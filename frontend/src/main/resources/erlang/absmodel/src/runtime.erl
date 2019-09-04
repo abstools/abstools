@@ -125,8 +125,21 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
     {ok, _Clock} = clock:start_link(Clocklimit),
     {ok, _Coverage} = coverage:start_link(),
 
+    %% Bootstrap initial cog and deployment component.  In the end, `Cog' has
+    %% `DC' as deployment component.  `DC' is contained in a cog `DCCog'.
+    %% `DCCog', again, has `DC' as deployment component (this is the only case
+    %% of circular cog-DC relationship).
+    RawCog=cog:start(),
+    DCCog = cog:start(),
+    put(this, class_ABS_DC_DeploymentComponent:init_internal()),
+    class_ABS_DC_DeploymentComponent:init(#object{oid=null,cog=DCCog}, [<<"Initial DC">>,dataEmptyMap,[]]),
+    DC = cog:new_object(DCCog, class_ABS_DC_DeploymentComponent, get(this)),
+    cog:activate_object(DCCog, DC), % unblock waiting tasks; unnecessary in this case but let’s keep the protocol
+    erase(this),
+    cog:set_dc(RawCog, DC),
+    cog:set_dc(DCCog, DC),
+    Cog=RawCog#cog{dcobj=DC},
     %%Start main task
-    Cog=cog:start(),
     {ok, cog:add_main_task(Cog,[Module,self()],
                            #task_info{method= <<".main"/utf8>>,
                                       this=null, destiny=null})}.

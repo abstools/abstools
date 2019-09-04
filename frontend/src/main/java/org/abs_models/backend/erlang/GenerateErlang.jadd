@@ -157,15 +157,11 @@ aspect GenerateErlang {
        ecs.println("%% Application callbacks");
        ecs.println("-export([start/2, stop/1]).");
        ecs.println();
-       ErlUtil.functionHeader(ecs, "main", Mask.none, "RawCog=#cog{ref=CogRef}");
+       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef,dcobj=DC}");
        ecs.println("put(vars, #{}),");
        ecs.println("C = none,");
        ecs.println("Oid = null, % avoid self-call branch in synccall code");
-       // Create a default deployment component.
-       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],RawCog,[]),");
-       ecs.println("cog:set_dc(RawCog, DC),");
-       ecs.println("Cog=#cog{ref=CogRef, dcobj=DC},");
-       ecs.println("O = #object{oid=null,cog=Cog},");
+       ecs.println("O = #object{oid=Oid,cog=Cog},");
        ecs.println("put(this, {state, none}),");
        ecs.println("Stack = [DC],");
        getBlock().generateErlangCode(ecs, Vars.n());
@@ -326,22 +322,16 @@ aspect GenerateErlang {
         scheduler = AnnotationHelper.getAnnotationValueFromName(classDecl.getAnnotations(), "ABS.Scheduler.Scheduler");
     }
     String className = ErlUtil.getName(classDecl);
-    boolean isNewDC = getType().isDeploymentComponentType();
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
     if (!hasLocal()) {
       ecs.print("object:new(cog:start(");
-      if (isNewDC) {
-          // do nothing, call cog:start/0.  thisDC() within a DC will fail
-          // (but the implementation of deployment components is entirely
-          // within the standard library).  We also don't support user-defined
-          // schedulers on them.
-      } else if (dc == null) {
+      if (dc == null) {
         ecs.print("DC");
       } else {
         dc.generateErlangCode(ecs, vars);
       }
-      if (scheduler != null && !isNewDC) {
+      if (scheduler != null) {
           String separator = " ";
           FnApp schedulerfun = (FnApp)scheduler;
           FunctionDecl decl = (FunctionDecl)(schedulerfun.getDecl());
@@ -1064,7 +1054,6 @@ aspect GenerateErlang {
 
   public void SuspendStmt.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.println("cog:return_token(Cog,self(),runnable,get(task_info),get(this)),");
-    ecs.println("cog:task_is_runnable(Cog,self()),");
     ecs.print("task:wait_for_token(Cog,");
     ecs.print(vars.toStack());
     ecs.print(")");

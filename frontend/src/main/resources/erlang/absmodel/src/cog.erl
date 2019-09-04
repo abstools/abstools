@@ -90,6 +90,10 @@ primary_object_state(ObjectStates) ->
 %%API
 
 start() ->
+    %% This is called two times: once for the initial cog in
+    %% runtime:start_mod/5, once for the cog of the first DC in the main block
+    %% (see GenerateErlang.jadd:ModuleDec.generateErlangCode).  In both cases,
+    %% we call cog:set_dc/2 afterwards.
     start(null, undefined).
 
 start(DC) ->
@@ -122,9 +126,9 @@ add_task(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info,Stack) ->
     TaskRef=await_start(Cog, TaskType, [Args | Stack]),
     TaskRef.
 
-add_main_task(#cog{ref=Cog},Args,Info)->
-    gen_statem:cast(Cog, {new_task,main_task,none,null,Args,Info,self(),true,{started, main_task}}),
-    TaskRef=await_start(Cog, main_task, Args),
+add_main_task(Cog=#cog{ref=CogRef},Args,Info)->
+    gen_statem:cast(CogRef, {new_task,main_task,none,null,Args,Info,self(),true,{started, main_task}}),
+    TaskRef=await_start(CogRef, main_task, Args),
     TaskRef.
 
 new_object(Cog=#cog{ref=CogRef}, Class, ObjectState) ->
@@ -193,14 +197,26 @@ maybe_send_runnable_confirmation(ConfirmTask) ->
     %% `cog_monitor:active' where necessary.
     ConfirmTask ! cog_confirms_task_wakeup.
 
-maybe_send_register_waiting_task(_WaitReason={waiting_on_future, Future},
-                                 _DC, Cog, Task) ->
-    future:register_waiting_task(Future, Cog, Task);
-maybe_send_register_waiting_task(_WaitReason={waiting_on_clock, Min, Max},
-                                 DC, Cog, Task) ->
-    dc:task_waiting_for_clock(DC, Task, Cog, Min, Max);
-maybe_send_register_waiting_task(_WaitReason, _DC, _Cog, _Task) ->
-    ok.
+register_waiting_task_if_necessary(_WaitReason={waiting_on_future, Future},
+                                   _DCRef, Cog, Task, TaskStateOrig) ->
+    %% In case the future is completed: immediately mark the task eligible for
+    %% scheduling instead of having the future sending out a
+    %% `task_is_runnable' signal immediately afterwards, since by then the
+    %% model might have terminated.  Note that it might be worthwhile to
+    %% change the program logic, e.g., by having distinct `State' values for
+    %% waiting on a future vs waiting on the clock, since this function does
+    %% two things at once (maybe registering the task with the future, and
+    %% calculating the next state of the suspending task).
+    case future:maybe_register_waiting_task(Future, Cog, Task) of
+        completed -> runnable;
+        unresolved -> TaskStateOrig
+    end;
+register_waiting_task_if_necessary(_WaitReason={waiting_on_clock, Min, Max},
+                                   DCRef, Cog, Task, TaskStateOrig) ->
+    dc:task_waiting_for_clock(DCRef, Task, Cog, Min, Max),
+    TaskStateOrig;
+register_waiting_task_if_necessary(_WaitReason, _DCRef, _Cog, _Task, TaskStateOrig) ->
+    TaskStateOrig.
 
 task_is_runnable(#cog{ref=CogRef},TaskRef) ->
     gen_statem:cast(CogRef, {task_runnable, TaskRef, none});
@@ -357,6 +373,7 @@ handle_call(From, {get_dc_ref, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, DCs)}};
 handle_call(From, {set_dc, DC, DCRef}, _StateName,
             Data=#data{dc=null, dcref=none}) ->
+    dc:new_cog(DCRef, self()),
     {keep_state, Data#data{dc=DC, dcref=DCRef}, {reply, From, ok}};
 handle_call(From, {new_object_state, ObjectState}, _StateName,
             Data=#data{object_states=ObjectStates, fresh_objects=FreshObjects,
@@ -443,7 +460,7 @@ object_state_from_pid(Pid, TaskInfos, ObjectStates) ->
 
 init([DC, DCRef, Scheduler]) ->
     process_flag(trap_exit, true),
-    dc:new_cog(DC, self()),
+    dc:new_cog(DCRef, self()),
     {ok, cog_starting, #data{dc=DC, dcref=DCRef, scheduler=Scheduler}}.
 
 start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
@@ -516,12 +533,12 @@ poll_waiting(Tasks, TaskInfos, ObjectStates) ->
     CrashTasks = lists:filtermap(fun({crashed, R}) -> {true, R}; (_) -> false end, Answers),
     { gb_sets:from_list(ReadyTasks), gb_sets:from_list(CrashTasks)}.
 
-maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos) ->
+maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos) ->
     %% This needs to be sent after cog_monitor:cog_active/1
     TaskInfo=maps:get(TaskRef, TaskInfos),
     case TaskInfo#task_info.wait_reason of
         {waiting_on_clock, _, _} ->
-            dc:task_confirm_clock_wakeup(DC, TaskRef);
+            dc:task_confirm_clock_wakeup(DCRef, TaskRef);
         {waiting_on_future, Future} ->
             future:confirm_wait_unblocked(Future, self(), TaskRef);
         _ -> ok
@@ -554,7 +571,7 @@ no_task_schedulable({call, From}, Event, Data) ->
 no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
                     Data=#data{waiting_tasks=Wai,polling_tasks=Pol,
                                runnable_tasks=Run, new_tasks=New,
-                               scheduler=Scheduler, dc=DC,
+                               scheduler=Scheduler, dc=DC, dcref=DCRef,
                                task_infos=TaskInfos,
                                object_states=ObjectStates}) ->
     %% we go through the complete scheduling algorithm even though we already
@@ -567,20 +584,20 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
     case T of
         none->     % None found -- should not happen
             case gb_sets:is_empty(NewNewTasks) of
-                true -> dc:cog_idle(DC, self());
+                true -> dc:cog_idle(DCRef, self());
                 false -> ok
             end,
             %% At least unblock the future; we’re in an impossible state
             maybe_send_runnable_confirmation(ConfirmTask),
-            maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+            maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
             {keep_state,
              Data#data{running_task=idle,waiting_tasks=NewWaitingTasks,
                        polling_tasks=gb_sets:difference(Pol, PollCrashedSet),
                        runnable_tasks=NewRunnableTasks, new_tasks=NewNewTasks}};
         T ->       % Execute T -- might or might not be TaskRef
-            dc:cog_active(DC, self()),
+            dc:cog_active(DCRef, self()),
             send_token(token, T, TaskInfos, ObjectStates),
-            maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+            maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
             maybe_send_runnable_confirmation(ConfirmTask),
             {next_state, task_running,
              %% T can come from Pol or NewRunnableTasks - adjust cog state
@@ -593,11 +610,11 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
                        new_tasks=NewNewTasks}}
     end;
 no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-                    Data=#data{new_tasks=Tasks,dc=DC,
-                                 task_infos=TaskInfos}) ->
+                    Data=#data{dcref=DCRef, dc=DC, new_tasks=Tasks,
+                               task_infos=TaskInfos}) ->
     %% The new task will send `task_runnable' soon; preemptively block time
     %% advance.
-    dc:cog_active(DC, self()),
+    dc:cog_active(DCRef, self()),
     NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
@@ -616,27 +633,27 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                 Data=#data{running_task=R, runnable_tasks=Run,
                            waiting_tasks=Wai, polling_tasks=Pol,
                            new_tasks=New, scheduler=Scheduler,
-                           task_infos=TaskInfos, dc=DC,
+                           task_infos=TaskInfos, dcref=DCRef,
                            object_states=ObjectStates}) ->
     gen_statem:reply(From, ok),
     NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
     This=TaskInfo#task_info.this,
     WaitReason=TaskInfo#task_info.wait_reason,
-    maybe_send_register_waiting_task(WaitReason, DC, self(), R),
+    NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), R, TaskState),
     NewObjectStates = update_object_state_map(This, ObjectState, ObjectStates),
-    NewRunnable = case TaskState of runnable -> Run;
+    NewRunnable = case NewTaskState of runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
-    NewWaiting = case TaskState of waiting -> gb_sets:add_element(R, Wai);
+    NewWaiting = case NewTaskState of waiting -> gb_sets:add_element(R, Wai);
                      _ -> Wai end,
-    NewPolling = case TaskState of waiting_poll -> gb_sets:add_element(R, Pol);
+    NewPolling = case NewTaskState of waiting_poll -> gb_sets:add_element(R, Pol);
                      _ -> Pol end,
-    %% for `TaskState' = `done', we just drop the task from Run (it can't
+    %% for `NewTaskState' = `done', we just drop the task from Run (it can't
     %% be in Wai or Pol)
     {T, PollCrashedSet}=choose_runnable_process(Scheduler, NewRunnable, NewPolling, NewTaskInfos, NewObjectStates),
     case T of
         none->
             case gb_sets:is_empty(New) of
-                true -> dc:cog_idle(DC, self());
+                true -> dc:cog_idle(DCRef, self());
                 false -> ok
             end,
             {next_state, no_task_schedulable,
@@ -662,19 +679,20 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
 task_running({call, From}, Event, Data) ->
     handle_call(From, Event, task_running, Data);
 task_running(cast, {task_runnable, TaskRef, ConfirmTask},
-             Data=#data{running_task=TaskRef, task_infos=TaskInfos, dc=DC}) ->
+             Data=#data{running_task=TaskRef, task_infos=TaskInfos,
+                        dcref=DCRef}) ->
     %% This can happen when a process suspends itself ({token, Id, runnable})
     %% or when we schedule a newly-created process.  In both cases we might
     %% have sent the token already before the process asked for it.
-    maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     keep_state_and_data;
 task_running(cast, {task_runnable, TaskRef, ConfirmTask},
              Data=#data{running_task=T,runnable_tasks=Run,
                         waiting_tasks=Wai,new_tasks=New,
-                        task_infos=TaskInfos, dc=DC})
+                        task_infos=TaskInfos, dcref=DCRef})
   when TaskRef /= T ->
-    maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     {keep_state,
      Data#data{runnable_tasks=gb_sets:add_element(TaskRef, Run),
@@ -689,22 +707,28 @@ task_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,C
                task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
 task_running(cast, {task_blocked, TaskRef, TaskInfo, ObjectState},
                 Data=#data{task_infos=TaskInfos,object_states=ObjectStates,
-                           dc=DC}) ->
-    dc:cog_blocked(DC, self()),
+                           dcref=DCRef}) ->
+    dc:cog_blocked(DCRef, self()),
     WaitReason=TaskInfo#task_info.wait_reason,
-    maybe_send_register_waiting_task(WaitReason, DC, self(), TaskRef),
+    NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), TaskRef, blocked),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     NewTaskInfos=maps:put(TaskRef, TaskInfo, TaskInfos),
-    {next_state, task_blocked,
-     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}};
+    case NewTaskState of
+        runnable ->
+            {next_state, task_blocked,
+             Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos},
+             {next_event, {task_runnable, TaskRef, none}}};
+        _ -> {next_state, task_blocked,
+              Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}}
+    end;
 task_running(cast, {task_blocked_for_clock, TaskRef, TaskInfo, ObjectState,
                    Min, Max},
                 Data=#data{task_infos=TaskInfos,object_states=ObjectStates,
-                           dc=DC}) ->
+                           dcref=DCRef}) ->
     %% TODO unify the next two lines
-    dc:task_waiting_for_clock(DC, TaskRef, self(), Min, Max),
-    dc:cog_blocked(DC, self()),
+    dc:task_waiting_for_clock(DCRef, TaskRef, self(), Min, Max),
+    dc:cog_blocked(DCRef, self()),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     %% We never pass TaskInfo back to the process, so we can mutate it here.
@@ -731,7 +755,7 @@ task_running(cast, Event, Data) ->
 task_running(info, {'EXIT',TaskRef,_Reason},
             Data=#data{running_task=R,runnable_tasks=Run,polling_tasks=Pol,
                        waiting_tasks=Wai,new_tasks=New,scheduler=Scheduler,
-                       task_infos=TaskInfos, dc=DC,
+                       task_infos=TaskInfos, dc=DC, dcref=DCRef,
                        object_states=ObjectStates}) ->
     NewTaskInfos=maps:remove(TaskRef, TaskInfos),
     %% TODO check if we need to update ObjectStates somehow
@@ -747,7 +771,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
             case T of
                 none->
                     case gb_sets:is_empty(NewNew) of
-                        true -> dc:cog_idle(DC, self());
+                        true -> dc:cog_idle(DCRef, self());
                         false -> ok
                     end,
                     {next_state, no_task_schedulable,
@@ -787,18 +811,18 @@ task_blocked({call, From}, Event, Data) ->
     handle_call(From, Event, task_blocked, Data);
 task_blocked(cast, {task_runnable, TaskRef, ConfirmTask},
              Data=#data{running_task=TaskRef, task_infos=TaskInfos,
-                        object_states=ObjectStates, dc=DC}) ->
-    dc:cog_unblocked(DC, self()),
-    maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+                        object_states=ObjectStates, dcref=DCRef}) ->
+    dc:cog_unblocked(DCRef, self()),
+    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     send_token(token, TaskRef, TaskInfos, ObjectStates),
     {next_state, task_running, Data};
 task_blocked(cast, {task_runnable, TaskRef, ConfirmTask},
              Data=#data{running_task=T, waiting_tasks=Wai,
                         runnable_tasks=Run, new_tasks=New,
-                        task_infos=TaskInfos, dc=DC})
+                        task_infos=TaskInfos, dcref=DCRef})
   when TaskRef /= T ->
-    maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     {next_state, task_blocked,
      Data#data{waiting_tasks=gb_sets:del_element(TaskRef, Wai),
@@ -825,21 +849,21 @@ waiting_for_gc_stop({call, From}, {token,R,TaskState, TaskInfo, ObjectState},
                     Data=#data{running_task=R, runnable_tasks=Run,
                                waiting_tasks=Wai, polling_tasks=Pol,
                                new_tasks=New,task_infos=TaskInfos,
-                               object_states=ObjectStates,dc=DC}) ->
+                               object_states=ObjectStates,dc=DC,dcref=DCRef}) ->
     gen_statem:reply(From, ok),
     gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     WaitReason=TaskInfo#task_info.wait_reason,
-    maybe_send_register_waiting_task(WaitReason, DC, self(), R),
+    NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), R, TaskState),
     NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
     NewObjectStates=update_object_state_map(TaskInfo#task_info.this,
                                             ObjectState, ObjectStates),
-    NewRunnable = case TaskState of
+    NewRunnable = case NewTaskState of
                       runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
-    NewWaiting = case TaskState of
+    NewWaiting = case NewTaskState of
                      waiting -> gb_sets:add_element(R, Wai);
                      _ -> Wai end,
-    NewPolling = case TaskState of
+    NewPolling = case NewTaskState of
                      waiting_poll -> gb_sets:add_element(R, Pol);
                      _ -> Pol end,
     case gb_sets:is_empty(NewRunnable) and gb_sets:is_empty(New) of
@@ -854,7 +878,7 @@ waiting_for_gc_stop({call, From}, {token,R,TaskState, TaskInfo, ObjectState},
         %% leaving `in_gc', and instead send it here if necessary.
         true -> {PollReadySet, PollCrashedSet} = poll_waiting(NewPolling, NewTaskInfos, NewObjectStates),
                 case gb_sets:is_empty(PollReadySet) of
-                    true -> dc:cog_idle(DC, self());
+                    true -> dc:cog_idle(DCRef, self());
                     false -> ok
                 end,
                 {next_state, in_gc,
@@ -875,9 +899,10 @@ waiting_for_gc_stop({call, From}, Event, Data) ->
     handle_call(From, Event, waiting_for_gc_stop, Data);
 waiting_for_gc_stop(cast, {task_runnable, TaskRef, ConfirmTask},
                     Data=#data{waiting_tasks=Wai, runnable_tasks=Run,
-                               new_tasks=New, task_infos=TaskInfos, dc=DC}) ->
-    dc:cog_active(DC, self()),
-    maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+                               new_tasks=New, task_infos=TaskInfos,
+                               dcref=DCRef}) ->
+    dc:cog_active(DCRef, self()),
+    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     {keep_state,
      Data#data{waiting_tasks=gb_sets:del_element(TaskRef, Wai),
@@ -892,22 +917,30 @@ waiting_for_gc_stop(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,N
                task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
 waiting_for_gc_stop(cast, {task_blocked, R, TaskInfo, ObjectState},
                     Data=#data{running_task=R,task_infos=TaskInfos,
-                               object_states=ObjectStates,dc=DC}) ->
-    dc:cog_blocked(DC, self()),
+                               object_states=ObjectStates,dc=DC,dcref=DCRef}) ->
+    dc:cog_blocked(DCRef, self()),
     gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     WaitReason=TaskInfo#task_info.wait_reason,
-    maybe_send_register_waiting_task(WaitReason, DC, self(), R),
+    NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), R, blocked),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
-    {next_state, in_gc,
-     Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates, task_infos=NewTaskInfos}};
+    case NewTaskState of
+        runnable ->
+            {next_state, in_gc,
+             Data#data{next_state_after_gc=task_blocked,
+                       object_states=NewObjectStates, task_infos=NewTaskInfos},
+             {next_event, {task_runnable, R, none}}};
+        _ -> {next_state, in_gc,
+              Data#data{next_state_after_gc=task_blocked,
+                        object_states=NewObjectStates, task_infos=NewTaskInfos}}
+    end;
 waiting_for_gc_stop(cast, {task_blocked_for_clock, R, TaskInfo, ObjectState,
                           Min, Max},
-                    Data=#data{running_task=R,task_infos=TaskInfos, object_states=ObjectStates,dc=DC}) ->
+                    Data=#data{running_task=R,task_infos=TaskInfos, object_states=ObjectStates,dcref=DCRef,dc=DC}) ->
     %% TODO unify the next two lines
-    dc:task_waiting_for_clock(DC, R, self(), Min, Max),
-    dc:cog_blocked(DC, self()),
+    dc:task_waiting_for_clock(DCRef, R, self(), Min, Max),
+    dc:cog_blocked(DCRef, self()),
     gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
@@ -962,9 +995,9 @@ in_gc({call, From}, Event, Data) ->
 in_gc(cast, {task_runnable, TaskRef, ConfirmTask},
       Data=#data{running_task=RunningTask,next_state_after_gc=NextState,
                  runnable_tasks=Run,waiting_tasks=Wai, new_tasks=New,
-                 task_infos=TaskInfos, dc=DC}) ->
-    dc:cog_active(DC, self()),
-    maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+                 task_infos=TaskInfos, dcref=DCRef}) ->
+    dc:cog_active(DCRef, self()),
+    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     NextState2=case TaskRef == RunningTask of
                    %% We will send token when receiving `resume_world'
@@ -991,10 +1024,10 @@ in_gc(cast, {get_references, Sender},
                                     received => []}}}
     end;
 in_gc(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-      Data=#data{new_tasks=Tasks,dc=DC,task_infos=TaskInfos}) ->
+      Data=#data{new_tasks=Tasks,dc=DC,dcref=DCRef,task_infos=TaskInfos}) ->
     %% Tell cog_monitor now that we're busy; after gc it might be too late --
     %% but don't put new task into runnable_tasks yet
-    dc:cog_active(DC, self()),
+    dc:cog_active(DCRef, self()),
     NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
@@ -1005,9 +1038,10 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                                      next_state_after_gc=NextState,
                                      scheduler=Scheduler,
                                      task_infos=TaskInfos,
-                                     object_states=ObjectStates, dc=DC}) ->
+                                     object_states=ObjectStates,
+                                     dc=DC, dcref=DCRef}) ->
     case Referencers > 0 of
-        false -> dc:cog_died(DC, self()),
+        false -> dc:cog_died(DCRef, self()),
                  gc:unregister_cog(#cog{ref=self(), dcobj=DC}),
                  {stop, normal, Data};
         true ->
@@ -1022,7 +1056,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                             {next_state, no_task_schedulable,
                              Data#data{polling_tasks=gb_sets:difference(Pol, PollCrashedSet)}};
                         T ->                    % Execute T
-                            dc:cog_active(DC, self()),
+                            dc:cog_active(DCRef, self()),
                             send_token(token, T, TaskInfos, ObjectStates),
                             {next_state, task_running,
                              Data#data{running_task=T,
@@ -1036,8 +1070,8 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                     %% `task_running' hence we must have gotten
                     %% `task_runnable' while gc'ing => send token to
                     %% process
-                    dc:cog_active(DC, self()), % might not be necessary but just in case
-                    dc:cog_unblocked(DC, self()),
+                    dc:cog_active(DCRef, self()), % might not be necessary but just in case
+                    dc:cog_unblocked(DCRef, self()),
                     send_token(token, RunningTask, TaskInfos, ObjectStates),
                     {next_state, task_running, Data};
                 _ -> {next_state, NextState, Data}
@@ -1079,9 +1113,9 @@ waiting_for_references({call, From}, Event, Data) ->
 waiting_for_references(cast, {task_runnable, TaskRef, ConfirmTask},
       Data=#data{running_task=RunningTask,next_state_after_gc=NextState,
                  runnable_tasks=Run,waiting_tasks=Wai, new_tasks=New,
-                 task_infos=TaskInfos, dc=DC}) ->
-    dc:cog_active(DC, self()),
-    maybe_send_unblock_confirmation(DC, TaskRef, TaskInfos),
+                 task_infos=TaskInfos, dcref=DCRef}) ->
+    dc:cog_active(DCRef, self()),
+    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     NextState2=case TaskRef == RunningTask of
                    %% We will send token when receiving `resume_world'
@@ -1109,11 +1143,11 @@ waiting_for_references(cast, {references, Task, References},
                                                    received := ordsets:union(CollectedReferences, References)}}}
     end;
 waiting_for_references(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-      Data=#data{new_tasks=Tasks,dc=DC,task_infos=TaskInfos,
+      Data=#data{new_tasks=Tasks, dc=DC, dcref=DCRef, task_infos=TaskInfos,
                 references=ReferenceRecord=#{waiting := Tasks}}) ->
     %% Tell cog_monitor now that we're busy; after gc it might be too late --
     %% but don't put new task into runnable_tasks yet
-    dc:cog_active(DC, self()),
+    dc:cog_active(DCRef, self()),
     NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     task:get_references_for_cog(NewTask),
     {keep_state,

@@ -43,30 +43,38 @@ get_resource_history(DCRef, Type) ->
     gen_statem:call(DCRef, {get_resource_history, Type}).
 
 %% cog->dc time and resource negotiation API
-%%
-%% This is a pass-through to cog_monitor for the moment.
-new_cog(_DC, Cog) ->
-    cog_monitor:new_cog(Cog).
+new_cog(none, _CogRef) ->
+    %% this case happens when calling cog:start/0 (this happens twice during
+    %% model startup, see GenerateErlang.jadd:ModuleDecl.generateErlangCode
+    %% and runtime:start_mod/5), and we call dc:new_cog from cog:set_dc/2,
+    %% which is called for both these cogs.
+    ok;
+new_cog(DCRef, CogRef) ->
+    gen_statem:call(DCRef, {new_cog,CogRef}).
 
-cog_died(_DC, Cog) ->
-    cog_monitor:cog_died(Cog).
+cog_died(DCRef, CogRef) ->
+    gen_statem:call(DCRef, {cog_died, CogRef}).
 
-cog_active(_DC, Cog) ->
-    cog_monitor:cog_active(Cog).
+cog_active(DCRef, CogRef) ->
+    %% idle -> active
+    gen_statem:call(DCRef, {cog_active, CogRef}).
 
-cog_blocked(_DC, Cog) ->
-    cog_monitor:cog_blocked(Cog).
+cog_blocked(DCRef, CogRef) ->
+    %% active -> blocked
+    gen_statem:call(DCRef, {cog_blocked, CogRef}).
 
-cog_unblocked(_DC, Cog) ->
-    cog_monitor:cog_unblocked(Cog).
+cog_unblocked(DCRef, CogRef) ->
+    %% blocked -> active
+    gen_statem:call(DCRef, {cog_unblocked, CogRef}).
 
-cog_idle(_DC, Cog) ->
-    cog_monitor:cog_idle(Cog).
+cog_idle(DCRef, CogRef) ->
+    %% active -> idle
+    gen_statem:call(DCRef, {cog_idle, CogRef}).
 
-task_waiting_for_clock(_DC, Task, Cog, Min, Max) ->
-    cog_monitor:task_waiting_for_clock(Task, Cog, Min, Max).
+task_waiting_for_clock(DCRef, TaskRef, CogRef, Min, Max) ->
+    gen_statem:call(DCRef, {task_waiting_for_clock, CogRef, TaskRef, Min, Max}).
 
-task_confirm_clock_wakeup(_DC, TaskRef) ->
+task_confirm_clock_wakeup(_DCRef, TaskRef) ->
     cog_monitor:task_confirm_clock_wakeup(TaskRef).
 
 consume(_DC=#object{oid=Oid,cog=Cog}, Resourcetype, Amount) ->
@@ -75,8 +83,6 @@ consume(_DC=#object{oid=Oid,cog=Cog}, Resourcetype, Amount) ->
                             {var_current_for_resourcetype(Resourcetype),
                              var_max_for_resourcetype(Resourcetype)},
                             Amount}).
-
-
 
 block_cog_for_resource(Cog=#cog{ref=CogRef,dcobj=DC}, Resourcetype, Amount, Stack) ->
     Amount_r = rationals:to_r(Amount),
@@ -107,9 +113,11 @@ block_cog_for_resource(Cog=#cog{ref=CogRef,dcobj=DC}, Resourcetype, Amount, Stac
 
 %% gen_statem API
 
--record(data, {cog, %% the cog that's storing our state
-               oid  %% the oid our state is stored under
-              }).
+-record(data,
+        {
+         %% The location of our state (`cog:get_object_state(cog, oid)'
+         cog, oid
+        }).
 
 callback_mode() -> state_functions.
 
@@ -122,12 +130,43 @@ terminate(_Reason,_StateName, _Data=#data{cog=Cog})->
 code_change(_OldVsn,_StateName,_Data,_Extra)->
     not_implemented.
 
+%% Catch-all call handler for behavior common to all states
+handle_call(From, {new_cog, CogRef}, _State, _Data)->
+    cog_monitor:new_cog(CogRef),
+    {keep_state_and_data, {reply, From, ok}};
+handle_call(From, {cog_died, CogRef}, _State, _Data) ->
+    Reply=cog_monitor:cog_died(CogRef),
+    gen_statem:reply(From, Reply),
+    keep_state_and_data;
+handle_call(From, {cog_active, CogRef}, _State, _Data) ->
+    Reply=cog_monitor:cog_active(CogRef),
+    gen_statem:reply(From, Reply),
+    keep_state_and_data;
+handle_call(From, {cog_idle, CogRef}, _State, _Data) ->
+    Reply=cog_monitor:cog_idle(CogRef),
+    gen_statem:reply(From, Reply),
+    keep_state_and_data;
+handle_call(From, {cog_blocked, CogRef}, _State, _Data) ->
+    Reply=cog_monitor:cog_blocked(CogRef),
+    gen_statem:reply(From, Reply),
+    keep_state_and_data;
+handle_call(From, {cog_unblocked, CogRef}, _State, _Data) ->
+    Reply=cog_monitor:cog_unblocked(CogRef),
+    gen_statem:reply(From, Reply),
+    keep_state_and_data;
+handle_call(From, {task_waiting_for_clock, CogRef, TaskRef, Min, Max}, _State,
+            _Data) ->
+    Reply=cog_monitor:task_waiting_for_clock(TaskRef, CogRef, Min, Max),
+    gen_statem:reply(From, Reply),
+    keep_state_and_data.
+
+
 %% Deployment component behavior
 %%
 %% Deployment components are objects, so we handle their events using
 %% the general object FSM machinery for now.
 active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count},
-       Data=#data{cog=Cog, oid=Oid}) ->
+       _Data=#data{cog=Cog, oid=Oid}) ->
     C=class_ABS_DC_DeploymentComponent,
     OState=cog:get_object_state(Cog, Oid),
     Initialized=C:get_val_internal(s, 'initialized'),
@@ -157,12 +196,12 @@ active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count},
             end
     end;
 active({call, From}, {clock_advance_for_dc, Amount},
-       Data=#data{cog=Cog, oid=Oid}) ->
+       _Data=#data{cog=Cog, oid=Oid}) ->
     OState=cog:get_object_state(Cog, Oid),
     OState1=update_state_and_history(OState, Amount),
     cog:object_state_changed(Cog, Oid, OState1),
     {keep_state_and_data, {reply, From, ok}};
-active({call, From}, {get_resource_history, Type}, Data=#data{cog=Cog,oid=Oid}) ->
+active({call, From}, {get_resource_history, Type}, _Data=#data{cog=Cog,oid=Oid}) ->
     C=class_ABS_DC_DeploymentComponent,
     OState=cog:get_object_state(Cog, Oid),
     Curvar=var_history_for_resourcetype(Type),
@@ -172,7 +211,7 @@ active({call, From}, {get_resource_history, Type}, Data=#data{cog=Cog,oid=Oid}) 
               C:get_val_internal(OState,Curvar),
               C:get_val_internal(OState,Maxvar)],
     {keep_state_and_data, {reply, From, Result}} ;
-active({call, From}, get_dc_info_string, Data=#data{cog=Cog,oid=Oid}) ->
+active({call, From}, get_dc_info_string, _Data=#data{cog=Cog,oid=Oid}) ->
     C=class_ABS_DC_DeploymentComponent,
     OState=cog:get_object_state(Cog, Oid),
     Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n",
@@ -180,14 +219,16 @@ active({call, From}, get_dc_info_string, Data=#data{cog=Cog,oid=Oid}) ->
                           builtin:toString(undefined, C:get_val_internal(OState,creationTime)),
                           builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
     {keep_state_and_data, {reply, From, Result}};
-active({call, From}, get_resource_json, Data=#data{cog=Cog,oid=Oid}) ->
+active({call, From}, get_resource_json, _Data=#data{cog=Cog,oid=Oid}) ->
     C=class_ABS_DC_DeploymentComponent,
     OState=cog:get_object_state(Cog, Oid),
     Name=C:get_val_internal(OState,description),
     History=C:get_val_internal(OState,cpuhistory),
     Result=[{<<"name">>, Name},
             {<<"values">>, History}],
-    {keep_state_and_data, {reply, From, {ok, Result}}}.
+    {keep_state_and_data, {reply, From, {ok, Result}}};
+active({call, From}, Event, Data) ->
+    handle_call(From, Event, active, Data).
 
 
 %% Callback from update event.  Handle arbitrary clock advancement
