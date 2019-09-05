@@ -23,10 +23,10 @@ distributions {
 dependencies {
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
     implementation 'commons-io:commons-io:2.6'
-    implementation 'com.google.guava:guava:27.1-jre'
+    implementation 'com.google.guava:guava:28.1-jre'
     implementation files('lib/choco-solver-2.1.1.jar')
     implementation 'org.eclipse.jdt:ecj:3.18.0'
-    implementation 'org.apfloat:apfloat:1.8.3'
+    implementation 'org.apfloat:apfloat:1.9.1'
     // our code fails to compile with newer versions of sat4j; leaving this at
     // version 2.3.0 for now.
     implementation 'org.sat4j:org.sat4j.core:2.3.0'
@@ -34,21 +34,21 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    compile 'info.picocli:picocli:4.0.0'
+    compile 'info.picocli:picocli:4.0.3'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.5.0")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.5.1")
     // Executes JUnit4 tests
-    testRuntime("org.junit.vintage:junit-vintage-engine:5.5.0")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.0'
+    testRuntime("org.junit.vintage:junit-vintage-engine:5.5.1")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:4.0.2'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest-core:2.1'
 
-    jastadd2 'org.jastadd:jastadd:2.3.3'
+    jastadd2 'org.jastadd:jastadd:2.3.4'
     antlr 'org.antlr:antlr4:4.7.2'
 }
 
