@@ -184,7 +184,6 @@ assemble.dependsOn generateAutocomplete
 test {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html
     useJUnitPlatform()
-    ignoreFailures=true
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
 
     // Allow dynamic exclusion of tests (based on https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)
