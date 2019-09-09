@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- The Maude backend is now unsupported, and the unit tests have been deactivated.  (This change was briefly discussed during the last ABS workshop, with no dissenting arguments, but can be reversed before the next release.)
+
 ### Fixed
 
 - Fixed a cause of spurious clock advances under rare circumstances (~1.5% chance of occurrence when calling empty methods on one cog only, see test case `TimeTests.no_time_advance1`).
