@@ -28,6 +28,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fixed a cause of spurious clock advances under rare circumstances (~1.5% chance of occurrence when calling empty methods on one cog only, see test case `TimeTests.no_time_advance1`).
 
+- The build now reports failure when a unit test fails, making CircleCI more useful.
+
 ## [1.8.1] - 2019-03-28
 
 ### Added

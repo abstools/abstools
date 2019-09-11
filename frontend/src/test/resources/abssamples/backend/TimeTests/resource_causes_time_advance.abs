@@ -1,0 +1,19 @@
+module BackendTest;
+import * from ABS.DC;
+
+interface I {
+    Bool n();
+}
+
+class C implements I {
+    Bool n() {
+        [Cost: 10] return True;
+    }
+}
+
+{
+    Bool testresult = False;
+    DC dc = new DeploymentComponent("hello", map[Pair(Speed, 5)]);
+    [DC: dc] I i = new C();
+    testresult = await i!n();
+}
