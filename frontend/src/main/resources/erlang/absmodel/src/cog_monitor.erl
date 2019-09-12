@@ -19,7 +19,7 @@
 -export([task_waiting_for_clock/4, task_confirm_clock_wakeup/1]).
 
 %% communication about dcs
--export([new_dc/1, dc_died/1, get_dcs/0]).
+-export([new_dc/1, dc_mte/2, dc_active/1, dc_blocked/1, dc_idle/1, dc_died/1, get_dcs/0]).
 
 %% the HTTP api
 -export([register_object_with_http_name/2,lookup_object_from_http_name/1,list_registered_http_names/0,list_registered_http_objects/0,increase_clock_limit/1]).
@@ -31,26 +31,34 @@
 %% Simulation ends when no cog is active or waiting for the clock / some
 %% resources.  Note that a cog is in either "active" or "idle" but can be in
 %% "active" and "blocked" at the same time.
--record(data,{main,            % this
-              active,          % non-idle cogs
-              idle,            % idle cogs
-              blocked,         % cogs with task blocked on future/resource
-              clock_waiting,   % [{Min,Max,Task,Cog}]: tasks with their
-                               % cog waiting for simulated time to advance,
-                               % with minimum and maximum waiting time.
-                               % Ordered by ascending maximum waiting time
-                               % such that the Max element of the head of the
-                               % list is always MTE [Maximum Time Elapse]).
-              active_before_next_clock,
-                               % ordset of {Task, Cog} of tasks that need to
-                               % acknowledge waking up before next clock
-                               % advance
-
-              dcs,             % list of deployment components
-              registered_objects, % Objects registered in HTTP API. binary |-> #object{}
-              keepalive_after_clock_limit % Flag whether we kill all objects after clock limit has been reached
-                                          % (false when HTTP API is active)
-              }).
+-record(data,{
+              %% this
+              main,
+              %% non-idle cogs
+              active=gb_sets:empty(),
+              %% idle cogs
+              idle=gb_sets:empty(),
+              %% cogs with task blocked on future/resource
+              blocked=gb_sets:empty(),
+              %% [{Min,Max,Task,Cog}]: tasks with their cog waiting for
+              %% simulated time to advance, with minimum and maximum waiting
+              %% time.  Ordered by ascending maximum waiting time such that
+              %% the Max element of the head of the list is always MTE
+              %% [Maximum Time Elapse]).
+              clock_waiting=[],
+              %% ordset of {Task, Cog} of tasks that need to acknowledge
+              %% waking up before next clock advance
+              active_before_next_clock=ordsets:new(),
+              %% list of deployment components
+              dcs=[],
+              %% map dc -> mte; clock advance should be minimum of these
+              dc_mtes=maps:new(),
+              %% Objects registered in HTTP API. binary |-> #object{}
+              registered_objects=maps:new(),
+              %% Flag whether we kill all objects after clock limit has been
+              %% reached (false when HTTP API is active)
+              keepalive_after_clock_limit
+             }).
 
 callback_mode() -> state_functions.
 
@@ -102,6 +110,18 @@ task_confirm_clock_wakeup(Task) ->
 new_dc(DCRef) ->
     gen_statem:call({global, cog_monitor}, {new_dc, DCRef}, infinity).
 
+dc_mte(DCRef, MTE) ->
+    gen_statem:call({global, cog_monitor}, {dc_mte, DCRef, MTE}, infinity).
+
+dc_active(_DCRef) ->
+    ok.
+
+dc_blocked(_DCRef) ->
+    ok.
+
+dc_idle(_DCRef) ->
+    ok.
+
 dc_died(DCRef) ->
     gen_statem:cast({global, cog_monitor}, {dc_died, DCRef}),
     ok.
@@ -133,15 +153,7 @@ increase_clock_limit(Amount) ->
 %%The callback gets as parameter the pid of the runtime process, which waits for all cogs to be idle
 init([Main,Keepalive])->
     {ok,running,
-     #data{main=Main,
-           active=gb_sets:empty(),
-           blocked=gb_sets:empty(),
-           idle=gb_sets:empty(),
-           clock_waiting=[],
-           dcs=[],
-           active_before_next_clock=ordsets:new(),
-           registered_objects=maps:new(),
-           keepalive_after_clock_limit=Keepalive}}.
+     #data{main=Main, keepalive_after_clock_limit=Keepalive}}.
 
 handle_call(From, {keep_alive, Class}, _State, Data=#data{keepalive_after_clock_limit=KeepAlive}) ->
     %% Do not garbage-collect DeploymentComponent objects when we do
@@ -224,6 +236,8 @@ handle_call(From, {task,Task,Cog,clock_waiting,Min,Max}, _State,
     {keep_state, Data#data{clock_waiting=C1}, {reply, From, ok}};
 handle_call(From, {new_dc, DCRef}, _State, Data=#data{dcs=DCs}) ->
     {keep_state, Data#data{dcs=[DCRef | DCs]}, {reply, From, ok}};
+handle_call(From, {dc_mte, DCRef, MTE}, _State, Data=#data{dc_mtes=MTEs}) ->
+    {keep_state, Data#data{dc_mtes=MTEs#{DCRef => MTE}}, {reply, From, ok}};
 handle_call(From, get_dcs, _State, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
 handle_call(From, all_registered_names, _State,
@@ -304,35 +318,48 @@ can_clock_advance(_OldData=#data{active=A, blocked=B, active_before_next_clock=A
     (ordsets:size(ABNC1) == 0) andalso ((not Old_idle and All_idle)
                                         orelse (Old_idle and All_idle and (ordsets:size(ABNC) > 0))) .
 
-advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,keepalive_after_clock_limit=Keepalive}) ->
-    case C of
-        [] ->
+advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,dc_mtes=MTEs,keepalive_after_clock_limit=Keepalive}) ->
+    case maps:size(MTEs) > 0 of
+        false ->
             case Keepalive of
                 false ->
                     %% One last clock advance to finish the last resource period
                     MTE=clock:distance_to_next_boundary(),
                     clock:advance(MTE),
-                    lists:foreach(fun(DC) -> dc:update(DC, MTE) end, DCs),
+                    lists:foreach(fun(DC) -> dc:notify_time_advance(DC, MTE) end, DCs),
                     M ! wait_done;
                 true ->
                     %% We are probably serving via http; don't advance time
                     ok
             end,
             Data;
-        [{_Min, MTE, _Task, _Cog} | _] ->
+        true ->
+            MTE=lists:min(maps:values(MTEs)), %TODO make this faster via maps:fold
             OldTime=clock:now(),
+            %% TODO: check that Delta > 0
             Delta=rationals:sub(MTE, OldTime),
             %% advance clock before waking up tasks waiting for it
             Clockresult=clock:advance(Delta),
             case Clockresult of
                 {ok, NewTime} ->
-                    lists:foreach(fun(DC) -> dc:update(DC, Delta) end, DCs),
+                    lists:foreach(fun(DC) -> dc:notify_time_advance(DC, Delta) end, DCs),
                     {A1,C1}=lists:unzip(
                               lists:map(
-                                fun(I) -> decrease_or_wakeup(MTE, I, NewTime) end,
+                                fun(E={MinE, _MaxE, TaskRefE, CogRefE}) ->
+                                        case cmp:lt(NewTime, MinE) of
+                                            true ->
+                                                {[], E};
+                                            false ->
+                                                {{TaskRefE, CogRefE}, []}
+                                        end
+                                end,
                                 C)),
+                    NewMTEs=maps:filter(fun(_DC, MTEI) ->
+                                                cmp:lt(NewTime, MTEI) end,
+                                        MTEs),
                     Data#data{clock_waiting=lists:flatten(C1),
-                                active_before_next_clock=ordsets:from_list(lists:flatten(A1))};
+                              active_before_next_clock=ordsets:from_list(lists:flatten(A1)),
+                              dc_mtes=NewMTEs};
                 {limit_reached, _} ->
                     influxdb:flush(),
                     case Keepalive of
@@ -349,18 +376,6 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,ke
             end
     end .
 
-decrease_or_wakeup(MTE, E={Min, _Max, Task, Cog}, CurrentTime) ->
-    %% Wake up a task if its minimum waiting time has passed.  We keep a list
-    %% of all {Task, Cog} tuples we have signaled; can_clock_advance/2 makes
-    %% sure all these tasks have switched to active before we advance the
-    %% clock again.
-    case cmp:lt(MTE, Min) of
-        true ->
-            {[], E};
-        false ->
-            cog:wakeup_task_after_clock_elapse(Cog, Task, CurrentTime),
-            {{Task, Cog}, []}
-    end.
 add_to_clock_waiting(C, Min, Max, Task, Cog) ->
     Time=clock:now(),
     add_to_clock_waiting(C, {rationals:add(Time, Min), rationals:add(Time, Max),

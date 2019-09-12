@@ -15,7 +15,6 @@
 -export([block_cog_for_duration/4,block_cog_for_cpu/3,block_cog_for_bandwidth/4,block_cog_for_future/3]).
 -export([return_token/5]).
 %% Called by cog_monitor
--export([wakeup_task_after_clock_elapse/3]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
 
@@ -213,7 +212,7 @@ register_waiting_task_if_necessary(_WaitReason={waiting_on_future, Future},
     end;
 register_waiting_task_if_necessary(_WaitReason={waiting_on_clock, Min, Max},
                                    DCRef, Cog, Task, TaskStateOrig) ->
-    dc:task_waiting_for_clock(DCRef, Task, Cog, Min, Max),
+    dc:task_waiting_for_clock(DCRef, Cog, Task, Min, Max),
     TaskStateOrig;
 register_waiting_task_if_necessary(_WaitReason, _DCRef, _Cog, _Task, TaskStateOrig) ->
     TaskStateOrig.
@@ -288,9 +287,6 @@ return_token(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState) ->
     after 0 -> ok
     end,
     gen_statem:call(Cog, {token, TaskRef, State, TaskInfo, ObjectState}).
-
-wakeup_task_after_clock_elapse(CogRef, TaskRef, _CurrentTime) ->
-    task_is_runnable(CogRef, TaskRef).
 
 task_poll_is_ready(#cog{ref=Cog}, TaskRef, TaskInfo) ->
     Cog ! {TaskRef, true, TaskInfo}.
@@ -533,14 +529,14 @@ poll_waiting(Tasks, TaskInfos, ObjectStates) ->
     CrashTasks = lists:filtermap(fun({crashed, R}) -> {true, R}; (_) -> false end, Answers),
     { gb_sets:from_list(ReadyTasks), gb_sets:from_list(CrashTasks)}.
 
-maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos) ->
+maybe_send_unblock_confirmation(DCRef, CogRef, TaskRef, TaskInfos) ->
     %% This needs to be sent after cog_monitor:cog_active/1
     TaskInfo=maps:get(TaskRef, TaskInfos),
     case TaskInfo#task_info.wait_reason of
         {waiting_on_clock, _, _} ->
-            dc:task_confirm_clock_wakeup(DCRef, TaskRef);
+            dc:task_confirm_clock_wakeup(DCRef, CogRef, TaskRef);
         {waiting_on_future, Future} ->
-            future:confirm_wait_unblocked(Future, self(), TaskRef);
+            future:confirm_wait_unblocked(Future, CogRef, TaskRef);
         _ -> ok
     end.
 
@@ -589,7 +585,7 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
             end,
             %% At least unblock the future; we’re in an impossible state
             maybe_send_runnable_confirmation(ConfirmTask),
-            maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+            maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
             {keep_state,
              Data#data{running_task=idle,waiting_tasks=NewWaitingTasks,
                        polling_tasks=gb_sets:difference(Pol, PollCrashedSet),
@@ -597,7 +593,7 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
         T ->       % Execute T -- might or might not be TaskRef
             dc:cog_active(DCRef, self()),
             send_token(token, T, TaskInfos, ObjectStates),
-            maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+            maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
             maybe_send_runnable_confirmation(ConfirmTask),
             {next_state, task_running,
              %% T can come from Pol or NewRunnableTasks - adjust cog state
@@ -684,7 +680,7 @@ task_running(cast, {task_runnable, TaskRef, ConfirmTask},
     %% This can happen when a process suspends itself ({token, Id, runnable})
     %% or when we schedule a newly-created process.  In both cases we might
     %% have sent the token already before the process asked for it.
-    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     keep_state_and_data;
 task_running(cast, {task_runnable, TaskRef, ConfirmTask},
@@ -692,7 +688,7 @@ task_running(cast, {task_runnable, TaskRef, ConfirmTask},
                         waiting_tasks=Wai,new_tasks=New,
                         task_infos=TaskInfos, dcref=DCRef})
   when TaskRef /= T ->
-    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     {keep_state,
      Data#data{runnable_tasks=gb_sets:add_element(TaskRef, Run),
@@ -726,9 +722,7 @@ task_running(cast, {task_blocked_for_clock, TaskRef, TaskInfo, ObjectState,
                    Min, Max},
                 Data=#data{task_infos=TaskInfos,object_states=ObjectStates,
                            dcref=DCRef}) ->
-    %% TODO unify the next two lines
-    dc:task_waiting_for_clock(DCRef, TaskRef, self(), Min, Max),
-    dc:cog_blocked(DCRef, self()),
+    dc:cog_blocked_for_clock(DCRef, self(), TaskRef, Min, Max),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     %% We never pass TaskInfo back to the process, so we can mutate it here.
@@ -813,7 +807,7 @@ task_blocked(cast, {task_runnable, TaskRef, ConfirmTask},
              Data=#data{running_task=TaskRef, task_infos=TaskInfos,
                         object_states=ObjectStates, dcref=DCRef}) ->
     dc:cog_unblocked(DCRef, self()),
-    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     send_token(token, TaskRef, TaskInfos, ObjectStates),
     {next_state, task_running, Data};
@@ -822,7 +816,7 @@ task_blocked(cast, {task_runnable, TaskRef, ConfirmTask},
                         runnable_tasks=Run, new_tasks=New,
                         task_infos=TaskInfos, dcref=DCRef})
   when TaskRef /= T ->
-    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     {next_state, task_blocked,
      Data#data{waiting_tasks=gb_sets:del_element(TaskRef, Wai),
@@ -902,7 +896,7 @@ waiting_for_gc_stop(cast, {task_runnable, TaskRef, ConfirmTask},
                                new_tasks=New, task_infos=TaskInfos,
                                dcref=DCRef}) ->
     dc:cog_active(DCRef, self()),
-    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     {keep_state,
      Data#data{waiting_tasks=gb_sets:del_element(TaskRef, Wai),
@@ -938,9 +932,7 @@ waiting_for_gc_stop(cast, {task_blocked, R, TaskInfo, ObjectState},
 waiting_for_gc_stop(cast, {task_blocked_for_clock, R, TaskInfo, ObjectState,
                           Min, Max},
                     Data=#data{running_task=R,task_infos=TaskInfos, object_states=ObjectStates,dcref=DCRef,dc=DC}) ->
-    %% TODO unify the next two lines
-    dc:task_waiting_for_clock(DCRef, R, self(), Min, Max),
-    dc:cog_blocked(DCRef, self()),
+    dc:cog_blocked_for_clock(DCRef, self(), R, Min, Max),
     gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
@@ -997,7 +989,7 @@ in_gc(cast, {task_runnable, TaskRef, ConfirmTask},
                  runnable_tasks=Run,waiting_tasks=Wai, new_tasks=New,
                  task_infos=TaskInfos, dcref=DCRef}) ->
     dc:cog_active(DCRef, self()),
-    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     NextState2=case TaskRef == RunningTask of
                    %% We will send token when receiving `resume_world'
@@ -1115,7 +1107,7 @@ waiting_for_references(cast, {task_runnable, TaskRef, ConfirmTask},
                  runnable_tasks=Run,waiting_tasks=Wai, new_tasks=New,
                  task_infos=TaskInfos, dcref=DCRef}) ->
     dc:cog_active(DCRef, self()),
-    maybe_send_unblock_confirmation(DCRef, TaskRef, TaskInfos),
+    maybe_send_unblock_confirmation(DCRef, self(), TaskRef, TaskInfos),
     maybe_send_runnable_confirmation(ConfirmTask),
     NextState2=case TaskRef == RunningTask of
                    %% We will send token when receiving `resume_world'
