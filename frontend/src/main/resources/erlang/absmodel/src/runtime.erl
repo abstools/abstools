@@ -151,13 +151,13 @@ end_mod(TaskRef, InfluxdbEnabled) ->
     coverage:write_files(),
     cog_monitor:waitfor(),
     gc:stop(),
-    clock:stop(),
     coverage:stop(),
     case InfluxdbEnabled of
         true -> influxdb:stop();
         _ -> ok
     end,
     cog_monitor:stop(),
+    clock:stop(),
     RetVal.
 
 

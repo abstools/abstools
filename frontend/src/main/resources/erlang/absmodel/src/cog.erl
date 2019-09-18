@@ -608,13 +608,12 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
 no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{dcref=DCRef, dc=DC, new_tasks=Tasks,
                                task_infos=TaskInfos}) ->
-    %% The new task will send `task_runnable' soon; preemptively block time
-    %% advance.
     dc:cog_active(DCRef, self()),
     NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-                 task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
+                 task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+     {next_event, cast, {task_runnable, NewTask, none}}};
 no_task_schedulable(cast, stop_world, Data=#data{dc=DC}) ->
     gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
@@ -700,7 +699,8 @@ task_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,C
     NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+     {next_event, cast, {task_runnable, NewTask, none}}};
 task_running(cast, {task_blocked, TaskRef, TaskInfo, ObjectState},
                 Data=#data{task_infos=TaskInfos,object_states=ObjectStates,
                            dcref=DCRef}) ->
@@ -714,7 +714,7 @@ task_running(cast, {task_blocked, TaskRef, TaskInfo, ObjectState},
         runnable ->
             {next_state, task_blocked,
              Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos},
-             {next_event, {task_runnable, TaskRef, none}}};
+             {next_event, cast, {task_runnable, TaskRef, none}}};
         _ -> {next_state, task_blocked,
               Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}}
     end;
@@ -828,7 +828,8 @@ task_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,C
     NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+    {next_event, cast, {task_runnable, NewTask, none}}};
 task_blocked(cast, stop_world, Data=#data{dc=DC}) ->
     gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=task_blocked}};
@@ -908,7 +909,8 @@ waiting_for_gc_stop(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,N
     NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+     {next_event, cast, {task_runnable, NewTask, none}}};
 waiting_for_gc_stop(cast, {task_blocked, R, TaskInfo, ObjectState},
                     Data=#data{running_task=R,task_infos=TaskInfos,
                                object_states=ObjectStates,dc=DC,dcref=DCRef}) ->
@@ -924,7 +926,7 @@ waiting_for_gc_stop(cast, {task_blocked, R, TaskInfo, ObjectState},
             {next_state, in_gc,
              Data#data{next_state_after_gc=task_blocked,
                        object_states=NewObjectStates, task_infos=NewTaskInfos},
-             {next_event, {task_runnable, R, none}}};
+             {next_event, cast, {task_runnable, R, none}}};
         _ -> {next_state, in_gc,
               Data#data{next_state_after_gc=task_blocked,
                         object_states=NewObjectStates, task_infos=NewTaskInfos}}
@@ -1023,7 +1025,8 @@ in_gc(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
     NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+     {next_event, cast, {task_runnable, NewTask, none}}};
 in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                                      running_task=RunningTask,
                                      runnable_tasks=Run, polling_tasks=Pol,
@@ -1145,7 +1148,8 @@ waiting_for_references(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sende
     {keep_state,
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                task_infos=maps:put(NewTask, NewInfo, TaskInfos),
-               references=ReferenceRecord#{waiting := [NewTask | Tasks]}}};
+               references=ReferenceRecord#{waiting := [NewTask | Tasks]}},
+     {next_event, cast, {task_runnable, NewTask, none}}};
 waiting_for_references(cast, Event, Data) ->
     handle_cast(Event, waiting_for_references, Data);
 waiting_for_references(info, {'EXIT',TaskRef,_Reason},

@@ -34,8 +34,6 @@ init(TaskType,Cog,Future,CalleeObj,Args,Info)->
     %% init RNG, recipe recommended by the Erlang documentation.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
-    %% TODO: make new tasks runnable immediately in cog; remove this call
-    cog:task_is_runnable(Cog, self()),
     wait_for_token(Cog, InnerState),
     Val=TaskType:start(InnerState),
     cog:return_token(Cog,self(),done,get(task_info),get(this)),
