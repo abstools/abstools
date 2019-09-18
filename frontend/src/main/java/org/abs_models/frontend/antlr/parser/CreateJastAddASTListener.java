@@ -342,7 +342,15 @@ public class CreateJastAddASTListener extends ABSBaseListener {
 
     // Interfaces
     @Override public void exitInterface_decl(ABSParser.Interface_declContext ctx) {
-        setV(ctx, new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), l(ctx.e), l(ctx.methodsig())));
+        InterfaceDecl i = new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), l(ctx.e), l(ctx.methodsig()));
+        if (!i.hasExtendedInterfaceUse() && !i.getName().equals("Object")) {
+            InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List());
+            // set position such that SourcePosition.findPosition() does not
+            // find this node
+            s.setPosition(-1, 0, -1, 0);
+            i.addExtendedInterfaceUseNoTransform(s);
+        }
+        setV(ctx, i);
     }
 
     @Override public void exitMethodsig(ABSParser.MethodsigContext ctx) {
@@ -363,6 +371,13 @@ public class CreateJastAddASTListener extends ABSBaseListener {
                 b.addStmt(v(s));
             }
             c.setInitBlock(b);
+        }
+        if (!c.hasImplementedInterfaceUse()) {
+            InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List());
+            // set position such that SourcePosition.findPosition() does not
+            // find this node
+            s.setPosition(-1, 0, -1, 0);
+            c.addImplementedInterfaceUseNoTransform(s);
         }
     }
 

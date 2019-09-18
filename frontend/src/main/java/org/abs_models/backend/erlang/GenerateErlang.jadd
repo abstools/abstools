@@ -342,11 +342,19 @@ aspect GenerateErlang {
         dc.generateErlangCode(ecs, vars);
       }
       if (scheduler != null && !isNewDC) {
+          String separator = " ";
           FnApp schedulerfun = (FnApp)scheduler;
           FunctionDecl decl = (FunctionDecl)(schedulerfun.getDecl());
-          ecs.print(", fun ");
+          ecs.print(", { fun ");
           ecs.print(ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
-          ecs.print("/" + (decl.getNumParam() + 2));
+          ecs.print("/" + (decl.getNumParam() + 2) + ", [");
+          for (PureExp p : schedulerfun.getParams()) {
+              // If we survive the type checker, all params will be of class
+              // `VarOrFieldUse' (see SchedulerChecker.java)
+              ecs.print(separator + ((VarOrFieldUse)p).getName());
+              separator = ", ";
+          }
+          ecs.print(" ] }");
       }
       ecs.format("),%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars,true);

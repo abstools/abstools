@@ -228,4 +228,9 @@ public class ObjectTests extends SemanticTests {
     public void implicit_unit_return() {
         assertEvalTrue(new File("abssamples/backend/ObjectTests/implicit_unit_return.abs"));
     }
+    @Test
+    public void common_superinterface() {
+        Assume.assumeTrue("This test only works with downcast support", driver.supportsDowncasting());
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/common_superinterface.abs"));
+    }
 }
