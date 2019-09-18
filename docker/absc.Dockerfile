@@ -1,11 +1,15 @@
 FROM erlang:21-alpine AS jdk-erlang
-RUN apk --update add openjdk8 bash && rm -rf /var/cache/apk/*
+RUN apk --update add \
+        bash \
+        nss \
+        openjdk8 \
+        && rm -rf /var/cache/apk/*
 
 FROM jdk-erlang AS builder
 COPY ./ /appSrc/
 WORKDIR /appSrc
 RUN chmod +x gradlew \
-    && ./gradlew frontend:assemble
+    && ./gradlew --no-daemon frontend:plainJar
 
 # A dockerfile for running the `absc' command-line compiler
 #

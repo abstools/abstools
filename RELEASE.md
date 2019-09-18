@@ -1,5 +1,7 @@
 # Release Checklist
 
+## Pre-release checks
+
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
@@ -15,6 +17,12 @@
   - check if all tools in collaboratory are installed
   - check that "Hello World" ABS program can start with Erlang simulator
   - check that "Hello World" ABS program doesn't crash SACO / CostABS
+
+- Check that the manual looks ok
+
+  - `open abs-docs/build/asciidoc/html5/index.html`
+
+## Release steps
 
 - Update `CHANGELOG.md`
   - Rename section `[Unreleased]` to `[x.y.z] - yyyy-mm-dd`
@@ -47,29 +55,45 @@
 
 - Add release tag `vx.y.z` with the same message as the commit message.
 
-- push release commit (`git push`) and tag (`git push --tags`)
+- run `./gradlew clean assemble` to update version information for compiler,
+  manual
+  
+  - check the output of `absc -V`; it should output the new version number
+  - check the header of `abs-docs/build/asciidoc/html5/index.html`, it should
+    contain the new version number
 
-- upload `absfrontend.jar`
+- push release commit (`git push`)
 
-  - github will have created a release at
-    [https://github.com/abstools/abstools/releases] with the source
-    tree archives.  Click "Edit" on the release and drag
-    `frontend/dist/absfrontend.jar` into the area that says "Attach
-    binaries by dropping them here or selecting them.".  (Automating
-    this step would involve handling github API keys, so we keep it
-    manual.)
+- update [https://abs-models.org/manual/]: copy the content of
+    `abs-docs/build/asciidoc/html5/` into the `static/manual/` subdirectory of
+    the repository at [https://github.com/abstools/abs-models.org], then
+    redeploy the website
+
+- finalize release on github (automating these steps would involve handling
+  github API keys, so we keep it manual.)
+
+  - push release tag (`git push --tags`) -- this will start the CircleCI
+    docker build, which will download the new version of the website created
+    in the previous step
+
+  - upload `absfrontend.jar`: go to
+    [https://github.com/abstools/abstools/releases/tag/vx.y.z].  Click "Edit
+    Tag", drag `frontend/dist/absfrontend.jar` into the area that says "Attach
+    binaries by dropping them here or selecting them." and wait until the
+    upload is complete.  Click the green "Finalize Release" button.
+
+## Post-release steps
 
 - Send mail to `abs-announce@abs-models.org`, `abs-dev@abs-models.org`
 
-- Check that CircleCI built and uploaded the docker images; otherwise
-  build and upload (in the main `abstools` directory):
-  - `docker build -t abslang/collaboratory:x.y.z .`
+- Build and upload the docker images:
+  - `docker build -t abslang/collaboratory:x.y.z -f docker/collaboratory.Dockerfile .`
+  - `docker build -t abslang/collaboratory:latest -f docker/collaboratory.Dockerfile .`
+  - `docker build -t abslang/absc:x.y.z -f docker/absc.Dockerfile .`
+  - `docker build -t abslang/absc:latest -f docker/absc.Dockerfile .`
   - `docker push abslang/collaboratory:x.y.z`
-  - `docker build -t abslang/collaboratory:latest .`
   - `docker push abslang/collaboratory:latest`
-  - `docker build -t abslang/absc:x.y.z -f frontend/Dockerfile .`
   - `docker push abslang/absc:x.y.z`
-  - `docker build -t abslang/absc:latest -f frontend/Dockerfile .`
   - `docker push abslang/absc:latest`
 
 # Version numbering

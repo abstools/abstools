@@ -10,8 +10,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
@@ -33,16 +31,6 @@ public class PrologBackend extends Main {
 
     public static int awaitId = 0;
     public static boolean entriesMode = false;
-
-    public static void main(final String... args) {
-        // For backward compatilibity
-        List<String> argslist = Arrays.asList(args);
-        if (!argslist.contains("-prolog")) {
-            argslist.add("--prolog"); // use new-style "--prolog" argument
-        }
-        // dispatch via common code path
-        Absc.main(argslist.toArray(new String[0]));
-    }
 
     public static int doMain(Absc arguments) {
         int result = 0;

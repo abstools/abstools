@@ -1,19 +1,50 @@
-FROM php:5.6-apache-stretch
+FROM jojomi/hugo AS abs-models-site
+RUN apk --update add git
+RUN git clone https://github.com/abstools/abs-models.org.git /abs-models.org
+WORKDIR /abs-models.org
+RUN hugo -e collaboratory
+
+FROM erlang:21-alpine AS jdk-erlang
+RUN apk --update add \
+        bash \
+        nss \
+        openjdk8 \
+        && rm -rf /var/cache/apk/*
+
+FROM jdk-erlang AS builder
+COPY ./ /appSrc/
+WORKDIR /appSrc
+RUN chmod +x gradlew \
+    && ./gradlew --no-daemon frontend:plainJar
+
+FROM php:7.3-apache-stretch
 # docker build -t easyinterface .
 # docker run -d -p 8080:80 --name easyinterface easyinterface
+# docker exec -it easyinterface bash
 
 # The mkdir below due to https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
 RUN apt-get -y update \
- && mkdir -p /usr/share/man/man1 \
- && apt-get -y install unzip git gnupg libmcrypt-dev gawk graphviz netcat-openbsd apt-utils \
+ && apt-get -y install gnupg \
+ && rm -rf /var/lib/apt/lists/* \
  && curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# -o erlang-solutions_1.0_all.deb \
  && dpkg -i erlang-solutions_1.0_all.deb \
  && rm erlang-solutions_1.0_all.deb \
  && apt-get -y update \
- && apt-get -y install erlang \
- && apt-get -y install default-jre \
- && apt-get install -y libgl1 python-dev wget python-pip \
- && docker-php-ext-install mcrypt \
+ && mkdir -p /usr/share/man/man1 \
+ && apt-get -y install \
+        apt-utils \
+        default-jre-headless \
+        erlang-base \
+        erlang-nox \
+        gawk \
+        git \
+        graphviz \
+        libgl1 \
+        netcat-openbsd \
+        python-dev \
+        python-pip \
+        unzip \
+        wget \
  && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/abstools/absexamples.git /var/www/absexamples \
  && chmod -R 755 /var/www/absexamples \
@@ -49,13 +80,9 @@ Alias /absexamples \"/var/www/absexamples\"\n\
    AllowOverride All\n\
    Require all granted\n\
 </Directory>\n" > /etc/apache2/sites-available/easyinterface-site.conf \
- && echo "<html><head>\n\
-<META HTTP-EQUIV=\"Refresh\" Content=\"0; URL=/ei/clients/web\">\n\
-</head><body>\n\
-EasyInterface is at http://localhost:8888/ei/clients/web.\n\
-</body></html>\n" > /var/www/html/index.html \
  && a2ensite easyinterface-site \
- && a2enmod headers 
+ && a2enmod headers
+COPY --from=abs-models-site /abs-models.org/collaboratory/ /var/www/html/
 RUN curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && unzip saco.colab.zip -d /usr/local/lib \
  && rm saco.colab.zip \
@@ -67,14 +94,17 @@ RUN curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip \
  && rm sra.colab.zip \
  && curl http://costa.fdi.ucm.es/download/apet.colab.zip -\# -o apet.colab.zip \
  && unzip apet.colab.zip -d /usr/local/lib \
- && rm apet.colab.zip \
- && sed -i 's/abs.backend.prolog.PrologBackend/org.abs_models.backend.prolog.PrologBackend/g' /usr/local/lib/saco/bin/generateProlog \
- && sed -i 's/abs.backend.prolog.PrologBackend/org.abs_models.backend.prolog.PrologBackend/g' /usr/local/lib/apet/bin/generateProlog
+ && rm apet.colab.zip
+# patch scripts until fixed upstream
+RUN sed -i 's/ -outline / --outline /g' /var/www/easyinterface/server/bin/envisage/outline/absoutline.sh
+RUN sed -i 's/ -erlang / --erlang /g' /var/www/easyinterface/server/bin/envisage/simulator/erlangbackend.sh
+RUN sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/saco/bin/generateProlog
+RUN sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/apet/bin/generateProlog
 RUN mkdir -p /usr/local/lib/frontend
-COPY frontend/dist /usr/local/lib/frontend/dist
-COPY frontend/bin /usr/local/lib/frontend/bin
-COPY frontend/lib /usr/local/lib/frontend/lib
-RUN chmod -R a+rx /usr/local/lib/frontend
+COPY --from=builder /appSrc/frontend/bin/ /usr/local/lib/frontend/bin
+COPY --from=builder /appSrc/frontend/dist/absfrontend.jar /usr/local/lib/frontend/dist/absfrontend.jar
+RUN chmod -R a+r /usr/local/lib/frontend
+RUN chmod -R a+x /usr/local/lib/frontend/bin
 
 
 ###############

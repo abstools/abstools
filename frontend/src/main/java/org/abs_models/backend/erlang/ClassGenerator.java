@@ -3,20 +3,27 @@
  */
 package org.abs_models.backend.erlang;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.abs_models.backend.common.CodeStream;
-import org.abs_models.backend.erlang.ErlUtil.Mask;
-import org.abs_models.frontend.ast.*;
-import org.abs_models.frontend.typechecker.DataTypeType;
-import org.abs_models.frontend.typechecker.Type;
-
 import com.google.common.collect.Iterables;
 
-import java.nio.charset.Charset;
-
+import org.abs_models.backend.common.CodeStream;
+import org.abs_models.backend.erlang.ErlUtil.Mask;
+import org.abs_models.frontend.ast.CaseBranchStmt;
+import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.FieldDecl;
+import org.abs_models.frontend.ast.InterfaceDecl;
+import org.abs_models.frontend.ast.InterfaceTypeUse;
+import org.abs_models.frontend.ast.MethodImpl;
+import org.abs_models.frontend.ast.MethodSig;
+import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.TypedVarOrFieldDecl;
+import org.abs_models.frontend.typechecker.DataTypeType;
+import org.abs_models.frontend.typechecker.Type;
 import org.apache.commons.io.output.WriterOutputStream;
 
 /**
@@ -75,6 +82,10 @@ public class ClassGenerator {
             ecs.incIndent();
             Vars vars = new Vars();
             m.getBlock().generateErlangCode(ecs, vars);
+            if (!m.hasReturnStmt()) {
+                ecs.println(",");
+                ecs.println("dataUnit");
+            }
             ecs.println();
             ecs.decIndent().println("catch");
             ecs.incIndent();

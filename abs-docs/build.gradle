@@ -1,5 +1,5 @@
 plugins {
-    id "org.asciidoctor.convert" version "1.5.10"
+    id "org.asciidoctor.convert" version "1.6.0"
 }
 
 asciidoctor {
@@ -13,7 +13,7 @@ asciidoctor {
         }
     }
     options doctype: 'book'
-    attributes 'doc-version': version,
+    attributes 'revnumber': versionDetails().lastTag + "-" + versionDetails().commitDistance + "-" + versionDetails().gitHash,
         'toc-position': "right",
         toc2: "true",
         numbered: "true",

@@ -506,6 +506,16 @@ aspect TypeChecker {
      */
     public Type MethodImpl.getType() { return getMethodSig().getType(); }
 
+    public boolean MethodImpl.hasReturnStmt() {
+        Block b = getBlock();
+        if (b.getNumStmt() > 0) {
+            Stmt lastStmt = b.getStmt(b.getNumStmt() - 1);
+            return lastStmt instanceof ReturnStmt;
+        } else {
+            return false;
+        }
+    }
+
     public void MethodImpl.typeCheck(SemanticConditionList e) {
         Block b = getBlock();
         MethodSig sig = getMethodSig();
@@ -517,22 +527,13 @@ aspect TypeChecker {
         }
 
         Type lastType = getMethodSig().getReturnType().getType();
-        if (b.getNumStmt() > 0) {
-            Stmt lastStmt = b.getStmt(b.getNumStmt()-1);
-            if (!(lastStmt instanceof ReturnStmt)) {
-                if (!lastType.isUnitType()) {
-                    // need return stmt
-                    e.add(new TypeError(lastStmt,ErrorMessage.METHOD_IMPL_MISSING_RETURN_STMT, sig.getName()));
-                }
-            } else {
-                ReturnStmt rs = (ReturnStmt) lastStmt;
-                Type rht = rs.getRetExp().getType();
-                if (!rht.isUnknownType()) {
-                    // if UnknownType, ReturnStmt.typeCheck will notice
-                    if (!rht.isAssignableTo(lastType)) {
-                        e.add(new TypeError(rs,ErrorMessage.WRONG_RETURN_STMT_TYPE,rht.toString(),sig.getName(),lastType.toString()));
-                    }
-                }
+        if (hasReturnStmt()) {
+            Stmt lastStmt = b.getStmt(b.getNumStmt() - 1);
+            ReturnStmt rs = (ReturnStmt) lastStmt;
+            Type rht = rs.getRetExp().getType();
+            // if UnknownType, ReturnStmt.typeCheck will report an error already
+            if (!rht.isUnknownType() && !rht.isAssignableTo(lastType)) {
+                e.add(new TypeError(rs,ErrorMessage.WRONG_RETURN_STMT_TYPE,rht.toString(),sig.getName(),lastType.toString()));
             }
         } else {
             if (!lastType.isUnitType()) {
