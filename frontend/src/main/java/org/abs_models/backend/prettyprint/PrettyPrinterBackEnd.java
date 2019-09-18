@@ -41,7 +41,6 @@ public class PrettyPrinterBackEnd extends Main {
         if (arguments.prettyprint_keepstdlib) {
             model.doPrettyPrintStdLib = true;
         }
-        analyzeFlattenAndRewriteModel(model);
         if (!arguments.prettyprint_force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
             printErrorMessage();
             return 1;

@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import org.abs_models.backend.common.InternalBackendException;
+import org.abs_models.common.WrongProgramArgumentException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -28,7 +29,7 @@ public class SourceCodePositionTest extends DeltaTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void test() throws IOException, InternalBackendException {
+    public void test() throws IOException, InternalBackendException, DeltaModellingException, WrongProgramArgumentException {
 
         File fcore = folder.newFile("core.abs");
         File fd1 = folder.newFile("delta1.abs");

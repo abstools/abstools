@@ -61,6 +61,9 @@
   - check the output of `absc -V`; it should output the new version number
   - check the header of `abs-docs/build/asciidoc/html5/index.html`, it should
     contain the new version number
+  - build with maven (`cd abs-docs ; mvn install`) and check that
+    `abs-docs/target/html/index.html` looks correct
+    (http://docs.abs-models.org still uses this build system)
 
 - push release commit (`git push`)
 

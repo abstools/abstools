@@ -26,8 +26,8 @@ public class PrettyPrinterTests extends ABSTest {
     @Test
     public void prettyPrinterAddDataTypeModifierTest() throws Exception{
         String deltaDecl = "delta Foo;adds data States=F|B|I|M;";
-        DeltaDecl d = (DeltaDecl) Main
-            .parseUnit(null, new StringReader(deltaDecl), true).getDeltaDecl(0);
+        DeltaDecl d = (DeltaDecl) parseString(deltaDecl).getCompilationUnit(1)
+            .getDeltaDecl(0);
         assertEqualsAndParses(deltaDecl, d);
     }
 
@@ -37,7 +37,7 @@ public class PrettyPrinterTests extends ABSTest {
         Model m = assertParse(deltaDecl, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING);
         assertEqualsAndParses(deltaDecl, m);
     }
-    
+
     @Test
     public void prettyPrinterListLiteralTest() throws Exception {
         String ms = "module Test; { List<Int> x = list[1, 2, 3]; }";

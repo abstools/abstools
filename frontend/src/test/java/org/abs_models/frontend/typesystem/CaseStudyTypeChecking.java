@@ -75,7 +75,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
         File srcFolderF = new File(srcFolder);
         assertTrue(srcFolder,srcFolderF.exists());
         Main main = new Main();
-        Model m = main.parseFiles(false, findAbsFiles(srcFolderF));
+        Model m = main.parse(findAbsFiles(srcFolderF));
 
         if (m != null) {
             m.evaluateAllProductDeclarations();

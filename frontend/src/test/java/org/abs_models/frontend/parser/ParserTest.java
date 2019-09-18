@@ -9,9 +9,11 @@ import java.io.StringReader;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.CompilationUnit;
 import org.abs_models.frontend.ast.DeltaDecl;
+import org.abs_models.frontend.ast.Model;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.fail;
 
 public class ParserTest extends FrontendTest {
 
@@ -364,21 +366,19 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void entry_deltadecl() throws Exception {
-        CompilationUnit u = Main.parseUnit(null, new StringReader("delta Mon;"), false);
+        CompilationUnit u = parseString("delta Mon;").getCompilationUnit(1);
         DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);
         Assert.assertNotNull(d);
     }
 
-    @Test (expected = ParseException.class)
     public void deltaNameLowerCaseTest() throws Exception{
         String deltaDecl = "delta foo;";
-        Main.parseUnit(null, new StringReader(deltaDecl), true);
+        assertParseError(deltaDecl);
     }
 
-    @Test(expected = ParseException.class)
     public void testIllegalCharacter() throws Exception {
         String functionDecl = "module LexicalTest; def Bool æåëßfë() = True;";
-        Main.parseUnit(null, new StringReader(functionDecl), true);
+        assertParseError(functionDecl);
     }
 
     @Test
@@ -432,11 +432,6 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void callPartialFunction() {
-        assertParse("{ f()(); }");
-        assertParse("{ f_1()(); }");
-        assertParse("{ f()(x); }");
-        assertParse("{ f()(g(x)); }");
-        assertParse("{ f()(x, y); }");
         assertParse("{ f(g)(); }");
         assertParse("{ f(g, h)(); }");
         assertParse("{ f(some_func, other_func)(); }");
@@ -471,5 +466,19 @@ public class ParserTest extends FrontendTest {
     @Test
     public void anonymousFunctionNoParamBraces() {
         assertParseError("{ f(Int i => i)();}");
+    }
+
+    /**
+     * Before commit b79ac958b150bda90acb3c095bba0c30d97df5e4 this caused an
+     * error, since list literals were not considered when determining the
+     * free variables within an anonymous function (closure).
+     */
+    @Test
+    public void anonymousFunctionFreeVarsInList() throws Exception {
+        final String fileName = "abssamples/ClosureWithListLiterals.abs";
+        final Model m = assertParseFileOk(fileName);
+
+        if (m.hasParserErrors())
+            fail(m.getParserErrors().get(0).toString());
     }
 }

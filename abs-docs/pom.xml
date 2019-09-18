@@ -65,6 +65,7 @@
             <idseparator>-</idseparator>
             <setanchors>true</setanchors>
             <stylesheet>asciidoctor.css</stylesheet>
+            <includedir>${project.docs.source}</includedir>
           </attributes>
         </configuration>
         <executions>

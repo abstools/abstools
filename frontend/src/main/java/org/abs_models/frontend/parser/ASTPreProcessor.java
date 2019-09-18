@@ -4,6 +4,7 @@
  */
 package org.abs_models.frontend.parser;
 
+import org.abs_models.common.Constants;
 import org.abs_models.frontend.ast.*;
 
 import java.util.Map;
@@ -11,23 +12,96 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
- * Preprocesses the AST directly after it has been parsed, before any name and
- * type analysis.  Typically, syntactic sugar is eliminated in this phase.
+ * This class contains code to preprocess the AST directly after it has been
+ * parsed, before any name and type analysis.  Typically, syntactic sugar is
+ * eliminated in this phase.
  *
  * Note that we might not have a full model yet - consider using NoTransform()
  * for accessors.
  *
- * Currently the following things are done:
- *
- *  - selector names of constructors are transformed to functions
- *
  * @author Jan Schäfer
+ * @author Rudi Schlatte
  *
  */
 public class ASTPreProcessor {
 
     public final static String FUNCTIONSELECTOR = "selector";
 
+    /**
+     * Preprocess string literals coming from the parser.
+     *
+     * Remove leading and trailing " and replace character escape sequences
+     * with the designated character.
+     *
+     * @argument tokenText The string token produced by the parser
+     * @return a fresh string suitable as the content of a StringLiteral
+     */
+    public final static String preprocessStringLiteral(String tokenText) {
+        StringBuffer s = new StringBuffer(tokenText.length() - 2);
+        // i = 1..len-1 to skip beginning and ending \" of the stringliteral
+        for (int i = 1; i < tokenText.length() - 1; i++) {
+            char c = tokenText.charAt(i);
+            if (c == '\\') {
+                i++;
+                c = tokenText.charAt(i);
+                switch (c) {
+                case 'n' : s.append('\n'); break;
+                case 'r' : s.append('\r'); break;
+                case 't' : s.append('\t'); break;
+                default : s.append(c); break;
+                }
+            } else {
+                s.append(c);
+            }
+        }
+        return s.toString();
+    }
+
+    /**
+     * Preprocess template string literals coming from the parser.
+     *
+     * Remove leading and trailing ` / $ characters and replace \` and \$
+     * sequences with single ` / $.  All other literal \ characters are kept.
+     *
+     * @argument tokenText The string token produced by the parser
+     * @return a fresh string suitable as the content of a StringLiteral
+     */
+    public final static String preprocessTemplateStringLiteral(String tokenText) {
+        StringBuffer s = new StringBuffer(tokenText.length() - 2);
+        // i = 1..len-1 to skip beginning and ending ` or $ of the stringliteral
+        for (int i = 1; i < tokenText.length() - 1; i++) {
+            char c = tokenText.charAt(i);
+            if (c == '\\') {
+                i++;
+                char c1 = tokenText.charAt(i); // safe since we only iterate to len-1
+                switch (c1) {
+                case '`' : s.append('`'); break;   // escaped end (\`)
+                case '$' : s.append('$'); break;   // escaped interpolation delimiter (\$)
+                // do not drop backslash if it doesn't escape any of the above:
+                default : s.append('\\'); s.append(c1); break;
+                }
+            } else {
+                s.append(c);
+            }
+        }
+        return s.toString();
+    }
+
+    /**
+     * Perform various preprocessing steps after creating an AST.  This
+     * routine is typically called after parsing but before type-checking.
+     * Currently the following things are done:
+     *
+     * - Transform selector names of constructors to functions
+     * - Import the standard library in modules that don’t mention it
+     * - Add "implements Object" for classes that don’t implement any interface
+     * - Add "extends Object" for interfaces that don’t extend any interface
+     * - Add default "throw PatternMatchFailException" behavior to case
+     *   statements
+     *
+     * @argument unit - the CompilationUnit to preprocess
+     * @return the same object as passed in the argument unit
+     */
     public CompilationUnit preprocess(CompilationUnit unit) {
         for (ModuleDecl d : unit.getModuleDecls()) {
             preprocess(d);
@@ -36,12 +110,76 @@ public class ASTPreProcessor {
     }
 
     private void preprocess(ModuleDecl moduleDecl) {
+        // Add import clauses if module does not import anything from standard
+        // library
+        if (!Constants.STDLIB_NAME.equals(moduleDecl.getName())) {
+            boolean needsImport = true;
+            for (Import i : moduleDecl.getImports()) {
+                if (i instanceof StarImport
+                    && ((StarImport)i).getModuleName().equals(Constants.STDLIB_NAME))
+                    needsImport = false;
+                else if (i instanceof FromImport
+                         && ((FromImport)i).getModuleName().equals(Constants.STDLIB_NAME))
+                    needsImport = false;
+            }
+            if (needsImport) {
+                moduleDecl.getImports().add(new StarImport(Constants.STDLIB_NAME));
+            }
+        }
+        if (moduleDecl.hasBlock()) {
+            createCaseStmtDefaultBranchesForChildren(moduleDecl.getBlockOptNoTransform());
+        }
         for (Decl decl : moduleDecl.getDecls()) {
             if (decl.isDataType()) {
+                // Add selector functions, e.g., functions fst and snd for
+                // datatype data Pair<A, B> = Pair(A fst, B snd);
                 DataTypeDecl dtd = (DataTypeDecl) decl;
                 for (FunctionDecl fd : createSelectorFunctions(dtd, false)) {
                     moduleDecl.addDeclNoTransform(fd);
                 }
+            } else if (decl.isClass()) {
+                createCaseStmtDefaultBranchesForChildren(decl);
+                // If decl implements no interface: implement Object
+                ClassDecl c = (ClassDecl)decl;
+                if (!c.hasImplementedInterfaceUse()) {
+                    InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List<Annotation>());
+                    // set position such that SourcePosition.findPosition()
+                    // does not find this node
+                    s.setPosition(-1, 0, -1, 0);
+                    c.addImplementedInterfaceUseNoTransform(s);
+                }
+            } else if (decl.isInterface()) {
+                // If decl extends no interface: extend Object
+                InterfaceDecl i = (InterfaceDecl)decl;
+                if (!i.hasExtendedInterfaceUse() && !i.getName().equals("Object")) {
+                    // KLUDGE: this breaks if we manage to define an interface
+                    // called "Object" in some other package.
+                    InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List<Annotation>());
+                    // set position such that SourcePosition.findPosition()
+                    // does not find this node
+                    s.setPosition(-1, 0, -1, 0);
+                    i.addExtendedInterfaceUseNoTransform(s);
+                }
+            }
+        }
+    }
+
+    private void createCaseStmtDefaultBranchesForChildren(ASTNode<?> n) {
+        for (CaseStmt cs : n.findChildren(CaseStmt.class)) {
+            List<CaseBranchStmt> branches = cs.getBranchListNoTransform();
+            CaseBranchStmt lastbranch = null;
+            if (branches.getNumChildNoTransform() > 0) {
+                lastbranch = branches.getChildNoTransform(branches.getNumChildNoTransform() - 1);
+            }
+            if (lastbranch == null || !(lastbranch.getLeftNoTransform() instanceof UnderscorePattern)) {
+                // Add default branch that throws PatternMatchFailException.
+                // See "Behavior of non-exhaustive case statement: no branch
+                // match = skip or error?" on abs-dev on Jan 25-26, 2017
+                Block block = new Block(new List<>(), new List<>());
+                block.addStmt(new ThrowStmt(new List<>(),
+                                            new DataConstructorExp("PatternMatchFailException",
+                                                                   new List<>())));
+                cs.addBranchNoTransform(new CaseBranchStmt(new UnderscorePattern(), block));
             }
         }
     }
@@ -207,7 +345,7 @@ public class ASTPreProcessor {
     }
 
     /**
-     * recursively set the position of this ast node and its childs
+     * recursively set the position of this ast node and its children
      */
     private void setAllPositionsFromNode(ASTNode<?> node, ASTNode<?> fromNode) {
         node.setPositionFromNode(fromNode);

@@ -1,0 +1,15 @@
+module ClosureWithListLiterals;
+
+def List<Int> run(fun)() = fun();
+
+// This caused a compiler error before b79ac958b150bda90acb3c095bba0c30d97df5e4,
+// since a global function is constructed from the anonymous one, deducing the
+// parameters from all free variables. However, free variables inside list
+// literals have not been considered before.
+def List<Int> test(Int r0) = run(
+    () => list[r0]
+  )();
+
+{
+  println("Main block");
+}

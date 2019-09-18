@@ -104,6 +104,99 @@ Unit n() {
 <2> The process can query its current deadline; if no deadline is given, `deadline` returns `InfDuration`
 <3> `d2` will be two time units less than `d1`
 
+.timeValue
+
+The function `timeValue` returns the value of its argument as a rational number.
+
+[source]
+----
+def Rat timeValue(Time t);
+----
+
+.timeDifference
+
+The function `timeDifference` returns the absolute value of the difference
+between its two arguments, i.e., a value greater or equal to `0`.
+
+[source]
+----
+def Rat timeDifference(Time t1, Time t2);
+----
+
+.timeLessThan
+
+The function `timeLessThan` returns `True` if the value of its first argument
+is less than the value of its second argument.
+
+[source]
+----
+def Bool timeLessThan(Time t1, Time t2);
+----
+
+
+.durationValue
+
+The function `durationValue` returns the value of its argument as a rational number.
+
+[source]
+----
+def Rat durationValue(Time t);
+----
+
+.isDurationInfinite
+
+The function `isDurationInfinite` returns `True` if its argument is `InfDuration`, `False` if its argument is `Duration(x)` for some value `x`.
+
+[source]
+----
+def Bool isDurationInfinite(Duration d);
+----
+
+.addDuration
+
+The function `addDuration` adds a duration to a time, returning a new value of
+type `Time`.  It is an error to pass `InfDuration` as an argument to this
+function.
+
+[source]
+----
+def Time addDuration(Time t, Duration d);
+----
+
+.subtractDuration
+
+The function `subtractDuration` subtracts a duration from a time, returning a
+new value of type `Time`.  It is an error to pass `InfDuration` as an argument
+to this function.
+
+[source]
+----
+def Time subtractDuration(Time t, Duration d);
+----
+
+.durationLessThan
+
+The function `durationLessThan` returns `True` if the value of its first
+argument is less than the value of its second argument.  In case both
+arguments are `InfDuration`, `durationLessThan` returns `False`.
+
+[source]
+----
+def Bool durationLessThan(Duration d1, Duration d2);
+----
+
+.subtractFromDuration
+
+The function `subtractFromDuration` subtracts a value `v` from a duration,
+returning a new value of type `Duration`.  In case its first argument is
+`InfDuration`, the result will also be `InfDuration`.
+
+[source]
+----
+def Duration subtractFromDuration(Duration d, Rat v);
+----
+
+
 === Statements
 
 The `duration(min, max)` statement blocks the cog of the executing process

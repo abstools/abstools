@@ -27,26 +27,28 @@ dependencies {
     implementation files('lib/choco-solver-2.1.1.jar')
     implementation 'org.eclipse.jdt.core.compiler:ecj:4.6.1'
     implementation 'org.apfloat:apfloat:1.8.3'
+    // our code fails to compile with newer versions of sat4j; leaving this at
+    // version 2.3.0 for now.
     implementation 'org.sat4j:org.sat4j.core:2.3.0'
     implementation 'org.sat4j:org.sat4j.pb:2.3.0'
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    compile 'info.picocli:picocli:3.9.5'
+    compile 'info.picocli:picocli:4.0.0'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.1")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.5.0")
     // Executes JUnit4 tests
-    testRuntime("org.junit.vintage:junit-vintage-engine:5.4.1")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.1'
+    testRuntime("org.junit.vintage:junit-vintage-engine:5.5.0")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.0'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:4.0.2'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest-core:2.1'
 
-    jastadd2 'org.jastadd:jastadd:2.3.2'
+    jastadd2 'org.jastadd:jastadd:2.3.3'
     antlr 'org.antlr:antlr4:4.7.2'
 }
 
@@ -136,6 +138,7 @@ task plainJar(type: Copy, dependsOn: jar) {
 clean {
     delete 'dist/'
 }
+assemble.dependsOn plainJar
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -168,9 +171,14 @@ task copyScripts(type: Copy) {
 clean {
     delete 'bin/'
 }
-
-assemble.dependsOn plainJar
 assemble.dependsOn copyScripts
+
+task generateAutocomplete(type: JavaExec) {
+    main = 'picocli.AutoComplete'
+    classpath = sourceSets.main.runtimeClasspath
+    args = [ '--force', '--completionScript', 'bin/bash/absc_completion.sh', 'org.abs_models.Absc' ]
+}
+assemble.dependsOn generateAutocomplete
 
 // test
 test {
@@ -178,6 +186,14 @@ test {
     useJUnitPlatform()
     ignoreFailures=true
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
+
+    // Allow dynamic exclusion of tests (based on https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)
+    // Usage: gradle test -PexcludeTests='**/ErlangModelApiTests*,**/ErlangExamplesTests*'
+    if (project.hasProperty('excludeTests')) {
+        project.property('excludeTests').split(',').each { 
+            exclude it
+        }
+    }
 }
 
 spotbugs {

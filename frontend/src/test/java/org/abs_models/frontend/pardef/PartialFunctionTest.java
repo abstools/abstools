@@ -34,14 +34,6 @@ public class PartialFunctionTest extends AbstractPartialFunctionTest {
     @Test
     public void functionCorrectlyExpanded() {
         testExpand(parse(
-            "f()();",
-            "def Int f()() = 1;"
-        ), "f_%s__");
-        testExpand(parse(
-            "f()(0);",
-            "def Int f()(Int i) = i;"),
-            "f_%s__");
-        testExpand(parse(
             "Int result = f(inc)(10);",
             incFunction(),
             "def Int f(f_1)(Int i) = f_1(i);"
@@ -57,10 +49,10 @@ public class PartialFunctionTest extends AbstractPartialFunctionTest {
     @Test
     public void definitionContainsParFnApp() {
         testExpand(parse(
-            "Int i = outer()(0);",
-            "def Int outer()(Int i) = inner()(i);",
-            "def Int inner()(Int i) = i * 2;"
-        ), "outer_%s__", "inner_%s__");
+            "Int i = outer(println)(0);",
+            "def Int outer(x)(Int i) = inner(x)(i);",
+            "def Int inner(x)(Int i) = i * 2;"
+        ), "outer_%s_println__", "inner_%s_println__");
     }
 
     @Test

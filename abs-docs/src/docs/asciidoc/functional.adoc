@@ -263,7 +263,7 @@ function call expressions, but have an additional prepended set of arguments.
 .Syntax
 |====
 | _ParFnAppExp_ ::= | _Identifier_ +
-  `(` [ _ParFnAppParam_ { `,` _ParFnAppParam_ } ] `)` +
+  `(` _ParFnAppParam_ { `,` _ParFnAppParam_ } `)` +
   `(` [ _PureExp_ { `,` _PureExp_ } ] `)`
 
 |  _ParFnAppParam_ ::= | _Identifier_ +
@@ -796,7 +796,7 @@ functional code, but cannot be passed as parameters to other partial
 functions.
 
 A partially defined function is called the same way as a normal function, with
-a separate argument list containing the functional arguments.  For recursion
+a separate, non-empty argument list containing the functional arguments.  For recursion
 inside the body of a partially defined function, omit the function parameter
 list.
 
@@ -804,7 +804,7 @@ list.
 .Syntax
 |====
 | _PartialFunctionDecl_  ::= | `def` _Type_ _SimpleIdentifier_ [ `<` _SimpleTypeIdentifier_ { `,` _SimpleTypeIdentifier_ } `>` ] +
-                        `(` [ _SimpleIdentifier_ { `,` _SimpleIdentifier_  } ]  `)` +
+                        `(` _SimpleIdentifier_ { `,` _SimpleIdentifier_  } `)` +
                         `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_  } ]  `)` +
                         `=` _PureExp_ `;`
 |====

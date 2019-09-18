@@ -4,7 +4,6 @@
  */
 package org.abs_models.frontend.antlr.parser;
 
-import org.abs_models.frontend.parser.ParseException;
 import org.abs_models.frontend.parser.ParserError;
 import org.abs_models.frontend.parser.SyntaxError;
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -14,15 +13,9 @@ import org.antlr.v4.runtime.Recognizer;
 public class SyntaxErrorCollector extends BaseErrorListener {
 
     private java.io.File filename = null;
-    boolean raiseExceptions = false;
 
-    public SyntaxErrorCollector(java.io.File file, boolean raiseExceptions) {
+    public SyntaxErrorCollector(java.io.File file) {
         this.filename = file;
-        this.raiseExceptions = raiseExceptions;
-    }
-
-    public void setRaiseExceptions(boolean raiseExceptions) {
-        this.raiseExceptions = raiseExceptions;
     }
 
     public java.util.List<ParserError> parserErrors
@@ -37,8 +30,5 @@ public class SyntaxErrorCollector extends BaseErrorListener {
         err.setFile(filename);
         parserErrors.add(err);
         // super.syntaxError(recognizer, offendingSymbol, line, charPositionInLine, msg, e);
-        if (raiseExceptions) {
-            throw new ParseException(err);
-        }
     }
 }

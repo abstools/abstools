@@ -9,6 +9,7 @@ import org.abs_models.frontend.antlr.parser.ABSParser.TraitApplyFragmentContext;
 import org.abs_models.frontend.antlr.parser.ABSParser.TraitNameFragmentContext;
 import org.abs_models.frontend.antlr.parser.ABSParser.TraitSetFragmentContext;
 import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.parser.ASTPreProcessor;
 import org.abs_models.frontend.parser.Main;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -109,45 +110,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     private StringLiteral makeStringLiteral(String tokenText) {
-        StringBuffer s = new StringBuffer(tokenText.length() - 2);
-        // i = 1..len-1 to skip beginning and ending \" of the stringliteral
-        for (int i = 1; i < tokenText.length() - 1; i++) {
-            char c = tokenText.charAt(i);
-            if (c == '\\') {
-                i++;
-                c = tokenText.charAt(i);
-                switch (c) {
-                case 'n' : s.append('\n'); break;
-                case 'r' : s.append('\r'); break;
-                case 't' : s.append('\t'); break;
-                default : s.append(c); break;
-                }
-            } else {
-                s.append(c);
-            }
-        }
-        return new StringLiteral(s.toString());
+        return new StringLiteral(ASTPreProcessor.preprocessStringLiteral(tokenText));
     }
 
     private PureExp makeTemplateStringLiteral(String tokenText) {
-        StringBuffer s = new StringBuffer(tokenText.length() - 2);
-        // i = 1..len-1 to skip beginning and ending \` of the stringliteral
-        for (int i = 1; i < tokenText.length() - 1; i++) {
-            char c = tokenText.charAt(i);
-            if (c == '\\') {
-                i++;
-                char c1 = tokenText.charAt(i);
-                switch (c1) {
-                case '`' : s.append('`'); break;   // escaped end (\`)
-                case '$' : s.append('$'); break;   // escaped interpolation delimiter (\$)
-                // do not drop backslash if it doesn't escape any of the above:
-                default : s.append('\\'); s.append(c1); break;
-                }
-            } else {
-                s.append(c);
-            }
-        }
-        return new StringLiteral(s.toString());
+        return new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(tokenText));
     }
 
     @Override public void enterCompilation_unit(ABSParser.Compilation_unitContext ctx) {
@@ -343,13 +310,6 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     // Interfaces
     @Override public void exitInterface_decl(ABSParser.Interface_declContext ctx) {
         InterfaceDecl i = new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), l(ctx.e), l(ctx.methodsig()));
-        if (!i.hasExtendedInterfaceUse() && !i.getName().equals("Object")) {
-            InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List());
-            // set position such that SourcePosition.findPosition() does not
-            // find this node
-            s.setPosition(-1, 0, -1, 0);
-            i.addExtendedInterfaceUseNoTransform(s);
-        }
         setV(ctx, i);
     }
 
@@ -371,13 +331,6 @@ public class CreateJastAddASTListener extends ABSBaseListener {
                 b.addStmt(v(s));
             }
             c.setInitBlock(b);
-        }
-        if (!c.hasImplementedInterfaceUse()) {
-            InterfaceTypeUse s = new InterfaceTypeUse("ABS.StdLib.Object", new List());
-            // set position such that SourcePosition.findPosition() does not
-            // find this node
-            s.setPosition(-1, 0, -1, 0);
-            c.addImplementedInterfaceUseNoTransform(s);
         }
     }
 
@@ -502,25 +455,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new ExpressionStmt(v(ctx.annotations()), v(ctx.exp())));
     }
     @Override public void exitCaseStmt(ABSParser.CaseStmtContext ctx) {
-        List<CaseBranchStmt> branches = l(ctx.casestmtbranch());
-        CaseBranchStmt lastbranch = null;
-        if (branches.getNumChildNoTransform() > 0) {
-            lastbranch = branches.getChildNoTransform(branches.getNumChildNoTransform() - 1);
-        }
-        if (lastbranch == null || !(lastbranch.getLeftNoTransform() instanceof UnderscorePattern)) {
-            // Add default branch that throws
-            // PatternMatchFailException.  See "Behavior of
-            // non-exhaustive case statement: no branch match = skip
-            // or error?" on abs-dev on Jan 25-26, 2017
-            Block block = new Block(new List<>(), new List<>());
-            block.addStmt(new ThrowStmt(new List<>(),
-                                        new DataConstructorExp("PatternMatchFailException",
-                                                               new List<>())));
-            CaseBranchStmt defaultBranch = new CaseBranchStmt(new UnderscorePattern(), block);
-            setASTNodePosition(ctx, defaultBranch);
-            branches.add(defaultBranch);
-        }
-        setV(ctx, new CaseStmt(v(ctx.annotations()), v(ctx.c), branches));
+        setV(ctx, new CaseStmt(v(ctx.annotations()), v(ctx.c), l(ctx.casestmtbranch())));
     }
     @Override public void exitCasestmtbranch(ABSParser.CasestmtbranchContext ctx) {
         Stmt body = v(ctx.stmt());

@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.abs_models.ABSTest;
 import org.abs_models.frontend.analyser.SemanticCondition;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.ClassDecl;
@@ -207,7 +208,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
                 generator);
         
         try {
-            model = Main.parseString(ABS_UNIT);
+            model = ABSTest.parseString(ABS_UNIT);
             generator = new ASTBasedABSTestRunnerGenerator(model);
             
             assertMatches(model, 
@@ -215,7 +216,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
                     equalTo(EMPTY_MAP), Boolean.TRUE,
                     generator);
             
-            model = Main.parseString(ABS_UNIT + TEST_CODE);
+            model = ABSTest.parseString(ABS_UNIT + TEST_CODE);
             generator = new ASTBasedABSTestRunnerGenerator(model);
             
             assertMatches(model, 
@@ -245,7 +246,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
     public final void testGenerateTestRunner() {
         final Model model;
         try {
-            model = Main.parseString(ABS_UNIT + TEST_CODE);
+            model = ABSTest.parseString(ABS_UNIT + TEST_CODE);
         } catch (Exception e) {
             throw new IllegalStateException("Cannot parse test code",e);
         }
@@ -257,7 +258,7 @@ public class ASTBasedABSTestRunnerGeneratorTest {
         String runner = stream.toString();
         
         try {
-            Model result = Main.parseString(ABS_UNIT + TEST_CODE + runner);
+            Model result = ABSTest.parseString(ABS_UNIT + TEST_CODE + runner);
             
             StringBuilder parseErrors = new StringBuilder();
             if (result.hasParserErrors()) {
