@@ -11,15 +11,15 @@
 
 
 lowlevelDeadline(_Cog) ->
-    ProcessInfo = get(process_info),
-    case ProcessInfo#process_info.proc_deadline of
+    TaskInfo = get(task_info),
+    case TaskInfo#task_info.proc_deadline of
         dataInfDuration -> -1;
         {dataDuration, Amount} ->
             Now=clock:now(),
-            {dataTime, CreateTime} = ProcessInfo#process_info.creation,
+            {dataTime, CreateTime} = TaskInfo#task_info.creation,
             %% negative result means infinite deadline so we clamp with 0 -
             %% this is arguably wrong but was demanded by the Java backend :(
-            Deadline=rationals:max(rationals:sub(Amount, rationals:sub(Now, CreateTime)), 0)
+            _Deadline=rationals:max(rationals:sub(Amount, rationals:sub(Now, CreateTime)), 0)
     end.
 
 currentms(_Cog)->
@@ -176,15 +176,15 @@ thisDC(#cog{dc=DC}) ->
     DC.
 
 %% ABS.Scheduler functions
-method(_Cog, #process_info{method=Method}) ->
+method(_Cog, #task_info{method=Method}) ->
     Method.
-arrival(_Cog, #process_info{arrival=Arrival}) ->
+arrival(_Cog, #task_info{arrival=Arrival}) ->
     Arrival.
-proc_deadline(_Cog, #process_info{proc_deadline=dataInfDuration}) ->
+proc_deadline(_Cog, #task_info{proc_deadline=dataInfDuration}) ->
     dataInfDuration;
-proc_deadline(_Cog, #process_info{
-                      proc_deadline={ dataDuration, OriginalDeadline},
-                      creation={dataTime, CreationTime}}) ->
+proc_deadline(_Cog, #task_info{
+                       proc_deadline={ dataDuration, OriginalDeadline},
+                       creation={dataTime, CreationTime}}) ->
     Time = clock:now(),
     Elapsed = rationals:sub(Time, CreationTime),
     NewDeadline = rationals:sub(OriginalDeadline, Elapsed),

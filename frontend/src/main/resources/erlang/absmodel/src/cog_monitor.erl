@@ -34,8 +34,8 @@
 -record(data,{main,            % this
               active,          % non-idle cogs
               idle,            % idle cogs
-              blocked,         % cogs with process blocked on future/resource
-              clock_waiting,   % [{Min,Max,Task,Cog}]: processes with their
+              blocked,         % cogs with task blocked on future/resource
+              clock_waiting,   % [{Min,Max,Task,Cog}]: tasks with their
                                % cog waiting for simulated time to advance,
                                % with minimum and maximum waiting time.
                                % Ordered by ascending maximum waiting time
@@ -371,7 +371,7 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,ke
         [{_Min, MTE, _Task, _Cog} | _] ->
             OldTime=clock:now(),
             Delta=rationals:sub(MTE, OldTime),
-            %% advance clock before waking up processes waiting for it
+            %% advance clock before waking up tasks waiting for it
             Clockresult=clock:advance(Delta),
             case Clockresult of
                 {ok, _} ->

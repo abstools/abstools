@@ -144,10 +144,10 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
     %%Start main task
     Cog=cog:start(),
 
-    ProcessInfo = #process_info{event=#event{type=schedule, local_id=main},
-                                method= <<".main"/utf8>>,
-                                this=null, destiny=null},
-    {ok, cog:add_main_task(Cog,[Module,self()], ProcessInfo)}.
+    TaskInfo = #task_info{event=#event{type=schedule, local_id=main},
+                          method= <<".main"/utf8>>,
+                          this=null, destiny=null},
+    {ok, cog:add_main_task(Cog,[Module,self()], TaskInfo)}.
 
 end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
     %%Wait for termination of main task and idle state

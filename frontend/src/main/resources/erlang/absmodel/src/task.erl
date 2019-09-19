@@ -31,12 +31,12 @@ start(Cog,TaskType,Future,CalleeObj,Args,Info)->
     spawn_link(task,init,[TaskType,Cog,Future,CalleeObj,Args,Info]).
 
 init(TaskType,Cog,Future,CalleeObj,Args,Info)->
-    put(process_info, Info#process_info{pid=self(),this=CalleeObj,destiny=Future}),
+    put(task_info, Info#task_info{pid=self(),this=CalleeObj,destiny=Future}),
     InnerState=TaskType:init(Cog,Future,CalleeObj,Args),
     %% init RNG, recipe recommended by the Erlang documentation.
     %% TODO: if we want reproducible runs, make seed a command-line parameter
     random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
-    cog:process_is_runnable(Cog, self()),
+    cog:task_is_runnable(Cog, self()),
     wait_for_token(Cog, InnerState),
     Val=TaskType:start(InnerState),
     release_token(Cog,done),
@@ -113,7 +113,7 @@ await_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
         {Min, Max} ->
             release_token(Cog, waiting, Min, Max),
             loop_for_clock_advance(Cog, Stack),
-            cog:process_is_runnable(Cog, self()),
+            cog:task_is_runnable(Cog, self()),
             wait_for_token(Cog, Stack);
         _ ->
             ok
@@ -122,9 +122,9 @@ await_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
 block_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
     case check_duration_amount(MMin, MMax) of
         {Min, Max} ->
-            cog:process_is_blocked_for_clock(Cog,self(), get(process_info), get(this), Min, Max),
+            cog:task_is_blocked_for_clock(Cog,self(), get(task_info), get(this), Min, Max),
             loop_for_clock_advance(Cog, Stack),
-            cog:process_is_runnable(Cog, self()),
+            cog:task_is_runnable(Cog, self()),
             wait_for_token(Cog, Stack);
         _ ->
             ok
@@ -139,9 +139,9 @@ block_for_resource(Cog=#cog{ref=CogRef}, DC, Resourcetype, Amount, Stack) ->
             case Result of
                 wait ->
                     Time=clock:distance_to_next_boundary(),
-                    cog:process_is_blocked_for_clock(Cog,self(), get(process_info), get(this), Time, Time),
+                    cog:task_is_blocked_for_clock(Cog,self(), get(task_info), get(this), Time, Time),
                     loop_for_clock_advance(Cog, Stack),
-                    cog:process_is_runnable(Cog, self()),
+                    cog:task_is_runnable(Cog, self()),
                     wait_for_token(Cog,Stack),
                     block_for_resource(Cog, DC, Resourcetype, Remaining, Stack);
                 ok ->
@@ -175,19 +175,19 @@ release_token(Cog,State)->
         {stop_world, _Sender} -> ok
     after 0 -> ok
     end,
-    ProcessInfo = #process_info{event=Event} = get(process_info),
-    cog:return_token(Cog, self(), State, ProcessInfo, get(this)),
+    TaskInfo = #task_info{event=Event} = get(task_info),
+    cog:return_token(Cog, self(), State, TaskInfo, get(this)),
     %% Flush the read/write sets when task suspends or terminates
     Event2 = Event#event{reads = ordsets:new(), writes = ordsets:new()},
-    put(process_info, ProcessInfo#process_info{event=Event2}).
+    put(task_info, TaskInfo#task_info{event=Event2}).
 
 release_token(Cog=#cog{ref=CogRef}, State, Min, Max) ->
     receive
         {stop_world, _Sender} -> ok
     after 0 -> ok
     end,
-    ProcessInfo = #process_info{event=Event} = get(process_info),
-    cog:return_token_suspended_for_clock(Cog, self(), State, ProcessInfo, get(this), Min, Max),
+    TaskInfo = #task_info{event=Event} = get(task_info),
+    cog:return_token_suspended_for_clock(Cog, self(), State, TaskInfo, get(this), Min, Max),
     %% Flush the read/write sets when task suspends or terminates
     Event2 = Event#event{reads = ordsets:new(), writes = ordsets:new()},
-    put(process_info, ProcessInfo#process_info{event=Event2}).
+    put(task_info, TaskInfo#task_info{event=Event2}).

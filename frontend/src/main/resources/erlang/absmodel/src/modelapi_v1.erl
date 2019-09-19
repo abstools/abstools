@@ -104,7 +104,7 @@ handle_object_call([Objectname, Methodname], Parameters) ->
                     {Success, ParamValues} = decode_parameters(Parameters, ParamDecls),
                     case Success of
                         ok ->
-                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #process_info{method=Methodname}),
+                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #task_info{method=Methodname}),
                             Result=case future:get_for_rest(Future) of
                                 {ok, Value} ->
                                     { 200, <<"application/json">>,

@@ -163,7 +163,7 @@ handle_object_call([Objectname, Methodname], Parameters, Req) ->
                     {Method, _ReturnType, ParamDecls}=maps:get(Methodname, Methods),
                     case decode_parameters(Parameters, ParamDecls, Body) of
                         { ok, ParamValues } ->
-                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #process_info{method=Methodname}),
+                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #task_info{method=Methodname}),
                             Result=case future:get_for_rest(Future) of
                                 {ok, Value} ->
                                     { 200, <<"application/json">>,

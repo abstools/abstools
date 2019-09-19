@@ -455,9 +455,9 @@ aspect GenerateErlang {
     ecs.println("Vars=get(vars),");
     ecs.println("cog:object_state_changed(Cog, O, State),");
     ecs.println("put(this,cog:get_object_state(Callee#object.cog, Callee)),");
-    // Since #process_info.method identifies the process to the
+    // Since #task_info.method identifies the process to the
     // scheduler, leave it unchanged
-    ecs.println("put(process_info,(get(process_info))#process_info{this=Callee}),");
+    ecs.println("put(task_info,(get(task_info))#task_info{this=Callee}),");
     ecs.println("T=object:get_class_from_state(get(this)), % it's the callee state already");
     ecs.format("Result=T:'m_%s'(Callee", getMethod());
     for (ParamDecl p : ms.getParams()) {
@@ -470,7 +470,7 @@ aspect GenerateErlang {
     // from cog (there could have been a synchronous callback,
     // invalidating State)
     ecs.println("cog:object_state_changed(Callee#object.cog, Callee, get(this)),");
-    ecs.println("put(process_info,(get(process_info))#process_info{this=O}),");
+    ecs.println("put(task_info,(get(task_info))#task_info{this=O}),");
     ecs.println("put(this, cog:get_object_state(Cog, O)),");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
@@ -479,7 +479,7 @@ aspect GenerateErlang {
     ecs.println("%% remote call");
     ecs.format("TempFuture = future:start(Callee,'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
-    ecs.format(",#process_info{method= <<\"%s\"/utf8>>},", getMethod());
+    ecs.format(",#task_info{method= <<\"%s\"/utf8>>},", getMethod());
     ecs.print("Cog,");
     ecs.print(vars.toStack());
     ecs.println("),");
@@ -497,7 +497,7 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
-    ecs.format(",#process_info{method= <<\"%s\"/utf8>>, creation={dataTime,builtin:currentms(Cog)}, proc_deadline=", getMethod());
+    ecs.format(",#task_info{method= <<\"%s\"/utf8>>, creation={dataTime,builtin:currentms(Cog)}, proc_deadline=", getMethod());
     if (deadline != null) {
         deadline.generateErlangCode(ecs, vars);
     } else {
@@ -1064,7 +1064,7 @@ aspect GenerateErlang {
 
   public void SuspendStmt.generateErlangCode(CodeStream ecs,Vars vars){
     ecs.println("task:release_token(Cog,runnable),");
-    ecs.println("cog:process_is_runnable(Cog,self()),");
+    ecs.println("cog:task_is_runnable(Cog,self()),");
     ecs.print("task:wait_for_token(Cog,");
     ecs.print(vars.toStack());
     ecs.print(")");
@@ -1081,11 +1081,11 @@ aspect GenerateErlang {
       ecs.incIndent().println("put(this, OState),");
       ecs.incIndent().println("try");
       ecs.incIndent().pf("case %s of",sw);
-      ecs.incIndent().pf("true -> cog:process_poll_is_ready(Cog, self(), get(process_info)), Poll(%s);",vars.toParamList());
-      ecs.pf("false -> cog:process_poll_is_not_ready(Cog, self(), get(process_info)),  Poll(%s)",vars.toParamList());
+      ecs.incIndent().pf("true -> cog:task_poll_is_ready(Cog, self(), get(task_info)), Poll(%s);",vars.toParamList());
+      ecs.pf("false -> cog:task_poll_is_not_ready(Cog, self(), get(task_info)),  Poll(%s)",vars.toParamList());
       ecs.decIndent().println("end");
       ecs.decIndent().println("catch");
-      ecs.incIndent().println("_:Exception -> cog:process_poll_has_crashed(Cog, self(), get(process_info)), throw(Exception)");
+      ecs.incIndent().println("_:Exception -> cog:task_poll_has_crashed(Cog, self(), get(task_info)), throw(Exception)");
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
       ecs.println("{token, OState} -> put(this, OState), ok;");

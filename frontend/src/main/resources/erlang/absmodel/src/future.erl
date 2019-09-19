@@ -39,7 +39,7 @@ start(Callee,Method,Params, Info, Cog, Stack) ->
     %% we don't have access to the caller id from the callee.
     #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(Cog, Method),
     ScheduleEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=Name},
-    NewInfo = Info#process_info{event=ScheduleEvent},
+    NewInfo = Info#task_info{event=ScheduleEvent},
     {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,true,self()], []),
     wait_for_future_start(Ref, Cog, Stack),
     Ref.
@@ -49,8 +49,8 @@ wait_for_future_start(Ref, Cog, Stack) ->
         {started, _Ref} ->
             ok;
         {stop_world, _Sender} ->
-            cog:process_is_blocked_for_gc(Cog, self(), get(process_info), get(this)),
-            cog:process_is_runnable(Cog, self()),
+            cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),
+            cog:task_is_runnable(Cog, self()),
             task:wait_for_token(Cog, [Ref | Stack]),
             wait_for_future_start(Ref, Cog, Stack);
         {get_references, Sender} ->
@@ -92,13 +92,13 @@ get_blocking(Future, Cog, Stack) ->
         false ->
             %% Tell future not to advance time until we picked up ourselves
             register_waiting_task(Future, self()),
-            cog:process_is_blocked(Cog,self(), get(process_info), get(this)),
+            cog:task_is_blocked(Cog,self(), get(task_info), get(this)),
             (fun Loop() ->
                      receive
                          {value_present, Future, _CalleeCog} ->
                              ok;
                          {stop_world, _Sender} ->
-                             %% `cog:process_is_blocked' already passed back
+                             %% `cog:task_is_blocked' already passed back
                              %% the token.  Eat the stop_world or we'll
                              %% deadlock later.
                              Loop();
@@ -106,7 +106,7 @@ get_blocking(Future, Cog, Stack) ->
                              cog:submit_references(Sender, gc:extract_references([Future | Stack])),
                              Loop()
                      end end)(),
-            cog:process_is_runnable(Cog, self()),
+            cog:task_is_runnable(Cog, self()),
             confirm_wait_unblocked(Future, self()),
             task:wait_for_token(Cog, [Future | Stack]),
             get_after_await(Future, Cog)
@@ -123,7 +123,7 @@ await(Future, Cog, Stack) ->
                      %% Unblock this task before allowing the other
                      %% task to terminate (and potentially letting its
                      %% cog idle).
-                     cog:process_is_runnable(Cog,self()),
+                     cog:task_is_runnable(Cog,self()),
                      confirm_wait_unblocked(Future, self()),
                      task:wait_for_token(Cog, [Future | Stack]);
                  {stop_world, _Sender} ->
@@ -189,7 +189,7 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
     %% call, but if Object is alive, so is (presumably)
     %% CogRef, and Object cannot have been garbage-collected
     %% in the meantime.
-    TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info#process_info{this=Callee,destiny=self()}, Params),
+    TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info#task_info{this=Callee,destiny=self()}, Params),
     case RegisterInGC of
         true -> gc:register_future(self());
         false -> ok
@@ -205,7 +205,7 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
                         waiting_tasks=[],
                         register_in_gc=RegisterInGC,
                         caller=Caller,
-                        event=Info#process_info.event}};
+                        event=Info#task_info.event}};
 init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
     %% This is dead code, left in for reference; a `null' callee is caught in
     %% future:start above.

@@ -45,11 +45,11 @@ new_local(Creator, Cog,Class,Args)->
     %% essentially a synccall and should be kept in sync with
     %% SyncCall.generateErlangCode (file GenerateErlang.jadd)
     OldVars=get(vars),
-    OldThis=(get(process_info))#process_info.this,
+    OldThis=(get(task_info))#task_info.this,
     OldState=get(this),
     cog:object_state_changed(Cog, Creator, OldState),
     put(this, State),
-    put(process_info,(get(process_info))#process_info{this=O}),
+    put(task_info,(get(task_info))#task_info{this=O}),
     %% We need to keep OldVars and OldState (i.e., get(this) at this
     %% point) on Stack in case we gc.
 
@@ -66,7 +66,7 @@ new_local(Creator, Cog,Class,Args)->
     %% Do not use OldState here: the init block of O might have called
     %% back into the creator object, invalidating OldState
     put(this, cog:get_object_state(Cog, Creator)),
-    put(process_info,(get(process_info))#process_info{this=OldThis}),
+    put(task_info,(get(task_info))#task_info{this=OldThis}),
     cog:activate_object(Cog, O),
     O.
 
@@ -78,7 +78,7 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     %% don't have to check for anything in `cog:get_object_state'.
     %% Note that synccalls to `this' will deadlock, as per the manual
     %% (Section “New Expression”)
-    cog:process_is_blocked_for_gc(CreatorCog, self(), get(process_info), get(this)),
+    cog:task_is_blocked_for_gc(CreatorCog, self(), get(task_info), get(this)),
 
     %% Create event for scheduling the init block at the caller; this is
     %% because we don't have access to the caller id from the callee.
@@ -86,14 +86,14 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     InitEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=init},
 
     cog:add_task(Cog,init_task,none,O,Args,
-                 #process_info{event=InitEvent, method= <<".init"/utf8>>, this=O, destiny=null},
+                 #task_info{event=InitEvent, method= <<".init"/utf8>>, this=O, destiny=null},
                  [O, Args | Stack]),
     Res=cog:sync_task_with_object(Cog, O, self()),
     case Res of
         uninitialized -> await_activation([O | Stack]);
         active -> ok
     end,
-    cog:process_is_runnable(CreatorCog, self()),
+    cog:task_is_runnable(CreatorCog, self()),
     task:wait_for_token(CreatorCog,[O, Args|Stack]),
     O.
 
@@ -120,18 +120,18 @@ get_class_from_state(OState) ->
     element(2, OState).
 
 register_read(Field) ->
-    case ProcessInfo=get(process_info) of
-        #process_info{event=E=#event{reads=R}} ->
+    case TaskInfo=get(task_info) of
+        #task_info{event=E=#event{reads=R}} ->
             R2 = ordsets:add_element(Field, R),
-            put(process_info, ProcessInfo#process_info{event=E#event{reads=R2}});
+            put(task_info, TaskInfo#task_info{event=E#event{reads=R2}});
         _ -> ok
     end.
 
 register_write(Field) ->
-    case ProcessInfo=get(process_info) of
-        #process_info{event=E=#event{writes=W}} ->
+    case TaskInfo=get(task_info) of
+        #task_info{event=E=#event{writes=W}} ->
             W2 = ordsets:add_element(Field, W),
-            put(process_info, ProcessInfo#process_info{event=E#event{writes=W2}});
+            put(task_info, TaskInfo#task_info{event=E#event{writes=W2}});
         _ -> ok
     end.
 
