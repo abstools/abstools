@@ -207,7 +207,7 @@ aspect GenerateErlang {
       stmt.generateErlangLocationInfo(ecs);
       PureExp cost = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
       if (cost != null) {
-          ecs.print("task:block_for_cpu(Cog,DC,");
+          ecs.print("cog:block_cog_for_cpu(Cog,DC,");
           cost.generateErlangCode(ecs, vars);
           ecs.print(",");
           ecs.print(vars.toStack());
@@ -220,7 +220,7 @@ aspect GenerateErlang {
               // FIXME: only consumes bandwidth from source cog
               // FIXME: should not consume bandwidth if call goes to same DC
 
-              ecs.print("task:block_for_bandwidth(Cog,DC,");
+              ecs.print("cog:block_cog_for_bandwidth(Cog,DC,");
               call_exp.getCallee().generateErlangCode(ecs, vars);
               ecs.print(",");
               size.generateErlangCode(ecs, vars);
@@ -228,7 +228,7 @@ aspect GenerateErlang {
               ecs.print(vars.toStack());
               ecs.println("),");
           } else if (stmt instanceof ReturnStmt) {
-              ecs.print("task:block_for_bandwidth(Cog,DC,null,");
+              ecs.print("cog:block_cog_for_bandwidth(Cog,DC,null,");
               size.generateErlangCode(ecs, vars);
               ecs.print(",");
               ecs.print(vars.toStack());
@@ -1063,7 +1063,7 @@ aspect GenerateErlang {
   }
 
   public void SuspendStmt.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.println("task:release_token(Cog,runnable),");
+    ecs.println("task:release_token(Cog,self(),runnable,get(task_info),get(this)),");
     ecs.println("cog:task_is_runnable(Cog,self()),");
     ecs.print("task:wait_for_token(Cog,");
     ecs.print(vars.toStack());
@@ -1075,7 +1075,7 @@ aspect GenerateErlang {
     if(getGuard().hasPoll()){
       getGuard().generateErlangCode(ecs,after,vars);
       after.close();
-      ecs.println("task:release_token(Cog,waiting_poll),");
+      ecs.println("task:release_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive {check, OState} -> ");
       ecs.incIndent().println("put(this, OState),");
@@ -1171,7 +1171,7 @@ aspect GenerateErlang {
 
   @Override
   public void DurationGuard.generateErlangCode(CodeStream preAwait, CodeStream ecs, Vars vars) {
-      preAwait.print("task:await_duration(Cog,");
+      preAwait.print("cog:suspend_current_task_for_duration(Cog,");
       getMin().generateErlangCode(preAwait, vars);
       preAwait.print(",");
       getMax().generateErlangCode(preAwait, vars);
@@ -1242,7 +1242,7 @@ aspect GenerateErlang {
 
   @Override
   public void DurationStmt.generateErlangCode(CodeStream ecs, Vars vars) {
-      ecs.print("task:block_for_duration(Cog,");
+      ecs.print("cog:block_cog_for_duration(Cog,");
       getMin().generateErlangCode(ecs, vars);
       ecs.print(",");
       getMax().generateErlangCode(ecs, vars);

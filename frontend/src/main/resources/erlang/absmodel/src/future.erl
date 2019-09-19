@@ -116,7 +116,7 @@ await(null, _Cog, _Stack) ->
     throw(dataNullPointerException);
 await(Future, Cog, Stack) ->
     register_waiting_task(Future, self()),
-    task:release_token(Cog, waiting),
+    task:release_token(Cog, self(), waiting, get(task_info), get(this)),
     (fun Loop() ->
              receive
                  {value_present, Future, _CalleeCog} ->
