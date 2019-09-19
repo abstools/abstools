@@ -6,7 +6,6 @@
 %% functions informing cog about task state change
 -export([task_is_runnable/2,
          task_is_blocked/4, task_is_blocked_for_gc/4,
-         task_is_blocked_for_clock/6,
          task_poll_is_ready/3, task_poll_is_not_ready/3,
          task_poll_has_crashed/3,
          submit_references/2,
@@ -14,9 +13,9 @@
          register_new_local_object/2, register_future_read/2,
          register_await_future_complete/2, get_scheduling_trace/1]).
 %% functions wrapping task changes; might block for messages
--export([suspend_current_task_for_duration/4,block_cog_for_duration/4]).
--export([block_cog_for_cpu/4,block_cog_for_bandwidth/5]).
--export([return_token/5,return_token_suspended_for_clock/7]).
+-export([suspend_current_task_for_duration/4]).
+-export([block_cog_for_duration/4,block_cog_for_cpu/4,block_cog_for_bandwidth/5]).
+-export([return_token/5]).
 %% Called by cog_monitor
 -export([wakeup_task_after_clock_elapse/3]).
 -export([inc_ref_count/1,dec_ref_count/1]).
@@ -46,7 +45,7 @@
          runnable_tasks=gb_sets:empty(),
          %% Tasks maybe ready to run (ask them)
          polling_tasks=gb_sets:empty(),
-         %% Tasks not ready to run (will signal when ready)
+         %% Tasks not ready to run (future or cog_monitor will signal when ready)
          waiting_tasks=gb_sets:empty(),
          %% Fresh tasks, before they announce themselves ready
          new_tasks=gb_sets:empty(),
@@ -219,7 +218,13 @@ loop_for_clock_advance(Cog, Stack) ->
 suspend_current_task_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
     case check_duration_amount(MMin, MMax) of
         {Min, Max} ->
-            task:release_token_with_time_info(Cog, self(), waiting, get(task_info), get(this), Min, Max),
+            receive
+                {stop_world, _Sender} -> ok
+            after 0 -> ok
+            end,
+            cog_monitor:task_waiting_for_clock(self(), CogRef, Min, Max),
+            %% We never pass TaskInfo back to the process, so we can mutate it here.
+            gen_statem:call(CogRef, {token, self(), waiting, (get(task_info))#task_info{waiting_on_clock=true}, get(this)}),
             %% TODO move this into the cog state machine (cog receives the
             %% time-advance signal from cog_monitor now)
             loop_for_clock_advance(Cog, Stack),
@@ -282,12 +287,14 @@ block_cog_for_bandwidth(Cog, DC, null, Amount, Stack) ->
 
 
 return_token(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState) ->
-    gen_statem:call(Cog, {token, TaskRef, State, TaskInfo, ObjectState}).
-
-return_token_suspended_for_clock(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState, Min, Max) ->
-    cog_monitor:task_waiting_for_clock(TaskRef, Cog, Min, Max),
-    %% We never pass TaskInfo back to the process, so we can mutate it here.
-    gen_statem:call(Cog, {token, TaskRef, State, TaskInfo#task_info{waiting_on_clock=true}, ObjectState}).
+    receive
+        {stop_world, _Sender} -> ok
+    after 0 -> ok
+    end,
+    #task_info{event=Event} = TaskInfo,
+    gen_statem:call(Cog, {token, TaskRef, State, TaskInfo, ObjectState}),
+    Event2 = Event#event{reads = ordsets:new(), writes = ordsets:new()},
+    put(task_info, TaskInfo#task_info{event=Event2}).
 
 wakeup_task_after_clock_elapse(Cog, Task, CurrentTime) ->
     %% TODO make this a cog-internal function, switch cog to busy

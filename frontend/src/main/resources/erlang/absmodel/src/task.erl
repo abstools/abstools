@@ -6,7 +6,7 @@
 %% External API
 -export([start/6,init/6,join/1,notifyEnd/1,notifyEnd/2]).
 %%API for tasks
--export([wait_for_token/2,release_token/5,release_token_with_time_info/7]).
+-export([wait_for_token/2]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
@@ -37,7 +37,7 @@ init(TaskType,Cog,Future,CalleeObj,Args,Info)->
     cog:task_is_runnable(Cog, self()),
     wait_for_token(Cog, InnerState),
     Val=TaskType:start(InnerState),
-    release_token(Cog,self(),done,get(task_info),get(this)),
+    cog:return_token(Cog,self(),done,get(task_info),get(this)),
     send_notifications(Val).
 
 send_stop_for_gc(Task) ->
@@ -83,25 +83,3 @@ wait_for_token(Cog, Stack) ->
             cog:submit_references(Sender, gc:extract_references(Stack)),
             wait_for_token(Cog, Stack)
     end.
-
-release_token(Cog,Task,State,TaskInfo,ObjectState)->
-    receive
-        {stop_world, _Sender} -> ok
-    after 0 -> ok
-    end,
-    #task_info{event=Event} = TaskInfo,
-    cog:return_token(Cog, Task, State, TaskInfo, ObjectState),
-    %% Flush the read/write sets when task suspends or terminates
-    Event2 = Event#event{reads = ordsets:new(), writes = ordsets:new()},
-    put(task_info, TaskInfo#task_info{event=Event2}).
-
-release_token_with_time_info(Cog=#cog{ref=CogRef}, Task, State, TaskInfo, ObjectState, Min, Max) ->
-    receive
-        {stop_world, _Sender} -> ok
-    after 0 -> ok
-    end,
-    #task_info{event=Event} = TaskInfo,
-    cog:return_token_suspended_for_clock(Cog, Task, State, TaskInfo, ObjectState, Min, Max),
-    %% Flush the read/write sets when task suspends or terminates
-    Event2 = Event#event{reads = ordsets:new(), writes = ordsets:new()},
-    put(task_info, TaskInfo#task_info{event=Event2}).
