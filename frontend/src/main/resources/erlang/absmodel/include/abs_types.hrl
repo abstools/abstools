@@ -2,19 +2,37 @@
 
 -record(object,{ref,cog}).
 -record(cog,{ref,dc}).
--record(task_info, % use get(task_info) in a task to get this structure
-       {pid=undefined,                % filled in at creation time with self()
-        this=null,                    % pid of the task's object (`null` for main task)
-        destiny=null,                 % pid of the task's future (`null` for main task and init task)
-        method= <<"">> ,              % name of the running method (file GenerateErlang.jadd)
-        creation={dataTime, 0},       % filled in at point of async call (file GenerateErlang.jadd)
-        event=undefined,              % filled in when added to cog
-        arrival={dataTime, -1},       % filled in by cog when receiving signal
-        cost=dataInfDuration,         % filled in via annotation
-        proc_deadline=dataInfDuration, % deadline relative to time at call, filled in via annotation cat point of async call (file GenerateErlang.jadd)
-        start={dataTime, -1},         % filled in upon first scheduling
-        crit=false,                   % filled in via annotation
-        waiting_on_clock=false        % KLUDGE: flag to tell cog that it needs to confirm wakeup to cog_monitor
+-record(task_info, % use `get(task_info)' in a task to get this structure
+       {
+        %% filled in at creation time with self()
+        pid=undefined,
+        %% pid of the task's object (`null` for main task)
+        this=null,
+        %% pid of the task's future (`null` for main task and init task)
+        destiny=null,
+        %% name of the running method (compile-time constant)
+        method= <<"">> ,
+        %% filled in when added to cog
+        event=undefined,
+        %% filled in at point of async call
+        creation={dataTime, 0},
+        %% filled in by cog when receiving invocation
+        arrival={dataTime, -1},
+        %% filled in via annotation
+        cost=dataInfDuration,
+        %% deadline relative to time at call, filled in via annotation at
+        %% point of async call
+        proc_deadline=dataInfDuration,
+        %% filled in by cog upon first scheduling
+        start={dataTime, -1},
+        %% filled in via annotation
+        crit=false,
+        %% Flag used by the cog to determine which action(s) to take when
+        %% scheduling a task.  Can be `none', `{waiting_on_clock, Min, Max}',
+        %% or `{waiting_on_future, Future}'.  Set and used internally by the
+        %% cog; always `none' in `task_info' structures obtained via
+        %% `get(task_info)'.
+        wait_reason=none
        }).
 
 -record(event,

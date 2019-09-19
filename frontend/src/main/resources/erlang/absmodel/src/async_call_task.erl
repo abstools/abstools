@@ -36,7 +36,7 @@ start(#state{fut=Future,obj=O=#object{cog=Cog=#cog{ref=CogRef,dc=DC}},meth=M,par
 
 complete_future(Future, Status, Value, Cog, Stack) ->
     future:value_available(Future, Status, Value, self(), Cog, value_accepted),
-        (fun Loop() ->
+    (fun Loop() ->
              %% Wait for message to be received, but handle GC request in the
              %% meantime.
              receive
@@ -45,9 +45,9 @@ complete_future(Future, Status, Value, Cog, Stack) ->
                      cog:task_is_runnable(Cog, self()),
                      task:wait_for_token(Cog, [Future, Value | Stack]),
                      Loop();
-                {get_references, Sender} ->
+                 {get_references, Sender} ->
                      cog:submit_references(Sender, gc:extract_references([Future, Value | Stack])),
-                    Loop();
-                {value_accepted, Future} -> ok
-            end
-    end)().
+                     Loop();
+                 {value_accepted, Future} -> ok
+             end
+     end)().
