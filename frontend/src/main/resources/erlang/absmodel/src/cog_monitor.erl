@@ -343,6 +343,12 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,dc
             case Clockresult of
                 {ok, NewTime} ->
                     lists:foreach(fun(DC) -> dc:notify_time_advance(DC, Delta) end, DCs),
+                    %% TODO: set all DCs to active here -- they’ll tell us if
+                    %% they’re idle during handling of notify_time_advance,
+                    %% and we avoid spurious time advances caused by one DC
+                    %% going through a complete idle->active->idle cycle
+                    %% before another one finishes notify_time_advance
+                    %% handling.
                     {A1,C1}=lists:unzip(
                               lists:map(
                                 fun(E={MinE, _MaxE, TaskRefE, CogRefE}) ->

@@ -14,7 +14,7 @@
 
 %% gen_statem callbacks
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
--export([active/3]).
+-export([active/3,idle/3]).
 
 -export([new/2,get_description/1]).
 -export([get_resource_history/2]).
@@ -141,7 +141,7 @@ notify_time_advance(DCRef, Delta) ->
 callback_mode() -> state_functions.
 
 init([Cog, Oid]) ->
-    {ok, active, #data{cog=Cog, oid=Oid}}.
+    {ok, idle, #data{cog=Cog, oid=Oid}}.
 
 terminate(_Reason,_StateName, _Data=#data{cog=Cog})->
     cog_monitor:dc_died(self()),
@@ -154,42 +154,85 @@ handle_call(From, {new_cog, CogRef}, _State, Data=#data{idle=I})->
     I1=gb_sets:add_element(CogRef,I),
     cog_monitor:new_cog(CogRef),
     {keep_state, Data#data{idle=I1}, {reply, From, ok}};
-handle_call(From, {cog_died, CogRef}, _State,
+handle_call(From, {cog_died, CogRef}, State,
             Data=#data{active=A, blocked=B, idle=I, clock_waiting=W}) ->
     Reply=cog_monitor:cog_died(CogRef),
     gen_statem:reply(From, Reply),
-    {keep_state, Data#data{active=gb_sets:del_element(CogRef, A),
-                           blocked=gb_sets:del_element(CogRef, B),
-                           idle=gb_sets:del_element(CogRef, I),
-                           clock_waiting=lists:filter(fun ({Cog, _, _, _}) ->
-                                                      Cog =/= CogRef end, W)
-                           %% TODO figure out resource_waiting
-                          }};
-handle_call(From, {cog_active, CogRef}, _State, Data=#data{active=A, idle=I}) ->
+    NewData=Data#data{active=gb_sets:del_element(CogRef, A),
+                      blocked=gb_sets:del_element(CogRef, B),
+                      idle=gb_sets:del_element(CogRef, I),
+                      %% TODO filter active_before_next_clock
+                      clock_waiting=lists:filter(
+                                      fun ({Cog, _, _, _}) ->
+                                              Cog =/= CogRef end,
+                                      W)},
+    case can_switch_to_idle(NewData) of
+        false -> {keep_state, NewData};
+        true -> switch_to_idle(State, NewData)
+    end;
+handle_call(From, {cog_active, CogRef}, State, Data=#data{active=A, idle=I}) ->
     Reply=cog_monitor:cog_active(CogRef),
     gen_statem:reply(From, Reply),
-    {keep_state, Data#data{active=gb_sets:add_element(CogRef, A),
-                           idle=gb_sets:del_element(CogRef, I)}};
-handle_call(From, {cog_idle, CogRef}, _State,
-            Data=#data{active=A, idle=I}) ->
-    Reply=cog_monitor:cog_idle(CogRef),
-    gen_statem:reply(From, Reply),
-    {keep_state, Data#data{active=gb_sets:del_element(CogRef, A),
-                           idle=gb_sets:add_element(CogRef, I)}};
-handle_call(From, {cog_blocked, CogRef}, _State,
-            Data=#data{active=A, blocked=B}) ->
-    Reply=cog_monitor:cog_blocked(CogRef),
-    gen_statem:reply(From, Reply),
-    {keep_state, Data#data{active=gb_sets:del_element(CogRef, A),
-                           blocked=gb_sets:add_element(CogRef, B)}};
-handle_call(From, {cog_unblocked, CogRef}, _State,
+    switch_to_active(State, Data#data{active=gb_sets:add_element(CogRef, A),
+                                      idle=gb_sets:del_element(CogRef, I)});
+handle_call(From, {cog_unblocked, CogRef}, State,
             Data=#data{active=A, blocked=B}) ->
     Reply=cog_monitor:cog_unblocked(CogRef),
     gen_statem:reply(From, Reply),
-    {keep_state, Data#data{active=gb_sets:add_element(CogRef, A),
-                           blocked=gb_sets:del_element(CogRef, B)}};
-handle_call(From, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max}, _State,
-           Data=#data{clock_waiting=W, active=A, blocked=B}) ->
+    switch_to_active(State, Data#data{active=gb_sets:add_element(CogRef, A),
+                                      blocked=gb_sets:del_element(CogRef, B)});
+handle_call(From, {get_resource_history, Type}, _State,
+            Data=#data{cog=Cog,oid=Oid}) ->
+    C=class_ABS_DC_DeploymentComponent,
+    OState=cog:get_object_state(Cog, Oid),
+    Curvar=var_history_for_resourcetype(Type),
+    Maxvar=var_totalhistory_for_resourcetype(Type),
+    Result = [C:get_val_internal(OState,description),
+              C:get_val_internal(OState,creationTime),
+              C:get_val_internal(OState,Curvar),
+              C:get_val_internal(OState,Maxvar)],
+    {keep_state_and_data, {reply, From, Result}};
+handle_call(From, get_resource_json, _State, Data=#data{cog=Cog,oid=Oid}) ->
+    C=class_ABS_DC_DeploymentComponent,
+    OState=cog:get_object_state(Cog, Oid),
+    Name=C:get_val_internal(OState,description),
+    History=C:get_val_internal(OState,cpuhistory),
+    Result=[{<<"name">>, Name},
+            {<<"values">>, History}],
+    {keep_state_and_data, {reply, From, {ok, Result}}};
+handle_call(From, get_dc_info_string, _State, Data=#data{cog=Cog,oid=Oid}) ->
+    C=class_ABS_DC_DeploymentComponent,
+    OState=cog:get_object_state(Cog, Oid),
+    Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n",
+                         [C:get_val_internal(OState,description),
+                          builtin:toString(undefined, C:get_val_internal(OState,creationTime)),
+                          builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
+    {keep_state_and_data, {reply, From, Result}}.
+
+handle_cast(_Event, _StateName, Data) ->
+    {stop, not_supported, Data}.
+
+%% Deployment component behavior
+active({call, From}, {cog_idle, CogRef}, Data=#data{active=A, idle=I}) ->
+    Reply=cog_monitor:cog_idle(CogRef),
+    gen_statem:reply(From, Reply),
+    NewData=Data#data{active=gb_sets:del_element(CogRef, A),
+                      idle=gb_sets:add_element(CogRef, I)},
+    case can_switch_to_idle(NewData) of
+        false -> {keep_state, NewData};
+        true -> switch_to_idle(active, NewData)
+    end;
+active({call, From}, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
+    Reply=cog_monitor:cog_blocked(CogRef),
+    gen_statem:reply(From, Reply),
+    NewData=Data#data{active=gb_sets:del_element(CogRef, A),
+                      blocked=gb_sets:add_element(CogRef, B)},
+    case can_switch_to_idle(NewData) of
+        false -> {keep_state, NewData};
+        true -> switch_to_idle(active, NewData)
+    end;
+active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
+       Data=#data{clock_waiting=W, active=A, blocked=B}) ->
     cog_monitor:task_waiting_for_clock(TaskRef, CogRef, Min, Max),
     %% We add the blocked task to the queue since it waits for the token; no
     %% need to handle it specially
@@ -198,33 +241,32 @@ handle_call(From, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max}, _State,
     {_CogRefH, _TaskRefH, _MinH, MaxH}=hd(NewW),
     cog_monitor:dc_mte(self(), MaxH),
     cog_monitor:cog_blocked(CogRef),
-    {keep_state, Data#data{clock_waiting=NewW,
-                           active=gb_sets:del_element(CogRef, A),
-                           blocked=gb_sets:add_element(CogRef, B)},
-     {reply, From, ok}};
-handle_call(From, {task_waiting_for_clock, CogRef, TaskRef, Min, Max}, _State,
-            Data=#data{clock_waiting=W}) ->
+    gen_statem:reply(From, ok),
+    NewData=Data#data{clock_waiting=NewW,
+                      active=gb_sets:del_element(CogRef, A),
+                      blocked=gb_sets:add_element(CogRef, B)},
+    case can_switch_to_idle(NewData) of
+        false -> {keep_state, NewData};
+        true -> switch_to_idle(active, NewData)
+    end;
+active({call, From}, {task_waiting_for_clock, CogRef, TaskRef, Min, Max},
+       Data=#data{clock_waiting=W}) ->
     cog_monitor:task_waiting_for_clock(TaskRef, CogRef, Min, Max),
     %% Min, Max are relative times
     NewW=add_to_queue(W, CogRef, TaskRef, Min, Max),
     %% MinH, MaxH are absolute times
     {_CogRefH, _TaskRefH, _MinH, MaxH}=hd(NewW),
     cog_monitor:dc_mte(self(), MaxH),
-    {keep_state, Data#data{clock_waiting=NewW}, {reply, From, ok}}.
-
-handle_cast({task_confirm_clock_wakeup, CogRef, TaskRef}, _StateName,
-            Data=#data{active_before_next_clock=ABNC}) ->
+    {keep_state, Data#data{clock_waiting=NewW}, {reply, From, ok}};
+active(cast, {task_confirm_clock_wakeup, CogRef, TaskRef},
+       Data=#data{active_before_next_clock=ABNC}) ->
     cog_monitor:task_confirm_clock_wakeup(TaskRef),
-    {keep_state,
-     Data#data{active_before_next_clock=gb_sets:delete(
-                                          {CogRef, TaskRef}, ABNC)}};
-handle_cast(_Event, _StateName, Data) ->
-    {stop, not_supported, Data}.
-
-%% Deployment component behavior
-%%
-%% Deployment components are objects, so we handle their events using
-%% the general object FSM machinery for now.
+    NewData=Data#data{active_before_next_clock=gb_sets:delete(
+                                                 {CogRef, TaskRef}, ABNC)},
+    case can_switch_to_idle(NewData) of
+        false -> {keep_state, NewData};
+        true -> switch_to_idle(active, NewData)
+    end;
 active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count},
        Data=#data{cog=Cog, oid=Oid}) ->
     C=class_ABS_DC_DeploymentComponent,
@@ -245,24 +287,33 @@ active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count},
                                             rationals:sub(Total1, Consumed))
                       end,
             case rationals:is_zero(ToConsume) of
-                true -> {keep_state_and_data, {reply, From, {wait, ToConsume}}};
-                false -> OState1=C:set_val_internal(OState,CurrentVar, rationals:add(Consumed, ToConsume)),
-                         %% We reply with "ok" not "wait" here, even when we
-                         %% did not fulfill the whole request, so we are ready
-                         %% for small-step consumption schemes where multiple
-                         %% consumers race for resources.
-                         cog:object_state_changed(Cog, Oid, OState1),
-                         {keep_state_and_data, {reply, From, {ok, ToConsume}}}
+                true ->
+                    {keep_state_and_data, {reply, From, {wait, ToConsume}}};
+                false ->
+                    OState1=C:set_val_internal(OState,CurrentVar, rationals:add(Consumed, ToConsume)),
+                    %% We reply with "ok" not "wait" here, even when we did
+                    %% not fulfill the whole request, so we are ready for
+                    %% small-step consumption schemes where multiple consumers
+                    %% race for resources.
+                    cog:object_state_changed(Cog, Oid, OState1),
+                    {keep_state_and_data, {reply, From, {ok, ToConsume}}}
             end
     end;
-active(cast, {clock_advance_for_dc, Amount},
-       Data=#data{cog=Cog, oid=Oid, clock_waiting=ClockWaiting,
-                  active_before_next_clock=OldABNC}) ->
-    %% TODO: check that OldABNC is empty
+active({call, From}, Event, Data) ->
+    handle_call(From, Event, active, Data);
+active(cast, Event, Data) ->
+    handle_cast(Event, active, Data).
+
+
+idle(cast, {clock_advance_for_dc, Amount},
+     Data=#data{cog=Cog, oid=Oid, clock_waiting=ClockWaiting}) ->
     Now=clock:now(),
     OState=cog:get_object_state(Cog, Oid),
     OState1=update_state_and_history(OState, Amount),
     cog:object_state_changed(Cog, Oid, OState1),
+    %% List traversal 1: wake up all tasks where Min <= Now; collect these
+    %% tasks in a set to make sure they were scheduled before the next clock
+    %% advance
     WakeUpItems=lists:foldl(
                   fun({CogRef, TaskRef, Min, _Max}, ActiveTasks) ->
                           case cmp:lt(Now, Min) of
@@ -278,9 +329,12 @@ active(cast, {clock_advance_for_dc, Amount},
                   end,
                   gb_sets:empty(),
                   ClockWaiting),
+    %% List traversal 2: calculate list of all still-sleeping tasks
     NewW=lists:filter(
            fun({_CogRef, _TaskRef, Min, _Max}) -> cmp:lt(Now, Min) end,
            ClockWaiting),
+    %% Let the cog_monitor know the maximum clock advance that we can do now
+    %% -- we can always change this later but need to get this out ASAP
     case NewW of
         [] ->
             ok;
@@ -288,40 +342,19 @@ active(cast, {clock_advance_for_dc, Amount},
             cog_monitor:dc_mte(self(), MaxH)
     end,
     %% TODO: walk through list of cogs that need resources, give them some and
-    %% send wakeup if they got everything
-    {keep_state,
-     Data#data{clock_waiting=NewW, active_before_next_clock=WakeUpItems}};
-active({call, From}, {get_resource_history, Type}, Data=#data{cog=Cog,oid=Oid}) ->
-    C=class_ABS_DC_DeploymentComponent,
-    OState=cog:get_object_state(Cog, Oid),
-    Curvar=var_history_for_resourcetype(Type),
-    Maxvar=var_totalhistory_for_resourcetype(Type),
-    Result = [C:get_val_internal(OState,description),
-              C:get_val_internal(OState,creationTime),
-              C:get_val_internal(OState,Curvar),
-              C:get_val_internal(OState,Maxvar)],
-    {keep_state_and_data, {reply, From, Result}} ;
-active({call, From}, get_dc_info_string, Data=#data{cog=Cog,oid=Oid}) ->
-    C=class_ABS_DC_DeploymentComponent,
-    OState=cog:get_object_state(Cog, Oid),
-    Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n",
-                         [C:get_val_internal(OState,description),
-                          builtin:toString(undefined, C:get_val_internal(OState,creationTime)),
-                          builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
-    {keep_state_and_data, {reply, From, Result}};
-active({call, From}, get_resource_json, Data=#data{cog=Cog,oid=Oid}) ->
-    C=class_ABS_DC_DeploymentComponent,
-    OState=cog:get_object_state(Cog, Oid),
-    Name=C:get_val_internal(OState,description),
-    History=C:get_val_internal(OState,cpuhistory),
-    Result=[{<<"name">>, Name},
-            {<<"values">>, History}],
-    {keep_state_and_data, {reply, From, {ok, Result}}};
-active({call, From}, Event, Data) ->
-    handle_call(From, Event, active, Data);
-active(cast, Event, Data) ->
-    handle_cast(Event, active, Data).
-
+    %% send wakeup if they got everything -- at the moment, this is done
+    %% implicitly
+    NewData=Data#data{clock_waiting=NewW, active_before_next_clock=WakeUpItems},
+    case gb_sets:is_empty(WakeUpItems) of
+        true ->
+            %% TODO: call cog_monitor:dc_idle here
+            {keep_state, NewData};
+        false -> switch_to_active(idle, NewData)
+    end;
+idle({call, From}, Event, Data) ->
+    handle_call(From, Event, idle, Data);
+idle(cast, Event, Data) ->
+    handle_cast(Event, idle, Data).
 
 
 %% Callback from update event.  Handle arbitrary clock advancement
@@ -403,6 +436,26 @@ update_state_and_history_for_resource(S, Resourcetype) ->
        end,
     C:set_val_internal(S3,Max,C:get_val_internal(S3,Next)).
 
+can_switch_to_idle(Data=#data{active=A, active_before_next_clock=ABNC}) ->
+    gb_sets:is_empty(A) andalso gb_sets:is_empty(ABNC).
+
+switch_to_active(OldState, Data) ->
+    %% switch to active; use (gen_statem:reply for replies)
+    case OldState of
+        active -> {keep_state, Data};
+        idle ->
+            %% cog_monitor:dc_active(self()),
+            {next_state, active, Data}
+    end.
+
+switch_to_idle(OldState, Data) ->
+    %% switch to idle; use (gen_statem:reply for replies)
+    case OldState of
+        idle -> {keep_state, Data};
+        active ->
+            %% cog_monitor:dc_idle(self()),
+            {next_state, idle, Data}
+    end.
 
 add_to_queue(Queue, CogRef, TaskRef, Min, Max) ->
     %% Note that this takes relative time (i.e., offset), and passes on
