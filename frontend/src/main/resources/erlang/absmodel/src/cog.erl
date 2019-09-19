@@ -6,12 +6,13 @@
 
 -export([process_is_runnable/2,
          process_is_blocked/4, process_is_blocked_for_gc/4,
+         process_is_blocked_for_clock/6,
          process_poll_is_ready/3, process_poll_is_not_ready/3,
-         submit_references/2, process_poll_has_crashed/3,
+         process_poll_has_crashed/3, submit_references/2,
          register_invocation/2, register_new_object/2,
          register_new_local_object/2, register_future_read/2,
          register_await_future_complete/2, get_scheduling_trace/1]).
--export([return_token/5]).
+-export([return_token/5, return_token_suspended_for_clock/7]).
 -export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("abs_types.hrl").
 
@@ -186,8 +187,18 @@ process_is_blocked(#cog{ref=Cog},TaskRef, ProcessInfo, ObjectState) ->
 process_is_blocked_for_gc(#cog{ref=Cog},TaskRef, ProcessInfo, ObjectState) ->
     gen_statem:cast(Cog, {process_blocked_for_gc, TaskRef, ProcessInfo, ObjectState}).
 
+process_is_blocked_for_clock(#cog{ref=Cog},TaskRef, ProcessInfo, ObjectState, Min, Max) ->
+    cog_monitor:task_waiting_for_clock(TaskRef, Cog, Min, Max),
+    %% We never pass ProcessInfo back to the process, so we can mutate it here.
+    gen_statem:cast(Cog, {process_blocked, TaskRef, ProcessInfo#process_info{waiting_on_clock=true}, ObjectState}).
+
 return_token(#cog{ref=Cog}, TaskRef, State, ProcessInfo, ObjectState) ->
     gen_statem:call(Cog, {token, TaskRef, State, ProcessInfo, ObjectState}).
+
+return_token_suspended_for_clock(#cog{ref=Cog}, TaskRef, State, ProcessInfo, ObjectState, Min, Max) ->
+    cog_monitor:task_waiting_for_clock(TaskRef, Cog, Min, Max),
+    %% We never pass ProcessInfo back to the process, so we can mutate it here.
+    gen_statem:call(Cog, {token, TaskRef, State, ProcessInfo#process_info{waiting_on_clock=true}, ObjectState}).
 
 process_poll_is_ready(#cog{ref=Cog}, TaskRef, ProcessInfo) ->
     Cog ! {TaskRef, true, ProcessInfo}.
@@ -401,7 +412,9 @@ update_object_state_map(Obj, State, OldObjectStates) ->
     end.
 
 object_state_from_pid(Pid, ProcessInfos, ObjectStates) ->
-    ProcessInfo=maps:get(Pid, ProcessInfos),
+    object_state_from_process_info(maps:get(Pid, ProcessInfos), ObjectStates).
+
+object_state_from_process_info(ProcessInfo, ObjectStates) ->
     case ProcessInfo#process_info.this of
         null -> {state, none};
         #object{ref=Ref} -> maps:get(Ref, ObjectStates)
@@ -523,6 +536,18 @@ poll_waiting(Processes, ProcessInfos, ObjectStates) ->
 send_token(Token, Process, ObjectState) ->
     Process ! {Token, ObjectState}.
 
+send_token_maybe_confirm_wakeup(token, Process, ProcessInfos, ObjectStates) ->
+    %% This confirms process wakeup to the cog monitor if the process (when
+    %% calling return_token*) told us it waits for the clock.
+    ProcessInfo=maps:get(Process, ProcessInfos),
+    ObjectState=object_state_from_process_info(ProcessInfo, ObjectStates),
+    send_token(token, Process, ObjectState),
+    case ProcessInfo#process_info.waiting_on_clock of
+        true ->
+            cog_monitor:task_confirm_clock_wakeup(Process);
+        _ -> ok
+    end.
+
 %% Wait until we get the nod from the garbage collector
 cog_starting(cast, stop_world, Data=#data{dc=DC})->
     gc:cog_stopped(#cog{ref=self(), dc=DC}),
@@ -570,7 +595,7 @@ no_task_schedulable({call, From}, {process_runnable, TaskRef},
             NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
             cog_monitor:cog_active(self()),
-            send_token(token, T, object_state_from_pid(T, ProcessInfos, ObjectStates)),
+            send_token_maybe_confirm_wakeup(token, T, ProcessInfos, ObjectStates),
             {next_state, process_running,
              %% T can come from Pol or NewRunnableTasks - adjust cog state
              Data#data{running_task=T,
@@ -651,7 +676,7 @@ process_running({call, From}, {token, R, ProcessState, ProcessInfo, ObjectState}
             NewRecorded2 = [#event{type=schedule, caller_id=Cid2, local_id=Lid2, name=Name2} | NewRecorded],
             NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
-            send_token(token, T, object_state_from_pid(T, NewProcessInfos, NewObjectStates)),
+            send_token_maybe_confirm_wakeup(token, T, NewProcessInfos, NewObjectStates),
             {keep_state,
              Data#data{running_task=T,
                        runnable_tasks=gb_sets:add_element(T, NewRunnable),
@@ -752,7 +777,7 @@ process_running(info, {'EXIT',TaskRef,_Reason},
                     NewRecorded = [#event{type=schedule, caller_id=Cid, local_id=Lid, name=Name} | Recorded],
                     NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
-                    send_token(token, T, object_state_from_pid(T, NewProcessInfos, ObjectStates)),
+                    send_token_maybe_confirm_wakeup(token, T, NewProcessInfos, ObjectStates),
                     {keep_state,
                      Data#data{running_task=T,
                                runnable_tasks=gb_sets:add_element(T, NewRunnable),
@@ -777,7 +802,7 @@ process_running(EventType, Event, Data) ->
 
 process_blocked({call, From}, {process_runnable, TaskRef}, Data=#data{running_task=TaskRef, process_infos=ProcessInfos, object_states=ObjectStates}) ->
     cog_monitor:cog_unblocked(self()),
-    send_token(token, TaskRef, object_state_from_pid(TaskRef, ProcessInfos, ObjectStates)),
+    send_token_maybe_confirm_wakeup(token, TaskRef, ProcessInfos, ObjectStates),
     {next_state, process_running, Data, {reply, From, ok}};
 process_blocked({call, From}, {process_runnable, TaskRef},
                 Data=#data{running_task=T, waiting_tasks=Wai,
@@ -1004,7 +1029,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                             NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
 
                             cog_monitor:cog_active(self()),
-                            send_token(token, T, object_state_from_pid(T, ProcessInfos, ObjectStates)),
+                            send_token_maybe_confirm_wakeup(token, T, ProcessInfos, ObjectStates),
                             {next_state, process_running,
                              Data#data{running_task=T,
                                        runnable_tasks=gb_sets:add_element(T, Run),
@@ -1019,7 +1044,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                     %% process
                     cog_monitor:cog_active(self()), % might not be necessary but just in case
                     cog_monitor:cog_unblocked(self()),
-                    send_token(token, RunningTask, object_state_from_pid(RunningTask, ProcessInfos, ObjectStates)),
+                    send_token_maybe_confirm_wakeup(token, RunningTask, ProcessInfos, ObjectStates),
                     {next_state, process_running, Data};
                 _ -> {next_state, NextState, Data}
             end
