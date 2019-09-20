@@ -203,7 +203,7 @@ public class ClassGenerator {
     }
 
     private String generatorClassMatcher() {
-        return String.format("O=#object{ref=Ref,cog=Cog=#cog{ref=CogRef,dc=DC}}", modName);
+        return String.format("O=#object{oid=Oid,cog=Cog=#cog{ref=CogRef,dcobj=DC}}", modName);
     }
 
     private void generateDataAccess() {

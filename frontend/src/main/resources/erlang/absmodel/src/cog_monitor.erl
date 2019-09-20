@@ -104,11 +104,11 @@ task_confirm_clock_wakeup(Task) ->
     gen_statem:cast({global, cog_monitor}, {task_confirm_clock_wakeup, Task}).
 
 %% Deployment Components interface
-new_dc(DC) ->
-    gen_statem:call({global, cog_monitor}, {newdc, DC}, infinity).
+new_dc(DCRef) ->
+    gen_statem:call({global, cog_monitor}, {new_dc, DCRef}, infinity).
 
-dc_died(DC) ->
-    gen_statem:cast({global, cog_monitor}, {dc_died, DC}),
+dc_died(DCRef) ->
+    gen_statem:cast({global, cog_monitor}, {dc_died, DCRef}),
     ok.
 
 get_dcs() ->
@@ -244,8 +244,8 @@ handle_call(From, {task,Task,Cog,clock_waiting,Min,Max}, _State,
              Data=#data{clock_waiting=C}) ->
     C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
     {keep_state, Data#data{clock_waiting=C1}, {reply, From, ok}};
-handle_call(From, {newdc, DC}, _State, Data=#data{dcs=DCs}) ->
-    {keep_state, Data#data{dcs=[DC | DCs]}, {reply, From, ok}};
+handle_call(From, {new_dc, DCRef}, _State, Data=#data{dcs=DCs}) ->
+    {keep_state, Data#data{dcs=[DCRef | DCs]}, {reply, From, ok}};
 handle_call(From, get_dcs, _State, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
 handle_call(From, get_schedules, _State,
@@ -273,8 +273,8 @@ handle_call(From, Request, _State, _Data)->
     {keep_state_and_data, {reply, From, error}}.
 
 
-handle_cast({dc_died, O}, _State, Data=#data{dcs=DCs}) ->
-    {keep_state, Data#data{dcs=lists:filter(fun (#object{ref=DC}) -> DC =/= O end, DCs)}};
+handle_cast({dc_died, DCRef}, _State, Data=#data{dcs=DCs}) ->
+    {keep_state, Data#data{dcs=lists:delete(DCRef, DCs)}};
 handle_cast({task_confirm_clock_wakeup, Task}, _State, Data=#data{active_before_next_clock=ABNC}) ->
     ABNC1=ordsets:filter(fun ({Task1, _}) -> Task1 =/= Task end, ABNC),
     S1=Data#data{active_before_next_clock=ABNC1},

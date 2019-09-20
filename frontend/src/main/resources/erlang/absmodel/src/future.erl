@@ -162,7 +162,7 @@ notify_completion(Pid) ->
 
 callback_mode() -> state_functions.
 
-init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,RegisterInGC,Caller]) ->
+init([Callee=#object{oid=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,RegisterInGC,Caller]) ->
     %%Start task
     process_flag(trap_exit, true),
     %% We used to wrap the following line in a

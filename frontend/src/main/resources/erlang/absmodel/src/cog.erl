@@ -2,7 +2,7 @@
 -module(cog).
 -export([start/0,start/1,start/2,start/3,add_main_task/3,add_task/7]).
 -export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
--export([get_dc/2]).
+-export([set_dc/2,get_dc_ref/2]).
 %% functions informing cog about task state change
 -export([task_is_runnable/2,
          task_is_blocked_for_gc/4,
@@ -56,8 +56,11 @@
          referencers=1,
          %% Accumulator for reference collection during gc
          references=#{},
-         %% Deployment component of cog
+         %% Deployment component object of cog
          dc=null,
+         %% Deployment component state machine of cog (cached; could be
+         %% obtained via `get_dc_ref')
+         dcref=none,
          %% User-defined scheduler.  `undefined' or a tuple `{function,
          %% arglist}', with `arglist' a list of length >= 1 containing 0 or
          %% more field names and the symbol `queue' (exactly once).
@@ -109,18 +112,26 @@ start(ParentCog, DC) ->
     start(ParentCog, DC, undefined).
 
 start(ParentCog, DC, Scheduler)->
-    %% There are two DC refs: the one in `data' is to handle GC and to create
-    %% a copy of the current cog (see start_new_task), the one in the cog
-    %% structure itself is for evaluating thisDC().  The main block cog and
-    %% DCs themselves currently do not have a DC associated.  In the case of
-    %% the main block this is arguably a bug because we cannot use cost
-    %% annotations in the main block; the implementation of deployment
-    %% components is contained in the standard library, so we can be sure they
-    %% do not use `thisDC()'.
-    {ok, CogRef} = gen_statem:start(?MODULE, [ParentCog, DC, Scheduler], []),
-    Cog=#cog{ref=CogRef,dc=DC},
-    gc:register_cog(Cog),
-    Cog.
+    %% There are two places where we store the object of the new cog’s DC: the
+    %% statem-internal `#data.dc' record (to handle GC and to create a copy of
+    %% the current cog, see start_new_task), and the outer cog structure (for
+    %% evaluating `thisDC()').  (Note that this second reference could be
+    %% eliminated by implementing a function `get_cog_dc/1'.)
+    %%
+    %% Additionally we cache the ref to the new cog’s DC in `#data.dcref',
+    %% since it is used frequently.
+    %%
+    %% Deployment components themselves do not have an associated DC, which
+    %% means we cannot use cost annotations in the methods of the class
+    %% `ABS.DC.DeploymentComponent' itself.
+    DCRef=case DC of
+              #object{oid=Oid,cog=Cog} -> cog:get_dc_ref(Cog, Oid);
+              null -> none
+          end,
+    {ok, NewCogRef} = gen_statem:start(?MODULE, [ParentCog, DC, DCRef, Scheduler], []),
+    NewCog=#cog{ref=NewCogRef,dcobj=DC},
+    gc:register_cog(NewCog),
+    NewCog.
 
 add_task(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info,Stack) ->
     gen_statem:cast(Cog, {new_task,TaskType,Future,CalleeObj,Args,Info,self(),false,{started, TaskType}}),
@@ -139,14 +150,14 @@ new_object(Cog=#cog{ref=CogRef}, Class, ObjectState) ->
             gen_statem:cast(CogRef, {new_dc, Oid});
         _ -> ok
     end,
-    #object{ref=Oid,cog=Cog}.
+    #object{oid=Oid,cog=Cog}.
 
-activate_object(#cog{ref=Cog}, #object{ref=Oid}) ->
+activate_object(#cog{ref=Cog}, #object{oid=Oid}) ->
     gen_statem:cast(Cog, {activate_object, Oid});
-activate_object(Cog, #object{ref=Oid}) ->
+activate_object(Cog, #object{oid=Oid}) ->
     gen_statem:cast(Cog, {activate_object, Oid}).
 
-object_dead(#cog{ref=Cog}, #object{ref=Oid}) ->
+object_dead(#cog{ref=Cog}, #object{oid=Oid}) ->
     gen_statem:cast(Cog, {object_dead, Oid});
 object_dead(#cog{ref=Cog}, Oid) ->
     gen_statem:cast(Cog, {object_dead, Oid});
@@ -154,7 +165,7 @@ object_dead(Cog, Oid) ->
     gen_statem:cast(Cog, {object_dead, Oid}).
 
 
-object_state_changed(#cog{ref=Cog}, #object{ref=Oid}, ObjectState) ->
+object_state_changed(#cog{ref=Cog}, #object{oid=Oid}, ObjectState) ->
     gen_statem:cast(Cog, {update_object_state, Oid, ObjectState});
 object_state_changed(#cog{ref=Cog}, Oid, ObjectState) ->
     gen_statem:cast(Cog, {update_object_state, Oid, ObjectState});
@@ -162,7 +173,7 @@ object_state_changed(Cog, Oid, ObjectState) ->
     gen_statem:cast(Cog, {update_object_state, Oid, ObjectState}).
 
 %% DCs call with "raw" pids, everyone else with a cog structure
-get_object_state(#cog{ref=Cog}, #object{ref=Oid}) ->
+get_object_state(#cog{ref=Cog}, #object{oid=Oid}) ->
     get_object_state(Cog, Oid);
 get_object_state(Cog, Oid) ->
     case gen_statem:call(Cog, {get_object_state, Oid}) of
@@ -171,17 +182,23 @@ get_object_state(Cog, Oid) ->
     end.
 
 
-sync_task_with_object(#cog{ref=Cog}, #object{ref=Oid}, TaskRef) ->
+sync_task_with_object(#cog{ref=Cog}, #object{oid=Oid}, TaskRef) ->
     %% either uninitialized or active; if uninitialized, signal
     %% TaskRef when we switch to active
     gen_statem:call(Cog, {sync_task_with_object, Oid, TaskRef}).
 
-get_dc(#cog{ref=Cog}, #object{ref=Oid}) ->
-    gen_statem:call(Cog, {get_dc, Oid});
-get_dc(#cog{ref=Cog}, Oid) ->
-    gen_statem:call(Cog, {get_dc, Oid});
-get_dc(Cog, Oid) ->
-    gen_statem:call(Cog, {get_dc, Oid}).
+set_dc(#cog{ref=CogRef}, DC) ->
+    set_dc(CogRef, DC);
+set_dc(CogRef, DC=#object{cog=DCCog, oid=DCOid}) ->
+    DCRef=cog:get_dc_ref(DCCog, DCOid),
+    gen_statem:call(CogRef, {set_dc, DC, DCRef}).
+
+get_dc_ref(#cog{ref=Cog}, #object{oid=Oid}) ->
+    gen_statem:call(Cog, {get_dc_ref, Oid});
+get_dc_ref(#cog{ref=Cog}, Oid) ->
+    gen_statem:call(Cog, {get_dc_ref, Oid});
+get_dc_ref(Cog, Oid) ->
+    gen_statem:call(Cog, {get_dc_ref, Oid}).
 
 maybe_send_runnable_confirmation(none) ->
     ok;
@@ -246,18 +263,18 @@ block_cog_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
             ok
     end.
 
-block_cog_for_cpu(Cog=#cog{dc=DC}, Amount, Stack) ->
-    dc:block_cog_for_resource(DC, Cog, cpu, Amount, Stack).
+block_cog_for_cpu(Cog, Amount, Stack) ->
+    dc:block_cog_for_resource(Cog, cpu, Amount, Stack).
 
-block_cog_for_bandwidth(Cog=#cog{dc=DC}, _Callee=#object{cog=#cog{dc=TargetDC}}, Amount, Stack) ->
+block_cog_for_bandwidth(Cog=#cog{dcobj=DC}, _Callee=#object{cog=#cog{dcobj=TargetDC}}, Amount, Stack) ->
     case DC == TargetDC of
         true -> ok;
-        false -> dc:block_cog_for_resource(Cog, DC, bw, Amount, Stack)
+        false -> dc:block_cog_for_resource(Cog, bw, Amount, Stack)
     end;
-block_cog_for_bandwidth(Cog=#cog{dc=DC}, null, Amount, Stack) ->
+block_cog_for_bandwidth(Cog=#cog{dcobj=DC}, null, Amount, Stack) ->
     %% KLUDGE: on return statements, we don't know where the result is sent.
     %% Consume bandwidth now -- fix this once the semantics are resolved
-    dc:block_cog_for_resource(Cog, DC, bw, Amount, Stack).
+    dc:block_cog_for_resource(Cog, bw, Amount, Stack).
 
 block_cog_for_future(#cog{ref=CogRef}, Future, Stack) ->
     gen_statem:cast(CogRef, {task_blocked,
@@ -373,8 +390,11 @@ handle_event({call, From}, {sync_task_with_object, Oid, TaskRef}, _StateName,
              Data#data{fresh_objects=maps:put(Oid, [TaskRef | Tasks], FreshObjects)},
              {reply, From, uninitialized}}
     end;
-handle_event({call, From}, {get_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
+handle_event({call, From}, {get_dc_ref, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, DCs)}};
+handle_event({call, From}, {set_dc, DC, DCRef}, _StateName,
+            Data=#data{dc=null, dcref=none}) ->
+    {keep_state, Data#data{dc=DC, dcref=DCRef}, {reply, From, ok}};
 handle_event({call, From}, {new_object_state, ObjectState}, _StateName,
             Data=#data{object_states=ObjectStates, fresh_objects=FreshObjects,
                        object_counter=ObjCounter}) ->
@@ -382,7 +402,7 @@ handle_event({call, From}, {new_object_state, ObjectState}, _StateName,
     {keep_state, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates),
                            fresh_objects=maps:put(Oid, [], FreshObjects),
                            object_counter=Oid},
-    {reply, From, Oid}};
+     {reply, From, Oid}};
 
 handle_event(cast, inc_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers + 1}};
@@ -446,6 +466,9 @@ handle_event(cast, {object_dead, Oid}, _StateName, Data=#data{object_states=Obje
         _ -> maps:remove(Oid, ObjectStates)
     end,
     {keep_state, Data#data{object_states=maps:remove(Oid, NewStates)}};
+
+handle_event({call, From}, Event, StateName, Data) ->
+    {stop, not_supported, Data};
 handle_event(cast, _Event, _StateName, Data) ->
     {stop, not_supported, Data};
 
@@ -485,29 +508,29 @@ callback_mode() -> state_functions.
 update_object_state_map(Obj, State, OldObjectStates) ->
     case Obj of
         null -> OldObjectStates;
-        #object{ref=ObjRef} ->
-            maps:put(ObjRef, State, OldObjectStates)
+        #object{oid=Oid} ->
+            maps:put(Oid, State, OldObjectStates)
     end.
 
 object_state_from_pid(Pid, TaskInfos, ObjectStates) ->
     TaskInfo=maps:get(Pid, TaskInfos),
     case TaskInfo#task_info.this of
         null -> {state, none};
-        #object{ref=Ref} -> maps:get(Ref, ObjectStates)
+        #object{oid=Oid} -> maps:get(Oid, ObjectStates)
     end.
 
-init([ParentCog, DC, Scheduler]) ->
+init([ParentCog, DC, DCRef, Scheduler]) ->
     process_flag(trap_exit, true),
-
     {Id, ReplayTrace} = case ParentCog of
                             null -> dc:new_cog(DC, ParentCog, self());
                             _ -> dc:new_cog(DC, ParentCog#cog.ref, self())
                         end,
-    {ok, cog_starting, #data{dc=DC, scheduler=Scheduler, id=Id, replaying=ReplayTrace}}.
+    Data = #data{dc=DC, dcref=DCRef, scheduler=Scheduler, id=Id, replaying=ReplayTrace},
+    {ok, cog_starting, Data}.
 
 start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie)->
     ArrivalInfo=Info#task_info{arrival={dataTime, clock:now()}},
-    Ref=task:start(#cog{ref=self(),dc=DC},TaskType,Future,CalleeObj,Args,ArrivalInfo),
+    Ref=task:start(#cog{ref=self(),dcobj=DC},TaskType,Future,CalleeObj,Args,ArrivalInfo),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     case Cookie of
         undef -> ok;
@@ -631,7 +654,7 @@ send_token(Token, Task, TaskInfos, ObjectStates) ->
 
 %% Wait until we get the nod from the garbage collector
 cog_starting(cast, stop_world, Data=#data{dc=DC})->
-    gc:cog_stopped(#cog{ref=self(), dc=DC}),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
 cog_starting(cast, acknowledged_by_gc, Data)->
     {next_state, no_task_schedulable, Data};
@@ -702,7 +725,7 @@ no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,N
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                  task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
 no_task_schedulable(cast, stop_world, Data=#data{dc=DC}) ->
-    gc:cog_stopped(#cog{ref=self(), dc=DC}),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
 no_task_schedulable(EventType, Event, Data) ->
     handle_event(EventType, Event, no_task_schedulable, Data).
@@ -941,7 +964,7 @@ task_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,C
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                task_infos=maps:put(NewTask, NewInfo, TaskInfos)}};
 task_blocked(cast, stop_world, Data=#data{dc=DC}) ->
-    gc:cog_stopped(#cog{ref=self(), dc=DC}),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=task_blocked}};
 task_blocked(EventType, Event, Data) ->
     handle_event(EventType, Event, task_blocked, Data).
@@ -956,7 +979,7 @@ waiting_for_gc_stop({call, From}, {token,R,TaskState, TaskInfo, ObjectState},
                                polling_states=PollingStates,
                                recorded=Recorded, replaying=Replaying}) ->
     gen_statem:reply(From, ok),
-    gc:cog_stopped(#cog{ref=self(), dc=DC}),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     WaitReason=TaskInfo#task_info.wait_reason,
     maybe_send_register_waiting_task(WaitReason, DC, self(), R),
     NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
@@ -1033,7 +1056,7 @@ waiting_for_gc_stop(cast, {task_blocked, R, TaskInfo, ObjectState},
                     Data=#data{running_task=R,task_infos=TaskInfos,
                                object_states=ObjectStates,dc=DC}) ->
     dc:cog_blocked(DC, self()),
-    gc:cog_stopped(#cog{ref=self(), dc=DC}),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     WaitReason=TaskInfo#task_info.wait_reason,
     maybe_send_register_waiting_task(WaitReason, DC, self(), R),
     This=TaskInfo#task_info.this,
@@ -1047,7 +1070,7 @@ waiting_for_gc_stop(cast, {task_blocked_for_clock, R, TaskInfo, ObjectState,
     %% TODO unify the next two lines
     dc:task_waiting_for_clock(DC, R, self(), Min, Max),
     dc:cog_blocked(DC, self()),
-    gc:cog_stopped(#cog{ref=self(), dc=DC}),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     %% We never pass TaskInfo back to the process, so we can mutate it here.
@@ -1058,7 +1081,7 @@ waiting_for_gc_stop(cast, {task_blocked_for_clock, R, TaskInfo, ObjectState,
 waiting_for_gc_stop(cast, {task_blocked_for_gc, R, TaskInfo, ObjectState},
                     Data=#data{running_task=R,task_infos=TaskInfos,
                                object_states=ObjectStates,dc=DC}) ->
-    gc:cog_stopped(#cog{ref=self(), dc=DC}),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
     NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
@@ -1073,7 +1096,7 @@ waiting_for_gc_stop(info, {'EXIT',TaskRef,_Reason},
                        new_tasks=New, task_infos=TaskInfos,dc=DC}) ->
     RunningTaskFinished=TaskRef==R,
     case RunningTaskFinished of
-        true -> gc:cog_stopped(#cog{ref=self(), dc=DC});
+        true -> gc:cog_stopped(#cog{ref=self(), dcobj=DC});
         false -> ok
     end,
     {next_state,
@@ -1149,7 +1172,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                                      recorded=Recorded,replaying=Replaying}) ->
     case Referencers > 0 of
         false -> dc:cog_died(DC, self(), Recorded),
-                 gc:unregister_cog(#cog{ref=self(), dc=DC}),
+                 gc:unregister_cog(#cog{ref=self(), dcobj=DC}),
                  {stop, normal, Data};
         true ->
             case NextState of

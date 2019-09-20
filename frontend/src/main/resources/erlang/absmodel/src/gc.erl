@@ -79,7 +79,7 @@ cog_stopped(Cog) ->
 register_object(Obj) ->
     gen_statem:cast({global, gc}, Obj).
 
-unregister_object(O=#object{ref=_Ref}) ->
+unregister_object(O=#object{oid=_Oid}) ->
     gen_statem:cast({global, gc}, {stopped_object, O}).
 
 %% gen_statem callback functions
@@ -113,7 +113,7 @@ idle_state_next(Data=#data{log=Log, cogs=Cogs}) ->
 idle(cast, {register_future, Ref, Sender}, Data=#data{root_futures=RootFutures}) ->
     {NextState, NewData} = idle_state_next(Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
     {next_state, NextState, NewData};
-idle(cast, O=#object{ref=_Ref}, Data=#data{objects=Objects}) ->
+idle(cast, O=#object{oid=_Oid}, Data=#data{objects=Objects}) ->
     {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:insert({object, O}, Objects)}),
     {next_state, NextState, NewData};
 idle(cast, {stopped_object, O}, Data=#data{objects=Objects}) ->
@@ -144,7 +144,7 @@ collecting_state_next(Data=#data{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, ro
         true ->
             gcstats(Log, mark),
             Exported=gb_sets:from_list(
-                       lists:map(fun(O=#object{ref=_Ref}) -> {object, O} end,
+                       lists:map(fun(O=#object{oid=_Oid}) -> {object, O} end,
                                  cog_monitor:list_registered_http_objects())),
             Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union([Cogs, RootFutures, Exported])))),
             gcstats(Log, sweep),
@@ -156,7 +156,7 @@ collecting_state_next(Data=#data{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, ro
 
 collecting(cast, {register_future, Ref, _Sender}, Data=#data{root_futures=RootFutures}) ->
     {keep_state, Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}};
-collecting(cast, O=#object{ref=_Ref}, Data=#data{objects=Objects}) ->
+collecting(cast, O=#object{oid=_Oid}, Data=#data{objects=Objects}) ->
     {keep_state, Data#data{objects=gb_sets:insert({object, O}, Objects)}};
 collecting(cast, {stopped_object, O}, Data=#data{objects=Objects}) ->
     {keep_state, Data#data{objects=gb_sets:del_element({object, O}, Objects)}};
@@ -243,9 +243,9 @@ extract_references(DataStructure) ->
 				     %% `undefined' otherwise.
 				     to_deep_list(get(vars))])).
 
-to_deep_list(O=#object{ref=_Ref}) ->
+to_deep_list(O=#object{oid=_Oid}) ->
     {object, O};
-to_deep_list(#cog{dc=DC=#object{ref=_Ref}}) ->
+to_deep_list(#cog{dcobj=DC=#object{oid=_Oid}}) ->
     {object, DC};
 to_deep_list(Ref) when is_pid(Ref) ->
     {future, Ref};

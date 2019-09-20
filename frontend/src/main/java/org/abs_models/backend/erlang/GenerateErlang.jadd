@@ -157,15 +157,16 @@ aspect GenerateErlang {
        ecs.println("%% Application callbacks");
        ecs.println("-export([start/2, stop/1]).");
        ecs.println();
-       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
+       ErlUtil.functionHeader(ecs, "main", Mask.none, "RawCog=#cog{ref=CogRef}");
        ecs.println("put(vars, #{}),");
        ecs.println("C = none,");
-       ecs.println("Ref = null, % avoid self-call branch in synccall code");
-       ecs.println("O = #object{ref=null,cog=Cog},");
-       ecs.println("put(this, {state, none}),");
+       ecs.println("Oid = null, % avoid self-call branch in synccall code");
        // Create a default deployment component.
-       ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
-       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],Cog,[O]),");
+       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],RawCog,[]),");
+       ecs.println("cog:set_dc(RawCog, DC),");
+       ecs.println("Cog=#cog{ref=CogRef, dcobj=DC},");
+       ecs.println("O = #object{oid=null,cog=Cog},");
+       ecs.println("put(this, {state, none}),");
        ecs.println("Stack = [DC],");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
@@ -423,7 +424,7 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.println(" of");
     ecs.incIndent().println("null -> throw(dataNullPointerException);");
-    ecs.println("Callee=#object{ref=Ref,cog=Cog} ->");
+    ecs.println("Callee=#object{oid=Oid,cog=Cog} ->");
     ecs.incIndent();
     ecs.println("%% self-call");
     ecs.println("Vars=get(vars),");
@@ -438,7 +439,7 @@ aspect GenerateErlang {
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
     ecs.decIndent();
-    ecs.println("Callee=#object{ref=ObjRef,cog=Cog} ->");
+    ecs.println("Callee=#object{oid=ObjRef,cog=Cog} ->");
     // Any fixes in this code branch should probably be transferred to
     // object:new_local in file object.erl since that code calls Class:init()
     // in the same way

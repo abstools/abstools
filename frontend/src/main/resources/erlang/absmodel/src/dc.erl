@@ -28,19 +28,19 @@
 %% External API
 
 new(Cog, Oid) ->
-    {ok,DC}=gen_statem:start_link(?MODULE,[Cog, Oid],[]),
-    cog_monitor:new_dc(DC),
-    DC.
+    {ok,DCRef}=gen_statem:start_link(?MODULE,[Cog, Oid],[]),
+    cog_monitor:new_dc(DCRef),
+    DCRef.
 
-update(DC, Interval) ->
-    gen_statem:call(DC, {clock_advance_for_dc, Interval}).
+update(DCRef, Interval) ->
+    gen_statem:call(DCRef, {clock_advance_for_dc, Interval}).
 
-get_description(DC) ->
-    gen_statem:call(DC, get_dc_info_string).
+get_description(DCRef) ->
+    gen_statem:call(DCRef, get_dc_info_string).
 
-get_resource_history(DC, Type) ->
+get_resource_history(DCRef, Type) ->
     %% [Description, CreationTime, History, Totalhistory]
-    gen_statem:call(DC, {get_resource_history, Type}).
+    gen_statem:call(DCRef, {get_resource_history, Type}).
 
 %% cog->dc time and resource negotiation API
 %%
@@ -69,16 +69,16 @@ task_waiting_for_clock(_DC, Task, Cog, Min, Max) ->
 task_confirm_clock_wakeup(_DC, TaskRef) ->
     cog_monitor:task_confirm_clock_wakeup(TaskRef).
 
-consume(O=#object{ref=Ref,cog=Cog}, Resourcetype, Amount) ->
-    DC=cog:get_dc(Cog, Ref),
-    gen_statem:call(DC, {consume_resource,
-                         {var_current_for_resourcetype(Resourcetype),
-                          var_max_for_resourcetype(Resourcetype)},
-                         Amount}).
+consume(_DC=#object{oid=Oid,cog=Cog}, Resourcetype, Amount) ->
+    DCRef=cog:get_dc_ref(Cog, Oid),
+    gen_statem:call(DCRef, {consume_resource,
+                            {var_current_for_resourcetype(Resourcetype),
+                             var_max_for_resourcetype(Resourcetype)},
+                            Amount}).
 
 
 
-block_cog_for_resource(Cog=#cog{ref=CogRef,dc=DC}, Resourcetype, Amount, Stack) ->
+block_cog_for_resource(Cog=#cog{ref=CogRef,dcobj=DC}, Resourcetype, Amount, Stack) ->
     Amount_r = rationals:to_r(Amount),
     case rationals:is_positive(Amount_r) of
         true ->
