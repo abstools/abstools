@@ -79,7 +79,7 @@ are_objects_of_class_protected(Class) ->
 
 %% Cogs interface
 new_cog(ParentCog, Cog) ->
-    gen_statem:call({global, cog_monitor}, {cog,ParentCog, Cog,new}, infinity).
+    gen_statem:call({global, cog_monitor}, {cog, ParentCog, Cog, new}, infinity).
 
 cog_active(Cog) ->
     gen_statem:call({global, cog_monitor}, {cog,Cog,active}, infinity).

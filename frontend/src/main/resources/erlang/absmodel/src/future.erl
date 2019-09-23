@@ -4,7 +4,7 @@
 -export([get_after_await/2,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
 -export([task_started/3]).
 -export([get_for_rest/1]).
--export([register_waiting_task/3,confirm_wait_unblocked/3]).
+-export([maybe_register_waiting_task/3,confirm_wait_unblocked/3]).
 -include_lib("abs_types.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
@@ -117,13 +117,16 @@ get_for_rest(Future) ->
     Result.
 
 
-register_waiting_task(Future, _Cog=#cog{ref=CogRef}, Task) ->
-    gen_statem:cast(Future, {waiting, {CogRef, Task}});
-register_waiting_task(Future, CogRef, Task) ->
-    gen_statem:cast(Future, {waiting, {CogRef, Task}}).
+%% replies with "unresolved" and arranges to call `cog:task_is_runnable/2'
+%% when the future is completed, or replies with "completed".  In the latter
+%% case, does not call task_is_runnable.
+maybe_register_waiting_task(Future, _Cog=#cog{ref=CogRef}, Task) ->
+    gen_statem:call(Future, {waiting, {CogRef, Task}});
+maybe_register_waiting_task(Future, CogRef, Task) ->
+    gen_statem:call(Future, {waiting, {CogRef, Task}}).
 
 register_waiting_process(Future, Pid) ->
-    gen_statem:cast(Future, {waiting, Pid}).
+    gen_statem:call(Future, {waiting, Pid}).
 
 confirm_wait_unblocked(Future, #cog{ref=CogRef}, TaskRef) ->
     gen_statem:cast(Future, {okthx, {CogRef, TaskRef}});
@@ -246,8 +249,9 @@ next_state_on_completion(Data=#data{waiting_tasks=WaitingTasks}) ->
 
 running({call, From}, get_references, Data=#data{references=References}) ->
     {keep_state, Data, {reply, From, References}};
-running(cast, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
-    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]}};
+running({call, From}, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
+    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]},
+     {reply, From, unresolved}};
 running(cast, {completed, value, Result, Sender, SenderCog, Cookie},
         Data=#data{calleetask=Sender,calleecog=SenderCog})->
     {NextState, Data1} = next_state_on_completion(Data#data{cookie=Cookie}),
@@ -293,9 +297,9 @@ completing({call, From}, {get, Cog}, _Data=#data{value=Value,event=Event}) ->
 completing(cast, {okthx, Task}, Data) ->
     {NextState, Data1} = next_state_on_okthx(Data, Task),
     {next_state, NextState, Data1};
-completing(cast, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
-    notify_completion(Task),
-    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]}};
+completing({call, From}, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
+    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]},
+     {reply, From, completed}};
 completing({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 completing(info, Msg, Data) ->
@@ -320,9 +324,8 @@ completed(cast, {die, _Reason}, Data) ->
     {stop, normal, Data};
 completed(cast, {okthx, _Task}, _Data) ->
     keep_state_and_data;
-completed(cast, {waiting, Task}, _Data) ->
-    notify_completion(Task),
-    keep_state_and_data;
+completed({call, From}, {waiting, _Task}, _Data) ->
+    {keep_state_and_data, {reply, From, completed}};
 completed({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 completed(info, Msg, Data) ->

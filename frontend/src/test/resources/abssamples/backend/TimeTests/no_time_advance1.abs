@@ -1,0 +1,24 @@
+module BackendTest;
+
+interface I {
+    Unit m();
+}
+
+class C implements I {
+    Unit m() {
+        skip;
+    }
+}
+
+{
+    // (try to) check for spurious clock advances
+    I i = new C();
+    Bool testresult = timeValue(now()) == 0;
+    Int count = 10000;
+    while (count > 0) {
+        count = count - 1;
+        await i!m();
+    }
+    testresult = testresult && timeValue(now()) == 0;
+    println(`testresult: $testresult$ -- time: $now()$`);
+}

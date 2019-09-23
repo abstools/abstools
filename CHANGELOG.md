@@ -18,12 +18,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Incompatible change: A partial function cannot have an empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as when written without the empty function argument list, i.e., as a non-partial function.
+- Incompatible change: A partial function cannot have an empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as a non-partial function with identical (non-function) argument list and body.
 
 ### Removed
 
 ### Fixed
 
+- Fixed a cause of spurious clock advances under rare circumstances (~1.5% chance of occurrence when calling empty methods on one cog only, see test case `TimeTests.no_time_advance1`).
 
 ## [1.8.1] - 2019-03-28
 

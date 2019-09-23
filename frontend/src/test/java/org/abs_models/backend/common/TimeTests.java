@@ -58,4 +58,10 @@ public class TimeTests extends SemanticTests {
         Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue(new File("abssamples/backend/TimeTests/resource_accounting.abs"));
     }
+
+    @Test
+    public void no_time_advance1() {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
+        assertEvalTrue(new File("abssamples/backend/TimeTests/no_time_advance1.abs"));
+    }
 }
