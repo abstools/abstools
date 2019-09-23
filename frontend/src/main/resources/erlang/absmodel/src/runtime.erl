@@ -208,7 +208,7 @@ run_dpor_slave(Module, Clocklimit, Trace) ->
     {ok, TaskRef} = start_mod(Module, false, none, Clocklimit, false, Trace),
     RetVal=task:join(TaskRef),
     Status = cog_monitor:waitfor(),
-    NewTrace = cog_monitor:get_schedules(),
+    NewTrace = cog_monitor:get_trace(),
     gc:stop(),
     clock:stop(),
     coverage:stop(),

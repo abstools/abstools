@@ -387,7 +387,7 @@ trace_to_json_friendly(Trace) ->
     lists:reverse(T).
 
 get_trace_json() ->
-    Trace = cog_monitor:get_schedules(),
+    Trace = cog_monitor:get_trace(),
     jsx:encode(trace_to_json_friendly(Trace), [{space, 1}, {indent, 2}]).
 
 get_db_traces_json() ->
