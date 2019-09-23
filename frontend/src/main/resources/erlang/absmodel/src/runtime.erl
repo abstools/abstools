@@ -168,7 +168,6 @@ end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
     coverage:write_files(),
     Status = cog_monitor:waitfor(),
     gc:stop(),
-    clock:stop(),
     coverage:stop(),
     case InfluxdbEnabled of
         true -> influxdb:stop();
@@ -184,6 +183,7 @@ end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
               _ -> {exit_with, Status, cog_monitor:get_alternative_schedule()}
           end,
     cog_monitor:stop(),
+    clock:stop(),
     Ret.
 
 
