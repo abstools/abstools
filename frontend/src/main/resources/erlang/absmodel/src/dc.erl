@@ -95,7 +95,6 @@ block_cog_for_resource(Cog=#cog{ref=CogRef,dcobj=DC}, Resourcetype, Amount, Stac
                     Time=clock:distance_to_next_boundary(),
                     %% XXX once we keep time ourselves this backwards call will be gone
                     cog:block_cog_for_duration(Cog, Time, Time, Stack),
-                    task:wait_for_token(Cog,Stack),
                     block_cog_for_resource(Cog, Resourcetype, Remaining, Stack);
                 ok ->
                     case rationals:is_positive(Remaining) of
