@@ -61,7 +61,9 @@ wait_for_future_start(Ref, Cog, Stack) ->
 
 
 start_for_rest(Callee, Method, Params, Info) ->
-    {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,Info,false,none], []),
+    ScheduleEvent = #event{type=schedule, caller_id=modelapi, local_id={Method, Params}, name=Method},
+    NewInfo = Info#task_info{event=ScheduleEvent},
+    {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,false,none], []),
     Ref.
 
 get_after_await(null, _Cog) ->
@@ -106,7 +108,7 @@ get_for_rest(Future) ->
     register_waiting_process(Future, self()),
     receive {value_present, Future} -> ok end,
     confirm_wait_unblocked(Future, self()),
-    Result=case gen_statem:call(Future, get) of
+    Result=case gen_statem:call(Future, {get, modelapi}) of
                %% Explicitly re-export internal representation since it's
                %% deconstructed by modelapi_v2:handle_object_call
                {ok,Value}->
@@ -288,6 +290,8 @@ completing({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event
                            local_id=Lid, name=Name, reads=R, writes=W},
     cog:register_await_future_complete(Cog, CompletionEvent),
     {keep_state_and_data, {reply, From, Value}};
+completing({call, From}, {get, modelapi}, _Data=#data{value=Value,event=Event}) ->
+    {keep_state_and_data, {reply, From, Value}};
 completing({call, From}, {get, Cog}, _Data=#data{value=Value,event=Event}) ->
     #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
     CompletionEvent=#event{type=future_read, caller_id=Cid,
@@ -313,6 +317,8 @@ completed({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}
     CompletionEvent=#event{type=await_future, caller_id=Cid,
                            local_id=Lid, name=Name, reads=R, writes=W},
     cog:register_await_future_complete(Cog, CompletionEvent),
+    {keep_state_and_data, {reply, From, Value}};
+completed({call, From}, {get, modelapi}, _Data=#data{value=Value,event=Event}) ->
     {keep_state_and_data, {reply, From, Value}};
 completed({call, From}, {get, Cog}, _Data=#data{value=Value,event=Event}) ->
     #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
