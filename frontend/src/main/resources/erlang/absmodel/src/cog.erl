@@ -406,8 +406,8 @@ handle_event({call, From}, {get_dc_ref, Oid}, _StateName, Data=#data{dcs=DCs}) -
     {keep_state_and_data, {reply, From, maps:get(Oid, DCs)}};
 handle_event({call, From}, {set_dc, DC, DCRef}, _StateName,
             Data=#data{dc=null, dcref=none}) ->
-    dc:new_cog(none, DCRef, self()),
-    {keep_state, Data#data{dc=DC, dcref=DCRef}, {reply, From, ok}};
+    {Id, ReplayTrace} = dc:new_cog(none, DCRef, self()),
+    {keep_state, Data#data{dc=DC, dcref=DCRef, id=Id, replaying=ReplayTrace}, {reply, From, ok}};
 handle_event({call, From}, {new_object_state, ObjectState}, _StateName,
             Data=#data{object_states=ObjectStates, fresh_objects=FreshObjects,
                        object_counter=ObjCounter}) ->
@@ -534,7 +534,11 @@ object_state_from_pid(Pid, TaskInfos, ObjectStates) ->
 
 init([ParentCog, DC, DCRef, Scheduler]) ->
     process_flag(trap_exit, true),
-    Data = case dc:new_cog(ParentCog, DCRef, self()) of
+    ParentRef = case ParentCog of
+                    #cog{ref=Ref} -> Ref;
+                    _ -> ParentCog
+                end,
+    Data = case dc:new_cog(ParentRef, DCRef, self()) of
                {Id, ReplayTrace} -> #data{dc=DC, dcref=DCRef,
                                           scheduler=Scheduler,
                                           id=Id, replaying=ReplayTrace};
