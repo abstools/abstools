@@ -205,7 +205,8 @@ run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
     end.
 
 run_dpor_slave(Module, Clocklimit, Trace) ->
-    {ok, TaskRef} = start_mod(Module, false, none, Clocklimit, false, Trace),
+    SchedulingTrace = modelapi_v2:to_scheduling_trace(Trace),
+    {ok, TaskRef} = start_mod(Module, false, none, Clocklimit, false, SchedulingTrace),
     RetVal=task:join(TaskRef),
     Status = cog_monitor:waitfor(),
     NewTrace = cog_monitor:get_trace(),
