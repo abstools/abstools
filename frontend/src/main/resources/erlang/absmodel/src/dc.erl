@@ -209,6 +209,56 @@ handle_call(From, get_dc_info_string, _State, Data=#data{cog=Cog,oid=Oid}) ->
                           builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
     {keep_state_and_data, {reply, From, Result}}.
 
+handle_cast({clock_advance_for_dc, Amount}, _State,
+     Data=#data{cog=Cog, oid=Oid, clock_waiting=ClockWaiting}) ->
+    %% `cog_monitor' calls `dc:notify_time_advance/2' only when all dcs are
+    %% idle -- but by the time we get to process the `clock_advance_for_dc'
+    %% signal, a cog might have already waken us up again, so we also accept
+    %% it in state `active'.
+    Now=clock:now(),
+    OState=cog:get_object_state(Cog, Oid),
+    OState1=update_state_and_history(OState, Amount),
+    cog:object_state_changed(Cog, Oid, OState1),
+    %% List traversal 1: wake up all tasks where Min <= Now; collect these
+    %% tasks in a set to make sure they were scheduled before the next clock
+    %% advance
+    WakeUpItems=lists:foldl(
+                  fun({CogRef, TaskRef, Min, _Max}, ActiveTasks) ->
+                          case cmp:lt(Now, Min) of
+                              true -> ActiveTasks;
+                              false ->
+                                  %% `cog:task_is_runnable' cannot be
+                                  %% synchronous since it will call back, so we
+                                  %% need to remember who we want to see awake
+                                  %% before next time advance.
+                                  cog:task_is_runnable(CogRef, TaskRef),
+                                  gb_sets:add({CogRef, TaskRef}, ActiveTasks)
+                          end
+                  end,
+                  gb_sets:empty(),
+                  ClockWaiting),
+    %% List traversal 2: calculate list of all still-sleeping tasks
+    NewW=lists:filter(
+           fun({_CogRef, _TaskRef, Min, _Max}) -> cmp:lt(Now, Min) end,
+           ClockWaiting),
+    %% Let the cog_monitor know the maximum clock advance that we can do now
+    %% -- we can always change this later but need to get this out ASAP
+    case NewW of
+        [] ->
+            ok;
+        [{_CogRefH, _TaskRefH, _MinH, MaxH} | _] ->
+            cog_monitor:dc_mte(self(), MaxH)
+    end,
+    %% TODO: walk through list of cogs that need resources, give them some and
+    %% send wakeup if they got everything -- at the moment, this is done
+    %% implicitly
+    NewData=Data#data{clock_waiting=NewW, active_before_next_clock=WakeUpItems},
+    case gb_sets:is_empty(WakeUpItems) of
+        true ->
+            %% TODO: call cog_monitor:dc_idle here
+            {keep_state, NewData};
+        false -> switch_to_active(idle, NewData)
+    end;
 handle_cast(_Event, _StateName, Data) ->
     {stop, not_supported, Data}.
 
@@ -305,52 +355,6 @@ active(cast, Event, Data) ->
     handle_cast(Event, active, Data).
 
 
-idle(cast, {clock_advance_for_dc, Amount},
-     Data=#data{cog=Cog, oid=Oid, clock_waiting=ClockWaiting}) ->
-    Now=clock:now(),
-    OState=cog:get_object_state(Cog, Oid),
-    OState1=update_state_and_history(OState, Amount),
-    cog:object_state_changed(Cog, Oid, OState1),
-    %% List traversal 1: wake up all tasks where Min <= Now; collect these
-    %% tasks in a set to make sure they were scheduled before the next clock
-    %% advance
-    WakeUpItems=lists:foldl(
-                  fun({CogRef, TaskRef, Min, _Max}, ActiveTasks) ->
-                          case cmp:lt(Now, Min) of
-                              true -> ActiveTasks;
-                              false ->
-                                  %% `cog:task_is_runnable' cannot be
-                                  %% synchronous since it will call back, so we
-                                  %% need to remember who we want to see awake
-                                  %% before next time advance.
-                                  cog:task_is_runnable(CogRef, TaskRef),
-                                  gb_sets:add({CogRef, TaskRef}, ActiveTasks)
-                          end
-                  end,
-                  gb_sets:empty(),
-                  ClockWaiting),
-    %% List traversal 2: calculate list of all still-sleeping tasks
-    NewW=lists:filter(
-           fun({_CogRef, _TaskRef, Min, _Max}) -> cmp:lt(Now, Min) end,
-           ClockWaiting),
-    %% Let the cog_monitor know the maximum clock advance that we can do now
-    %% -- we can always change this later but need to get this out ASAP
-    case NewW of
-        [] ->
-            ok;
-        [{_CogRefH, _TaskRefH, _MinH, MaxH} | _] ->
-            cog_monitor:dc_mte(self(), MaxH)
-    end,
-    %% TODO: walk through list of cogs that need resources, give them some and
-    %% send wakeup if they got everything -- at the moment, this is done
-    %% implicitly
-    NewData=Data#data{clock_waiting=NewW, active_before_next_clock=WakeUpItems},
-    case gb_sets:is_empty(WakeUpItems) of
-        true ->
-            %% TODO: call cog_monitor:dc_idle here
-            {keep_state, NewData};
-        false -> switch_to_active(idle, NewData)
-    end;
 idle({call, From}, Event, Data) ->
     handle_call(From, Event, idle, Data);
 idle(cast, Event, Data) ->
