@@ -1,12 +1,15 @@
 #!/bin/bash
+set -e
 
 scriptpath="$( cd "$(dirname "$0")" ; pwd -P )"
 codepaths=$(find "$scriptpath" -name "ebin" -type d -print0 \
                  | xargs -0 printf '%s","' | sed 's/","$//g')
+
+(cd $scriptpath/absmodel && ../bin/rebar compile)
+
 (
     echo "cd(\"$dir/absmodel\")."
     echo "code:add_paths([\"$codepaths\"])."
-    echo "make:all([load])."
     echo "runtime:start(\"$@\")."
     cat
 ) | erl -sname master@localhost
