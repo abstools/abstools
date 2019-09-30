@@ -122,8 +122,7 @@ public class ErlApp {
             "run.escript",
             "absmodel/rebar.config",
             "bin/*",
-            "link_sources",
-            "influx-grafana/*"
+            "link_sources"
             );
     private static final Set<String> EXEC_FILES = ImmutableSet.of(
             "bin/rebar",

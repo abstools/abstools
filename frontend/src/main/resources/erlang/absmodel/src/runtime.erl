@@ -15,9 +15,6 @@
 
 -define(CMDLINE_SPEC,
         [{port,$p,"port",{integer,none},"Listen for model API requests on port (0 for random port) and keep model running"},
-         {influxdb_enable,$i,"influxdb-enable",undefined,"Enable writing to InfluxDB"},
-         {influxdb_url,$u,"influxdb-url",{string,"http://localhost:8086"},"Write log data to influxdb database located at URL"},
-         {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
          {dump_trace,$t,"dump-trace",{string, none},"Dump the trace as a JSON file"},
@@ -41,7 +38,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none, maps:new(), false);
+            run_mod(?ABSMAINMODULE, false, false, none, none, maps:new(), false);
         Args->
             start(Args)
    end.
@@ -86,9 +83,6 @@ parse(Args,Exec)->
             Port=proplists:get_value(port,Parsed,none),
             Clocklimit=proplists:get_value(clocklimit,Parsed,none),
 
-            InfluxdbUrl=proplists:get_value(influxdb_url,Parsed),
-            InfluxdbDB=proplists:get_value(influxdb_db,Parsed),
-            InfluxdbEnable=proplists:get_value(influxdb_enable,Parsed, false),
             Schedulers=proplists:get_value(schedulers,Parsed,none),
             DumpTrace=proplists:get_value(dump_trace,Parsed,none),
             ReplayMode=proplists:get_value(replay_trace,Parsed,none),
@@ -113,7 +107,7 @@ parse(Args,Exec)->
             case ExploreMode of
                 true -> dpor:start_link(Module, Clocklimit);
                 false -> run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-                                 InfluxdbUrl, InfluxdbDB, InfluxdbEnable, ReplayTrace, DumpTrace)
+                                 ReplayTrace, DumpTrace)
             end;
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
@@ -161,7 +155,7 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
                           this=null, destiny=null},
     {ok, cog:add_main_task(Cog,[Module,self()], TaskInfo)}.
 
-end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
+end_mod(TaskRef, DumpTrace) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     %% modelapi_v2:print_statistics(),
@@ -169,10 +163,6 @@ end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
     Status = cog_monitor:waitfor(),
     gc:stop(),
     coverage:stop(),
-    case InfluxdbEnabled of
-        true -> influxdb:stop();
-        _ -> ok
-    end,
     case DumpTrace of
         none -> ok;
         _ -> JsonTrace = modelapi_v2:get_trace_json(),
@@ -187,21 +177,14 @@ end_mod(TaskRef, InfluxdbEnabled, DumpTrace) ->
     Ret.
 
 
-run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-        InfluxdbUrl, InfluxdbDB, InfluxdbEnable, Trace, DumpTrace)  ->
-
-    case InfluxdbEnable of
-        true -> {ok, _Influxdb} = influxdb:start_link(InfluxdbUrl, InfluxdbDB, Clocklimit);
-        _ -> ok
-    end,
-
+run_mod(Module, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace)  ->
     case Port of
         _ when is_integer(Port) ->
             start_http(Port, Module, Debug, GCStatistics, Clocklimit, Trace),
             receive ok -> ok end;
         _ ->
             {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false, Trace),
-            end_mod(R, InfluxdbEnable, DumpTrace)
+            end_mod(R, DumpTrace)
     end.
 
 run_dpor_slave(Module, Clocklimit, Trace) ->

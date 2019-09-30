@@ -407,7 +407,6 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,dc
                               active_before_next_clock=ordsets:from_list(lists:flatten(A1)),
                               dc_mtes=NewMTEs};
                 {limit_reached, _} ->
-                    influxdb:flush(),
                     case Keepalive of
                         false ->
                             io:format(standard_error, "Simulation time limit reached; terminating~n", []),
