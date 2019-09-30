@@ -99,16 +99,16 @@ clean {
 jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     archiveBaseName='absfrontend'
-    archiveAppendix=versionDetails().branchName
+    archiveAppendix=gitBranch()
     manifest {
         attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',
-            'Implementation-Version': versionDetails().lastTag,
+            'Implementation-Version': project.version.tokenize('-').first(),
             'Bundle-Version': project.version,
             // This is wrong, but we use it anyway for the detailed
             // version string (java.lang.Package only has methods
             // getVersion and getSpecificationVersion)
-            'Specification-Version': versionDetails().lastTag + "-" + versionDetails().commitDistance + "-" + versionDetails().gitHash
+            'Specification-Version': project.version
     }
     from configurations.runtimeClasspath
         .findAll { it.name.endsWith('jar') }
@@ -142,13 +142,13 @@ assemble.dependsOn plainJar
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
-    appendix = versionDetails().branchName
+    appendix = gitBranch()
     from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
-    appendix = versionDetails().branchName
+    appendix = gitBranch()
     from javadoc.destinationDir
 }
 

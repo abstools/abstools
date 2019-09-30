@@ -5,10 +5,26 @@
  * Learn how to create Gradle builds at https://guides.gradle.org/creating-new-gradle-builds/
  */
 
-plugins {
-    id 'com.palantir.git-version' version '0.11.0'
+// https://stackoverflow.com/questions/15061277/how-can-i-get-the-current-git-branch-in-gradle/36760102#36760102
+def gitBranch() {
+    def branch = ""
+    def proc = "git rev-parse --abbrev-ref HEAD".execute()
+    proc.in.eachLine { line -> branch = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    // shorter version, but does not print errors:
+    // def branch = 'git rev-parse --abbrev-ref HEAD'.execute().text.split()[0]
+    branch
 }
 
+def gitVersion() {
+    def version = ""
+    def proc = "git describe --tags".execute()
+    proc.in.eachLine { line -> version = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    version
+}
 
 subprojects {
     repositories {
