@@ -135,6 +135,24 @@ This sequence of commands starts Erlang, then compiles the generated Erlang
 code and starts it.  Type `gen/erl/run -h` for a list of options accepted by
 the model.
 
+==== Recording and replaying traces
+
+ABS task scheduling is non-deterministic; i.e., when two tasks are enabled,
+the cog will select an arbitrary one (but see <<sec:schedulers>>).  The erlang
+backend can record a trace of scheduling decisions and replay it to precisely
+reproduce the previous run.
+
+To record a trace to a file `trace.json`, start the model with a parameter
+`--dump-trace trace.json` or `-t trace.json`.
+
+To replay an existing trace recorded in `trace.json`, start the model with
+`--replay-trace trace.json` or `-r trace.json`.
+
+A trace can also be obtained from a running model via the Model API.  Assuming
+the model is started on port 8080 (via a parameter `-p 8080`), the trace is
+accessible at the url http://localhost:8080/trace.  A trace visualizer can be
+found here: https://github.com/larstvei/ABS-traces.
+
 ==== Generating code coverage information
 
 The Erlang backend can optionally generate code coverage information in a

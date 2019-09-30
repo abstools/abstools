@@ -1,56 +1,24 @@
-ABS Tools – Trace fork
+ABS Tools
 =========
 
-Inside this repository we develop the experimental extensions for the ABS
-modeling language. The current language manual is at http://docs.abs-models.org.
+[![CircleCI](https://img.shields.io/circleci/project/abstools/abstools.svg)](https://circleci.com/gh/abstools/abstools)
+[![GitHub release](https://img.shields.io/github/release/abstools/abstools.svg)](https://github.com/abstools/abstools/releases/latest)
+[![Gitter](https://badges.gitter.im/abstools/general.svg)](https://gitter.im/abstools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-After installing the frontend (see instructions below), you can try out
-recording and replying. First compile an ABS model to Erlang with
+Inside this repository we develop the core tools of the ABS modelling
+language.  The current language manual is at http://docs.abs-models.org.
 
-    $ bin/bash/absc --erlang [options] <absfiles>
+To run the ABS collaboratory (a browser-based IDE for ABS) locally using
+Docker, execute the following command:
 
-The output will be put in `gen/erl`.
+    docker run -p 8080:80 --rm abslang/collaboratory:latest
 
-A model can be started with two different commands, both of which are
-generated inside `gen/erl`:
+Then connect your browser to http://localhost:8080/.  It is not necessary to
+clone the repository or compile the toolchain to run the ABS collaboratory in this way.
 
-    $ gen/erl/run
-    $ gen/erl/start_console
-
-The command `run` launches an Erlang script that terminates after the
-model terminates; `start_console` launches an Erlang shell and
-executes the given main module, offering an Erlang prompt afterwards.
-For windows, start the model with `run.bat`.
-
-To record a trace to a file `trace.json`, then one of the following:
-
-    $ gen/erl/run --dump-trace trace.json
-    $ gen/erl/run -t trace.json
-
-To replay an existing trace, run one of the following
-
-    $ gen/erl/run --replay-trace trace.json
-    $ gen/erl/run -r trace.json
-
-Both work with `gen/erl/start_console` as well, but then files should be given
-as full paths.
-
-To extract a trace from a running model, run a model with the model API
-enabled with one of the following:
-
-    $ gen/erl/run -p 8080
-    $ gen/erl/run --port 8080
-
-Then the trace is available in JSON at http://localhost:8080/trace. One can for
-instance save it to file using curl, like so:
-
-    $ curl localhost:8080/trace > trace.json
-
-With the model API enabled, it can be used along with:
-https://github.com/larstvei/ABS-traces.
-
-Running `gen/erl/run -h` gives a list of command-line options.
-
+To run the absc compiler locally using docker, create a script such as
+https://github.com/abstools/abstools/blob/master/frontend/src/main/resources/bash/absc-docker
+and put it in your path.
 
 Folders
 -------

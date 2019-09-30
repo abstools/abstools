@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Field values can now be passed to custom scheduling functions in the erlang backend.
 
+- The erlang backend can now record and replay traces of scheduling decisions; see the output of `gen/erl/run -h`, specifically the `--dump-trace` (`-t`) and `--replay-trace` (`-r`) options.  The trace of the currently running model is also available via the Model API: a model started with `-p 8080` will make its trace available at `https://localhost:8080/trace`.
+
 - The `abslang/absc` docker image now includes the analysis tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`, which only support the linux platform but can now be run inside the container on other platforms.
 
 ### Changed
