@@ -1139,9 +1139,9 @@ aspect GenerateErlang {
   public void ClaimGuard.generateErlangCode(CodeStream preAwait,CodeStream ecs,Vars vars){
     PureExp var = getVar();
     if (var instanceof FieldUse) {
-        ecs.print("future:poll(");
+        ecs.print("future:maybe_register_waiting_cog(");
         var.generateErlangCode(ecs,vars);
-        ecs.print(")");
+        ecs.print(", CogRef)");
     } else {
         preAwait.print("future:await(");
         var.generateErlangCode(preAwait,vars);

@@ -3,13 +3,16 @@
 -export([start/0,start/1,start/2,start/3,add_main_task/3,add_task/7]).
 -export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
 -export([set_dc/2,get_dc_ref/2]).
+%% function informing cog about future state change
+-export([future_is_ready/2]).
 %% functions informing cog about task state change
 -export([task_is_runnable/2,
          task_is_blocked_for_gc/4,
          task_poll_is_ready/3, task_poll_is_not_ready/3,
          task_poll_has_crashed/3,
-         submit_references/2,
-         register_invocation/2, register_new_object/2,
+         submit_references/2]).
+%% functions for registering / creating trace events
+-export([register_invocation/2, register_new_object/2,
          register_new_local_object/2, register_future_read/2,
          register_await_future_complete/2, get_trace/1]).
 %% functions wrapping task changes; might block for messages
@@ -233,6 +236,15 @@ register_waiting_task_if_necessary(_WaitReason={waiting_on_clock, Min, Max},
 register_waiting_task_if_necessary(_WaitReason, _DCRef, _Cog, _Task, TaskStateOrig) ->
     TaskStateOrig.
 
+future_is_ready(CogRef, FutureRef) ->
+    %% If a task is waiting on a future that is stored in a field, the future
+    %% asks the cog to try a scheduling round once the future is ready.  If
+    %% the cog is not in state `no_task_schedulable' this is a harmless no-op.
+    %% If the field got re-assigned and the future is not awaited on anymore,
+    %% the scheduling round will not find any runnable task but this is
+    %% harmless as well.
+    gen_statem:cast(CogRef, {future_is_ready, FutureRef}).
+
 task_is_runnable(#cog{ref=CogRef},TaskRef) ->
     gen_statem:cast(CogRef, {task_runnable, TaskRef, none});
 task_is_runnable(CogRef, TaskRef) ->
@@ -421,6 +433,11 @@ handle_event(cast, inc_ref_count, _StateName, Data=#data{referencers=Referencers
     {keep_state, Data#data{referencers=Referencers + 1}};
 handle_event(cast, dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
     {keep_state, Data#data{referencers=Referencers - 1}};
+
+handle_event(cast, {future_is_ready, FutureRef}, _StateName, Data) ->
+    %% This is the common case (we are not idle, just confirm to the future).
+    future:confirm_wait_unblocked(FutureRef, {waiting_cog, self()}),
+    keep_state_and_data;
 
 %% Record/replay a method invocation, and return a stable identifier for the
 %% invocation.
@@ -731,6 +748,53 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
                        polling_tasks=gb_sets:del_element(T, Pol),
                        runnable_tasks=gb_sets:add_element(T, NewRunnableTasks),
                        new_tasks=NewNewTasks, recorded=NewRecorded, replaying=NewReplaying}}
+    end;
+no_task_schedulable(cast, {future_is_ready, FutureRef},
+                    Data=#data{waiting_tasks=Wai,polling_tasks=Pol,
+                               runnable_tasks=Run, new_tasks=New,
+                               scheduler=Scheduler, dc=DC, dcref=DCRef,
+                               task_infos=TaskInfos,
+                               object_states=ObjectStates,
+                               polling_states=PollingStates,
+                               recorded=Recorded,replaying=Replaying}) ->
+    %% We might have a task waiting on `FutureRef' that’s stored in a field.
+    %% Try a normal scheduling round.
+    NewPollingStates=poll_waiting(Pol, TaskInfos, ObjectStates),
+    Candidates = get_candidate_set(Run, Pol, NewPollingStates),
+    T = choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, Replaying),
+    case T of
+        none->
+            %% None found -- this was not the future we were waiting for (the
+            %% field we were waiting for was reassigned to a different future)
+            case gb_sets:is_empty(New) andalso time_slot_replayed(Replaying) of
+                true -> dc:cog_idle(DCRef, self());
+                false -> ok
+            end,
+            %% unblock the future anyway; it tried its best to help us
+            future:confirm_wait_unblocked(FutureRef, {waiting_cog, self()}),
+            {keep_state,
+             Data#data{running_task=idle, polling_states=NewPollingStates}};
+        T ->       % Execute T -- might or might not be TaskRef
+            #task_info{event=Event} = maps:get(T, TaskInfos),
+            #event{caller_id=Cid, local_id=Lid, name=Name} = Event,
+            NewRecorded = [#event{type=schedule, caller_id=Cid, local_id=Lid, name=Name} | Recorded],
+            NewReplaying = case Replaying of [] -> []; [X | Rest] -> Rest end,
+
+            dc:cog_active(DCRef, self()),
+            send_token(token, T, TaskInfos, ObjectStates),
+            maybe_send_unblock_confirmation(DCRef, self(), T, TaskInfos),
+            %% Send this confirmation unconditionally, even in case the task
+            %% waiting on the future stored in a field wasn’t chosen -- all
+            %% that matters is we went through a scheduling round.  Also, send
+            %% this *after* dc:cog_active.
+            future:confirm_wait_unblocked(FutureRef, {waiting_cog, self()}),
+            {next_state, task_running,
+             %% T can come from Pol or NewRunnableTasks - adjust cog state
+             Data#data{running_task=T,
+                       polling_tasks=gb_sets:del_element(T, Pol),
+                       runnable_tasks=gb_sets:add_element(T, Run),
+                       polling_states=NewPollingStates,
+                       recorded=NewRecorded, replaying=NewReplaying}}
     end;
 no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                     Data=#data{dcref=DCRef, dc=DC, new_tasks=Tasks,

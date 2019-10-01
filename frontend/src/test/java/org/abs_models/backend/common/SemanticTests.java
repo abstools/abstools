@@ -109,7 +109,6 @@ public abstract class SemanticTests {
         Model m;
         try {
             m = ABSTest.assertParseFileOk(f.getPath());
-            assertNotNull(m.lookupModule("BackendTest"));
             assertFalse(m.hasParserErrors());
             assertFalse(m.hasTypeErrors());
             assertEvalTrue(m);
