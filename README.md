@@ -60,23 +60,6 @@ Folders
     * `maven-support` - Maven plugin for generating Java/Maude from ABS,
       testing and packaging ABS codes
 
-Using Vagrant
--------------
-
-To develop the ABS tools without installing additional software, you
-can use [Vagrant](https://www.vagrantup.com).  Vagrant will start a
-Linux virtual machine and install the needed dependencies.
-
-First, install Vagrant from https://www.vagrantup.com/downloads.html and
-VirtualBox from https://www.virtualbox.org
-
-To create the ABS virtual machine, run the command `vagrant up` in this
-directory.  Run `vagrant ssh` to login to that machine (login vagrant/vagrant), or open
-http://localhost:8888/ to connect to a local version of the collaboratory.
-Currently supported browsers include Firefox, Chrome, recent IE (no Safari).
-
-Within the VM, this directory is accessible as `/vagrant`.
-
 Note for Windows Users
 ----------------------
 

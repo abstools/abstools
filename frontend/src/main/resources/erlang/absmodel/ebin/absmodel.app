@@ -6,7 +6,7 @@
               {mod,{main_app,[]}},
               {env,[{port,8080}]},
               {modules,[active_object_task,async_call_task,builtin,clock,cmp,
-                        cog,cog_monitor,coverage,dc,error_transform,future,gc,
-                        getopt,influxdb,init_task,intar,main_app,main_task,
+                        cog,cog_monitor,coverage,dc,dpor,error_transform,
+                        future,gc,getopt,init_task,intar,main_app,main_task,
                         mochinum,modelapi_v1,modelapi_v2,object,rationals,
                         runtime,task]}]}.

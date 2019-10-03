@@ -138,11 +138,11 @@ public class ClassGenerator {
             ecs.println(",");
         }
         if (classDecl.isActiveClass()) {
-            ecs.println("cog:process_is_blocked_for_gc(Cog, self(), get(process_info), get(this)),");
-            ecs.print("cog:add_task(Cog,active_object_task,null,O,[],#process_info{method= <<\"run\"/utf8>>,this=O,destiny=null},");
+            ecs.println("cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),");
+            ecs.print("cog:add_task(Cog,active_object_task,null,O,[],#task_info{event=#event{type=schedule, local_id=run}, method= <<\"run\"/utf8>>,this=O,destiny=null},");
             ecs.print(vars.toStack());
             ecs.println("),");
-            ecs.println("cog:process_is_runnable(Cog,self()),");
+            ecs.println("cog:task_is_runnable(Cog,self()),");
             ecs.print("task:wait_for_token(Cog,");
             ecs.print(vars.toStack());
             ecs.println("),");
@@ -203,7 +203,7 @@ public class ClassGenerator {
     }
 
     private String generatorClassMatcher() {
-        return String.format("O=#object{ref=Ref,cog=Cog=#cog{ref=CogRef,dc=DC}}", modName);
+        return String.format("O=#object{oid=Oid,cog=Cog=#cog{ref=CogRef,dcobj=DC}}", modName);
     }
 
     private void generateDataAccess() {
@@ -222,6 +222,7 @@ public class ClassGenerator {
             ecs.pf(" %%%% %s:%s", f.getFileName(), f.getStartLine());
             ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
                                    "'" + f.getName() + "'");
+            ecs.println("object:register_read('" + f.getName() + "'),");
             ecs.println("G;");
             ecs.decIndent();
         }
@@ -241,6 +242,7 @@ public class ClassGenerator {
                 first = false;
                 ecs.pf(" %%%% %s:%s", f.getFileName(), f.getStartLine());
                 ErlUtil.functionHeader(ecs, "set_val_internal", Mask.none, "S", "'" + f.getName() + "'", "V");
+                ecs.println("object:register_write('" + f.getName() + "'),");
                 ecs.format("S#state{'%s'=V}", f.getName());
             }
             ecs.println(".");

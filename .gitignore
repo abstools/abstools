@@ -13,6 +13,7 @@ xtext-gen/
 xtend-gen/
 bin/
 out/
+/log/
 /frontend/dist/
 /frontend/**/gen/
 /frontend/**/*.beam

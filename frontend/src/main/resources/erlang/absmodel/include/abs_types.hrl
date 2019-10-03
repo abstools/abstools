@@ -1,16 +1,48 @@
 %%This file is licensed under the terms of the Modified BSD License.
 
--record(object,{ref,cog}).
--record(cog,{ref,dc}).
--record(process_info, % use get(process_info) in a task to get this structure
-       {pid=undefined,                % filled in at creation time with self()
-        this=null,                    % pid of the task's object (`null` for main task)
-        destiny=null,                 % pid of the task's future (`null` for main task and init task)
-        method= <<"">> ,              % name of the running method (file GenerateErlang.jadd)
-        creation={dataTime, 0},       % filled in at point of async call (file GenerateErlang.jadd)
-        arrival={dataTime, -1},       % filled in by cog when receiving signal
-        cost=dataInfDuration,         % filled in via annotation
-        proc_deadline=dataInfDuration, % deadline relative to time at call, filled in via annotation cat point of async call (file GenerateErlang.jadd)
-        start={dataTime, -1},         % filled in upon first scheduling
-        crit=false                    % filled in via annotation
+-record(object,{oid,cog}).
+-record(cog,{ref,dcobj}).
+-record(task_info, % use `get(task_info)' in a task to get this structure
+       {
+        %% filled in at creation time with self()
+        pid=undefined,
+        %% pid of the task's object (`null` for main task)
+        this=null,
+        %% pid of the task's future (`null` for main task and init task)
+        destiny=null,
+        %% name of the running method (compile-time constant)
+        method= <<"">> ,
+        %% filled in when added to cog
+        event=undefined,
+        %% filled in at point of async call
+        creation={dataTime, 0},
+        %% filled in by cog when receiving invocation
+        arrival={dataTime, -1},
+        %% filled in via annotation
+        cost=dataInfDuration,
+        %% deadline relative to time at call, filled in via annotation at
+        %% point of async call
+        proc_deadline=dataInfDuration,
+        %% filled in by cog upon first scheduling
+        start={dataTime, -1},
+        %% filled in via annotation
+        crit=false,
+        %% Flag used by the cog to determine which action(s) to take when
+        %% scheduling a task.  Can be `none', `{waiting_on_clock, Min, Max}',
+        %% or `{waiting_on_future, Future}'.  Set and used internally by the
+        %% cog; always `none' in `task_info' structures obtained via
+        %% `get(task_info)'.
+        wait_reason=none
        }).
+
+-record(event,
+        {type,                 % schedule | invocation | new_object | suspend | await_future | future_read | future_write
+         local_id,             % A local identifier, provided by the cog
+         caller_id=undefined,  % An identifier for the calling object's cog
+         name=undefined,       % The method or class name, depending on the type
+         reads=ordsets:new(),  % A set of object fields that are read from
+         writes=ordsets:new(), % A set of object fields that are written to
+         time=builtin:float(ok, clock:now()) % The time of the event creation
+        }).
+
+-record(db_trace, {trace, status=unexplored}).

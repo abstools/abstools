@@ -24,10 +24,10 @@ dependencies {
 
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
     implementation 'commons-io:commons-io:2.6'
-    implementation 'com.google.guava:guava:27.1-jre'
+    implementation 'com.google.guava:guava:28.1-jre'
     implementation files('lib/choco-solver-2.1.1.jar')
-    implementation 'org.eclipse.jdt.core.compiler:ecj:4.6.1'
-    implementation 'org.apfloat:apfloat:1.8.3'
+    implementation 'org.eclipse.jdt:ecj:3.18.0'
+    implementation 'org.apfloat:apfloat:1.9.1'
     // our code fails to compile with newer versions of sat4j; leaving this at
     // version 2.3.0 for now.
     implementation 'org.sat4j:org.sat4j.core:2.3.0'
@@ -35,15 +35,15 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    compile 'info.picocli:picocli:4.0.0'
+    compile 'info.picocli:picocli:4.0.3'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.5.0")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.5.1")
     // Executes JUnit4 tests
-    testRuntime("org.junit.vintage:junit-vintage-engine:5.5.0")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.0'
+    testRuntime("org.junit.vintage:junit-vintage-engine:5.5.1")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:4.0.2'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
@@ -52,7 +52,7 @@ dependencies {
     testCompile "org.eclipse.xtext:org.eclipse.xtext.testing:${xtextVersion}"
     testCompile "org.eclipse.xtext:org.eclipse.xtext.xbase.testing:${xtextVersion}"
 
-    jastadd2 'org.jastadd:jastadd:2.3.3'
+    jastadd2 'org.jastadd:jastadd:2.3.4'
 }
 
 // JastAdd
@@ -96,16 +96,16 @@ clean {
 jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     archiveBaseName='absfrontend'
-    archiveAppendix=versionDetails().branchName
+    archiveAppendix=gitBranch()
     manifest {
         attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',
-            'Implementation-Version': versionDetails().lastTag,
+            'Implementation-Version': project.version.tokenize('-').first(),
             'Bundle-Version': project.version,
             // This is wrong, but we use it anyway for the detailed
             // version string (java.lang.Package only has methods
             // getVersion and getSpecificationVersion)
-            'Specification-Version': versionDetails().lastTag + "-" + versionDetails().commitDistance + "-" + versionDetails().gitHash
+            'Specification-Version': project.version
     }
     from configurations.runtimeClasspath
         .findAll { it.name.endsWith('jar') }
@@ -143,13 +143,13 @@ assemble.dependsOn plainJar
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
-    appendix = versionDetails().branchName
+    appendix = gitBranch()
     from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
-    appendix = versionDetails().branchName
+    appendix = gitBranch()
     from javadoc.destinationDir
 }
 
@@ -185,7 +185,6 @@ assemble.dependsOn generateAutocomplete
 test {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html
     useJUnitPlatform()
-    ignoreFailures=true
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
 
     // Allow dynamic exclusion of tests (based on https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)

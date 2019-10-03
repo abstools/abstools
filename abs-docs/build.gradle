@@ -13,7 +13,7 @@ asciidoctor {
         }
     }
     options doctype: 'book'
-    attributes 'revnumber': versionDetails().lastTag + "-" + versionDetails().commitDistance + "-" + versionDetails().gitHash,
+    attributes 'revnumber': project.version,
         'toc-position': "right",
         toc2: "true",
         numbered: "true",

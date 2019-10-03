@@ -1,9 +1,11 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
 -export([start/6,start_for_rest/4]).
--export([get_after_await/1,get_blocking/3,await/3,poll/1,die/2,value_available/6]).
+-export([get_after_await/2,get_blocking/3,await/3,has_value/1,die/2,value_available/6]).
 -export([task_started/3]).
 -export([get_for_rest/1]).
+-export([maybe_register_waiting_task/3,confirm_wait_unblocked/3,
+         maybe_register_waiting_cog/2,confirm_wait_unblocked/2]).
 -include_lib("abs_types.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
@@ -23,10 +25,14 @@
                calleecog,
                references=[],
                value=none,
-               waiting_tasks=[],
+               %% Three different things can be waiting: tasks, cogs, and
+               %% "bare" pids (for calls coming from the model api).  See
+               %% `notify_completion/1', `confirm_wait_unblocked/2'.
+               waiting_tasks=ordsets:new(),
                cookie=none,
                register_in_gc=true,
-               caller=none
+               caller=none,
+               event=undefined
               }).
 
 %% Interacting with a future caller-side
@@ -34,7 +40,12 @@
 start(null,_Method,_Params, _Info, _Cog, _Stack) ->
     throw(dataNullPointerException);
 start(Callee,Method,Params, Info, Cog, Stack) ->
-    {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,Info,true,self()], []),
+    %% Create the schedule event based on the invocation event; this is because
+    %% we don't have access to the caller id from the callee.
+    #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(Cog, Method),
+    ScheduleEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=Name},
+    NewInfo = Info#task_info{event=ScheduleEvent},
+    {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,true,self()], []),
     wait_for_future_start(Ref, Cog, Stack),
     Ref.
 
@@ -43,8 +54,8 @@ wait_for_future_start(Ref, Cog, Stack) ->
         {started, _Ref} ->
             ok;
         {stop_world, _Sender} ->
-            cog:process_is_blocked_for_gc(Cog, self(), get(process_info), get(this)),
-            cog:process_is_runnable(Cog, self()),
+            cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),
+            cog:task_is_runnable(Cog, self()),
             task:wait_for_token(Cog, [Ref | Stack]),
             wait_for_future_start(Ref, Cog, Stack);
         {get_references, Sender} ->
@@ -54,13 +65,15 @@ wait_for_future_start(Ref, Cog, Stack) ->
 
 
 start_for_rest(Callee, Method, Params, Info) ->
-    {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,Info,false,none], []),
+    ScheduleEvent = #event{type=schedule, caller_id=modelapi, local_id={Method, Params}, name=Method},
+    NewInfo = Info#task_info{event=ScheduleEvent},
+    {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,false,none], []),
     Ref.
 
-get_after_await(null) ->
+get_after_await(null, _Cog) ->
     throw(dataNullPointerException);
-get_after_await(Future)->
-    case gen_statem:call(Future, get) of
+get_after_await(Future, Cog)->
+    case gen_statem:call(Future, {get, Cog}) of
         {ok,Value}->
             Value;
         {error,Reason}->
@@ -68,9 +81,9 @@ get_after_await(Future)->
     end.
 
 
-poll(null) ->
+has_value(null) ->
     throw(dataNullPointerException);
-poll(Future) ->
+has_value(Future) ->
     case gen_statem:call(Future, poll) of
         completed -> true;
         unresolved -> false
@@ -80,59 +93,26 @@ poll(Future) ->
 get_blocking(null, _Cog, _Stack) ->
     throw(dataNullPointerException);
 get_blocking(Future, Cog, Stack) ->
-    case poll(Future) of
+    case has_value(Future) of
         true ->
-            get_after_await(Future);
+            get_after_await(Future, Cog);
         false ->
-            %% Tell future not to advance time until we picked up ourselves
-            register_waiting_task(Future, self()),
-            cog:process_is_blocked(Cog,self(), get(process_info), get(this)),
-            (fun Loop() ->
-                     receive
-                         {value_present, Future, _CalleeCog} ->
-                             ok;
-                         {stop_world, _Sender} ->
-                             %% `cog:process_is_blocked' already passed back
-                             %% the token.  Eat the stop_world or we'll
-                             %% deadlock later.
-                             Loop();
-                         {get_references, Sender} ->
-                             cog:submit_references(Sender, gc:extract_references([Future | Stack])),
-                             Loop()
-                     end end)(),
-            cog:process_is_runnable(Cog, self()),
-            confirm_wait_unblocked(Future, self()),
+            cog:block_cog_for_future(Cog, Future, Stack),
             task:wait_for_token(Cog, [Future | Stack]),
-            get_after_await(Future)
+            get_after_await(Future, Cog)
     end.
 
 await(null, _Cog, _Stack) ->
     throw(dataNullPointerException);
 await(Future, Cog, Stack) ->
-    register_waiting_task(Future, self()),
-    task:release_token(Cog, waiting),
-    (fun Loop() ->
-             receive
-                 {value_present, Future, _CalleeCog} ->
-                     %% Unblock this task before allowing the other
-                     %% task to terminate (and potentially letting its
-                     %% cog idle).
-                     cog:process_is_runnable(Cog,self()),
-                     confirm_wait_unblocked(Future, self()),
-                     task:wait_for_token(Cog, [Future | Stack]);
-                 {stop_world, _Sender} ->
-                     Loop();
-                 {get_references, Sender} ->
-                     cog:submit_references(Sender, gc:extract_references([Future | Stack])),
-                     Loop()
-             end end)().
-
+    cog:suspend_current_task_for_future(Cog, Future, Stack),
+    gen_statem:call(Future, {done_waiting, Cog}).
 
 get_for_rest(Future) ->
-    register_waiting_task(Future, self()),
-    receive {value_present, Future, _Calleecog1} -> ok end,
+    register_waiting_process(Future, self()),
+    receive {value_present, Future} -> ok end,
     confirm_wait_unblocked(Future, self()),
-    Result=case gen_statem:call(Future, get) of
+    Result=case gen_statem:call(Future, {get, modelapi}) of
                %% Explicitly re-export internal representation since it's
                %% deconstructed by modelapi_v2:handle_object_call
                {ok,Value}->
@@ -143,11 +123,43 @@ get_for_rest(Future) ->
     Result.
 
 
-register_waiting_task(Future, Task) ->
-    gen_statem:cast(Future, {waiting, Task}).
+%% Register a waiting task (await x?; where x is a local variable).
+%%
+%% Replies with "unresolved" and arranges to call `notify_completion/1'
+%% when the future has no value, or replies with "completed" if the future has
+%% a value.  In the latter case, does not call notify_completion.
+maybe_register_waiting_task(Future, _Cog=#cog{ref=CogRef}, Task) ->
+    gen_statem:call(Future, {waiting, {waiting_task, CogRef, Task}});
+maybe_register_waiting_task(Future, CogRef, Task) ->
+    gen_statem:call(Future, {waiting, {waiting_task, CogRef, Task}}).
 
-confirm_wait_unblocked(Future, Task) ->
-    gen_statem:cast(Future, {okthx, Task}).
+%% Register a waiting task (await x?; where x is a field).
+%%
+%% Replies with "unresolved" and arranges to call `cog:future_is_ready/2' when
+%% the future is completed, or replies with "completed".  In the latter case,
+%% does not call future_is_ready.  Note that this function can be called
+%% multiple times (once per scheduling round) since `x' can be reassigned.
+maybe_register_waiting_cog(Future, CogRef) ->
+    case gen_statem:call(Future, {waiting, {waiting_cog, CogRef}}) of
+        unresolved ->
+            false;
+        completed ->
+            true
+    end.
+
+register_waiting_process(Future, Pid) ->
+    gen_statem:call(Future, {waiting, Pid}).
+
+confirm_wait_unblocked(Future, #cog{ref=CogRef}, TaskRef) ->
+    gen_statem:cast(Future, {okthx, {waiting_task, CogRef, TaskRef}});
+confirm_wait_unblocked(Future, CogRef, TaskRef) ->
+    gen_statem:cast(Future, {okthx, {waiting_task, CogRef, TaskRef}}).
+
+%% These two branches are "the same" but we make the two cases explicit.
+confirm_wait_unblocked(Future, {waiting_cog, CogRef}) ->
+    gen_statem:cast(Future, {okthx, {waiting_cog, CogRef}});
+confirm_wait_unblocked(Future, Pid) ->
+    gen_statem:cast(Future, {okthx, Pid}).
 
 
 %% Interacting with a future callee-side
@@ -169,11 +181,19 @@ die(Future, Reason) ->
     gen_statem:cast(Future, {die, Reason}).
 
 
+notify_completion({waiting_task, CogRef, TaskRef}) ->
+    cog:task_is_runnable(CogRef, TaskRef);
+notify_completion({waiting_cog, CogRef}) ->
+    cog:future_is_ready(CogRef, self());
+notify_completion(Pid) ->
+    Pid ! {value_present, self()}.
+
+
 %% gen_statem machinery
 
 callback_mode() -> state_functions.
 
-init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,RegisterInGC,Caller]) ->
+init([Callee=#object{oid=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,RegisterInGC,Caller]) ->
     %%Start task
     process_flag(trap_exit, true),
     %% We used to wrap the following line in a
@@ -181,7 +201,7 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
     %% call, but if Object is alive, so is (presumably)
     %% CogRef, and Object cannot have been garbage-collected
     %% in the meantime.
-    TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info#process_info{this=Callee,destiny=self()}, Params),
+    TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info#task_info{this=Callee,destiny=self()}, Params),
     case RegisterInGC of
         true -> gc:register_future(self());
         false -> ok
@@ -194,9 +214,10 @@ init([Callee=#object{ref=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
                         calleecog=Cog,
                         references=gc:extract_references(Params),
                         value=none,
-                        waiting_tasks=[],
+                        waiting_tasks=ordsets:new(),
                         register_in_gc=RegisterInGC,
-                        caller=Caller}};
+                        caller=Caller,
+                        event=Info#task_info.event}};
 init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
     %% This is dead code, left in for reference; a `null' callee is caught in
     %% future:start above.
@@ -211,13 +232,16 @@ init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
 
 
 
-handle_info({'EXIT',_Pid,Reason}, running, Data=#data{register_in_gc=RegisterInGC, waiting_tasks=WaitingTasks, calleecog=CalleeCog}) ->
-    lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
+handle_info({'EXIT',_Pid,Reason}, running,
+            Data=#data{register_in_gc=RegisterInGC,
+                       waiting_tasks=WaitingTasks}) ->
+    lists:map(fun notify_completion/1, ordsets:to_list(WaitingTasks)),
     case RegisterInGC of
         true -> gc:unroot_future(self());
         false -> ok
     end,
-    {next_state, completed, Data#data{value={error,error_transform:transform(Reason)}}};
+    {next_state, completed,
+     Data#data{value={error,error_transform:transform(Reason)}}};
 handle_info(_Info, StateName, Data) ->
     {next_state, StateName, Data}.
 
@@ -242,26 +266,36 @@ handle_call(_From, _Event, Data) ->
 
 %% State functions
 
-next_state_on_completion(Data=#data{waiting_tasks=[], calleetask=TerminatingProcess, cookie=Cookie, register_in_gc=RegisterInGC}) ->
-    TerminatingProcess ! {Cookie, self()},
-    case RegisterInGC of
-        true -> gc:unroot_future(self());
-        false -> ok
-    end,
-    {completed, Data};
-next_state_on_completion(Data=#data{waiting_tasks=WaitingTasks, calleecog=CalleeCog}) ->
-    lists:map(fun (Task) -> Task ! {value_present, self(), CalleeCog} end, WaitingTasks),
-    {completing, Data}.
+next_state_on_completion(Data=#data{waiting_tasks=WaitingTasks,
+                                    calleetask=TerminatingProcess,
+                                    cookie=Cookie,
+                                    register_in_gc=RegisterInGC}) ->
+    case ordsets:is_empty(WaitingTasks) of
+        true ->
+            TerminatingProcess ! {Cookie, self()},
+            case RegisterInGC of
+                true -> gc:unroot_future(self());
+                false -> ok
+            end,
+            {completed, Data};
+        false ->
+            lists:map(fun notify_completion/1, ordsets:to_list(WaitingTasks)),
+            {completing, Data}
+    end.
 
 
 running({call, From}, get_references, Data=#data{references=References}) ->
     {keep_state, Data, {reply, From, References}};
-running(cast, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
-    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]}};
-running(cast, {completed, value, Result, Sender, SenderCog, Cookie}, Data=#data{calleetask=Sender,calleecog=SenderCog})->
+running({call, From}, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
+    {keep_state,
+     Data#data{waiting_tasks=ordsets:add_element(Task, WaitingTasks)},
+     {reply, From, unresolved}};
+running(cast, {completed, value, Result, Sender, SenderCog, Cookie},
+        Data=#data{calleetask=Sender,calleecog=SenderCog})->
     {NextState, Data1} = next_state_on_completion(Data#data{cookie=Cookie}),
     {next_state, NextState, Data1#data{value={ok,Result}, references=[]}};
-running(cast, {completed, exception, Result, Sender, SenderCog, Cookie}, Data=#data{calleetask=Sender,calleecog=SenderCog})->
+running(cast, {completed, exception, Result, Sender, SenderCog, Cookie},
+        Data=#data{calleetask=Sender,calleecog=SenderCog})->
     {NextState, Data1} = next_state_on_completion(Data#data{cookie=Cookie}),
     {next_state, NextState, Data1#data{value={error,Result}, references=[]}};
 running({call, From}, Msg, Data) ->
@@ -270,47 +304,72 @@ running(info, Msg, Data) ->
     handle_info(Msg, running, Data).
 
 
-next_state_on_okthx(Data=#data{calleetask=CalleeTask,waiting_tasks=WaitingTasks, cookie=Cookie, register_in_gc=RegisterInGC}, Task) ->
-    NewWaitingTasks=lists:delete(Task, WaitingTasks),
-    case NewWaitingTasks of
-        [] ->
+next_state_on_okthx(Data=#data{calleetask=CalleeTask,
+                               waiting_tasks=WaitingTasks, cookie=Cookie,
+                               register_in_gc=RegisterInGC}, Task) ->
+    NewWaitingTasks=ordsets:del_element(Task, WaitingTasks),
+    case ordsets:is_empty(NewWaitingTasks) of
+        true ->
             CalleeTask ! {Cookie, self()},
             case RegisterInGC of
                 true -> gc:unroot_future(self());
                 false -> ok
             end,
-            {completed, Data#data{waiting_tasks=[]}};
-        _ ->
+            {completed, Data#data{waiting_tasks=NewWaitingTasks}};
+        false ->
             {completing, Data#data{waiting_tasks=NewWaitingTasks}}
     end.
 
-completing({call, From}, get_references, Data=#data{value=Value}) ->
+completing({call, From}, get_references, _Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
-completing({call, From}, get, Data=#data{value=Value}) ->
+completing({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}) ->
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
+    CompletionEvent=#event{type=await_future, caller_id=Cid,
+                           local_id=Lid, name=Name, reads=R, writes=W},
+    cog:register_await_future_complete(Cog, CompletionEvent),
+    {keep_state_and_data, {reply, From, Value}};
+completing({call, From}, {get, modelapi}, _Data=#data{value=Value,event=Event}) ->
+    {keep_state_and_data, {reply, From, Value}};
+completing({call, From}, {get, Cog}, _Data=#data{value=Value,event=Event}) ->
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
+    CompletionEvent=#event{type=future_read, caller_id=Cid,
+                           local_id=Lid, name=Name, reads=R, writes=W},
+    cog:register_future_read(Cog, CompletionEvent),
     {keep_state_and_data, {reply, From, Value}};
 completing(cast, {okthx, Task}, Data) ->
     {NextState, Data1} = next_state_on_okthx(Data, Task),
     {next_state, NextState, Data1};
-completing(cast, {waiting, Task}, Data=#data{calleecog=CalleeCog,waiting_tasks=WaitingTasks}) ->
-    Task ! {value_present, self(), CalleeCog},
-    {keep_state, Data#data{waiting_tasks=[Task | WaitingTasks]}};
+completing({call, From}, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
+    {keep_state_and_data,
+     {reply, From, completed}};
 completing({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 completing(info, Msg, Data) ->
     handle_info(Msg, completing, Data).
 
 
-completed({call, From}, get_references, Data=#data{value=Value}) ->
+completed({call, From}, get_references, _Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
-completed({call, From}, get, Data=#data{value=Value}) ->
+completed({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}) ->
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
+    CompletionEvent=#event{type=await_future, caller_id=Cid,
+                           local_id=Lid, name=Name, reads=R, writes=W},
+    cog:register_await_future_complete(Cog, CompletionEvent),
+    {keep_state_and_data, {reply, From, Value}};
+completed({call, From}, {get, modelapi}, _Data=#data{value=Value,event=Event}) ->
+    {keep_state_and_data, {reply, From, Value}};
+completed({call, From}, {get, Cog}, _Data=#data{value=Value,event=Event}) ->
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
+    CompletionEvent=#event{type=future_read, caller_id=Cid,
+                           local_id=Lid, name=Name, reads=R, writes=W},
+    cog:register_future_read(Cog, CompletionEvent),
     {keep_state_and_data, {reply, From, Value}};
 completed(cast, {die, _Reason}, Data) ->
     {stop, normal, Data};
-completed(cast, {okthx, _Task}, Data) ->
+completed(cast, {okthx, _Task}, _Data) ->
     keep_state_and_data;
-completed(cast, {waiting, Task}, Data=#data{calleecog=CalleeCog}) ->
-    Task ! {value_present, self(), CalleeCog},
-    keep_state_and_data;
+completed({call, From}, {waiting, _Task}, _Data) ->
+    {keep_state_and_data, {reply, From, completed}};
 completed({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 completed(info, Msg, Data) ->

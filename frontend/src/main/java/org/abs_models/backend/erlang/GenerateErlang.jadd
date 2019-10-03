@@ -157,15 +157,12 @@ aspect GenerateErlang {
        ecs.println("%% Application callbacks");
        ecs.println("-export([start/2, stop/1]).");
        ecs.println();
-       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
+       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef,dcobj=DC}");
        ecs.println("put(vars, #{}),");
        ecs.println("C = none,");
-       ecs.println("Ref = null, % avoid self-call branch in synccall code");
-       ecs.println("O = #object{ref=null,cog=Cog},");
+       ecs.println("Oid = null, % avoid self-call branch in synccall code");
+       ecs.println("O = #object{oid=Oid,cog=Cog},");
        ecs.println("put(this, {state, none}),");
-       // Create a default deployment component.
-       ecs.println("%% FIXME: thisDC() won't work in main block (DC should be in Cog state)");
-       ecs.println("DC = object:new(cog:start(),class_ABS_DC_DeploymentComponent, [<<\"Initial DC\">>,dataEmptyMap,[]],Cog,[O]),");
        ecs.println("Stack = [DC],");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
@@ -207,7 +204,7 @@ aspect GenerateErlang {
       stmt.generateErlangLocationInfo(ecs);
       PureExp cost = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
       if (cost != null) {
-          ecs.print("task:block_for_cpu(Cog,DC,");
+          ecs.print("cog:block_cog_for_cpu(Cog,");
           cost.generateErlangCode(ecs, vars);
           ecs.print(",");
           ecs.print(vars.toStack());
@@ -220,7 +217,7 @@ aspect GenerateErlang {
               // FIXME: only consumes bandwidth from source cog
               // FIXME: should not consume bandwidth if call goes to same DC
 
-              ecs.print("task:block_for_bandwidth(Cog,DC,");
+              ecs.print("cog:block_cog_for_bandwidth(Cog,");
               call_exp.getCallee().generateErlangCode(ecs, vars);
               ecs.print(",");
               size.generateErlangCode(ecs, vars);
@@ -228,7 +225,7 @@ aspect GenerateErlang {
               ecs.print(vars.toStack());
               ecs.println("),");
           } else if (stmt instanceof ReturnStmt) {
-              ecs.print("task:block_for_bandwidth(Cog,DC,null,");
+              ecs.print("cog:block_cog_for_bandwidth(Cog,null,");
               size.generateErlangCode(ecs, vars);
               ecs.print(",");
               ecs.print(vars.toStack());
@@ -325,22 +322,17 @@ aspect GenerateErlang {
         scheduler = AnnotationHelper.getAnnotationValueFromName(classDecl.getAnnotations(), "ABS.Scheduler.Scheduler");
     }
     String className = ErlUtil.getName(classDecl);
-    boolean isNewDC = getType().isDeploymentComponentType();
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
     if (!hasLocal()) {
-      ecs.print("object:new(cog:start(");
-      if (isNewDC) {
-          // do nothing, call cog:start/0.  thisDC() within a DC will fail
-          // (but the implementation of deployment components is entirely
-          // within the standard library).  We also don't support user-defined
-          // schedulers on them.
-      } else if (dc == null) {
-        ecs.print("DC");
+      ecs.print("object:new(cog:start(Cog");
+      if (dc == null) {
+        ecs.print(",DC");
       } else {
+        ecs.print(",");
         dc.generateErlangCode(ecs, vars);
       }
-      if (scheduler != null && !isNewDC) {
+      if (scheduler != null) {
           String separator = " ";
           FnApp schedulerfun = (FnApp)scheduler;
           FunctionDecl decl = (FunctionDecl)(schedulerfun.getDecl());
@@ -422,7 +414,7 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.println(" of");
     ecs.incIndent().println("null -> throw(dataNullPointerException);");
-    ecs.println("Callee=#object{ref=Ref,cog=Cog} ->");
+    ecs.println("Callee=#object{oid=Oid,cog=Cog} ->");
     ecs.incIndent();
     ecs.println("%% self-call");
     ecs.println("Vars=get(vars),");
@@ -437,7 +429,7 @@ aspect GenerateErlang {
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
     ecs.decIndent();
-    ecs.println("Callee=#object{ref=ObjRef,cog=Cog} ->");
+    ecs.println("Callee=#object{oid=ObjRef,cog=Cog} ->");
     // Any fixes in this code branch should probably be transferred to
     // object:new_local in file object.erl since that code calls Class:init()
     // in the same way
@@ -454,9 +446,9 @@ aspect GenerateErlang {
     ecs.println("Vars=get(vars),");
     ecs.println("cog:object_state_changed(Cog, O, State),");
     ecs.println("put(this,cog:get_object_state(Callee#object.cog, Callee)),");
-    // Since #process_info.method identifies the process to the
+    // Since #task_info.method identifies the process to the
     // scheduler, leave it unchanged
-    ecs.println("put(process_info,(get(process_info))#process_info{this=Callee}),");
+    ecs.println("put(task_info,(get(task_info))#task_info{this=Callee}),");
     ecs.println("T=object:get_class_from_state(get(this)), % it's the callee state already");
     ecs.format("Result=T:'m_%s'(Callee", getMethod());
     for (ParamDecl p : ms.getParams()) {
@@ -469,7 +461,7 @@ aspect GenerateErlang {
     // from cog (there could have been a synchronous callback,
     // invalidating State)
     ecs.println("cog:object_state_changed(Callee#object.cog, Callee, get(this)),");
-    ecs.println("put(process_info,(get(process_info))#process_info{this=O}),");
+    ecs.println("put(task_info,(get(task_info))#task_info{this=O}),");
     ecs.println("put(this, cog:get_object_state(Cog, O)),");
     ecs.println("put(vars, Vars),");
     ecs.println("Result;");
@@ -478,7 +470,7 @@ aspect GenerateErlang {
     ecs.println("%% remote call");
     ecs.format("TempFuture = future:start(Callee,'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
-    ecs.format(",#process_info{method= <<\"%s\"/utf8>>},", getMethod());
+    ecs.format(",#task_info{method= <<\"%s\"/utf8>>},", getMethod());
     ecs.print("Cog,");
     ecs.print(vars.toStack());
     ecs.println("),");
@@ -496,7 +488,7 @@ aspect GenerateErlang {
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
-    ecs.format(",#process_info{method= <<\"%s\"/utf8>>, creation={dataTime,builtin:currentms(Cog)}, proc_deadline=", getMethod());
+    ecs.format(",#task_info{method= <<\"%s\"/utf8>>, creation={dataTime,builtin:currentms(Cog)}, proc_deadline=", getMethod());
     if (deadline != null) {
         deadline.generateErlangCode(ecs, vars);
     } else {
@@ -1062,8 +1054,7 @@ aspect GenerateErlang {
   }
 
   public void SuspendStmt.generateErlangCode(CodeStream ecs,Vars vars){
-    ecs.println("task:release_token(Cog,runnable),");
-    ecs.println("cog:process_is_runnable(Cog,self()),");
+    ecs.println("cog:return_token(Cog,self(),runnable,get(task_info),get(this)),");
     ecs.print("task:wait_for_token(Cog,");
     ecs.print(vars.toStack());
     ecs.print(")");
@@ -1074,21 +1065,21 @@ aspect GenerateErlang {
     if(getGuard().hasPoll()){
       getGuard().generateErlangCode(ecs,after,vars);
       after.close();
-      ecs.println("task:release_token(Cog,waiting_poll),");
+      ecs.println("cog:return_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive {check, OState} -> ");
       ecs.incIndent().println("put(this, OState),");
       ecs.incIndent().println("try");
       ecs.incIndent().pf("case %s of",sw);
-      ecs.incIndent().pf("true -> cog:process_poll_is_ready(Cog, self(), get(process_info)), Poll(%s);",vars.toParamList());
-      ecs.pf("false -> cog:process_poll_is_not_ready(Cog, self(), get(process_info)),  Poll(%s)",vars.toParamList());
+      ecs.incIndent().pf("true -> cog:task_poll_is_ready(Cog, self(), get(task_info)), Poll(%s);",vars.toParamList());
+      ecs.pf("false -> cog:task_poll_is_not_ready(Cog, self(), get(task_info)),  Poll(%s)",vars.toParamList());
       ecs.decIndent().println("end");
       ecs.decIndent().println("catch");
-      ecs.incIndent().println("_:Exception -> cog:process_poll_has_crashed(Cog, self(), get(process_info)), throw(Exception)");
+      ecs.incIndent().println("_:Exception -> cog:task_poll_has_crashed(Cog, self(), get(task_info)), throw(Exception)");
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
       ecs.println("{token, OState} -> put(this, OState), ok;");
-      ecs.println("{stop_world, _Sender} -> % only happens when stop_world and release_token cross");
+      ecs.println("{stop_world, _Sender} -> % only happens when stop_world and return_token cross");
       ecs.incIndent().pf("Poll(%s);", vars.toParamList());
       ecs.decIndent().println("{get_references, Sender} ->");
       ecs.incIndent().pf("cog:submit_references(Sender, gc:extract_references(%s)),", vars.toStack());
@@ -1148,9 +1139,9 @@ aspect GenerateErlang {
   public void ClaimGuard.generateErlangCode(CodeStream preAwait,CodeStream ecs,Vars vars){
     PureExp var = getVar();
     if (var instanceof FieldUse) {
-        ecs.print("future:poll(");
+        ecs.print("future:maybe_register_waiting_cog(");
         var.generateErlangCode(ecs,vars);
-        ecs.print(")");
+        ecs.print(", CogRef)");
     } else {
         preAwait.print("future:await(");
         var.generateErlangCode(preAwait,vars);
@@ -1170,7 +1161,7 @@ aspect GenerateErlang {
 
   @Override
   public void DurationGuard.generateErlangCode(CodeStream preAwait, CodeStream ecs, Vars vars) {
-      preAwait.print("task:await_duration(Cog,");
+      preAwait.print("cog:suspend_current_task_for_duration(Cog,");
       getMin().generateErlangCode(preAwait, vars);
       preAwait.print(",");
       getMax().generateErlangCode(preAwait, vars);
@@ -1190,10 +1181,9 @@ aspect GenerateErlang {
     }
 
     future.generateErlangCode(ecs,vars);
-
+    ecs.print(", Cog");
     if (!(future instanceof VarUse) || vars.canBlock(((VarUse) future).getName())) {
-        ecs.print(", Cog, ");
-        ecs.print(vars.toStack());
+        ecs.print(", " + vars.toStack());
     }
     ecs.print(")");
   }
@@ -1242,7 +1232,7 @@ aspect GenerateErlang {
 
   @Override
   public void DurationStmt.generateErlangCode(CodeStream ecs, Vars vars) {
-      ecs.print("task:block_for_duration(Cog,");
+      ecs.print("cog:block_cog_for_duration(Cog,");
       getMin().generateErlangCode(ecs, vars);
       ecs.print(",");
       getMax().generateErlangCode(ecs, vars);

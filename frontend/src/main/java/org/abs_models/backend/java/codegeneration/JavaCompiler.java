@@ -7,12 +7,13 @@ package org.abs_models.backend.java.codegeneration;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
+import com.google.common.collect.ObjectArrays;
 
 import org.abs_models.backend.java.JavaBackend;
+import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 
 class JavaCompiler {
-    private static final String DEFAULT_PREFIX = "-encoding " + JavaBackend.CHARSET.name() +" -source 5 -nowarn -noExit ";
+    private static final String[] DEFAULT_PREFIX = {"-encoding", JavaBackend.CHARSET.name(), " -source", "5", "-nowarn", "-noExit"};
 
     public static void main(String... args) throws JavaCodeGenerationException {
         if (!compile(args))
@@ -20,17 +21,10 @@ class JavaCompiler {
     }
 
     public static boolean compile(String[] args) throws JavaCodeGenerationException {
-        StringBuffer sb = new StringBuffer();
-        for (String s : args) {
-            sb.append(s+" ");
-        }
-        return compile(sb.toString());
-    }
-
-    public static boolean compile(String args) throws JavaCodeGenerationException {
+        String[] allargs = ObjectArrays.concat(DEFAULT_PREFIX, args, String.class);
         StringWriter outWriter = new StringWriter();
         StringWriter errWriter = new StringWriter();
-        boolean res = BatchCompiler.compile(DEFAULT_PREFIX + args, new PrintWriter(outWriter), new PrintWriter(errWriter), null);
+        boolean res = BatchCompiler.compile(allargs, new PrintWriter(outWriter), new PrintWriter(errWriter), null);
         if (!res) {
             String errorString = errWriter.toString();
             throw new JavaCodeGenerationException("There seems to be a bug in the ABS Java backend. " +

@@ -1,0 +1,31 @@
+module BackendTest;
+
+interface AI {
+  Bool foo();
+}
+
+class A (BI b) implements AI {
+  Fut<Unit> x;
+
+  Bool foo() {
+    x = b!bar();
+    await x?;
+    return True;
+  }
+}
+
+interface BI {
+  Unit bar();
+}
+
+class B implements BI {
+  Unit bar() {
+  }
+}
+
+{
+    Bool testresult = False;
+    BI b = new B();
+    AI a = new A(b);
+    testresult = await a!foo();
+}

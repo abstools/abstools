@@ -8,6 +8,7 @@
 
 -export([print_statistics/0]).
 -export([abs_to_json/1]).                % callback from data_constructor_info
+-export([json_to_trace/1,json_to_scheduling_trace/1,get_trace_json/0]).
 
 
 init(Req, _Opts) ->
@@ -18,6 +19,8 @@ init(Req, _Opts) ->
             <<"clock">> -> handle_clock(cowboy_req:path_info(Req),
                                         cowboy_req:parse_qs(Req));
             <<"dcs">> -> handle_dcs();
+            <<"trace">> -> handle_trace();
+            <<"db_traces">> -> handle_db_traces();
             <<"o">> -> handle_object_query(cowboy_req:path_info(Req));
             <<"static_dcs">> -> handle_static_dcs(cowboy_req:path_info(Req));
             <<"call">> -> handle_object_call(cowboy_req:path_info(Req),
@@ -72,6 +75,12 @@ handle_clock([<<"advance">>], _) ->
 
 handle_dcs() ->
     {200, <<"application/json">>, get_statistics_json()}.
+
+handle_trace() ->
+    {200, <<"application/json">>, get_trace_json()}.
+
+handle_db_traces() ->
+    {200, <<"application/json">>, get_db_traces_json()}.
 
 handle_object_query([Objectname, Fieldname]) ->
     {State, Object}=cog_monitor:lookup_object_from_http_name(Objectname),
@@ -154,7 +163,7 @@ handle_object_call([Objectname, Methodname], Parameters, Req) ->
                     {Method, _ReturnType, ParamDecls}=maps:get(Methodname, Methods),
                     case decode_parameters(Parameters, ParamDecls, Body) of
                         { ok, ParamValues } ->
-                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #process_info{method=Methodname}),
+                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #task_info{method=Methodname}),
                             Result=case future:get_for_rest(Future) of
                                 {ok, Value} ->
                                     { 200, <<"application/json">>,
@@ -320,6 +329,71 @@ get_statistics_json() ->
     io_lib:format("Deployment components:~n~w~n",
                   [jsx:encode(DC_info_json, [{space, 1}, {indent, 2}])]),
     jsx:encode(DC_info_json, [{space, 1}, {indent, 2}]).
+
+
+construct_local_trace(LocalTrace) ->
+    Atomize = fun (L) -> case is_binary(L) of
+                             true -> list_to_atom(binary_to_list(L));
+                             false -> L
+                         end
+              end,
+    lists:map(fun (#{type := Type,
+                     caller_id := CallerId,
+                     local_id := LocalId,
+                     name := Name,
+                     reads := Reads,
+                     writes := Writes,
+                     time := Time}) ->
+                      #event{type=Atomize(Type),
+                             caller_id=Atomize(CallerId),
+                             local_id=Atomize(LocalId),
+                             name=Atomize(Name),
+                             reads=lists:map(Atomize, Reads),
+                             writes=lists:map(Atomize, Writes),
+                             time=Time}
+              end, LocalTrace).
+
+json_to_trace(JSON) ->
+    RawTrace = jsx:decode(JSON, [{labels, atom}, return_maps]),
+    lists:foldl(fun (#{cog_id := Id, cog_schedule := LocalTrace}, Acc) ->
+                        maps:put(Id, construct_local_trace(LocalTrace), Acc)
+                end, #{}, RawTrace).
+
+json_to_scheduling_trace(JSON) ->
+    Trace = json_to_trace(JSON),
+    maps:map(fun(Cog, LocalTrace) ->
+                     lists:filter(fun (E=#event{type=schedule}) -> true;
+                                      (E) -> false
+                                  end, LocalTrace)
+             end, Trace).
+
+local_trace_to_json_friendly(LocalTrace) ->
+    lists:map(fun (Event) ->
+                      #{type => Event#event.type,
+                        caller_id => Event#event.caller_id,
+                        local_id => Event#event.local_id,
+                        name => Event#event.name,
+                        reads => Event#event.reads,
+                        writes => Event#event.writes,
+                        time => Event#event.time}
+              end, LocalTrace).
+
+trace_to_json_friendly(Trace) ->
+    T = maps:fold(fun (CogId, LocalTrace, Acc) ->
+                          [#{cog_id => CogId,
+                             cog_schedule => local_trace_to_json_friendly(LocalTrace)}
+                           | Acc]
+                  end, [], Trace),
+    lists:reverse(T).
+
+get_trace_json() ->
+    Trace = cog_monitor:get_trace(),
+    jsx:encode(trace_to_json_friendly(Trace), [{space, 1}, {indent, 2}]).
+
+get_db_traces_json() ->
+    Traces = dpor:get_traces_from_db(),
+    JSONTraces = lists:map(fun trace_to_json_friendly/1, Traces),
+    jsx:encode(JSONTraces, [{space, 1}, {indent, 2}]).
 
 
 handle_static_dcs([]) ->

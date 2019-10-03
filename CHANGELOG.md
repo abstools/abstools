@@ -14,16 +14,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Field values can now be passed to custom scheduling functions in the erlang backend.
 
+- The erlang backend can now record and replay traces of scheduling decisions; see the output of `gen/erl/run -h`, specifically the `--dump-trace` (`-t`) and `--replay-trace` (`-r`) options.  The trace of the currently running model is also available via the Model API: a model started with `-p 8080` will make its trace available at `https://localhost:8080/trace`.
+
 - The `abslang/absc` docker image now includes the analysis tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`, which only support the linux platform but can now be run inside the container on other platforms.
 
 ### Changed
 
-- Incompatible change: A partial function cannot have an empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as when written without the empty function argument list, i.e., as a non-partial function.
+- Incompatible change: A partial function cannot have an empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as a non-partial function with identical (non-function) argument list and body.
 
 ### Removed
 
+- The Maude backend is now unsupported, and the unit tests have been deactivated.  (This change was briefly discussed during the last ABS workshop, with no dissenting arguments, but can be reversed before the next release.)
+
 ### Fixed
 
+- Fixed a cause of spurious clock advances under rare circumstances (~1.5% chance of occurrence when calling empty methods on one cog only, see test case `TimeTests.no_time_advance1`).
+
+- The build now reports failure when a unit test fails, making CircleCI more useful.
 
 ## [1.8.1] - 2019-03-28
 

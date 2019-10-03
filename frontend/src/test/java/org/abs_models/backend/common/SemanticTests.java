@@ -70,10 +70,10 @@ public abstract class SemanticTests {
          * Switch back on when Radu comes back.
          */
         // data.add(new Object[] { new JavaDynamicTestDriver() });
-        if (checkMaude()) {
-            data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.RL) });
-            data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.EQ_TIMED) });
-        }
+        // if (checkMaude()) {
+        //     data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.RL) });
+        //     data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.EQ_TIMED) });
+        // }
         if (checkErlang()) {
             data.add(new Object[] { new ErlangTestDriver() });
         }
@@ -109,7 +109,6 @@ public abstract class SemanticTests {
         Model m;
         try {
             m = ABSTest.assertParseFileOk(f.getPath());
-            assertNotNull(m.lookupModule("BackendTest"));
             assertFalse(m.hasParserErrors());
             assertFalse(m.hasTypeErrors());
             assertEvalTrue(m);

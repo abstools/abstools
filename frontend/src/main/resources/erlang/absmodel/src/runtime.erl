@@ -8,18 +8,18 @@
 
 -include_lib("absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/5]).
+-export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/6,run_dpor_slave/3]).
 
 %% Supervisor callbacks
 -export([init/1]).
 
 -define(CMDLINE_SPEC,
         [{port,$p,"port",{integer,none},"Listen for model API requests on port (0 for random port) and keep model running"},
-         {influxdb_enable,$i,"influxdb-enable",undefined,"Enable writing to InfluxDB"},
-         {influxdb_url,$u,"influxdb-url",{string,"http://localhost:8086"},"Write log data to influxdb database located at URL"},
-         {influxdb_db,$d,"influxdb-db",{string,"absmodel"},"Name of the influx database log data is written to"},
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
+         {dump_trace,$t,"dump-trace",{string, none},"Dump the trace as a JSON file"},
+         {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
+         {explore,undefined,"explore",undefined,"Explore different execution paths"},
          {debug,undefined,"debug",{integer,0},"Turn on debug mode when > 0 (model will run much slower; diagnostic output when > 1)"},
          {version,$v,"version",undefined,"Output version and exit"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
@@ -38,7 +38,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none, none, none, none, none);
+            run_mod(?ABSMAINMODULE, false, false, none, none, maps:new(), false);
         Args->
             start(Args)
    end.
@@ -52,13 +52,14 @@ run(Args) ->
 start_http() ->
     {ok, _} = application:ensure_all_started(absmodel).
 
-start_http(Port, Module, Debug, GCStatistics, Clocklimit) ->
+start_http(Port, Module, Debug, GCStatistics, Clocklimit, Trace) ->
     ok = application:load(absmodel),
     ok = application:set_env(absmodel, port, Port),
     ok = application:set_env(absmodel, module, Module),
     ok = application:set_env(absmodel, debug, Debug),
     ok = application:set_env(absmodel, gcstatistics, GCStatistics),
     ok = application:set_env(absmodel, clocklimit, Clocklimit),
+    ok = application:set_env(absmodel, replay_trace, Trace),
     start_http().
 
 
@@ -82,10 +83,10 @@ parse(Args,Exec)->
             Port=proplists:get_value(port,Parsed,none),
             Clocklimit=proplists:get_value(clocklimit,Parsed,none),
 
-            InfluxdbUrl=proplists:get_value(influxdb_url,Parsed),
-            InfluxdbDB=proplists:get_value(influxdb_db,Parsed),
-            InfluxdbEnable=proplists:get_value(influxdb_enable,Parsed, false),
             Schedulers=proplists:get_value(schedulers,Parsed,none),
+            DumpTrace=proplists:get_value(dump_trace,Parsed,none),
+            ReplayMode=proplists:get_value(replay_trace,Parsed,none),
+            ExploreMode=proplists:get_value(explore,Parsed,false),
             case Schedulers of
                 none -> none;
                 _ -> MaxSchedulers=erlang:system_info(schedulers),
@@ -97,8 +98,17 @@ parse(Args,Exec)->
                      erlang:system_flag(schedulers_online,
                                         min(Schedulers, MaxSchedulers))
             end,
-            run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-                    InfluxdbUrl, InfluxdbDB, InfluxdbEnable);
+            ReplayTrace = case ReplayMode of
+                              none -> maps:new();
+                              FileName ->
+                                  {ok, File} = file:read_file(FileName),
+                                  modelapi_v2:json_to_scheduling_trace(File)
+                          end,
+            case ExploreMode of
+                true -> dpor:start_link(Module, Clocklimit);
+                false -> run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
+                                 ReplayTrace, DumpTrace)
+            end;
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
     end.
@@ -109,59 +119,85 @@ parse(Args,Exec)->
 %% For now we just punt.
 start_link(Args) ->
     case Args of
-        [Module, Debug, GCStatistics, Clocklimit, Keepalive] ->
-            {ok, _T} = start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive),
+        [Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace] ->
+            {ok, _T} = start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
-start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive) ->
+start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
     io:format(standard_error, "Start ~w~n",[Module]),
     %%Init logging
-    {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive),
+    {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive, Trace),
     %% Init garbage collector
     {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
     {ok, _Clock} = clock:start_link(Clocklimit),
     {ok, _Coverage} = coverage:start_link(),
 
+    %% Bootstrap initial cog and deployment component.  In the end, `Cog' has
+    %% `DC' as deployment component.  `DC' is contained in a cog `DCCog'.
+    %% `DCCog', again, has `DC' as deployment component (this is the only case
+    %% of circular cog-DC relationship).
+    RawCog=cog:start(),
+    DCCog = cog:start(),
+    put(this, class_ABS_DC_DeploymentComponent:init_internal()),
+    class_ABS_DC_DeploymentComponent:init(#object{oid=null,cog=DCCog}, [<<"Initial DC">>,dataEmptyMap,[]]),
+    DC = cog:new_object(DCCog, class_ABS_DC_DeploymentComponent, get(this)),
+    cog:activate_object(DCCog, DC), % unblock waiting tasks; unnecessary in this case but let’s keep the protocol
+    erase(this),
+    cog:set_dc(RawCog, DC),
+    cog:set_dc(DCCog, DC),
+    Cog=RawCog#cog{dcobj=DC},
     %%Start main task
-    Cog=cog:start(),
-    {ok, cog:add_main_task(Cog,[Module,self()],
-                           #process_info{method= <<".main"/utf8>>,
-                                         this=null, destiny=null})}.
+    TaskInfo = #task_info{event=#event{type=schedule, local_id=main},
+                          method= <<".main"/utf8>>,
+                          this=null, destiny=null},
+    {ok, cog:add_main_task(Cog,[Module,self()], TaskInfo)}.
 
-end_mod(TaskRef, InfluxdbEnabled) ->
+end_mod(TaskRef, DumpTrace) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     %% modelapi_v2:print_statistics(),
     coverage:write_files(),
-    cog_monitor:waitfor(),
+    Status = cog_monitor:waitfor(),
+    gc:stop(),
+    coverage:stop(),
+    case DumpTrace of
+        none -> ok;
+        _ -> JsonTrace = modelapi_v2:get_trace_json(),
+             file:write_file(DumpTrace, JsonTrace)
+    end,
+    Ret = case Status of
+              success -> RetVal;
+              _ -> {exit_with, Status, cog_monitor:get_alternative_schedule()}
+          end,
+    cog_monitor:stop(),
+    clock:stop(),
+    Ret.
+
+
+run_mod(Module, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace)  ->
+    case Port of
+        _ when is_integer(Port) ->
+            start_http(Port, Module, Debug, GCStatistics, Clocklimit, Trace),
+            receive ok -> ok end;
+        _ ->
+            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false, Trace),
+            end_mod(R, DumpTrace)
+    end.
+
+run_dpor_slave(Module, Clocklimit, Trace) ->
+    {ok, TaskRef} = start_mod(Module, false, none, Clocklimit, false, Trace),
+    RetVal=task:join(TaskRef),
+    Status = cog_monitor:waitfor(),
+    NewTrace = cog_monitor:get_trace(),
     gc:stop(),
     clock:stop(),
     coverage:stop(),
-    case InfluxdbEnabled of
-        true -> influxdb:stop();
-        _ -> ok
-    end,
+    NewTraces = case Status of
+                    success -> dpor:new_traces(NewTrace);
+                    deadlock -> cog_monitor:get_alternative_schedule()
+                end,
     cog_monitor:stop(),
-    RetVal.
-
-
-run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-        InfluxdbUrl, InfluxdbDB, InfluxdbEnable)  ->
-
-    case InfluxdbEnable of
-        true -> {ok, _Influxdb} = influxdb:start_link(InfluxdbUrl, InfluxdbDB, Clocklimit);
-        _ -> ok
-    end,
-
-    case Port of
-        _ when is_integer(Port) ->
-            start_http(Port, Module, Debug, GCStatistics, Clocklimit),
-            receive ok -> ok end;
-        _ ->
-            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false),
-            end_mod(R, InfluxdbEnable)
-    end.
-
+    {NewTrace, NewTraces}.

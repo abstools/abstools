@@ -1,0 +1,49 @@
+module BackendTest;
+
+// This test case checks whether time advance is calculated properly: we
+// should advance to the earliest interval end point among all suspended
+// processes, *except* that we must advance until the (per-cog unique)
+// blocking process unblocks.
+
+interface I {
+    Time m_await(Int min, Int max);
+    Time m_block(Int min, Int max);
+    Unit sync();
+}
+
+class C implements I {
+    Bool start = False;
+    Time m_await(Int min, Int max) {
+        await duration(min, max);
+        return now();
+    }
+    Time m_block(Int min, Int max) {
+        await start;
+        duration(min, max);
+        return now();
+    }
+    Unit sync() {
+        start = True;
+    }
+}
+
+{
+    I o = new C();
+    Fut<Time> f1 = o!m_await(3,5);
+    Fut<Time> f2 = o!m_await(3, 3);
+    Fut<Time> f3 = o!m_block(6, 6);
+    // waiting for clock advance is the only way we have of making sure that
+    // all three processes in `o' have been received and scheduled; otherwise,
+    // if both `m_block' and `sync' happen to overtake one or more of the
+    // `m_await' calls, we will observe different return values.
+    await duration(1, 1);
+    o!sync();
+    await f1? & f2? & f3?;
+    Time t1 = f1.get;
+    Time t2 = f2.get;
+    Time t3 = f3.get;
+    Bool testresult = timeValue(t1) == 7
+        && timeValue(t2) == 7
+        && timeValue(t3) == 7;
+    println(`testresult: $testresult$: t1 = $t1$, t2 = $t2$, t3 = $t3$`);
+}

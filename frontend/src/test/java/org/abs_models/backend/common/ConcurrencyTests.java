@@ -4,11 +4,12 @@
  */
 package org.abs_models.backend.common;
 
+import java.io.File;
+
+import org.abs_models.backend.BackendTestDriver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import org.abs_models.backend.BackendTestDriver;
 
 @RunWith(Parameterized.class)
 public class ConcurrencyTests extends SemanticTests {
@@ -78,6 +79,11 @@ public class ConcurrencyTests extends SemanticTests {
         // Use a future after variable bindings at the call's location have gone
         // out of scope
         assertEvalTrue(INTERFACE_IF + CLASS_CF3 + CALL_M_FUTURE);
+    }
+
+    @Test
+    public void await_field_future() {
+        assertEvalTrue(new File("abssamples/backend/ConcurrencyTests/await_field_future.abs"));
     }
 
     @Test

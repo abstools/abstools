@@ -16,15 +16,15 @@ init(_Cog,Future,CalleeObj,[Method|Params])->
     #state{fut=Future,obj=CalleeObj,meth=Method,params=Params}.
 
 
-start(#state{fut=Future,obj=O=#object{cog=Cog=#cog{ref=CogRef,dc=DC}},meth=M,params=P})->
+start(#state{fut=Future,obj=O=#object{cog=Cog=#cog{ref=CogRef,dcobj=DC}},meth=M,params=P})->
     %% Don't put this inside try-catch -- if we can't get the class
     %% things are properly wrong
     C=object:get_class_from_ref(O),
     try
         receive
             {stop_world, CogRef} ->
-                cog:process_is_blocked_for_gc(Cog, self(), get(process_info), get(this)),
-                cog:process_is_runnable(Cog, self()),
+                cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),
+                cog:task_is_runnable(Cog, self()),
                 task:wait_for_token(Cog, [O,DC|P])
         after 0 -> ok end,
         Res=apply(C, M,[O|P]),
@@ -36,18 +36,18 @@ start(#state{fut=Future,obj=O=#object{cog=Cog=#cog{ref=CogRef,dc=DC}},meth=M,par
 
 complete_future(Future, Status, Value, Cog, Stack) ->
     future:value_available(Future, Status, Value, self(), Cog, value_accepted),
-        (fun Loop() ->
+    (fun Loop() ->
              %% Wait for message to be received, but handle GC request in the
              %% meantime.
              receive
                  {stop_world, _Sender} ->
-                     cog:process_is_blocked_for_gc(Cog, self(), get(process_info), get(this)),
-                     cog:process_is_runnable(Cog, self()),
+                     cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),
+                     cog:task_is_runnable(Cog, self()),
                      task:wait_for_token(Cog, [Future, Value | Stack]),
                      Loop();
-                {get_references, Sender} ->
+                 {get_references, Sender} ->
                      cog:submit_references(Sender, gc:extract_references([Future, Value | Stack])),
-                    Loop();
-                {value_accepted, Future} -> ok
-            end
-    end)().
+                     Loop();
+                 {value_accepted, Future} -> ok
+             end
+     end)().
