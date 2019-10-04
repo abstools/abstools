@@ -41,9 +41,6 @@ Folders
     written in [Ott](https://www.cl.cam.ac.uk/~pes20/ott/)
 
 
-* `emacs` - Editor support for ABS -- moved to
-  https://github.com/abstools/abs-mode but left here for existing users.
-
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
   continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.
 
@@ -69,8 +66,8 @@ for the initial `git clone` command, i.e.,
 
     git clone https://github.com/abstools/abstools -c core.autocrlf=false
 
-Otherwise, running the tools inside Vagrant or Docker will fail with obscure
-error messages.
+Otherwise, running the tools inside Docker will fail with obscure error
+messages.
 
 Working with the repository
 ---------------------------
