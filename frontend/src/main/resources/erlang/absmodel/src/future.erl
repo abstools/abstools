@@ -97,7 +97,7 @@ get_blocking(Future, Cog, Stack) ->
         true ->
             get_after_await(Future, Cog);
         false ->
-            cog:block_cog_for_future(Cog, Future, Stack),
+            cog:block_current_task_for_future(Cog, Future, Stack),
             task:wait_for_token(Cog, [Future | Stack]),
             get_after_await(Future, Cog)
     end.

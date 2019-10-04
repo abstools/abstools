@@ -23,7 +23,7 @@
 -export([new_cog/3, cog_died/3]).
 -export([cog_active/2, cog_idle/2, cog_blocked/2, cog_blocked_for_clock/5, cog_unblocked/2]).
 -export([task_waiting_for_clock/5, task_confirm_clock_wakeup/3]).
--export([block_cog_for_resource/4]).
+-export([block_task_for_resource/5]).
 
 -export([notify_time_advance/2]).
 
@@ -87,7 +87,7 @@ consume(_DC=#object{oid=Oid,cog=Cog}, Resourcetype, Amount) ->
                              var_max_for_resourcetype(Resourcetype)},
                             Amount}).
 
-block_cog_for_resource(Cog=#cog{ref=CogRef,dcobj=DC}, Resourcetype, Amount, Stack) ->
+block_task_for_resource(Cog=#cog{ref=CogRef,dcobj=DC}, TaskRef, Resourcetype, Amount, Stack) ->
     Amount_r = rationals:to_r(Amount),
     case rationals:is_positive(Amount_r) of
         true ->
@@ -97,13 +97,13 @@ block_cog_for_resource(Cog=#cog{ref=CogRef,dcobj=DC}, Resourcetype, Amount, Stac
                 wait ->
                     Time=clock:distance_to_next_boundary(),
                     %% XXX once we keep time ourselves this backwards call will be gone
-                    cog:block_cog_for_duration(Cog, Time, Time, Stack),
-                    block_cog_for_resource(Cog, Resourcetype, Remaining, Stack);
+                    cog:block_current_task_for_duration(Cog, Time, Time, Stack),
+                    block_task_for_resource(Cog, TaskRef, Resourcetype, Remaining, Stack);
                 ok ->
                     case rationals:is_positive(Remaining) of
                         %% We loop since the DC might decide to hand out less
                         %% than we ask for and less than it has available.
-                        true -> block_cog_for_resource(Cog, Resourcetype, Remaining, Stack);
+                        true -> block_task_for_resource(Cog, TaskRef, Resourcetype, Remaining, Stack);
                         false -> ok
                     end
             end;
