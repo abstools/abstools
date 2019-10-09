@@ -44,9 +44,9 @@ get_resource_history(DCRef, Type) ->
 %% cog->dc time and resource negotiation API
 new_cog(none, none, _CogRef) ->
     %% this case happens when calling cog:start/0 (this happens twice during
-    %% model startup, see GenerateErlang.jadd:ModuleDecl.generateErlangCode
-    %% and runtime:start_mod/5), and we call dc:new_cog from cog:set_dc/2,
-    %% which is called for both these cogs.
+    %% model startup, see runtime:start_mod/5), and we call dc:new_cog from
+    %% cog:set_dc/2, which is called for both these cogs -- so no need to do
+    %% anything here.
     ok;
 new_cog(ParentCog, DCRef, CogRef) ->
     gen_statem:call(DCRef, {new_cog, ParentCog, CogRef}).
@@ -80,36 +80,8 @@ task_waiting_for_clock(DCRef, CogRef, TaskRef, Min, Max) ->
 task_confirm_clock_wakeup(DCRef, CogRef, TaskRef) ->
     gen_statem:cast(DCRef, {task_confirm_clock_wakeup, CogRef, TaskRef}).
 
-consume(_DC=#object{oid=Oid,cog=Cog}, Resourcetype, Amount) ->
-    DCRef=cog:get_dc_ref(Cog, Oid),
-    gen_statem:call(DCRef, {consume_resource,
-                            {var_current_for_resourcetype(Resourcetype),
-                             var_max_for_resourcetype(Resourcetype)},
-                            Amount}).
-
-block_task_for_resource(Cog=#cog{ref=CogRef,dcobj=DC}, TaskRef, Resourcetype, Amount, Stack) ->
-    Amount_r = rationals:to_r(Amount),
-    case rationals:is_positive(Amount_r) of
-        true ->
-            {Result, Consumed}= consume(DC,Resourcetype,Amount_r),
-            Remaining=rationals:sub(Amount_r, Consumed),
-            case Result of
-                wait ->
-                    Time=clock:distance_to_next_boundary(),
-                    %% XXX once we keep time ourselves this backwards call will be gone
-                    cog:block_current_task_for_duration(Cog, Time, Time, Stack),
-                    block_task_for_resource(Cog, TaskRef, Resourcetype, Remaining, Stack);
-                ok ->
-                    case rationals:is_positive(Remaining) of
-                        %% We loop since the DC might decide to hand out less
-                        %% than we ask for and less than it has available.
-                        true -> block_task_for_resource(Cog, TaskRef, Resourcetype, Remaining, Stack);
-                        false -> ok
-                    end
-            end;
-        false ->
-            ok
-    end.
+block_task_for_resource(DCRef, CogRef, TaskRef, Resourcetype, Amount) ->
+    gen_statem:cast(DCRef, {consume_resource, CogRef, TaskRef, Resourcetype, Amount}).
 
 notify_time_advance(DCRef, Delta) ->
     gen_statem:cast(DCRef, {clock_advance_for_dc, Delta}).
@@ -132,6 +104,10 @@ notify_time_advance(DCRef, Delta) ->
          %% compare current time with Min.  Note that times are absolute, so
          %% we do not have to decrement items in the queue as time advances.
          clock_waiting=[],
+         %% Map of Resourcetype |-> [{CogRef, TaskRef, Amount}] entries.  New
+         %% resource requests are queued at the back, front of the list gets
+         %% served first.
+         resource_waiting=#{},
          %% Set of `{CogRef, TaskRef}' that must wake up before clock can
          %% advance again.  This set is filled with items from `clock_waiting'
          %% during clock advance and emptied via `task_confirm_clock_wakeup'.
@@ -209,15 +185,20 @@ handle_call(From, get_dc_info_string, _State, Data=#data{cog=Cog,oid=Oid}) ->
                           builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
     {keep_state_and_data, {reply, From, Result}}.
 
-handle_cast({clock_advance_for_dc, Amount}, _State,
-     Data=#data{cog=Cog, oid=Oid, clock_waiting=ClockWaiting}) ->
+handle_cast({clock_advance_for_dc, Amount}, State,
+     Data=#data{cog=Cog, oid=Oid, clock_waiting=ClockWaiting,
+                resource_waiting=ResourceWaiting}) ->
     %% `cog_monitor' calls `dc:notify_time_advance/2' only when all dcs are
     %% idle -- but by the time we get to process the `clock_advance_for_dc'
     %% signal, a cog might have already waken us up again, so we also accept
     %% it in state `active'.
     Now=clock:now(),
     OState=cog:get_object_state(Cog, Oid),
-    OState1=update_state_and_history(OState, Amount),
+    {OState1, NewCpuQueue, NewBwQueue, NewMemoryQueue}
+        = update_dc_state_wake_up_cogs(OState, Amount,
+                                   maps:get(cpu, ResourceWaiting, []),
+                                   maps:get(bw, ResourceWaiting, []),
+                                   maps:get(memory, ResourceWaiting, [])),
     cog:object_state_changed(Cog, Oid, OState1),
     %% List traversal 1: wake up all tasks where Min <= Now; collect these
     %% tasks in a set to make sure they were scheduled before the next clock
@@ -241,23 +222,19 @@ handle_cast({clock_advance_for_dc, Amount}, _State,
     NewW=lists:filter(
            fun({_CogRef, _TaskRef, Min, _Max}) -> cmp:lt(Now, Min) end,
            ClockWaiting),
+    NewData=Data#data{clock_waiting=NewW, active_before_next_clock=WakeUpItems,
+                     resource_waiting=ResourceWaiting#{cpu => NewCpuQueue,
+                                                       bw => NewBwQueue,
+                                                       memory => NewMemoryQueue}},
     %% Let the cog_monitor know the maximum clock advance that we can do now
     %% -- we can always change this later but need to get this out ASAP
-    case NewW of
-        [] ->
-            ok;
-        [{_CogRefH, _TaskRefH, _MinH, MaxH} | _] ->
-            cog_monitor:dc_mte(self(), MaxH)
-    end,
-    %% TODO: walk through list of cogs that need resources, give them some and
-    %% send wakeup if they got everything -- at the moment, this is done
-    %% implicitly
-    NewData=Data#data{clock_waiting=NewW, active_before_next_clock=WakeUpItems},
-    case gb_sets:is_empty(WakeUpItems) of
-        true ->
-            %% TODO: call cog_monitor:dc_idle here
-            {keep_state, NewData};
-        false -> switch_to_active(idle, NewData)
+    maybe_send_mte_to_cog_monitor(NewData),
+    case can_switch_to_idle(NewData) of
+        %% After a clock advance, cog_monitor regards us as active until we
+        %% send out an idle notification -- hence, no need to send
+        %% cog_monitor:dc_active here.
+        false -> {keep_state, NewData};
+        true -> switch_to_idle(State, NewData)
     end;
 handle_cast(_Event, _StateName, Data) ->
     {stop, not_supported, Data}.
@@ -268,6 +245,17 @@ active({call, From}, {cog_idle, CogRef}, Data=#data{active=A, idle=I}) ->
     gen_statem:reply(From, Reply),
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       idle=gb_sets:add_element(CogRef, I)},
+    case can_switch_to_idle(NewData) of
+        false -> {keep_state, NewData};
+        true -> switch_to_idle(active, NewData)
+    end;
+active(internal, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
+    %% We send this `internal' event to ourselves when `CogRef' blocks on a
+    %% resource.  Same code as in the `call' case below except we don’t send
+    %% an answer.
+    cog_monitor:cog_blocked(CogRef),
+    NewData=Data#data{active=gb_sets:del_element(CogRef, A),
+                      blocked=gb_sets:add_element(CogRef, B)},
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
@@ -287,14 +275,12 @@ active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
     %% We add the blocked task to the queue since it waits for the token; no
     %% need to handle it specially
     NewW=add_to_queue(W, CogRef, TaskRef, Min, Max),
-    %% MinH, MaxH are absolute times; NewW is non-empty
-    {_CogRefH, _TaskRefH, _MinH, MaxH}=hd(NewW),
-    cog_monitor:dc_mte(self(), MaxH),
-    cog_monitor:cog_blocked(CogRef),
-    gen_statem:reply(From, ok),
     NewData=Data#data{clock_waiting=NewW,
                       active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
+    maybe_send_mte_to_cog_monitor(NewData),
+    cog_monitor:cog_blocked(CogRef),
+    gen_statem:reply(From, ok),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
@@ -302,12 +288,10 @@ active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
 active({call, From}, {task_waiting_for_clock, CogRef, TaskRef, Min, Max},
        Data=#data{clock_waiting=W}) ->
     cog_monitor:task_waiting_for_clock(TaskRef, CogRef, Min, Max),
-    %% Min, Max are relative times
     NewW=add_to_queue(W, CogRef, TaskRef, Min, Max),
-    %% MinH, MaxH are absolute times
-    {_CogRefH, _TaskRefH, _MinH, MaxH}=hd(NewW),
-    cog_monitor:dc_mte(self(), MaxH),
-    {keep_state, Data#data{clock_waiting=NewW}, {reply, From, ok}};
+    NewData=Data#data{clock_waiting=NewW},
+    maybe_send_mte_to_cog_monitor(NewData),
+    {keep_state, NewData, {reply, From, ok}};
 active(cast, {task_confirm_clock_wakeup, CogRef, TaskRef},
        Data=#data{active_before_next_clock=ABNC}) ->
     cog_monitor:task_confirm_clock_wakeup(TaskRef),
@@ -317,36 +301,58 @@ active(cast, {task_confirm_clock_wakeup, CogRef, TaskRef},
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
     end;
-active({call, From}, {consume_resource, {CurrentVar, MaxVar}, Count},
-       Data=#data{cog=Cog, oid=Oid}) ->
+active(cast, {consume_resource, CogRef, TaskRef, Resourcetype, Amount_raw},
+       Data=#data{cog=MyCog, oid=MyOid, resource_waiting=RQueue}) ->
+    %% We clamp the value -- do not try to consume a negative amount
+    Requested = rationals:max(rationals:to_r(Amount_raw), 0),
     C=class_ABS_DC_DeploymentComponent,
-    OState=cog:get_object_state(Cog, Oid),
-    Initialized=C:get_val_internal(s, 'initialized'),
+    OState=cog:get_object_state(MyCog, MyOid),
+    Initialized=C:get_val_internal(OState, 'initialized'),
+    ResourceVarCurrent=var_current_for_resourcetype(Resourcetype),
+    ResourceVarMax=var_max_for_resourcetype(Resourcetype),
+    Queue = maps:get(Resourcetype, RQueue, []),
     case Initialized of
-        false ->
-            %% the init block has not run yet -- should not happen
-            {keep_state_and_data, {reply, From, {wait, 0}}};
-        _ ->
-            Total=C:get_val_internal(OState,MaxVar),
-            Consumed=rationals:to_r(C:get_val_internal(OState,CurrentVar)),
-            Requested=rationals:to_r(Count),
-            ToConsume=case Total of
+        null ->
+            %% The init block of the DC object has not run yet (should not
+            %% happen) - but just record the request and deal with it later.
+            {keep_state,
+             Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Requested}]}},
+             {next_event, internal, {cog_blocked, CogRef}}};
+        true ->
+            %% We modify the DC object state directly, which looks scary - but
+            %% no ABS code modifies that part of the object state so we’re
+            %% safe.  (The relevant fields are marked `[Final]' in the class
+            %% definition.)
+            Total=C:get_val_internal(OState,ResourceVarMax),
+            Consumed=rationals:to_r(C:get_val_internal(OState,ResourceVarCurrent)),
+            Available=case Total of
                           dataInfRat -> Requested;
-                          {dataFin, Total1} ->
-                              rationals:min(Requested,
-                                            rationals:sub(Total1, Consumed))
+                          {dataFin, Total1} -> rationals:sub(Total1, Consumed)
                       end,
-            case rationals:is_zero(ToConsume) of
+            case rationals:is_greater(Requested, Available) of
                 true ->
-                    {keep_state_and_data, {reply, From, {wait, ToConsume}}};
+                    %% We need more than is available - get what we can and
+                    %% queue the rest.
+                    Remaining = rationals:sub(Requested, Available),
+                    NewConsumed = rationals:add(Consumed, Available),
+                    %% Do not set current to total since that is of type InfRat
+                    OState1=C:set_val_internal(OState,ResourceVarCurrent, NewConsumed),
+                    cog:object_state_changed(MyCog, MyOid, OState1),
+                    {keep_state,
+                     %% In this case, `Queue' should be empty *or* `Available'
+                     %% should be 0 (because we should have given out
+                     %% everything during time advance).  In either case,
+                     %% appending to the end does the right thing.
+                     Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Remaining}]}},
+                     {next_event, internal, {cog_blocked, CogRef}}};
                 false ->
-                    OState1=C:set_val_internal(OState,CurrentVar, rationals:add(Consumed, ToConsume)),
-                    %% We reply with "ok" not "wait" here, even when we did
-                    %% not fulfill the whole request, so we are ready for
-                    %% small-step consumption schemes where multiple consumers
-                    %% race for resources.
-                    cog:object_state_changed(Cog, Oid, OState1),
-                    {keep_state_and_data, {reply, From, {ok, ToConsume}}}
+                    %% Do not inform cog_monitor that cog is blocked; just
+                    %% unblock task here
+                    NewConsumed=rationals:add(Consumed, Requested),
+                    OState1=C:set_val_internal(OState,ResourceVarCurrent, NewConsumed),
+                    cog:object_state_changed(MyCog, MyOid, OState1),
+                    cog:task_is_runnable(CogRef, TaskRef),
+                    keep_state_and_data
             end
     end;
 active({call, From}, Event, Data) ->
@@ -361,19 +367,76 @@ idle(cast, Event, Data) ->
     handle_cast(Event, idle, Data).
 
 
-%% Callback from update event.  Handle arbitrary clock advancement
-%% amounts (within one interval, arriving at clock boundary, jumping
-%% multiple boundaries)
-update_state_and_history(S, Amount) ->
+%% Handle clock advancement.  Consider arbitrary clock advancement amounts
+%% (within one interval, arriving at clock boundary, jumping multiple
+%% boundaries), consume resources on the way, and wake up cogs whose resource
+%% needs have been filled.
+update_dc_state_wake_up_cogs(S, Amount, CpuQueue, BwQueue, MemoryQueue) ->
     Boundary=clock:distance_to_next_boundary(),
     Amount1=rationals:sub(Amount, Boundary),
     case rationals:is_negative(Amount1) of
-        false -> S1=update_state_and_history_for_resource(S, cpu),
-                 S2=update_state_and_history_for_resource(S1, bw),
-                 S3=update_state_and_history_for_resource(S2, memory),
-                 update_state_and_history(S3, Amount1);
-        true -> S
+        false -> {S1, NewCpuQueue}=update_dc_state_wake_up_cogs_for_resource(S, cpu, CpuQueue),
+                 {S2, NewBwQueue}=update_dc_state_wake_up_cogs_for_resource(S1, bw, BwQueue),
+                 {S3, NewMemoryQueue}=update_dc_state_wake_up_cogs_for_resource(S2, memory, MemoryQueue),
+                 update_dc_state_wake_up_cogs(S3, Amount1, NewCpuQueue, NewBwQueue, NewMemoryQueue);
+        true -> {S, CpuQueue, BwQueue, MemoryQueue}
     end.
+
+update_dc_state_wake_up_cogs_for_resource(S0, Resourcetype, Queue) ->
+    %% Consume as many resources as possible from `Queue', and wake up tasks
+    %% where possible.  Then, add consumed and available to the respective
+    %% history list in `S'.  Return updated DC state and queue.
+    C=class_ABS_DC_DeploymentComponent,
+    VarHistory=var_history_for_resourcetype(Resourcetype),
+    VarTotalshistory=var_totalhistory_for_resourcetype(Resourcetype),
+    VarCurrent=var_current_for_resourcetype(Resourcetype),
+    VarMax=var_max_for_resourcetype(Resourcetype),
+    VarNext=var_nextmax_for_resourcetype(Resourcetype),
+
+    OldTotal=C:get_val_internal(S0, VarMax),
+
+    %% Refill resources, record history for previous interval.
+    S1=C:set_val_internal(S0,VarHistory,
+                          [ C:get_val_internal(S0,VarCurrent) |
+                            C:get_val_internal(S0,VarHistory)]),
+    S2=C:set_val_internal(S1,VarTotalshistory,
+                          advanceTotalsHistory(C:get_val_internal(S1,VarTotalshistory), OldTotal)),
+    S3=case Resourcetype of
+           %% Memory does not refresh as time advances
+           memory -> S2;
+           _ -> C:set_val_internal(S2,VarCurrent,0)
+       end,
+    S4=C:set_val_internal(S3,VarMax,C:get_val_internal(S3,VarNext)),
+
+    %% Consume new resources.  Loop until resources or queue exhausted.
+    {NewQueue, NewState}=
+        (fun Loop([], State) -> {[], State};
+             Loop([{CogRef, TaskRef, Requested} | Rest], State) ->
+                 NewTotal=C:get_val_internal(State,VarMax),
+                 Consumed=rationals:to_r(C:get_val_internal(State,VarCurrent)),
+                 Available=case NewTotal of
+                               dataInfRat ->
+                                   Requested;
+                               {dataFin, Total1} ->
+                                   rationals:sub(Total1, Consumed)
+                           end,
+                 case rationals:is_greater(Requested, Available) of
+                     true ->
+                         Remaining = rationals:sub(Requested, Available),
+                         NewConsumed = rationals:add(Consumed, Available),
+                         %% Do not set current to total since that is of type
+                         %% InfRat
+                         State1=C:set_val_internal(State,VarCurrent, NewConsumed),
+                         {[{CogRef, TaskRef, Remaining} | Rest], State1};
+                     false ->
+                         cog:task_is_runnable(CogRef, TaskRef),
+                         NewConsumed = rationals:add(Consumed, Requested),
+                         State1=C:set_val_internal(State,VarCurrent, NewConsumed),
+                         Loop(Rest, State1)
+                 end
+             end)(Queue, S4),
+    {NewState, NewQueue}.
+
 
 %% Attribute names for resource types.  Must be the same as in class
 %% abslang.abs:ABS.DC.DeploymentComponent
@@ -418,25 +481,33 @@ advanceTotalsHistory(History, {dataFin,Amount}) ->
 advanceTotalsHistory(History, dataInfRat) -> History.
 
 
-update_state_and_history_for_resource(S, Resourcetype) ->
-    C=class_ABS_DC_DeploymentComponent,
-    History=var_history_for_resourcetype(Resourcetype),
-    Totalshistory=var_totalhistory_for_resourcetype(Resourcetype),
-    Consumed=var_current_for_resourcetype(Resourcetype),
-    Max=var_max_for_resourcetype(Resourcetype),
-    Next=var_nextmax_for_resourcetype(Resourcetype),
-
-    S1=C:set_val_internal(S,History,
-                          [ C:get_val_internal(S,Consumed) |
-                            C:get_val_internal(S,History)]),
-    S2=C:set_val_internal(S1,Totalshistory,
-                          advanceTotalsHistory(C:get_val_internal(S1,Totalshistory), C:get_val_internal(S1,Max))),
-    S3=case Resourcetype of
-           %% Memory does not refresh as time advances
-           memory -> S2;
-           _ -> C:set_val_internal(S2,Consumed,0)
-       end,
-    C:set_val_internal(S3,Max,C:get_val_internal(S3,Next)).
+maybe_send_mte_to_cog_monitor(Data=#data{clock_waiting=ClockWaiting,
+                                         resource_waiting=ResourceWaiting}) ->
+    %% If we’re not waiting for the clock or resources, do nothing.
+    %% Otherwise, send the minimum of the next clock boundary (If we’re
+    %% waiting for resources) and the MTE of the task(s) we’re waiting on (if
+    %% any).
+    ResMTE=case lists:any(fun([]) -> false; (_) -> true end,
+                          maps:values(ResourceWaiting))
+           of
+               %% We could theoretically calculate a bigger MTE, given the
+               %% request size and total number of resources per interval -
+               %% but since the total can change at each interval (via calls
+               %% to `DeploymentComponent.incrementResources') we would have
+               %% to calculate a new MTE at each interval anyway.
+               true -> clock:next_boundary();
+               false -> none
+            end,
+    TimeMTE=case ClockWaiting of
+                [{_CogRefH, _TaskRefH, _MinH, MaxH} | _] -> MaxH;
+                _ -> none
+            end,
+    case {ResMTE, TimeMTE} of
+        {none, none} -> ok;
+        {none, TimeMTE} -> cog_monitor:dc_mte(self(), TimeMTE);
+        {ResMTE, none} -> cog_monitor:dc_mte(self(), ResMTE);
+        _ -> cog_monitor:dc_mte(self(), rationals:min(TimeMTE, ResMTE))
+    end.
 
 can_switch_to_idle(Data=#data{active=A, active_before_next_clock=ABNC}) ->
     gb_sets:is_empty(A) andalso gb_sets:is_empty(ABNC).

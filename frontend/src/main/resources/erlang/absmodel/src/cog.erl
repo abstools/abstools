@@ -294,18 +294,38 @@ block_current_task_for_duration(Cog=#cog{ref=CogRef},MMin,MMax,Stack) ->
             ok
     end.
 
-block_current_task_for_cpu(Cog, Amount, Stack) ->
-    dc:block_task_for_resource(Cog, self(), cpu, Amount, Stack).
+block_current_task_for_cpu(Cog=#cog{ref=CogRef}, Amount, Stack) ->
+    gen_statem:cast(CogRef, {task_blocked_for_resource,
+                             self(),
+                             get(task_info),
+                             get(this),
+                             cpu, Amount}),
+    task:wait_for_token(CogRef, Stack).
 
-block_current_task_for_bandwidth(Cog=#cog{dcobj=DC}, _Callee=#object{cog=#cog{dcobj=TargetDC}}, Amount, Stack) ->
+block_current_task_for_bandwidth(Cog=#cog{ref=CogRef,dcobj=DC},
+                                 _Callee=#object{cog=#cog{dcobj=TargetDC}},
+                                 Amount, Stack) ->
     case DC == TargetDC of
-        true -> ok;
-        false -> dc:block_task_for_resource(Cog, self(), bw, Amount, Stack)
+        true ->
+            ok;
+        false ->
+            gen_statem:cast(CogRef, {task_blocked_for_resource,
+                                     self(),
+                                     get(task_info),
+                                     get(this),
+                                     bw, Amount}),
+            task:wait_for_token(CogRef, Stack)
     end;
-block_current_task_for_bandwidth(Cog=#cog{dcobj=DC}, null, Amount, Stack) ->
+block_current_task_for_bandwidth(Cog=#cog{ref=CogRef}, null,
+                                 Amount, Stack) ->
     %% KLUDGE: on return statements, we don't know where the result is sent.
     %% Consume bandwidth now -- fix this once the semantics are resolved
-    dc:block_task_for_resource(Cog, self(), bw, Amount, Stack).
+    gen_statem:cast(CogRef, {task_blocked_for_resource,
+                             self(),
+                             get(task_info),
+                             get(this),
+                             bw, Amount}),
+    task:wait_for_token(CogRef, Stack).
 
 block_current_task_for_future(#cog{ref=CogRef}, Future, Stack) ->
     gen_statem:cast(CogRef, {task_blocked_for_future,
@@ -914,9 +934,22 @@ task_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,C
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
      {next_event, cast, {task_runnable, NewTask, none}}};
+task_running(cast, {task_blocked_for_resource,
+                    TaskRef, TaskInfo, ObjectState, Resourcetype, Amount},
+             Data=#data{dcref=DCRef, object_states=ObjectStates,
+                        task_infos=TaskInfos}) ->
+    dc:block_task_for_resource(DCRef, self(), TaskRef, Resourcetype, Amount),
+    %% dc will call task_is_runnable as needed and/or register our blockedness
+    WaitReason=TaskInfo#task_info.wait_reason,
+    NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), TaskRef, blocked),
+    This=TaskInfo#task_info.this,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
+    NewTaskInfos=maps:put(TaskRef, TaskInfo, TaskInfos),
+    {next_state, task_blocked,
+     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}} ;
 task_running(cast, {task_blocked_for_future, TaskRef, TaskInfo, ObjectState, Future},
-                Data=#data{task_infos=TaskInfos,object_states=ObjectStates,
-                           dcref=DCRef, replaying=Replaying}) ->
+             Data=#data{task_infos=TaskInfos,object_states=ObjectStates,
+                        dcref=DCRef, replaying=Replaying}) ->
     %% The following out commented code block causes deadlocks. We should try
     %% to reinstate it after understanding why it deadlocks:
     %% case time_slot_replayed(Replaying) of

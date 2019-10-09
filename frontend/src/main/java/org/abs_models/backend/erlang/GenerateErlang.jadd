@@ -215,8 +215,6 @@ aspect GenerateErlang {
           Call call_exp = stmt.getCallExpression();
           if (call_exp != null) {
               // FIXME: only consumes bandwidth from source cog
-              // FIXME: should not consume bandwidth if call goes to same DC
-
               ecs.print("cog:block_current_task_for_bandwidth(Cog,");
               call_exp.getCallee().generateErlangCode(ecs, vars);
               ecs.print(",");
@@ -225,6 +223,9 @@ aspect GenerateErlang {
               ecs.print(vars.toStack());
               ecs.println("),");
           } else if (stmt instanceof ReturnStmt) {
+              // FIXME: should not consume bandwidth when reader of future is
+              // on same cog (need to work out where to account for bandwidth
+              // when multiple readers access the future)
               ecs.print("cog:block_current_task_for_bandwidth(Cog,null,");
               size.generateErlangCode(ecs, vars);
               ecs.print(",");

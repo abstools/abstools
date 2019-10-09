@@ -2,18 +2,25 @@ module BackendTest;
 import * from ABS.DC;
 
 interface I {
-    Bool n();
+    Unit n(Int cost);
 }
 
 class C implements I {
-    Bool n() {
-        [Cost: 10] return True;
+    Unit n(Int cost) {
+        [Cost: cost] skip;
     }
 }
 
 {
-    Bool testresult = False;
+    Bool testresult = True;
     DC dc = new DeploymentComponent("hello", map[Pair(Speed, 5)]);
     [DC: dc] I i = new C();
-    testresult = await i!n();
+    await i!n(10);              // consume all of t=0, t=1
+    testresult = testresult && now() == Time(1);
+    await i!n(1);               // consume 1 of 5 in t=2
+    testresult = testresult && now() == Time(2);
+    await i!n(4);               // consume rest of t=2
+    testresult = testresult && now() == Time(2);
+    await i!n(1);               // consume 1 of 5 in t=3
+    testresult = testresult && now() == Time(3);
 }
