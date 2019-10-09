@@ -1,14 +1,14 @@
 Require Import Arith.
 Require Import Omega.
 Require Import List.
-Require Import ott_list_support.
-Require Import ott_list_base.
+Require Import Ott.ott_list_support.
+Require Import Ott.ott_list_base.
 
 
 
 Section Lists.
 
-Variables A B C : Set.
+Variables A B C : Type.
 Implicit Types x : A.
 Implicit Types y : B.
 Implicit Types z : C.
@@ -37,7 +37,6 @@ Fixpoint nth_safe l n {struct l} : n < length l -> A :=
     | h::t, S m => fun H => nth_safe t m (le_S_n _ _ H)
     | nil, _ => fun H => match le_Sn_O _ H with end
   end.
-Implicit Arguments nth_safe [].
 
 Lemma nth_safe_eq_nth_error :
   forall l n H, value (nth_safe l n H) = nth_error l n.
@@ -138,8 +137,8 @@ Qed.
 
 Lemma nth_error_length :
   forall l n, match nth_error l n with
-                | value _ => n < length l
-                | error => n >= length l
+                | Some _ => n < length l
+                | None => n >= length l
               end.
 Proof.
   induction l; intros; destruct n; try solve [compute; auto with arith].
@@ -173,8 +172,8 @@ Qed.
 Lemma nth_eq_nth_error :
   forall l n default,
     nth n l default = match nth_error l n with
-                        | value x => x
-                        | error => default
+                        | Some x => x
+                        | None => default
                       end.
 Proof.
   induction l; destruct n; intros; try reflexivity. simpl; apply IHl.
@@ -182,11 +181,11 @@ Qed.
 
 End Lists.
 
-Implicit Arguments nth_safe [A].
-Implicit Arguments nth_safe_eq_nth_error [A].
-Implicit Arguments nth_safe_proof_irrelevance [A].
-Implicit Arguments nth_safe_cons [A].
-Implicit Arguments nth_safe_app [A].
+Arguments nth_safe [A] _ _ _.
+Arguments nth_safe_eq_nth_error [A] _ _ _.
+Arguments nth_safe_proof_irrelevance [A] _ _ _ _.
+Arguments nth_safe_cons [A] _ _ _ _.
+Arguments nth_safe_app [A] _ _ _ _.
 
 Hint Rewrite nth_map nth_ok_map nth_error_map : lists.
 Hint Rewrite nth_error_nil : lists.

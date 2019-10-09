@@ -4,7 +4,7 @@ Require Import Arith.
 Require Import List.
 Require Import Omega.
 Require Import Wf_nat.
-Require Import ott_list_support.
+Require Import Ott.ott_list_support.
 
 
 
@@ -27,7 +27,7 @@ Ltac reverse_list l l' :=
 
 Section Lists.
 
-Variables A B C : Set.
+Variables A B C : Type.
 Implicit Types x : A.
 Implicit Types y : B.
 Implicit Types z : C.
@@ -44,8 +44,8 @@ Set Implicit Arguments.
 
 (*** Length ***)
 
-Definition lt_length (A:Set) := ltof _ (@length A).
-Definition well_founded_lt_length (A:Set) := (well_founded_ltof _ (@length A)).
+Definition lt_length (A:Type) := ltof _ (@length A).
+Definition well_founded_lt_length (A:Type) := (well_founded_ltof _ (@length A)).
 
 Lemma length_app : forall l l', length (l ++ l') = length l + length l'.
 Proof.
@@ -179,7 +179,7 @@ Qed.
 (*** End of the Lists section ***)
 
 End Lists.
-Implicit Arguments lt_length [A].
+Arguments lt_length [A] _ _.
 
 Hint Resolve length_app length_map length_rev : datatypes.
 Hint Rewrite length_app length_map length_rev : lists.
