@@ -139,7 +139,7 @@ start(ParentCog, DC, Scheduler)->
           end,
     {ok, NewCogRef} = gen_statem:start(?MODULE, [ParentCog, DC, DCRef, Scheduler], []),
     NewCog=#cog{ref=NewCogRef,dcobj=DC},
-    gc:register_cog(NewCog),
+    gc:register_cog(NewCogRef),
     NewCog.
 
 add_task(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info,Stack) ->
@@ -378,8 +378,8 @@ get_trace(CogRef) ->
 
 %%Garbage collector callbacks
 
-acknowledged_by_gc(#cog{ref=Cog}) ->
-    gen_statem:cast(Cog, acknowledged_by_gc).
+acknowledged_by_gc(CogRef) ->
+    gen_statem:cast(CogRef, acknowledged_by_gc).
 
 inc_ref_count(#cog{ref=Cog})->
     gen_statem:cast(Cog, inc_ref_count).
@@ -389,19 +389,19 @@ dec_ref_count(#cog{ref=Cog})->
 
 get_references(#cog{ref=Ref}) ->
     get_references(Ref);
-get_references(Cog) ->
-    gen_statem:cast(Cog, {get_references, self()}),
+get_references(CogRef) ->
+    gen_statem:cast(CogRef, {get_references, self()}),
     receive {references_from_cog, References} -> References end.
 
 stop_world(#cog{ref=Ref}) ->
     gen_statem:cast(Ref, stop_world);
-stop_world(Cog) ->
-    gen_statem:cast(Cog, stop_world).
+stop_world(CogRef) ->
+    gen_statem:cast(CogRef, stop_world).
 
 resume_world(#cog{ref=Ref}) ->
     gen_statem:cast(Ref, resume_world);
-resume_world(Cog) ->
-    gen_statem:cast(Cog, resume_world).
+resume_world(CogRef) ->
+    gen_statem:cast(CogRef, resume_world).
 
 %%Internal
 
