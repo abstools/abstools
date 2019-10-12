@@ -1001,20 +1001,21 @@ implements DeploymentComponentForCloudProvider {
     // Histories are updated by the backend.  totalhistories stay empty in
     // case the DC has an infinite amount of resources for that type.  If
     // these field names are changed, adjust dc.erl
-    // (var_current_for_resourcetype et al.) and abs-interpreter.maude (op
-    // advance et al.)
+    // (var_current_for_resourcetype et al.).
     List<Rat> cpuhistory = Nil;
     List<Rat> cpuhistorytotal = Nil;
     List<Rat> bwhistory = Nil;
     List<Rat> bwhistorytotal = Nil;
     List<Rat> memoryhistory = Nil;
     List<Rat> memoryhistorytotal = Nil;
-    // Counters of consumed resources in current time unit.  Modified by the
-    // backend where appropriate (Speed, bandwidth self-refresh; memory
-    // doesn't.)  Do not rename.
-    Rat cpuconsumed = 0;
-    Rat bwconsumed = 0;
-    Rat memoryconsumed = 0;
+    // Counters of consumed resources in current time unit.  Asynchronously
+    // modified by the backend where appropriate (Speed, bandwidth
+    // self-refresh; memory doesn't.)  Do not rename.  Do not assign in ABS
+    // code.  Writes to these fields from ABS code might be overwritten by the
+    // backend.
+    [Final] Rat cpuconsumed = 0;
+    [Final] Rat bwconsumed = 0;
+    [Final] Rat memoryconsumed = 0;
 
     // Creation time and shutdown time are used by (at least) the
     // visualization backend.  Do not rename.

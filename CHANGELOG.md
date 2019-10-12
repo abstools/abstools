@@ -22,9 +22,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Incompatible change: A partial function cannot have an empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as a non-partial function with identical (non-function) argument list and body.
 
+- Resource consumption (via `Cost` annotations) in the erlang backend is now more deterministic: once the deployment component gives part of the requested resources to a cog, it will not give resources of the same type to another cog until the first request has been fulfilled.
+
 ### Removed
 
-- The Maude backend is now unsupported, and the unit tests have been deactivated.  (This change was briefly discussed during the last ABS workshop, with no dissenting arguments, but can be reversed before the next release.)
+- The Maude backend is now deprecated, and the unit tests have been deactivated.  (This change was briefly discussed during the last ABS workshop, with no dissenting arguments, but can be reversed before the next release.)
 
 ### Fixed
 

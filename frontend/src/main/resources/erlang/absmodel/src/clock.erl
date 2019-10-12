@@ -7,7 +7,7 @@
 
 -module(clock).
 -behaviour(gen_server).
--export([start_link/1,stop/0,advance/1,advance_limit/1,is_at_limit/0,now/0,distance_to_next_boundary/0]).
+-export([start_link/1,stop/0,advance/1,advance_limit/1,is_at_limit/0,now/0,next_boundary/0,distance_to_next_boundary/0]).
 -export([code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2]).
 -record(state,{now, limit}).
 
@@ -33,7 +33,12 @@ now() ->
     gen_server:call({global, clock}, now, infinity).
 
 distance_to_next_boundary() ->
+    %% Returns relative time until the next resource refresh timepoint.
     gen_server:call({global, clock}, next_int, infinity).
+
+next_boundary() ->
+    %% Returns absolute time of the next resource refresh timepoint.
+    gen_server:call({global, clock}, next_boundary, infinity).
 
 %% gen_server functions
 
@@ -72,7 +77,12 @@ handle_call(next_int, _From, State=#state{now=Time}) ->
     case rationals:is_zero(Distance) of
         true -> {reply, {1,1}, State};
         false -> {reply, Distance, State}
-    end.
+    end;
+handle_call(next_boundary, _From, State=#state{now=Time}) ->
+    %% Refill boundary is the next integer -- truncate current time and add 1
+    %% since we don’t have a round-up function, and in case we are at an
+    %% integer we want the next one anyway.
+    {reply,rationals:add(rationals:trunc(Time), {1, 1}) , State}.
 
 handle_cast(_Msg,State) ->
     %% unused

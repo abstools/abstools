@@ -67,14 +67,18 @@ unroot_future(Fut) ->
     %% Fut is the plain pid of the Future process
     gen_statem:cast({global, gc}, {unroot, Fut}).
 
-register_cog(Cog) ->
-    gen_statem:call({global, gc}, Cog).
+register_cog(CogRef) ->
+    gen_statem:call({global, gc}, {register_cog, CogRef}).
 
-unregister_cog(Cog) ->
-    gen_statem:cast({global, gc}, {die, Cog}).
+unregister_cog(#cog{ref=CogRef}) ->
+    gen_statem:cast({global, gc}, {die, CogRef});
+unregister_cog(CogRef) ->
+    gen_statem:cast({global, gc}, {die, CogRef}).
 
-cog_stopped(Cog) ->
-    gen_statem:cast({global, gc}, {stopped, Cog}).
+cog_stopped(#cog{ref=CogRef}) ->
+    gen_statem:cast({global, gc}, {stopped, CogRef});
+cog_stopped(CogRef) ->
+    gen_statem:cast({global, gc}, {stopped, CogRef}).
 
 register_object(Obj) ->
     gen_statem:cast({global, gc}, Obj).
@@ -123,13 +127,13 @@ idle(cast, {unroot, Sender}, Data=#data{root_futures=RootFutures, futures=Future
     {NextState, NewData} = idle_state_next(Data#data{futures=gb_sets:insert({future, Sender}, Futures),
                                                    root_futures=gb_sets:delete({future, Sender}, RootFutures)}),
     {next_state, NextState, NewData};
-idle(cast, {die, Cog}, Data=#data{cogs=Cogs}) ->
-    {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:delete({cog, Cog}, Cogs)}),
+idle(cast, {die, CogRef}, Data=#data{cogs=Cogs}) ->
+    {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:delete({cog, CogRef}, Cogs)}),
     {next_state, NextState, NewData};
-idle({call, From}, Cog=#cog{ref=Ref}, Data=#data{cogs=Cogs}) ->
-    {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:insert({cog, Cog}, Cogs)}),
+idle({call, From}, {register_cog, CogRef}, Data=#data{cogs=Cogs}) ->
+    {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:insert({cog, CogRef}, Cogs)}),
     case NextState of
-        idle -> cog:acknowledged_by_gc(Cog);
+        idle -> cog:acknowledged_by_gc(CogRef);
         %% If we switched to collecting, we already sent stop_world -- no need
         %% to send ack in that case.
         _ -> ok
@@ -164,18 +168,18 @@ collecting(cast, {unroot, Sender}, Data=#data{root_futures=RootFutures, futures=
     {keep_state,
      Data#data{futures=gb_sets:insert({future, Sender}, Futures),
                  root_futures=gb_sets:delete({future, Sender}, RootFutures)}};
-collecting(cast, {die, Cog}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
-    {NextState, NewData} = collecting_state_next(Data#data{cogs=gb_sets:delete({cog, Cog}, Cogs),
-                                                         cogs_waiting_to_stop=gb_sets:delete_any({cog, Cog}, RunningCogs)}),
+collecting(cast, {die, CogRef}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
+    {NextState, NewData} = collecting_state_next(Data#data{cogs=gb_sets:delete({cog, CogRef}, Cogs),
+                                                         cogs_waiting_to_stop=gb_sets:delete_any({cog, CogRef}, RunningCogs)}),
     {next_state, NextState, NewData};
-collecting(cast, {stopped, Ref}, Data=#data{cogs_waiting_to_stop=RunningCogs}) ->
-    {NextState, NewData} = collecting_state_next(Data#data{cogs_waiting_to_stop=gb_sets:delete({cog, Ref}, RunningCogs)}),
+collecting(cast, {stopped, CogRef}, Data=#data{cogs_waiting_to_stop=RunningCogs}) ->
+    {NextState, NewData} = collecting_state_next(Data#data{cogs_waiting_to_stop=gb_sets:delete({cog, CogRef}, RunningCogs)}),
     {next_state, NextState, NewData};
-collecting({call, From}, Cog=#cog{ref=Ref}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
-    cog:stop_world(Cog),
+collecting({call, From}, {register_cog, CogRef}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
+    cog:stop_world(CogRef),
     {keep_state,
-     Data#data{cogs=gb_sets:insert({cog, Cog}, Cogs),
-                 cogs_waiting_to_stop=gb_sets:insert({cog, Cog}, RunningCogs)},
+     Data#data{cogs=gb_sets:insert({cog, CogRef}, Cogs),
+               cogs_waiting_to_stop=gb_sets:insert({cog, CogRef}, RunningCogs)},
     {reply, From, ok}};
 collecting(_Event, _From, Data) ->
     {stop, not_supported, Data}.
@@ -223,6 +227,11 @@ get_references({future, Ref}) ->
         false -> []
     end;
 get_references({cog, #cog{ref=Ref}}) ->
+    case is_process_alive(Ref) of
+        true -> cog:get_references(Ref);
+        false -> []
+    end;
+get_references({cog, Ref}) ->
     case is_process_alive(Ref) of
         true -> cog:get_references(Ref);
         false -> []

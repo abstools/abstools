@@ -49,7 +49,7 @@ core_abs.vo: Makefile.coq
 	make -f Makefile.coq
 
 Makefile.coq: core_abs.v
-	coq_makefile -I $(OTT_COQ_DIR) core_abs.v > Makefile.coq
+	coq_makefile -I $(realpath OTT_COQ_DIR) core_abs.v -o Makefile.coq
 
 clean:				## Remove intermediate and output files
 	make -C coq clean

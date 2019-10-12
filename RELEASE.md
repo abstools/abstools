@@ -5,6 +5,8 @@
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
+- Run unit tests for erlang backend with pessimal gc (replace body of `gc:is_collection_needed/1` with `true`)
+
 - Manually compile and run a small model on macOS, Linux, Windows
 
 - Create docker (`make docker ; make run-collaboratory`)

@@ -17,4 +17,4 @@ abs_functional.vo: Makefile.coq_functional
 	make -f Makefile.coq_functional
 
 Makefile.coq_functional: StringOrderedTypeCompat.v abs_functional.v
-	coq_makefile -I $(OTT_COQ_DIR) StringOrderedTypeCompat.v abs_functional.v > Makefile.coq_functional
+	coq_makefile -I $(OTT_COQ_DIR) StringOrderedTypeCompat.v abs_functional.v -o Makefile.coq_functional

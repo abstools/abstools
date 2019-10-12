@@ -5,16 +5,16 @@ Require Import Max.
 Require Import Min.
 Require Import List.
 Require Import Omega.
-Require Import ott_list_support.
-Require Import ott_list_base.
-Require Import ott_list_nth.
+Require Import Ott.ott_list_support.
+Require Import Ott.ott_list_base.
+Require Import Ott.ott_list_nth.
 Import List_lib_Arith.
 
 
 
 Section Lists.
 
-Variables A B C : Set.
+Variables A B C : Type.
 Implicit Types x : A.
 Implicit Types y : B.
 Implicit Types z : C.
