@@ -16,7 +16,7 @@
 -export([new_cog/2, cog_active/1, cog_blocked/3, cog_unblocked/1, cog_idle/3, cog_died/2]).
 
 %% communication about dcs
--export([new_dc/1, dc_mte/2, dc_active/1, dc_idle/2, dc_died/1, get_dcs/0]).
+-export([new_dc/2, dc_mte/2, dc_active/1, dc_idle/2, dc_died/1, get_dcs/0]).
 -export([get_trace/0, get_alternative_schedule/0]).
 
 %% the HTTP api
@@ -97,8 +97,8 @@ cog_died(Cog, RecordedTrace) ->
     gen_statem:call({global, cog_monitor}, {cog,Cog,RecordedTrace,die}, infinity).
 
 %% Deployment Components interface
-new_dc(DCRef) ->
-    gen_statem:call({global, cog_monitor}, {new_dc, DCRef}, infinity).
+new_dc(DCRef, Cog) ->
+    gen_statem:call({global, cog_monitor}, {new_dc, DCRef, Cog}, infinity).
 
 dc_mte(DCRef, MTE) ->
     gen_statem:call({global, cog_monitor}, {dc_mte, DCRef, MTE}, infinity).
@@ -230,18 +230,24 @@ handle_event({call, From}, {cog,Cog,RecordedTrace,die}, _State,
         false->
             {keep_state, S1}
     end;
-handle_event({call, From}, {new_dc, DCRef}, _State, Data=#data{dcrefs=DCs}) ->
-    {keep_state, Data#data{dcrefs=[DCRef | DCs]}, {reply, From, ok}};
+handle_event({call, From}, {new_dc, DCRef, Cog}, _State, Data=#data{dcrefs=DCs, cog_names=M,trace=T}) ->
+    {C, N} = maps:get(Cog, M, {[], 0}),
+    Id = [-1 | C],
+    NewM = maps:put(DCRef, {Id, 0}, M),
+    ShownId = lists:reverse(Id),
+    {keep_state, Data#data{dcrefs=[DCRef | DCs], cog_names=NewM},
+     {reply, From, {ShownId, maps:get(ShownId, T, [])}}};
 handle_event({call, From}, {dc_mte, DCRef, MTE}, _State, Data=#data{dc_mtes=MTEs}) ->
     {keep_state,
      Data#data{dc_mtes=update_mtes(MTEs, DCRef, MTE)},
      {reply, From, ok}};
 handle_event({call, From}, get_dcs, _State, Data=#data{dcrefs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
-handle_event({call, From}, get_trace, _State,
-            Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace=T}) ->
-    S = gb_sets:union(gb_sets:union(A, B), I),
-    {keep_state_and_data, {reply, From, gather_traces(S, Names, T)}};
+handle_event({call, From}, get_trace, _State, Data=#data{dcrefs=DCs, cog_names=Names, trace=T}) ->
+    Traces = lists:foldl(fun (DC, AccT) ->
+                                 maps:merge(AccT, dc:get_traces(DC))
+                         end, T, DCs),
+    {keep_state_and_data, {reply, From, Traces}};
 handle_event({call, From}, get_alternative_schedule, _State,
             Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace=T}) ->
     {keep_state_and_data, {reply, From, gb_sets:to_list(A)}};
@@ -319,16 +325,6 @@ advancing(cast, Event, Data) ->
     handle_event(cast, Event, advancing, Data);
 advancing(info, Event, Data) ->
     handle_event(info, Event, advancing, Data).
-
-
-
-gather_traces(Idle, Names, TraceMap) ->
-    gb_sets:fold(fun (Cog, AccT) ->
-                         Trace = lists:reverse(cog:get_trace(Cog)),
-                         {Id, _} = maps:get(Cog, Names),
-                         ShownId = lists:reverse(Id),
-                         maps:put(ShownId, Trace, AccT)
-                 end, TraceMap, Idle).
 
 
 terminate(_Reason, _State, _Data) ->

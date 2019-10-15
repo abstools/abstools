@@ -45,4 +45,12 @@
          time=builtin:float(ok, clock:now()) % The time of the event creation
         }).
 
+-record(dc_event,
+        {type,                 % cpu | bw | memory
+         local_id,             % A local identifier, provided by the cog
+         caller_id=undefined,  % An identifier for the calling object's cog
+         amount,               % The number of requested resources
+         time=builtin:float(ok, clock:now()) % The time of the event creation
+        }).
+
 -record(db_trace, {trace, status=unexplored}).
