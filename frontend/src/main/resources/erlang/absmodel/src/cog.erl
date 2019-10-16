@@ -51,7 +51,8 @@
          runnable_tasks=gb_sets:empty(),
          %% Tasks maybe ready to run (ask them)
          polling_tasks=gb_sets:empty(),
-         %% Tasks not ready to run (future or cog_monitor will signal when ready)
+         %% Tasks not ready to run (future or dc will call `task_is_runnable'
+         %% when ready)
          waiting_tasks=gb_sets:empty(),
          %% Fresh tasks, before they announce themselves ready
          new_tasks=gb_sets:empty(),
@@ -216,7 +217,7 @@ maybe_send_runnable_confirmation(ConfirmTask) ->
     %% Confirm to an async task that it’s ok to terminate now; the cog waiting
     %% on the future has woken up and notified the cog monitor.  Note that we
     %% call this function from inside the cog after we called
-    %% `cog_monitor:active' where necessary.
+    %% `dc:cog_active' where necessary.
     ConfirmTask ! cog_confirms_task_wakeup.
 
 register_waiting_task_if_necessary(_WaitReason={waiting_on_future, Future},
@@ -694,7 +695,7 @@ poll_waiting(Tasks, TaskInfos, ObjectStates) ->
                 end, #{}, PollingTasks).
 
 maybe_send_unblock_confirmation(DCRef, CogRef, TaskRef, TaskInfos) ->
-    %% This needs to be sent after cog_monitor:cog_active/1
+    %% This needs to be sent after dc:cog_active/2
     TaskInfo=maps:get(TaskRef, TaskInfos),
     case TaskInfo#task_info.wait_reason of
         {waiting_on_clock, _, _} ->
@@ -884,7 +885,7 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                        polling_states=NewPollingStates,
                        recorded=NewRecorded, replaying=Replaying}};
         _ ->
-            %% no need for `cog_monitor:active' since we were already running
+            %% no need for `dc:cog_active' since we were already running
             %% something
             #task_info{event=Event2} = maps:get(T, NewTaskInfos),
             #event{caller_id=Cid2, local_id=Lid2, name=Name2} = Event2,
@@ -1030,7 +1031,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
                                new_tasks=NewNew,
                                task_infos=NewTaskInfos}};
                 _ ->
-                    %% no need for `cog_monitor:active' since we were already
+                    %% no need for `dc:cog_active' since we were already
                     %% running something
                     #task_info{event=Event} = maps:get(T, NewTaskInfos),
                     #event{caller_id=Cid, local_id=Lid, name=Name} = Event,
