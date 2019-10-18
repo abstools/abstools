@@ -1,0 +1,21 @@
+module BackendTest;
+import * from ABS.DC;
+
+interface I {
+    Unit n(Int cost);
+}
+
+class C implements I {
+    Unit n(Int cost) {
+        [Cost: cost] skip;
+    }
+}
+
+{
+    Bool testresult = True;
+    DC dc = new DeploymentComponent("hello", map[Pair(Speed, 5)]);
+    [DC: dc] I i = new C();
+    await i!n(20);
+    testresult = testresult && now() == Time(3);
+    println(`testresult: $testresult$`);
+}

@@ -158,20 +158,19 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
 end_mod(TaskRef, DumpTrace) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
-    %% modelapi_v2:print_statistics(),
     coverage:write_files(),
-    Status = cog_monitor:waitfor(),
-    gc:stop(),
-    coverage:stop(),
     case DumpTrace of
         none -> ok;
         _ -> JsonTrace = modelapi_v2:get_trace_json(),
              file:write_file(DumpTrace, JsonTrace)
     end,
+    Status = cog_monitor:waitfor(),
     Ret = case Status of
               success -> RetVal;
               _ -> {exit_with, Status, cog_monitor:get_alternative_schedule()}
           end,
+    gc:stop(),
+    coverage:stop(),
     cog_monitor:stop(),
     clock:stop(),
     Ret.

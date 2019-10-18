@@ -15,11 +15,8 @@
 %% communication about cogs
 -export([new_cog/2, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_idle/1, cog_died/2]).
 
-%% communication about tasks
--export([task_waiting_for_clock/4, task_confirm_clock_wakeup/1]).
-
 %% communication about dcs
--export([new_dc/1, dc_mte/2, dc_active/1, dc_blocked/1, dc_idle/1, dc_died/1, get_dcs/0]).
+-export([new_dc/1, dc_mte/2, dc_active/1, dc_idle/1, dc_died/1, get_dcs/0]).
 -export([get_trace/0, get_alternative_schedule/0]).
 
 %% the HTTP api
@@ -27,7 +24,7 @@
 
 %%gen_statem callbacks
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
--export([running/3]).
+-export([running/3,advancing/3]).
 
 %% Simulation ends when no cog is active or waiting for the clock / some
 %% resources.  Note that a cog is in either "active" or "idle" but can be in
@@ -41,17 +38,11 @@
               idle=gb_sets:empty(),
               %% cogs with task blocked on future/resource
               blocked=gb_sets:empty(),
-              %% [{Min,Max,Task,Cog}]: tasks with their cog waiting for
-              %% simulated time to advance, with minimum and maximum waiting
-              %% time.  Ordered by ascending maximum waiting time such that
-              %% the Max element of the head of the list is always MTE
-              %% [Maximum Time Elapse]).
-              clock_waiting=[],
-              %% ordset of {Task, Cog} of tasks that need to acknowledge
-              %% waking up before next clock advance
-              active_before_next_clock=ordsets:new(),
-              %% list of deployment components
-              dcs=[],
+              %% ordset of DCs that need to acknowledge waking up before next
+              %% clock advance
+              active_before_next_clock=gb_sets:empty(),
+              %% list of deployment component references
+              dcrefs=[],
               %% map dc -> mte; clock advance should be minimum of these
               dc_mtes=maps:new(),
               %% Objects registered in HTTP API. binary |-> #object{}
@@ -105,13 +96,6 @@ cog_idle(Cog) ->
 cog_died(Cog, RecordedTrace) ->
     gen_statem:call({global, cog_monitor}, {cog,Cog,RecordedTrace,die}, infinity).
 
-%% Tasks interface
-task_waiting_for_clock(Task, Cog, Min, Max) ->
-    gen_statem:call({global, cog_monitor}, {task,Task,Cog,clock_waiting,Min,Max}, infinity).
-
-task_confirm_clock_wakeup(Task) ->
-    gen_statem:cast({global, cog_monitor}, {task_confirm_clock_wakeup, Task}).
-
 %% Deployment Components interface
 new_dc(DCRef) ->
     gen_statem:call({global, cog_monitor}, {new_dc, DCRef}, infinity).
@@ -119,14 +103,11 @@ new_dc(DCRef) ->
 dc_mte(DCRef, MTE) ->
     gen_statem:call({global, cog_monitor}, {dc_mte, DCRef, MTE}, infinity).
 
-dc_active(_DCRef) ->
-    ok.
+dc_active(DCRef) ->
+    gen_statem:cast({global, cog_monitor}, {dc_active, DCRef}).
 
-dc_blocked(_DCRef) ->
-    ok.
-
-dc_idle(_DCRef) ->
-    ok.
+dc_idle(DCRef) ->
+    gen_statem:cast({global, cog_monitor}, {dc_idle, DCRef}).
 
 dc_died(DCRef) ->
     gen_statem:cast({global, cog_monitor}, {dc_died, DCRef}),
@@ -199,7 +180,7 @@ handle_event({call, From}, {cog,Cog,idle}, _State, Data=#data{active=A,idle=I})-
     gen_statem:reply(From, ok),
     case can_clock_advance(Data, S1) of
         true->
-            {keep_state, advance_clock_or_terminate(S1)};
+            {next_state, advancing, advance_clock_or_terminate(S1)};
         false->
             {keep_state, S1}
     end;
@@ -210,7 +191,7 @@ handle_event({call, From}, {cog,Cog,blocked}, _State, Data=#data{active=A,blocke
     gen_statem:reply(From, ok),
     case can_clock_advance(Data, S1) of
         true->
-            {keep_state, advance_clock_or_terminate(S1)};
+            {next_state, advancing, advance_clock_or_terminate(S1)};
         false->
             {keep_state, S1}
     end;
@@ -220,46 +201,38 @@ handle_event({call, From}, {clock_limit_increased, Amount}, _State, Data) ->
     %% introducing an `at_limit' state in addition to `running'.
     Was_blocked = clock:is_at_limit(),
     {Success, Newlimit} = clock:advance_limit(Amount),
-    S1 = case Was_blocked of
-             true ->
-                 %% If clock didn't advance (Success == error), this
-                 %% does advance clock since limit stayed the same
-                 advance_clock_or_terminate(Data);
-             false ->
-                 Data
-         end,
-    {keep_state, S1, {reply, From, {Success, Newlimit}}};
+    case Was_blocked of
+        true ->
+            %% If clock didn't advance (Success == error), this
+            %% does advance clock since limit stayed the same
+            S1=advance_clock_or_terminate(Data),
+            {next_state, advancing, S1, {reply, From, {Success, Newlimit}}};
+        false ->
+            keep_state_and_data
+    end;
 handle_event({call, From}, {cog,Cog,unblocked}, _State, Data=#data{active=A,blocked=B})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
     {keep_state, Data#data{active=A1,blocked=B1}, {reply, From, ok}};
 handle_event({call, From}, {cog,Cog,RecordedTrace,die}, _State,
-            Data=#data{active=A,idle=I,blocked=B,clock_waiting=W,
-                            active_before_next_clock=ABNC,
-                            cog_names=M, trace=T})->
-    ABNC1=ordsets:filter(fun ({_, Cog1}) -> Cog1 =/= Cog end, ABNC),
+            Data=#data{active=A,idle=I,blocked=B, cog_names=M, trace=T})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     B1=gb_sets:del_element(Cog,B),
-    W1=lists:filter(fun ({_Min, _Max, _Task, Cog1}) ->  Cog1 =/= Cog end, W),
     T1=maps:put(maps:get(Cog, M), RecordedTrace, T),
-    S1=Data#data{active=A1,idle=I1,blocked=B1,clock_waiting=W1, active_before_next_clock=ABNC1,trace=T1},
+    S1=Data#data{active=A1,idle=I1,blocked=B1,trace=T1},
     gen_statem:reply(From, ok),
     case can_clock_advance(Data, S1) of
         true->
-            {keep_state, advance_clock_or_terminate(S1)};
+            {next_state, advancing, advance_clock_or_terminate(S1)};
         false->
             {keep_state, S1}
     end;
-handle_event({call, From}, {task,Task,Cog,clock_waiting,Min,Max}, _State,
-             Data=#data{clock_waiting=C}) ->
-    C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
-    {keep_state, Data#data{clock_waiting=C1}, {reply, From, ok}};
-handle_event({call, From}, {new_dc, DCRef}, _State, Data=#data{dcs=DCs}) ->
-    {keep_state, Data#data{dcs=[DCRef | DCs]}, {reply, From, ok}};
+handle_event({call, From}, {new_dc, DCRef}, _State, Data=#data{dcrefs=DCs}) ->
+    {keep_state, Data#data{dcrefs=[DCRef | DCs]}, {reply, From, ok}};
 handle_event({call, From}, {dc_mte, DCRef, MTE}, _State, Data=#data{dc_mtes=MTEs}) ->
     {keep_state, Data#data{dc_mtes=MTEs#{DCRef => MTE}}, {reply, From, ok}};
-handle_event({call, From}, get_dcs, _State, Data=#data{dcs=DCs}) ->
+handle_event({call, From}, get_dcs, _State, Data=#data{dcrefs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
 handle_event({call, From}, get_trace, _State,
             Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace=T}) ->
@@ -284,17 +257,6 @@ handle_event({call, From}, {lookup_object, Name}, _State,
 handle_event({call, From}, Request, _State, _Data)->
     io:format(standard_error, "Unknown call: ~w~n", [Request]),
     {keep_state_and_data, {reply, From, error}};
-handle_event(cast, {dc_died, DCRef}, _State, Data=#data{dcs=DCs}) ->
-    {keep_state, Data#data{dcs=lists:delete(DCRef, DCs)}};
-handle_event(cast, {task_confirm_clock_wakeup, Task}, _State, Data=#data{active_before_next_clock=ABNC}) ->
-    ABNC1=ordsets:filter(fun ({Task1, _}) -> Task1 =/= Task end, ABNC),
-    S1=Data#data{active_before_next_clock=ABNC1},
-    case can_clock_advance(Data, S1) of
-        true->
-            {keep_state, advance_clock_or_terminate(S1)};
-        false->
-            {keep_state, S1}
-    end;
 handle_event(cast, Request, _State, _Data) ->
     %% unused
     io:format(standard_error, "Unknown cast: ~w~n", [Request]),
@@ -307,10 +269,50 @@ handle_event(info, Event, _State, _Data)->
 %% Event functions
 running({call, From}, Event, Data) ->
     handle_event({call, From}, Event, running, Data);
+running(cast, {dc_died, DCRef}, Data=#data{dcrefs=DCs}) ->
+    {keep_state, Data#data{dcrefs=lists:delete(DCRef, DCs)}};
+running(cast, {dc_active, DCRef}, _Data) ->
+    %% straggler coming in after clock advance and we already detected
+    %% activity -> ignore it
+    keep_state_and_data;
+running(cast, {dc_idle, DCRef}, _Data) ->
+    %% straggler coming in after clock advance and we already detected
+    %% activity -> ignore it
+    keep_state_and_data;
 running(cast, Event, Data) ->
     handle_event(cast, Event, running, Data);
 running(info, Event, Data) ->
     handle_event(info, Event, running, Data).
+
+advancing({call, From}, Event, Data) ->
+    handle_event({call, From}, Event, advancing, Data);
+advancing(cast, {dc_died, DCRef},
+          Data=#data{dcrefs=DCs, active_before_next_clock=ABNC}) ->
+    %% TODO check if ABNC empty; switch to running or start next clock cycle
+    ABNC1=gb_sets:del_element(DCRef, ABNC),
+    case gb_sets:is_empty(ABNC1) of
+        true ->
+            {keep_state, advance_clock_or_terminate(Data#data{active_before_next_clock=gb_sets:empty()})};
+        false ->
+            {keep_state, Data#data{dcrefs=lists:delete(DCRef, DCs),
+                                   active_before_next_clock=ABNC1}}
+    end;
+advancing(cast, {dc_active, DCRef}, Data=#data{active_before_next_clock=ABNC}) ->
+    %% As soon as one dc is active, no need to wait longer.
+    {next_state, running, Data#data{active_before_next_clock=gb_sets:empty()}};
+advancing(cast, {dc_idle, DCRef}, Data=#data{active_before_next_clock=ABNC}) ->
+    ABNC1=gb_sets:del_element(DCRef, ABNC),
+    case gb_sets:is_empty(ABNC1) of
+        true ->
+            {keep_state, advance_clock_or_terminate(Data#data{active_before_next_clock=ABNC1})};
+        false ->
+            {keep_state, Data#data{active_before_next_clock=ABNC1}}
+    end;
+advancing(cast, Event, Data) ->
+    handle_event(cast, Event, advancing, Data);
+advancing(info, Event, Data) ->
+    handle_event(info, Event, advancing, Data).
+
 
 
 gather_traces(Idle, Names, TraceMap) ->
@@ -330,8 +332,8 @@ code_change(_OldVsn, _OldState, Data, _Extra)->
     %% not supported
     not_supported.
 
-can_clock_advance(_OldData=#data{active=A, blocked=B, active_before_next_clock=ABNC},
-                  _NewData=#data{active=A1, blocked=B1, active_before_next_clock=ABNC1}) ->
+can_clock_advance(_OldData=#data{active=A, blocked=B},
+                  _NewData=#data{active=A1, blocked=B1}) ->
     %% This function detects a state change between old and new state.  The
     %% clock can advance under the following circumstances:
     %%
@@ -345,21 +347,20 @@ can_clock_advance(_OldData=#data{active=A, blocked=B, active_before_next_clock=A
     %% duration, the other one blocking on a second (longer) duration.  In
     %% that case, the suspended task signals readiness but the cog remains
     %% blocked.
+    %%
+    %% TODO: check second case -- we do not track waiting tasks here anymore,
+    %% only cog states.
 
     Old_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
     All_idle = gb_sets:is_empty(gb_sets:subtract(A1, B1)),
-    (ordsets:size(ABNC1) == 0) andalso ((not Old_idle and All_idle)
-                                        orelse (Old_idle and All_idle and (ordsets:size(ABNC) > 0))) .
+    not Old_idle and All_idle.
 
-advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,dc_mtes=MTEs,keepalive_after_clock_limit=Keepalive}) ->
+advance_clock_or_terminate(Data=#data{main=M,active=A,dcrefs=DCs,dc_mtes=MTEs,keepalive_after_clock_limit=Keepalive}) ->
     case maps:size(MTEs) > 0 of
         false ->
+            %% We are done: everyone is quiescent and no one has a deadline
             case Keepalive of
                 false ->
-                    %% One last clock advance to finish the last resource period
-                    MTE=clock:distance_to_next_boundary(),
-                    clock:advance(MTE),
-                    lists:foreach(fun(DC) -> dc:notify_time_advance(DC, MTE) end, DCs),
                     M ! case gb_sets:is_empty(Data#data.blocked) of
                             true -> {wait_done, success};
                             false -> {wait_done, deadlock}
@@ -368,7 +369,7 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,dc
                     %% We are probably serving via http; don't advance time
                     ok
             end,
-            Data;
+            Data#data{active_before_next_clock=gb_sets:from_list(DCs)};
         true ->
             MTE=lists:min(maps:values(MTEs)), %TODO make this faster via maps:fold
             OldTime=clock:now(),
@@ -379,28 +380,10 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,dc
             case Clockresult of
                 {ok, NewTime} ->
                     lists:foreach(fun(DC) -> dc:notify_time_advance(DC, Delta) end, DCs),
-                    %% TODO: set all DCs to active here -- they’ll tell us if
-                    %% they’re idle during handling of notify_time_advance,
-                    %% and we avoid spurious time advances caused by one DC
-                    %% going through a complete idle->active->idle cycle
-                    %% before another one finishes notify_time_advance
-                    %% handling.
-                    {A1,C1}=lists:unzip(
-                              lists:map(
-                                fun(E={MinE, _MaxE, TaskRefE, CogRefE}) ->
-                                        case cmp:lt(NewTime, MinE) of
-                                            true ->
-                                                {[], E};
-                                            false ->
-                                                {{TaskRefE, CogRefE}, []}
-                                        end
-                                end,
-                                C)),
                     NewMTEs=maps:filter(fun(_DC, MTEI) ->
                                                 cmp:lt(NewTime, MTEI) end,
                                         MTEs),
-                    Data#data{clock_waiting=lists:flatten(C1),
-                              active_before_next_clock=ordsets:from_list(lists:flatten(A1)),
+                    Data#data{active_before_next_clock=gb_sets:from_list(DCs),
                               dc_mtes=NewMTEs};
                 {limit_reached, _} ->
                     case Keepalive of
@@ -415,16 +398,3 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,clock_waiting=C,dcs=DCs,dc
                     end
             end
     end .
-
-add_to_clock_waiting(C, Min, Max, Task, Cog) ->
-    Time=clock:now(),
-    add_to_clock_waiting(C, {rationals:add(Time, Min), rationals:add(Time, Max),
-                             Task, Cog}).
-
-add_to_clock_waiting([H={_Min,Head,_Task,_Cog} | T], I={_Min1,Max,_Task1,_Cog1}) ->
-    case rationals:is_greater(Head, Max) of
-        true -> [I, H | T];
-        false -> [H | add_to_clock_waiting(T, I)]
-    end;
-add_to_clock_waiting([], I) ->
-    [I].

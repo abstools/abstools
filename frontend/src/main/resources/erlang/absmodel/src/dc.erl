@@ -229,6 +229,11 @@ handle_cast({clock_advance_for_dc, Amount}, State,
     %% Let the cog_monitor know the maximum clock advance that we can do now
     %% -- we can always change this later but need to get this out ASAP
     maybe_send_mte_to_cog_monitor(NewData),
+    case gb_sets:is_empty(WakeUpItems) of
+        %% If all cogs send dc_idle, cog_monitor will advance time again
+        true -> cog_monitor:dc_idle(self());
+        false -> cog_monitor:dc_active(self())
+    end,
     case can_switch_to_idle(NewData) of
         %% After a clock advance, cog_monitor regards us as active until we
         %% send out an idle notification -- hence, no need to send
@@ -252,7 +257,9 @@ active({call, From}, {cog_idle, CogRef}, Data=#data{active=A, idle=I}) ->
 active(internal, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
     %% We send this `internal' event to ourselves when `CogRef' blocks on a
     %% resource.  Same code as in the `call' case below except we don’t send
-    %% an answer.
+    %% an answer.  Take care to send mte before cog_blocked or cog_monitor
+    %% might think the model has ended.
+    maybe_send_mte_to_cog_monitor(Data),
     cog_monitor:cog_blocked(CogRef),
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
@@ -271,7 +278,6 @@ active({call, From}, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
     end;
 active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
        Data=#data{clock_waiting=W, active=A, blocked=B}) ->
-    cog_monitor:task_waiting_for_clock(TaskRef, CogRef, Min, Max),
     %% We add the blocked task to the queue since it waits for the token; no
     %% need to handle it specially
     NewW=add_to_queue(W, CogRef, TaskRef, Min, Max),
@@ -287,14 +293,12 @@ active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
     end;
 active({call, From}, {task_waiting_for_clock, CogRef, TaskRef, Min, Max},
        Data=#data{clock_waiting=W}) ->
-    cog_monitor:task_waiting_for_clock(TaskRef, CogRef, Min, Max),
     NewW=add_to_queue(W, CogRef, TaskRef, Min, Max),
     NewData=Data#data{clock_waiting=NewW},
     maybe_send_mte_to_cog_monitor(NewData),
     {keep_state, NewData, {reply, From, ok}};
 active(cast, {task_confirm_clock_wakeup, CogRef, TaskRef},
        Data=#data{active_before_next_clock=ABNC}) ->
-    cog_monitor:task_confirm_clock_wakeup(TaskRef),
     NewData=Data#data{active_before_next_clock=gb_sets:delete(
                                                  {CogRef, TaskRef}, ABNC)},
     case can_switch_to_idle(NewData) of
@@ -428,7 +432,6 @@ update_dc_state_wake_up_cogs_for_resource(WakeUpItems0, S0, Resourcetype, Queue)
                          %% Do not set current to total since that is of type
                          %% InfRat
                          State1=C:set_val_internal(State,VarCurrent, NewConsumed),
-                         %% TODO: do we call cog_monitor:cog_blocked here?
                          {WakeUpItems,
                           [{CogRef, TaskRef, Remaining} | Rest],
                           State1};
@@ -486,21 +489,19 @@ advanceTotalsHistory(History, {dataFin,Amount}) ->
     [ Amount | History ];
 advanceTotalsHistory(History, dataInfRat) -> History.
 
-
-maybe_send_mte_to_cog_monitor(Data=#data{clock_waiting=ClockWaiting,
-                                         resource_waiting=ResourceWaiting}) ->
-    %% If we’re not waiting for the clock or resources, do nothing.
-    %% Otherwise, send the minimum of the next clock boundary (If we’re
-    %% waiting for resources) and the MTE of the task(s) we’re waiting on (if
-    %% any).
+mte(Data=#data{clock_waiting=ClockWaiting,
+               resource_waiting=ResourceWaiting}) ->
+    %% MTE as an ABS rational or none if nothing’s waiting.  MTE is the
+    %% minimum of the next clock boundary (if we’re waiting for resources) and
+    %% the MTEs of all task(s) that are waiting for the clock.  We could
+    %% theoretically calculate a bigger MTE (from the request size and total
+    %% number of resources per interval) when we’re only waiting for resources
+    %% - but since the total can change at each interval (via calls to
+    %% `DeploymentComponent.incrementResources') we would have to calculate a
+    %% new MTE at each interval anyway just in case.
     ResMTE=case lists:any(fun([]) -> false; (_) -> true end,
                           maps:values(ResourceWaiting))
            of
-               %% We could theoretically calculate a bigger MTE, given the
-               %% request size and total number of resources per interval -
-               %% but since the total can change at each interval (via calls
-               %% to `DeploymentComponent.incrementResources') we would have
-               %% to calculate a new MTE at each interval anyway.
                true -> clock:next_boundary();
                false -> none
             end,
@@ -509,10 +510,18 @@ maybe_send_mte_to_cog_monitor(Data=#data{clock_waiting=ClockWaiting,
                 _ -> none
             end,
     case {ResMTE, TimeMTE} of
-        {none, none} -> ok;
-        {none, TimeMTE} -> cog_monitor:dc_mte(self(), TimeMTE);
-        {ResMTE, none} -> cog_monitor:dc_mte(self(), ResMTE);
-        _ -> cog_monitor:dc_mte(self(), rationals:min(TimeMTE, ResMTE))
+        {none, none} -> none;
+        {none, TimeMTE} -> TimeMTE;
+        {ResMTE, none} -> ResMTE;
+        _ -> none
+    end.
+
+
+maybe_send_mte_to_cog_monitor(Data) ->
+    MTE=mte(Data),
+    case MTE of
+        none -> ok;
+        _ -> cog_monitor:dc_mte(self(), MTE)
     end.
 
 can_switch_to_idle(Data=#data{active=A, active_before_next_clock=ABNC}) ->
