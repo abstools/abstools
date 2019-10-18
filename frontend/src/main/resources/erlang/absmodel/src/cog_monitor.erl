@@ -167,7 +167,7 @@ init([Main,Keepalive,Trace])->
     {ok,running,
      #data{main=Main, keepalive_after_clock_limit=Keepalive, trace=Trace}}.
 
-handle_call(From, {keep_alive, Class}, _State, Data=#data{keepalive_after_clock_limit=KeepAlive}) ->
+handle_event({call, From}, {keep_alive, Class}, _State, Data=#data{keepalive_after_clock_limit=KeepAlive}) ->
     %% Do not garbage-collect DeploymentComponent objects when we do
     %% visualization (KeepAlive=true)
     Result=case KeepAlive of
@@ -178,7 +178,7 @@ handle_call(From, {keep_alive, Class}, _State, Data=#data{keepalive_after_clock_
                        end
            end,
     {keep_state_and_data, {reply, From, Result}};
-handle_call(From, {cog,ParentCog,Cog,new}, _State, Data=#data{idle=I,cog_names=M,trace=T})->
+handle_event({call, From}, {cog,ParentCog,Cog,new}, _State, Data=#data{idle=I,cog_names=M,trace=T})->
     {C, N} = maps:get(ParentCog, M, {[], 0}),
     Id = [N | C],
     M2 = maps:put(ParentCog, {C, N+1}, M),
@@ -188,11 +188,11 @@ handle_call(From, {cog,ParentCog,Cog,new}, _State, Data=#data{idle=I,cog_names=M
     I1=gb_sets:add_element(Cog,I),
     {keep_state, Data#data{idle=I1, cog_names=NewM},
      {reply, From, {ShownId, maps:get(ShownId, T, [])}}};
-handle_call(From, {cog,Cog,active}, _State, Data=#data{active=A,idle=I})->
+handle_event({call, From}, {cog,Cog,active}, _State, Data=#data{active=A,idle=I})->
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     {keep_state, Data#data{active=A1,idle=I1}, {reply, From, ok}};
-handle_call(From, {cog,Cog,idle}, _State, Data=#data{active=A,idle=I})->
+handle_event({call, From}, {cog,Cog,idle}, _State, Data=#data{active=A,idle=I})->
     A1=gb_sets:del_element(Cog,A),
     I1=gb_sets:add_element(Cog,I),
     S1=Data#data{active=A1,idle=I1},
@@ -203,7 +203,7 @@ handle_call(From, {cog,Cog,idle}, _State, Data=#data{active=A,idle=I})->
         false->
             {keep_state, S1}
     end;
-handle_call(From, {cog,Cog,blocked}, _State, Data=#data{active=A,blocked=B})->
+handle_event({call, From}, {cog,Cog,blocked}, _State, Data=#data{active=A,blocked=B})->
     A1=gb_sets:del_element(Cog,A),
     B1=gb_sets:add_element(Cog,B),
     S1=Data#data{active=A1,blocked=B1},
@@ -214,7 +214,7 @@ handle_call(From, {cog,Cog,blocked}, _State, Data=#data{active=A,blocked=B})->
         false->
             {keep_state, S1}
     end;
-handle_call(From, {clock_limit_increased, Amount}, _State, Data) ->
+handle_event({call, From}, {clock_limit_increased, Amount}, _State, Data) ->
     %% KLUDGE: Ideally we'd like to only be told that the limit has
     %% increased, without having to do it ourselves.  Consider
     %% introducing an `at_limit' state in addition to `running'.
@@ -229,11 +229,11 @@ handle_call(From, {clock_limit_increased, Amount}, _State, Data) ->
                  Data
          end,
     {keep_state, S1, {reply, From, {Success, Newlimit}}};
-handle_call(From, {cog,Cog,unblocked}, _State, Data=#data{active=A,blocked=B})->
+handle_event({call, From}, {cog,Cog,unblocked}, _State, Data=#data{active=A,blocked=B})->
     A1=gb_sets:add_element(Cog,A),
     B1=gb_sets:del_element(Cog,B),
     {keep_state, Data#data{active=A1,blocked=B1}, {reply, From, ok}};
-handle_call(From, {cog,Cog,RecordedTrace,die}, _State,
+handle_event({call, From}, {cog,Cog,RecordedTrace,die}, _State,
             Data=#data{active=A,idle=I,blocked=B,clock_waiting=W,
                             active_before_next_clock=ABNC,
                             cog_names=M, trace=T})->
@@ -251,44 +251,42 @@ handle_call(From, {cog,Cog,RecordedTrace,die}, _State,
         false->
             {keep_state, S1}
     end;
-handle_call(From, {task,Task,Cog,clock_waiting,Min,Max}, _State,
+handle_event({call, From}, {task,Task,Cog,clock_waiting,Min,Max}, _State,
              Data=#data{clock_waiting=C}) ->
     C1=add_to_clock_waiting(C,Min,Max,Task,Cog),
     {keep_state, Data#data{clock_waiting=C1}, {reply, From, ok}};
-handle_call(From, {new_dc, DCRef}, _State, Data=#data{dcs=DCs}) ->
+handle_event({call, From}, {new_dc, DCRef}, _State, Data=#data{dcs=DCs}) ->
     {keep_state, Data#data{dcs=[DCRef | DCs]}, {reply, From, ok}};
-handle_call(From, {dc_mte, DCRef, MTE}, _State, Data=#data{dc_mtes=MTEs}) ->
+handle_event({call, From}, {dc_mte, DCRef, MTE}, _State, Data=#data{dc_mtes=MTEs}) ->
     {keep_state, Data#data{dc_mtes=MTEs#{DCRef => MTE}}, {reply, From, ok}};
-handle_call(From, get_dcs, _State, Data=#data{dcs=DCs}) ->
+handle_event({call, From}, get_dcs, _State, Data=#data{dcs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
-handle_call(From, get_trace, _State,
+handle_event({call, From}, get_trace, _State,
             Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace=T}) ->
     S = gb_sets:union(gb_sets:union(A, B), I),
     {keep_state_and_data, {reply, From, gather_traces(S, Names, T)}};
-handle_call(From, get_alternative_schedule, _State,
+handle_event({call, From}, get_alternative_schedule, _State,
             Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace=T}) ->
     {keep_state_and_data, {reply, From, gb_sets:to_list(A)}};
-handle_call(From, all_registered_names, _State,
+handle_event({call, From}, all_registered_names, _State,
             Data=#data{registered_objects=Objects}) ->
     {keep_state_and_data, {reply, From, maps:keys(Objects)}};
-handle_call(From, all_registered_objects, _State,
+handle_event({call, From}, all_registered_objects, _State,
             Data=#data{registered_objects=Objects}) ->
     {keep_state_and_data, {reply, From, maps:values(Objects)}};
-handle_call(From, {register_object, Object, Key}, _State,
+handle_event({call, From}, {register_object, Object, Key}, _State,
             Data=#data{registered_objects=Objects}) ->
     {keep_state, Data#data{registered_objects=maps:put(Key, Object, Objects)},
      {reply, From, ok}};
-handle_call(From, {lookup_object, Name}, _State,
+handle_event({call, From}, {lookup_object, Name}, _State,
             Data=#data{registered_objects=Objects}) ->
     {keep_state_and_data, {reply, From, maps:get(Name, Objects, none)}};
-handle_call(From, Request, _State, _Data)->
+handle_event({call, From}, Request, _State, _Data)->
     io:format(standard_error, "Unknown call: ~w~n", [Request]),
-    {keep_state_and_data, {reply, From, error}}.
-
-
-handle_cast({dc_died, DCRef}, _State, Data=#data{dcs=DCs}) ->
+    {keep_state_and_data, {reply, From, error}};
+handle_event(cast, {dc_died, DCRef}, _State, Data=#data{dcs=DCs}) ->
     {keep_state, Data#data{dcs=lists:delete(DCRef, DCs)}};
-handle_cast({task_confirm_clock_wakeup, Task}, _State, Data=#data{active_before_next_clock=ABNC}) ->
+handle_event(cast, {task_confirm_clock_wakeup, Task}, _State, Data=#data{active_before_next_clock=ABNC}) ->
     ABNC1=ordsets:filter(fun ({Task1, _}) -> Task1 =/= Task end, ABNC),
     S1=Data#data{active_before_next_clock=ABNC1},
     case can_clock_advance(Data, S1) of
@@ -297,24 +295,22 @@ handle_cast({task_confirm_clock_wakeup, Task}, _State, Data=#data{active_before_
         false->
             {keep_state, S1}
     end;
-handle_cast(Request, _State, _Data) ->
+handle_event(cast, Request, _State, _Data) ->
     %% unused
     io:format(standard_error, "Unknown cast: ~w~n", [Request]),
-    {keep_state_and_data}.
-
-
-handle_info(Event, _State, _Data)->
+    {keep_state_and_data};
+handle_event(info, Event, _State, _Data)->
     %% unused
     io:format(standard_error, "Unknown info: ~w~n", [Event]),
     {keep_state_and_data}.
 
 %% Event functions
 running({call, From}, Event, Data) ->
-    handle_call(From, Event, running, Data);
+    handle_event({call, From}, Event, running, Data);
 running(cast, Event, Data) ->
-    handle_cast(Event, running, Data);
+    handle_event(cast, Event, running, Data);
 running(info, Event, Data) ->
-    handle_info(Event, running, Data).
+    handle_event(info, Event, running, Data).
 
 
 gather_traces(Idle, Names, TraceMap) ->
