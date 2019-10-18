@@ -194,11 +194,11 @@ handle_cast({clock_advance_for_dc, Amount}, State,
     %% it in state `active'.
     Now=clock:now(),
     OState=cog:get_object_state(Cog, Oid),
-    {OState1, NewCpuQueue, NewBwQueue, NewMemoryQueue}
-        = update_dc_state_wake_up_cogs(OState, Amount,
-                                   maps:get(cpu, ResourceWaiting, []),
-                                   maps:get(bw, ResourceWaiting, []),
-                                   maps:get(memory, ResourceWaiting, [])),
+    {WakeUpItems1, OState1, NewCpuQueue, NewBwQueue, NewMemoryQueue}
+        = update_dc_state_wake_up_cogs(gb_sets:empty(), OState, Amount,
+                                       maps:get(cpu, ResourceWaiting, []),
+                                       maps:get(bw, ResourceWaiting, []),
+                                       maps:get(memory, ResourceWaiting, [])),
     cog:object_state_changed(Cog, Oid, OState1),
     %% List traversal 1: wake up all tasks where Min <= Now; collect these
     %% tasks in a set to make sure they were scheduled before the next clock
@@ -216,7 +216,7 @@ handle_cast({clock_advance_for_dc, Amount}, State,
                                   gb_sets:add({CogRef, TaskRef}, ActiveTasks)
                           end
                   end,
-                  gb_sets:empty(),
+                  WakeUpItems1,
                   ClockWaiting),
     %% List traversal 2: calculate list of all still-sleeping tasks
     NewW=lists:filter(
@@ -371,18 +371,18 @@ idle(cast, Event, Data) ->
 %% (within one interval, arriving at clock boundary, jumping multiple
 %% boundaries), consume resources on the way, and wake up cogs whose resource
 %% needs have been filled.
-update_dc_state_wake_up_cogs(S, Amount, CpuQueue, BwQueue, MemoryQueue) ->
+update_dc_state_wake_up_cogs(WakeUpItems, S, Amount, CpuQueue, BwQueue, MemoryQueue) ->
     Boundary=clock:distance_to_next_boundary(),
     Amount1=rationals:sub(Amount, Boundary),
     case rationals:is_negative(Amount1) of
-        false -> {S1, NewCpuQueue}=update_dc_state_wake_up_cogs_for_resource(S, cpu, CpuQueue),
-                 {S2, NewBwQueue}=update_dc_state_wake_up_cogs_for_resource(S1, bw, BwQueue),
-                 {S3, NewMemoryQueue}=update_dc_state_wake_up_cogs_for_resource(S2, memory, MemoryQueue),
-                 update_dc_state_wake_up_cogs(S3, Amount1, NewCpuQueue, NewBwQueue, NewMemoryQueue);
-        true -> {S, CpuQueue, BwQueue, MemoryQueue}
+        false -> {WakeUpItems1, S1, NewCpuQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems, S, cpu, CpuQueue),
+                 {WakeUpItems2, S2, NewBwQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems1, S1, bw, BwQueue),
+                 {WakeUpItems3, S3, NewMemoryQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems2, S2, memory, MemoryQueue),
+                 update_dc_state_wake_up_cogs(WakeUpItems3, S3, Amount1, NewCpuQueue, NewBwQueue, NewMemoryQueue);
+        true -> {WakeUpItems, S, CpuQueue, BwQueue, MemoryQueue}
     end.
 
-update_dc_state_wake_up_cogs_for_resource(S0, Resourcetype, Queue) ->
+update_dc_state_wake_up_cogs_for_resource(WakeUpItems0, S0, Resourcetype, Queue) ->
     %% Consume as many resources as possible from `Queue', and wake up tasks
     %% where possible.  Then, add consumed and available to the respective
     %% history list in `S'.  Return updated DC state and queue.
@@ -409,9 +409,10 @@ update_dc_state_wake_up_cogs_for_resource(S0, Resourcetype, Queue) ->
     S4=C:set_val_internal(S3,VarMax,C:get_val_internal(S3,VarNext)),
 
     %% Consume new resources.  Loop until resources or queue exhausted.
-    {NewQueue, NewState}=
-        (fun Loop([], State) -> {[], State};
-             Loop([{CogRef, TaskRef, Requested} | Rest], State) ->
+    {NewWakeUpItems, NewQueue, NewState}=
+        (fun Loop(WakeUpItems, [], State) ->
+                 {WakeUpItems, [], State};
+             Loop(WakeUpItems, [{CogRef, TaskRef, Requested} | Rest], State) ->
                  NewTotal=C:get_val_internal(State,VarMax),
                  Consumed=rationals:to_r(C:get_val_internal(State,VarCurrent)),
                  Available=case NewTotal of
@@ -427,15 +428,20 @@ update_dc_state_wake_up_cogs_for_resource(S0, Resourcetype, Queue) ->
                          %% Do not set current to total since that is of type
                          %% InfRat
                          State1=C:set_val_internal(State,VarCurrent, NewConsumed),
-                         {[{CogRef, TaskRef, Remaining} | Rest], State1};
+                         %% TODO: do we call cog_monitor:cog_blocked here?
+                         {WakeUpItems,
+                          [{CogRef, TaskRef, Remaining} | Rest],
+                          State1};
                      false ->
                          cog:task_is_runnable(CogRef, TaskRef),
                          NewConsumed = rationals:add(Consumed, Requested),
                          State1=C:set_val_internal(State,VarCurrent, NewConsumed),
-                         Loop(Rest, State1)
+                         Loop(gb_sets:add({CogRef, TaskRef}, WakeUpItems),
+                              Rest,
+                              State1)
                  end
-             end)(Queue, S4),
-    {NewState, NewQueue}.
+             end)(WakeUpItems0, Queue, S4),
+    {NewWakeUpItems, NewState, NewQueue}.
 
 
 %% Attribute names for resource types.  Must be the same as in class
