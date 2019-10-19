@@ -954,7 +954,7 @@ task_running(cast, {task_blocked_for_future, TaskRef, TaskInfo, ObjectState, Fut
     %% The following out commented code block causes deadlocks. We should try
     %% to reinstate it after understanding why it deadlocks:
     %% case time_slot_replayed(Replaying) of
-    %%     true -> cog_monitor:cog_blocked(self()),
+    %%     true -> dc:cog_blocked(DCRef, self()),
     %%             WaitReason=TaskInfo#task_info.wait_reason,
     %%             maybe_send_register_waiting_task(WaitReason, self(), TaskRef);
     %%     false -> ok

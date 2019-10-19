@@ -226,12 +226,9 @@ handle_cast({clock_advance_for_dc, Amount}, State,
                      resource_waiting=ResourceWaiting#{cpu => NewCpuQueue,
                                                        bw => NewBwQueue,
                                                        memory => NewMemoryQueue}},
-    %% Let the cog_monitor know the maximum clock advance that we can do now
-    %% -- we can always change this later but need to get this out ASAP
-    maybe_send_mte_to_cog_monitor(NewData),
     case gb_sets:is_empty(WakeUpItems) of
         %% If all cogs send dc_idle, cog_monitor will advance time again
-        true -> cog_monitor:dc_idle(self());
+        true -> cog_monitor:dc_idle(self(), mte(NewData));
         false -> cog_monitor:dc_active(self())
     end,
     case can_switch_to_idle(NewData) of
@@ -246,10 +243,10 @@ handle_cast(_Event, _StateName, Data) ->
 
 %% Deployment component behavior
 active({call, From}, {cog_idle, CogRef}, Data=#data{active=A, idle=I}) ->
-    Reply=cog_monitor:cog_idle(CogRef),
-    gen_statem:reply(From, Reply),
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       idle=gb_sets:add_element(CogRef, I)},
+    Reply=cog_monitor:cog_idle(self(), CogRef, mte(NewData)),
+    gen_statem:reply(From, Reply),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
@@ -259,19 +256,18 @@ active(internal, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
     %% resource.  Same code as in the `call' case below except we don’t send
     %% an answer.  Take care to send mte before cog_blocked or cog_monitor
     %% might think the model has ended.
-    maybe_send_mte_to_cog_monitor(Data),
-    cog_monitor:cog_blocked(CogRef),
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
+    cog_monitor:cog_blocked(self(), CogRef, mte(NewData)),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
     end;
 active({call, From}, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
-    Reply=cog_monitor:cog_blocked(CogRef),
-    gen_statem:reply(From, Reply),
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
+    Reply=cog_monitor:cog_blocked(self(), CogRef, mte(NewData)),
+    gen_statem:reply(From, Reply),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
@@ -284,8 +280,7 @@ active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
     NewData=Data#data{clock_waiting=NewW,
                       active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
-    maybe_send_mte_to_cog_monitor(NewData),
-    cog_monitor:cog_blocked(CogRef),
+    cog_monitor:cog_blocked(self(), CogRef, mte(NewData)),
     gen_statem:reply(From, ok),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
@@ -295,7 +290,7 @@ active({call, From}, {task_waiting_for_clock, CogRef, TaskRef, Min, Max},
        Data=#data{clock_waiting=W}) ->
     NewW=add_to_queue(W, CogRef, TaskRef, Min, Max),
     NewData=Data#data{clock_waiting=NewW},
-    maybe_send_mte_to_cog_monitor(NewData),
+    cog_monitor:dc_mte(self(), mte(NewData)),
     {keep_state, NewData, {reply, From, ok}};
 active(cast, {task_confirm_clock_wakeup, CogRef, TaskRef},
        Data=#data{active_before_next_clock=ABNC}) ->
@@ -491,7 +486,7 @@ advanceTotalsHistory(History, dataInfRat) -> History.
 
 mte(Data=#data{clock_waiting=ClockWaiting,
                resource_waiting=ResourceWaiting}) ->
-    %% MTE as an ABS rational or none if nothing’s waiting.  MTE is the
+    %% MTE as an ABS rational or `infinity' if nothing’s waiting.  MTE is the
     %% minimum of the next clock boundary (if we’re waiting for resources) and
     %% the MTEs of all task(s) that are waiting for the clock.  We could
     %% theoretically calculate a bigger MTE (from the request size and total
@@ -503,25 +498,17 @@ mte(Data=#data{clock_waiting=ClockWaiting,
                           maps:values(ResourceWaiting))
            of
                true -> clock:next_boundary();
-               false -> none
+               false -> infinity
             end,
     TimeMTE=case ClockWaiting of
                 [{_CogRefH, _TaskRefH, _MinH, MaxH} | _] -> MaxH;
-                _ -> none
+                _ -> infinity
             end,
     case {ResMTE, TimeMTE} of
-        {none, none} -> none;
-        {none, TimeMTE} -> TimeMTE;
-        {ResMTE, none} -> ResMTE;
-        _ -> none
-    end.
-
-
-maybe_send_mte_to_cog_monitor(Data) ->
-    MTE=mte(Data),
-    case MTE of
-        none -> ok;
-        _ -> cog_monitor:dc_mte(self(), MTE)
+        {infinity, infinity} -> infinity;
+        {infinity, TimeMTE} -> TimeMTE;
+        {ResMTE, infinity} -> ResMTE;
+        _ -> infinity
     end.
 
 can_switch_to_idle(Data=#data{active=A, active_before_next_clock=ABNC}) ->
@@ -541,7 +528,7 @@ switch_to_idle(OldState, Data) ->
     case OldState of
         idle -> {keep_state, Data};
         active ->
-            %% cog_monitor:dc_idle(self()),
+            %% cog_monitor:dc_idle(self(), mte(Data)),
             {next_state, idle, Data}
     end.
 

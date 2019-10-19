@@ -13,10 +13,10 @@
 -export([are_objects_of_class_protected/1]).
 
 %% communication about cogs
--export([new_cog/2, cog_active/1, cog_blocked/1, cog_unblocked/1, cog_idle/1, cog_died/2]).
+-export([new_cog/2, cog_active/1, cog_blocked/3, cog_unblocked/1, cog_idle/3, cog_died/2]).
 
 %% communication about dcs
--export([new_dc/1, dc_mte/2, dc_active/1, dc_idle/1, dc_died/1, get_dcs/0]).
+-export([new_dc/1, dc_mte/2, dc_active/1, dc_idle/2, dc_died/1, get_dcs/0]).
 -export([get_trace/0, get_alternative_schedule/0]).
 
 %% the HTTP api
@@ -84,14 +84,14 @@ new_cog(ParentCog, Cog) ->
 cog_active(Cog) ->
     gen_statem:call({global, cog_monitor}, {cog,Cog,active}, infinity).
 
-cog_blocked(Cog) ->
-    gen_statem:call({global, cog_monitor}, {cog, Cog, blocked}, infinity).
+cog_blocked(DCRef, CogRef, MTE) ->
+    gen_statem:call({global, cog_monitor}, {cog_blocked, DCRef, CogRef, MTE}, infinity).
 
 cog_unblocked(Cog) ->
     gen_statem:call({global, cog_monitor}, {cog, Cog, unblocked}, infinity).
 
-cog_idle(Cog) ->
-    gen_statem:call({global, cog_monitor}, {cog,Cog,idle}, infinity).
+cog_idle(DCRef, CogRef, MTE) ->
+    gen_statem:call({global, cog_monitor}, {cog_idle, DCRef, CogRef, MTE}, infinity).
 
 cog_died(Cog, RecordedTrace) ->
     gen_statem:call({global, cog_monitor}, {cog,Cog,RecordedTrace,die}, infinity).
@@ -106,8 +106,8 @@ dc_mte(DCRef, MTE) ->
 dc_active(DCRef) ->
     gen_statem:cast({global, cog_monitor}, {dc_active, DCRef}).
 
-dc_idle(DCRef) ->
-    gen_statem:cast({global, cog_monitor}, {dc_idle, DCRef}).
+dc_idle(DCRef, MTE) ->
+    gen_statem:cast({global, cog_monitor}, {dc_idle, DCRef, MTE}).
 
 dc_died(DCRef) ->
     gen_statem:cast({global, cog_monitor}, {dc_died, DCRef}),
@@ -173,10 +173,11 @@ handle_event({call, From}, {cog,Cog,active}, _State, Data=#data{active=A,idle=I}
     A1=gb_sets:add_element(Cog,A),
     I1=gb_sets:del_element(Cog,I),
     {keep_state, Data#data{active=A1,idle=I1}, {reply, From, ok}};
-handle_event({call, From}, {cog,Cog,idle}, _State, Data=#data{active=A,idle=I})->
-    A1=gb_sets:del_element(Cog,A),
-    I1=gb_sets:add_element(Cog,I),
-    S1=Data#data{active=A1,idle=I1},
+handle_event({call, From}, {cog_idle, DCRef, CogRef, MTE}, _State,
+             Data=#data{active=A,idle=I, dc_mtes=MTEs})->
+    A1=gb_sets:del_element(CogRef,A),
+    I1=gb_sets:add_element(CogRef,I),
+    S1=Data#data{active=A1,idle=I1, dc_mtes=update_mtes(MTEs, DCRef, MTE)},
     gen_statem:reply(From, ok),
     case can_clock_advance(Data, S1) of
         true->
@@ -184,10 +185,11 @@ handle_event({call, From}, {cog,Cog,idle}, _State, Data=#data{active=A,idle=I})-
         false->
             {keep_state, S1}
     end;
-handle_event({call, From}, {cog,Cog,blocked}, _State, Data=#data{active=A,blocked=B})->
-    A1=gb_sets:del_element(Cog,A),
-    B1=gb_sets:add_element(Cog,B),
-    S1=Data#data{active=A1,blocked=B1},
+handle_event({call, From}, {cog_blocked, DCRef, CogRef, MTE}, _State,
+             Data=#data{active=A,blocked=B, dc_mtes=MTEs})->
+    A1=gb_sets:del_element(CogRef,A),
+    B1=gb_sets:add_element(CogRef,B),
+    S1=Data#data{active=A1,blocked=B1, dc_mtes=update_mtes(MTEs, DCRef, MTE)},
     gen_statem:reply(From, ok),
     case can_clock_advance(Data, S1) of
         true->
@@ -231,7 +233,9 @@ handle_event({call, From}, {cog,Cog,RecordedTrace,die}, _State,
 handle_event({call, From}, {new_dc, DCRef}, _State, Data=#data{dcrefs=DCs}) ->
     {keep_state, Data#data{dcrefs=[DCRef | DCs]}, {reply, From, ok}};
 handle_event({call, From}, {dc_mte, DCRef, MTE}, _State, Data=#data{dc_mtes=MTEs}) ->
-    {keep_state, Data#data{dc_mtes=MTEs#{DCRef => MTE}}, {reply, From, ok}};
+    {keep_state,
+     Data#data{dc_mtes=update_mtes(MTEs, DCRef, MTE)},
+     {reply, From, ok}};
 handle_event({call, From}, get_dcs, _State, Data=#data{dcrefs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
 handle_event({call, From}, get_trace, _State,
@@ -275,10 +279,10 @@ running(cast, {dc_active, DCRef}, _Data) ->
     %% straggler coming in after clock advance and we already detected
     %% activity -> ignore it
     keep_state_and_data;
-running(cast, {dc_idle, DCRef}, _Data) ->
+running(cast, {dc_idle, DCRef, MTE}, Data=#data{dc_mtes=MTEs}) ->
     %% straggler coming in after clock advance and we already detected
-    %% activity -> ignore it
-    keep_state_and_data;
+    %% activity -- but we can still remember its current MTE
+    {keep_state, Data#data{dc_mtes=update_mtes(MTEs, DCRef, MTE)}};
 running(cast, Event, Data) ->
     handle_event(cast, Event, running, Data);
 running(info, Event, Data) ->
@@ -300,13 +304,16 @@ advancing(cast, {dc_died, DCRef},
 advancing(cast, {dc_active, DCRef}, Data=#data{active_before_next_clock=ABNC}) ->
     %% As soon as one dc is active, no need to wait longer.
     {next_state, running, Data#data{active_before_next_clock=gb_sets:empty()}};
-advancing(cast, {dc_idle, DCRef}, Data=#data{active_before_next_clock=ABNC}) ->
+advancing(cast, {dc_idle, DCRef, MTE},
+          Data=#data{active_before_next_clock=ABNC, dc_mtes=MTEs}) ->
     ABNC1=gb_sets:del_element(DCRef, ABNC),
+    NewData=Data#data{active_before_next_clock=ABNC1,
+                      dc_mtes=update_mtes(MTEs, DCRef, MTE)},
     case gb_sets:is_empty(ABNC1) of
         true ->
-            {keep_state, advance_clock_or_terminate(Data#data{active_before_next_clock=ABNC1})};
+            {keep_state, advance_clock_or_terminate(NewData)};
         false ->
-            {keep_state, Data#data{active_before_next_clock=ABNC1}}
+            {keep_state, NewData}
     end;
 advancing(cast, Event, Data) ->
     handle_event(cast, Event, advancing, Data);
@@ -331,6 +338,12 @@ terminate(_Reason, _State, _Data) ->
 code_change(_OldVsn, _OldState, Data, _Extra)->
     %% not supported
     not_supported.
+
+update_mtes(MTEs, DCRef, MTE) ->
+    case MTE of
+        infinity -> maps:remove(DCRef, MTEs);
+        _ -> MTEs#{DCRef => MTE}
+    end.
 
 can_clock_advance(_OldData=#data{active=A, blocked=B},
                   _NewData=#data{active=A1, blocked=B1}) ->
