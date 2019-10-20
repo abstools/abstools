@@ -345,6 +345,7 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
                        [] -> [];
                        [RequestEvent | Rest] -> Rest
                    end,
+    {RetryNow, NewRetries} = get_retries(Retries, NewReplaying),
     case Initialized of
         null ->
             %% The init block of the DC object has not run yet (should not
@@ -352,8 +353,8 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
             {keep_state,
              Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Requested}]},
                        recorded=[RequestEvent | Recorded],
-                       replaying=NewReplaying, retries=[]},
-             [{next_event, internal, {cog_blocked, CogRef}} | Retries]};
+                       replaying=NewReplaying, retries=NewRetries},
+             [{next_event, internal, {cog_blocked, CogRef}} | RetryNow]};
         true ->
             %% We modify the DC object state directly, which looks scary - but
             %% no ABS code modifies that part of the object state so we’re
@@ -381,8 +382,8 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
                      %% appending to the end does the right thing.
                      Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Remaining}]},
                                recorded=[RequestEvent | Recorded],
-                               replaying=NewReplaying, retries=[]},
-                     [{next_event, internal, {cog_blocked, CogRef}} | Retries]};
+                               replaying=NewReplaying, retries=NewRetries},
+                     [{next_event, internal, {cog_blocked, CogRef}} | RetryNow]};
                 false ->
                     %% Do not inform cog_monitor that cog is blocked; just
                     %% unblock task here
@@ -391,8 +392,8 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
                     cog:object_state_changed(MyCog, MyOid, OState1),
                     cog:task_is_runnable(CogRef, TaskRef),
                     {keep_state, Data#data{recorded=[RequestEvent | Recorded],
-                                           replaying=NewReplaying, retries=[]},
-                     Retries}
+                                           replaying=NewReplaying, retries=NewRetries},
+                     RetryNow}
             end
     end;
 active({call, From}, Event, Data) ->
@@ -589,3 +590,12 @@ add_to_queue_internal([Head={_CogRefHead, _TaskRefHead, _MinHead, MaxHead} | Tai
     end;
 add_to_queue_internal([], Item) ->
     [Item].
+
+get_retries(Retries, []) ->
+    {[], []};
+get_retries(Retries, [ExpectedEvent | Replaying]) ->
+    lists:partition(
+      fun ({next_event, cast,
+            {consume_resource, _TaskRef, _CogRef, RequestEvent}}) ->
+              RequestEvent =:= ExpectedEvent
+      end, Retries).
