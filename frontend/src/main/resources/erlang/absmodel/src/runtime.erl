@@ -165,15 +165,15 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     coverage:write_files(),
-    case DumpTrace of
-        none -> ok;
-        _ -> JsonTrace = modelapi_v2:get_trace_json(),
-             file:write_file(DumpTrace, JsonTrace)
-    end,
     Status = cog_monitor:waitfor(),
     case Verbose of
         true -> io:format("Simulation time: ~p us~n", [timer:now_diff(erlang:timestamp(), StartTime)]);
         _ -> ok
+    end,
+    case DumpTrace of
+        none -> ok;
+        _ -> JsonTrace = modelapi_v2:get_trace_json(),
+             file:write_file(DumpTrace, JsonTrace)
     end,
     Ret = case Status of
               success -> RetVal;
