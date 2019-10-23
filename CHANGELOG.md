@@ -18,11 +18,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The `abslang/absc` docker image now includes the analysis tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`, which only support the linux platform but can now be run inside the container on other platforms.
 
+- Added a new runtime parameter `-v`, `--verbose` for more output in the erlang backend; currently this enables printing of which module is run, on which port the model api is started, and elapsed time after a model finishes.
+
 ### Changed
 
 - Incompatible change: A partial function cannot have an empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as a non-partial function with identical (non-function) argument list and body.
 
 - Resource consumption (via `Cost` annotations) in the erlang backend is now more deterministic: once the deployment component gives part of the requested resources to a cog, it will not give resources of the same type to another cog until the first request has been fulfilled.
+
+- Models in the erlang backend do not print the module and model api port anymore unless started with the `-v` or `--version` parameter.
+
+- The short-form parameter for printing information about the compiler version in the erlang backend changed from `-v` to `-V`.  The long-form parameter (`--version`) is unchanged.
+
 
 ### Removed
 

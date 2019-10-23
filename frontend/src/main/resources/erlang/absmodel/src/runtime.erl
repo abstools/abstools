@@ -8,7 +8,7 @@
 
 -include_lib("absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/6,run_dpor_slave/3]).
+-export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/7,run_dpor_slave/3]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -20,8 +20,9 @@
          {dump_trace,$t,"dump-trace",{string, none},"Dump the trace as a JSON file"},
          {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
          {explore,undefined,"explore",undefined,"Explore different execution paths"},
+         {verbose,$v,"verbose",undefined,"Print status messages to stderr"},
          {debug,undefined,"debug",{integer,0},"Turn on debug mode when > 0 (model will run much slower; diagnostic output when > 1)"},
-         {version,$v,"version",undefined,"Output version and exit"},
+         {version,$V,"version",undefined,"Output version and exit"},
          {main_module,undefined,undefined,{string, ?ABSMAINMODULE},"Name of Module containing MainBlock"}]).
 
 
@@ -38,7 +39,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none, none, maps:new(), false);
+            run_mod(?ABSMAINMODULE, false, false, false, none, none, maps:new(), false);
         Args->
             start(Args)
    end.
@@ -52,11 +53,12 @@ run(Args) ->
 start_http() ->
     {ok, _} = application:ensure_all_started(absmodel).
 
-start_http(Port, Module, Debug, GCStatistics, Clocklimit, Trace) ->
+start_http(Port, Module, Verbose, Debug, GCStatistics, Clocklimit, Trace) ->
     ok = application:load(absmodel),
     ok = application:set_env(absmodel, port, Port),
     ok = application:set_env(absmodel, module, Module),
     ok = application:set_env(absmodel, debug, Debug),
+    ok = application:set_env(absmodel, verbose, Verbose),
     ok = application:set_env(absmodel, gcstatistics, GCStatistics),
     ok = application:set_env(absmodel, clocklimit, Clocklimit),
     ok = application:set_env(absmodel, replay_trace, Trace),
@@ -79,14 +81,15 @@ parse(Args,Exec)->
                          _ -> ?ABSMAINMODULE
                      end,
             Debug=proplists:get_value(debug,Parsed, 0) > 0,
+            Verbose=proplists:get_value(verbose,Parsed,false),
             GCStatistics=proplists:get_value(debug,Parsed, 0) > 1,
             Port=proplists:get_value(port,Parsed,none),
             Clocklimit=proplists:get_value(clocklimit,Parsed,none),
-
             Schedulers=proplists:get_value(schedulers,Parsed,none),
             DumpTrace=proplists:get_value(dump_trace,Parsed,none),
             ReplayMode=proplists:get_value(replay_trace,Parsed,none),
             ExploreMode=proplists:get_value(explore,Parsed,false),
+
             case Schedulers of
                 none -> none;
                 _ -> MaxSchedulers=erlang:system_info(schedulers),
@@ -106,8 +109,8 @@ parse(Args,Exec)->
                           end,
             case ExploreMode of
                 true -> dpor:start_link(Module, Clocklimit);
-                false -> run_mod(Module, Debug, GCStatistics, Port, Clocklimit,
-                                 ReplayTrace, DumpTrace)
+                false -> run_mod(Module, Verbose, Debug, GCStatistics, Port,
+                                 Clocklimit, ReplayTrace, DumpTrace)
             end;
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
@@ -119,14 +122,17 @@ parse(Args,Exec)->
 %% For now we just punt.
 start_link(Args) ->
     case Args of
-        [Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace] ->
-            {ok, _T} = start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace),
+        [Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace] ->
+            {ok, _T} = start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
-start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
-    io:format(standard_error, "Start ~w~n",[Module]),
+start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
+    case Verbose of
+        true -> io:format(standard_error, "Start ~w~n",[Module]);
+        _ -> ok
+    end,
     %%Init logging
     {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive, Trace),
     %% Init garbage collector
@@ -155,7 +161,7 @@ start_mod(Module, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
                           this=null, destiny=null},
     {ok, cog:add_main_task(Cog,[Module,self()], TaskInfo)}.
 
-end_mod(TaskRef, DumpTrace) ->
+end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     coverage:write_files(),
@@ -165,6 +171,10 @@ end_mod(TaskRef, DumpTrace) ->
              file:write_file(DumpTrace, JsonTrace)
     end,
     Status = cog_monitor:waitfor(),
+    case Verbose of
+        true -> io:format("Simulation time: ~p us~n", [timer:now_diff(erlang:timestamp(), StartTime)]);
+        _ -> ok
+    end,
     Ret = case Status of
               success -> RetVal;
               _ -> {exit_with, Status, cog_monitor:get_alternative_schedule()}
@@ -176,18 +186,19 @@ end_mod(TaskRef, DumpTrace) ->
     Ret.
 
 
-run_mod(Module, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace)  ->
+run_mod(Module, Verbose, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace)  ->
     case Port of
         _ when is_integer(Port) ->
-            start_http(Port, Module, Debug, GCStatistics, Clocklimit, Trace),
+            start_http(Port, Module, Verbose, Debug, GCStatistics, Clocklimit, Trace),
             receive ok -> ok end;
         _ ->
-            {ok, R}=start_mod(Module, Debug, GCStatistics, Clocklimit, false, Trace),
-            end_mod(R, DumpTrace)
+            StartTime = erlang:timestamp(),
+            {ok, R}=start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, false, Trace),
+            end_mod(R, Verbose, DumpTrace, StartTime)
     end.
 
 run_dpor_slave(Module, Clocklimit, Trace) ->
-    {ok, TaskRef} = start_mod(Module, false, none, Clocklimit, false, Trace),
+    {ok, TaskRef} = start_mod(Module, false, false, none, Clocklimit, false, Trace),
     RetVal=task:join(TaskRef),
     Status = cog_monitor:waitfor(),
     NewTrace = cog_monitor:get_trace(),
