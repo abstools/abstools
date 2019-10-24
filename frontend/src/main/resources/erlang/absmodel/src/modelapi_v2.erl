@@ -327,8 +327,8 @@ get_statistics_json() ->
                                     {<<"values">>, create_history_list(CreationTime, History, Totalhistory)}]
                            end, DC_infos),
     io_lib:format("Deployment components:~n~w~n",
-                  [jsx:encode(DC_info_json, [{space, 1}, {indent, 2}])]),
-    jsx:encode(DC_info_json, [{space, 1}, {indent, 2}]).
+                  [jsx:encode(DC_info_json)]),
+    jsx:encode(DC_info_json).
 
 
 atomize(L) when is_binary(L) ->
@@ -417,12 +417,12 @@ trace_to_json_friendly(Trace) ->
 
 get_trace_json() ->
     Trace = cog_monitor:get_trace(),
-    jsx:encode(trace_to_json_friendly(Trace), [{space, 1}, {indent, 2}]).
+    jsx:encode(trace_to_json_friendly(Trace)).
 
 get_db_traces_json() ->
     Traces = dpor:get_traces_from_db(),
     JSONTraces = lists:map(fun trace_to_json_friendly/1, Traces),
-    jsx:encode(JSONTraces, [{space, 1}, {indent, 2}]).
+    jsx:encode(JSONTraces).
 
 
 handle_static_dcs([]) ->
