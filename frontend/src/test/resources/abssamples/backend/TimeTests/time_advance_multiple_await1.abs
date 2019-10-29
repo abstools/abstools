@@ -1,0 +1,33 @@
+module BackendTest;
+// Check that multiple awaiting processes in the same cog only cause one time
+// advance step.
+
+interface I {
+    Bool m();
+}
+
+class C implements I {
+    Bool m() {
+        await duration(1, 1);
+        // don’t bother checking before/after for this simple test
+        return now() == Time(1);
+    }
+}
+
+{
+    I o = new C();
+    List<Fut<Bool>> lf = list[];
+    Bool testresult = True;
+    Int count = 1000;
+    while (count > 0) {
+        Fut<Bool> f = o!m();
+        lf = Cons(f, lf);
+        count = count - 1;
+    }
+    foreach (f in lf) {
+        Bool pr = f.get;
+        testresult = testresult && pr;
+    }
+    testresult = testresult && now() == Time(1);
+    println(`testresult: $testresult$ -- time: $now()$`);
+}
