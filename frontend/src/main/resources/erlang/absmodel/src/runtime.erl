@@ -167,7 +167,7 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     coverage:write_files(),
     Status = cog_monitor:waitfor(),
     case Verbose of
-        true -> io:format("Simulation time: ~p us~n", [timer:now_diff(erlang:timestamp(), StartTime)]);
+        true -> io:format("Simulation time: ~p us with status ~w~n", [timer:now_diff(erlang:timestamp(), StartTime), Status]);
         _ -> ok
     end,
     case DumpTrace of

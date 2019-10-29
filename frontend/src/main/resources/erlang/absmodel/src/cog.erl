@@ -741,7 +741,7 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
     Candidates = get_candidate_set(NewRunnableTasks, Pol, PollingStates),
     T = choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, Replaying),
     case T of
-        none->     % None found -- should not happen
+        none->     % None found -- can happen during replay
             case gb_sets:is_empty(NewNewTasks) of
                 true -> dc:cog_idle(DCRef, self());
                 false -> ok
