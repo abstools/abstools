@@ -122,7 +122,8 @@ get_traces(DCRef) ->
          recorded=[],
          %% A list of events with resources that is to be provided
          replaying=[],
-         %% A list of resource requests that must be retried
+         %% A list of resource requests that came too early during replay and
+         %% therefore must be retried
          retries=[]
         }).
 
@@ -131,7 +132,7 @@ callback_mode() -> state_functions.
 init([Cog, Oid]) ->
     {ok, idle, #data{cog=Cog, oid=Oid}}.
 
-terminate(_Reason,_StateName, _Data=#data{cog=Cog})->
+terminate(_Reason,_StateName, _Data=#data{cog=_Cog})->
     cog_monitor:dc_died(self()),
     ok.
 code_change(_OldVsn,_StateName,_Data,_Extra)->
@@ -145,34 +146,38 @@ handle_call(From, {new_cog, ParentCog, CogRef}, _State, Data=#data{idle=I})->
 handle_call(From, {set_id_and_trace, Id, ReplayTrace}, _State, Data)->
     {keep_state, Data#data{id=Id, replaying=ReplayTrace}, {reply, From, ok}};
 handle_call(From, {cog_died, CogRef, RecordedTrace}, State,
-            Data=#data{active=A, blocked=B, idle=I, clock_waiting=W}) ->
+            Data=#data{active=A, blocked=B, idle=I, clock_waiting=W,
+                       active_before_next_clock=ABNC}) ->
     Reply=cog_monitor:cog_died(CogRef, RecordedTrace),
     gen_statem:reply(From, Reply),
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:del_element(CogRef, B),
                       idle=gb_sets:del_element(CogRef, I),
-                      %% TODO filter active_before_next_clock
+                      active_before_next_clock=gb_sets:filter(
+                                                 fun({CogRef1, _}) ->
+                                                         CogRef1 =/= CogRef end,
+                                                 ABNC),
                       clock_waiting=lists:filter(
-                                      fun ({Cog, _, _, _}) ->
-                                              Cog =/= CogRef end,
+                                      fun ({CogRef1, _, _, _}) ->
+                                              CogRef1 =/= CogRef end,
                                       W)},
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(State, NewData)
     end;
-handle_call(From, {cog_active, CogRef}, State, Data=#data{active=A, idle=I}) ->
-    Reply=cog_monitor:cog_active(CogRef),
-    gen_statem:reply(From, Reply),
+handle_call(From, {cog_active, CogRef}, State,
+            Data=#data{active=A, blocked=B, idle=I}) ->
+    gen_statem:reply(From, ok),
     switch_to_active(State, Data#data{active=gb_sets:add_element(CogRef, A),
+                                      blocked=gb_sets:del_element(CogRef, B),
                                       idle=gb_sets:del_element(CogRef, I)});
 handle_call(From, {cog_unblocked, CogRef}, State,
             Data=#data{active=A, blocked=B}) ->
-    Reply=cog_monitor:cog_unblocked(CogRef),
-    gen_statem:reply(From, Reply),
+    gen_statem:reply(From, ok),
     switch_to_active(State, Data#data{active=gb_sets:add_element(CogRef, A),
                                       blocked=gb_sets:del_element(CogRef, B)});
 handle_call(From, {get_resource_history, Type}, _State,
-            Data=#data{cog=Cog,oid=Oid}) ->
+            _Data=#data{cog=Cog,oid=Oid}) ->
     C=class_ABS_DC_DeploymentComponent,
     OState=cog:get_object_state(Cog, Oid),
     Curvar=var_history_for_resourcetype(Type),
@@ -182,7 +187,7 @@ handle_call(From, {get_resource_history, Type}, _State,
               C:get_val_internal(OState,Curvar),
               C:get_val_internal(OState,Maxvar)],
     {keep_state_and_data, {reply, From, Result}};
-handle_call(From, get_resource_json, _State, Data=#data{cog=Cog,oid=Oid}) ->
+handle_call(From, get_resource_json, _State, _Data=#data{cog=Cog,oid=Oid}) ->
     C=class_ABS_DC_DeploymentComponent,
     OState=cog:get_object_state(Cog, Oid),
     Name=C:get_val_internal(OState,description),
@@ -190,7 +195,7 @@ handle_call(From, get_resource_json, _State, Data=#data{cog=Cog,oid=Oid}) ->
     Result=[{<<"name">>, Name},
             {<<"values">>, History}],
     {keep_state_and_data, {reply, From, {ok, Result}}};
-handle_call(From, get_dc_info_string, _State, Data=#data{cog=Cog,oid=Oid}) ->
+handle_call(From, get_dc_info_string, _State, _Data=#data{cog=Cog,oid=Oid}) ->
     C=class_ABS_DC_DeploymentComponent,
     OState=cog:get_object_state(Cog, Oid),
     Result=io_lib:format("Name: ~s~nCreation time: ~s~nCPU history (reversed): ~s~n~n",
@@ -270,8 +275,7 @@ handle_cast(_Event, _StateName, Data) ->
 active({call, From}, {cog_idle, CogRef}, Data=#data{active=A, idle=I}) ->
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       idle=gb_sets:add_element(CogRef, I)},
-    Reply=cog_monitor:cog_idle(self(), CogRef, mte(NewData)),
-    gen_statem:reply(From, Reply),
+    gen_statem:reply(From, ok),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
@@ -283,7 +287,6 @@ active(internal, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
     %% might think the model has ended.
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
-    cog_monitor:cog_blocked(self(), CogRef, mte(NewData)),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
@@ -291,8 +294,7 @@ active(internal, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
 active({call, From}, {cog_blocked, CogRef}, Data=#data{active=A, blocked=B}) ->
     NewData=Data#data{active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
-    Reply=cog_monitor:cog_blocked(self(), CogRef, mte(NewData)),
-    gen_statem:reply(From, Reply),
+    gen_statem:reply(From, ok),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
@@ -305,7 +307,6 @@ active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
     NewData=Data#data{clock_waiting=NewW,
                       active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
-    cog_monitor:cog_blocked(self(), CogRef, mte(NewData)),
     gen_statem:reply(From, ok),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
@@ -331,6 +332,7 @@ active(cast, Event={consume_resource, CogRef, TaskRef, RequestEvent},
     {keep_state, Data#data{retries=[{next_event, cast, Event} | Retries]}};
 active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
        Data=#data{cog=MyCog, oid=MyOid, resource_waiting=RQueue,
+                  active_before_next_clock=ABNC,
                   recorded=Recorded, replaying=Replaying, retries=Retries}) ->
     #dc_event{type=Resourcetype, amount=Amount_raw} = RequestEvent,
     %% We clamp the value -- do not try to consume a negative amount
@@ -391,8 +393,17 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
                     OState1=C:set_val_internal(OState,ResourceVarCurrent, NewConsumed),
                     cog:object_state_changed(MyCog, MyOid, OState1),
                     cog:task_is_runnable(CogRef, TaskRef),
-                    {keep_state, Data#data{recorded=[RequestEvent | Recorded],
-                                           replaying=NewReplaying, retries=NewRetries},
+                    {keep_state,
+                     Data#data{recorded=[RequestEvent | Recorded],
+                               replaying=NewReplaying,
+                               retries=NewRetries,
+                               %% KLUDGE: The cog task will send
+                               %% `task_confirm_clock_wakeup` even in case the
+                               %% clock did not advance -- prepare to accept
+                               %% it.
+                               active_before_next_clock=gb_sets:add_element(
+                                                          {CogRef, TaskRef},
+                                                          ABNC)},
                      RetryNow}
             end
     end;
@@ -553,7 +564,7 @@ mte(Data=#data{clock_waiting=ClockWaiting,
         _ -> infinity
     end.
 
-can_switch_to_idle(Data=#data{active=A, active_before_next_clock=ABNC}) ->
+can_switch_to_idle(_Data=#data{active=A, active_before_next_clock=ABNC}) ->
     gb_sets:is_empty(A) andalso gb_sets:is_empty(ABNC).
 
 switch_to_active(OldState, Data) ->
@@ -561,7 +572,7 @@ switch_to_active(OldState, Data) ->
     case OldState of
         active -> {keep_state, Data};
         idle ->
-            %% cog_monitor:dc_active(self()),
+            cog_monitor:dc_active(self()),
             {next_state, active, Data}
     end.
 
@@ -570,7 +581,7 @@ switch_to_idle(OldState, Data) ->
     case OldState of
         idle -> {keep_state, Data};
         active ->
-            %% cog_monitor:dc_idle(self(), mte(Data)),
+            cog_monitor:dc_idle(self(), mte(Data)),
             {next_state, idle, Data}
     end.
 

@@ -943,7 +943,12 @@ task_running(cast, {task_blocked_for_resource,
     NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), TaskRef, blocked),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    NewTaskInfos=maps:put(TaskRef, TaskInfo, TaskInfos),
+    %% We never pass TaskInfo back to the process, so we can mutate it here.
+    %% Also: since resource waiting might cause time advance, arrange to
+    %% confirm task wakeup here even though we’re not strictly waiting for the
+    %% clock.  (The DC expects `task_confirm_clock_wakeup' in all cases,
+    %% including when the clock did not actually advance.)
+    NewTaskInfos=maps:put(TaskRef, TaskInfo#task_info{wait_reason={waiting_on_clock, none, none}}, TaskInfos),
     {next_state, task_blocked,
      Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos,
                next_stable_id=N+1, recorded=[Event | Recorded]}};

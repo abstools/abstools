@@ -13,11 +13,11 @@
 -export([are_objects_of_class_protected/1]).
 
 %% communication about cogs
--export([new_cog/2, cog_active/1, cog_blocked/3, cog_unblocked/1, cog_idle/3, cog_died/2]).
+-export([new_cog/2, cog_died/2]).
 
 %% communication about dcs
 -export([new_dc/2, dc_mte/2, dc_active/1, dc_idle/2, dc_died/1, get_dcs/0]).
--export([get_trace/0, get_alternative_schedule/0]).
+-export([get_trace/0]).
 
 %% the HTTP api
 -export([register_object_with_http_name/2,lookup_object_from_http_name/1,list_registered_http_names/0,list_registered_http_objects/0,increase_clock_limit/1]).
@@ -32,18 +32,16 @@
 -record(data,{
               %% this
               main,
-              %% non-idle cogs
+              %% non-idle DCs (with >=1 cog with a running process)
               active=gb_sets:empty(),
-              %% idle cogs
+              %% idle DCs (with all cogs blocked or idle)
               idle=gb_sets:empty(),
-              %% cogs with task blocked on future/resource
-              blocked=gb_sets:empty(),
-              %% ordset of DCs that need to acknowledge waking up before next
+              %% set of DCs that need to acknowledge waking up before next
               %% clock advance
               active_before_next_clock=gb_sets:empty(),
               %% list of deployment component references
               dcrefs=[],
-              %% map dc -> mte; clock advance should be minimum of these
+              %% map dc -> mte; clock will advance by min of these values
               dc_mtes=maps:new(),
               %% Objects registered in HTTP API. binary |-> #object{}
               registered_objects=maps:new(),
@@ -81,18 +79,6 @@ are_objects_of_class_protected(Class) ->
 new_cog(ParentCog, Cog) ->
     gen_statem:call({global, cog_monitor}, {cog, ParentCog, Cog, new}, infinity).
 
-cog_active(Cog) ->
-    gen_statem:call({global, cog_monitor}, {cog,Cog,active}, infinity).
-
-cog_blocked(DCRef, CogRef, MTE) ->
-    gen_statem:call({global, cog_monitor}, {cog_blocked, DCRef, CogRef, MTE}, infinity).
-
-cog_unblocked(Cog) ->
-    gen_statem:call({global, cog_monitor}, {cog, Cog, unblocked}, infinity).
-
-cog_idle(DCRef, CogRef, MTE) ->
-    gen_statem:call({global, cog_monitor}, {cog_idle, DCRef, CogRef, MTE}, infinity).
-
 cog_died(Cog, RecordedTrace) ->
     gen_statem:call({global, cog_monitor}, {cog,Cog,RecordedTrace,die}, infinity).
 
@@ -118,9 +104,6 @@ get_dcs() ->
 
 get_trace() ->
     gen_server:call({global, cog_monitor}, get_trace, infinity).
-
-get_alternative_schedule() ->
-    gen_server:call({global, cog_monitor}, get_alternative_schedule, infinity).
 
 register_object_with_http_name(Object, Name) ->
     gen_statem:call({global, cog_monitor}, {register_object, Object, Name}, infinity).
@@ -159,44 +142,15 @@ handle_event({call, From}, {keep_alive, Class}, _State, Data=#data{keepalive_aft
                        end
            end,
     {keep_state_and_data, {reply, From, Result}};
-handle_event({call, From}, {cog,ParentCog,Cog,new}, _State, Data=#data{idle=I,cog_names=M,trace=T})->
+handle_event({call, From}, {cog,ParentCog,Cog,new}, _State,
+             Data=#data{cog_names=M,trace=T})->
     {C, N} = maps:get(ParentCog, M, {[], 0}),
     Id = [N | C],
     M2 = maps:put(ParentCog, {C, N+1}, M),
     NewM = maps:put(Cog, {Id, 0}, M2),
-    I1=gb_sets:add_element(Cog,I),
     ShownId = lists:reverse(Id),
-    I1=gb_sets:add_element(Cog,I),
-    {keep_state, Data#data{idle=I1, cog_names=NewM},
+    {keep_state, Data#data{cog_names=NewM},
      {reply, From, {ShownId, maps:get(ShownId, T, [])}}};
-handle_event({call, From}, {cog,Cog,active}, _State, Data=#data{active=A,idle=I})->
-    A1=gb_sets:add_element(Cog,A),
-    I1=gb_sets:del_element(Cog,I),
-    {keep_state, Data#data{active=A1,idle=I1}, {reply, From, ok}};
-handle_event({call, From}, {cog_idle, DCRef, CogRef, MTE}, _State,
-             Data=#data{active=A,idle=I, dc_mtes=MTEs})->
-    A1=gb_sets:del_element(CogRef,A),
-    I1=gb_sets:add_element(CogRef,I),
-    S1=Data#data{active=A1,idle=I1, dc_mtes=update_mtes(MTEs, DCRef, MTE)},
-    gen_statem:reply(From, ok),
-    case can_clock_advance(Data, S1) of
-        true->
-            {next_state, advancing, advance_clock_or_terminate(S1)};
-        false->
-            {keep_state, S1}
-    end;
-handle_event({call, From}, {cog_blocked, DCRef, CogRef, MTE}, _State,
-             Data=#data{active=A,blocked=B, dc_mtes=MTEs})->
-    A1=gb_sets:del_element(CogRef,A),
-    B1=gb_sets:add_element(CogRef,B),
-    S1=Data#data{active=A1,blocked=B1, dc_mtes=update_mtes(MTEs, DCRef, MTE)},
-    gen_statem:reply(From, ok),
-    case can_clock_advance(Data, S1) of
-        true->
-            {next_state, advancing, advance_clock_or_terminate(S1)};
-        false->
-            {keep_state, S1}
-    end;
 handle_event({call, From}, {clock_limit_increased, Amount}, _State, Data) ->
     %% KLUDGE: Ideally we'd like to only be told that the limit has
     %% increased, without having to do it ourselves.  Consider
@@ -212,24 +166,12 @@ handle_event({call, From}, {clock_limit_increased, Amount}, _State, Data) ->
         false ->
             keep_state_and_data
     end;
-handle_event({call, From}, {cog,Cog,unblocked}, _State, Data=#data{active=A,blocked=B})->
-    A1=gb_sets:add_element(Cog,A),
-    B1=gb_sets:del_element(Cog,B),
-    {keep_state, Data#data{active=A1,blocked=B1}, {reply, From, ok}};
 handle_event({call, From}, {cog,Cog,RecordedTrace,die}, _State,
-            Data=#data{active=A,idle=I,blocked=B, cog_names=M, trace=T})->
-    A1=gb_sets:del_element(Cog,A),
-    I1=gb_sets:del_element(Cog,I),
-    B1=gb_sets:del_element(Cog,B),
+            Data=#data{cog_names=M, trace=T})->
     T1=maps:put(maps:get(Cog, M), RecordedTrace, T),
-    S1=Data#data{active=A1,idle=I1,blocked=B1,trace=T1},
-    gen_statem:reply(From, ok),
-    case can_clock_advance(Data, S1) of
-        true->
-            {next_state, advancing, advance_clock_or_terminate(S1)};
-        false->
-            {keep_state, S1}
-    end;
+    S1=Data#data{trace=T1},
+    {keep_state, S1,
+     {reply, From, ok}};
 handle_event({call, From}, {new_dc, DCRef, Cog}, _State, Data=#data{dcrefs=DCs, cog_names=M,trace=T}) ->
     {C, N} = maps:get(Cog, M, {[], 0}),
     Id = [-1 | C],
@@ -241,28 +183,25 @@ handle_event({call, From}, {dc_mte, DCRef, MTE}, _State, Data=#data{dc_mtes=MTEs
     {keep_state,
      Data#data{dc_mtes=update_mtes(MTEs, DCRef, MTE)},
      {reply, From, ok}};
-handle_event({call, From}, get_dcs, _State, Data=#data{dcrefs=DCs}) ->
+handle_event({call, From}, get_dcs, _State, _Data=#data{dcrefs=DCs}) ->
     {keep_state_and_data, {reply, From, DCs}};
-handle_event({call, From}, get_trace, _State, Data=#data{dcrefs=DCs, cog_names=Names, trace=T}) ->
+handle_event({call, From}, get_trace, _State, _Data=#data{dcrefs=DCs, trace=T}) ->
     Traces = lists:foldl(fun (DC, AccT) ->
                                  maps:merge(AccT, dc:get_traces(DC))
                          end, T, DCs),
     {keep_state_and_data, {reply, From, Traces}};
-handle_event({call, From}, get_alternative_schedule, _State,
-            Data=#data{active=A, blocked=B, idle=I, cog_names=Names, trace=T}) ->
-    {keep_state_and_data, {reply, From, gb_sets:to_list(A)}};
 handle_event({call, From}, all_registered_names, _State,
-            Data=#data{registered_objects=Objects}) ->
+             _Data=#data{registered_objects=Objects}) ->
     {keep_state_and_data, {reply, From, maps:keys(Objects)}};
 handle_event({call, From}, all_registered_objects, _State,
-            Data=#data{registered_objects=Objects}) ->
+             _Data=#data{registered_objects=Objects}) ->
     {keep_state_and_data, {reply, From, maps:values(Objects)}};
 handle_event({call, From}, {register_object, Object, Key}, _State,
-            Data=#data{registered_objects=Objects}) ->
+             Data=#data{registered_objects=Objects}) ->
     {keep_state, Data#data{registered_objects=maps:put(Key, Object, Objects)},
      {reply, From, ok}};
 handle_event({call, From}, {lookup_object, Name}, _State,
-            Data=#data{registered_objects=Objects}) ->
+             _Data=#data{registered_objects=Objects}) ->
     {keep_state_and_data, {reply, From, maps:get(Name, Objects, none)}};
 handle_event({call, From}, Request, _State, _Data)->
     io:format(standard_error, "Unknown call: ~w~n", [Request]),
@@ -279,16 +218,35 @@ handle_event(info, Event, _State, _Data)->
 %% Event functions
 running({call, From}, Event, Data) ->
     handle_event({call, From}, Event, running, Data);
-running(cast, {dc_died, DCRef}, Data=#data{dcrefs=DCs}) ->
-    {keep_state, Data#data{dcrefs=lists:delete(DCRef, DCs)}};
-running(cast, {dc_active, DCRef}, _Data) ->
-    %% straggler coming in after clock advance and we already detected
-    %% activity -> ignore it
-    keep_state_and_data;
-running(cast, {dc_idle, DCRef, MTE}, Data=#data{dc_mtes=MTEs}) ->
-    %% straggler coming in after clock advance and we already detected
-    %% activity -- but we can still remember its current MTE
-    {keep_state, Data#data{dc_mtes=update_mtes(MTEs, DCRef, MTE)}};
+running(cast, {dc_died, DCRef},
+        Data=#data{dcrefs=DCs, dc_mtes=MTEs, active_before_next_clock=ABNC,
+                   active=A, idle=I}) ->
+    NewData=Data#data{dcrefs=lists:delete(DCRef, DCs),
+                      dc_mtes=maps:remove(DCRef, MTEs),
+                      active_before_next_clock=gb_sets:del_element(DCRef, ABNC),
+                      active=gb_sets:del_element(DCRef, A),
+                      idle=gb_sets:del_element(DCRef, I)},
+    case can_clock_advance(NewData) of
+        true -> {next_state, advancing, advance_clock_or_terminate(NewData)};
+        false -> {keep_state, NewData}
+    end;
+running(cast, {dc_active, DCRef},
+        Data=#data{active_before_next_clock=ABNC, active=A, idle=I}) ->
+    NewData=Data#data{active_before_next_clock=gb_sets:del_element(DCRef, ABNC),
+                      active=gb_sets:add_element(DCRef, A),
+                      idle=gb_sets:del_element(DCRef, I)},
+    {keep_state, NewData};
+running(cast, {dc_idle, DCRef, MTE},
+        Data=#data{dc_mtes=MTEs, active_before_next_clock=ABNC,
+                   active=A, idle=I}) ->
+    NewData=Data#data{dc_mtes=update_mtes(MTEs, DCRef, MTE),
+                      active_before_next_clock=gb_sets:del_element(DCRef, ABNC),
+                      active=gb_sets:del_element(DCRef, A),
+                      idle=gb_sets:add_element(DCRef, I)},
+    case can_clock_advance(NewData) of
+        true -> {next_state, advancing, advance_clock_or_terminate(NewData)};
+        false -> {keep_state, NewData}
+    end;
 running(cast, Event, Data) ->
     handle_event(cast, Event, running, Data);
 running(info, Event, Data) ->
@@ -297,28 +255,53 @@ running(info, Event, Data) ->
 advancing({call, From}, Event, Data) ->
     handle_event({call, From}, Event, advancing, Data);
 advancing(cast, {dc_died, DCRef},
-          Data=#data{dcrefs=DCs, active_before_next_clock=ABNC}) ->
-    %% TODO check if ABNC empty; switch to running or start next clock cycle
+          Data=#data{dcrefs=DCs, dc_mtes=MTEs, active_before_next_clock=ABNC,
+                   active=A, idle=I}) ->
     ABNC1=gb_sets:del_element(DCRef, ABNC),
+    NewData=Data#data{dcrefs=lists:delete(DCRef, DCs),
+                      dc_mtes=maps:remove(DCRef, MTEs),
+                      active_before_next_clock=gb_sets:del_element(DCRef, ABNC),
+                      active=gb_sets:del_element(DCRef, A),
+                      idle=gb_sets:del_element(DCRef, I)},
     case gb_sets:is_empty(ABNC1) of
         true ->
-            {keep_state, advance_clock_or_terminate(Data#data{active_before_next_clock=gb_sets:empty()})};
-        false ->
-            {keep_state, Data#data{dcrefs=lists:delete(DCRef, DCs),
-                                   active_before_next_clock=ABNC1}}
-    end;
-advancing(cast, {dc_active, DCRef}, Data=#data{active_before_next_clock=ABNC}) ->
-    %% As soon as one dc is active, no need to wait longer.
-    {next_state, running, Data#data{active_before_next_clock=gb_sets:empty()}};
-advancing(cast, {dc_idle, DCRef, MTE},
-          Data=#data{active_before_next_clock=ABNC, dc_mtes=MTEs}) ->
-    ABNC1=gb_sets:del_element(DCRef, ABNC),
-    NewData=Data#data{active_before_next_clock=ABNC1,
-                      dc_mtes=update_mtes(MTEs, DCRef, MTE)},
-    case gb_sets:is_empty(ABNC1) of
-        true ->
+            %% Everyone woke up and we haven’t switched to state `running' ->
+            %% advance clock again, will probably lead to termination of
+            %% model.  Note this case can happen if the clock limit is lower
+            %% than the MTE; in that case, all DCs are still idle after the
+            %% clock advanced.
             {keep_state, advance_clock_or_terminate(NewData)};
         false ->
+            %% Still waiting for everyone to wake up
+            {keep_state, NewData}
+    end;
+advancing(cast, {dc_active, DCRef},
+          Data=#data{active_before_next_clock=ABNC, active=A, idle=I}) ->
+    NewData=Data#data{active_before_next_clock=gb_sets:del_element(DCRef, ABNC),
+                      active=gb_sets:add_element(DCRef, A),
+                      idle=gb_sets:del_element(DCRef, I)},
+    %% We can switch to `running’ as soon as the first dc registers active,
+    %% but will wait for a notification (dc_active / dc_idle) for all
+    %% remaining dcs before advancing the clock again.
+    {next_state, running, NewData};
+advancing(cast, {dc_idle, DCRef, MTE},
+          Data=#data{dc_mtes=MTEs, active_before_next_clock=ABNC,
+                   active=A, idle=I}) ->
+    ABNC1=gb_sets:del_element(DCRef, ABNC),
+    NewData=Data#data{dc_mtes=update_mtes(MTEs, DCRef, MTE),
+                      active_before_next_clock=ABNC1,
+                      active=gb_sets:del_element(DCRef, A),
+                      idle=gb_sets:add_element(DCRef, I)},
+    case gb_sets:is_empty(ABNC1) of
+        true ->
+            %% Everyone woke up and we haven’t switched to state `running' ->
+            %% advance clock again, will probably lead to termination of
+            %% model.  Note this case can happen if the clock limit is lower
+            %% than the MTE; in that case, all DCs are still idle after the
+            %% clock advanced.
+            {keep_state, advance_clock_or_terminate(NewData)};
+        false ->
+            %% Still waiting for everyone to wake up
             {keep_state, NewData}
     end;
 advancing(cast, Event, Data) ->
@@ -331,8 +314,7 @@ terminate(_Reason, _State, _Data) ->
     ok.
 
 
-code_change(_OldVsn, _OldState, Data, _Extra)->
-    %% not supported
+code_change(_OldVsn, _OldState, _Data, _Extra)->
     not_supported.
 
 update_mtes(MTEs, DCRef, MTE) ->
@@ -341,39 +323,23 @@ update_mtes(MTEs, DCRef, MTE) ->
         _ -> MTEs#{DCRef => MTE}
     end.
 
-can_clock_advance(_OldData=#data{active=A, blocked=B},
-                  _NewData=#data{active=A1, blocked=B1}) ->
-    %% This function detects a state change between old and new state.  The
-    %% clock can advance under the following circumstances:
-    %%
-    %% - All tasks waken up in the previous advance have acknowledged receipt
-    %%   of that signal, AND either of:
-    %%   - At least one cog used to run but is idle/blocked now; OR
-    %%   - All cogs are idle or blocked AND the last task woken up in the
-    %%     previous advance has just now acknowledged receipt of the signal.
-    %%
-    %% The second case can happen if a cog runs two tasks: one awaiting on a
-    %% duration, the other one blocking on a second (longer) duration.  In
-    %% that case, the suspended task signals readiness but the cog remains
-    %% blocked.
-    %%
-    %% TODO: check second case -- we do not track waiting tasks here anymore,
-    %% only cog states.
+can_clock_advance(_Data=#data{active=A, active_before_next_clock=ABNC}) ->
+    Result=gb_sets:is_empty(A) andalso gb_sets:is_empty(ABNC),
+    Result.
 
-    Old_idle = gb_sets:is_empty(gb_sets:subtract(A, B)),
-    All_idle = gb_sets:is_empty(gb_sets:subtract(A1, B1)),
-    not Old_idle and All_idle.
-
-advance_clock_or_terminate(Data=#data{main=M,active=A,dcrefs=DCs,dc_mtes=MTEs,keepalive_after_clock_limit=Keepalive}) ->
+advance_clock_or_terminate(Data=#data{main=M, dcrefs=DCs, dc_mtes=MTEs,
+                                      keepalive_after_clock_limit=Keepalive}) ->
     case maps:size(MTEs) > 0 of
         false ->
             %% We are done: everyone is quiescent and no one has a deadline
+            %% (remember that when a DC sends an MTE of `infinity' its entry
+            %% is removed from the map)
             case Keepalive of
                 false ->
-                    M ! case gb_sets:is_empty(Data#data.blocked) of
-                            true -> {wait_done, success};
-                            false -> {wait_done, deadlock}
-                        end;
+                    %% TODO check for deadlock here -- need to ask DCs if any
+                    %% cogs are blocked --send {wait_done, deadlock} if yes.
+                    %% TODO Also reimplement get_alternative_schedule/1
+                    M ! {wait_done, success};
                 true ->
                     %% We are probably serving via http; don't advance time
                     ok
@@ -398,7 +364,6 @@ advance_clock_or_terminate(Data=#data{main=M,active=A,dcrefs=DCs,dc_mtes=MTEs,ke
                     case Keepalive of
                         false ->
                             io:format(standard_error, "Simulation time limit reached; terminating~n", []),
-                            Cogs=gb_sets:union([Data#data.active, Data#data.blocked, Data#data.idle]),
                             M ! {wait_done, success},
                             Data;
                         true ->

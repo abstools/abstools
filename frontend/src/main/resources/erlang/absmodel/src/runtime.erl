@@ -177,7 +177,7 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     end,
     Ret = case Status of
               success -> RetVal;
-              _ -> {exit_with, Status, cog_monitor:get_alternative_schedule()}
+              _ -> {exit_with, Status}
           end,
     gc:stop(),
     coverage:stop(),
@@ -207,7 +207,7 @@ run_dpor_slave(Module, Clocklimit, Trace) ->
     coverage:stop(),
     NewTraces = case Status of
                     success -> dpor:new_traces(NewTrace);
-                    deadlock -> cog_monitor:get_alternative_schedule()
+                    deadlock -> []
                 end,
     cog_monitor:stop(),
     {NewTrace, NewTraces}.
