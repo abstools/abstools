@@ -8,7 +8,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
 
 /**
- * This class contains custom validation rules. 
+ * This class contains custom validation rules.
  *
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
@@ -92,4 +92,37 @@ public class AbsValidator extends AbstractAbsValidator {
         }
     }
 
+    // ========== end of Core ABS ==========
+
+    // Deltas
+    @Check public void checkAllowedAddedDeclaration(DeltaModuleModifier mod) {
+        if (mod.getAdded_decl() != null) {
+            Declaration d = mod.getAdded_decl();
+            if (!(d instanceof ClassDecl
+                  || d instanceof InterfaceDecl
+                  || d instanceof FunctionDecl
+                  || d instanceof DataTypeDecl
+                  || d instanceof TypeSynonymDecl
+                  )) {
+                error("Adding of " + d.getClass().getName() + " declarations is unsupported",
+                      AbsPackage.eINSTANCE.getDeltaModuleModifier_Added_decl());
+            }
+        }
+    }
+
+    @Check public void checkNoFieldInitializerForDeltaCondition(DeltaCondition d) {
+        if (d.getDeltaFieldCondition() != null
+            && d.getDeltaFieldCondition().isHasInit()) {
+            error("Cannot use a field initializer here",
+                  AbsPackage.eINSTANCE.getDeltaCondition_DeltaFieldCondition());
+        }
+    }
+
+    @Check public void checkNoFieldInitializerForRemovedField(ClassModifier cm) {
+        if (cm.getRemoved_field() != null
+            && cm.getRemoved_field().isHasInit()) {
+            error("Cannot use a field initializer here",
+                  AbsPackage.eINSTANCE.getClassModifier_Removed_field());
+        }
+    }
 }

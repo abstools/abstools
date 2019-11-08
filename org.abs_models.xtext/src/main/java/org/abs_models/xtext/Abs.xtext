@@ -5,7 +5,7 @@ import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 generate abs "http://www.abs_models.org/xtext/Abs"
 
 CompilationUnit
-    : {CompilationUnit} (modules+=ModuleDecl)*
+    : {CompilationUnit} (modules+=ModuleDecl)* (deltas+=DeltaDecl)*
     ;
 
 ModuleDecl
@@ -30,7 +30,6 @@ ModuleImport
             ))
         ';'
     ;
-
 
 // Annotations
 
@@ -80,13 +79,12 @@ FunctionDecl
 InterfaceDecl
     : annotations=Annotations 'interface' name=TYPE_IDENTIFIER
         ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
-        '{' (methods+=MethodSignature)* '}'
+        '{' (methods+=MethodSignature ';' )* '}'
     ;
 
 MethodSignature
     : annotations=Annotations resulttype=TypeUseNoAnnotations name=IDENTIFIER
         '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')'
-        ';'
     ;
 
 ClassDecl
@@ -94,7 +92,7 @@ ClassDecl
         ( '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')' )?
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
-        (fields+=FieldDecl)*
+        (fields+=FieldDecl ';')*
         ( '{' initblockstmts+=Stmt* '}' )?
         ( 'recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
         // (traits+=TraitUsage)*
@@ -104,7 +102,7 @@ ClassDecl
 
 FieldDecl
     : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
-        (hasInit?='=' init=Exp)? ';'
+        (hasInit?='=' init=Exp)?
     ;
 
 MethodDecl
@@ -425,6 +423,68 @@ AnyIdentifier returns ecore::EString
     : QualifiedIdentifier
     | QualifiedTypeIdentifier
     ;
+
+// ========== end of Core ABS ==========
+
+// Deltas
+
+DeltaDecl
+    : 'delta' name=TYPE_IDENTIFIER
+        ( '(' ( args+=DeltaParamDecl (',' args+=DeltaParamDecl)* )? ')' )?
+        ';'
+        // TODO: multiple in the antlr grammar but the AST only supports one
+        // instance of this
+        ('uses' usedModulenames+=QualifiedTypeIdentifier ';')*
+        (modifiers+=DeltaModuleModifier)*
+    ;
+
+DeltaParamDecl
+    : normalParam=ParamDecl
+    | ( classModifier=QualifiedTypeIdentifier condition=DeltaCondition )
+    ;
+
+DeltaCondition
+    : 'hasField' deltaFieldCondition=FieldDecl
+    | 'hasMethod' deltaMethodCondition=MethodSignature
+    | 'hasInterface' deltaInterfaceCondition=QualifiedTypeIdentifier
+    ;
+
+DeltaModuleModifier
+    : 'adds'
+        ( added_decl=Declaration
+        | added_import=ModuleImport
+        | added_export=ModuleExport)
+    | 'removes'
+        ( 'class' removed_class_name=QualifiedTypeIdentifier
+        | 'interface' removed_interface_name=QualifiedTypeIdentifier)
+    | 'modifies'
+        ( 'class' modified_class_name=QualifiedTypeIdentifier
+            ('adds' added_interfaces+=QualifiedTypeIdentifier
+                (',' added_interfaces+=QualifiedTypeIdentifier)*)?
+            ('removes' removed_interfaces+=QualifiedTypeIdentifier
+                (',' removed_interfaces+=QualifiedTypeIdentifier)*)?
+            '{' (class_modifiers+=ClassModifier)* '}'
+        | 'interface' modified_interface_name=QualifiedTypeIdentifier
+            '{' (interface_modifiers+=InterfaceModifier)* '}'
+        )
+    ;
+
+ClassModifier
+    : 'adds'
+        ( added_field=FieldDecl ';'
+        | added_method=MethodDecl)
+    | 'removes'
+        ( removed_field=FieldDecl ';'
+        | removed_method=MethodSignature ';' )
+    | 'modifies' modified_method=MethodDecl
+    ;
+
+InterfaceModifier
+    : 'adds' addedMethod=MethodSignature ';'
+    | 'removes' removedMethod=MethodSignature ';'
+    ;
+
+
 
 // Local Variables:
 // mode: antlr

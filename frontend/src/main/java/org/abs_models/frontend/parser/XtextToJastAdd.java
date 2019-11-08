@@ -112,6 +112,9 @@ public class XtextToJastAdd {
         for (org.abs_models.xtext.abs.ModuleDecl module : xtext_unit.getModules()) {
             result.addModuleDeclNoTransform(fromXtext(module));
         }
+        for (org.abs_models.xtext.abs.DeltaDecl delta : xtext_unit.getDeltas()) {
+            result.addDeltaDeclNoTransform(fromXtext(delta));
+        }
         return nodeWithLocation(result, xtext_unit);
     }
 
@@ -119,59 +122,10 @@ public class XtextToJastAdd {
         ModuleDecl result = new ModuleDecl();
         result.setName(xtext_module.getName());
         for (org.abs_models.xtext.abs.ModuleExport export : xtext_module.getExports()) {
-            Export e;
-            if (export.isStar()) {
-                // "export *;"
-                // "export * from OtherModule;"
-                StarExport se = new StarExport();
-                e = se;
-                if (export.getModulename() != null)
-                    se.setModuleName(nodeWithLocation(new Name(export.getModulename()), export, AbsPackage.eINSTANCE.getModuleExport_Modulename()));
-            } else if (export.getModulename() != null) {
-                // "export a, b from OtherModule;"
-                FromExport fe = new FromExport();
-                e = fe;
-                fe.setModuleName(export.getModulename());
-                for (int i = 0; i < export.getIdentifiers().size(); i++) {
-                    String id = export.getIdentifiers().get(i);
-                    fe.addNameNoTransform(nodeWithLocation(new Name(id), export, AbsPackage.eINSTANCE.getModuleExport_Identifiers(), i));
-                }
-            } else {
-                // "export a, b;"
-                NamedExport ne = new NamedExport();
-                e = ne;
-                for (int i = 0; i < export.getIdentifiers().size(); i++) {
-                    String id = export.getIdentifiers().get(i);
-                    ne.addNameNoTransform(nodeWithLocation(new Name(id), export, AbsPackage.eINSTANCE.getModuleExport_Identifiers(), i));
-                }
-            }
-            result.addExportNoTransform(nodeWithLocation(e, export));
+            result.addExportNoTransform(fromXtext(export));
         }
         for (org.abs_models.xtext.abs.ModuleImport imp : xtext_module.getImports()) {
-            Import ji;
-            if (imp.isStar()) {
-                // "import * from OtherModule;"
-                StarImport si = new StarImport(imp.getModulename());
-                ji = si;
-            } else if (imp.getModulename() != null) {
-                // "import a, b from OtherModule;"
-                FromImport fi = new FromImport();
-                ji = fi;
-                fi.setModuleName(imp.getModulename());
-                for (int i = 0; i < imp.getIdentifiers().size(); i++) {
-                    String id = imp.getIdentifiers().get(i);
-                    fi.addNameNoTransform(nodeWithLocation(new Name(id), imp, AbsPackage.eINSTANCE.getModuleImport_Identifiers(), i));
-                }
-            } else {
-                // "import OtherModule.a, OtherModule.b;"
-                NamedImport ni = new NamedImport();
-                ji = ni;
-                for (int i = 0; i < imp.getIdentifiers().size(); i++) {
-                    String id = imp.getIdentifiers().get(i);
-                    ni.addNameNoTransform(nodeWithLocation(new Name(id), imp, AbsPackage.eINSTANCE.getModuleImport_Identifiers(), i));
-                }
-            }
-            result.addImportNoTransform(nodeWithLocation(ji, imp));
+            result.addImportNoTransform(fromXtext(imp));
         }
         for (org.abs_models.xtext.abs.Declaration decl : xtext_module.getDeclarations()) {
             result.addDeclNoTransform(fromXtext(decl));
@@ -188,6 +142,63 @@ public class XtextToJastAdd {
             result.setBlock(mainBlock);
         }
         return nodeWithLocation(result, xtext_module);
+    }
+
+    private static Export fromXtext(org.abs_models.xtext.abs.ModuleExport xtext_export) {
+        Export result;
+        if (xtext_export.isStar()) {
+            // "export *;"
+            // "export * from OtherModule;"
+            StarExport se = new StarExport();
+            result = se;
+            if (xtext_export.getModulename() != null)
+                se.setModuleName(nodeWithLocation(new Name(xtext_export.getModulename()), xtext_export, AbsPackage.eINSTANCE.getModuleExport_Modulename()));
+        } else if (xtext_export.getModulename() != null) {
+            // "export a, b from OtherModule;"
+            FromExport fe = new FromExport();
+            result = fe;
+            fe.setModuleName(xtext_export.getModulename());
+            for (int i = 0; i < xtext_export.getIdentifiers().size(); i++) {
+                String id = xtext_export.getIdentifiers().get(i);
+                fe.addNameNoTransform(nodeWithLocation(new Name(id), xtext_export, AbsPackage.eINSTANCE.getModuleExport_Identifiers(), i));
+            }
+        } else {
+            // "export a, b;"
+            NamedExport ne = new NamedExport();
+            result = ne;
+            for (int i = 0; i < xtext_export.getIdentifiers().size(); i++) {
+                String id = xtext_export.getIdentifiers().get(i);
+                ne.addNameNoTransform(nodeWithLocation(new Name(id), xtext_export, AbsPackage.eINSTANCE.getModuleExport_Identifiers(), i));
+            }
+        }
+        return nodeWithLocation(result, xtext_export);
+    }
+
+    private static Import fromXtext(org.abs_models.xtext.abs.ModuleImport xtext_import) {
+        Import result;
+        if (xtext_import.isStar()) {
+            // "import * from OtherModule;"
+            StarImport si = new StarImport(xtext_import.getModulename());
+            result = si;
+        } else if (xtext_import.getModulename() != null) {
+            // "import a, b from OtherModule;"
+            FromImport fi = new FromImport();
+            result = fi;
+            fi.setModuleName(xtext_import.getModulename());
+            for (int i = 0; i < xtext_import.getIdentifiers().size(); i++) {
+                String id = xtext_import.getIdentifiers().get(i);
+                fi.addNameNoTransform(nodeWithLocation(new Name(id), xtext_import, AbsPackage.eINSTANCE.getModuleImport_Identifiers(), i));
+            }
+        } else {
+            // "import OtherModule.a, OtherModule.b;"
+            NamedImport ni = new NamedImport();
+            result = ni;
+            for (int i = 0; i < xtext_import.getIdentifiers().size(); i++) {
+                String id = xtext_import.getIdentifiers().get(i);
+                ni.addNameNoTransform(nodeWithLocation(new Name(id), xtext_import, AbsPackage.eINSTANCE.getModuleImport_Identifiers(), i));
+            }
+        }
+        return nodeWithLocation(result, xtext_import);
     }
 
     private static List<Annotation> annotationsfromXtext(org.abs_models.xtext.abs.Annotations annotations) {
@@ -1046,6 +1057,105 @@ public class XtextToJastAdd {
         }
         result.setName(type.getName());
         return nodeWithLocation(result, type);
+    }
+
+    // ========== end of Core ABS ==========
+
+    private static DeltaDecl fromXtext(org.abs_models.xtext.abs.DeltaDecl xtext_delta) {
+        DeltaDecl result = new DeltaDecl();
+        result.setName(xtext_delta.getName());
+        for (org.abs_models.xtext.abs.DeltaParamDecl arg : xtext_delta.getArgs()) {
+            if (arg.getNormalParam() != null) {
+                result.addParam(nodeWithLocation(new DeltaFieldParam(fromXtext(arg.getNormalParam())), arg));
+            } else {
+                result.addParam(nodeWithLocation(new DeltaClassParam(arg.getClassModifier(), fromXtext(arg.getCondition())), arg));
+            }
+        }
+        for (int i = 0; i < xtext_delta.getUsedModulenames().size(); i++) {
+            String iname = xtext_delta.getUsedModulenames().get(i);
+            result.addDeltaAccessNoTransform(nodeWithLocation(new DeltaAccess(iname), xtext_delta, AbsPackage.eINSTANCE.getDeltaDecl_UsedModulenames(), i));
+        }
+        for (org.abs_models.xtext.abs.DeltaModuleModifier m : xtext_delta.getModifiers()) {
+            result.addModuleModifier(fromXtext(m));
+        }
+        return nodeWithLocation(result, xtext_delta);
+    }
+
+    private static HasCondition fromXtext(org.abs_models.xtext.abs.DeltaCondition xtext_cond) {
+        HasCondition result = null;
+        if (xtext_cond.getDeltaFieldCondition() != null) {
+            result = new HasField(fromXtext(xtext_cond.getDeltaFieldCondition()));
+        } else if (xtext_cond.getDeltaMethodCondition() != null) {
+            result = new HasMethod(fromXtext(xtext_cond.getDeltaMethodCondition()));
+        } else {
+            result = new HasInterface(new InterfaceTypeUse(xtext_cond.getDeltaInterfaceCondition(), new List<>()));
+        }
+        return nodeWithLocation(result, xtext_cond);
+    }
+
+    private static ModuleModifier fromXtext(org.abs_models.xtext.abs.DeltaModuleModifier xtext_mod) {
+        ModuleModifier result = null;
+        if (xtext_mod.getAdded_decl() != null) {
+            Decl d = fromXtext(xtext_mod.getAdded_decl());
+            if (d instanceof ClassDecl) {
+                result = new AddClassModifier((ClassDecl) d);
+            } else if (d instanceof InterfaceDecl) {
+                result = new AddInterfaceModifier((InterfaceDecl) d);
+            } else if (d instanceof TypeSynDecl) {
+                result = new AddTypeSynModifier((TypeSynDecl) d);
+            } else if (d instanceof DataTypeDecl) {
+                result = new AddDataTypeModifier((DataTypeDecl) d);
+            } else if (d instanceof FunctionDecl) {
+                result = new AddFunctionModifier((FunctionDecl) d);
+            }
+        } else if (xtext_mod.getAdded_import() != null) {
+            result = new AddImportModifier(fromXtext(xtext_mod.getAdded_import()));
+        } else if (xtext_mod.getAdded_export() != null) {
+            result = new AddExportModifier(fromXtext(xtext_mod.getAdded_export()));
+        } else if (xtext_mod.getRemoved_class_name() != null) {
+            result = new RemoveClassModifier(xtext_mod.getRemoved_class_name());
+        } else if (xtext_mod.getRemoved_interface_name() != null) {
+            result = new RemoveInterfaceModifier(xtext_mod.getRemoved_interface_name());
+        } else if (xtext_mod.getModified_class_name() != null) {
+            ModifyClassModifier mresult = new ModifyClassModifier();
+            mresult.setName(xtext_mod.getModified_class_name());
+            for (int i = 0; i < xtext_mod.getAdded_interfaces().size(); i++) {
+                String iname = xtext_mod.getAdded_interfaces().get(i);
+                mresult.addAddedInterfaceNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_mod, AbsPackage.eINSTANCE.getDeltaModuleModifier_Added_interfaces(), i));
+            }
+            for (int i = 0; i < xtext_mod.getRemoved_interfaces().size(); i++) {
+                String iname = xtext_mod.getRemoved_interfaces().get(i);
+                mresult.addRemovedInterfaceNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_mod, AbsPackage.eINSTANCE.getDeltaModuleModifier_Removed_interfaces(), i));
+            }
+            for (org.abs_models.xtext.abs.ClassModifier mod : xtext_mod.getClass_modifiers()) {
+                if (mod.getAdded_field() != null) {
+                    mresult.addModifierNoTransform(new AddFieldModifier(fromXtext(mod.getAdded_field())));
+                } else if (mod.getAdded_method() != null) {
+                    mresult.addModifierNoTransform(new AddMethodModifier(fromXtext(mod.getAdded_method())));
+                } else if (mod.getRemoved_field() != null) {
+                    mresult.addModifierNoTransform(new RemoveFieldModifier(fromXtext(mod.getRemoved_field())));
+                } else if (mod.getRemoved_method() != null) {
+                    List<MethodSig> methodlist = new List<MethodSig>();
+                    methodlist.add(fromXtext(mod.getRemoved_method()));
+                    mresult.addModifierNoTransform(new RemoveMethodModifier(methodlist));
+                } else if (mod.getModified_method() != null) {
+                    mresult.addModifierNoTransform(new ModifyMethodModifier(fromXtext(mod.getModified_method())));
+                }
+            }
+            result = mresult;
+        } else if (xtext_mod.getModified_interface_name() != null) {
+            ModifyInterfaceModifier mresult = new ModifyInterfaceModifier();
+            mresult.setName(xtext_mod.getModified_interface_name());
+            for (org.abs_models.xtext.abs.InterfaceModifier mod : xtext_mod.getInterface_modifiers()) {
+                if (mod.getAddedMethod() != null) {
+                    mresult.addMethodSigModifier(new AddMethodSigModifier(fromXtext(mod.getAddedMethod())));
+                } else {
+                    mresult.addMethodSigModifier(new RemoveMethodSigModifier(fromXtext(mod.getRemovedMethod())));
+                }
+            }
+            result = mresult;
+        }
+        return nodeWithLocation(result, xtext_mod);
     }
 
 }
