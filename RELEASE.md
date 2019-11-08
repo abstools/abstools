@@ -1,5 +1,8 @@
 # Release Checklist
 
+If possible, perform the release using Java 8, since jars generated with later
+versions (e.g., Java 11) cannot be used with earlier versions.
+
 ## Pre-release checks
 
 - Run unit tests, check for fresh failing tests (compared to last

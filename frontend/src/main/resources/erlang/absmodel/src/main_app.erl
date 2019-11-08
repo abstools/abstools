@@ -15,6 +15,7 @@ start(_StartType, _StartArgs) ->
                                         {"/:request/[...]", modelapi_v2, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
     {ok, Module} = application:get_env(absmodel, module),
+    {ok, Verbose} = application:get_env(absmodel, verbose),
     {ok, Debug} = application:get_env(absmodel, debug),
     {ok, GCStatistics} = application:get_env(absmodel, gcstatistics),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
@@ -23,11 +24,16 @@ start(_StartType, _StartArgs) ->
     %% https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy.start_clear/
     case cowboy:start_clear(http, [{port, Port}, {ip, loopback}],
                             #{env => #{dispatch => Dispatch}}) of
-        {ok, _} -> io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [ranch:get_port(http)]);
+        {ok, _} ->
+            case Verbose of
+                true ->
+                    io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [ranch:get_port(http)]);
+                _ -> ok
+            end;
         _ -> io:format(standard_error, "Failed to start model API on port ~w (is another model already running?)~nAborting~n", [Port]),
              halt(1)
     end,
-    runtime:start_link([Module, Debug, GCStatistics, Clocklimit, true, Trace]).
+    runtime:start_link([Module, Verbose, Debug, GCStatistics, Clocklimit, true, Trace]).
 
 stop(_State) ->
     ok.

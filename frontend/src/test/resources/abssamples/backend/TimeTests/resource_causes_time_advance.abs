@@ -23,4 +23,5 @@ class C implements I {
     testresult = testresult && now() == Time(2);
     await i!n(1);               // consume 1 of 5 in t=3
     testresult = testresult && now() == Time(3);
+    println(`testresult: $testresult$ -- time = $now()$; expected Time(3)`);
 }

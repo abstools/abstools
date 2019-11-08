@@ -211,7 +211,7 @@ public class ErlApp {
         hcs.println("-undef(ABSMAINMODULE).");
         hcs.println("-define(ABSMAINMODULE," + erlModulename + ").");
         hcs.println("-undef(ABSCOMPILERVERSION).");
-        hcs.println("-define(ABSCOMPILERVERSION,\"" + Main.getVersion() + "." + Main.getGitVersion() + "\").");
+        hcs.println("-define(ABSCOMPILERVERSION,\"" + Main.getGitVersion() + "\").");
         hcs.close();
     }
 

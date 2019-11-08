@@ -59,32 +59,32 @@ gcstats(Log, Statistics) ->
     end.
 
 
-register_future(Fut) ->
+register_future(FutRef) ->
     %% Fut is the plain pid of the Future process
-    gen_statem:cast({global, gc}, {register_future, Fut, self()}).
+    gen_statem:cast({global, gc}, {register_future, FutRef, self()}).
 
-unroot_future(Fut) ->
+unroot_future(FutRef) ->
     %% Fut is the plain pid of the Future process
-    gen_statem:cast({global, gc}, {unroot, Fut}).
+    gen_statem:cast({global, gc}, {unroot_future, FutRef}).
 
 register_cog(CogRef) ->
     gen_statem:call({global, gc}, {register_cog, CogRef}).
 
 unregister_cog(#cog{ref=CogRef}) ->
-    gen_statem:cast({global, gc}, {die, CogRef});
+    gen_statem:cast({global, gc}, {unregister_cog, CogRef});
 unregister_cog(CogRef) ->
-    gen_statem:cast({global, gc}, {die, CogRef}).
+    gen_statem:cast({global, gc}, {unregister_cog, CogRef}).
 
 cog_stopped(#cog{ref=CogRef}) ->
-    gen_statem:cast({global, gc}, {stopped, CogRef});
+    gen_statem:cast({global, gc}, {cog_stopped, CogRef});
 cog_stopped(CogRef) ->
-    gen_statem:cast({global, gc}, {stopped, CogRef}).
+    gen_statem:cast({global, gc}, {cog_stopped, CogRef}).
 
 register_object(Obj) ->
-    gen_statem:cast({global, gc}, Obj).
+    gen_statem:cast({global, gc}, {register_object, Obj}).
 
 unregister_object(O=#object{oid=_Oid}) ->
-    gen_statem:cast({global, gc}, {stopped_object, O}).
+    gen_statem:cast({global, gc}, {unregister_object, O}).
 
 %% gen_statem callback functions
 
@@ -117,17 +117,17 @@ idle_state_next(Data=#data{log=Log, cogs=Cogs}) ->
 idle(cast, {register_future, Ref, Sender}, Data=#data{root_futures=RootFutures}) ->
     {NextState, NewData} = idle_state_next(Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
     {next_state, NextState, NewData};
-idle(cast, O=#object{oid=_Oid}, Data=#data{objects=Objects}) ->
+idle(cast, {register_object, O=#object{oid=_Oid}}, Data=#data{objects=Objects}) ->
     {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:insert({object, O}, Objects)}),
     {next_state, NextState, NewData};
-idle(cast, {stopped_object, O}, Data=#data{objects=Objects}) ->
+idle(cast, {unregister_object, O}, Data=#data{objects=Objects}) ->
     {NextState, NewData} = idle_state_next(Data#data{objects=gb_sets:del_element({object, O}, Objects)}),
     {next_state, NextState, NewData};
-idle(cast, {unroot, Sender}, Data=#data{root_futures=RootFutures, futures=Futures}) ->
-    {NextState, NewData} = idle_state_next(Data#data{futures=gb_sets:insert({future, Sender}, Futures),
-                                                   root_futures=gb_sets:delete({future, Sender}, RootFutures)}),
+idle(cast, {unroot_future, Ref}, Data=#data{root_futures=RootFutures, futures=Futures}) ->
+    {NextState, NewData} = idle_state_next(Data#data{futures=gb_sets:insert({future, Ref}, Futures),
+                                                   root_futures=gb_sets:delete({future, Ref}, RootFutures)}),
     {next_state, NextState, NewData};
-idle(cast, {die, CogRef}, Data=#data{cogs=Cogs}) ->
+idle(cast, {unregister_cog, CogRef}, Data=#data{cogs=Cogs}) ->
     {NextState, NewData} = idle_state_next(Data#data{cogs=gb_sets:delete({cog, CogRef}, Cogs)}),
     {next_state, NextState, NewData};
 idle({call, From}, {register_cog, CogRef}, Data=#data{cogs=Cogs}) ->
@@ -160,19 +160,19 @@ collecting_state_next(Data=#data{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, ro
 
 collecting(cast, {register_future, Ref, _Sender}, Data=#data{root_futures=RootFutures}) ->
     {keep_state, Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}};
-collecting(cast, O=#object{oid=_Oid}, Data=#data{objects=Objects}) ->
+collecting(cast, {register_object, O=#object{oid=_Oid}}, Data=#data{objects=Objects}) ->
     {keep_state, Data#data{objects=gb_sets:insert({object, O}, Objects)}};
-collecting(cast, {stopped_object, O}, Data=#data{objects=Objects}) ->
+collecting(cast, {unregister_object, O}, Data=#data{objects=Objects}) ->
     {keep_state, Data#data{objects=gb_sets:del_element({object, O}, Objects)}};
-collecting(cast, {unroot, Sender}, Data=#data{root_futures=RootFutures, futures=Futures}) ->
+collecting(cast, {unroot_future, Sender}, Data=#data{root_futures=RootFutures, futures=Futures}) ->
     {keep_state,
      Data#data{futures=gb_sets:insert({future, Sender}, Futures),
                  root_futures=gb_sets:delete({future, Sender}, RootFutures)}};
-collecting(cast, {die, CogRef}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
+collecting(cast, {unregister_cog, CogRef}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->
     {NextState, NewData} = collecting_state_next(Data#data{cogs=gb_sets:delete({cog, CogRef}, Cogs),
                                                          cogs_waiting_to_stop=gb_sets:delete_any({cog, CogRef}, RunningCogs)}),
     {next_state, NextState, NewData};
-collecting(cast, {stopped, CogRef}, Data=#data{cogs_waiting_to_stop=RunningCogs}) ->
+collecting(cast, {cog_stopped, CogRef}, Data=#data{cogs_waiting_to_stop=RunningCogs}) ->
     {NextState, NewData} = collecting_state_next(Data#data{cogs_waiting_to_stop=gb_sets:delete({cog, CogRef}, RunningCogs)}),
     {next_state, NextState, NewData};
 collecting({call, From}, {register_cog, CogRef}, Data=#data{cogs=Cogs, cogs_waiting_to_stop=RunningCogs}) ->

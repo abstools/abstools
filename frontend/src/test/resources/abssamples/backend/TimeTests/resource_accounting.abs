@@ -15,4 +15,5 @@ import * from ABS.DC;
     await duration(3, 3);
     Rat cost = await cp!getAccumulatedCost();
     testresult = cost == 5;
+    println(`testresult: $testresult$ with cost=$cost$`);
 }

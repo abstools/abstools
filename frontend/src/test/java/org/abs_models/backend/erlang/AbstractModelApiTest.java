@@ -61,7 +61,7 @@ public abstract class AbstractModelApiTest extends ABSTest {
         File runFile = new File(tmpdir, "run");
 
         // initialize with port number = 0 to get a random port
-        ProcessBuilder pb = new ProcessBuilder(runFile.getAbsolutePath(), mainModule, "-p", "0");
+        ProcessBuilder pb = new ProcessBuilder(runFile.getAbsolutePath(), mainModule, "-p", "0", "-v");
         pb.directory(tmpdir);
         pb.redirectErrorStream(true);
         serverProcess = pb.start();

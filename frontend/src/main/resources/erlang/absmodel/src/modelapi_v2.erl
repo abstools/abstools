@@ -327,31 +327,67 @@ get_statistics_json() ->
                                     {<<"values">>, create_history_list(CreationTime, History, Totalhistory)}]
                            end, DC_infos),
     io_lib:format("Deployment components:~n~w~n",
-                  [jsx:encode(DC_info_json, [{space, 1}, {indent, 2}])]),
-    jsx:encode(DC_info_json, [{space, 1}, {indent, 2}]).
+                  [jsx:encode(DC_info_json)]),
+    jsx:encode(DC_info_json).
 
+
+atomize(L) when is_binary(L) ->
+    list_to_atom(binary_to_list(L));
+atomize(L) ->
+    L.
+
+map_to_event(#{type := Type,
+               caller_id := CallerId,
+               local_id := LocalId,
+               name := Name,
+               reads := Reads,
+               writes := Writes,
+               time := Time}) ->
+    #event{type=atomize(Type),
+           caller_id=atomize(CallerId),
+           local_id=atomize(LocalId),
+           name=atomize(Name),
+           reads=lists:map(fun atomize/1, Reads),
+           writes=lists:map(fun atomize/1, Writes),
+           time=Time};
+map_to_event(#{type := Type,
+               caller_id := CallerId,
+               local_id := LocalId,
+               amount := Amount,
+               time := Time}) ->
+    #dc_event{type=atomize(Type),
+              caller_id=atomize(CallerId),
+              local_id=atomize(LocalId),
+              amount=Amount,
+              time=Time}.
+
+event_to_map(#event{type=Type,
+                    caller_id=CallerId,
+                    local_id=LocalId,
+                    name=Name,
+                    reads=Reads,
+                    writes=Writes,
+                    time=Time}) ->
+    #{type => Type,
+      caller_id => CallerId,
+      local_id => LocalId,
+      name => Name,
+      reads => Reads,
+      writes => Writes,
+      time => Time};
+event_to_map(#dc_event{type=Type,
+                       caller_id=CallerId,
+                       local_id=LocalId,
+                       amount=Amount,
+                       time=Time}) ->
+    #{type => Type,
+      caller_id => CallerId,
+      local_id => LocalId,
+      amount => Amount,
+      time => Time}.
 
 construct_local_trace(LocalTrace) ->
-    Atomize = fun (L) -> case is_binary(L) of
-                             true -> list_to_atom(binary_to_list(L));
-                             false -> L
-                         end
-              end,
-    lists:map(fun (#{type := Type,
-                     caller_id := CallerId,
-                     local_id := LocalId,
-                     name := Name,
-                     reads := Reads,
-                     writes := Writes,
-                     time := Time}) ->
-                      #event{type=Atomize(Type),
-                             caller_id=Atomize(CallerId),
-                             local_id=Atomize(LocalId),
-                             name=Atomize(Name),
-                             reads=lists:map(Atomize, Reads),
-                             writes=lists:map(Atomize, Writes),
-                             time=Time}
-              end, LocalTrace).
+    lists:map(fun map_to_event/1, LocalTrace).
 
 json_to_trace(JSON) ->
     RawTrace = jsx:decode(JSON, [{labels, atom}, return_maps]),
@@ -363,20 +399,13 @@ json_to_scheduling_trace(JSON) ->
     Trace = json_to_trace(JSON),
     maps:map(fun(Cog, LocalTrace) ->
                      lists:filter(fun (E=#event{type=schedule}) -> true;
+                                      (E=#dc_event{}) -> true;
                                       (E) -> false
                                   end, LocalTrace)
              end, Trace).
 
 local_trace_to_json_friendly(LocalTrace) ->
-    lists:map(fun (Event) ->
-                      #{type => Event#event.type,
-                        caller_id => Event#event.caller_id,
-                        local_id => Event#event.local_id,
-                        name => Event#event.name,
-                        reads => Event#event.reads,
-                        writes => Event#event.writes,
-                        time => Event#event.time}
-              end, LocalTrace).
+    lists:map(fun event_to_map/1, LocalTrace).
 
 trace_to_json_friendly(Trace) ->
     T = maps:fold(fun (CogId, LocalTrace, Acc) ->
@@ -388,12 +417,12 @@ trace_to_json_friendly(Trace) ->
 
 get_trace_json() ->
     Trace = cog_monitor:get_trace(),
-    jsx:encode(trace_to_json_friendly(Trace), [{space, 1}, {indent, 2}]).
+    jsx:encode(trace_to_json_friendly(Trace)).
 
 get_db_traces_json() ->
     Traces = dpor:get_traces_from_db(),
     JSONTraces = lists:map(fun trace_to_json_friendly/1, Traces),
-    jsx:encode(JSONTraces, [{space, 1}, {indent, 2}]).
+    jsx:encode(JSONTraces).
 
 
 handle_static_dcs([]) ->

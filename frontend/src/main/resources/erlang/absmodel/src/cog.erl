@@ -51,7 +51,8 @@
          runnable_tasks=gb_sets:empty(),
          %% Tasks maybe ready to run (ask them)
          polling_tasks=gb_sets:empty(),
-         %% Tasks not ready to run (future or cog_monitor will signal when ready)
+         %% Tasks not ready to run (future or dc will call `task_is_runnable'
+         %% when ready)
          waiting_tasks=gb_sets:empty(),
          %% Fresh tasks, before they announce themselves ready
          new_tasks=gb_sets:empty(),
@@ -74,7 +75,7 @@
          id,
          %% Cog-unique (and stable) ids for futures and objects
          next_stable_id=0,
-         %% A list of the scheduling decisions made
+         %% A list of events that has occurred
          recorded=[],
          %% A list of scheduling decisions that is to be made
          replaying=[],
@@ -216,7 +217,7 @@ maybe_send_runnable_confirmation(ConfirmTask) ->
     %% Confirm to an async task that it’s ok to terminate now; the cog waiting
     %% on the future has woken up and notified the cog monitor.  Note that we
     %% call this function from inside the cog after we called
-    %% `cog_monitor:active' where necessary.
+    %% `dc:cog_active' where necessary.
     ConfirmTask ! cog_confirms_task_wakeup.
 
 register_waiting_task_if_necessary(_WaitReason={waiting_on_future, Future},
@@ -500,8 +501,8 @@ handle_event({call, From}, {register_await_future_complete, Event}, _StateName,
     {keep_state, Data#data{recorded=NewRecorded}, {reply, From, ok}};
 
 handle_event({call, From}, get_trace, _StateName,
-             Data=#data{recorded=Recorded}) ->
-    {keep_state_and_data, {reply, From, Recorded}};
+             Data=#data{id=Id, recorded=Recorded}) ->
+    {keep_state_and_data, {reply, From, {Id, Recorded}}};
 
 handle_event(cast, {new_dc, Oid}, _StateName, Data=#data{dcs=DCs}) ->
     DC=dc:new(self(), Oid),
@@ -654,11 +655,6 @@ get_candidate_set(RunnableTasks, PollingTasks, PollingStates) ->
     Ready = fun (X) -> maps:get(X, PollingStates) == true end,
     gb_sets:union(RunnableTasks, gb_sets:filter(Ready, PollingTasks)).
 
-time_slot_replayed([]) ->
-    true;
-time_slot_replayed([Event=#event{time=T} | Rest]) ->
-    builtin:float(ok, clock:now()) < T.
-
 record_termination_or_suspension(R, TaskInfos, PollingStates, NewPollingStates, TaskState, Recorded) ->
     Changed = [P || {P, V} <- maps:to_list(NewPollingStates),
                     not(maps:is_key(P, PollingStates)) orelse V /= maps:get(P, PollingStates)],
@@ -694,7 +690,7 @@ poll_waiting(Tasks, TaskInfos, ObjectStates) ->
                 end, #{}, PollingTasks).
 
 maybe_send_unblock_confirmation(DCRef, CogRef, TaskRef, TaskInfos) ->
-    %% This needs to be sent after cog_monitor:cog_active/1
+    %% This needs to be sent after dc:cog_active/2
     TaskInfo=maps:get(TaskRef, TaskInfos),
     case TaskInfo#task_info.wait_reason of
         {waiting_on_clock, _, _} ->
@@ -745,8 +741,8 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
     Candidates = get_candidate_set(NewRunnableTasks, Pol, PollingStates),
     T = choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, Replaying),
     case T of
-        none->     % None found -- should not happen
-            case gb_sets:is_empty(NewNewTasks) andalso time_slot_replayed(Replaying) of
+        none->     % None found -- can happen during replay
+            case gb_sets:is_empty(NewNewTasks) of
                 true -> dc:cog_idle(DCRef, self());
                 false -> ok
             end,
@@ -791,7 +787,7 @@ no_task_schedulable(cast, {future_is_ready, FutureRef},
         none->
             %% None found -- this was not the future we were waiting for (the
             %% field we were waiting for was reassigned to a different future)
-            case gb_sets:is_empty(New) andalso time_slot_replayed(Replaying) of
+            case gb_sets:is_empty(New) of
                 true -> dc:cog_idle(DCRef, self());
                 false -> ok
             end,
@@ -871,7 +867,7 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
     T = choose_runnable_task(Scheduler, Candidates, NewTaskInfos, NewObjectStates, Replaying),
     case T of
         none->
-            case gb_sets:is_empty(New) andalso time_slot_replayed(Replaying) of
+            case gb_sets:is_empty(New) of
                 true -> dc:cog_idle(DCRef, self());
                 false -> ok
             end,
@@ -884,7 +880,7 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                        polling_states=NewPollingStates,
                        recorded=NewRecorded, replaying=Replaying}};
         _ ->
-            %% no need for `cog_monitor:active' since we were already running
+            %% no need for `dc:cog_active' since we were already running
             %% something
             #task_info{event=Event2} = maps:get(T, NewTaskInfos),
             #event{caller_id=Cid2, local_id=Lid2, name=Name2} = Event2,
@@ -937,27 +933,28 @@ task_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,C
 task_running(cast, {task_blocked_for_resource,
                     TaskRef, TaskInfo, ObjectState, Resourcetype, Amount},
              Data=#data{dcref=DCRef, object_states=ObjectStates,
-                        task_infos=TaskInfos}) ->
-    dc:block_task_for_resource(DCRef, self(), TaskRef, Resourcetype, Amount),
+                        task_infos=TaskInfos, id=Id, next_stable_id=N,
+                        recorded=Recorded}) ->
+    Event = #event{type=resource, caller_id=Id, local_id=N, name=Resourcetype},
+    RequestEvent = #dc_event{type=Resourcetype, caller_id=Id, local_id=N, amount=Amount},
+    dc:block_task_for_resource(DCRef, self(), TaskRef, RequestEvent),
     %% dc will call task_is_runnable as needed and/or register our blockedness
     WaitReason=TaskInfo#task_info.wait_reason,
     NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), TaskRef, blocked),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
-    NewTaskInfos=maps:put(TaskRef, TaskInfo, TaskInfos),
+    %% We never pass TaskInfo back to the process, so we can mutate it here.
+    %% Also: since resource waiting might cause time advance, arrange to
+    %% confirm task wakeup here even though we’re not strictly waiting for the
+    %% clock.  (The DC expects `task_confirm_clock_wakeup' in all cases,
+    %% including when the clock did not actually advance.)
+    NewTaskInfos=maps:put(TaskRef, TaskInfo#task_info{wait_reason={waiting_on_clock, none, none}}, TaskInfos),
     {next_state, task_blocked,
-     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}} ;
+     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos,
+               next_stable_id=N+1, recorded=[Event | Recorded]}};
 task_running(cast, {task_blocked_for_future, TaskRef, TaskInfo, ObjectState, Future},
              Data=#data{task_infos=TaskInfos,object_states=ObjectStates,
                         dcref=DCRef, replaying=Replaying}) ->
-    %% The following out commented code block causes deadlocks. We should try
-    %% to reinstate it after understanding why it deadlocks:
-    %% case time_slot_replayed(Replaying) of
-    %%     true -> cog_monitor:cog_blocked(self()),
-    %%             WaitReason=TaskInfo#task_info.wait_reason,
-    %%             maybe_send_register_waiting_task(WaitReason, self(), TaskRef);
-    %%     false -> ok
-    %% end,
     dc:cog_blocked(DCRef, self()),
     WaitReason=TaskInfo#task_info.wait_reason,
     NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), TaskRef, blocked),
@@ -1019,7 +1016,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
             T = choose_runnable_task(Scheduler, Candidates, NewTaskInfos, ObjectStates, Replaying),
             case T of
                 none->
-                    case gb_sets:is_empty(NewNew) andalso time_slot_replayed(Replaying) of
+                    case gb_sets:is_empty(NewNew) of
                         true -> dc:cog_idle(DCRef, self());
                         false -> ok
                     end,
@@ -1030,7 +1027,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
                                new_tasks=NewNew,
                                task_infos=NewTaskInfos}};
                 _ ->
-                    %% no need for `cog_monitor:active' since we were already
+                    %% no need for `dc:cog_active' since we were already
                     %% running something
                     #task_info{event=Event} = maps:get(T, NewTaskInfos),
                     #event{caller_id=Cid, local_id=Lid, name=Name} = Event,
@@ -1137,7 +1134,7 @@ waiting_for_gc_stop({call, From}, {token,R,TaskState, TaskInfo, ObjectState},
         %% where an ill-timed `cog_idle()' might cause the clock to
         %% advance.  Hence, we take care to not send `cog_idle()' when
         %% leaving `in_gc', and instead send it here if necessary.
-        true -> case gb_sets:is_empty(PollReadySet) andalso time_slot_replayed(Replaying) of
+        true -> case gb_sets:is_empty(PollReadySet) of
                     true -> dc:cog_idle(DCRef, self());
                     false -> ok
                 end,
