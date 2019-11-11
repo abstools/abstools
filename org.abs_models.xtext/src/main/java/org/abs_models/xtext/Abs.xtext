@@ -6,6 +6,7 @@ generate abs "http://www.abs_models.org/xtext/Abs"
 
 CompilationUnit
     : {CompilationUnit} (modules+=ModuleDecl)* (deltas+=DeltaDecl)*
+        productline=ProductlineDecl?
     ;
 
 ModuleDecl
@@ -484,7 +485,43 @@ InterfaceModifier
     | 'removes' removedMethod=MethodSignature ';'
     ;
 
+// Productline
 
+ProductlineDecl
+    : 'productline' name=TYPE_IDENTIFIER ';'
+        'features' features+=ProductlineFeature (',' features+=ProductlineFeature)* ';'
+        delta_clauses+=ProductlineDeltaClause*
+    ;
+
+ProductlineFeature
+// allow writing Feat' to refer to the intermediate feature "$feat"
+    : name=TYPE_IDENTIFIER p?='\''
+        ('{' attribute_assignments+=AttributeAssignment (',' attribute_assignments+=AttributeAssignment) '}')?
+    ;
+
+AttributeAssignment
+    : name=IDENTIFIER '='
+        ( i?=INTLITERAL
+        | b?=TYPE_IDENTIFIER
+        | s?=STRINGLITERAL)
+    ;
+
+ProductlineDeltaClause
+    : 'delta' name=TYPE_IDENTIFIER
+        ('(' params+=DeltaClauseParam (',' params+=DeltaClauseParam)* '_')?
+        // after_condition=DeltaClauseAfterCondition?
+        // from_condition=DeltaClauseFromCondition?
+        // when_condition=DeltaClauseWhenCondition?
+        ';'
+    ;
+
+DeltaClauseParam
+// CID | FID.aid | CONSTANT
+// The following comment copied from ABS.g4, which copied from ABS.parser:
+// TODO: accept feature, attributes, or constants (DataExp)
+    : int_param?=INTLITERAL
+    | id_param?=TYPE_IDENTIFIER ('.' fidaid_param?=IDENTIFIER)
+    ;
 
 // Local Variables:
 // mode: antlr

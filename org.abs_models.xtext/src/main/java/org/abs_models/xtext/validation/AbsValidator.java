@@ -13,7 +13,10 @@ import org.eclipse.xtext.validation.Check;
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 public class AbsValidator extends AbstractAbsValidator {
-
+    // TODO
+    // 
+    // - check in AttributeAssignment: only True, False allowed for type
+    //   identifiers
     private boolean isSideEffectExpContainer(EObject stmt) {
         // We allow the following forms:
         // - "f.get;" (ExpStmt)
