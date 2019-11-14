@@ -1,0 +1,116 @@
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+
+aspect ForeachExpander {
+
+    /** Switch whether this rewriting is enabled.
+     */
+    // TODO: make this a constructor parameter?  Otherwise we have a
+    // race condition here
+    public boolean Model.doForEachRewrite = true;
+
+    public void Model.expandForeachLoops() {
+        if (doForEachRewrite) {
+            for (ModuleDecl moduleDecl : getModuleDecls()) {
+                moduleDecl.expandForeachLoops();
+            }
+        }
+    }
+
+    public void ModuleDecl.expandForeachLoops() {
+        for (ForeachStmt loop : this.findChildren(ForeachStmt.class, true)) {
+            if (!loop.canBeRewritten()) {
+                continue;
+            }
+
+            if (loop.closestParent(Block.class) == null) {
+                throw new RuntimeException("Encountered a detached ForeachStmt node.");
+            }
+            loop.expand();
+        }
+    }
+
+    // Since rewriting happens during type-checking, make sure we don't
+    // attempt a rewrite without type-checking information
+    public boolean ForeachStmt.canBeRewritten() {
+        if (!amInCoreAbs()) return false;
+        Type vartype = getLoopVarDecl().getType();
+        if (vartype.isUnknownType()) return false;
+        return true;
+    }
+
+    /**
+     * Unfold the foreach loop into a while loop.
+     */
+    public void ForeachStmt.expand() {
+        // [A] foreach (i in l) { ... }
+        // =>
+        // [A] {                       (1)
+        //   List tmp = l;             (2)
+        //   while (!isEmpty(tmp) {    (3)
+        //     i = head(tmp);          (4)
+        //     tmp = tail(tmp);        (5)
+        //     {...}                   (6)
+        // }
+
+        final Type listtype = getListExp().getType();
+        final Type vartype = getLoopVarDecl().getType();
+        final String listvarname = "tmp"+Integer.toString(hashCode());
+        final String varname = getLoopVarDecl().getName();
+
+        // (1)
+        Block result = new Block();
+        // `setPositionFromNode' sets up default line/column positions for
+        // contained nodes as well
+        result.setPositionFromNode(this);
+        result.setAnnotationList(this.getAnnotations().treeCopyNoTransform());
+
+        // special case: foreach (i in list[]) { ... }
+        // foreach (i in elements(set[])) { ... } etc.
+
+        // these checks are a bit paranoid since the type checker already
+        // guarantees that `listtype' is of type List<A>.  What we really want
+        // to know is whether we know the type of A, which we don't when we're
+        // dealing with an empty literal list.  (Note that this is not a type
+        // error.)
+        if (listtype.isDataType()
+            && ((DataTypeType)listtype).hasTypeArgs()
+            && ((DataTypeType)listtype).numTypeArgs() == 1
+            && ((DataTypeType)listtype).getTypeArg(0).isBoundedType()
+            && !((BoundedType)(((DataTypeType)listtype).getTypeArg(0))).hasBoundType()
+            ) {
+            // We loop over an empty list: do nothing, eliminate the loop body
+        } else {
+            // (2)
+            VarDeclStmt listvarstmt = new VarDeclStmt(new List(), new VarDecl(listvarname, listtype.toUse(), new Opt(getListExp().treeCopyNoTransform())));
+            result.addStmt(listvarstmt);
+
+            // (3)
+            PureExp whilecondition = new NegExp(new FnApp("isEmpty", new List(new VarUse(listvarname))));
+            Block whilebody = new Block();
+            WhileStmt whilestmt = new WhileStmt();
+            whilestmt.setCondition(whilecondition);
+            whilestmt.setBody(whilebody);
+            result.addStmt(whilestmt);
+
+            // (4)
+            VarDeclStmt loopvarstmt = new VarDeclStmt(new List(), new VarDecl(varname, vartype.toUse(), new Opt(new FnApp("head", new List(new VarUse(listvarname))))));
+            whilebody.addStmt(loopvarstmt);
+
+            // (5)
+            AssignStmt loopvardecrement = new AssignStmt(new List(), new VarUse(listvarname), new FnApp("tail", new List(new VarUse(listvarname))));
+            whilebody.addStmt(loopvardecrement);
+
+            // (6)
+            whilebody.addStmt(getBody().treeCopyNoTransform());
+        }
+        this.replaceWith(result);
+    }
+
+}
+
+// Local Variables:
+// mode: java
+// End:

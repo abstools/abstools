@@ -7,7 +7,7 @@ package org.abs_models;
 import static org.abs_models.ABSTest.Config.EXPECT_PARSE_ERROR;
 import static org.abs_models.ABSTest.Config.EXPECT_TYPE_ERROR;
 import static org.abs_models.ABSTest.Config.TYPE_CHECK;
-import static org.abs_models.ABSTest.Config.WITHOUT_DESUGARING;
+import static org.abs_models.ABSTest.Config.WITHOUT_DESUGARING_AFTER_TYPECHECK;
 import static org.abs_models.ABSTest.Config.WITHOUT_MODULE_NAME;
 import static org.abs_models.ABSTest.Config.WITH_LOC_INF;
 import static org.junit.Assert.fail;
@@ -38,7 +38,7 @@ public class ABSTest {
         EXPECT_TYPE_ERROR,
         EXPECT_WARNING,
         TYPE_CHECK,
-        WITHOUT_DESUGARING
+        WITHOUT_DESUGARING_AFTER_TYPECHECK
     }
 
     public static class ABSFileNameFilter implements FilenameFilter {
@@ -98,7 +98,7 @@ public class ABSTest {
         try {
             Model p = parseString(s);
 
-            if (isSet(WITHOUT_DESUGARING, config)) {
+            if (isSet(WITHOUT_DESUGARING_AFTER_TYPECHECK, config)) {
                 p.doAACrewrite = false;
                 p.doForEachRewrite = false;
             }
@@ -117,6 +117,8 @@ public class ABSTest {
                         p.flattenTraitOnly();
                         p.collapseTraitModifiers();
                         p.expandPartialFunctions();
+                        p.expandForeachLoops();
+                        p.expandAwaitAsyncCalls();
                         if (isSet(WITH_LOC_INF, config)) {
                             LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
                             p.registerTypeSystemExtension(ltie);

@@ -1,0 +1,119 @@
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+
+aspect AwaitAsyncCallExpander {
+
+    /** Per-model switch whether this rewriting is enabled.
+     */
+    // TODO: make this a constructor parameter?  Otherwise we have a
+    // race condition here
+    public boolean Model.doAACrewrite = true;
+
+    public void Model.expandAwaitAsyncCalls() {
+        if (doAACrewrite) {
+            for (ModuleDecl moduleDecl : getModuleDecls()) {
+                moduleDecl.expandAwaitAsyncCalls();
+            }
+        }
+    }
+
+    public void ModuleDecl.expandAwaitAsyncCalls() {
+        for (AwaitAsyncCall call : this.findChildren(AwaitAsyncCall.class, true)) {
+            if (!call.canBeRewritten()) {
+                continue;
+            }
+
+            if (call.closestParent(Block.class) == null) {
+                throw new RuntimeException("Encountered a detached AwaitAsyncCall node.");
+            }
+            call.expand();
+        }
+    }
+
+    public boolean AwaitAsyncCall.canBeRewritten() {
+        // This method is very cautious so it can be called on nodes with type
+        // errors.
+        if (!amInCoreAbs()) return false;
+        // are we in a detached subtree?
+        if (closestParent(Model.class) == null) return false;
+        // Can we create a correctly-typed future?
+        Type calleetype = getCallee().getType();
+        if (calleetype.isUnknownType()) return false;
+        MethodSig m = calleetype.lookupMethod(getMethod());
+        if (m == null) return false;
+        Access a = (Access)m.getReturnType();
+        if (a.getType().isUnknownType()) return false;
+        return true;
+    }
+
+
+    /**
+     * Unfold the await-asynchronous call into an asynchronous call, an await
+     * on the anonymous future, and a get to return the value.
+     */
+    public void AwaitAsyncCall.expand() {
+        // 1. pos=getIndexOfChild(this)
+        // 2. remove(pos)
+        // 3.-5. parent.insertChild(Stmt, pos++)
+        AwaitAsyncCall aac = this;
+        Stmt stmt = this.closestParent(Stmt.class);
+        Block block = stmt.closestParent(Block.class);
+        List<Stmt> stmtlist = block.getStmtListNoTransform();
+        int pos = stmtlist.getIndexOfChild(stmt);
+
+        Type calleetype = aac.getCallee().getType();
+        Access a = (Access)calleetype.lookupMethod(aac.getMethod()).getReturnType();
+        final String varName = "tmp"+Integer.toString(aac.hashCode());
+        // The annotations on an "await o!m();"-containing statement need to
+        // end up on the fresh "o!m()"; move them there
+        List<Annotation> annotations = stmt.getAnnotationList().treeCopyNoTransform();
+        final TypeUse du = a.getType().toUse();
+        // TODO: The typechecker will assert that/if the name is free, but in
+        // freak chances it may not.
+        AsyncCall nac = new AsyncCall(aac.getCallee().treeCopyNoTransform(),
+                                      aac.getMethod(),
+                                      aac.getParamList().treeCopyNoTransform());
+        nac.setPositionFromNode(aac);
+        ParametricDataTypeUse pdtu = new ParametricDataTypeUse("Fut", new List(), new List().add(du));
+        pdtu.setPositionFromNode(aac);
+        // Annotations of the original "await o!m()" moved here
+        VarDeclStmt vds = new VarDeclStmt(annotations, new VarDecl(varName, pdtu, new Opt(nac)));
+        vds.setPositionFromNode(aac);
+        AwaitStmt as = new AwaitStmt(new List(), new ClaimGuard( new VarUse(varName)));
+        as.setPositionFromNode(aac);
+        GetExp g = new GetExp(new VarUse(varName));
+        g.setPositionFromNode(aac);
+
+        stmtlist.removeChild(pos);
+        stmtlist.insertChild(vds, pos);
+        pos++;
+        stmtlist.insertChild(as, pos);
+        pos++;
+
+        if (stmt instanceof VarDeclStmt) {
+            ((VarDeclStmt)stmt).getVarDecl().setInitExp(g);
+            stmtlist.insertChild(stmt.treeCopyNoTransform(), pos);
+        } else if (stmt instanceof AssignStmt) {
+            ((AssignStmt)stmt).setValue(g);
+            stmtlist.insertChild(stmt.treeCopyNoTransform(), pos);
+        } else if (stmt instanceof ReturnStmt) {
+            ((ReturnStmt)stmt).setRetExp(g);
+            stmtlist.insertChild(stmt.treeCopyNoTransform(), pos);
+        } else if (stmt instanceof ExpressionStmt) {
+            // This branch intentionally left blank: do not execute the get
+            // expression (we drop stmt in this case).  See
+            // https://github.com/abstools/abstools/issues/115
+        } else {
+            // Should never happen -- AwaitAsyncCall is an EffExp so ABS.ast
+            // enumerates the places it can occur
+            throw new NotImplementedYetException(this, "Don't know how to rewrite statement " + stmt.getClass().toString());
+        }
+    }
+
+}
+
+// Local Variables:
+// mode: java
+// End:

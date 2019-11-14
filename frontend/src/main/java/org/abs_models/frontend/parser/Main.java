@@ -218,6 +218,8 @@ public class Main {
     private void analyzeFlattenAndRewriteModel(Model m) throws WrongProgramArgumentException, DeltaModellingException, FileNotFoundException {
         m.verbose = arguments.verbose;
         m.debug = arguments.debug;
+        m.doAACrewrite = !arguments.prettyprint_keepsugar;
+        m.doForEachRewrite = !arguments.prettyprint_keepsugar;
 
         if (m.hasParserErrors()) {
             System.err.println("Syntactic errors: " + m.getParserErrors().size());
@@ -234,6 +236,8 @@ public class Main {
         m.collapseTraitModifiers();
 
         m.expandPartialFunctions();
+        m.expandForeachLoops();
+        m.expandAwaitAsyncCalls();
 
         if (arguments.product != null) {
             // apply deltas that correspond to arguments.productproduct
