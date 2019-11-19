@@ -16,8 +16,13 @@ application {
     mainClassName = 'org.abs_models.frontend.parser.Main'
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 distributions {
-    main { baseName = 'absc' }
+    main { distributionBaseName = 'absc' }
 }
 
 dependencies {
@@ -34,14 +39,14 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    compile 'info.picocli:picocli:4.0.4'
+    implementation 'info.picocli:picocli:4.0.4'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.5.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.5.2")
     // Executes JUnit4 tests
-    testRuntime("org.junit.vintage:junit-vintage-engine:5.5.2")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.5.2")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.easymock:easymock:4.1'
@@ -116,18 +121,6 @@ jar {
     reproducibleFileOrder=true
 }
 
-// include manual in source archives
-distZip {
-    from project(':abs-docs').asciidoctor, {
-        into "abs-docs-${version}"
-    }
-}
-distTar {
-    from project(':abs-docs').asciidoctor, {
-        into "abs-docs-${version}"
-    }
-}
-
 // this is necessary for the `absc` scripts
 task plainJar(type: Copy, dependsOn: jar) {
     description 'Copies absfrontend.jar into its documented location.'
@@ -139,23 +132,6 @@ clean {
     delete 'dist/'
 }
 assemble.dependsOn plainJar
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    appendix = gitBranch()
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    appendix = gitBranch()
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
 
 // `absc` script et al. -- copy to well-known location and instruct
 // users to set their $PATH (see e.g. `frontend/README.md`,
