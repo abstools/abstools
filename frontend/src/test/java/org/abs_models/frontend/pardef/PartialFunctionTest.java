@@ -25,10 +25,10 @@ public class PartialFunctionTest extends AbstractPartialFunctionTest {
     public void unusedFunctionNotRemoved() {
         Model model = expand(parse(
             "",
-            "def Int f()() = 0;"
+            applyFunction()
         ));
-        PartialFunctionDecl decl = getPartialFunction(model, "f");
-        assertNotNull("Unused pardef 'f' has been removed!", decl);
+        PartialFunctionDecl decl = getPartialFunction(model, "apply");
+        assertNotNull("Unused pardef 'apply' has been removed!", decl);
     }
 
     @Test
