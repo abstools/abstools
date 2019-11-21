@@ -17,6 +17,7 @@ import org.abs_models.frontend.analyser.HasCogs;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.AsyncCall;
+import org.abs_models.frontend.ast.AwaitAsyncCall;
 import org.abs_models.frontend.ast.Block;
 import org.abs_models.frontend.ast.Call;
 import org.abs_models.frontend.ast.ClassDecl;
@@ -204,15 +205,16 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     @Override
     public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
         if (originatingNode instanceof SyncCall) {
-        } else
-        if (originatingNode instanceof AsyncCall) {
+            // empty branch
+        } else if (originatingNode instanceof AsyncCall) {
             AsyncCall call = (AsyncCall)originatingNode;
             adaptAndSet(t, AdaptDirection.FROM, getLV(call.getCallee().getType()), originatingNode);
-        } else
-        if (originatingNode instanceof ThisExp) {
+        } else if (originatingNode instanceof AwaitAsyncCall) {
+            AwaitAsyncCall call = (AwaitAsyncCall)originatingNode;
+            adaptAndSet(t, AdaptDirection.FROM, getLV(call.getCallee().getType()), originatingNode);
+        } else if (originatingNode instanceof ThisExp) {
             annotateVar(t, LocationTypeVariable.ALWAYS_NEAR);
-        } else
-        if (originatingNode instanceof NewExp) {
+        } else if (originatingNode instanceof NewExp) {
             NewExp newExp = (NewExp)originatingNode;
             LocationTypeVariable ltv;
             if (!newExp.hasLocal()) {
