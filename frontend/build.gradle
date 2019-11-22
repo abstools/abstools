@@ -8,15 +8,20 @@ plugins {
 
     // JastAdd plugin documentation at https://github.com/jastadd/jastaddgradle
     id 'org.jastadd' version '1.13.3'
-    id "com.github.spotbugs" version "1.6.9"
+    id "com.github.spotbugs" version "2.0.1"
 }
 
 application {
     mainClassName = 'org.abs_models.frontend.parser.Main'
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 distributions {
-    main { baseName = 'absc' }
+    main { distributionBaseName = 'absc' }
 }
 
 dependencies {
@@ -26,7 +31,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.google.guava:guava:28.1-jre'
     implementation files('lib/choco-solver-2.1.1.jar')
-    implementation 'org.eclipse.jdt:ecj:3.18.0'
+    implementation 'org.eclipse.jdt:ecj:3.19.0'
     implementation 'org.apfloat:apfloat:1.9.1'
     // our code fails to compile with newer versions of sat4j; leaving this at
     // version 2.3.0 for now.
@@ -35,20 +40,20 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    compile 'info.picocli:picocli:4.0.3'
+    implementation 'info.picocli:picocli:4.0.4'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.5.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.5.2")
     // Executes JUnit4 tests
-    testRuntime("org.junit.vintage:junit-vintage-engine:5.5.1")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.5.2")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.easymock:easymock:4.0.2'
+    testImplementation 'org.easymock:easymock:4.1'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
-    testImplementation 'org.hamcrest:hamcrest-core:2.1'
-    testCompile "org.junit.jupiter:junit-jupiter-api:5.5.0"
+    testImplementation 'org.hamcrest:hamcrest-core:2.2'
+    testCompile "org.junit.jupiter:junit-jupiter-api:5.5.2"
     testCompile "org.eclipse.xtext:org.eclipse.xtext.testing:${xtextVersion}"
     testCompile "org.eclipse.xtext:org.eclipse.xtext.xbase.testing:${xtextVersion}"
 
@@ -116,18 +121,6 @@ jar {
     reproducibleFileOrder=true
 }
 
-// include manual in source archives
-distZip {
-    from project(':abs-docs').asciidoctor, {
-        into "abs-docs-${version}"
-    }
-}
-distTar {
-    from project(':abs-docs').asciidoctor, {
-        into "abs-docs-${version}"
-    }
-}
-
 // this is necessary for the `absc` scripts
 task plainJar(type: Copy, dependsOn: jar) {
     description 'Copies absfrontend.jar into its documented location.'
@@ -140,23 +133,6 @@ clean {
     delete 'dist/'
 }
 assemble.dependsOn plainJar
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    appendix = gitBranch()
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    appendix = gitBranch()
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
 
 // `absc` script et al. -- copy to well-known location and instruct
 // users to set their $PATH (see e.g. `frontend/README.md`,

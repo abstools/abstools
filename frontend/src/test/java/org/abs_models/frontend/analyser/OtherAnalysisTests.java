@@ -12,11 +12,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.prettyprint.ABSFormatter;
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
+import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.AwaitAsyncCall;
@@ -125,8 +128,8 @@ public class OtherAnalysisTests extends FrontendTest {
         final String p1 = prettyPrint(m);
         // Model m2 = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
         // FIXME: the code in this example is incorrect (no await statement in init block allowed)
-        Model m2 = assertParse("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!m(Unit());}}");
-        m2.doAACrewrite = false;
+        Model m2 = assertParse("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!m(Unit());}}",
+                               Config.WITHOUT_DESUGARING_AFTER_TYPECHECK);
         assertFalse(m2.hasErrors());
         assertEquals(p1, prettyPrint(m2));
     }
@@ -138,56 +141,32 @@ public class OtherAnalysisTests extends FrontendTest {
         assertFalse(m.hasErrors());
         final String p1 = prettyPrint(m);
         // FIXME: the code in this example is incorrect (no await statement in init block allowed)
-        Model m2 = assertParse("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!n(Unit());}}");
-        m2.doAACrewrite = false;
+        Model m2 = assertParse("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!n(Unit());}}",
+                               Config.WITHOUT_DESUGARING_AFTER_TYPECHECK);
         assertFalse(m2.hasErrors());
         assertEquals(p1, prettyPrint(m2));
     }
 
     @Test
     public void testContext1() {
-        // FIXME: the code in this example is incorrect (no await statement in init block allowed)
-        Model m = assertParse("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
-        ClassDecl cd = (ClassDecl) m.lookupModule("UnitTest").getDecl(2);
-        AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
-        assertNull("Rewrite failed!", n);
-    }
-
-    @Test
-    public void testContext2() {
-        // FIXME: the code in this example is incorrect (no await statement in init block allowed)
-        Model m = assertParse("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
-        ClassDecl cd = (ClassDecl) m.lookupModule("UnitTest").getDecl(2);
-        AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
-        assertNull("Rewriting failed!",n);
-    }
-
-    private static ASTNode<?> down(ASTNode<?> n) {
-        ASTNode<?> x = null;
-        for(int i =0; i<n.getNumChild(); i++) {
-            x = n.getChild(i);
-            if (x == null)
-                continue;
-            if (x instanceof AwaitAsyncCall)
-                return x;
-            else {
-                x = down(x);
-                if (x != null)
-                    return x;
-            }
-        }
-        return null;
+        Model m = assertParse("interface I { Unit m(); } class C implements I { Unit m() {Unit x = await this!m();}}",
+            Config.TYPE_CHECK);
+        ClassDecl cd = (ClassDecl) m.lookupModule("UnitTest").getDecl(1);
+        int n =  cd.findChildren(AwaitAsyncCall.class).size();
+        assertEquals("Rewrite failed", n, 0);
     }
 
     @Test
     public void awaitRewriteModule1() {
-        Model m = assertParse("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}");
-        m.doAACrewrite = false;
+        Model m = assertParse("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}",
+            Config.TYPE_CHECK, Config.WITHOUT_DESUGARING_AFTER_TYPECHECK);
         ClassDecl c = (ClassDecl) m.lookupModule("C").getDecl(0);
-        ReturnStmt ret = (ReturnStmt) c.getMethod(0).getBlock().getStmt(0);
+        Stmt stmt = c.getMethod(0).getBlock().getStmt(0);
+        ReturnStmt ret = (ReturnStmt) stmt;
         assertThat(ret.getRetExp().getType(), instanceOf(DataTypeType.class));
         assertEquals("A.X",ret.getRetExp().getType().getQualifiedName());
-        m = assertParse("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}");
+        m = assertParse("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}",
+            Config.TYPE_CHECK);
         c = (ClassDecl) m.lookupModule("C").getDecl(0);
         Stmt s = c.getMethod(0).getBlock().getStmt(0);
         VarDeclStmt b = (VarDeclStmt) s;
@@ -204,8 +183,8 @@ public class OtherAnalysisTests extends FrontendTest {
     public void awaitRewriteDecl1() {
         Model m = assertParse("module A; class C { } delta D; modifies class C { adds Unit m() { return await this!m();}}");
         DeltaDecl c = m.getDeltaDecls().iterator().next();
-        AwaitAsyncCall a = (AwaitAsyncCall) down(c);
-        assertNotNull(a); // pity, would like this to work.
+        // pity, would like this to work so that size == 0
+        assertEquals(c.findChildren(AwaitAsyncCall.class).size(), 1);
     }
 
     @Test
@@ -213,12 +192,17 @@ public class OtherAnalysisTests extends FrontendTest {
         String deltaDecl = "delta D; modifies class C { adds Unit m() { return await this!m();}}";
         Model m = assertParse(deltaDecl);
         DeltaDecl d = m.findDelta("D");
-        AwaitAsyncCall a = (AwaitAsyncCall) down(d);
-        assertNotNull(a); // pity, would like this to work.
+        // pity, would like this to work so that size == 0
+        assertEquals(d.findChildren(AwaitAsyncCall.class).size(), 1);
     }
 
     @Test
     public void foreachRewriteEmptyListLiteral() {
         assertTypeOK("module Test; { foreach (i in elements(set[])) { skip; } }");
+    }
+
+    @Test
+    public void bug184() throws WrongProgramArgumentException, InternalBackendException, IOException {
+        assertParseFileOk("abssamples/frontend/bug184.abs", Config.TYPE_CHECK);
     }
 }

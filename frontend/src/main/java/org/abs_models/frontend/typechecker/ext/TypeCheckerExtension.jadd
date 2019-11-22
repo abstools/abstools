@@ -97,6 +97,12 @@ aspect TypeCheckerExtension {
         return t;
     }
 
+    refine Typing eq AwaitAsyncCall.getType() {
+        Type t = Typing.AwaitAsyncCall.getType().fullCopy();
+        getModel().getTypeExt().annotateType(t, this);
+        return t;
+    }
+
     refine Typing eq IfExp.getType() {
         Type t = Typing.IfExp.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);

@@ -1266,15 +1266,16 @@ public class ContractInference {
                 _env.putFuture((TypingEnvironmentVariableTypeFuture) r, new TypingEnvironmentFutureTypeUntick(
                         _df.newRecordFuture(aprime, Y), new ContractElementInvk(call, nameOfClass, nameOfMethod, mi)));
             } else if (call instanceof AwaitAsyncCall) {
-                // same stuff that for sync calls
+                // same stuff as for async calls
                 // AwaitAsyncCall are actually rewritten in the AST if the flag
                 // public static boolean Model.doAACrewrite is set to true;
                 // objects of this kind are rewritten at the ast level as
-                // AsyncCall + await
-                // you can switch this switch in file
-                // frontend/src/abs/backend/coreabs/GenerateCoreAbs.jadd line 38
-                r = Y;
-                contract.add(_df.newContractSyncInvk(call, nameOfClass, nameOfMethod, mi));
+                // AsyncCall + await (+ get)
+                IRecord calleeShape = createInstance(cl, aprime);
+                c.addEquation(new ASTNodeInformation(call), callee, calleeShape);
+                r = new TypingEnvironmentVariableTypeFuture();
+                _env.putFuture((TypingEnvironmentVariableTypeFuture) r, new TypingEnvironmentFutureTypeUntick(
+                        _df.newRecordFuture(aprime, Y), new ContractElementInvk(call, nameOfClass, nameOfMethod, mi)));
             } else {
                 // should not happen
                 r = null;

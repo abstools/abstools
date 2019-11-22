@@ -57,24 +57,23 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         if (origNode instanceof AsyncCall) {
             AsyncCall ac = (AsyncCall) origNode;
             adaptTo(t,AdaptDirection.FROM,ac.getCallee().getType());
-        } else
-        if (origNode instanceof ThisExp) {
+        } else if (origNode instanceof AwaitAsyncCall) {
+            AwaitAsyncCall ac = (AwaitAsyncCall) origNode;
+            adaptTo(t,AdaptDirection.FROM,ac.getCallee().getType());
+        } else if (origNode instanceof ThisExp) {
             setLocationType(t,LocationType.NEAR);
-        } else            
-        if (origNode instanceof NewExp) {
+        } else if (origNode instanceof NewExp) {
             NewExp newExp = (NewExp)origNode;
             LocationType type = LocationType.FAR;
             if (newExp.hasLocal()) {
                 type = LocationType.NEAR;
-            } 
+            }
             setLocationType(t,type);
-        } else
-        if (origNode instanceof NullExp) {
+        } else if (origNode instanceof NullExp) {
             setLocationType(t, LocationType.BOTTOM);
         } else if (t.isReferenceType()) {
             setAnnotatedType(t, origNode);
         }
-        
     }
 
     private void setAnnotatedType(Type t, ASTNode<?> origNode) {
