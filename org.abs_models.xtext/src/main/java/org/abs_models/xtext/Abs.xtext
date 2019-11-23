@@ -7,6 +7,7 @@ generate abs "http://www.abs_models.org/xtext/Abs"
 CompilationUnit
     : {CompilationUnit} (modules+=ModuleDecl)* (deltas+=DeltaDecl)*
         productline=ProductlineDecl?
+        products+=ProductDecl*
     ;
 
 ModuleDecl
@@ -489,29 +490,30 @@ InterfaceModifier
 
 ProductlineDecl
     : 'productline' name=TYPE_IDENTIFIER ';'
-        'features' features+=ProductlineFeature (',' features+=ProductlineFeature)* ';'
+        'features' features+=ProductFeature (',' features+=ProductFeature)* ';'
         delta_clauses+=ProductlineDeltaClause*
     ;
 
-ProductlineFeature
+ProductFeature
 // allow writing Feat' to refer to the intermediate feature "$feat"
     : name=TYPE_IDENTIFIER p?='\''
         ('{' attribute_assignments+=AttributeAssignment (',' attribute_assignments+=AttributeAssignment) '}')?
     ;
 
-AttributeAssignment
-    : name=IDENTIFIER '='
-        ( i?=INTLITERAL
-        | b?=TYPE_IDENTIFIER
-        | s?=STRINGLITERAL)
+AttributeAssignment : name=IDENTIFIER '=' value = AttributeAssignmentValue ;
+
+AttributeAssignmentValue
+    : {AttributeAssignmentValue_Int} value=INTLITERAL
+    | {AttributeAssignmentValue_Bool} value=TYPE_IDENTIFIER
+    | {AttributeAssignmentValue_String} value=STRINGLITERAL
     ;
 
 ProductlineDeltaClause
     : 'delta' name=TYPE_IDENTIFIER
         ('(' params+=DeltaClauseParam (',' params+=DeltaClauseParam)* '_')?
-        // after_condition=DeltaClauseAfterCondition?
-        // from_condition=DeltaClauseFromCondition?
-        // when_condition=DeltaClauseWhenCondition?
+        ('after' after_ids+=TYPE_IDENTIFIER (',' after_ids+=TYPE_IDENTIFIER))?
+        ('from' from_condition=DeltaClauseApplicationClause)?
+        (('when' | 'to') when_condition=DeltaClauseApplicationClause)?
         ';'
     ;
 
@@ -519,8 +521,50 @@ DeltaClauseParam
 // CID | FID.aid | CONSTANT
 // The following comment copied from ABS.g4, which copied from ABS.parser:
 // TODO: accept feature, attributes, or constants (DataExp)
-    : int_param?=INTLITERAL
-    | id_param?=TYPE_IDENTIFIER ('.' fidaid_param?=IDENTIFIER)
+    : {DeltaClauseParam_Int} int_param=INTLITERAL
+    | {DeltaClauseParam_Id} id_param=TYPE_IDENTIFIER ('.' fidaid_param=IDENTIFIER)?
+    ;
+
+DeltaClauseApplicationClause : DeltaClauseApplicationClauseOr ;
+
+DeltaClauseApplicationClauseOr returns DeltaClauseApplicationClause
+    : DeltaClauseApplicationClauseAnd ({DeltaClauseApplicationClauseOr.left = current} '||' right=DeltaClauseApplicationClauseAnd) ;
+
+DeltaClauseApplicationClauseAnd returns DeltaClauseApplicationClause
+    : DeltaClauseApplicationClausePrimary ({DeltaClauseApplicationClauseAnd.left = current} '&&' right=DeltaClauseApplicationClausePrimary) ;
+
+DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
+    : '!' not=DeltaClauseApplicationClause
+    | '(' paren=DeltaClauseApplicationClause ')'
+    | feature_name=TYPE_IDENTIFIER
+    ;
+
+// Products
+
+ProductDecl
+    : 'product' name=TYPE_IDENTIFIER
+        ( '(' features+=ProductFeature (',' features+=ProductFeature)* ')' ';'
+        | '=' expr=ProductExpr )
+    ;
+
+ProductExpr : ProductExprDifference ;
+
+ProductExprDifference returns ProductExpr
+    : ProductExprUnion ({ProductExprDifference.left = current} '-' right=ProductExprUnion)
+    ;
+
+ProductExprUnion returns ProductExpr
+    : ProductExprIntersect ({ProductExprUnion.left = current} '||' right=ProductExprIntersect)
+    ;
+
+ProductExprIntersect returns ProductExpr
+    : ProductExprPrimary ({ProductExprIntersect.left = current} '&&' right=ProductExprPrimary)
+    ;
+
+ProductExprPrimary returns ProductExpr
+    : '{' features+=ProductFeature (',' features+=ProductFeature)* '}'
+    | prodname=TYPE_IDENTIFIER
+    | '(' paren=ProductExpr ')'
     ;
 
 // Local Variables:

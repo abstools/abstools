@@ -128,4 +128,11 @@ public class AbsValidator extends AbstractAbsValidator {
                   AbsPackage.eINSTANCE.getClassModifier_Removed_field());
         }
     }
+
+    @Check public void checkOnlyTrueOrFalseDeltaParameter(AttributeAssignmentValue_Bool aavb) {
+        if (!(aavb.getValue().equals("True") || aavb.getValue().equals("False"))) {
+            error("Invalid Boolean value, must be ‘True’ or ‘False’.",
+                  AbsPackage.eINSTANCE.getAttributeAssignmentValue_Bool_Value());
+        }
+    }
 }

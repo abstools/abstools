@@ -115,6 +115,13 @@ public class XtextToJastAdd {
         for (org.abs_models.xtext.abs.DeltaDecl delta : xtext_unit.getDeltas()) {
             result.addDeltaDeclNoTransform(fromXtext(delta));
         }
+        if (xtext_unit.getProductline() != null) {
+            result.setProductLine(fromXtext(xtext_unit.getProductline()));
+        }
+        for (org.abs_models.xtext.abs.ProductDecl product : xtext_unit.getProducts()) {
+            result.addProductDeclNoTransform(fromXtext(product));
+        }
+
         return nodeWithLocation(result, xtext_unit);
     }
 
@@ -1158,4 +1165,153 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_mod);
     }
 
+    private static ProductLine fromXtext(org.abs_models.xtext.abs.ProductlineDecl xtext_decl) {
+        ProductLine result = new ProductLine();
+        result.setName(xtext_decl.getName());
+        for (org.abs_models.xtext.abs.ProductFeature feature : xtext_decl.getFeatures()) {
+            result.addFeatureNoTransform(fromXtext(feature));
+        }
+        for (org.abs_models.xtext.abs.ProductlineDeltaClause xtext_clause : xtext_decl.getDelta_clauses()) {
+            result.addDeltaClause(fromXtext(xtext_clause));
+        }
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static Feature fromXtext(org.abs_models.xtext.abs.ProductFeature xtext_feature) {
+        Feature result = new Feature();
+        result.setName(xtext_feature.getName());
+        for (org.abs_models.xtext.abs.AttributeAssignment xtext_attr : xtext_feature.getAttribute_assignments()) {
+            AttrAssignment attr = new AttrAssignment();
+            attr.setName(xtext_attr.getName());
+            org.abs_models.xtext.abs.AttributeAssignmentValue xtext_value = xtext_attr.getValue();
+            if (xtext_value instanceof org.abs_models.xtext.abs.AttributeAssignmentValue_Int) {
+                int value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_Int)xtext_value).getValue().intValue();
+                attr.setValue(nodeWithLocation(new IntVal(value), xtext_value));
+            } else if (xtext_value instanceof org.abs_models.xtext.abs.AttributeAssignmentValue_Bool) {
+                boolean value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_Bool)xtext_value).getValue().equals("True");
+                attr.setValue(nodeWithLocation(new BoolVal(value), xtext_value));
+            } else if (xtext_value instanceof org.abs_models.xtext.abs.AttributeAssignmentValue_String) {
+                String value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_String)xtext_value).getValue();
+                attr.setValue(nodeWithLocation(new StringVal(value), xtext_value));
+            } else {
+                // The antlr code created an UnknownValue here and rewrote it
+                // into BoolVal later -- we catch invalid constructor names
+                // during xtext validation instead.
+                throw new NotImplementedYetException(new ASTNode(),
+                                                     "No conversion to JastAdd implemented for Xtext node "
+                                                     + xtext_value.getClass().toString());
+            }
+            result.addAttrAssignment(nodeWithLocation(attr, xtext_attr));
+        }
+        return nodeWithLocation(result, xtext_feature);
+    }
+
+    private static DeltaClause fromXtext(org.abs_models.xtext.abs.ProductlineDeltaClause xtext_clause) {
+        DeltaClause result = new DeltaClause();
+        Deltaspec result_name = new Deltaspec();
+        result_name.setDeltaID(xtext_clause.getName());
+        for (org.abs_models.xtext.abs.DeltaClauseParam param : xtext_clause.getParams()) {
+            result_name.addDeltaparam(fromXtext(param));
+        }
+        result.setDeltaspec(result_name);
+        for (String after_id : xtext_clause.getAfter_ids()) {
+            result.addAfterDeltaID(new DeltaID(after_id));
+        }
+        if (xtext_clause.getFrom_condition() != null) {
+            result.setFromAppCond(fromXtext(xtext_clause.getFrom_condition()));
+        }
+        if (xtext_clause.getWhen_condition() != null) {
+            result.setAppCond(fromXtext(xtext_clause.getWhen_condition()));
+        }
+        return nodeWithLocation(result, xtext_clause);
+    }
+
+    private static Deltaparam fromXtext(org.abs_models.xtext.abs.DeltaClauseParam xtext_param) {
+        Deltaparam result = null;
+        if (xtext_param instanceof org.abs_models.xtext.abs.DeltaClauseParam_Int) {
+            result = new Const(new IntVal(((org.abs_models.xtext.abs.DeltaClauseParam_Int)xtext_param).getInt_param().intValue()));
+        } else if (xtext_param instanceof org.abs_models.xtext.abs.DeltaClauseParam_Id) {
+            org.abs_models.xtext.abs.DeltaClauseParam_Id id_param = (org.abs_models.xtext.abs.DeltaClauseParam_Id) xtext_param;
+            if (id_param.getFidaid_param() == null) {
+                if (id_param.getId_param().equals("True")) {
+                    result = new Const(new BoolVal(true));
+                } else if (id_param.getId_param().equals("False")) {
+                    result = new Const(new BoolVal(false));
+                } else {
+                    result = new FID(id_param.getId_param());
+                }
+            } else {
+                result = new FIDAID(id_param.getId_param(), id_param.getFidaid_param());
+            }
+        } else {
+            throw new NotImplementedYetException(new ASTNode(),
+                                                 "No conversion to JastAdd implemented for Xtext node "
+                                                 + xtext_param.getClass().toString());
+        }
+        return nodeWithLocation(result, xtext_param);
+    }
+
+    private static AppCond fromXtext(org.abs_models.xtext.abs.DeltaClauseApplicationClause xtext_clause) {
+        AppCond result = null;
+        if (xtext_clause instanceof org.abs_models.xtext.abs.DeltaClauseApplicationClauseOr) {
+            result = new AppCondOr(fromXtext(xtext_clause.getLeft()),
+                                   fromXtext(xtext_clause.getRight()));
+        } else if (xtext_clause instanceof org.abs_models.xtext.abs.DeltaClauseApplicationClauseAnd) {
+            result = new AppCondAnd(fromXtext(xtext_clause.getLeft()),
+                                    fromXtext(xtext_clause.getRight()));
+        } else {
+            // primary
+            if (xtext_clause.getNot() != null) {
+                result = new AppCondNot(fromXtext(xtext_clause.getNot()));
+            } else if (xtext_clause.getParen() != null) {
+                return fromXtext(xtext_clause.getParen());
+            } else {
+                result = new AppCondFeature(xtext_clause.getFeature_name());
+            }
+        }
+        return nodeWithLocation(result, xtext_clause);
+    }
+
+    private static ProductDecl fromXtext(org.abs_models.xtext.abs.ProductDecl xtext_decl) {
+        ProductDecl result = new ProductDecl();
+        result.setName(xtext_decl.getName());
+        if (xtext_decl.getExpr() != null) {
+            // new syntax
+            result.setProductExpr(fromXtext(xtext_decl.getExpr()));
+        } else {
+            // old syntax
+            ProductFeatureSet fs = new ProductFeatureSet();
+            for (org.abs_models.xtext.abs.ProductFeature feat : xtext_decl.getFeatures()) {
+                fs.addFeature(fromXtext(feat));
+            }
+            result.setProductExpr(fs);
+        }
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static ProductExpr fromXtext(org.abs_models.xtext.abs.ProductExpr xtext_exp) {
+        ProductExpr result = null;
+        if (xtext_exp instanceof org.abs_models.xtext.abs.ProductExprDifference) {
+            result = new ProductDifference(fromXtext(xtext_exp.getLeft()),
+                                           fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.ProductExprUnion) {
+            result = new ProductUnion(fromXtext(xtext_exp.getLeft()),
+                                      fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.ProductExprIntersect) {
+            result = new ProductIntersect(fromXtext(xtext_exp.getLeft()),
+                                          fromXtext(xtext_exp.getRight()));
+        } else {
+            if (xtext_exp.getProdname() != null) {
+                result = new ProductName(xtext_exp.getProdname());
+            } else if (xtext_exp.getParen() != null) {
+                return fromXtext(xtext_exp.getParen());
+            } else {
+                result = new ProductFeatureSet();
+                for (org.abs_models.xtext.abs.ProductFeature feat : xtext_exp.getFeatures()) {
+                    ((ProductFeatureSet)result).addFeature(fromXtext(feat));
+                }
+            }
+        }
+        return nodeWithLocation(result, xtext_exp);
+    }
 }
