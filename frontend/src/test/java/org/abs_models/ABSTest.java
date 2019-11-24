@@ -169,7 +169,16 @@ public class ABSTest {
     static public Model assertParseFileOk(String fileName, Config... config) throws IOException,
         WrongProgramArgumentException, InternalBackendException, DeltaModellingException {
         Main main = new Main();
-        Model m = main.parse(Arrays.asList(new File(resolveFileName(fileName))));
+        File file = new File(resolveFileName(fileName));
+        Model m;
+        if (file.isDirectory()) {
+            m = main.parse(Arrays.asList(file.listFiles(f ->
+                                                        f.isFile()
+                                                        && (f.getName().endsWith(".abs")
+                                                            || f.getName().endsWith(".mtvl")))));
+        } else {
+            m = main.parse(Arrays.asList(file));
+        }
         m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
     }
