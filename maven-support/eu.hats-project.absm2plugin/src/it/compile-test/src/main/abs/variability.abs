@@ -1,1 +1,1 @@
-root FM { group [0..1] { F } }
+root FM { group [0 .. 1] { F } }

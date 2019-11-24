@@ -19,7 +19,7 @@ interface WebServer {
 class WebServer (Map<String, Document> pages) implements WebServer {
     Maybe<DocHead> getHead(String path) {
         Maybe<Document> doc = lookup(pages, path);
-        return if doc == Nothing then Nothing else Just(dochead(fromJust(doc)));
+        return when doc == Nothing then Nothing else Just(dochead(fromJust(doc)));
     }
     Maybe<Document> getPage(String path) {
         return lookup(pages, path);

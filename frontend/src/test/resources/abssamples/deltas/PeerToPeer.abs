@@ -230,7 +230,7 @@ root Peer2Peer {
     group oneof {
         Basic,
         Extended {
-            group [0..2] {
+            group [0 .. 2] {
                 FileFilter,
                 ParentalControl { require: FileFilter; }
             }

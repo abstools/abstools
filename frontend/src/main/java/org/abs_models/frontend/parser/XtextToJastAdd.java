@@ -121,7 +121,12 @@ public class XtextToJastAdd {
         for (org.abs_models.xtext.abs.ProductDecl product : xtext_unit.getProducts()) {
             result.addProductDeclNoTransform(fromXtext(product));
         }
-
+        for (org.abs_models.xtext.abs.MTVLFeatureRoot f : xtext_unit.getRoot_features()) {
+            result.addFeatureDeclNoTransform(fromXtext(f));
+        }
+        for (org.abs_models.xtext.abs.MTVLFeatureExtension e : xtext_unit.getFeature_extensions()) {
+            result.addFExtNoTransform(fromXtext(e));
+        }
         return nodeWithLocation(result, xtext_unit);
     }
 
@@ -1161,9 +1166,15 @@ public class XtextToJastAdd {
                 }
             }
             result = mresult;
+        } else if (xtext_mod.getModified_typesyn() != null) {
+            result = new ModifyTypeSynModifier(fromXtext(xtext_mod.getModified_typesyn()));
+        } else if (xtext_mod.getModified_datatype() != null) {
+            result = new ModifyDataTypeModifier(fromXtext(xtext_mod.getModified_datatype()));
         }
         return nodeWithLocation(result, xtext_mod);
     }
+
+    // Product lines
 
     private static ProductLine fromXtext(org.abs_models.xtext.abs.ProductlineDecl xtext_decl) {
         ProductLine result = new ProductLine();
@@ -1272,6 +1283,8 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_clause);
     }
 
+    // Products
+
     private static ProductDecl fromXtext(org.abs_models.xtext.abs.ProductDecl xtext_decl) {
         ProductDecl result = new ProductDecl();
         result.setName(xtext_decl.getName());
@@ -1314,4 +1327,248 @@ public class XtextToJastAdd {
         }
         return nodeWithLocation(result, xtext_exp);
     }
+
+    // mTVL
+
+    private static FeatureDecl fromXtext(org.abs_models.xtext.abs.MTVLFeatureRoot xtext_root) {
+        FeatureDecl result = new FeatureDecl();
+        result.setName(xtext_root.getName());
+        if (xtext_root.getGroup() != null) {
+            result.setGroup(fromXtext(xtext_root.getGroup()));
+        }
+        AttrConstraints constraints = new AttrConstraints();
+        for (org.abs_models.xtext.abs.MTVLAttributeDecl attr : xtext_root.getAttributes()) {
+            constraints.addAttributeNoTransform(fromXtext(attr));
+        }
+        for (org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_root.getConstraints()) {
+            constraints.addConstrNoTransform(fromXtext(constraint));
+        }
+        result.setAttrConstraints(constraints);
+        return nodeWithLocation(result, xtext_root);
+    }
+
+    private static FeatureDecl fromXtext(org.abs_models.xtext.abs.MTVLFeatureDecl xtext_feature) {
+        FeatureDecl result = new FeatureDecl();
+        result.setName(xtext_feature.getName());
+        if (xtext_feature.getGroup() != null) {
+            result.setGroup(fromXtext(xtext_feature.getGroup()));
+        }
+        AttrConstraints constraints = new AttrConstraints();
+        for (org.abs_models.xtext.abs.MTVLAttributeDecl attr : xtext_feature.getAttributes()) {
+            constraints.addAttributeNoTransform(fromXtext(attr));
+        }
+        for (org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_feature.getConstraints()) {
+            constraints.addConstrNoTransform(fromXtext(constraint));
+        }
+        result.setAttrConstraints(constraints);
+        return nodeWithLocation(result, xtext_feature);
+    }
+
+    private static FExt fromXtext(org.abs_models.xtext.abs.MTVLFeatureExtension xtext_ext) {
+        FExt result = new FExt();
+        result.setName(xtext_ext.getName());
+        if (xtext_ext.getGroup() != null) {
+            result.setGroup(fromXtext(xtext_ext.getGroup()));
+        }
+        AttrConstraints constraints = new AttrConstraints();
+        for (org.abs_models.xtext.abs.MTVLAttributeDecl attr : xtext_ext.getAttributes()) {
+            constraints.addAttributeNoTransform(fromXtext(attr));
+        }
+        for (org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_ext.getConstraints()) {
+            constraints.addConstrNoTransform(fromXtext(constraint));
+        }
+        result.setAttrConstraints(constraints);
+        return nodeWithLocation(result, xtext_ext);
+    }
+
+    private static Group fromXtext(org.abs_models.xtext.abs.MTVLFeatureGroup xtext_group) {
+        Group result = new Group();
+        if (xtext_group.isAllof()) {
+            result.setCard(new AllOf());
+        } else if(xtext_group.isOneof()) {
+            result.setCard(new CRange(1, 1));
+        } else if(xtext_group.getUpper().isStar()) {
+            result.setCard(new Minim(xtext_group.getLower().intValue()));
+        } else {
+            result.setCard(new CRange(xtext_group.getLower().intValue(),
+                                      xtext_group.getUpper().getValue().intValue()));
+        }
+        for (org.abs_models.xtext.abs.MTVLChildFeature f : xtext_group.getChildren()) {
+            result.addFNodeNoTransform(fromXtext(f));
+        }
+        return nodeWithLocation(result, xtext_group);
+    }
+
+    private static Attribute fromXtext(org.abs_models.xtext.abs.MTVLAttributeDecl xtext_attr) {
+        Attribute result = new Attribute();
+        result.setName(xtext_attr.getName());
+        if (xtext_attr.getType().equals("Int")) {
+            if (xtext_attr.isInterval()) {
+                result.setAType(new IntMType("Int",
+                                             fromXtext(xtext_attr.getLower()),
+                                             fromXtext(xtext_attr.getUpper())));
+            } else if (xtext_attr.isSet()) {
+                IntListMType mt = new IntListMType("Int", new List<>());
+                for (org.abs_models.xtext.abs.MTVLIntValue v : xtext_attr.getContent()) {
+                    mt.addBoundaryValNoTransform(new BoundaryVal((v.isMinus() ? -1 : +1)
+                                                                 * v.getValue().intValue()));
+                }
+                result.setAType(mt);
+            } else {
+                result.setAType(new IntMType("Int", new Limit(), new Limit()));
+            }
+        } else if (xtext_attr.getType().equals("String")) {
+            result.setAType(new StringMType("String"));
+        } else if (xtext_attr.getType().equals("Bool")) {
+            result.setAType(new BoolMType("Bool"));
+        } else {
+            // should not happen - caught during validation
+            result.setAType(new UnresolvedMType(xtext_attr.getType()));
+        }
+        return nodeWithLocation(result, xtext_attr);
+    }
+
+    private static BoundaryInt fromXtext(org.abs_models.xtext.abs.MTVLIntLimit xtext_lim) {
+        BoundaryInt result = null;
+        if (xtext_lim.isStar()) {
+            result = new Limit();
+        } else {
+            result = new BoundaryVal((xtext_lim.isMinus() ? -1 : +1)
+                                     * xtext_lim.getValue().intValue());
+        }
+        return nodeWithLocation(result, xtext_lim);
+    }
+
+    private static Constr fromXtext(org.abs_models.xtext.abs.MTVLConstraint xtext_constr) {
+        Constr result = null;
+        if (xtext_constr instanceof org.abs_models.xtext.abs.MTVLIfInConstraint) {
+            result = new IfIn(fromXtext(((org.abs_models.xtext.abs.MTVLIfInConstraint)xtext_constr).getExpr()));
+        } else if (xtext_constr instanceof org.abs_models.xtext.abs.MTVLIfOutConstraint) {
+            result = new IfOut(fromXtext(((org.abs_models.xtext.abs.MTVLIfOutConstraint)xtext_constr).getExpr()));
+        } else if (xtext_constr instanceof org.abs_models.xtext.abs.MTVLRequireConstraint) {
+            result = new Require(new FeatVar(((org.abs_models.xtext.abs.MTVLRequireConstraint)xtext_constr).getRequire()));
+        } else if (xtext_constr instanceof org.abs_models.xtext.abs.MTVLExcludeConstraint) {
+            result = new Exclude(new FeatVar(((org.abs_models.xtext.abs.MTVLExcludeConstraint)xtext_constr).getExclude()));
+        } else {
+            throw new NotImplementedYetException(new ASTNode(),
+                                                 "No conversion to JastAdd implemented for Xtext node "
+                                                 + xtext_constr.getClass().toString());
+        }
+        return nodeWithLocation(result, xtext_constr);
+    }
+
+    private static FNode fromXtext(org.abs_models.xtext.abs.MTVLChildFeature xtext_feat) {
+        FNode result = null;
+        if (xtext_feat.isOpt()) {
+            result = new OptFeat(fromXtext(xtext_feat.getFeature()));
+        } else {
+            result = new MandFeat(fromXtext(xtext_feat.getFeature()));
+        }
+        return nodeWithLocation(result, xtext_feat);
+    }
+
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprOr xtext_exp) {
+        MOrBoolExp result = new MOrBoolExp(fromXtext(xtext_exp.getLeft()),
+                                           fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprAnd xtext_exp) {
+        MAndBoolExp result = new MAndBoolExp(fromXtext(xtext_exp.getLeft()),
+                                             fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprImpl xtext_exp) {
+        MImpliesExp result = new MImpliesExp(fromXtext(xtext_exp.getLeft()),
+                                             fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprEqv xtext_exp) {
+        MEquivExp result = new MEquivExp(fromXtext(xtext_exp.getLeft()),
+                                         fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprEq xtext_exp) {
+        MEqExp result = new MEqExp(fromXtext(xtext_exp.getLeft()),
+                                   fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprNeq xtext_exp) {
+        MNotEqExp result = new MNotEqExp(fromXtext(xtext_exp.getLeft()),
+                                         fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprLT xtext_exp) {
+        MLTExp result = new MLTExp(fromXtext(xtext_exp.getLeft()),
+                                   fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprGT xtext_exp) {
+        MGTExp result = new MGTExp(fromXtext(xtext_exp.getLeft()),
+                                   fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprLTEQ xtext_exp) {
+        MLTEQExp result = new MLTEQExp(fromXtext(xtext_exp.getLeft()),
+                                       fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprGTEQ xtext_exp) {
+        MGTEQExp result = new MGTEQExp(fromXtext(xtext_exp.getLeft()),
+                                       fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprPlus xtext_exp) {
+        MAddAddExp result = new MAddAddExp(fromXtext(xtext_exp.getLeft()),
+                                           fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprMinus xtext_exp) {
+        MSubAddExp result = new MSubAddExp(fromXtext(xtext_exp.getLeft()),
+                                           fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprMul xtext_exp) {
+        MMultMultExp result = new MMultMultExp(fromXtext(xtext_exp.getLeft()),
+                                               fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprDiv xtext_exp) {
+        MDivMultExp result = new MDivMultExp(fromXtext(xtext_exp.getLeft()),
+                                             fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprMod xtext_exp) {
+        MModMultExp result = new MModMultExp(fromXtext(xtext_exp.getLeft()),
+                                             fromXtext(xtext_exp.getRight()));
+        return nodeWithLocation(result, xtext_exp);
+    }
+    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExpr xtext_exp) {
+        MExp result = null;
+        if (xtext_exp.getParen_exp() != null) {
+            return fromXtext(xtext_exp.getParen_exp());
+        } else if (xtext_exp.getMinus_exp() != null) {
+            result = new MMinusExp(fromXtext(xtext_exp.getMinus_exp()));
+        } else if (xtext_exp.getNeg_exp() != null) {
+            result = new MNegExp(fromXtext(xtext_exp.getNeg_exp()));
+        } else if (xtext_exp.getInt_exp() != null) {
+            result = new MValue(new IntVal(xtext_exp.getInt_exp().intValue()));
+        } else if (xtext_exp.getId_exp() != null) {
+            result = new AttVar(xtext_exp.getId_exp());
+        } else {
+            if (xtext_exp.getDot_id() != null) {
+                result = new FAVar(xtext_exp.getType_exp(),
+                                   xtext_exp.getDot_id());
+            } else {
+                if (xtext_exp.getType_exp().equals("True")) {
+                    result = new MValue(new BoolVal(true));
+                } else if (xtext_exp.getType_exp().equals("False")) {
+                    result = new MValue(new BoolVal(false));
+                } else {
+                    result = new FeatVar(xtext_exp.getType_exp());
+                }
+            }
+        }
+        return nodeWithLocation(result, xtext_exp);
+    }
+
 }

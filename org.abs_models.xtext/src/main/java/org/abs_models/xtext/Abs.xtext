@@ -8,6 +8,8 @@ CompilationUnit
     : {CompilationUnit} (modules+=ModuleDecl)* (deltas+=DeltaDecl)*
         productline=ProductlineDecl?
         products+=ProductDecl*
+        ( root_features+=MTVLFeatureRoot
+        | feature_extensions+=MTVLFeatureExtension)*
     ;
 
 ModuleDecl
@@ -457,8 +459,8 @@ DeltaModuleModifier
         | added_import=ModuleImport
         | added_export=ModuleExport)
     | 'removes'
-        ( 'class' removed_class_name=QualifiedTypeIdentifier
-        | 'interface' removed_interface_name=QualifiedTypeIdentifier)
+        ( 'class' removed_class_name=QualifiedTypeIdentifier ';'
+        | 'interface' removed_interface_name=QualifiedTypeIdentifier ';')
     | 'modifies'
         ( 'class' modified_class_name=QualifiedTypeIdentifier
             ('adds' added_interfaces+=QualifiedTypeIdentifier
@@ -468,6 +470,8 @@ DeltaModuleModifier
             '{' (class_modifiers+=ClassModifier)* '}'
         | 'interface' modified_interface_name=QualifiedTypeIdentifier
             '{' (interface_modifiers+=InterfaceModifier)* '}'
+        | modified_typesyn=TypeSynonymDecl
+        | modified_datatype=DataTypeDecl
         )
     ;
 
@@ -496,8 +500,8 @@ ProductlineDecl
 
 ProductFeature
 // allow writing Feat' to refer to the intermediate feature "$feat"
-    : name=TYPE_IDENTIFIER p?='\''
-        ('{' attribute_assignments+=AttributeAssignment (',' attribute_assignments+=AttributeAssignment) '}')?
+    : name=TYPE_IDENTIFIER p?='\''?
+        ('{' attribute_assignments+=AttributeAssignment (',' attribute_assignments+=AttributeAssignment)* '}')?
     ;
 
 AttributeAssignment : name=IDENTIFIER '=' value = AttributeAssignmentValue ;
@@ -510,8 +514,8 @@ AttributeAssignmentValue
 
 ProductlineDeltaClause
     : 'delta' name=TYPE_IDENTIFIER
-        ('(' params+=DeltaClauseParam (',' params+=DeltaClauseParam)* '_')?
-        ('after' after_ids+=TYPE_IDENTIFIER (',' after_ids+=TYPE_IDENTIFIER))?
+        ('(' params+=DeltaClauseParam (',' params+=DeltaClauseParam)* ')')?
+        ('after' after_ids+=TYPE_IDENTIFIER (',' after_ids+=TYPE_IDENTIFIER)* )?
         ('from' from_condition=DeltaClauseApplicationClause)?
         (('when' | 'to') when_condition=DeltaClauseApplicationClause)?
         ';'
@@ -528,10 +532,10 @@ DeltaClauseParam
 DeltaClauseApplicationClause : DeltaClauseApplicationClauseOr ;
 
 DeltaClauseApplicationClauseOr returns DeltaClauseApplicationClause
-    : DeltaClauseApplicationClauseAnd ({DeltaClauseApplicationClauseOr.left = current} '||' right=DeltaClauseApplicationClauseAnd) ;
+    : DeltaClauseApplicationClauseAnd ({DeltaClauseApplicationClauseOr.left = current} '||' right=DeltaClauseApplicationClauseAnd)* ;
 
 DeltaClauseApplicationClauseAnd returns DeltaClauseApplicationClause
-    : DeltaClauseApplicationClausePrimary ({DeltaClauseApplicationClauseAnd.left = current} '&&' right=DeltaClauseApplicationClausePrimary) ;
+    : DeltaClauseApplicationClausePrimary ({DeltaClauseApplicationClauseAnd.left = current} '&&' right=DeltaClauseApplicationClausePrimary)* ;
 
 DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
     : '!' not=DeltaClauseApplicationClause
@@ -550,21 +554,141 @@ ProductDecl
 ProductExpr : ProductExprDifference ;
 
 ProductExprDifference returns ProductExpr
-    : ProductExprUnion ({ProductExprDifference.left = current} '-' right=ProductExprUnion)
+    : ProductExprUnion ({ProductExprDifference.left = current} '-' right=ProductExprUnion)*
     ;
 
 ProductExprUnion returns ProductExpr
-    : ProductExprIntersect ({ProductExprUnion.left = current} '||' right=ProductExprIntersect)
+    : ProductExprIntersect ({ProductExprUnion.left = current} '||' right=ProductExprIntersect)*
     ;
 
 ProductExprIntersect returns ProductExpr
-    : ProductExprPrimary ({ProductExprIntersect.left = current} '&&' right=ProductExprPrimary)
+    : ProductExprPrimary ({ProductExprIntersect.left = current} '&&' right=ProductExprPrimary)*
     ;
 
 ProductExprPrimary returns ProductExpr
     : '{' features+=ProductFeature (',' features+=ProductFeature)* '}'
     | prodname=TYPE_IDENTIFIER
     | '(' paren=ProductExpr ')'
+    ;
+
+// Feature Model
+
+
+// The following rules are translations of the corresponding antlr rules and
+// differ from the grammar in the manual in some places.
+MTVLFeatureRoot
+    : 'root' name=TYPE_IDENTIFIER
+        (
+            '{'
+            group=MTVLFeatureGroup?
+            (attributes+=MTVLAttributeDecl | constraints+=MTVLConstraint)*
+            '}'
+        )?
+    ;
+
+MTVLFeatureDecl
+// same as MTVLFeatureRoot without the ’root’ keyword in front
+    : name=TYPE_IDENTIFIER
+        (
+            '{'
+            group=MTVLFeatureGroup?
+            (attributes+=MTVLAttributeDecl | constraints+=MTVLConstraint)*
+            '}'
+        )?
+    ;
+
+MTVLFeatureExtension
+    : 'extension' name=TYPE_IDENTIFIER
+        '{'
+        group=MTVLFeatureGroup?
+        (attributes+=MTVLAttributeDecl | constraints+=MTVLConstraint)*
+        '}'
+    ;
+
+MTVLFeatureGroup
+    : 'group'
+        ( allof?='allof'
+        | oneof?='oneof'
+        | '[' lower=INTLITERAL '..' upper=MTVLIntLimit ']'
+        )
+        '{'
+        children+=MTVLChildFeature (',' children+=MTVLChildFeature)*
+        '}'
+    ;
+
+MTVLChildFeature : opt?='opt'? feature=MTVLFeatureDecl ;
+
+MTVLAttributeDecl
+    : type=TYPE_IDENTIFIER name=IDENTIFIER
+        ('in'
+            ( interval?='[' lower=MTVLIntLimit '..' upper=MTVLIntLimit ']'
+            | set?='{' content+=MTVLIntValue (',' content+=MTVLIntValue)* '}')
+        )?
+        ';'
+    ;
+
+MTVLIntLimit : star?='*' | minus?='-'? value=INTLITERAL ;
+
+MTVLIntValue : minus?='-'? value=INTLITERAL ;
+
+MTVLConstraint returns MTVLConstraint
+    : 'ifin' {MTVLIfInConstraint} ':' expr=MTVLConstraintExpr ';'
+    | 'ifout' {MTVLIfOutConstraint} ':' expr=MTVLConstraintExpr ';'
+    | 'require' {MTVLRequireConstraint} ':' require=TYPE_IDENTIFIER ';'
+    | 'exclude' {MTVLExcludeConstraint} ':' exclude=TYPE_IDENTIFIER ';'
+    | {MTVLIfInConstraint} expr=MTVLConstraintExpr ';'
+    ;
+
+MTVLConstraintExpr : MTVLConstraintExprOr ;
+
+MTVLConstraintExprOr returns MTVLConstraintExpr
+    : MTVLConstraintExprAnd ({MTVLConstraintExprOr.left=current} '||' right=MTVLConstraintExprAnd)*
+    ; // left-assoc
+
+MTVLConstraintExprAnd returns MTVLConstraintExpr
+    : MTVLConstraintExprImplEqv ({MTVLConstraintExprAnd.left=current} '||' right=MTVLConstraintExprImplEqv)*
+    ; // left-assoc
+
+MTVLConstraintExprImplEqv returns MTVLConstraintExpr
+    : MTVLConstraintExprEqNeq
+        ( ({MTVLConstraintExprImpl.left=current} '->' right=MTVLConstraintExprEqNeq)
+        | ({MTVLConstraintExprEqv.left=current} '<->' right=MTVLConstraintExprEqNeq))
+    ; // non-assoc
+
+MTVLConstraintExprEqNeq returns MTVLConstraintExpr
+    : MTVLConstraintExprCompare
+        ( ({MTVLConstraintExprEq.left=current} '==' right=MTVLConstraintExprCompare)
+        | ({MTVLConstraintExprNeq.left=current} '!=' right=MTVLConstraintExprCompare))
+    ; // non-assoc
+
+MTVLConstraintExprCompare returns MTVLConstraintExpr
+    : MTVLConstraintExprPlusMinus
+        ( ({MTVLConstraintExprLT.left=current} '<' right=MTVLConstraintExprPlusMinus)
+        | ({MTVLConstraintExprGT.left=current} '>' right=MTVLConstraintExprPlusMinus)
+        | ({MTVLConstraintExprLTEQ.left=current} '<=' right=MTVLConstraintExprPlusMinus)
+        | ({MTVLConstraintExprGTEQ.left=current} '>=' right=MTVLConstraintExprPlusMinus))
+    ; // non-assoc
+
+MTVLConstraintExprPlusMinus returns MTVLConstraintExpr
+    : MTVLConstraintExprMulDivMod
+      ( ({MTVLConstraintExprPlus.left=current} '+' right=MTVLConstraintExprMulDivMod)
+        | ({MTVLConstraintExprMinus.left=current} '-' right=MTVLConstraintExprMulDivMod))*
+    ; // left-assoc
+
+MTVLConstraintExprMulDivMod returns MTVLConstraintExpr
+    : MTVLConstraintExprPrimary
+      ( ({MTVLConstraintExprMul.left=current} '*' right=MTVLConstraintExprPrimary)
+        | ({MTVLConstraintExprDiv.left=current} '/' right=MTVLConstraintExprPrimary)
+        | ({MTVLConstraintExprMod.left=current} '%' right=MTVLConstraintExprPrimary))*
+    ; // left-assoc
+
+MTVLConstraintExprPrimary returns MTVLConstraintExpr
+    : '(' paren_exp=MTVLConstraintExpr ')'
+    | '-' minus_exp=MTVLConstraintExpr
+    | '!' neg_exp=MTVLConstraintExpr
+    | int_exp=INTLITERAL
+    | id_exp=IDENTIFIER
+    | type_exp=TYPE_IDENTIFIER (dot?='.' dot_id=IDENTIFIER)?
     ;
 
 // Local Variables:
