@@ -6,133 +6,14 @@ package org.abs_models.xtext.validation;
 import org.abs_models.xtext.abs.*;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
+import org.eclipse.xtext.validation.ComposedChecks;
 
 /**
- * This class contains custom validation rules.
+ * This class collects all classes implementing validation rules.
  *
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
+// Include other validators: see https://stackoverflow.com/a/17317417
+@ComposedChecks(validators = { FullAbsValidator.class, CoreAbsValidator.class })
 public class AbsValidator extends AbstractAbsValidator {
-    // TODO
-    // 
-    // - check in AttributeAssignment: only True, False allowed for type
-    //   identifiers
-    private boolean isSideEffectExpContainer(EObject stmt) {
-        // We allow the following forms:
-        // - "f.get;" (ExpStmt)
-        // - "x = f.get;" (AssignStmt)
-        // - "T x = f.get" (VarDeclStmt)
-        // - "return f.get" (ReturnStmt)
-        return stmt instanceof ExpStmt
-            || stmt instanceof AssignStmt
-            || stmt instanceof VarDeclStmt
-            || stmt instanceof ReturnStmt;
-    }
-    private boolean isSingleMethodCallGuard(Guard g) {
-        return g instanceof ExpGuard
-            && ((ExpGuard)g).getExp() instanceof MethodCallExp;
-    }
-
-    @Check
-    public void checkGetExpPlacement(GetExp e) {
-        if(!isSideEffectExpContainer(e.eContainer())) {
-            error("A get expression cannot be a sub-expression",
-                  e.eContainer(), e.eContainingFeature());
-        }
-    }
-    @Check
-    public void checkOriginalCallExpPlacement(OriginalCallExp e) {
-        if(!isSideEffectExpContainer(e.eContainer())) {
-            error("An original call expression cannot be a sub-expression",
-                  e.eContainer(), e.eContainingFeature());
-        }
-    }
-    @Check
-    public void checkNewExpPlacement(NewExp e) {
-        if(!isSideEffectExpContainer(e.eContainer())) {
-            error("A new expression cannot be a sub-expression",
-                  e.eContainer(), e.eContainingFeature());
-        }
-    }
-    @Check
-    public void checkAwaitExpPlacement(AwaitExp e) {
-        if (isSingleMethodCallGuard(e.getGuard())) {
-            // "await o!m()", i.e., an await expression
-            if(!isSideEffectExpContainer(e.eContainer())) {
-                error("An await expression cannot be a sub-expression",
-                      e.eContainer(), e.eContainingFeature());
-            }
-        } else {
-            // any other await, i.e., an await statement
-            if (!(e.eContainer() instanceof ExpStmt)) {
-                error("Invalid placement of await statement",
-                      e.eContainer(), e.eContainingFeature());
-            }
-        }
-    }
-    @Check
-    public void checkValidAwaitCall(MethodCallExp e) {
-        if (e.eContainer() instanceof ExpGuard
-            && ((MethodCallExp)e).getOperator().equals(".")) {
-            // disallow "await o.m()"
-            error("Cannot await on synchronous method call",
-                  e.eContainer(), e.eContainingFeature());
-        }
-    }
-
-    @Check
-    public void checkNoMethodCallInSubguard(AndGuard g) {
-        // Block "await o!m() & o!m();"
-        Guard l = g.getLeft();
-        Guard r = g.getRight();
-        if (l instanceof ExpGuard && ((ExpGuard)l).getExp() instanceof MethodCallExp) {
-            error("A side-effect expression cannot be a sub-expression",
-                  AbsPackage.eINSTANCE.getAndGuard_Left());
-        }
-        if (r instanceof ExpGuard && ((ExpGuard)r).getExp() instanceof MethodCallExp) {
-            error("A side-effect expression cannot be a sub-expression",
-                  AbsPackage.eINSTANCE.getAndGuard_Left());
-        }
-    }
-
-    // ========== end of Core ABS ==========
-
-    // Deltas
-    @Check public void checkAllowedAddedDeclaration(DeltaModuleModifier mod) {
-        if (mod.getAdded_decl() != null) {
-            Declaration d = mod.getAdded_decl();
-            if (!(d instanceof ClassDecl
-                  || d instanceof InterfaceDecl
-                  || d instanceof FunctionDecl
-                  || d instanceof DataTypeDecl
-                  || d instanceof TypeSynonymDecl
-                  )) {
-                error("Adding of " + d.getClass().getName() + " declarations is unsupported",
-                      AbsPackage.eINSTANCE.getDeltaModuleModifier_Added_decl());
-            }
-        }
-    }
-
-    @Check public void checkNoFieldInitializerForDeltaCondition(DeltaCondition d) {
-        if (d.getDeltaFieldCondition() != null
-            && d.getDeltaFieldCondition().isHasInit()) {
-            error("Cannot use a field initializer here",
-                  AbsPackage.eINSTANCE.getDeltaCondition_DeltaFieldCondition());
-        }
-    }
-
-    @Check public void checkNoFieldInitializerForRemovedField(ClassModifier cm) {
-        if (cm.getRemoved_field() != null
-            && cm.getRemoved_field().isHasInit()) {
-            error("Cannot use a field initializer here",
-                  AbsPackage.eINSTANCE.getClassModifier_Removed_field());
-        }
-    }
-
-    @Check public void checkOnlyTrueOrFalseDeltaParameter(AttributeAssignmentValue_Bool aavb) {
-        if (!(aavb.getValue().equals("True") || aavb.getValue().equals("False"))) {
-            error("Invalid Boolean value, must be ‘True’ or ‘False’.",
-                  AbsPackage.eINSTANCE.getAttributeAssignmentValue_Bool_Value());
-        }
-    }
 }
