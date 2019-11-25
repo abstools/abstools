@@ -174,8 +174,7 @@ public class ABSTest {
         if (file.isDirectory()) {
             m = main.parse(Arrays.asList(file.listFiles(f ->
                                                         f.isFile()
-                                                        && (f.getName().endsWith(".abs")
-                                                            || f.getName().endsWith(".mtvl")))));
+                                                        && Main.isABSSourceFile(f))));
         } else {
             m = main.parse(Arrays.asList(file));
         }
