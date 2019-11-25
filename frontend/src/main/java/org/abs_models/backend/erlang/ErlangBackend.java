@@ -64,7 +64,7 @@ public class ErlangBackend extends Main {
 
     private int compile() throws Exception {
         final Model model = parse(arguments.files);
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
+        if (model == null || model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
             printErrorMessage();
             return 1;
         }

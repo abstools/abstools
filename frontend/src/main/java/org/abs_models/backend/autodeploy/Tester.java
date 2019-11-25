@@ -46,7 +46,7 @@ public class Tester extends Main {
       // SmartDeploy code generator since this tool takes in input a
       // program using some classes that are not defined (they will be
       // added later with a delta).
-      if (model.hasParserErrors()
+      if (model == null || model.hasParserErrors()
           // || model.hasErrors()
           ) return 1;
       if (arguments.verbose) {

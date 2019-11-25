@@ -34,6 +34,10 @@ public class PrettyPrinterBackEnd extends Main {
     public int compile(Absc args) throws Exception {
         this.arguments = args;
         final Model model = parse(arguments.files);
+        if (model == null) {
+            printErrorMessage();
+            return 1;
+        }
         if (arguments.prettyprint_keepsugar) {
             model.doAACrewrite = false;
             model.doForEachRewrite = false;

@@ -40,7 +40,7 @@ public class OutlinePrinterBackEnd extends Main {
 
     public int compile() throws Exception {
         final Model model = parse(arguments.files);
-        if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
+        if (model == null || !force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
             printErrorMessage();
             return 1;
         }

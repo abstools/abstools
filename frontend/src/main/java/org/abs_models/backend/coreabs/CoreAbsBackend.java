@@ -16,6 +16,10 @@ public class CoreAbsBackend extends Main {
         this.arguments = args;
         try {
             Model m = parse(arguments.files);
+            if (m == null) {
+                printErrorMessage();
+                return 1;
+            }
             PrintStream stream = System.out;
             String loc = "Standard Output";
             if (arguments.outputfile != null) {

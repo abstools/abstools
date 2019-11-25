@@ -126,7 +126,7 @@ public class Main {
                 }
                 if (arguments.backend.dumpProducts) {
                     Model m = parse(arguments.files);
-                    if (m.hasParserErrors()) {
+                    if (m == null || m.hasParserErrors()) {
                         // parse should have already printed errors
                         result = Math.max(result, 1);
                     } else {
@@ -142,7 +142,7 @@ public class Main {
             if (!done) {
                 // no backend selected, just do type-checking
                 Model m = parse(arguments.files);
-                if (m.hasParserErrors() || m.hasErrors() || m.hasTypeErrors()) {
+                if (m == null || m.hasParserErrors() || m.hasErrors() || m.hasTypeErrors()) {
                     printErrorMessage();
                     result = 1;
                 }
@@ -168,19 +168,39 @@ public class Main {
         return remainingArgs;
     }
 
-    // entry point for unit tests who just want to parse one or more files
+    /**
+     * Entry point for parsing files.  This method uses the `arguments` field
+     * for additional parameters.  In case of parse errors, returns null and
+     * prints diagnostic messages to stdout.
+     *
+     * @param args - a list of File 
+     * @return A Model instance, or null in case of errors.
+     * @throws IOException
+     * @throws DeltaModellingException
+     * @throws WrongProgramArgumentException
+     * @throws InternalBackendException
+     */
+    //
     public Model parse(final java.util.List<File> args) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException {
         Model m = parseFiles(this.arguments.verbose, args);
-        analyzeFlattenAndRewriteModel(m);
+        if (m != null) analyzeFlattenAndRewriteModel(m);
         return m;
     }
 
+    /**
+     *
+     * @param verbose controls whether to print diagnostic messages
+     * @param fileNames the files to parse into a Model
+     * @return An instance of Model, or null in case of errors in the source files.
+     * @throws IOException
+     * @throws InternalBackendException
+     */
     private static Model parseFiles(boolean verbose, final java.util.List<File> fileNames) throws IOException, InternalBackendException {
         if (fileNames.isEmpty()) {
             throw new IllegalArgumentException("Please provide at least one input file");
         }
 
-        // TODO parse not only files but also directories and package files
+        // TODO parse not only files but also package files
 
         // TODO document abs package files (this involves finding out what they do)
 

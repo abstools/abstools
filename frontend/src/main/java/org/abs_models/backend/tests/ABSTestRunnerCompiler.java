@@ -47,7 +47,7 @@ public class ABSTestRunnerCompiler extends Main {
     public void compile(Absc args) throws Exception {
         this.arguments = args;
         final Model model = parse(arguments.files);
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
+        if (model == null || model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
 
         final PrintStream stream;

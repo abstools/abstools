@@ -10,6 +10,7 @@ import static org.abs_models.ABSTest.Config.TYPE_CHECK;
 import static org.abs_models.ABSTest.Config.WITHOUT_DESUGARING_AFTER_TYPECHECK;
 import static org.abs_models.ABSTest.Config.WITHOUT_MODULE_NAME;
 import static org.abs_models.ABSTest.Config.WITH_LOC_INF;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -113,6 +114,7 @@ public class ABSTest {
             s = preamble + s;
         try {
             Model p = parseString(s);
+            assertNotNull(p);
 
             if (isSet(WITHOUT_DESUGARING_AFTER_TYPECHECK, config)) {
                 p.doAACrewrite = false;
@@ -178,6 +180,7 @@ public class ABSTest {
         } else {
             m = main.parse(Arrays.asList(file));
         }
+        assertNotNull(m);
         m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
     }
@@ -186,6 +189,7 @@ public class ABSTest {
         Main main = new Main();
         java.util.List<File> files = fileNames.stream().map(f -> new File(resolveFileName(f))).collect(Collectors.toList());
         Model m = main.parse(files);
+        assertNotNull(m);
         return assertParseModelOk(m, config);
     }
 

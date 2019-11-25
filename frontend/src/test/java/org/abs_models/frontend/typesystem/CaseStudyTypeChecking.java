@@ -5,6 +5,7 @@
 package org.abs_models.frontend.typesystem;
 
 import static org.abs_models.ABSTest.Config.TYPE_CHECK;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -76,24 +77,22 @@ public class CaseStudyTypeChecking extends FrontendTest {
         assertTrue(srcFolder,srcFolderF.exists());
         Main main = new Main();
         Model m = main.parse(findAbsFiles(srcFolderF));
-
-        if (m != null) {
-            m.evaluateAllProductDeclarations();
-            if (m.hasParserErrors())
-                Assert.fail(m.getParserErrors().get(0).getMessage());
-            int numSemErrs = m.getErrors().getErrorCount();
-            StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
-            if (numSemErrs > 0) {
-                for (SemanticCondition error : m.getErrors())
+        Assert.assertNotNull(m);
+        m.evaluateAllProductDeclarations();
+        if (m.hasParserErrors())
+            Assert.fail(m.getParserErrors().get(0).getMessage());
+        int numSemErrs = m.getErrors().getErrorCount();
+        StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
+        if (numSemErrs > 0) {
+            for (SemanticCondition error : m.getErrors())
+                errs = errs.append(error.getHelpMessage() + "\n");
+            fail("Failed to parse: " + srcFolder + "\n" + errs.toString());
+        } else if (isSet(TYPE_CHECK, config)) {
+            SemanticConditionList l = m.typeCheck();
+            if (l.containsErrors()) {
+                for (SemanticCondition error : l)
                     errs = errs.append(error.getHelpMessage() + "\n");
-                fail("Failed to parse: " + srcFolder + "\n" + errs.toString());
-            } else if (isSet(TYPE_CHECK, config)) {
-                SemanticConditionList l = m.typeCheck();
-                if (l.containsErrors()) {
-                    for (SemanticCondition error : l)
-                        errs = errs.append(error.getHelpMessage() + "\n");
-                    fail("Failed to typecheck: " + srcFolder + "\n" + errs.toString());
-                }
+                fail("Failed to typecheck: " + srcFolder + "\n" + errs.toString());
             }
         }
         return m;
