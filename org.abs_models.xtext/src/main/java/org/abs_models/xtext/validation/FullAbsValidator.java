@@ -60,4 +60,21 @@ public class FullAbsValidator extends AbstractDeclarativeValidator {
                   AbsPackage.eINSTANCE.getAttributeAssignmentValue_Bool_Value());
         }
     }
+
+    @Check public void checkFeatureAttributeParameterType(MTVLAttributeDecl ad) {
+        if (!(ad.getType().equals("Int")
+              || ad.getType().equals("String")
+              || ad.getType().equals("Bool"))) {
+            error("Invalid attribute type, must be ‘Int’, ‘Bool’ or ‘String’.",
+                  AbsPackage.eINSTANCE.getMTVLAttributeDecl_Type());
+        } else if (!(ad.getType().equals("Int"))
+                   && ad.isInterval()) {
+            error("Can only specify an interval for type ‘Int’.",
+                  AbsPackage.eINSTANCE.getMTVLAttributeDecl_Interval());
+        } else if (!(ad.getType().equals("Int"))
+                   && ad.isSet()) {
+            error("Can only specify a value set for type ‘Int’.",
+                  AbsPackage.eINSTANCE.getMTVLAttributeDecl_Set());
+        }
+    }
 }
