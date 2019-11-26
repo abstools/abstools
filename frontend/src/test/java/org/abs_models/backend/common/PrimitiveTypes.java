@@ -32,6 +32,9 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void boolNegBindsOverOr() { assertEvalTrue("{ Bool testresult = !False || True; }"); }
+
+    @Test
     public void intMinus() {
         assertEvalTrue("{ Int x = -1; x = -x; Bool testresult = x == 1; }");
     }
