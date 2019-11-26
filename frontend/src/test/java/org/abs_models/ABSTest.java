@@ -33,8 +33,14 @@ import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.parser.XtextToJastAdd;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import org.abs_models.xtext.AbsStandaloneSetup;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.diagnostics.Severity;
+import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.testing.util.ParseHelper;
+import org.eclipse.xtext.util.CancelIndicator;
+import org.eclipse.xtext.validation.IResourceValidator;
+import org.eclipse.xtext.validation.Issue;
 
 public class ABSTest {
     public static enum Config {
@@ -103,7 +109,19 @@ public class ABSTest {
         resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(Main.ABS_STD_LIB).toString()))
             .load(null);
         ph.parse(s, resourceSet);
-        return XtextToJastAdd.fromResourceSet(resourceSet);
+        boolean hasErrors = false;
+        for (Resource r : resourceSet.getResources()) {
+            IResourceValidator validator = ((XtextResource)r).getResourceServiceProvider().getResourceValidator();
+            java.util.List<Issue> issues = validator.validate(r, org.eclipse.xtext.validation.CheckMode.ALL, CancelIndicator.NullImpl);
+            for (Issue issue : issues) {
+                if (issue.getSeverity() == Severity.ERROR) hasErrors = true;
+            }
+        }
+        Model result = null;
+        if (!hasErrors) {
+            result = XtextToJastAdd.fromResourceSet(resourceSet);
+        }
+        return result;
     }
 
     protected static Model assertParse(String s, Config... config) {
@@ -114,6 +132,14 @@ public class ABSTest {
             s = preamble + s;
         try {
             Model p = parseString(s);
+            if (isSet(EXPECT_PARSE_ERROR,config)) {
+                // in case of syntax errors, p is null
+                if (!(p == null) && !p.hasParserErrors()) {
+                    fail("Expected to find parse error");
+                } else {
+                    return p;
+                }
+            }
             assertNotNull(p);
 
             if (isSet(WITHOUT_DESUGARING_AFTER_TYPECHECK, config)) {
@@ -121,35 +147,30 @@ public class ABSTest {
                 p.doForEachRewrite = false;
             }
 
-            if (isSet(EXPECT_PARSE_ERROR,config)) {
-                if (!p.hasParserErrors())
-                    fail("Expected to find parse error");
+            if (p.hasParserErrors()) {
+                fail("Failed to parse: " + s + "\n" + p.getParserErrors().get(0).getMessage());
             } else {
-                if (p.hasParserErrors()) {
-                    fail("Failed to parse: " + s + "\n" + p.getParserErrors().get(0).getMessage());
-                } else {
-                    // make ProductDecl.getProduct() not return null
-                    p.evaluateAllProductDeclarations();
-                    if (isSet(TYPE_CHECK, config)) {
-                        // copy other choice parts of Main.analyzeFlattenAndRewriteModel
-                        p.flattenTraitOnly();
-                        p.collapseTraitModifiers();
-                        p.expandPartialFunctions();
-                        p.expandForeachLoops();
-                        p.expandAwaitAsyncCalls();
-                        if (isSet(WITH_LOC_INF, config)) {
-                            LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
-                            p.registerTypeSystemExtension(ltie);
+                // make ProductDecl.getProduct() not return null
+                p.evaluateAllProductDeclarations();
+                if (isSet(TYPE_CHECK, config)) {
+                    // copy other choice parts of Main.analyzeFlattenAndRewriteModel
+                    p.flattenTraitOnly();
+                    p.collapseTraitModifiers();
+                    p.expandPartialFunctions();
+                    p.expandForeachLoops();
+                    p.expandAwaitAsyncCalls();
+                    if (isSet(WITH_LOC_INF, config)) {
+                        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
+                        p.registerTypeSystemExtension(ltie);
+                    }
+                    SemanticConditionList l = p.typeCheck();
+                    if (isSet(EXPECT_TYPE_ERROR,config)) {
+                        if (!l.containsErrors()) {
+                            fail("Expected type errors, but none appeared");
                         }
-                        SemanticConditionList l = p.typeCheck();
-                        if (isSet(EXPECT_TYPE_ERROR,config)) {
-                            if (!l.containsErrors()) {
-                                fail("Expected type errors, but none appeared");
-                            }
-                        } else {
-                            if (l.containsErrors()) {
-                                fail("Failed to typecheck: " + s + "\n" + l.getFirstError().getMessage());
-                            }
+                    } else {
+                        if (l.containsErrors()) {
+                            fail("Failed to typecheck: " + s + "\n" + l.getFirstError().getMessage());
                         }
                     }
                 }
