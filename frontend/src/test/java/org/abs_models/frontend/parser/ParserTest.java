@@ -14,6 +14,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.fail;
+import static org.junit.Assert.assertTrue;
 
 public class ParserTest extends FrontendTest {
 
@@ -65,7 +66,8 @@ public class ParserTest extends FrontendTest {
     @Test
     public void testEmptyBlock() {
         // No decls.
-        assertParse("{ }");
+        Model m = assertParse("{ }");
+        assertTrue(m.lookupModule("UnitTest").hasBlock());
     }
 
     @Test

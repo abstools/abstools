@@ -1,15 +1,15 @@
 == Software Product Line Engineering
 
-ABS supports the development of software product lines with a set of language 
-constructs for defining system variants. Following a feature-oriented 
-software development approach, variants are described as sets of features. 
-Features and their dependencies are specified in a feature model.
-Each feature has its corresponding ABS implementation. A feature's implementation 
-is specified in terms of the code modifications (i.e., additions and removals) 
-that need to be performed to a variant of the system that does not include 
-that feature in order to add it. This style of programming is called 
-delta-oriented programming. The ABS code modules that encapsulate feature 
-implementations are called delta modules (deltas). 
+ABS supports the development of software product lines with a set of language
+constructs for defining system variants. Following a feature-oriented software
+development approach, variants are described as sets of features.  Features
+and their dependencies are specified in a feature model.  Each feature has its
+corresponding ABS implementation. A feature's implementation is specified in
+terms of the code modifications (i.e., additions and removals) that need to be
+performed to a variant of the system that does not include that feature in
+order to add it. This style of programming is called delta-oriented
+programming. The ABS code modules that encapsulate feature implementations are
+called delta modules (deltas).
 
 
 === Delta-Oriented Programming
@@ -42,7 +42,7 @@ execution or simulation environment.
 .Syntax
 |====
 | _DeltaDecl_      ::= | `delta` _SimpleTypeIdentifier_ [ `(` _DeltaParam_ { `,` _DeltaParam_ } `)` ] `;` +
- { _ModuleAccess_ } { _ModuleModifier_ }
+ [ _ModuleAccess_ ] { _ModuleModifier_ }
 
 | _DeltaParam_ ::= | _Type_ _SimpleIdentifier_ +
                    {vbar} _QualifiedTypeIdentifier_ _HasCondition_
@@ -126,38 +126,50 @@ The `FeatureModel` clause specifies a number of "orthogonal" root feature
 models along with a number of extensions that specify additional constraints,
 typically cross-tree dependencies.  Its grammar is as follows:
 
-[source]
-----
-FeatureModel ::= ('root' FeatureDecl)* FeatureExtension*
-FeatureDecl  ::= FName [ '{' [Group] AttributeDecl* Constraint* '}' ]
-FeatureExtension ::= 'extension' FName '{' AttributeDecl* Constraint* '}'
-Group ::= 'group' Cardinality '{' ['opt'] FeatureDecl (',' ['opt'] FeatureDecl)* '}'
-Cardinality ::= 'allof' | 'oneof' | '[' IntLiteral '..' Limit ']'
-AttributeDecl ::= 'Int' AName ';'
-                | 'Int' AName in '[' Limit '..' Limit ']' ';'
-                | 'Bool' AName ';'
-                | 'String' AName ';'
-Limit ::= IntLiteral | '*'
-Constraint ::= Expr ';'
-             | 'ifin'':'  Expr ';'
-             | 'ifout'':' Expr ';'
-             | 'require'':' FName ';'
-             | 'exclude'':' FName ';'
-Expr ::= 'True'
-       | 'False'
-       | IntLiteral
-       | StringLiteral
-       | FName
-       | AName
-       | FName '.'AName
-       | UnOp Expr
-       | Expr BinOp Expr
-       | '(' Expr ')'
-UnOp ::= '!' | '-'
-BinOp ::= '||' | '&&' | '->' | '<->' | '=='
-        | '!=' | '>'  | '<'  | '>='  | '<='
-        | '+'  | '-'  | '*'  | '/'   | '%'
-----
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _FeatureModel_ ::= | { `root` _FeatureDecl_ } { _FeatureExtension_ }
+
+| _FeatureDecl_  ::= | _FName_ [ `{` [ _Group_ ] { _AttributeDecl_ } { _Constraint_ } `}` ]
+
+| _FeatureExtension_ ::= | `extension` _FName_ `{` { _AttributeDecl_ } { _Constraint_ } `}`
+
+| _Group_ ::= | `group` _Cardinality_ `{` [ `opt` ] _FeatureDecl_ { `,` [ `opt` ] _FeatureDecl_ } `}`
+
+| _Cardinality_ ::= | `allof` {vbar} `oneof` {vbar} `[` _IntLiteral_ `..` _Limit_ `]`
+
+| _AttributeDecl_ ::= | `Int` _AName_ `;` +
+ {vbar}  `Int` _AName_ `in` `[` _Limit_ `..` _Limit_ `]` `;` +
+ {vbar}  `Int` _AName_ `in` `{` _IntLiteral_ { `,` _IntLiteral_ } `}` `;` +
+ {vbar} `Bool` _AName_ `;` +
+ {vbar} `String` _AName_ `;`
+
+| _Limit_ ::= | _IntLiteral_ {vbar} `*`
+
+| _Constraint_ ::= | _Expr_ `;` +
+  {vbar} `ifin` `:`  _Expr_ `;` +
+  {vbar} `ifout` `:` _Expr_ `;` +
+  {vbar} `require` `:` _FName_ `;` +
+  {vbar} `exclude` `:` _FName_ `;`
+
+| _Expr_ ::= | `True` +
+  {vbar} `False` +
+  {vbar} _IntLiteral_ +
+  {vbar} _StringLiteral_ +
+  {vbar} _FName_ +
+  {vbar} _AName_ +
+  {vbar} _FName_ `.` _AName_ +
+  {vbar} _UnOp_ _Expr_ +
+  {vbar} _Expr_ _BinOp_ _Expr_ +
+  {vbar} `(` _Expr_ `)`
+  
+| _UnOp_ ::= | `!` {vbar} `-`
+
+| _BinOp_ ::= | `{vbar}{vbar}` {vbar} `&&` {vbar} `\->` {vbar} `\<\->` {vbar} `==`
+        {vbar} `!=` {vbar} `>`  {vbar} `<`  {vbar} `>=`  {vbar} `\<=`
+        {vbar} `+`  {vbar} `-`  {vbar} `*`  {vbar} `/`   {vbar} `%`
+|====
 
 Attributes and values range over integers, strings or booleans.
 
@@ -246,23 +258,24 @@ configuration defines, for each selection of features satisfied by the product
 selection, which delta modules should be applied to the core.  Furthermore, it
 guides the code generation by ordering the application of the delta modules.
 
-[source]
-----
-Configuration ::= 'productline' TypeId ';' Features ';' DeltaClause*
-Features      ::='features' FName (',' FName)*
-DeltaClause   ::= 'delta' DeltaSpec [AfterCondition] [ApplicationCondition] ';'
-DeltaSpec     ::= DeltaName ['(' DeltaParams ')']
-DeltaName     ::= TypeId
-DeltaParams   ::= DeltaParam (',' DeltaParam)*
-DeltaParam    ::= FName | FName'.'AName
-AfterClause   ::= 'after' DeltaName (',' DeltaName)*
-WhenClause    ::= 'when' AppCond 
-AppCond       ::= AppCond '&&' AppCond 
-                | AppCond '||' AppCond  
-                | '!' AppCond  
-                | '(' AppCond ')' 
-                | FName
-----
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _Configuration_ ::= | `productline` _TypeId_ `;` _Features_ `;` { _DeltaClause_ }
+| _Features_      ::= | `features` _FName_ { `,` _FName_ }
+| _DeltaClause_   ::= | `delta` _DeltaSpec_ [ _AfterCondition_ ] [ _ApplicationCondition_ ] `;`
+| _DeltaSpec_     ::= | _DeltaName_ [ `(` _DeltaParams_ `)` ]
+| _DeltaName_     ::= | _TypeId_
+| _DeltaParams_   ::= | _DeltaParam_ { `,` _DeltaParam_ }
+| _DeltaParam_    ::= | _FName_ {vbar} _FName_ `.` _AName_
+| _AfterClause_   ::= | `after` _DeltaName_ { `,` _DeltaName_ }
+| _WhenClause_    ::= | `when` _AppCond_
+| _AppCond_       ::= | _AppCond_ `&&` _AppCond_ +
+                {vbar} _AppCond_ `{vbar}{vbar}` _AppCond_ +
+                {vbar} `!` _AppCond_ +
+                {vbar} `(` _AppCond_ `)` +
+                {vbar} _FName_
+|====
 
 
 Features and delta modules are associated through _application conditions_ (a.k.a. _activation conditions_),
@@ -301,20 +314,21 @@ _product expressions_. Product expressions use set-theoretic operations (union,
 intersection, complement) over products and sets of features.
 
 
-[source]
-----
-Selection ::= 'product' TypeId ( '(' FeatureSpecs ')' ';' | '=' ProductExpr ';' )
-ProductExpr: '{' FeatureSpecs '}'
-			| ProductExpr '&&' ProductExpr
-			| ProductExpr '||' ProductExpr
-			| ProductExpr '-' ProductExpr
-			| TypeId
-			| '(' ProductExpr ')'
-FeatureSpecs ::= FeatureSpec (',' FeatureSpec)*
-FeatureSpec ::= FName [AttributeAssignments]
-AttributeAssignments ::= '{' AttributeAssignment (',' AttributeAssignment '}'
-AttributeAssignment ::= AName '=' Literal
-----
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _Selection_ ::= | `product` _TypeId_ ( `(` _FeatureSpecs_ `)` `;` {vbar} `=` _ProductExpr_ `;` )
+| _ProductExpr_ ::= | `{` _FeatureSpecs_ `}` +
+  {vbar}  _ProductExpr_ `&&` _ProductExpr_ +
+  {vbar}  _ProductExpr_ `{vbar}{vbar}` _ProductExpr_ +
+  {vbar}  _ProductExpr_ `-` _ProductExpr_ +
+  {vbar}  _TypeId_ +
+  {vbar}  `(` _ProductExpr_ `)`
+| _FeatureSpecs_ ::= | _FeatureSpec_ { `,` _FeatureSpec_ }
+| _FeatureSpec_ ::= | _FName_ [ _AttributeAssignments_ ]
+| _AttributeAssignments_ ::= | `{` _AttributeAssignment_ { `,` _AttributeAssignment_ } `}`
+| _AttributeAssignment_ ::= | _AName_ `=` _Literal_
+|====
 
 Here are some product definitions for the `DeltaResourceExample` product line:
 
