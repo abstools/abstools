@@ -284,8 +284,8 @@ PrimaryExp returns Exp
     ;
 
 UnaryExp returns Exp
-    : ( '!' Exp {NotExp.body=current}
-      | '-' Exp {NegExp.body=current}
+    : ( '!' PrimaryExp {NotExp.body=current}
+      | '-' PrimaryExp {NegExp.body=current}
       // | '+' Exp {PosExp.body=current}
     )
     ;
@@ -538,7 +538,7 @@ DeltaClauseApplicationClauseAnd returns DeltaClauseApplicationClause
     : DeltaClauseApplicationClausePrimary ({DeltaClauseApplicationClauseAnd.left = current} '&&' right=DeltaClauseApplicationClausePrimary)* ;
 
 DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
-    : '!' not=DeltaClauseApplicationClause
+    : '!' not=DeltaClauseApplicationClausePrimary
     | '(' paren=DeltaClauseApplicationClause ')'
     | feature_name=TYPE_IDENTIFIER
     ;
@@ -646,7 +646,7 @@ MTVLConstraintExprOr returns MTVLConstraintExpr
     ; // left-assoc
 
 MTVLConstraintExprAnd returns MTVLConstraintExpr
-    : MTVLConstraintExprImplEqv ({MTVLConstraintExprAnd.left=current} '||' right=MTVLConstraintExprImplEqv)*
+    : MTVLConstraintExprImplEqv ({MTVLConstraintExprAnd.left=current} '&&' right=MTVLConstraintExprImplEqv)*
     ; // left-assoc
 
 MTVLConstraintExprImplEqv returns MTVLConstraintExpr
@@ -684,8 +684,8 @@ MTVLConstraintExprMulDivMod returns MTVLConstraintExpr
 
 MTVLConstraintExprPrimary returns MTVLConstraintExpr
     : '(' paren_exp=MTVLConstraintExpr ')'
-    | '-' minus_exp=MTVLConstraintExpr
-    | '!' neg_exp=MTVLConstraintExpr
+    | '-' minus_exp=MTVLConstraintExprPrimary
+    | '!' neg_exp=MTVLConstraintExprPrimary
     | int_exp=INTLITERAL
     | id_exp=IDENTIFIER
     | type_exp=TYPE_IDENTIFIER (dot?='.' dot_id=IDENTIFIER)?
