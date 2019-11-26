@@ -1143,7 +1143,7 @@ public class XtextToJastAdd {
                 if (mod.getAdded_field() != null) {
                     mresult.addModifierNoTransform(new AddFieldModifier(fromXtext(mod.getAdded_field())));
                 } else if (mod.getAdded_method() != null) {
-                    mresult.addModifierNoTransform(new AddMethodModifier(fromXtext(mod.getAdded_method())));
+                    mresult.addModifierNoTransform(new DeltaTraitModifier(new AddMethodModifier(fromXtext(mod.getAdded_method()))));
                 } else if (mod.getRemoved_field() != null) {
                     mresult.addModifierNoTransform(new RemoveFieldModifier(fromXtext(mod.getRemoved_field())));
                 } else if (mod.getRemoved_method() != null) {
@@ -1151,7 +1151,7 @@ public class XtextToJastAdd {
                     methodlist.add(fromXtext(mod.getRemoved_method()));
                     mresult.addModifierNoTransform(new RemoveMethodModifier(methodlist));
                 } else if (mod.getModified_method() != null) {
-                    mresult.addModifierNoTransform(new ModifyMethodModifier(fromXtext(mod.getModified_method())));
+                    mresult.addModifierNoTransform(new DeltaTraitModifier(new ModifyMethodModifier(fromXtext(mod.getModified_method()))));
                 }
             }
             result = mresult;
