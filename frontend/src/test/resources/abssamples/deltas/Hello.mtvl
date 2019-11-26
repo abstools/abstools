@@ -4,7 +4,7 @@ root MultiLingualHelloWorld {
       group oneof { English, Dutch, French, German }
     },
     opt Repeat {
-      Int times in [0..1000];
+      Int times in [0 .. 1000];
       ifin: times > 0; 
     } 
   } 

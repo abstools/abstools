@@ -46,7 +46,7 @@ public class FeatureModel extends FrontendTest {
     public void attributeBounded() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParse("productline PL; features FM;"
             + "product P();"
-            + "root FM { Int attr in [0..99]; }");
+            + "root FM { Int attr in [0 .. 99]; }");
         model.flattenForProduct("P");
     }
 
