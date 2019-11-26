@@ -52,7 +52,7 @@ public class DuplicateCheckTest extends FrontendTest {
 
     @Test
     public void duplicatePartialFunctions() {
-        Model m = assertParse("data Test = Test; def Test zero()() = Test; def Test zero()() = Test;");
+        Model m = assertParse("data Test = Test; def Test zero(x)() = Test; def Test zero(x)() = Test;");
         assertContains(m.typeCheck().getFirstError(), ErrorMessage.DUPLICATE_PARTIAL_FUN_NAME.withArgs("zero", ""));
     }
 
