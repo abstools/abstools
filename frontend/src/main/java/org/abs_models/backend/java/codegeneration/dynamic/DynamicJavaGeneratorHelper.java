@@ -567,61 +567,6 @@ public class DynamicJavaGeneratorHelper {
         }
     }
 
-    public static void generateUpdate(PrintStream stream, UpdateDecl update, String className, ArrayList<String> classes) {
-
-        stream.println("private static " + ABSDynamicUpdate.class.getName() + " instance;");
-        stream.println("public static " + ABSDynamicUpdate.class.getName() + " singleton() {");
-        stream.println("if (instance == null) {");
-        stream.println("instance = new " + ABSDynamicUpdate.class.getName() + "();");
-        stream.println("instance.setName(\"" + update.getName() + "\");");
-        stream.println("}");
-        stream.println("return instance;");
-        stream.println("}");
-
-        // override apply method
-        stream.println("public static void apply(" + ABSDynamicRuntime.class.getName() + " runtime) {");
-        for (ObjectUpdate ou :update.getObjectUpdates()) {
-            stream.println("{");
-            stream.println("// Call apply() for to update objects of class " + ou.getClassName());
-
-            stream.println(ABSDynamicClass.class.getName() + " cls = " + JavaBackend.getClassName(ou.getClassName()) + ".singleton();");
-            stream.println("for (" + ABSDynamicObject.class.getName() + " obj : runtime.getAllObjects(cls)) {");
-            stream.println("// exec update...");
-            stream.println("System.out.println(obj.toString());");
-
-            stream.println("}");
-            stream.println("}");
-
-        }
-        stream.println("}");
-
-        for (ObjectUpdate ou :update.getObjectUpdates()) {
-            generateObjectUpdate(stream, ou);
-        }
-    }
-
-    public static void generateObjectUpdate(PrintStream stream, ObjectUpdate ou) {
-        // object updates are mapped to static inner classes
-        DynamicJavaGeneratorHelper.generateHelpLine(ou, stream);
-//        stream.println("public static class " + ou.getClassName() + " extends " + ABSClosure.class.getName() + " {");
-//        stream.println("public " + ABSValue.class.getName() + " exec(final " + ABSDynamicObject.class.getName() + " thisP, " + ABSValue.class.getName() + "... args) {");
-
-        // generate body
-        // FIXME Var resolution
-//        ou.getAwaitStmt().generateJavaDynamic(stream);
-//        for (VarDeclStmt stmt : ou.getUpdatePreamble().getVarDeclStmts())
-//            stmt.generateJavaDynamic(stream);
-//        for (AssignStmt stmt : ou.getPreBodyList())
-//            stmt.generateJavaDynamic(stream);
-//        for (AssignStmt stmt : ou.getPostBodyList())
-//            stmt.generateJavaDynamic(stream);
-
-
-//        stream.println("}");
-//        stream.println("}");
-
-    }
-
     public static void generateProduct(PrintStream stream, ProductDecl prod, HashMap<String, ProductDecl> allProducts) {
         stream.println("private static " + ABSDynamicProduct.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicProduct.class.getName() + " singleton() {");
@@ -632,49 +577,6 @@ public class DynamicJavaGeneratorHelper {
         // Features (just names, currently not used)
         for (Feature feature : prod.getProduct().getFeatures())
             stream.println("instance.addFeature(\"" + feature.getName() + "\");");
-
-        stream.println("}");
-        stream.println("return instance;");
-        stream.println("}");
-    }
-
-    public static void generateReconfiguration(PrintStream stream, Reconfiguration recf, ProductDecl currentP, HashMap<String, ProductDecl> allProducts) {
-        stream.println("private static " + ABSDynamicReconfiguration.class.getName() + " instance;");
-        stream.println("public static " + ABSDynamicReconfiguration.class.getName() + " singleton() {");
-        stream.println("if (instance == null) {");
-        stream.println("instance = new " + ABSDynamicReconfiguration.class.getName() + "();");
-        stream.println("instance.setName(\"" + currentP.getName() + "->" + recf.getTargetProductID() + "\");");
-
-        // Current and Target products
-        stream.println("instance.setCurrentProduct(" + JavaBackendConstants.LIB_RDM_PACKAGE + "."
-                + JavaBackend.getProductName(currentP.getName()) + ".singleton());");
-        stream.println("instance.setTargetProduct(" + JavaBackendConstants.LIB_RDM_PACKAGE + "."
-                + JavaBackend.getProductName(recf.getTargetProductID()) + ".singleton());");
-
-        // StateUpdate
-        stream.println("instance.setUpdate(" + JavaBackendConstants.LIB_UPDATES_PACKAGE + "."
-                + JavaBackend.getUpdateName(recf.getUpdateID()) + ".singleton());");
-
-        // Deltas
-        List<DeltaID> deltaIDs = recf.getDeltaIDs();
-        stream.print("instance.setDeltas(");
-        if (deltaIDs.getNumChild() == 0) { // no deltas
-            stream.print(Collections.class.getName() + ".<" + ABSDynamicDelta.class.getName() + ">emptyList()");
-        } else {
-            StringBuilder deltaList = new StringBuilder();
-            deltaList.append(Arrays.class.getName() + ".asList(");
-            boolean first = true;
-            for (DeltaID did : deltaIDs) {
-                if (first) first = false;
-                else deltaList.append(", ");
-
-                deltaList.append(JavaBackend.getDeltaPackageName(did.getName()) + "."
-                        + JavaBackend.getDeltaName(did.getName())  + ".singleton()");
-            }
-            deltaList.append(")");
-            stream.print(deltaList);
-        }
-        stream.println(");");
 
         stream.println("}");
         stream.println("return instance;");
