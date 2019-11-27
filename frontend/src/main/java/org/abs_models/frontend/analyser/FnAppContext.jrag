@@ -95,7 +95,6 @@ aspect FnAppContext {
     eq Annotation.getChild().isVarUseContextImperative(VarUse v) = isVarUseContextImperative(v);
     // parameters can be in either context
     eq ParamDecl.getChild().isVarUseContextImperative(VarUse v) = isVarUseContextImperative(v);
-    eq UpdateDecl.getChild().isVarUseContextImperative(VarUse v) = true;
     eq DeltaDecl.getChild().isVarUseContextImperative(VarUse v) = true;
     eq ModuleDecl.getBlock().isVarUseContextImperative(VarUse v) = true;
     eq FunctionDecl.getChild().isVarUseContextImperative(VarUse v) = false;
@@ -183,8 +182,6 @@ aspect FnAppContext {
     // Blocks of statements occur only in methods, never functions
     eq Block.getStmt().isParamDeclImperative(ParamDecl p) = true;
     eq Block.getAnnotation().isParamDeclImperative(ParamDecl p) = true;
-    // Unused at the moment: Erlang currently doesn't support object updates
-    eq ObjectUpdate.getChild().isParamDeclImperative(ParamDecl p) = true;
     eq InterfaceDecl.getAnnotation().isParamDeclImperative(ParamDecl p) = true;
     eq DataTypeDecl.getAnnotation().isParamDeclImperative(ParamDecl p) = false;
     eq TypeSynDecl.getAnnotation().isParamDeclImperative(ParamDecl p) = false;

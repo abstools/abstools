@@ -43,10 +43,6 @@ public class DeltaTest extends FrontendTest {
         for (ProductDecl prod : m.getProductDecls()) {
             productNames.add(prod.getName());
         }
-        HashSet<String> updateNames = new HashSet<>();
-        for (UpdateDecl upd : m.getUpdateDecls()) {
-            updateNames.add(upd.getName());
-        }
-        TypeCheckerHelper.typeCheckProductDecl(p, featureNames, productNames, m.getDeltaDeclsMap(), updateNames, e);
+        TypeCheckerHelper.typeCheckProductDecl(p, featureNames, productNames, m.getDeltaDeclsMap(), e);
     }
 }

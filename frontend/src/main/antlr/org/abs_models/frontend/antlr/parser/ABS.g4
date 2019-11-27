@@ -385,26 +385,6 @@ namespace_modifier : 'adds' module_import    # DeltaAddModuleImportFragment
     | 'adds' module_export                   # DeltaAddModuleExportFragment
     ;
 
-// Updates (?)
-update_decl : 'stateupdate' TYPE_IDENTIFIER ';' object_update* # UpdateDecl
-    ;
-
-object_update : 'objectupdate' qualified_type_identifier '{'
-        'await' guard ';'
-        update_preamble_decl*
-        pre+=object_update_assign_stmt*
-        'classupdate' ';'
-        post+=object_update_assign_stmt*
-        '}'                                    # ObjectUpdateDecl
-    ;
-
-object_update_assign_stmt :
-        var_or_field_ref '=' exp ';'           # ObjectUpdateAssignStmt
-    ;
-
-update_preamble_decl : type_exp IDENTIFIER ';' # UpdatePreambleDecl
-    ;
-
 // Product line
 productline_decl : 'productline' TYPE_IDENTIFIER ';'
         'features' feature (',' feature)* ';'
@@ -452,16 +432,10 @@ attr_assignment : IDENTIFIER '=' (i=INTLITERAL | b=TYPE_IDENTIFIER | s=STRINGLIT
 // Products
 product_decl : 'product' TYPE_IDENTIFIER
     (
-      '(' (feature (',' feature)*)? ')'
-      ('{' product_reconfiguration* '}' | ';')
+      '(' (feature (',' feature)*)? ')' ';'
     |
       '=' product_expr ';'
     )
-    ;
-
-product_reconfiguration : product=TYPE_IDENTIFIER
-        'delta' delta_id (',' delta_id)*
-        'stateupdate' update=TYPE_IDENTIFIER ';'
     ;
 
 // Product Expression
@@ -527,7 +501,6 @@ boundary_val : m='-'? i=INTLITERAL ;
 main_block : annotations '{' stmt* '}' ;
 
 compilation_unit : module_decl* delta_decl*
-        update_decl*
         productline_decl? product_decl*
         ('root' feature_decl | 'extension' fextension)*
     ;

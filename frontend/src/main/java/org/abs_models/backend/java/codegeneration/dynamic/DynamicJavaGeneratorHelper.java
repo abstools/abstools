@@ -633,16 +633,6 @@ public class DynamicJavaGeneratorHelper {
         for (Feature feature : prod.getProduct().getFeatures())
             stream.println("instance.addFeature(\"" + feature.getName() + "\");");
 
-        // Reconfigurations
-        for (Reconfiguration recf : prod.getReconfigurations()) {
-            stream.println("instance.addReconfiguration("
-                    + JavaBackendConstants.LIB_RDM_PACKAGE + "."
-                    + JavaBackend.getProductName(recf.getTargetProductID()) + ".singleton()"
-                    + ", "
-                    + JavaBackendConstants.LIB_RDM_PACKAGE + "."
-                    + JavaBackend.getReconfigurationName(prod.getName(), recf.getTargetProductID()) + ".singleton());");
-        }
-
         stream.println("}");
         stream.println("return instance;");
         stream.println("}");

@@ -118,11 +118,9 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     @Override public void enterCompilation_unit(ABSParser.Compilation_unitContext ctx) {
-        this.result = setV(ctx, new CompilationUnit(this.filename,
-            new List<>(),
-            new List<>(), new List<>(),
-            new Opt<>(), new List<>(),
-            new List<>(), new List<>()));
+        CompilationUnit r = new CompilationUnit();
+        r.setName(this.filename);
+        this.result = setV(ctx, r);
     }
 
     @Override public void exitCompilation_unit(ABSParser.Compilation_unitContext ctx) {
@@ -937,27 +935,6 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new AddExportModifier(v(ctx.module_export())));
     }
 
-    // Updates (?)
-    @Override public void exitUpdateDecl(ABSParser.UpdateDeclContext ctx) {
-        setV(ctx, new UpdateDecl(ctx.TYPE_IDENTIFIER().getText(), l(ctx.object_update())));
-    }
-
-    @Override public void exitObjectUpdateDecl(ABSParser.ObjectUpdateDeclContext ctx) {
-        setV(ctx, new ObjectUpdate(ctx.qualified_type_identifier().getText(),
-                                   new AwaitStmt(new List<>(), v(ctx.guard())),
-                                   new UpdatePreamble(l(ctx.update_preamble_decl())),
-                                   l(ctx.pre), l(ctx.post)));
-    }
-
-    @Override public void exitObjectUpdateAssignStmt(ABSParser.ObjectUpdateAssignStmtContext ctx) {
-        setV(ctx, new AssignStmt(new List<>(), v(ctx.var_or_field_ref()), v(ctx.exp())));
-    }
-
-    @Override public void exitUpdatePreambleDecl(ABSParser.UpdatePreambleDeclContext ctx) {
-        setV(ctx, new VarDeclStmt(new List<>(), new VarDecl(ctx.IDENTIFIER().getText(), v(ctx.type_exp()), new Opt<>())));
-    }
-
-
     // Productline
     @Override public void exitProductline_decl(ABSParser.Productline_declContext ctx) {
         setV(ctx, new ProductLine(ctx.TYPE_IDENTIFIER().getText(),
@@ -1042,15 +1019,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitProduct_decl(ABSParser.Product_declContext ctx) {
         if(ctx.product_expr() == null) {
             // old syntax: a product is declared as a set of features
-            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), new ProductFeatureSet(l(ctx.feature())), l(ctx.product_reconfiguration())));
+            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), new ProductFeatureSet(l(ctx.feature()))));
         } else {
             // new syntax: using product expressions
-            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.product_expr()), l(ctx.product_reconfiguration())));
+            setV(ctx, new ProductDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.product_expr())));
         }
-    }
-
-    @Override public void exitProduct_reconfiguration(ABSParser.Product_reconfigurationContext ctx) {
-        setV(ctx, new Reconfiguration(ctx.product.getText(), l(ctx.delta_id()), ctx.update.getText()));
     }
 
     // Product Expression

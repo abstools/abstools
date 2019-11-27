@@ -639,8 +639,8 @@ public class Main {
 	    } else {
 		String path = "<unknown path>";
 		if (file != null) path = file.getPath();
-		@SuppressWarnings("rawtypes")
-		    CompilationUnit u = new CompilationUnit(path,new List(),new List(),new List(),new Opt(),new List(),new List(),new List());
+                CompilationUnit u = new CompilationUnit();
+                u.setName(path);
 		u.setParserErrors(errorlistener.parserErrors);
 		return u;
 	    }

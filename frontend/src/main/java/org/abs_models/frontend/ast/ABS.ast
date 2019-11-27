@@ -9,10 +9,9 @@ Model ::= CompilationUnit* /Product*/ ;
 //Model ::= CompilationUnit* ;
 
 
-CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* UpdateDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
+CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
 ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
 DeltaDecl ::= <Name> Param:DeltaParamDecl* DeltaAccess* ModuleModifier* ;
-UpdateDecl ::= <Name> ObjectUpdate* ;
 
 abstract Import;
 NamedImport : Import ::= Name* ;
@@ -112,9 +111,6 @@ AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
 
 DeltaTraitModifier : Modifier ::= MethodModifier;
-
-ObjectUpdate ::= <ClassName> AwaitStmt UpdatePreamble PreBody:AssignStmt* PostBody:AssignStmt* ;
-UpdatePreamble ::= VarDeclStmt* ; // TODO also allow FunctionDecls and DataTypeDecls
 
 abstract VarOrFieldDecl ::= <Name>;
 FunctionParamDecl : VarOrFieldDecl ;
@@ -334,7 +330,7 @@ FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
 // Extended Product Selection Language
-ProductDecl ::= <Name> ProductExpr Reconfiguration* ;
+ProductDecl ::= <Name> ProductExpr ;
 
 abstract ProductExpr ;
 ProductFeatureSet : ProductExpr ::= Feature* ;
@@ -344,4 +340,3 @@ ProductDifference : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
 ProductName : ProductExpr ::= <Name> ;
 
 Product ::= Feature* ;
-Reconfiguration ::= <TargetProductID> DeltaID* <UpdateID> ;
