@@ -4,18 +4,11 @@
  *
  */
 
-product LowEnd (Text) {
-    Regular delta DVoice stateupdate L2R;
-}
+product LowEnd (Text);
 
-product Regular (Text, Voice) {
-    HighEnd delta DVideo,DFiles stateupdate R2H;
-    LowEnd delta DNoVoice stateupdate R2L;
-}
+product Regular (Text, Voice);
 
-product HighEnd (Text, Voice, Video, Files) {
-    Regular delta DNoFiles,DNoVideo stateupdate H2R;
-}
+product HighEnd (Text, Voice, Video, Files);
 
 product HighStatic(Text, Voice, Video, Files);
 

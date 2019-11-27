@@ -204,7 +204,6 @@ public class TypeCheckerHelper {
             Map<String,Feature> featureNames,
             Set<String> prodNames,
             Map<String,DeltaDecl> deltaNames,
-            Set<String> updateNames,
             SemanticConditionList e) {
         if (featureNames != null) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
@@ -259,25 +258,6 @@ public class TypeCheckerHelper {
                 e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT, prod.getName(), failedConstraints));
             }
         }
-
-        Set<String> seen = new HashSet<>();
-        // FIXME: deal with reconfigurations
-//        for (Reconfiguration recf : prod.getReconfigurations()) {
-//            if (!seen.add(recf.getTargetProductID()))
-//                e.add(new TypeError(recf, ErrorMessage.DUPLICATE_RECONFIGURATION, recf.getTargetProductID()));
-//
-//            // Does the reconfiguration target product exist?
-//            if (! prodNames.contains(recf.getTargetProductID()))
-//                e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getTargetProductID()));
-//            // Do the deltas used for reconfiguration exist?
-//            for (DeltaID d : recf.getDeltaIDs()) {
-//                if (! deltaNames.containsKey(d.getName()))
-//                    e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
-//            }
-//            // Does the update used for reconfiguration exist?
-//            if (! updateNames.contains(recf.getUpdateID()))
-//                e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getUpdateID()));
-//        }
     }
 
     /**
@@ -581,15 +561,6 @@ public class TypeCheckerHelper {
             for (DeltaDecl d : u.getDeltaDecls()) {
                 if (!seen.add(d.getName()))
                     errors.add(new TypeError(d, ErrorMessage.DUPLICATE_DELTA, d.getName()));
-            }
-        }
-    }
-    public static void checkForDuplicateUpdates(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
-        Set<String> seen = new HashSet<>();
-        for (CompilationUnit u : compilationUnits) {
-            for (UpdateDecl d : u.getUpdateDecls()) {
-                if (!seen.add(d.getName()))
-                    errors.add(new TypeError(d, ErrorMessage.DUPLICATE_UPDATE, d.getName()));
             }
         }
     }

@@ -4,18 +4,9 @@ delta En when English;
 delta De when German;
 delta Fr when French;
 
-product English(English) {
-    German delta De stateupdate En2Ger;
-    French delta Fr stateupdate En2Fr;
-}
-product German(German) {
-    English delta En stateupdate Ger2En;
-    French delta Fr stateupdate Ger2Fr;
-}
-product French(French) {
-    German delta De stateupdate Fr2Ger;
-    English delta En stateupdate Fr2En;
-}
+product English(English);
+product German(German);
+product French(French);
 
 root Hello {
     group oneof {

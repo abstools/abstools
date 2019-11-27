@@ -103,7 +103,6 @@ aspect Deltas {
     // type information etc.
     eq CompilationUnit.getModuleDecl().amInCoreAbs() = true;
     eq CompilationUnit.getDeltaDecl().amInCoreAbs() = false;
-    eq CompilationUnit.getUpdateDecl().amInCoreAbs() = false;
     eq CompilationUnit.getProductLine().amInCoreAbs() = false;
     eq CompilationUnit.getProductDecl().amInCoreAbs() = false;
     eq CompilationUnit.getFeatureDecl().amInCoreAbs() = false;

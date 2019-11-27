@@ -704,7 +704,14 @@ public class Main {
     //     	CompilationUnit u
     //     	    = new ASTPreProcessor().preprocess(l.getCompilationUnit());
     //     	return u;
-    //         } else {
+    //        } else {
+    //             String path = "<unknown path>";
+    //             if (file != null) path = file.getPath();
+    //             CompilationUnit u = new CompilationUnit();
+    //             u.setName(path);
+    //             u.setParserErrors(errorlistener.parserErrors);
+    //             return u;
+    //         }
     //     	String path = "<unknown path>";
     //     	if (file != null) path = file.getPath();
     //     	@SuppressWarnings("rawtypes")

@@ -124,16 +124,6 @@ aspect TypeResolution {
         return getDeltaDeclsMap().get(name);
     }
 
-    syn lazy Collection<UpdateDecl> Model.getUpdateDecls() {
-        ArrayList<UpdateDecl> res = new ArrayList<UpdateDecl>();
-        for (CompilationUnit u : getCompilationUnits()) {
-            for (UpdateDecl d : u.getUpdateDecls()) {
-                res.add(d);
-            }
-        }
-        return res;
-    }
-
     syn lazy Collection<ProductDecl> Model.getProductDecls() {
         ArrayList<ProductDecl> res = new ArrayList<ProductDecl>();
         for (CompilationUnit u : getCompilationUnits()) {

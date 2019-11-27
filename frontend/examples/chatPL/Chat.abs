@@ -16,7 +16,6 @@ class ClientImpl implements Client {
 
 {
     Connection conn = new local ConnectionImpl();
-    new Reconfigurator(conn);
 
     Client c1 = new local ClientImpl();
     Client c2 = new ClientImpl();
@@ -142,12 +141,4 @@ modifies class ClientImpl removes Voice {
 removes interface Call;
 removes class CallImpl;
 removes class AudioStream;
-
-// *********************************************************************************
-// state update definitions
-
-stateupdate L2R;
-stateupdate R2L;
-stateupdate R2H;
-stateupdate H2R;
 

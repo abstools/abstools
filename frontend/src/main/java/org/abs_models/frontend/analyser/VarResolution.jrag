@@ -361,9 +361,6 @@ aspect VarResolution {
 
     eq HasMethod.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
 
-    // TODO: return something more meaningful here?
-    eq UpdateDecl.getObjectUpdate().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
-
     inh VarOrFieldDecl Exp.lookupVarOrFieldName(String name, boolean fieldOnly);
     /* [stolz/georgo]
        This is weird: here seems to be the reason for the failing patternVarTest, where the parent of the

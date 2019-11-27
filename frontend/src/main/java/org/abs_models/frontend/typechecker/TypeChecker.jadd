@@ -32,7 +32,6 @@ aspect TypeChecker {
             TypeCheckerHelper.checkForDuplicateModules(errors, getCompilationUnits());
             TypeCheckerHelper.checkForDuplicateDeltas(errors, getCompilationUnits());
             TypeCheckerHelper.checkForDuplicateProducts(errors, getCompilationUnits());
-            TypeCheckerHelper.checkForDuplicateUpdates(errors, getCompilationUnits());
             for (CompilationUnit u : getCompilationUnits()) {
                 u.typeCheck(errors);
             }
@@ -1251,11 +1250,7 @@ aspect TypeCheckProductline {
         for (ProductDecl prod : m.getProductDecls()) {
             productNames.add(prod.getName());
         }
-        HashSet<String> updateNames = new HashSet<String>();
-        for (UpdateDecl upd : m.getUpdateDecls()) {
-            updateNames.add(upd.getName());
-        }
-        TypeCheckerHelper.typeCheckProductDecl(this, featureNames, productNames, m.getDeltaDeclsMap(), updateNames, e);
+        TypeCheckerHelper.typeCheckProductDecl(this, featureNames, productNames, m.getDeltaDeclsMap(), e);
     }
 
     protected void ProductLine.typeCheck(SemanticConditionList e) {
@@ -1315,14 +1310,6 @@ aspect TypeCheckProductline {
     public void AppCondFeature.typeCheck(Set<String> definedFeatures, SemanticConditionList e) {
         if (! definedFeatures.contains(getName()))
             e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, getName()));
-    }
-
-    protected void UpdateDecl.typecheck(Set<String> definedFeatures, SemanticConditionList e) {
-        for (ObjectUpdate u : getObjectUpdates())
-            u.typeCheck(e);
-    }
-    protected void ObjectUpdate.typeCheck(SemanticConditionList e) {
-        // TODO
     }
 
     syn Type DeltaParamDecl.getType();

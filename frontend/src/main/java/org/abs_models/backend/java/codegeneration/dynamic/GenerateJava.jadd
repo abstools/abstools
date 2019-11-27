@@ -36,15 +36,6 @@ aspect GenerateJavaDynamic_Core {
         }
         {
             JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_UPDATES_PACKAGE);
-            for (UpdateDecl decl : getUpdateDecls()) {
-                try {
-                    decl.generateJavaCodeDynamic(pkg);
-                } catch (NotImplementedYetException e) { 
-                    throw new JavaCodeGenerationException("Update " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
-                } catch (RuntimeException e) { 
-                    throw new JavaCodeGenerationException("Update " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
-                }
-            }
         }
         {   /* The Reconfiguration Decision Model (RDM) */
             // first remember all products by name
@@ -1155,62 +1146,6 @@ aspect GenerateJavaDynamic_DeltaModelling {
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + generatedJavaClassName + " {");
             DynamicJavaGeneratorHelper.generateProduct(stream, this, allProducts);
-            stream.println("}");
-            
-            for (Reconfiguration recf : getReconfigurations()) {
-                recf.generateJavaCodeDynamic(pkg, this, allProducts);
-            }
-        } finally {
-            if (stream != null)
-                stream.close();
-        }
-    }
-    
-    public void Reconfiguration.generateJavaCodeDynamic(JavaCode.Package pkg, ProductDecl currentP, HashMap<String, ProductDecl> allProducts)
-            throws IOException, JavaCodeGenerationException {
-        PrintStream stream = null;
-        String generatedJavaClassName = JavaBackend.getReconfigurationName(currentP.getName(), getTargetProductID());
-        
-        try {
-            File file = pkg.createJavaFile(generatedJavaClassName);
-            stream = JavaCodeStream.from(file);
-            // gen header
-            stream.println("package " + pkg.packageName + ";");
-            stream.println("public class " + generatedJavaClassName + " {");
-            DynamicJavaGeneratorHelper.generateReconfiguration(stream, this, currentP, allProducts);
-            stream.println("}");
-        } finally {
-            if (stream != null)
-                stream.close();
-        }
-    }
-    
-        
-    /*
-     * State Updates 
-     */
-    public void UpdateDecl.generateJavaCodeDynamic(JavaCode.Package pkg) 
-            throws IOException, JavaCodeGenerationException {
-        PrintStream stream = null;
-        String generatedJavaClassName = JavaBackend.getUpdateName(getName());
-        
-        try {
-            File file = pkg.createJavaFile(generatedJavaClassName);
-            stream = JavaCodeStream.from(file);
-            // gen header
-            stream.println("package " + pkg.packageName + ";");
-            stream.println("public class " + generatedJavaClassName + " {");
-            ArrayList<String> classes = new ArrayList<String>();
-            for (ObjectUpdate upd : getObjectUpdates()) {
-                // TODO implement
-                //upd.generateJavaCodeDynamic(pkg);
-                //classes.add(upd.getGeneratedJavaClassName());
-                classes.add(upd.getClassName());
-                
-                stream.println("// generate Update for instances of " + upd.getClassName());
-                
-            }
-            DynamicJavaGeneratorHelper.generateUpdate(stream, this, generatedJavaClassName, classes);
             stream.println("}");
         } finally {
             if (stream != null)
