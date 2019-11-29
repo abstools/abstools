@@ -4,10 +4,6 @@
  */
 package org.abs_models.frontend.antlr.parser;
 
-import org.abs_models.frontend.antlr.parser.ABSParser.MethodsigContext;
-import org.abs_models.frontend.antlr.parser.ABSParser.TraitApplyFragmentContext;
-import org.abs_models.frontend.antlr.parser.ABSParser.TraitNameFragmentContext;
-import org.abs_models.frontend.antlr.parser.ABSParser.TraitSetFragmentContext;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.ASTPreProcessor;
 import org.abs_models.frontend.parser.Main;
@@ -141,32 +137,36 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     @Override public void exitTraitAddFragment(ABSParser.TraitAddFragmentContext ctx) {
-        setV(ctx,new AddMethodModifier((TraitExpr) v(ctx.trait_expr())));
+        setV(ctx,new AddMethodModifier((TraitExpr) v(ctx.basic_trait_expr())));
     }
     @Override public void exitTraitModifyFragment(ABSParser.TraitModifyFragmentContext ctx) {
-        setV(ctx,new ModifyMethodModifier((TraitExpr) v(ctx.trait_expr())));
+        setV(ctx,new ModifyMethodModifier((TraitExpr) v(ctx.basic_trait_expr())));
      }
     @Override public void exitTraitRemoveFragment(ABSParser.TraitRemoveFragmentContext ctx) {
         List<MethodSig> l = new List<>();
-        for (MethodsigContext methodSig : ctx.methodsig()) {
+        for (ABSParser.MethodsigContext methodSig : ctx.methodsig()) {
             l.add(v(methodSig));
         }
         setV(ctx,new RemoveMethodModifier(l));
      }
 
+    @Override
+    public void exitTrait_expr(ABSParser.Trait_exprContext ctx) {
+        TraitExpr result = v(ctx.basic_trait_expr());
+        for (ABSParser.Trait_operContext t : ctx.trait_oper()) {
+            result = new TraitModifyExpr(result, v(t));
+        }
+        setV(ctx, result);
+    }
 
-         @Override
-        public void exitTraitApplyFragment(TraitApplyFragmentContext ctx) {
-             setV(ctx, new TraitModifyExpr(v(ctx.trait_expr()), v(ctx.trait_oper())));
-        }
-         @Override
-        public void exitTraitNameFragment(TraitNameFragmentContext ctx) {
-             setV(ctx, new TraitNameExpr(ctx.TYPE_IDENTIFIER().getText()));
-        }
-         @Override
-        public void exitTraitSetFragment(TraitSetFragmentContext ctx) {
-             setV(ctx, new TraitSetExpr(l(ctx.method())));
-        }
+    @Override
+    public void exitTraitNameFragment(ABSParser.TraitNameFragmentContext ctx) {
+        setV(ctx, new TraitNameExpr(ctx.TYPE_IDENTIFIER().getText()));
+    }
+    @Override
+    public void exitTraitSetFragment(ABSParser.TraitSetFragmentContext ctx) {
+        setV(ctx, new TraitSetExpr(l(ctx.method())));
+    }
     @Override public void exitTrait_usage( ABSParser.Trait_usageContext ctx) {
         //setV(ctx, new TraitUse(ctx.TYPE_IDENTIFIER().toString(), new List()));
         setV(ctx, new TraitUse(v(ctx.trait_expr())));

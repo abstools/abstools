@@ -248,11 +248,12 @@ Similar to classes, traits in ABS are not types.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _TraitDecl_ ::= | `trait` _TraitName_ = ( `{` { _MethDecl_ } `}` {vbar} _TraitName_ ) { _TraitOper_ }
+| _TraitDecl_ ::= | `trait` _TraitName_ = _MethodSet_ { _TraitOper_ }
+| _MethodSet_ ::= | _TraitName_ {vbar} _MethDecl_ {vbar} `{` { _MethDecl_ }  `}`
 | _TraitName_ ::= | _SimpleIdentifier_
-| _TraitOper_ ::= | `adds` _TraitExpr_ +
-{vbar} `modifies` _TraitExpr_ +
-{vbar} `removes` _MethSig_
+| _TraitOper_ ::= | `adds` _MethodSet_ +
+{vbar} `modifies` _MethodSet_ +
+{vbar} `removes` ( _MethSig_ {vbar} `{` _MethSig_ `}` )
 |====
 
 

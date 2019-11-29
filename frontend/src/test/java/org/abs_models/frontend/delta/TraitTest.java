@@ -627,7 +627,7 @@ public class TraitTest extends DeltaTest{
         AddMethodModifier mcl = (AddMethodModifier) dml.getMethodModifier();
         TraitExpr expr = mcl.getTraitExpr();
         TraitExpr set = expr.resolve(cls.getModuleDecl());
-        assertTrue(set.getChild(0).getNumChild() == 3);
+        assertTrue("expected 2, got " + set.getChild(0).getNumChild(), set.getChild(0).getNumChild() == 2);
 
     }
 
@@ -666,7 +666,7 @@ public class TraitTest extends DeltaTest{
         ModifyMethodModifier mcl = (ModifyMethodModifier) dml.getMethodModifier();
         TraitExpr expr = mcl.getTraitExpr();
         TraitExpr set = expr.resolve(cls.getModuleDecl());
-        assertTrue(set.getChild(0).getNumChild() == 4);
+        assertTrue("expected 2, got " + set.getChild(0).getNumChild(), set.getChild(0).getNumChild() == 2);
 
     }
 
@@ -703,7 +703,7 @@ public class TraitTest extends DeltaTest{
         ModifyMethodModifier mcl = (ModifyMethodModifier) dml.getMethodModifier();
         TraitExpr expr = mcl.getTraitExpr();
         TraitExpr set = expr.resolve(cls.getModuleDecl());
-        assertTrue(set.getChild(0).getNumChild() == 1);
+        assertTrue("expected 2, got " + set.getChild(0).getNumChild(), set.getChild(0).getNumChild() == 2);
         assertThat(set, instanceOf(TraitSetExpr.class));
     }
 
@@ -740,7 +740,7 @@ public class TraitTest extends DeltaTest{
         ModifyMethodModifier mcl = (ModifyMethodModifier) dml.getMethodModifier();
         TraitExpr expr = mcl.getTraitExpr();
         TraitExpr set = expr.resolve(cls.getModuleDecl());
-        assertTrue(set.getChild(0).getNumChild() == 3);
+        assertTrue("expected 2, got " + set.getChild(0).getNumChild(), set.getChild(0).getNumChild() == 2);
         assertThat(set, instanceOf(TraitSetExpr.class));
     }
 
@@ -845,14 +845,14 @@ public class TraitTest extends DeltaTest{
         assertTrue(mm.getModifierList().getNumChild() == 6);
 
 
-        DeltaTraitModifier dml = (DeltaTraitModifier) mm.getModifier(1);
+        DeltaTraitModifier dml = (DeltaTraitModifier) mm.getModifier(0);
         AddMethodModifier mcl = (AddMethodModifier) dml.getMethodModifier();
         TraitExpr set = mcl.getTraitExpr();
         assertTrue(set.getChild(0).getNumChild() == 2);
         assertThat(set, instanceOf(TraitSetExpr.class));
 
 
-        DeltaTraitModifier dml2 = (DeltaTraitModifier) mm.getModifier(2);
+        DeltaTraitModifier dml2 = (DeltaTraitModifier) mm.getModifier(1);
         ModifyMethodModifier mcl2 = (ModifyMethodModifier) dml2.getMethodModifier();
         TraitExpr set2 = mcl2.getTraitExpr();
         assertTrue(set2.getChild(0).getNumChild() == 1);
