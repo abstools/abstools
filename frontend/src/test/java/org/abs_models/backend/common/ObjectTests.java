@@ -137,8 +137,14 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
-    public void trait1() {
-        assertEvalTrue(new File("abssamples/backend/ObjectTests/trait1.abs"));
+    public void traitApplication() {
+        // tests trait application
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/trait_application.abs"));
+    }
+
+    @Test
+    public void traitOriginalCall() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/trait_original_call.abs"));
     }
 
     @Test

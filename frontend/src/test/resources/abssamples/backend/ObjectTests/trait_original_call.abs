@@ -1,0 +1,25 @@
+module BackendTest;
+
+// Test trait application with ‘original()’ calls
+
+interface I {
+    Bool test();
+}
+
+trait T = {
+    Bool test(){ return False; }
+}
+trait T2 = {
+    Bool test(){ Bool orig = original(); return !orig; }
+}
+
+
+class C implements I {
+    uses T modifies T2;
+}
+
+{
+    I i = new C();
+    Bool testresult = await i!test();
+    println(`testresult: $testresult$`);
+}

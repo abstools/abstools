@@ -110,10 +110,10 @@ release points, blocking expressions and `throw` statements).
 .Syntax
 |====
 | _ClassDecl_ ::= | `class` _SimpleTypeIdentifier_ [ `(` [ _ClassParameterList_ ] `)` ] [ `implements` _InterfaceList_ ] +
-                    `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] [ _TraitUseList_ ] { _MethDecl_ } `}`
+                    `{` [ _FieldDeclList_ ] [ _Block_ ] [_RecoveryBlock_] { _TraitUseList_ } { _MethDecl_ } `}`
 | _ClassParameterList_ ::= | _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ }
 | _InterfaceList_ ::= | _TypeIdentifier_ { `,` _TypeIdentifier_ }
-| _TraitUseList_ ::= | adds _TraitName_ `;` {  adds _TraitName_ `;`}
+| _TraitUse_ ::= | adds _TraitExpr_ `;`
 | _FieldDeclList_ ::= | { _Type_ _SimpleIdentifier_ [ `=` _PureExp_ ] `;` }
 | _RecoveryBlock_ ::= | `recover` `{` { _Pattern_ `\=>` _Stmt_ } `}`
 | _MethDecl_ ::= | _Type_ _SimpleIdentifier_ `(` [ _Type_ _SimpleIdentifier_ { `,` _Type_ _SimpleIdentifier_ } ] `)` _Block_
@@ -123,9 +123,10 @@ release points, blocking expressions and `throw` statements).
 A class definition contains zero or more method definitions.  Each method has
 a name, return type and zero or more parameters.  All methods declared in an
 interface that is implemented by the class or one of their super-interfaces
-must be defined in the class body or in one of its traits.  A class is free to
-define methods not declared in an interface; such methods are private to the
-class and cannot be called from outside the class.
+must be defined in the class body or in one of the used traits (see
+<<sec:traits>>).  A class is free to define methods not declared in an
+interface; such methods are private to the class and cannot be called from
+outside the class.
 
 NOTE: ABS currently does not support method overloading.  Each method must
 have a unique name since methods are not disambiguated by their parameter
@@ -235,27 +236,29 @@ The run method is asynchronously called after object initialization.
 == Traits
 
 ABS does not support inheritance for code reuse.  Method implementations that
-are common between classes can be defined once and used inside these classes by
-using _traits_.  A trait can add, remove and modify methods of a class or of
-another trait.
+are common between classes can be defined once and used inside these classes
+by using _traits_.  A trait is a set of method definitions that can be added
+to a class via the `uses` clause in the class definition.
 
 Traits are applied to classes at compile-time and do not change the
 interface(s) of a class.  Classes and their methods are type-checked once all
 traits are applied.
 
-Similar to classes, traits in ABS are not types.
+Traits can re-use and modify other traits via _trait operations_.  A trait can
+add methods to another trait, modify methods in another trait, or remove
+methods from another trait.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _TraitDecl_ ::= | `trait` _TraitName_ = _MethodSet_ { _TraitOper_ }
+| _TraitDecl_ ::= | `trait` _TraitName_ = _TraitExpr_
+| _TraitExpr_ ::= | _MethodSet_ { _TraitOper_ }
 | _MethodSet_ ::= | _TraitName_ {vbar} _MethDecl_ {vbar} `{` { _MethDecl_ }  `}`
 | _TraitName_ ::= | _SimpleIdentifier_
 | _TraitOper_ ::= | `adds` _MethodSet_ +
-{vbar} `modifies` _MethodSet_ +
-{vbar} `removes` ( _MethSig_ {vbar} `{` _MethSig_ `}` )
+               {vbar} `modifies` _MethodSet_ +
+               {vbar} `removes` ( _MethSig_ {vbar} `{` { _MethSig_ } `}` )
 |====
-
 
 A trait is defined with `trait` t = _T_ at module level.
 
@@ -264,75 +267,49 @@ class body) is to add the methods in that trait to the class
 definition.
 
 .Explanation
-* The operation `adds` adds all the elements of the next _MethodSet_ to the class. 
-If a method with the same name is already present in the class (or set of methods), the error will be raised _after_ applying all traits, during type checking.
+* The trait operation `adds` adds all the elements of its _MethodSet_ to the
+trait.  It is an error if any method of the _MethodSet_ is already present in
+the trait.  Any error will be raised _after_ applying all operations, during
+type checking.
+
+.Example
 [source]
 ----
-trait T = { Unit x(){ skip; } } 
+trait T = { Unit x(){ skip; } }
 trait T2 = { Unit y(){ skip; } } adds T
+// T2 contains the following methods:
+// Unit y(){ skip; } Unit x(){ skip; }
 ----
-will be resolved to the set
-[source]
-----
-{ Unit x(){ skip; } Unit y(){ skip; } } 
-----
-* The operation `modifies` changes all the elements of the next _MethodSet_ in the class to the new implementation described in this _MethodSet_. 
-A trait may contain original() calls which refer to the version of the method before the trait application.
-If a method with the same name is not present in the class (or set of methods), the method is added instead and the original() calls are not resolved.
 
-A method may contain targeted original calls. These raise an error if the trait is used directly by a class
-The following is invalid:
-[source]
-.Example
-----
-trait T = {Unit myMethod(){ skip; }}  modifies {Unit myMethod(){ core.original(); }}
-class C {uses T; }
-----
-The following two examples are valid:
-[source]
-.Example
-----
-trait T = {Unit myMethod(){ skip; }} modifies {Unit myMethod(){ original(); }}
-class C {uses T; }
-----
-[source]
-.Example
-----
-module M;
-trait T = {Unit myMethod(){ skip; }} 
-class C {uses T; }
 
-delta D;
-modifies class M.C{
-        modifies Unit myMethod(){ core.original(); }
+* The trait operation `modifies` changes all the methods in the trait to the new implementation described in this _MethodSet_.  If a method with the same name is not present in the trait, the method is added instead.
+
+The methods in the `modifies` operation may contain `original()` calls which
+will call the version of the method before the operation application.  In case
+an overriden method is not present, `original()` calls will lead to a
+compile-time error.
+
+.Example
+[source]
+----
+trait T = { Bool m(){ return False; } }
+trait T2 = { Bool m() { Bool orig = original(); return !orig; } }
+class C {
+  uses T modifies T2;
 }
+// Calling C.m() will return True
 ----
-* The operation `removes` deletes the method with the provided signature. 
-If a method with the same name is not present in the class (or set of methods), an error will be raised during trait application.
 
-.The order of trait application is as follows:
-* All traits used within a class, in the order they are referred to
-* All traits used within a delta, in the order they are referred to
+* The operation `removes` removes the method(s) with the provided signatures
+from the trait.  If a method with the same name is not present in the class
+(or set of methods), an error will be raised during compilation.
 
-[source]
 .Example
+[source]
 ----
-module M;
-interface I { Unit x(); Unit foo(); Unit bar(); }
-trait T = Unit x() { this.foo(); original(); this.bar();  }
-trait T2 = { Unit x() { println("T2"); } } modifies T
-trait T3 = { Unit x() { println("T3"); } } modifies T
-class C implements I {
-        Int i = 0;
-        uses T2;
-        Unit foo(){ i = i+1; }
-        Unit bar(){ i = i-1; }
+trait T = { Bool m(){ return False; } }
+class C {
+  uses T removes { Bool m(); };
 }
-
-class C2 implements I {
-        Int i = 0;
-        uses T3;
-        Unit foo(){ i = i-1; }
-        Unit bar(){ i = i+1; }
-}
+// class C does not contain any methods
 ----
