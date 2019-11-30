@@ -1,0 +1,30 @@
+module BackendTest;
+
+// Test trait application
+
+interface I {
+    Bool test();
+}
+
+trait T = {
+    Bool m_1(){ return True; }
+    Bool test(){ return False; }
+}
+trait T2 = {
+    Bool test(){ return this.m_3(); }
+    Bool m_3(){ return False; }
+}
+trait T3 = {
+  Bool m_3(){ return True; }
+}
+
+
+class C implements I {
+    uses T removes { Bool test(); } adds T2 modifies T3;
+}
+
+{
+    I i = new C();
+    Bool testresult = await i!test();
+    println(`testresult: $testresult$`);
+}
