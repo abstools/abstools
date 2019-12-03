@@ -137,6 +137,17 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
+    public void traitApplication() {
+        // tests trait application
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/trait_application.abs"));
+    }
+
+    @Test
+    public void traitOriginalCall() {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/trait_original_call.abs"));
+    }
+
+    @Test
     public void fieldPatternMatch() {
         assertEvalTrue(INTERFACE_I
                 + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { return case 2 {a => True;};  } }"

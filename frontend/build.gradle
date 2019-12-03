@@ -8,7 +8,7 @@ plugins {
 
     // JastAdd plugin documentation at https://github.com/jastadd/jastaddgradle
     id 'org.jastadd' version '1.13.3'
-    id "com.github.spotbugs" version "2.0.1"
+    id "com.github.spotbugs" version "3.0.0"
 }
 
 application {
@@ -40,7 +40,7 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    implementation 'info.picocli:picocli:4.0.4'
+    implementation 'info.picocli:picocli:4.1.1'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
@@ -102,6 +102,7 @@ jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     archiveBaseName='absfrontend'
     archiveAppendix=gitBranch()
+    duplicatesStrategy='exclude'
     manifest {
         attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',

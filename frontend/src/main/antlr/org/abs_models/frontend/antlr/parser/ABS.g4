@@ -317,16 +317,17 @@ decl : datatype_decl
 
 trait_decl : 'trait' TYPE_IDENTIFIER '=' trait_expr ;
 
-trait_expr : '{' method* '}'		            #TraitSetFragment
-    | method 				            #TraitSetFragment
-    | TYPE_IDENTIFIER				    #TraitNameFragment
-    | trait_expr trait_oper	                    #TraitApplyFragment
+trait_expr : basic_trait_expr trait_oper* ;
+
+basic_trait_expr : '{' method* '}'      #TraitSetFragment
+    | method                            #TraitSetFragment
+    | TYPE_IDENTIFIER                   #TraitNameFragment
     ;
 
 trait_oper : 'removes' methodsig                    #TraitRemoveFragment
     | 'removes' '{' methodsig* '}'                  #TraitRemoveFragment
-    | 'adds' trait_expr                             #TraitAddFragment
-    | 'modifies' trait_expr                         #TraitModifyFragment
+    | 'adds' basic_trait_expr                       #TraitAddFragment
+    | 'modifies' basic_trait_expr                   #TraitModifyFragment
     ;
 
 trait_usage: 'uses' trait_expr ';' ;
@@ -374,11 +375,11 @@ oo_modifier : 'adds' class_decl                            # DeltaAddClassModifi
 
 class_modifier_fragment : 'adds' field_decl  # DeltaAddFieldFragment
     | 'removes' field_decl                   # DeltaRemoveFieldFragment
-    | trait_oper     						 # DeltaTraitFragment
+    | trait_oper                             # DeltaTraitFragment
     ;
 
 interface_modifier_fragment : 'adds' methodsig   # DeltaAddMethodsigFragment
-    | 'removes' methodsig 	                     # DeltaRemoveMethodsigFragment
+    | 'removes' methodsig                       # DeltaRemoveMethodsigFragment
     ;
 
 namespace_modifier : 'adds' module_import    # DeltaAddModuleImportFragment
