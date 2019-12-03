@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'org.xtext:xtext-gradle-plugin:2.0.7'
+        classpath 'org.xtext:xtext-gradle-plugin:2.0.8'
         classpath 'io.spring.gradle:dependency-management-plugin:1.0.8.RELEASE'
     }
 }
@@ -21,7 +21,6 @@ dependencyManagement {
 }
 apply plugin: 'org.xtext.xtend'
 apply from: "${rootDir}/gradle/xtext-source-layout.gradle"
-apply from: "${rootDir}/gradle/xtext-maven-deployment.gradle"
 apply plugin: 'eclipse'
 
 group = 'org.abs_models.xtext'
@@ -31,9 +30,9 @@ configurations.all {
 }
 
 dependencies {
-    compile project(':org.abs_models.xtext')
-    compile "org.eclipse.xtext:org.eclipse.xtext.ide:${xtextVersion}"
-    compile "org.eclipse.xtext:org.eclipse.xtext.xbase.ide:${xtextVersion}"
+    implementation project(':org.abs_models.xtext')
+    implementation "org.eclipse.xtext:org.eclipse.xtext.ide:${xtextVersion}"
+    implementation "org.eclipse.xtext:org.eclipse.xtext.xbase.ide:${xtextVersion}"
 }
 
 apply plugin: 'application'
@@ -43,7 +42,7 @@ applicationName = 'abs-lsp-server'
 
 shadowJar {
     from(project.convention.getPlugin(JavaPluginConvention).sourceSets.main.output)
-    configurations = [project.configurations.runtime]
+    configurations = [project.configurations.runtimeClasspath]
     exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA','schema/*',
             '.options', '.api_description', '*.profile', '*.html', 'about.*', 'about_files/*',
             'plugin.xml', 'modeling32.png', 'systembundle.properties', 'profile.list')

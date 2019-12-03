@@ -26,6 +26,8 @@ distributions {
 
 dependencies {
     implementation project(':org.abs_models.xtext')
+    implementation "org.eclipse.xtext:org.eclipse.xtext.ide:${xtextVersion}"
+    implementation "org.eclipse.xtext:org.eclipse.xtext.xbase.ide:${xtextVersion}"
 
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
     implementation 'commons-io:commons-io:2.6'
@@ -53,9 +55,9 @@ dependencies {
     testImplementation 'org.easymock:easymock:4.1'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest-core:2.2'
-    testCompile "org.junit.jupiter:junit-jupiter-api:5.5.2"
-    testCompile "org.eclipse.xtext:org.eclipse.xtext.testing:${xtextVersion}"
-    testCompile "org.eclipse.xtext:org.eclipse.xtext.xbase.testing:${xtextVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.5.2"
+    testImplementation "org.eclipse.xtext:org.eclipse.xtext.testing:${xtextVersion}"
+    testImplementation "org.eclipse.xtext:org.eclipse.xtext.xbase.testing:${xtextVersion}"
 
     jastadd2 'org.jastadd:jastadd:2.3.4'
 }
