@@ -12,6 +12,7 @@ import org.abs_models.frontend.ast.DeltaDecl;
 import org.abs_models.frontend.ast.Model;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.fail;
 import static org.junit.Assert.assertTrue;
@@ -74,7 +75,6 @@ public class ParserTest extends FrontendTest {
     public void ifExp() {
         assertParse("{ (when True then x else x).get; }");
         assertParse("{ Int x = 5; if(when 4 == 5 then True else False) { x = 4; } else { x = 3; } }");
-        assertParse("{ when True then x else x.get; }");
     }
 
 

@@ -182,7 +182,7 @@ Pattern
     | {StringLiteralPattern} value=STRINGLITERAL
     | {FloatLiteralPattern} value=FLOATLITERAL
     | {VariablePattern} value=IDENTIFIER
-    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' args+=Pattern (',' args+=Pattern)* ')' )?
+    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' (args+=Pattern (',' args+=Pattern)* )? ')' )?
     ;
 
 // Expressions
