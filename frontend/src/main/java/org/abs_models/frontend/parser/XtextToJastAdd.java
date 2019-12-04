@@ -241,6 +241,8 @@ public class XtextToJastAdd {
             result = fromXtext((org.abs_models.xtext.abs.ExceptionDecl) xtext_decl);
         } else if (xtext_decl instanceof org.abs_models.xtext.abs.FunctionDecl) {
             result = fromXtext((org.abs_models.xtext.abs.FunctionDecl) xtext_decl);
+        } else if (xtext_decl instanceof org.abs_models.xtext.abs.TraitDecl) {
+            result = fromXtext((org.abs_models.xtext.abs.TraitDecl) xtext_decl);
         } else if (xtext_decl instanceof org.abs_models.xtext.abs.InterfaceDecl) {
             result = fromXtext((org.abs_models.xtext.abs.InterfaceDecl) xtext_decl);
         } else if (xtext_decl instanceof org.abs_models.xtext.abs.ClassDecl) {
@@ -395,6 +397,51 @@ public class XtextToJastAdd {
         }
     }
 
+    static TraitDecl fromXtext(org.abs_models.xtext.abs.TraitDecl xtext_decl) {
+        TraitDecl result = new TraitDecl();
+        result.setName(xtext_decl.getName());
+        result.setTraitExpr(fromXtext(xtext_decl.getTrait_exp()));
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    static TraitExpr fromXtext(org.abs_models.xtext.abs.TraitExp xtext_exp) {
+        TraitExpr result = fromXtext(xtext_exp.getBasic_exp());
+        for (org.abs_models.xtext.abs.TraitOp op : xtext_exp.getTrait_ops()) {
+            result = new TraitModifyExpr(result, fromXtext(op));
+        }
+        return nodeWithLocation(result, xtext_exp);
+    }
+
+    static TraitExpr fromXtext(org.abs_models.xtext.abs.BasicTraitExp xtext_exp) {
+        TraitExpr result = null;
+        if (xtext_exp.isMethodSet() || xtext_exp.getMethods().size() > 0) {
+            TraitSetExpr fresult = new TraitSetExpr();
+            for (org.abs_models.xtext.abs.MethodDecl m : xtext_exp.getMethods()) {
+                fresult.addMethodImplNoTransform(fromXtext(m));
+            }
+            result = fresult;
+        } else {
+            result = new TraitNameExpr(xtext_exp.getRef());
+        }
+        return nodeWithLocation(result, xtext_exp);
+    }
+
+    static MethodModifier fromXtext(org.abs_models.xtext.abs.TraitOp xtext_exp) {
+        MethodModifier result = null;
+        if (xtext_exp.isRemoveMethodModifier() || xtext_exp.getRemoved_sigs().size() > 0) {
+            List<MethodSig> l = new List<>();
+            for (org.abs_models.xtext.abs.MethodSignature s : xtext_exp.getRemoved_sigs()) {
+                l.add(fromXtext(s));
+            }
+            result = new RemoveMethodModifier(l);
+        } else if (xtext_exp.getAdded_exp() != null) {
+            result = new AddMethodModifier(fromXtext(xtext_exp.getAdded_exp()));
+        } else {
+            result = new ModifyMethodModifier(fromXtext(xtext_exp.getModified_exp()));
+        }
+        return nodeWithLocation(result, xtext_exp);
+    }
+
     static InterfaceDecl fromXtext(org.abs_models.xtext.abs.InterfaceDecl xtext_decl) {
         InterfaceDecl result = new  InterfaceDecl();
         result.setName(xtext_decl.getName());
@@ -441,6 +488,7 @@ public class XtextToJastAdd {
             result.addFieldNoTransform(fromXtext(fieldDecl));
         }
 
+        // TODO treat the case of an empty init block
         if (xtext_decl.getInitblockstmts().size() > 0) {
             InitBlock astInitBlock = new InitBlock();
             for(org.abs_models.xtext.abs.Stmt statement : xtext_decl.getInitblockstmts()) {
@@ -455,6 +503,9 @@ public class XtextToJastAdd {
 
         for (CaseStmtBranch recover_branch : xtext_decl.getRecoverbranches()) {
             result.addRecoverBranchNoTransform(fromXtext(recover_branch));
+        }
+        for (org.abs_models.xtext.abs.TraitExp trait_exp : xtext_decl.getUsed_traits()) {
+            result.addTraitUseNoTransform(new TraitUse(fromXtext(trait_exp)));
         }
 
         return nodeWithLocation(result, xtext_decl);
@@ -1142,16 +1193,30 @@ public class XtextToJastAdd {
             for (org.abs_models.xtext.abs.ClassModifier mod : xtext_mod.getClass_modifiers()) {
                 if (mod.getAdded_field() != null) {
                     mresult.addModifierNoTransform(new AddFieldModifier(fromXtext(mod.getAdded_field())));
-                } else if (mod.getAdded_method() != null) {
-                    mresult.addModifierNoTransform(new DeltaTraitModifier(new AddMethodModifier(fromXtext(mod.getAdded_method()))));
+                } else if (mod.getAdded_methods().size() > 0) {
+                    TraitSetExpr tse = new TraitSetExpr();
+                    for (org.abs_models.xtext.abs.MethodDecl m : mod.getAdded_methods()) {
+                        tse.addMethodImplNoTransform(fromXtext(m));
+                    }
+                    mresult.addModifierNoTransform(new DeltaTraitModifier(new AddMethodModifier(tse)));
+                } else if (mod.getAdded_trait() != null) {
+                    mresult.addModifierNoTransform(new DeltaTraitModifier(new AddMethodModifier(new TraitNameExpr(mod.getAdded_trait()))));
                 } else if (mod.getRemoved_field() != null) {
                     mresult.addModifierNoTransform(new RemoveFieldModifier(fromXtext(mod.getRemoved_field())));
-                } else if (mod.getRemoved_method() != null) {
+                } else if (mod.getRemoved_methods().size() > 0) {
                     List<MethodSig> methodlist = new List<MethodSig>();
-                    methodlist.add(fromXtext(mod.getRemoved_method()));
-                    mresult.addModifierNoTransform(new RemoveMethodModifier(methodlist));
-                } else if (mod.getModified_method() != null) {
-                    mresult.addModifierNoTransform(new DeltaTraitModifier(new ModifyMethodModifier(fromXtext(mod.getModified_method()))));
+                    for (org.abs_models.xtext.abs.MethodSignature s : mod.getRemoved_methods()) {
+                        methodlist.add(fromXtext(s));
+                    }
+                    mresult.addModifierNoTransform(new DeltaTraitModifier(new RemoveMethodModifier(methodlist)));
+                } else if (mod.getModified_methods().size() > 0) {
+                    TraitSetExpr tse = new TraitSetExpr();
+                    for (org.abs_models.xtext.abs.MethodDecl m : mod.getAdded_methods()) {
+                        tse.addMethodImplNoTransform(fromXtext(m));
+                    }
+                    mresult.addModifierNoTransform(new DeltaTraitModifier(new ModifyMethodModifier(tse)));
+                } else if (mod.getModified_trait() != null) {
+                    mresult.addModifierNoTransform(new DeltaTraitModifier(new ModifyMethodModifier(new TraitNameExpr(mod.getModified_trait()))));
                 }
             }
             result = mresult;

@@ -48,9 +48,9 @@ Declaration
     | TypeSynonymDecl
     | ExceptionDecl
     | FunctionDecl
+    | TraitDecl
     | InterfaceDecl
     | ClassDecl
-    // | TraitDecl
     ;
 
 DataTypeDecl
@@ -80,6 +80,24 @@ FunctionDecl
         ';'
     ;
 
+TraitDecl : 'trait' name=TYPE_IDENTIFIER '=' trait_exp=TraitExp ;
+
+TraitExp : basic_exp=BasicTraitExp trait_ops+=TraitOp* ;
+
+BasicTraitExp
+    : MethodSet?='{' methods+=MethodDecl* '}'
+    | methods+=MethodDecl
+    | ref=TYPE_IDENTIFIER
+    ;
+
+TraitOp
+    : 'removes'
+        ( RemoveMethodModifier?='{' ( removed_sigs+=MethodSignature ';' )* '}'
+        | removed_sigs+=MethodSignature ';' )
+    | 'adds' added_exp=BasicTraitExp
+    | 'modifies' modified_exp=BasicTraitExp
+    ;
+
 InterfaceDecl
     : annotations=Annotations 'interface' name=TYPE_IDENTIFIER
         ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
@@ -99,7 +117,7 @@ ClassDecl
         (fields+=FieldDecl ';')*
         ( '{' initblockstmts+=Stmt* '}' )?
         ( 'recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
-        // (traits+=TraitUsage)*
+        ( 'uses' used_traits+=TraitExp ';' )*
         (methods+=MethodDecl)*
         '}'
     ;
@@ -478,11 +496,18 @@ DeltaModuleModifier
 ClassModifier
     : 'adds'
         ( added_field=FieldDecl ';'
-        | added_method=MethodDecl)
+        | '{' added_methods+=MethodDecl* '}'
+        | added_methods+=MethodDecl
+        | added_trait=TYPE_IDENTIFIER)
     | 'removes'
         ( removed_field=FieldDecl ';'
-        | removed_method=MethodSignature ';' )
-    | 'modifies' modified_method=MethodDecl
+        | '{' ( removed_methods+=MethodSignature ';' )* '}'
+        | removed_methods+=MethodSignature ';' )
+    | 'modifies'
+        ( modified_methods+=MethodDecl
+        | '{' modified_methods+=MethodDecl* '}'
+        | modified_trait=TYPE_IDENTIFIER
+        )
     ;
 
 InterfaceModifier
