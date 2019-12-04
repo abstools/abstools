@@ -104,7 +104,7 @@ jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     archiveBaseName='absfrontend'
     archiveAppendix=gitBranch()
-    duplicatesStrategy='exclude'
+    duplicatesStrategy='include'
     manifest {
         attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',
