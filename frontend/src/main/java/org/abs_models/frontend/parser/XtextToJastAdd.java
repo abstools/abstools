@@ -151,6 +151,7 @@ public class XtextToJastAdd {
 
             final MainBlock mainBlock = new MainBlock();
             mainBlock.setStmtList(statements);
+            mainBlock.setAnnotationList(annotationsfromXtext(xtext_module.getMain_annotations()));
             result.setBlock(mainBlock);
         }
         return nodeWithLocation(result, xtext_module);
