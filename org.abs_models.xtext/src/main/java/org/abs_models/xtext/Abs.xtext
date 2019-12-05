@@ -572,7 +572,7 @@ DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
 
 ProductDecl
     : 'product' name=TYPE_IDENTIFIER
-        ( '(' features+=ProductFeature (',' features+=ProductFeature)* ')' ';'
+        ( '(' ( features+=ProductFeature (',' features+=ProductFeature)* )? ')' ';'
         | '=' expr=ProductExpr ';' )
     ;
 
