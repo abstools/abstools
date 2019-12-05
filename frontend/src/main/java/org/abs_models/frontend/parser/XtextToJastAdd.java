@@ -1211,7 +1211,7 @@ public class XtextToJastAdd {
                     mresult.addModifierNoTransform(new DeltaTraitModifier(new RemoveMethodModifier(methodlist)));
                 } else if (mod.getModified_methods().size() > 0) {
                     TraitSetExpr tse = new TraitSetExpr();
-                    for (org.abs_models.xtext.abs.MethodDecl m : mod.getAdded_methods()) {
+                    for (org.abs_models.xtext.abs.MethodDecl m : mod.getModified_methods()) {
                         tse.addMethodImplNoTransform(fromXtext(m));
                     }
                     mresult.addModifierNoTransform(new DeltaTraitModifier(new ModifyMethodModifier(tse)));
