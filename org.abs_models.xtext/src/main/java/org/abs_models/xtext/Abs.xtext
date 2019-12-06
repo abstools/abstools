@@ -677,13 +677,13 @@ MTVLConstraintExprAnd returns MTVLConstraintExpr
 MTVLConstraintExprImplEqv returns MTVLConstraintExpr
     : MTVLConstraintExprEqNeq
         ( ({MTVLConstraintExprImpl.left=current} '->' right=MTVLConstraintExprEqNeq)
-        | ({MTVLConstraintExprEqv.left=current} '<->' right=MTVLConstraintExprEqNeq))
+        | ({MTVLConstraintExprEqv.left=current} '<->' right=MTVLConstraintExprEqNeq))?
     ; // non-assoc
 
 MTVLConstraintExprEqNeq returns MTVLConstraintExpr
     : MTVLConstraintExprCompare
         ( ({MTVLConstraintExprEq.left=current} '==' right=MTVLConstraintExprCompare)
-        | ({MTVLConstraintExprNeq.left=current} '!=' right=MTVLConstraintExprCompare))
+        | ({MTVLConstraintExprNeq.left=current} '!=' right=MTVLConstraintExprCompare))?
     ; // non-assoc
 
 MTVLConstraintExprCompare returns MTVLConstraintExpr
@@ -691,7 +691,7 @@ MTVLConstraintExprCompare returns MTVLConstraintExpr
         ( ({MTVLConstraintExprLT.left=current} '<' right=MTVLConstraintExprPlusMinus)
         | ({MTVLConstraintExprGT.left=current} '>' right=MTVLConstraintExprPlusMinus)
         | ({MTVLConstraintExprLTEQ.left=current} '<=' right=MTVLConstraintExprPlusMinus)
-        | ({MTVLConstraintExprGTEQ.left=current} '>=' right=MTVLConstraintExprPlusMinus))
+        | ({MTVLConstraintExprGTEQ.left=current} '>=' right=MTVLConstraintExprPlusMinus))?
     ; // non-assoc
 
 MTVLConstraintExprPlusMinus returns MTVLConstraintExpr

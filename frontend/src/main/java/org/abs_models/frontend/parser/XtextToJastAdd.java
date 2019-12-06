@@ -1533,84 +1533,57 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_feat);
     }
 
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprOr xtext_exp) {
-        MOrBoolExp result = new MOrBoolExp(fromXtext(xtext_exp.getLeft()),
-                                           fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprAnd xtext_exp) {
-        MAndBoolExp result = new MAndBoolExp(fromXtext(xtext_exp.getLeft()),
-                                             fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprImpl xtext_exp) {
-        MImpliesExp result = new MImpliesExp(fromXtext(xtext_exp.getLeft()),
-                                             fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprEqv xtext_exp) {
-        MEquivExp result = new MEquivExp(fromXtext(xtext_exp.getLeft()),
-                                         fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprEq xtext_exp) {
-        MEqExp result = new MEqExp(fromXtext(xtext_exp.getLeft()),
-                                   fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprNeq xtext_exp) {
-        MNotEqExp result = new MNotEqExp(fromXtext(xtext_exp.getLeft()),
-                                         fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprLT xtext_exp) {
-        MLTExp result = new MLTExp(fromXtext(xtext_exp.getLeft()),
-                                   fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprGT xtext_exp) {
-        MGTExp result = new MGTExp(fromXtext(xtext_exp.getLeft()),
-                                   fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprLTEQ xtext_exp) {
-        MLTEQExp result = new MLTEQExp(fromXtext(xtext_exp.getLeft()),
-                                       fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprGTEQ xtext_exp) {
-        MGTEQExp result = new MGTEQExp(fromXtext(xtext_exp.getLeft()),
-                                       fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprPlus xtext_exp) {
-        MAddAddExp result = new MAddAddExp(fromXtext(xtext_exp.getLeft()),
-                                           fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprMinus xtext_exp) {
-        MSubAddExp result = new MSubAddExp(fromXtext(xtext_exp.getLeft()),
-                                           fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprMul xtext_exp) {
-        MMultMultExp result = new MMultMultExp(fromXtext(xtext_exp.getLeft()),
-                                               fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprDiv xtext_exp) {
-        MDivMultExp result = new MDivMultExp(fromXtext(xtext_exp.getLeft()),
-                                             fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExprMod xtext_exp) {
-        MModMultExp result = new MModMultExp(fromXtext(xtext_exp.getLeft()),
-                                             fromXtext(xtext_exp.getRight()));
-        return nodeWithLocation(result, xtext_exp);
-    }
     private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExpr xtext_exp) {
         MExp result = null;
-        if (xtext_exp.getParen_exp() != null) {
+
+        if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprOr) {
+            result = new MOrBoolExp(fromXtext(xtext_exp.getLeft()),
+                                    fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprAnd) {
+            result = new MAndBoolExp(fromXtext(xtext_exp.getLeft()),
+                                     fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprImpl) {
+            result = new MImpliesExp(fromXtext(xtext_exp.getLeft()),
+                                     fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprEqv) {
+            result = new MEquivExp(fromXtext(xtext_exp.getLeft()),
+                                   fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprEq) {
+            result = new MEqExp(fromXtext(xtext_exp.getLeft()),
+                                fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprNeq) {
+            result = new MNotEqExp(fromXtext(xtext_exp.getLeft()),
+                                   fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprLT) {
+            result = new MLTExp(fromXtext(xtext_exp.getLeft()),
+                                fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprGT) {
+            result = new MGTExp(fromXtext(xtext_exp.getLeft()),
+                                fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprLTEQ) {
+            result = new MLTEQExp(fromXtext(xtext_exp.getLeft()),
+                                  fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprGTEQ) {
+            result = new MGTEQExp(fromXtext(xtext_exp.getLeft()),
+                                  fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprPlus) {
+            result = new MAddAddExp(fromXtext(xtext_exp.getLeft()),
+                                    fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprMinus) {
+            result = new MSubAddExp(fromXtext(xtext_exp.getLeft()),
+                                    fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprMul) {
+            result = new MMultMultExp(fromXtext(xtext_exp.getLeft()),
+                                      fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprDiv) {
+            result = new MDivMultExp(fromXtext(xtext_exp.getLeft()),
+                                     fromXtext(xtext_exp.getRight()));
+        } else if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintExprMod) {
+            result = new MModMultExp(fromXtext(xtext_exp.getLeft()),
+                                     fromXtext(xtext_exp.getRight()));
+        }
+        // MTVLConstraintExprPrimary
+        else if (xtext_exp.getParen_exp() != null) {
             return fromXtext(xtext_exp.getParen_exp());
         } else if (xtext_exp.getMinus_exp() != null) {
             result = new MMinusExp(fromXtext(xtext_exp.getMinus_exp()));
