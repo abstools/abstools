@@ -17,6 +17,7 @@ import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LocationTypeTests extends FrontendTest {
@@ -153,20 +154,19 @@ public class LocationTypeTests extends FrontendTest {
         assertLocationTypeErrorOnly("interface K {} def Unit f([Near] K k) = Unit; { [Far] K k; Unit u = f(k);}");
     }
 
-    @Test
+    @Test @Ignore
     public void dataExp() {
         assertLocationTypeErrorOnly("interface K {} data Foo = Bar([Far] K); { [Near] K k; Foo f = Bar(k);}");
     }
     
-    /*
-    @Test
-    public void callParamInfer() {
-        Model m = assertInferOk("interface I { Unit m(I i); } class C implements I { Unit m(I i) { I j; j = new local C(); i.m(j); } } { }");
-        ClassDecl cd = (ClassDecl) m.getCompilationUnit(1).getModuleDecl(0).getDecl(1);
-        Type t = cd.getMethod(0).getMethodSig().getParam(0).getType();
-        LocationType lt = m.getLocationTypeInferenceResult().get(LocationTypeInferrerExtension.getLV(t));
-        assertEquals(LocationType.NEAR, lt);
-    }*/
+    // @Test @Ignore
+    // public void callParamInfer() {
+    //     Model m = assertInferOk("interface I { Unit m(I i); } class C implements I { Unit m(I i) { I j; j = new local C(); i.m(j); } } { }");
+    //     ClassDecl cd = (ClassDecl) m.getCompilationUnit(1).getModuleDecl(0).getDecl(1);
+    //     Type t = cd.getMethod(0).getMethodSig().getParam(0).getType();
+    //     LocationType lt = m.getLocationTypeInferenceResult().get(LocationTypeInferrerExtension.getLV(t));
+    //     assertEquals(LocationType.NEAR, lt);
+    // }
     
     
     @Test
