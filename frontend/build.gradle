@@ -90,15 +90,12 @@ compileJava.dependsOn 'generateGrammarSource'
 //     outputs.file('src/main/resources/erlang/absmodel/ebin/cog.beam')
 // }
 
-task compileErlangBackend(type: Exec) {
+task compileErlangBackend(type: Exec, dependsOn: processResources) {
     description 'Compiles Erlang backend support files.'
-    workingDir 'src/main/resources/erlang/absmodel'
+    workingDir 'build/resources/main/erlang/absmodel'
     commandLine 'escript', '../bin/rebar', 'compile'
 }
-processResources.dependsOn 'compileErlangBackend'
-clean {
-    delete fileTree('src/main/resources/erlang/absmodel/').include('**/*.beam')
-}
+jar.dependsOn 'compileErlangBackend'
 
 // jar
 jar {
