@@ -832,10 +832,10 @@ public class XtextToJastAdd {
             OriginalCall exp;
             if (xtextExp.isCore()) {
                 // ‘core.original()’
-                exp = new TargetedOriginalCall(nodeWithLocation(new DeltaID("core"), xtextExp, AbsPackage.eINSTANCE.getOriginalCallExp_Core()), paramList);
+                exp = new TargetedOriginalCall(paramList, nodeWithLocation(new DeltaID("core"), xtextExp, AbsPackage.eINSTANCE.getOriginalCallExp_Core()));
             } else if (xtextExp.getDelta() != null) {
                 // ‘Delta.original()’
-                exp = new TargetedOriginalCall(nodeWithLocation(new DeltaID(xtextExp.getDelta()), xtextExp, AbsPackage.eINSTANCE.getOriginalCallExp_Delta()), paramList);
+                exp = new TargetedOriginalCall(paramList, nodeWithLocation(new DeltaID(xtextExp.getDelta()), xtextExp, AbsPackage.eINSTANCE.getOriginalCallExp_Delta()));
             } else {
                 // ‘original()’
                 exp = new OriginalCall(paramList);

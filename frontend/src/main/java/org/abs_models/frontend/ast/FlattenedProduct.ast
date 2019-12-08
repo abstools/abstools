@@ -1,5 +1,0 @@
-abstract InstNode;
-
-//intrinsic attributes
-InstModel : InstNode ::= <Model:Model>; 
-InstModuleDecl : InstNode ::= <ModuleDecl:ModuleDecl>;

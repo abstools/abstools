@@ -1,17 +1,21 @@
-//$Id$
+// CoreABS.
 //
+// This file contains the AST definitions necessary to implement roughly
+// Chapters 1--11 (Core ABS) of the manual.  Chapters 12--15 (Model API,
+// Real-Time ABS, custom schedulers) do not add changes to the AST since they
+// are implemented in terms of annotations.  Chapter 16 (Software Product Line
+// Engineering) is contained in the file FullAbs.ast in this directory.
 
 // needed for lists of strings
 Name ::= <Name>;
-DeltaID ::= <Name>;
 
-Model ::= CompilationUnit* /Product*/ ;
+abstract CoreModel ::= CompilationUnit* ;
 //Model ::= CompilationUnit* ;
 
 
-CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
+abstract CoreCompilationUnit ::= <Name> ModuleDecl* ;
+
 ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
-DeltaDecl ::= <Name> Param:DeltaParamDecl* DeltaAccess* ModuleModifier* ;
 
 abstract Import;
 NamedImport : Import ::= Name* ;
@@ -24,7 +28,6 @@ StarExport: Export ::= [ModuleName:Name];
 FromExport: Export ::= Name* <ModuleName>;
 // (see below for Blocks)
 
-DeltaAccess: StarImport ::= <ModuleName>;
 /***************************************/
 abstract Decl ::= <Name>;
 abstract BehaviorDecl: Decl ::= ; // Entities used in behavior expressions
@@ -63,43 +66,6 @@ TypeSynDecl: TypeDecl ::= Annotation* Value:TypeUse ;
 ConstructorArg ::= TypeUse [SelectorName:Name];
 
 
-abstract DeltaParamDecl;
-DeltaClassParam : DeltaParamDecl ::= <Name> HasCondition;
-DeltaFieldParam : DeltaParamDecl ::= ParamDecl; // same parameter as method parameters
-
-abstract HasCondition;
-HasField : HasCondition ::= FieldDecl;
-HasMethod : HasCondition ::= MethodSig;
-HasInterface : HasCondition ::= InterfaceTypeUse;
-
-abstract ModuleModifier;
-abstract NamespaceModifier : ModuleModifier;
-abstract OOModifier : ModuleModifier;
-abstract ClassModifier : OOModifier;
-abstract InterfaceModifier : OOModifier;
-abstract MethodSigModifier;
-
-abstract FunctionalModifier : ModuleModifier;
-abstract TypeSynModifier : FunctionalModifier;
-abstract DataTypeModifier : FunctionalModifier;
-abstract FunctionModifier : FunctionalModifier;
-
-AddImportModifier : NamespaceModifier ::= Import;
-AddExportModifier : NamespaceModifier ::= Export;
-
-AddTypeSynModifier : TypeSynModifier ::= TypeSynDecl;
-ModifyTypeSynModifier : TypeSynModifier ::= TypeSynDecl;
-AddDataTypeModifier : DataTypeModifier ::= DataTypeDecl;
-ModifyDataTypeModifier : DataTypeModifier ::= DataTypeDecl;
-AddFunctionModifier : FunctionModifier ::= FunctionDecl;
-
-AddClassModifier : ClassModifier ::= ClassDecl;
-RemoveClassModifier : ClassModifier ::= <Name>;
-ModifyClassModifier : ClassModifier ::= <Name> AddedInterface:InterfaceTypeUse* RemovedInterface:InterfaceTypeUse* Modifier*;
-AddInterfaceModifier : InterfaceModifier ::= InterfaceDecl;
-RemoveInterfaceModifier : InterfaceModifier ::= <Name>;
-ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
-
 abstract Modifier;
 abstract MethodModifier : Modifier;
 AddMethodModifier : MethodModifier ::= TraitExpr;
@@ -109,8 +75,6 @@ AddFieldModifier : Modifier ::= FieldDecl;
 RemoveFieldModifier : Modifier ::= FieldDecl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
-
-DeltaTraitModifier : Modifier ::= MethodModifier;
 
 abstract VarOrFieldDecl ::= <Name>;
 FunctionParamDecl : VarOrFieldDecl ;
@@ -260,8 +224,7 @@ SyncCall: Call;
 AsyncCall: Call;
 AwaitAsyncCall: Call;
 GetExp: EffExp ::= PureExp;
-OriginalCall: EffExp ::= Param:PureExp*;
-TargetedOriginalCall: OriginalCall ::= Target:DeltaID Param:PureExp*;
+OriginalCall: EffExp ::= Param:PureExp*; // original() is supported in traits, hence part of Core ABS.
 
 abstract Unary : PureExp ::= Operand:PureExp;
 
@@ -300,43 +263,3 @@ GTEQExp : RelationalExpr ;
 abstract EqualityExpr : RelationalExpr;
 EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
-
-// Feature Configuration and Product Selection Language (CL/PSL)
-ProductLine ::= <Name> Feature* DeltaClause* ;
-Feature ::= <Name> AttrAssignment*;
-
-DeltaClause ::= Deltaspec AfterDeltaID:DeltaID* [FromAppCond:AppCond] [AppCond] ;
-
-abstract AppCond;
-AppCondAnd : AppCond ::= Left:AppCond Right:AppCond ;
-AppCondOr : AppCond ::= Left:AppCond Right:AppCond ;
-AppCondNot : AppCond ::= AppCond ;
-AppCondFeature : AppCond ::= <Name> ;
-// TODO allow application conditions over attributes too e.g. "delta D when (1 < F.foo < 5) && F.bar"
-
-
-AttrAssignment ::= <Name:String> Value ;
-abstract Value;
-UnknownVal: Value ::= <Value>;
-IntVal: Value ::= <Value:int>;  // TODO: make this BigInteger?
-BoolVal: Value ::= <Value:Boolean>;
-StringVal: Value ::= <Value:String>;
-
-Deltaspec ::= <DeltaID> Deltaparam* ;
-abstract Deltaparam;
-CID: Deltaparam ::= <Name>;
-FID: Deltaparam ::= <FeatName>;
-FIDAID: Deltaparam ::= <FeatName> <AttrName>;
-Const: Deltaparam ::= Value ;
-
-// Extended Product Selection Language
-ProductDecl ::= <Name> ProductExpr ;
-
-abstract ProductExpr ;
-ProductFeatureSet : ProductExpr ::= Feature* ;
-ProductIntersect : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
-ProductUnion : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
-ProductDifference : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
-ProductName : ProductExpr ::= <Name> ;
-
-Product ::= Feature* ;

@@ -1,0 +1,205 @@
+// Full ABS.
+//
+// This file contains the AST definitions necessary to implement Chapter 16 of
+// the manual (Software Product Line Engineering).  It extends the definitions
+// of CoreAbs.ast in the same directory.
+
+
+// Hook into CoreAbs.ast definitions
+Model : CoreModel ::= /Product*/ ;
+CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
+
+// Deltas
+
+DeltaDecl ::= <Name> Param:DeltaParamDecl* DeltaAccess* ModuleModifier* ;
+
+DeltaID ::= <Name>;
+
+// An extension to OriginalCall that names a delta (OriginalCall can also be
+// used in a trait, hence is part of Core ABS)
+TargetedOriginalCall: OriginalCall ::= Target:DeltaID ;
+
+DeltaAccess: StarImport ::= <ModuleName>;
+
+abstract DeltaParamDecl;
+DeltaClassParam : DeltaParamDecl ::= <Name> HasCondition;
+DeltaFieldParam : DeltaParamDecl ::= ParamDecl; // same parameter as method parameters
+
+abstract HasCondition;
+HasField : HasCondition ::= FieldDecl;
+HasMethod : HasCondition ::= MethodSig;
+HasInterface : HasCondition ::= InterfaceTypeUse;
+
+abstract ModuleModifier;
+abstract NamespaceModifier : ModuleModifier;
+abstract OOModifier : ModuleModifier;
+abstract ClassModifier : OOModifier;
+abstract InterfaceModifier : OOModifier;
+abstract MethodSigModifier;
+
+abstract FunctionalModifier : ModuleModifier;
+abstract TypeSynModifier : FunctionalModifier;
+abstract DataTypeModifier : FunctionalModifier;
+abstract FunctionModifier : FunctionalModifier;
+
+AddImportModifier : NamespaceModifier ::= Import;
+AddExportModifier : NamespaceModifier ::= Export;
+
+AddTypeSynModifier : TypeSynModifier ::= TypeSynDecl;
+ModifyTypeSynModifier : TypeSynModifier ::= TypeSynDecl;
+AddDataTypeModifier : DataTypeModifier ::= DataTypeDecl;
+ModifyDataTypeModifier : DataTypeModifier ::= DataTypeDecl;
+AddFunctionModifier : FunctionModifier ::= FunctionDecl;
+
+AddClassModifier : ClassModifier ::= ClassDecl;
+RemoveClassModifier : ClassModifier ::= <Name>;
+ModifyClassModifier : ClassModifier ::= <Name> AddedInterface:InterfaceTypeUse* RemovedInterface:InterfaceTypeUse* Modifier*;
+AddInterfaceModifier : InterfaceModifier ::= InterfaceDecl;
+RemoveInterfaceModifier : InterfaceModifier ::= <Name>;
+ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
+
+DeltaTraitModifier : Modifier ::= MethodModifier;
+
+// Feature Configuration and Product Selection Language (CL/PSL)
+ProductLine ::= <Name> Feature* DeltaClause* ;
+Feature ::= <Name> AttrAssignment*;
+
+DeltaClause ::= Deltaspec AfterDeltaID:DeltaID* [FromAppCond:AppCond] [AppCond] ;
+
+abstract AppCond;
+AppCondAnd : AppCond ::= Left:AppCond Right:AppCond ;
+AppCondOr : AppCond ::= Left:AppCond Right:AppCond ;
+AppCondNot : AppCond ::= AppCond ;
+AppCondFeature : AppCond ::= <Name> ;
+// TODO allow application conditions over attributes too e.g. "delta D when (1 < F.foo < 5) && F.bar"
+
+
+AttrAssignment ::= <Name:String> Value ;
+abstract Value;
+UnknownVal: Value ::= <Value>;
+IntVal: Value ::= <Value:int>;  // TODO: make this BigInteger?
+BoolVal: Value ::= <Value:Boolean>;
+StringVal: Value ::= <Value:String>;
+
+Deltaspec ::= <DeltaID> Deltaparam* ;
+abstract Deltaparam;
+CID: Deltaparam ::= <Name>;
+FID: Deltaparam ::= <FeatName>;
+FIDAID: Deltaparam ::= <FeatName> <AttrName>;
+Const: Deltaparam ::= Value ;
+
+// Extended Product Selection Language
+ProductDecl ::= <Name> ProductExpr ;
+
+abstract ProductExpr ;
+ProductFeatureSet : ProductExpr ::= Feature* ;
+ProductIntersect : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductUnion : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductDifference : ProductExpr ::= Left:ProductExpr Right:ProductExpr ;
+ProductName : ProductExpr ::= <Name> ;
+
+Product ::= Feature* ;
+
+// Used in FlattenedProduct.jadd -- but seems to be dead code
+
+abstract InstNode;
+
+//intrinsic attributes
+InstModel : InstNode ::= <Model:Model>; 
+InstModuleDecl : InstNode ::= <ModuleDecl:ModuleDecl>;
+
+
+/////////////////////////////////
+/// mTVL - root and extension ///
+/////////////////////////////////
+
+// TODO: remove FeatureModelDecl when removing beaver parser, antlr doesn't need it
+FeatureModelDecl ::= FeatureDecl* FExt*;
+
+FExt ::= <Name> [Group] AttrConstraints;
+
+FeatureDecl ::= <Name> [Group] AttrConstraints;
+
+AttrConstraints ::= Attribute* Constr*;
+
+Group ::=  Card:Cardinality FNode*;
+
+abstract  FNode ::= FeatureDecl;
+OptFeat:  FNode;
+MandFeat: FNode;
+
+abstract Cardinality;
+AllOf:   Cardinality;
+Minim:   Cardinality ::= <CFrom:int>;
+CRange:  Cardinality ::= <CFrom:int> <CTo:int>;
+
+Attribute ::= <Name> AType:MType;
+
+abstract  MType ::= <Typename>;
+UnresolvedMType: MType;
+BoolMType: MType;
+StringMType: MType;
+IntMType:  MType ::= Min:BoundaryInt Max:BoundaryInt;
+IntListMType:  MType ::= BoundaryVal*;
+
+abstract BoundaryInt;
+Limit: BoundaryInt;
+BoundaryVal: BoundaryInt ::= <Value:int>;
+
+abstract Constr;
+IfIn:    Constr ::= Expr: MExp;
+IfOut:   Constr ::= Expr: MExp;
+Exclude: Constr ::= FeatVar;
+Require: Constr ::= FeatVar;
+
+abstract            MExp: Constr;
+abstract SimpleExp: MExp;
+abstract MUnary:    MExp ::= Operand: MExp;
+abstract MBinary:   MExp ::= Left:MExp  Right:MExp;
+
+////// some intersection with frontend PureExp
+//Booleans
+MNegExp: MUnary ;
+
+abstract     MBoolExp: MBinary ;
+MAndBoolExp: MBoolExp ;
+MOrBoolExp:  MBoolExp ;
+MImpliesExp: MBoolExp ;  // not in PureExp
+MEquivExp:   MBoolExp ;  // not in PureExp
+
+abstract MRelationalExpr: MBinary;
+MLTExp:   MRelationalExpr ;
+MGTExp:   MRelationalExpr ;
+MLTEQExp: MRelationalExpr ;
+MGTEQExp: MRelationalExpr ;
+
+abstract   MEqualityExpr: MRelationalExpr;
+MEqExp:    MEqualityExpr ;
+MNotEqExp: MEqualityExpr ;
+
+//Integers
+MMinusExp : MUnary ;
+
+abstract MArithmeticExpr : MBinary ;
+
+abstract      MMultExp: MArithmeticExpr ;
+MMultMultExp: MMultExp ;
+MDivMultExp:  MMultExp ;
+MModMultExp:  MMultExp ;
+
+abstract    MAddExp: MArithmeticExpr ;
+MAddAddExp: MAddExp ;
+MSubAddExp: MAddExp ;
+
+//// end of intersection with PureExp
+
+
+// Variables and values
+abstract Variable: SimpleExp;
+MValue : SimpleExp ::= Value;
+// Concrete values (IntVal, BoolVal, StringVal) are in abs.ast
+
+// variables
+AttVar:  Variable ::= <AName>;
+FeatVar: Variable ::= <FName>;
+FAVar:   Variable ::= <FName> <AName>;
