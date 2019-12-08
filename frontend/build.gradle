@@ -188,5 +188,5 @@ javadoc {
     failOnError = false
     options.addStringOption('Xdoclint:none', '-quiet')
     options.tags = [ 'apilevel', 'declaredat', 'aspect', 'ast', 'attribute',
-                    'astdecl', 'production' ]
+                    'argument', 'astdecl', 'production' ]
 }
