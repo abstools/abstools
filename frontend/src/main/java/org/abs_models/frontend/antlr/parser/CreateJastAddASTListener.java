@@ -504,9 +504,9 @@ public class CreateJastAddASTListener extends ABSBaseListener {
             ? new List<>()
             : v(ctx.pure_exp_list());
         if (ctx.c != null) {
-            setV(ctx, new TargetedOriginalCall(new DeltaID("core"), l));
+            setV(ctx, new TargetedOriginalCall(l, new DeltaID("core")));
         } else if (ctx.d != null) {
-            setV(ctx, new TargetedOriginalCall(v(ctx.d), l));
+            setV(ctx, new TargetedOriginalCall(l, v(ctx.d)));
         } else {
             setV(ctx, new OriginalCall(l));
         }

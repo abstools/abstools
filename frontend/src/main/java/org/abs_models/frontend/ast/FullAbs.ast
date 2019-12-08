@@ -17,7 +17,7 @@ DeltaID ::= <Name>;
 
 // An extension to OriginalCall that names a delta (OriginalCall can also be
 // used in a trait, hence is part of Core ABS)
-TargetedOriginalCall: OriginalCall ::= Target:DeltaID Param:PureExp* ;
+TargetedOriginalCall: OriginalCall ::= Target:DeltaID ;
 
 DeltaAccess: StarImport ::= <ModuleName>;
 
