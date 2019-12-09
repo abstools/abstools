@@ -55,11 +55,11 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 
 - Add release tag `vx.y.z` with the same message as the commit message.
 
-- run `./gradlew clean assemble` to update version information for compiler,
-  manual
+- run `./gradlew clean ; ./gradlew assemble` to update version information for
+  compiler, manual
   
   - check the output of `absc -V`; it should output the new version number
-  - check the header of `abs-docs/build/asciidoc/html5/index.html`, it should
+  - check the header of `abs-docs/build/docs/asciidoc/index.html`, it should
     contain the new version number
   - build with maven (`cd abs-docs ; mvn install`) and check that
     `abs-docs/target/html/index.html` looks correct
