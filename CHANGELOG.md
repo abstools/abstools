@@ -8,38 +8,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.8.2] - 2019-12-09
+
+### Added
+
 - All interfaces without `extends` clause now extend the interface `ABS.StdLib.Object`.  This means that it is always possible to write `Object o = x;` with  `x` being a reference to an object of any class.
 
 - All classes without `implements` clause now implement the interface `ABS.StdLib.Object`.  This means that for all object references `x`, `x implements Object` will evaluate to true and `x as Object` will not evaluate to `null`.
 
-- Field values can now be passed to custom scheduling functions in the erlang backend.
+- Field values can now be passed to custom scheduling functions in the erlang backend.  See Section 14.3 of the language manual for details.
 
 - The erlang backend can now record and replay traces of scheduling decisions; see the output of `gen/erl/run -h`, specifically the `--dump-trace` (`-t`) and `--replay-trace` (`-r`) options.  The trace of the currently running model is also available via the Model API: a model started with `-p 8080` will make its trace available at `https://localhost:8080/trace`.
 
 - The `abslang/absc` docker image now includes the analysis tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`, which only support the linux platform but can now be run inside the container on other platforms.
 
-- Added a new runtime parameter `-v`, `--verbose` for more output in the erlang backend; currently this enables printing of which module is run, on which port the model api is started, and elapsed time after a model finishes.
+- The erlang backend now supports a new runtime parameter `-v`, `--verbose` for more output when starting a model.  A model started with `-v` will print the module name, the port of the model api (if any), and a summary of elapsed time upon termination.
 
 ### Changed
 
-- Incompatible change: A partial function cannot have an empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as a non-partial function with identical (non-function) argument list and body.
+- Incompatible change: A partial function must have a non-empty list of function parameters.  This change comes with no loss of functionality since a partial function without functional parameters is strictly the same function as a non-partial function with identical (non-function) argument list and body.
 
 - Resource consumption (via `Cost` annotations) in the erlang backend is now more deterministic: once the deployment component gives part of the requested resources to a cog, it will not give resources of the same type to another cog until the first request has been fulfilled.
 
-- Models in the erlang backend do not print the module and model api port anymore unless started with the `-v` or `--version` parameter.
+- Models in the erlang backend do not print the module and model api port anymore unless started with the `-v` or `--verbose` parameter.
 
 - The short-form parameter for printing information about the compiler version in the erlang backend changed from `-v` to `-V`.  The long-form parameter (`--version`) is unchanged.
 
-
 ### Removed
 
-- The Maude backend is now deprecated, and the unit tests have been deactivated.  (This change was briefly discussed during the last ABS workshop, with no dissenting arguments, but can be reversed before the next release.)
+- The Maude backend is now deprecated, and the unit tests have been deactivated.  (This change was briefly discussed during the 2019 ABS workshop, with no dissenting opinions.)
 
 ### Fixed
 
 - Fixed a cause of spurious clock advances under rare circumstances (~1.5% chance of occurrence when calling empty methods on one cog only, see test case `TimeTests.no_time_advance1`).
 
-- The build now reports failure when a unit test fails, making CircleCI more useful.
+- The build command `./gradlew build`, which runs unit tests, now terminates with a non-zero exit code when a unit test fails.  (To build without running unit tests, use `./gradlew assemble`.)
 
 ## [1.8.1] - 2019-03-28
 
@@ -338,7 +347,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.2...HEAD
+[1.8.2]: https://github.com/abstools/abstools/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/abstools/abstools/compare/v_1.8.0...v1.8.1
 [1.8.0]: https://github.com/abstools/abstools/compare/v_1.7.0...v1.8.0
 [1.7.0]: https://github.com/abstools/abstools/compare/version_1.6.0...v1.7.0

@@ -18,11 +18,6 @@ versions (e.g., Java 11) cannot be used with earlier versions.
   - check that "Hello World" ABS program doesn't crash SACO / CostABS in collaboratory
   - check that absc container works / was created: `docker run --rm abslang/absc:latest -h` should produce the same output as `absc -h` on the local machine
 
-- Create vagrant (`vagrant up`) (NOTE: currently broken and probably unused)
-  - check if all tools in collaboratory are installed
-  - check that "Hello World" ABS program can start with Erlang simulator
-  - check that "Hello World" ABS program doesn't crash SACO / CostABS
-
 - Check that the manual looks ok
 
   - `open abs-docs/build/asciidoc/html5/index.html`
@@ -51,20 +46,20 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 
 - Prepare release commit
 
-  - The release commit should include only the updated `CHANGELOG.md`,
+  - The release commit should include only the updated `CHANGELOG.md`.
+
+  - The first line of the commit message should be `Release version
+   x.y.z`, followed by the contents of the change log for the current version,
     with the headline markers `#` replaced by stars `*` (since the
     # symbol denotes comments in a github commit message).
 
-  - The first line of the commit message should be `Release version
-   x.y.z`, followed by the contents of the change log for the current version
-
 - Add release tag `vx.y.z` with the same message as the commit message.
 
-- run `./gradlew clean assemble` to update version information for compiler,
-  manual
+- run `./gradlew clean ; ./gradlew assemble` to update version information for
+  compiler, manual
   
   - check the output of `absc -V`; it should output the new version number
-  - check the header of `abs-docs/build/asciidoc/html5/index.html`, it should
+  - check the header of `abs-docs/build/docs/asciidoc/index.html`, it should
     contain the new version number
   - build with maven (`cd abs-docs ; mvn install`) and check that
     `abs-docs/target/html/index.html` looks correct

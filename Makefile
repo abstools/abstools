@@ -1,4 +1,4 @@
-.PHONY: help default frontend vagrant-vm docker clean server
+.PHONY: help default frontend docker clean server
 .DEFAULT_GOAL := default
 
 # Check that given variables are set and all have non-empty values, die with
@@ -48,9 +48,6 @@ manual:				## Build the ABS manual
 	@echo "Finished."
 	@echo "HTML: abs-docs/build/asciidoc/html5/index.html"
 	@echo "PDF: abs-docs/build/asciidoc/pdf/index.pdf"
-
-vagrant:			## Build and start Vagrant virtual machine
-	vagrant up
 
 docker:				## Build collaboratory and absc docker images
 	$(DOCKER) build -t abslang/collaboratory -f docker/collaboratory.Dockerfile $(ROOT_DIR)

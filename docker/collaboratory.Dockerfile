@@ -9,6 +9,7 @@ RUN apk --update add \
         bash \
         nss \
         openjdk8 \
+        git \
         && rm -rf /var/cache/apk/*
 
 FROM jdk-erlang AS builder
