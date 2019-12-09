@@ -18,11 +18,6 @@ versions (e.g., Java 11) cannot be used with earlier versions.
   - check that "Hello World" ABS program doesn't crash SACO / CostABS in collaboratory
   - check that absc container works / was created: `docker run --rm abslang/absc:latest -h` should produce the same output as `absc -h` on the local machine
 
-- Create vagrant (`vagrant up`) (NOTE: currently broken and probably unused)
-  - check if all tools in collaboratory are installed
-  - check that "Hello World" ABS program can start with Erlang simulator
-  - check that "Hello World" ABS program doesn't crash SACO / CostABS
-
 - Check that the manual looks ok
 
   - `open abs-docs/build/asciidoc/html5/index.html`
