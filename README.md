@@ -31,8 +31,8 @@ Folders
 
 
 * `abs-docs` - the ABS language manual, available online at
-  http://docs.abs-models.org.  To generate the manual locally, install maven,
-  then run `make manual`.
+  http://docs.abs-models.org.  To generate the manual locally,
+  run `make manual`.
 
   * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual,
     now mostly of historical interest
@@ -53,9 +53,6 @@ Folders
 
 * various leftovers from previous projects, to be evaluated and
   reactivated or pruned
-
-    * `maven-support` - Maven plugin for generating Java/Maude from ABS,
-      testing and packaging ABS codes
 
 Note for Windows Users
 ----------------------
