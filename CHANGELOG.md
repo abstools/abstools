@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.8.2] - 2019-12-09
+
+### Added
+
 - All interfaces without `extends` clause now extend the interface `ABS.StdLib.Object`.  This means that it is always possible to write `Object o = x;` with  `x` being a reference to an object of any class.
 
 - All classes without `implements` clause now implement the interface `ABS.StdLib.Object`.  This means that for all object references `x`, `x implements Object` will evaluate to true and `x as Object` will not evaluate to `null`.
@@ -337,7 +347,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.2...HEAD
+[1.8.2]: https://github.com/abstools/abstools/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/abstools/abstools/compare/v_1.8.0...v1.8.1
 [1.8.0]: https://github.com/abstools/abstools/compare/v_1.7.0...v1.8.0
 [1.7.0]: https://github.com/abstools/abstools/compare/version_1.6.0...v1.7.0

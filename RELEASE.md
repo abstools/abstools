@@ -46,12 +46,12 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 
 - Prepare release commit
 
-  - The release commit should include only the updated `CHANGELOG.md`,
-    with the headline markers `#` replaced by stars `*` (since the
-    # symbol denotes comments in a github commit message).
+  - The release commit should include only the updated `CHANGELOG.md`.
 
   - The first line of the commit message should be `Release version
-   x.y.z`, followed by the contents of the change log for the current version
+   x.y.z`, followed by the contents of the change log for the current version,
+    with the headline markers `#` replaced by stars `*` (since the
+    # symbol denotes comments in a github commit message).
 
 - Add release tag `vx.y.z` with the same message as the commit message.
 
