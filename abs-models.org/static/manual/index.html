@@ -746,8 +746,7 @@ p { margin-bottom: 1.25rem; }
 <h1>ABS Documentation</h1>
 <div class="details">
 <span id="author" class="author">ABS Development Team</span><br>
-<span id="revnumber">version v1.8.1-0-8ab2eddbb1,</span>
-<span id="revdate">built on 2019-03-28</span>
+<span id="revnumber">version v1.8.2</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -814,7 +813,7 @@ p { margin-bottom: 1.25rem; }
 <ul class="sectlevel2">
 <li><a href="#-atomic-methods">8.1. Atomic Methods</a></li>
 <li><a href="#-constant-fields">8.2. Constant Fields</a></li>
-<li><a href="#-active-classes">8.3. Active Classes</a></li>
+<li><a href="#sec:active-classes">8.3. Active Classes</a></li>
 </ul>
 </li>
 <li><a href="#sec:traits">9. Traits</a></li>
@@ -831,14 +830,15 @@ p { margin-bottom: 1.25rem; }
 <li><a href="#type-numbers">11.2. Numbers</a></li>
 <li><a href="#type-string">11.3. Strings</a></li>
 <li><a href="#type-unit">11.4. Unit</a></li>
-<li><a href="#type-future">11.5. The Future Type</a></li>
-<li><a href="#stdlib:predefined-exceptions">11.6. Predefined exceptions in the Standard Library</a></li>
-<li><a href="#type-list">11.7. Lists</a></li>
-<li><a href="#type-set">11.8. Sets</a></li>
-<li><a href="#type-map">11.9. Maps</a></li>
-<li><a href="#type-pair">11.10. Pairs</a></li>
-<li><a href="#type-triple">11.11. Triples</a></li>
-<li><a href="#type-optionals">11.12. Optionals</a></li>
+<li><a href="#type-object">11.5. Object</a></li>
+<li><a href="#type-future">11.6. The Future Type</a></li>
+<li><a href="#stdlib:predefined-exceptions">11.7. Predefined exceptions in the Standard Library</a></li>
+<li><a href="#type-list">11.8. Lists</a></li>
+<li><a href="#type-set">11.9. Sets</a></li>
+<li><a href="#type-map">11.10. Maps</a></li>
+<li><a href="#type-pair">11.11. Pairs</a></li>
+<li><a href="#type-triple">11.12. Triples</a></li>
+<li><a href="#type-optionals">11.13. Optionals</a></li>
 </ul>
 </li>
 <li><a href="#-the-model-api">12. The Model API</a>
@@ -2447,7 +2447,7 @@ function call expressions, but have an additional prepended set of arguments.</p
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>ParFnAppExp</em> ::=</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Identifier</em><br>
-  <code>(</code> [ <em>ParFnAppParam</em> { <code>,</code> <em>ParFnAppParam</em> } ] <code>)</code><br>
+  <code>(</code> <em>ParFnAppParam</em> { <code>,</code> <em>ParFnAppParam</em> } <code>)</code><br>
   <code>(</code> [ <em>PureExp</em> { <code>,</code> <em>PureExp</em> } ] <code>)</code></p></td>
 </tr>
 <tr>
@@ -3203,7 +3203,7 @@ functions.</p>
 </div>
 <div class="paragraph">
 <p>A partially defined function is called the same way as a normal function, with
-a separate argument list containing the functional arguments.  For recursion
+a separate, non-empty argument list containing the functional arguments.  For recursion
 inside the body of a partially defined function, omit the function parameter
 list.</p>
 </div>
@@ -3217,7 +3217,7 @@ list.</p>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>PartialFunctionDecl</em>  ::=</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>def</code> <em>Type</em> <em>SimpleIdentifier</em> [ <code>&lt;</code> <em>SimpleTypeIdentifier</em> { <code>,</code> <em>SimpleTypeIdentifier</em> } <code>&gt;</code> ]<br>
-                        <code>(</code> [ <em>SimpleIdentifier</em> { <code>,</code> <em>SimpleIdentifier</em>  } ]  <code>)</code><br>
+                        <code>(</code> <em>SimpleIdentifier</em> { <code>,</code> <em>SimpleIdentifier</em>  } <code>)</code><br>
                         <code>(</code> [ <em>Type</em> <em>SimpleIdentifier</em> { <code>,</code> <em>Type</em> <em>SimpleIdentifier</em>  } ]  <code>)</code><br>
                         <code>=</code> <em>PureExp</em> <code>;</code></p></td>
 </tr>
@@ -4122,9 +4122,14 @@ an exception via the <code>throw</code> statement.
 <div class="sectionbody">
 <div class="paragraph">
 <p>Interfaces in ABS are similar to interfaces in Java.  They have a name, which
-defines a nominal type, and they can extend zero or more other
-interfaces.  The interface body consists of a list of method signature
-declarations.  Method names start with a lowercase letter.</p>
+defines a nominal type, and they can extend one or more interfaces.  If no
+explicit <code>extends</code> clause is given, the interface will extend the standard
+library interface <code>ABS.StdLib.Object</code> (see <a href="#type-object">Object</a>).  The
+<code>ABS.StdLib.Object</code> interface does not specify any methods.</p>
+</div>
+<div class="paragraph">
+<p>The interface body consists of a list of method signature declarations.
+Method names start with a lowercase letter.</p>
 </div>
 <table class="tableblock frame-topbot grid-none stretch">
 <caption class="title">Syntax</caption>
@@ -4148,9 +4153,24 @@ declarations.  Method names start with a lowercase letter.</p>
 </tbody>
 </table>
 <div class="paragraph">
-<p>Method declarations can carry an <code>[Atomic]</code> annotation.  The compiler will
-statically check that any definitions for such methods do not contain
-suspension points (<code>suspend</code> and <code>await</code> statements).</p>
+<p>If a method declarations in an interface has an <code>[Atomic]</code> annotation, the
+compiler will statically check that any definitions for this method contain no
+suspension points (<code>suspend</code> and <code>await</code> statements), i.e., that running that
+method will complete without scheduling.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+For ease of reasoning and analysis, ABS methods differ only by name.  It
+is an error for an interface to declare two methods with the same name, either
+explicitly or via extending another interface.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>The interfaces in the example below represent a database system, providing
@@ -4188,33 +4208,82 @@ interface Peer extends Client, Server {
 <h2 id="sec:classes">8. Classes</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Classes in ABS are used to create objects via the <code>new</code> expression.  Classes
-can implement an arbitrary number of interfaces.  Since classes are not types
-in ABS, classes typically implement one or more interfaces, although the <code>run</code>
-method makes it meaningful to have objects with active behavior only and
-without interfaces; such objects will never accept method calls.  See
-<a href="#typecheck-expression">The Type-Check Expression</a> and <a href="#typecast-expression">The Type-Cast Expression</a> for how to obtain a
-reference to the same object via a different interface.</p>
+<p>Classes in ABS describe stateful behavior.  All objects in ABS have exactly
+one class; objects are created via the <code>new</code> expression.</p>
 </div>
 <div class="paragraph">
-<p>Classes in ABS have zero or more <em>class parameters</em>.  Each class parameter
-defines a field of the class which is assigned a value via arguments the <code>new</code>
+<p>Classes implement one or more interfaces.  If a class implements more than
+one interface, <a href="#typecheck-expression">The Type-Check Expression</a> and <a href="#typecast-expression">The Type-Cast Expression</a> are used
+to obtain a reference to the same object typed with a different interface.  If
+no explicit <code>implements</code> clause is given, the class will extend the standard
+library interface <code>ABS.StdLib.Object</code> (see <a href="#type-object">Object</a>).  The
+<code>ABS.StdLib.Object</code> interface does not specify any methods.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Classes typically explicitly implement one or more interfaces so that
+methods can be called on them, but the <code>run</code> method makes it meaningful to
+have objects without public methods; such objects cannot accept method calls
+but can send method calls to other objects.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+For ease of reasoning and analysis, ABS methods differ only by name.  It
+is an error for a class to implement two interfaces that both contain a method
+with the same name.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Classes have <em>fields</em> that define the state of objects of that class.  All
+fields are private and can only be accessed from methods defined in the class.
+Fields are defined in two ways:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>Field declarations</em> in the body of the class define fields that get their
+initial value from their init expression.</p>
+</li>
+<li>
+<p><em>Class parameters</em> define fields that get their initial value from the <code>new</code>
 expression.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>Classes have an optional init block, which is executed before any
-other code.  The init block cannot contain processor release points
-(i.e., <code>await</code> or <code>suspend</code>), blocking expressions (i.e., <code>get</code>,
-<code>duration</code>, using resources), or explicitly throw an exception via the <code>throw</code>
-statement.</p>
+<p>Classes have an optional <em>init block</em>, which is executed for each new object
+before any other code.  The init block cannot contain processor release points
+(i.e., <code>await</code> or <code>suspend</code>), blocking expressions (i.e., <code>get</code>, <code>duration</code>,
+using resources), or explicitly throw an exception via the <code>throw</code> statement.
+It is mainly used for complicated field initializations and is frequently
+omitted.</p>
 </div>
 <div class="paragraph">
-<p>Classes have an optional recovery block.  In case an uncaught exception occurs
-in a method, the exception is matched against the patterns given in the
+<p>Classes have an optional <em>run method</em> (see <a href="#sec:active-classes">Active Classes</a>).</p>
+</div>
+<div class="paragraph">
+<p>Classes have an optional <em>recovery block</em>.  In case an uncaught exception
+occurs in a method, the exception is matched against the patterns given in the
 recovery block, and the associated statement(s) are executed.  If the
 exception does not match any pattern in the recovery block, or if the recovery
 block itself raises an exception, the object is killed.  Code in the recovery
-block has the same restrictions as in the init block.</p>
+block has the same restrictions as in the init block (i.e., no processor
+release points, blocking expressions and <code>throw</code> statements).</p>
 </div>
 <table class="tableblock frame-topbot grid-none stretch">
 <caption class="title">Syntax</caption>
@@ -4226,7 +4295,7 @@ block has the same restrictions as in the init block.</p>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>ClassDecl</em> ::=</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>class</code> <em>SimpleTypeIdentifier</em> [ <code>(</code> [ <em>ClassParameterList</em> ] <code>)</code> ] [ <code>implements</code> <em>InterfaceList</em> ]<br>
-                    <code>{</code> [ <em>FieldDeclList</em> ] [ <em>Block</em> ] [<em>RecoveryBlock</em>] [ <em>TraitUseList</em> ] { <em>MethDecl</em> } <code>}</code></p></td>
+                    <code>{</code> [ <em>FieldDeclList</em> ] [ <em>Block</em> ] [<em>RecoveryBlock</em>] { <em>TraitUseList</em> } { <em>MethDecl</em> } <code>}</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>ClassParameterList</em> ::=</p></td>
@@ -4237,8 +4306,8 @@ block has the same restrictions as in the init block.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>TypeIdentifier</em> { <code>,</code> <em>TypeIdentifier</em> }</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>TraitUseList</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">adds <em>TraitName</em> <code>;</code> {  adds <em>TraitName</em> <code>;</code>}</p></td>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>TraitUse</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">adds <em>TraitExpr</em> <code>;</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>FieldDeclList</em> ::=</p></td>
@@ -4258,9 +4327,10 @@ block has the same restrictions as in the init block.</p>
 <p>A class definition contains zero or more method definitions.  Each method has
 a name, return type and zero or more parameters.  All methods declared in an
 interface that is implemented by the class or one of their super-interfaces
-must be defined in the class body or in one of its traits.  A class is free to
-define methods not declared in an interface; such methods are private to the
-class and cannot be called from outside the class.</p>
+must be defined in the class body or in one of the used traits (see
+<a href="#sec:traits">Traits</a>).  A class is free to define methods not declared in an
+interface; such methods are private to the class and cannot be called from
+outside the class.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -4367,7 +4437,7 @@ assign new values to two fields declared as <code>Final</code>:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="-active-classes">8.3. Active Classes</h3>
+<h3 id="sec:active-classes">8.3. Active Classes</h3>
 <div class="paragraph">
 <p>A class can be active or passive. Active classes start an activity on their own upon creation. Passive classes only react to incoming method calls. A class is active if and only if it has a run method:</p>
 </div>
@@ -4389,9 +4459,9 @@ assign new values to two fields declared as <code>Final</code>:</p>
 <div class="sectionbody">
 <div class="paragraph">
 <p>ABS does not support inheritance for code reuse.  Method implementations that
-are common between classes can be defined once and used inside these classes by
-using <em>traits</em>.  A trait can add, remove and modify methods of a class or of
-another trait.</p>
+are common between classes can be defined once and used inside these classes
+by using <em>traits</em>.  A trait is a set of method definitions that can be added
+to a class via the <code>uses</code> clause in the class definition.</p>
 </div>
 <div class="paragraph">
 <p>Traits are applied to classes at compile-time and do not change the
@@ -4399,7 +4469,9 @@ interface(s) of a class.  Classes and their methods are type-checked once all
 traits are applied.</p>
 </div>
 <div class="paragraph">
-<p>Similar to classes, traits in ABS are not types.</p>
+<p>Traits can re-use and modify other traits via <em>trait operations</em>.  A trait can
+add methods to another trait, modify methods in another trait, or remove
+methods from another trait.</p>
 </div>
 <table class="tableblock frame-topbot grid-none stretch">
 <caption class="title">Syntax</caption>
@@ -4410,7 +4482,15 @@ traits are applied.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>TraitDecl</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>trait</code> <em>TraitName</em> = ( <code>{</code> { <em>MethDecl</em> } <code>}</code> | <em>TraitName</em> ) { <em>TraitOper</em> }</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>trait</code> <em>TraitName</em> = <em>TraitExpr</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>TraitExpr</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>MethodSet</em> { <em>TraitOper</em> }</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>MethodSet</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>TraitName</em> | <em>MethDecl</em> | <code>{</code> { <em>MethDecl</em> }  <code>}</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>TraitName</em> ::=</p></td>
@@ -4418,9 +4498,9 @@ traits are applied.</p>
 </tr>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>TraitOper</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>adds</code> <em>TraitExpr</em><br>
-| <code>modifies</code> <em>TraitExpr</em><br>
-| <code>removes</code> <em>MethSig</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>adds</code> <em>MethodSet</em><br>
+               | <code>modifies</code> <em>MethodSet</em><br>
+               | <code>removes</code> ( <em>MethSig</em> | <code>{</code> { <em>MethSig</em> } <code>}</code> )</p></td>
 </tr>
 </tbody>
 </table>
@@ -4436,108 +4516,63 @@ definition.</p>
 <div class="title">Explanation</div>
 <ul>
 <li>
-<p>The operation <code>adds</code> adds all the elements of the next <em>MethodSet</em> to the class.
-If a method with the same name is already present in the class (or set of methods), the error will be raised <em>after</em> applying all traits, during type checking.</p>
+<p>The trait operation <code>adds</code> adds all the elements of its <em>MethodSet</em> to the
+trait.  It is an error if any method of the <em>MethodSet</em> is already present in
+the trait.  Any error will be raised <em>after</em> applying all operations, during
+type checking.</p>
 </li>
 </ul>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
-<pre>trait T = { Unit x(){ skip; } }
-trait T2 = { Unit y(){ skip; } } adds T</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>will be resolved to the set</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>{ Unit x(){ skip; } Unit y(){ skip; } }</code></pre>
+<pre class="highlight"><code>trait T = { Unit x(){ skip; } }
+trait T2 = { Unit y(){ skip; } } adds T
+// T2 contains the following methods:
+// Unit y(){ skip; } Unit x(){ skip; }</code></pre>
 </div>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>The operation <code>modifies</code> changes all the elements of the next <em>MethodSet</em> in the class to the new implementation described in this <em>MethodSet</em>.
-A trait may contain original() calls which refer to the version of the method before the trait application.
-If a method with the same name is not present in the class (or set of methods), the method is added instead and the original() calls are not resolved.</p>
+<p>The trait operation <code>modifies</code> changes all the methods in the trait to the new implementation described in this <em>MethodSet</em>.  If a method with the same name is not present in the trait, the method is added instead.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>A method may contain targeted original calls. These raise an error if the trait is used directly by a class
-The following is invalid:</p>
+<p>The methods in the <code>modifies</code> operation may contain <code>original()</code> calls which
+will call the version of the method before the operation application.  In case
+an overriden method is not present, <code>original()</code> calls will lead to a
+compile-time error.</p>
 </div>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>trait T = {Unit myMethod(){ skip; }}  modifies {Unit myMethod(){ core.original(); }}
-class C {uses T; }</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The following two examples are valid:</p>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="highlight"><code>trait T = {Unit myMethod(){ skip; }} modifies {Unit myMethod(){ original(); }}
-class C {uses T; }</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="highlight"><code>module M;
-trait T = {Unit myMethod(){ skip; }}
-class C {uses T; }
-
-delta D;
-modifies class M.C{
-        modifies Unit myMethod(){ core.original(); }
-}</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>The operation <code>removes</code> deletes the method with the provided signature.
-If a method with the same name is not present in the class (or set of methods), an error will be raised during trait application.</p>
-</li>
-</ul>
-</div>
-<div class="ulist">
-<div class="title">The order of trait application is as follows:</div>
-<ul>
-<li>
-<p>All traits used within a class, in the order they are referred to</p>
-</li>
-<li>
-<p>All traits used within a delta, in the order they are referred to</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="highlight"><code>module M;
-interface I { Unit x(); Unit foo(); Unit bar(); }
-trait T = Unit x() { this.foo(); original(); this.bar();  }
-trait T2 = { Unit x() { println("T2"); } } modifies T
-trait T3 = { Unit x() { println("T3"); } } modifies T
-class C implements I {
-        Int i = 0;
-        uses T2;
-        Unit foo(){ i = i+1; }
-        Unit bar(){ i = i-1; }
+<pre class="highlight"><code>trait T = { Bool m(){ return False; } }
+trait T2 = { Bool m() { Bool orig = original(); return !orig; } }
+class C {
+  uses T modifies T2;
 }
-
-class C2 implements I {
-        Int i = 0;
-        uses T3;
-        Unit foo(){ i = i-1; }
-        Unit bar(){ i = i+1; }
-}</code></pre>
+// Calling C.m() will return True</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The operation <code>removes</code> removes the method(s) with the provided signatures
+from the trait.  If a method with the same name is not present in the class
+(or set of methods), an error will be raised during compilation.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>trait T = { Bool m(){ return False; } }
+class C {
+  uses T removes { Bool m(); };
+}
+// class C does not contain any methods</code></pre>
 </div>
 </div>
 </div>
@@ -5323,7 +5358,7 @@ output to begin on a new line.</p>
 <div class="sect2">
 <h3 id="type-unit">11.4. Unit</h3>
 <div class="paragraph">
-<p>Unit is the empty (void) datatype.</p>
+<p><code>Unit</code> is the empty (void) datatype.</p>
 </div>
 <div class="sect3">
 <h4 id="-datatypes-and-constructors-4">Datatypes and Constructors</h4>
@@ -5333,7 +5368,17 @@ output to begin on a new line.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="type-future">11.5. The Future Type</h3>
+<h3 id="type-object">11.5. Object</h3>
+<div class="paragraph">
+<p><code>Object</code> is the standard super-interface.  All interfaces extend this type.
+All object references can be assigned to variables of this type.</p>
+</div>
+<div class="paragraph">
+<p>The <code>Object</code> interface does not specify any methods.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="type-future">11.6. The Future Type</h3>
 <div class="paragraph">
 <p>Futures are placeholders for return values of asynchronous methods calls.</p>
 </div>
@@ -5390,7 +5435,7 @@ a shorthand can be used that combines the above three statements:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="stdlib:predefined-exceptions">11.6. Predefined exceptions in the Standard Library</h3>
+<h3 id="stdlib:predefined-exceptions">11.7. Predefined exceptions in the Standard Library</h3>
 <div class="paragraph">
 <p>ABS provides pre-defined exceptions that are thrown in specific circumstances.
 See <a href="#sec:exception-types">Exceptions</a> for information about exceptions.</p>
@@ -5447,7 +5492,7 @@ situation.
 </div>
 </div>
 <div class="sect2">
-<h3 id="type-list">11.7. Lists</h3>
+<h3 id="type-list">11.8. Lists</h3>
 <div class="paragraph">
 <p>A list is a sequence of values of the same type.  Lists are constructed via
 the <code>list</code> constructor function, e.g., <code>list[1, 2, 3]</code> creates a list of three
@@ -5635,7 +5680,7 @@ a value of type <code>B</code>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="type-set">11.8. Sets</h3>
+<h3 id="type-set">11.9. Sets</h3>
 <div class="paragraph">
 <p>A set contains elements of the same type, without duplicates.  Sets are
 constructed via the <code>set</code> constructor function, e.g., <code>set[1, 2, 2, 3]</code>
@@ -5783,7 +5828,7 @@ empty set; consider using <code>takeMaybe</code> in that case.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="type-map">11.9. Maps</h3>
+<h3 id="type-map">11.10. Maps</h3>
 <div class="paragraph">
 <p>Maps are dictionaries storing a <em>value</em> for each <em>key</em>.</p>
 </div>
@@ -5947,7 +5992,7 @@ the first entry already mapping <code>k</code> to a value.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="type-pair">11.10. Pairs</h3>
+<h3 id="type-pair">11.11. Pairs</h3>
 <div class="sect3">
 <h4 id="-datatypes-and-constructors-8">Datatypes and Constructors</h4>
 <div class="paragraph">
@@ -5973,7 +6018,7 @@ respectively.  The constructor is called <code>Pair</code> as well.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="type-triple">11.11. Triples</h3>
+<h3 id="type-triple">11.12. Triples</h3>
 <div class="sect3">
 <h4 id="-datatypes-and-constructors-9">Datatypes and Constructors</h4>
 <div class="paragraph">
@@ -6003,7 +6048,7 @@ respectively.  The constructor is called <code>Pair</code> as well.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="type-optionals">11.12. Optionals</h3>
+<h3 id="type-optionals">11.13. Optionals</h3>
 <div class="sect3">
 <h4 id="-datatypes-and-constructors-10">Datatypes and Constructors</h4>
 <div class="paragraph">
@@ -6684,6 +6729,97 @@ Unit n() {
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<div class="title">timeValue</div>
+<p>The function <code>timeValue</code> returns the value of its argument as a rational number.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Rat timeValue(Time t);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">timeDifference</div>
+<p>The function <code>timeDifference</code> returns the absolute value of the difference
+between its two arguments, i.e., a value greater or equal to <code>0</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Rat timeDifference(Time t1, Time t2);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">timeLessThan</div>
+<p>The function <code>timeLessThan</code> returns <code>True</code> if the value of its first argument
+is less than the value of its second argument.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Bool timeLessThan(Time t1, Time t2);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">durationValue</div>
+<p>The function <code>durationValue</code> returns the value of its argument as a rational number.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Rat durationValue(Time t);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">isDurationInfinite</div>
+<p>The function <code>isDurationInfinite</code> returns <code>True</code> if its argument is <code>InfDuration</code>, <code>False</code> if its argument is <code>Duration(x)</code> for some value <code>x</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Bool isDurationInfinite(Duration d);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">addDuration</div>
+<p>The function <code>addDuration</code> adds a duration to a time, returning a new value of
+type <code>Time</code>.  It is an error to pass <code>InfDuration</code> as an argument to this
+function.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Time addDuration(Time t, Duration d);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">subtractDuration</div>
+<p>The function <code>subtractDuration</code> subtracts a duration from a time, returning a
+new value of type <code>Time</code>.  It is an error to pass <code>InfDuration</code> as an argument
+to this function.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Time subtractDuration(Time t, Duration d);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">durationLessThan</div>
+<p>The function <code>durationLessThan</code> returns <code>True</code> if the value of its first
+argument is less than the value of its second argument.  In case both
+arguments are <code>InfDuration</code>, <code>durationLessThan</code> returns <code>False</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Bool durationLessThan(Duration d1, Duration d2);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">subtractFromDuration</div>
+<p>The function <code>subtractFromDuration</code> subtracts a value <code>v</code> from a duration,
+returning a new value of type <code>Duration</code>.  In case its first argument is
+<code>InfDuration</code>, the result will also be <code>InfDuration</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Duration subtractFromDuration(Duration d, Rat v);</code></pre>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="-statements-2">13.3. Statements</h3>
@@ -6880,22 +7016,7 @@ def Process randomscheduler(List&lt;Process&gt; queue) = nth(queue, random(lengt
 </div>
 <div class="paragraph">
 <p>All schedulers must have a result type <code>Process</code> and must take an argument of
-type <code>List&lt;Process&gt;</code>.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Schedulers can have more than one argument; arguments after the
-first one will be filled with the value of object fields of the same
-name at scheduling time.  This feature is currently available in the
-Maude backend only.
-</td>
-</tr>
-</table>
+type <code>List&lt;Process&gt;</code> as their first argument.</p>
 </div>
 </div>
 <div class="sect2">
@@ -6988,6 +7109,47 @@ have the name <code>queue</code>.</p>
 <div class="content">
 <pre class="highlight"><code>   [Scheduler: randomscheduler(queue)] I instance = new C();</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>For schedulers with more than one argument, values for subsequent arguments
+are filled with the value of object fields of the same name current at
+scheduling time.  The object whose fields are used is the first object in a
+cog, i.e., the object created via the <code>new</code> expression that created the cog.
+Subseqent objects created in that cog via <code>new local</code> cannot influence the
+scheduler.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>module Test;
+import * from ABS.StdLib.Scheduler;
+
+class C {
+  Bool flag = False; <i class="conum" data-value="1"></i><b>(1)</b>
+}
+
+def Process some_scheduler(List&lt;Process&gt; queue, Bool value) = head(queue); <i class="conum" data-value="2"></i><b>(2)</b>
+
+{
+  [Scheduler: some_scheduler(queue, flag)] new C(); <i class="conum" data-value="3"></i><b>(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Here, class <code>C</code> defines a field called <code>flag</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The scheduler <code>some_scheduler</code> has a second argument of type <code>Bool</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The current value of field <code>flag</code> will used as the second argument to <code>some_scheduler</code></td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -7726,15 +7888,15 @@ instantaneously because <code>dc</code> only has 5 <code>Speed</code> resources 
 <div class="sectionbody">
 <div class="paragraph">
 <p>ABS supports the development of software product lines with a set of language
-constructs for defining system variants. Following a feature-oriented
-software development approach, variants are described as sets of features.
-Features and their dependencies are specified in a feature model.
-Each feature has its corresponding ABS implementation. A feature&#8217;s implementation
-is specified in terms of the code modifications (i.e., additions and removals)
-that need to be performed to a variant of the system that does not include
-that feature in order to add it. This style of programming is called
-delta-oriented programming. The ABS code modules that encapsulate feature
-implementations are called delta modules (deltas).</p>
+constructs for defining system variants. Following a feature-oriented software
+development approach, variants are described as sets of features.  Features
+and their dependencies are specified in a feature model.  Each feature has its
+corresponding ABS implementation. A feature&#8217;s implementation is specified in
+terms of the code modifications (i.e., additions and removals) that need to be
+performed to a variant of the system that does not include that feature in
+order to add it. This style of programming is called delta-oriented
+programming. The ABS code modules that encapsulate feature implementations are
+called delta modules (deltas).</p>
 </div>
 <div class="sect2">
 <h3 id="-delta-oriented-programming">16.1. Delta-Oriented Programming</h3>
@@ -7775,7 +7937,7 @@ execution or simulation environment.</p>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>DeltaDecl</em>      ::=</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>delta</code> <em>SimpleTypeIdentifier</em> [ <code>(</code> <em>DeltaParam</em> { <code>,</code> <em>DeltaParam</em> } <code>)</code> ] <code>;</code><br>
- { <em>ModuleAccess</em> } { <em>ModuleModifier</em> }</p></td>
+ [ <em>ModuleAccess</em> ] { <em>ModuleModifier</em> }</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>DeltaParam</em> ::=</p></td>
@@ -7887,39 +8049,78 @@ that can be built.</p>
 models along with a number of extensions that specify additional constraints,
 typically cross-tree dependencies.  Its grammar is as follows:</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>FeatureModel ::= ('root' FeatureDecl)* FeatureExtension*
-FeatureDecl  ::= FName [ '{' [Group] AttributeDecl* Constraint* '}' ]
-FeatureExtension ::= 'extension' FName '{' AttributeDecl* Constraint* '}'
-Group ::= 'group' Cardinality '{' ['opt'] FeatureDecl (',' ['opt'] FeatureDecl)* '}'
-Cardinality ::= 'allof' | 'oneof' | '[' IntLiteral '..' Limit ']'
-AttributeDecl ::= 'Int' AName ';'
-                | 'Int' AName in '[' Limit '..' Limit ']' ';'
-                | 'Bool' AName ';'
-                | 'String' AName ';'
-Limit ::= IntLiteral | '*'
-Constraint ::= Expr ';'
-             | 'ifin'':'  Expr ';'
-             | 'ifout'':' Expr ';'
-             | 'require'':' FName ';'
-             | 'exclude'':' FName ';'
-Expr ::= 'True'
-       | 'False'
-       | IntLiteral
-       | StringLiteral
-       | FName
-       | AName
-       | FName '.'AName
-       | UnOp Expr
-       | Expr BinOp Expr
-       | '(' Expr ')'
-UnOp ::= '!' | '-'
-BinOp ::= '||' | '&amp;&amp;' | '-&gt;' | '&lt;-&gt;' | '=='
-        | '!=' | '&gt;'  | '&lt;'  | '&gt;='  | '&lt;='
-        | '+'  | '-'  | '*'  | '/'   | '%'</code></pre>
-</div>
-</div>
+<table class="tableblock frame-topbot grid-none stretch">
+<caption class="title">Syntax</caption>
+<colgroup>
+<col style="width: 30%;">
+<col style="width: 70%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>FeatureModel</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">{ <code>root</code> <em>FeatureDecl</em> } { <em>FeatureExtension</em> }</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>FeatureDecl</em>  ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>FName</em> [ <code>{</code> [ <em>Group</em> ] { <em>AttributeDecl</em> } { <em>Constraint</em> } <code>}</code> ]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>FeatureExtension</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>extension</code> <em>FName</em> <code>{</code> { <em>AttributeDecl</em> } { <em>Constraint</em> } <code>}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Group</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>group</code> <em>Cardinality</em> <code>{</code> [ <code>opt</code> ] <em>FeatureDecl</em> { <code>,</code> [ <code>opt</code> ] <em>FeatureDecl</em> } <code>}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Cardinality</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>allof</code> | <code>oneof</code> | <code>[</code> <em>IntLiteral</em> <code>..</code> <em>Limit</em> <code>]</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>AttributeDecl</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Int</code> <em>AName</em> <code>;</code><br>
+ |  <code>Int</code> <em>AName</em> <code>in</code> <code>[</code> <em>Limit</em> <code>..</code> <em>Limit</em> <code>]</code> <code>;</code><br>
+ |  <code>Int</code> <em>AName</em> <code>in</code> <code>{</code> <em>IntLiteral</em> { <code>,</code> <em>IntLiteral</em> } <code>}</code> <code>;</code><br>
+ | <code>Bool</code> <em>AName</em> <code>;</code><br>
+ | <code>String</code> <em>AName</em> <code>;</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Limit</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>IntLiteral</em> | <code>*</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Constraint</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Expr</em> <code>;</code><br>
+  | <code>ifin</code> <code>:</code>  <em>Expr</em> <code>;</code><br>
+  | <code>ifout</code> <code>:</code> <em>Expr</em> <code>;</code><br>
+  | <code>require</code> <code>:</code> <em>FName</em> <code>;</code><br>
+  | <code>exclude</code> <code>:</code> <em>FName</em> <code>;</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Expr</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>True</code><br>
+  | <code>False</code><br>
+  | <em>IntLiteral</em><br>
+  | <em>StringLiteral</em><br>
+  | <em>FName</em><br>
+  | <em>AName</em><br>
+  | <em>FName</em> <code>.</code> <em>AName</em><br>
+  | <em>UnOp</em> <em>Expr</em><br>
+  | <em>Expr</em> <em>BinOp</em> <em>Expr</em><br>
+  | <code>(</code> <em>Expr</em> <code>)</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>UnOp</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>!</code> | <code>-</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>BinOp</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>||</code> | <code>&amp;&amp;</code> | <code>-&gt;</code> | <code>&lt;-&gt;</code> | <code>==</code>
+        | <code>!=</code> | <code>&gt;</code>  | <code>&lt;</code>  | <code>&gt;=</code>  | <code>&lt;=</code>
+        | <code>+</code>  | <code>-</code>  | <code>*</code>  | <code>/</code>   | <code>%</code></p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Attributes and values range over integers, strings or booleans.</p>
 </div>
@@ -8017,24 +8218,59 @@ configuration defines, for each selection of features satisfied by the product
 selection, which delta modules should be applied to the core.  Furthermore, it
 guides the code generation by ordering the application of the delta modules.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>Configuration ::= 'productline' TypeId ';' Features ';' DeltaClause*
-Features      ::='features' FName (',' FName)*
-DeltaClause   ::= 'delta' DeltaSpec [AfterCondition] [ApplicationCondition] ';'
-DeltaSpec     ::= DeltaName ['(' DeltaParams ')']
-DeltaName     ::= TypeId
-DeltaParams   ::= DeltaParam (',' DeltaParam)*
-DeltaParam    ::= FName | FName'.'AName
-AfterClause   ::= 'after' DeltaName (',' DeltaName)*
-WhenClause    ::= 'when' AppCond
-AppCond       ::= AppCond '&amp;&amp;' AppCond
-                | AppCond '||' AppCond
-                | '!' AppCond
-                | '(' AppCond ')'
-                | FName</code></pre>
-</div>
-</div>
+<table class="tableblock frame-topbot grid-none stretch">
+<caption class="title">Syntax</caption>
+<colgroup>
+<col style="width: 30%;">
+<col style="width: 70%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Configuration</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>productline</code> <em>TypeId</em> <code>;</code> <em>Features</em> <code>;</code> { <em>DeltaClause</em> }</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Features</em>      ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>features</code> <em>FName</em> { <code>,</code> <em>FName</em> }</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>DeltaClause</em>   ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>delta</code> <em>DeltaSpec</em> [ <em>AfterCondition</em> ] [ <em>ApplicationCondition</em> ] <code>;</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>DeltaSpec</em>     ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>DeltaName</em> [ <code>(</code> <em>DeltaParams</em> <code>)</code> ]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>DeltaName</em>     ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>TypeId</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>DeltaParams</em>   ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>DeltaParam</em> { <code>,</code> <em>DeltaParam</em> }</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>DeltaParam</em>    ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>FName</em> | <em>FName</em> <code>.</code> <em>AName</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>AfterClause</em>   ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>after</code> <em>DeltaName</em> { <code>,</code> <em>DeltaName</em> }</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>WhenClause</em>    ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>when</code> <em>AppCond</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>AppCond</em>       ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>AppCond</em> <code>&amp;&amp;</code> <em>AppCond</em><br>
+                | <em>AppCond</em> <code>||</code> <em>AppCond</em><br>
+                | <code>!</code> <em>AppCond</em><br>
+                | <code>(</code> <em>AppCond</em> <code>)</code><br>
+                | <em>FName</em></p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Features and delta modules are associated through <em>application conditions</em> (a.k.a. <em>activation conditions</em>),
 which are logical expressions over the set of features and attributes in a
@@ -8074,21 +8310,44 @@ It is also possible to declare products based on other products using
 <em>product expressions</em>. Product expressions use set-theoretic operations (union,
 intersection, complement) over products and sets of features.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>Selection ::= 'product' TypeId ( '(' FeatureSpecs ')' ';' | '=' ProductExpr ';' )
-ProductExpr: '{' FeatureSpecs '}'
-			| ProductExpr '&amp;&amp;' ProductExpr
-			| ProductExpr '||' ProductExpr
-			| ProductExpr '-' ProductExpr
-			| TypeId
-			| '(' ProductExpr ')'
-FeatureSpecs ::= FeatureSpec (',' FeatureSpec)*
-FeatureSpec ::= FName [AttributeAssignments]
-AttributeAssignments ::= '{' AttributeAssignment (',' AttributeAssignment '}'
-AttributeAssignment ::= AName '=' Literal</code></pre>
-</div>
-</div>
+<table class="tableblock frame-topbot grid-none stretch">
+<caption class="title">Syntax</caption>
+<colgroup>
+<col style="width: 30%;">
+<col style="width: 70%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Selection</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>product</code> <em>TypeId</em> ( <code>(</code> <em>FeatureSpecs</em> <code>)</code> <code>;</code> | <code>=</code> <em>ProductExpr</em> <code>;</code> )</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>ProductExpr</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{</code> <em>FeatureSpecs</em> <code>}</code><br>
+  |  <em>ProductExpr</em> <code>&amp;&amp;</code> <em>ProductExpr</em><br>
+  |  <em>ProductExpr</em> <code>||</code> <em>ProductExpr</em><br>
+  |  <em>ProductExpr</em> <code>-</code> <em>ProductExpr</em><br>
+  |  <em>TypeId</em><br>
+  |  <code>(</code> <em>ProductExpr</em> <code>)</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>FeatureSpecs</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>FeatureSpec</em> { <code>,</code> <em>FeatureSpec</em> }</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>FeatureSpec</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>FName</em> [ <em>AttributeAssignments</em> ]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>AttributeAssignments</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{</code> <em>AttributeAssignment</em> { <code>,</code> <em>AttributeAssignment</em> } <code>}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>AttributeAssignment</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>AName</em> <code>=</code> <em>Literal</em></p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Here are some product definitions for the <code>DeltaResourceExample</code> product line:</p>
 </div>
@@ -8361,6 +8620,29 @@ the model.</p>
 </div>
 </div>
 <div class="sect3">
+<h4 id="-recording-and-replaying-traces">Recording and replaying traces</h4>
+<div class="paragraph">
+<p>ABS task scheduling is non-deterministic; i.e., when two tasks are enabled,
+the cog will select an arbitrary one (but see <a href="#sec:schedulers">User-Defined Schedulers</a>).  The erlang
+backend can record a trace of scheduling decisions and replay it to precisely
+reproduce the previous run.</p>
+</div>
+<div class="paragraph">
+<p>To record a trace to a file <code>trace.json</code>, start the model with a parameter
+<code>--dump-trace trace.json</code> or <code>-t trace.json</code>.</p>
+</div>
+<div class="paragraph">
+<p>To replay an existing trace recorded in <code>trace.json</code>, start the model with
+<code>--replay-trace trace.json</code> or <code>-r trace.json</code>.</p>
+</div>
+<div class="paragraph">
+<p>A trace can also be obtained from a running model via the Model API.  Assuming
+the model is started on port 8080 (via a parameter <code>-p 8080</code>), the trace is
+accessible at the url <a href="http://localhost:8080/trace" class="bare">http://localhost:8080/trace</a>.  A trace visualizer can be
+found here: <a href="https://github.com/larstvei/ABS-traces" class="bare">https://github.com/larstvei/ABS-traces</a>.</p>
+</div>
+</div>
+<div class="sect3">
 <h4 id="-generating-code-coverage-information">Generating code coverage information</h4>
 <div class="paragraph">
 <p>The Erlang backend can optionally generate code coverage information in a
@@ -8622,8 +8904,8 @@ No other runtime system libraries and dependencies will be generated.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version v1.8.1-0-8ab2eddbb1<br>
-Last updated 2019-03-28 11:53:16 +0100
+Version v1.8.2<br>
+Last updated 2019-12-09 14:23:48 +0100
 </div>
 </div>
 </body>
