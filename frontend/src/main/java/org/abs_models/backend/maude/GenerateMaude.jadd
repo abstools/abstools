@@ -635,7 +635,6 @@ aspect GenerateMaude {
             cost.generateMaude(stream);
         }
         stream.print(",\n      Code: ");
-        if (getCritical()) stream.print("assign( '.nbcr ; \"+\"( '.nbcr :: \"num\"[1] ) ) ; "); // (Component Model) //
         if (getBlock().getNumStmt() == 0) {
             stream.print("return( \"ABS.StdLib.Unit\"[ emp ] ) ");
         } else {
@@ -648,7 +647,6 @@ aspect GenerateMaude {
                 stream.print("; return( \"ABS.StdLib.Unit\"[ emp ] ) ");
             }
         }
-        if (getCritical()) stream.print(" ; assign( '.nbcr ; \"-\"( '.nbcr :: \"num\"[1] ) ) "); // (Component Model) //
         stream.print("> ");
     }
 

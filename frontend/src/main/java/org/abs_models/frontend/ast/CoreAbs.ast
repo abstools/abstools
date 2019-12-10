@@ -80,7 +80,7 @@ abstract VarOrFieldDecl ::= <Name>;
 FunctionParamDecl : VarOrFieldDecl ;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
 VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
-FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* <Port:boolean>; // (For Component Model) //
+FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* ;
 ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
 ClassParamDecl: ParamDecl;
 PatternVarDecl: VarOrFieldDecl;
@@ -91,7 +91,7 @@ BuiltinFunctionDef: FunctionDef;
 ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
 
 MethodSig ::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
-MethodImpl ::= MethodSig Block <Critical:boolean>; // (For Component Model) //
+MethodImpl ::= MethodSig Block ;
 
 
 // Uses of various identifiers

@@ -64,7 +64,7 @@ public class ContractInference {
         _emptyDecl.setName(_dummyClass);
         MethodSig methodSig = new MethodSig(_dummyMethod, new org.abs_models.frontend.ast.List<>(), new DataTypeUse(),
             new org.abs_models.frontend.ast.List<>());
-        MethodImpl node = new MethodImpl(methodSig, new Block(), false);
+        MethodImpl node = new MethodImpl(methodSig, new Block());
 
         _emptyDecl.addMethod(node);
     }
