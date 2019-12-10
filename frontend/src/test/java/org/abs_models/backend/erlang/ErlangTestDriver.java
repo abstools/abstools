@@ -10,13 +10,14 @@ import static org.junit.Assert.assertEquals;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.InputStream;
-import java.io.Closeable;
-import java.util.Optional;
-import java.util.LinkedList;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.concurrent.TimeUnit;
+import java.util.LinkedList;
+import java.util.Optional;
+
 import com.google.common.io.Files;
 
 import org.abs_models.ABSTest;
@@ -90,7 +91,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f.deleteOnExit();
             Model model = assertParse(absCode, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);
-            return run(f, mainModule);
+            return runAndCheck(f, mainModule);
         } catch (Exception e) {
             return null;
         } finally {
@@ -296,16 +297,26 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     /**
-     * Executes mainModule
+     * Executes a model and returns its output as a list of strings, one per
+     * line.
      *
      * To detect faults, we have a Timeout process which will kill the
      * runtime system after 10 seconds
+     *
+     * @param workDir a temporary directory containing a compiled model.
+     * @param mainModule the module whose main block should be executed.
+     * @param arguments additional arguments to pass to the model
+     * @return the remainder of an output line starting with "RES=" or null if none found.
      */
-    private String run(File workDir, String mainModule) throws Exception {
-        String val = null;
+    public java.util.List<String> runCompiledModel(File workDir, String mainModule, String... arguments) throws Exception {
+        ArrayList<String> val = new ArrayList<String>();
+        ArrayList<String> process_args = new ArrayList<String>();
         String runFileName = ErlangBackend.isWindows() ? "run.bat" : "run";
         File runFile = new File(workDir, runFileName);
-        ProcessBuilder pb = new ProcessBuilder(runFile.getAbsolutePath(), mainModule);
+        process_args.add(runFile.getAbsolutePath());
+        process_args.add(mainModule);
+        process_args.addAll(Arrays.asList(arguments));
+        ProcessBuilder pb = new ProcessBuilder(process_args);
         pb.directory(workDir);
         pb.redirectErrorStream(true);
         Process p = pb.start();
@@ -323,10 +334,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
                 
                 if (maybeLine.isPresent()) {
                     final String line = maybeLine.get();
-
-                    if (line.startsWith("RES=")) { // see `genCode' above
-                        val = line.split("=")[1];
-                    }
+                    val.add(line);
                 }
 
                 if (r.hasStreamEnded()) {
@@ -348,6 +356,32 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         return val;
     }
 
+    /**
+     * Executes a model and returns the value of the `testresult' abs
+     * variable.
+     *
+     * To detect faults, we have a Timeout process which will kill the
+     * runtime system after 10 seconds
+     *
+     * @param workDir a temporary directory containing a compiled model.
+     * @param mainModule the module whose main block should be executed.
+     * @return the remainder of an output line starting with "RES=" or null if none found.
+     */
+    private String runAndCheck(File workDir, String mainModule) throws Exception {
+        java.util.List<String> output = runCompiledModel(workDir, mainModule);
+        if (output == null) {
+            return null;
+        } else {
+            for (String line : output) {
+                if (line.startsWith("RES=")) { // see `genCode' above
+                    String val = line.split("=")[1];
+                    return val;
+                }
+            }
+            return null;
+        }
+    }
+
     @Override
     public void assertEvalTrue(Model model) throws Exception {
         File f = null;
@@ -355,7 +389,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             f = Files.createTempDir();
             f.deleteOnExit();
             String mainModule = genCode(model, f, true);
-            assertEquals("True",run(f, mainModule));
+            assertEquals("True",runAndCheck(f, mainModule));
         } finally {
             try {
                 FileUtils.deleteDirectory(f);

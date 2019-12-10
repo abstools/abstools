@@ -1,0 +1,58 @@
+module Resource2;
+import * from ABS.DC;
+
+interface Service {
+  Bool photo_request();
+  Bool video_request(Int n);
+}
+
+class Service implements Service {
+  Int cost_per_image = 1;
+
+  Bool photo_request() {
+    [Cost: cost_per_image] skip;
+    return Duration(0) < deadline();
+  }
+
+  Bool video_request(Int n) {
+    [Cost: n * cost_per_image] skip;
+    return Duration(0) < deadline();
+  }
+}
+
+class Client(Service s, Int n, Int bound) {
+  Int successes = 0;
+  Int missed = 0;
+  List<Fut<Bool>> answers = Nil;
+  Fut<Bool> f;
+  Int iterations = 0;
+
+  Unit run() {
+    while (iterations < bound) {
+      [Deadline: Duration(20)] f = s!photo_request();
+      answers = Cons(f,answers);
+      [Deadline: Duration(20)] f = s!photo_request();
+      answers = Cons(f,answers);
+      [Deadline: Duration(10)] f = s!video_request(n);
+      answers = Cons(f,answers);
+      iterations = iterations + 1;
+    }
+
+    foreach (f in answers) {
+      Bool b = f.get;
+      if (b) {
+          successes = successes + 1;
+      } else {
+          missed = missed + 1;
+      }
+    }
+    println("Successes: " + toString(successes));
+    println("Missed deadlines: " + toString(missed));
+  }
+}
+
+{
+  DC server = new DeploymentComponent("Server", map[Pair(Speed, 2)]);
+  [DC: server] Service s1 = new Service();
+  new Client(s1, 1, 100);
+}

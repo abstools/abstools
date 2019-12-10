@@ -1,0 +1,55 @@
+module NaiveSharedBuffer;
+
+interface Client {
+    Unit insert(String s);
+    Unit receive(String s);
+    Unit setOtherClient(Client c);
+    Unit printbuffer();
+}
+
+class Client(String s) implements Client {
+    Client otherClient;
+    String buffer = "";
+
+    Unit insert(String s) {
+        buffer = s + buffer;
+        otherClient!receive(s);
+    }
+
+    Unit receive(String s) {
+        buffer = s + buffer;
+    }
+
+    Unit setOtherClient(Client c) {
+        otherClient = c;
+    }
+
+    Unit printbuffer() {
+        println(buffer);
+    }
+
+    Unit run() {
+        await otherClient != null;
+        foreach (i in list[1,2,3,4]) {
+            this!insert(s + toString(i));
+        }
+    }
+}
+
+{
+    Client a = new Client("a");
+    Client b = new Client("b");
+    a.setOtherClient(b);
+    b.setOtherClient(a);
+
+    await duration(1,1);
+    a.printbuffer();
+    b.printbuffer();
+}
+
+
+// Local Variables:
+// abs-link-source-path: "/Users/larstvei/Dropbox/ifi/phd/abs/abstools/"
+// abs-local-port: 8080
+// abs-target-language: erlang
+// End:
