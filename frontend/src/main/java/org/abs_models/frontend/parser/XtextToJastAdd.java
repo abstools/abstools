@@ -42,7 +42,7 @@ public class XtextToJastAdd {
     private static <T extends ASTNode<?>> T nodeWithLocation(T node, EObject obj) {
         INode n = NodeModelUtils.findActualNodeFor(obj); // do we want .getNode() instead?
         if (n != null) {
-            ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getSignificantTextRegion(obj);
+            ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getFullTextRegion(obj);
             // End location is untested since we only print beginning
             // locations in error output
             LineAndColumn beg = NodeModelUtils.getLineAndColumn(n, location.getOffset());
@@ -67,7 +67,7 @@ public class XtextToJastAdd {
     private static <T extends ASTNode<?>> T nodeWithLocation(T node, EObject obj, EStructuralFeature feature, int indexInList) {
         INode n = NodeModelUtils.findActualNodeFor(obj); // do we want .getNode() instead?
         if (n != null) {
-            ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getSignificantTextRegion(obj, feature, indexInList);
+            ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getFullTextRegion(obj, feature, indexInList);
             // End location is untested since we only print beginning
             // locations in error output
             LineAndColumn beg = NodeModelUtils.getLineAndColumn(n, location.getOffset());
@@ -524,7 +524,9 @@ public class XtextToJastAdd {
     }
 
     private static MethodImpl fromXtext(org.abs_models.xtext.abs.MethodDecl xtext_decl) {
-        MethodImpl result = new MethodImpl();
+        // Initialize position here already so we can use it for the embedded
+        // MethodSig
+        MethodImpl result = nodeWithLocation(new MethodImpl(), xtext_decl);
 
         MethodSig sig = new MethodSig();
         sig.setName(xtext_decl.getName());
@@ -533,6 +535,11 @@ public class XtextToJastAdd {
             sig.addParamNoTransform(fromXtext(arg));
         }
         sig.setReturnType(fromXtext(xtext_decl.getResulttype()));
+        // Handle position of embedded MethodSig: first set position to
+        // closing ")", then adjust start position to start of MethodDecl
+        nodeWithLocation(sig, xtext_decl, AbsPackage.eINSTANCE.getMethodDecl_Sig_end_position());
+        sig.setPosition(result.getStartLine(), result.getStartColumn(),
+                        sig.getEndLine(), sig.getEndColumn());
         result.setMethodSig(sig);
 
         Block block = new Block();

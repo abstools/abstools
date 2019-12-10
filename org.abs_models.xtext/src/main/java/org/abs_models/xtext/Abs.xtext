@@ -129,7 +129,10 @@ FieldDecl
 
 MethodDecl
     : annotations=Annotations resulttype=TypeUseNoAnnotations name=IDENTIFIER
-        '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
+        // Our JastAdd AST has an embedded MethodSig inside MethodDecl while
+        // in xtext we just parse name etc. directly.  `sig_end_position' is
+        // used to calculate the end location of that embedded node.
+        '(' (args+=ParamDecl (',' args+=ParamDecl)* )? sig_end_position=')'
         '{' (statements+=Stmt)* '}'
     ;
 
