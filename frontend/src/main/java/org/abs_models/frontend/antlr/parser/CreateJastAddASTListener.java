@@ -335,7 +335,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitField_decl(ABSParser.Field_declContext ctx) {
         // FIXME: 'port' missing (for component model)
         FieldDecl f = setV(ctx, new FieldDecl(ctx.IDENTIFIER().getText(), v(ctx.type_use()), o(ctx.pure_exp()),
-            v(ctx.annotations()), false));
+            v(ctx.annotations())));
     }
 
     @Override public void exitMethod(ABSParser.MethodContext ctx) {
@@ -347,8 +347,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         for (ABSParser.StmtContext s : ctx.stmt()) {
             b.addStmt(v(s));
         }
-        // FIXME: 'critical' missing (for component model)
-        setV(ctx, new MethodImpl(ms, b, false));
+        setV(ctx, new MethodImpl(ms, b));
     }
 
     // Statements

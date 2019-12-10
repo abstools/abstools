@@ -43,7 +43,7 @@ public class TraitTest extends DeltaTest{
 
 
         MethodSig sig= AbsASTBuilderUtil.createMethodSig("n", AbsASTBuilderUtil.getUnit());
-        MethodImpl impl = new MethodImpl(sig, new Block(new List<>(), new List<>(new SkipStmt())), false);
+        MethodImpl impl = new MethodImpl(sig, new Block(new List<>(), new List<>(new SkipStmt())));
         AddMethodModifier opr = new AddMethodModifier(impl);
 
         assertNotNull(opr.getMethodImpl());
@@ -82,7 +82,7 @@ public class TraitTest extends DeltaTest{
 
         MethodSig sig= AbsASTBuilderUtil.createMethodSig("m", AbsASTBuilderUtil.getUnit());
         MethodImpl impl = new MethodImpl(sig, new Block(new List<>(),
-            new List<>(new SkipStmt(), new SkipStmt())), false);
+            new List<>(new SkipStmt(), new SkipStmt())));
         ModifyMethodModifier opr = new ModifyMethodModifier(impl);
 
         assertNotNull(opr.getMethodImpl());
