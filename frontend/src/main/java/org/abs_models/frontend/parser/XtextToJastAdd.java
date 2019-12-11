@@ -744,15 +744,16 @@ public class XtextToJastAdd {
 
     private static Guard fromXtext(org.abs_models.xtext.abs.Guard guard) {
         Guard result = null;
-        if (guard instanceof org.abs_models.xtext.abs.ClaimGuard) {
-            org.abs_models.xtext.abs.ClaimGuard cguard = (org.abs_models.xtext.abs.ClaimGuard)guard;
-            result = nodeWithLocation(new org.abs_models.frontend.ast.ClaimGuard(pureExpFromXtext(cguard.getFuture())), guard);
-        } else if (guard instanceof org.abs_models.xtext.abs.DurationGuard) {
+        if (guard instanceof org.abs_models.xtext.abs.DurationGuard) {
             org.abs_models.xtext.abs.DurationGuard dguard = (org.abs_models.xtext.abs.DurationGuard) guard;
             result = nodeWithLocation(new org.abs_models.frontend.ast.DurationGuard(pureExpFromXtext(dguard.getMin()), pureExpFromXtext(dguard.getMax())), guard);
         } else if (guard instanceof org.abs_models.xtext.abs.ExpGuard) {
             org.abs_models.xtext.abs.ExpGuard eguard = (org.abs_models.xtext.abs.ExpGuard) guard;
-            result = nodeWithLocation(new org.abs_models.frontend.ast.ExpGuard(pureExpFromXtext(eguard.getExp())), guard);
+            if (eguard.isClaim()) {
+                result = nodeWithLocation(new org.abs_models.frontend.ast.ClaimGuard(pureExpFromXtext(eguard.getExp())), guard);
+            } else {
+                result = nodeWithLocation(new org.abs_models.frontend.ast.ExpGuard(pureExpFromXtext(eguard.getExp())), guard);
+            }
         } else if (guard instanceof org.abs_models.xtext.abs.AndGuard) {
             org.abs_models.xtext.abs.AndGuard aguard = (org.abs_models.xtext.abs.AndGuard)guard;
             result = nodeWithLocation(new org.abs_models.frontend.ast.AndGuard(fromXtext(aguard.getLeft()), fromXtext(aguard.getRight())), guard);
