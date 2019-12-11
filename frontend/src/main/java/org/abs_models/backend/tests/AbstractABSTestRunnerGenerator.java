@@ -21,8 +21,8 @@ import org.abs_models.frontend.ast.List;
 import org.abs_models.frontend.ast.MethodImpl;
 import org.abs_models.frontend.ast.MethodSig;
 import org.abs_models.frontend.ast.Model;
-import org.abs_models.frontend.ast.ParametricDataTypeDecl;
-import org.abs_models.frontend.ast.ParametricDataTypeUse;
+import org.abs_models.frontend.ast.DataTypeDecl;
+import org.abs_models.frontend.ast.DataTypeUse;
 import org.abs_models.frontend.ast.PureExp;
 
 /**
@@ -137,18 +137,18 @@ abstract class AbstractABSTestRunnerGenerator implements ABSTestRunnerGenerator 
 
     protected void gatherABSUnitAnnotations() {
         for (Decl decl : this.model.getDecls()) {
-            if (decl instanceof ParametricDataTypeDecl) {
+            if (decl instanceof DataTypeDecl) {
                 String name = decl.getType().getQualifiedName();
                 if (test.equals(name)) {
-                    testType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
+                    testType = ((DataTypeDecl) decl).getDataConstructor(0);
                 } else if (fixture.equals(name)) {
-                    fixtureType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
+                    fixtureType = ((DataTypeDecl) decl).getDataConstructor(0);
                 } else if (suite.equals(name)) {
-                    suiteType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
+                    suiteType = ((DataTypeDecl) decl).getDataConstructor(0);
                 } else if (dataPoint.equals(name)) {
-                    dataPointType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
+                    dataPointType = ((DataTypeDecl) decl).getDataConstructor(0);
                 } else if (ignore.equals(name)) {
-                    ignoreType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
+                    ignoreType = ((DataTypeDecl) decl).getDataConstructor(0);
                 }
             }
         }
@@ -201,7 +201,7 @@ abstract class AbstractABSTestRunnerGenerator implements ABSTestRunnerGenerator 
     protected MethodSig findDataPoints(InterfaceDecl inf) {
         for (MethodSig meth : inf.getAllMethodSigs()) {
             if (hasTestAnnotation(meth.getAnnotations(), dataPointType)) {
-                Decl d = ((ParametricDataTypeUse) meth.getReturnType()).getDecl();
+                Decl d = ((DataTypeUse) meth.getReturnType()).getDecl();
                 if (d.getType().getQualifiedName().equals(absStdSet)) {
                     return meth;
                 }
