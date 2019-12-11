@@ -249,7 +249,7 @@ public class XtextToJastAdd {
             }
         } else if (xtext_decl.getTraitdecl() != null) {
             result = fromXtext(xtext_decl.getTraitdecl());
-            // TODO add annotations to trait declarations
+            ((TraitDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
         } else if (xtext_decl.getInterfacedecl() != null) {
             result = fromXtext(xtext_decl.getInterfacedecl());
             ((InterfaceDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));

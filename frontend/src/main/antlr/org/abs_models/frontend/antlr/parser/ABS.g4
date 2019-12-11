@@ -315,7 +315,8 @@ decl : datatype_decl
     ;
 
 
-trait_decl : 'trait' TYPE_IDENTIFIER '=' trait_expr ;
+trait_decl : annotations
+        'trait' TYPE_IDENTIFIER '=' trait_expr ;
 
 trait_expr : basic_trait_expr trait_oper* ;
 
