@@ -220,7 +220,7 @@ public class XtextToJastAdd {
             Annotation astAnnotation;
             PureExp exp = pureExpFromXtext(annotation.getValue());
             if (annotation.getId() != null) {
-                astAnnotation = new TypedAnnotation(exp, fromXtext(annotation.getId()));
+                astAnnotation = new TypedAnnotation(exp, nodeWithLocation(new UnresolvedTypeUse(annotation.getId(), new List<>()), AbsPackage.eINSTANCE.getAnnotation_Id()));
             } else {
                 astAnnotation = new Annotation(exp);
             }

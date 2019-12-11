@@ -37,7 +37,7 @@ ModuleImport
 
 // Annotations
 
-Annotation: (id=TypeUseNoAnnotations ':')? value=Exp ;
+Annotation: (id=TYPE_IDENTIFIER ':')? value=Exp ;
 
 Annotations: {Annotations} ( '[' annotations+=Annotation (',' annotations+=Annotation)* ']')* ;
 
