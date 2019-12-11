@@ -231,23 +231,31 @@ public class XtextToJastAdd {
 
     static Decl fromXtext(org.abs_models.xtext.abs.Declaration xtext_decl) {
         Decl result = null;
-        // This manual, explicit dispatch will complain when someone adds a
-        // new type of declaration; this is something we want (if it doesn’t
-        // cost too much)
-        if (xtext_decl instanceof org.abs_models.xtext.abs.DataTypeDecl) {
-            result = fromXtext((org.abs_models.xtext.abs.DataTypeDecl) xtext_decl);
-        } else if (xtext_decl instanceof org.abs_models.xtext.abs.TypeSynonymDecl) {
-            result = fromXtext((org.abs_models.xtext.abs.TypeSynonymDecl) xtext_decl);
-        } else if (xtext_decl instanceof org.abs_models.xtext.abs.ExceptionDecl) {
-            result = fromXtext((org.abs_models.xtext.abs.ExceptionDecl) xtext_decl);
-        } else if (xtext_decl instanceof org.abs_models.xtext.abs.FunctionDecl) {
-            result = fromXtext((org.abs_models.xtext.abs.FunctionDecl) xtext_decl);
-        } else if (xtext_decl instanceof org.abs_models.xtext.abs.TraitDecl) {
-            result = fromXtext((org.abs_models.xtext.abs.TraitDecl) xtext_decl);
-        } else if (xtext_decl instanceof org.abs_models.xtext.abs.InterfaceDecl) {
-            result = fromXtext((org.abs_models.xtext.abs.InterfaceDecl) xtext_decl);
-        } else if (xtext_decl instanceof org.abs_models.xtext.abs.ClassDecl) {
-            result = fromXtext((org.abs_models.xtext.abs.ClassDecl) xtext_decl);
+        if (xtext_decl.getDatatypedecl() != null) {
+            result = fromXtext(xtext_decl.getDatatypedecl());
+            ((DataTypeDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        } else if (xtext_decl.getTypesynonymdecl() != null) {
+            result = fromXtext(xtext_decl.getTypesynonymdecl());
+            ((TypeSynDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        } else if (xtext_decl.getExceptiondecl() != null) {
+            result = fromXtext(xtext_decl.getExceptiondecl());
+            ((ExceptionDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        } else if (xtext_decl.getFunctiondecl() != null) {
+            result = fromXtext(xtext_decl.getFunctiondecl());
+            if (result instanceof PartialFunctionDecl) {
+                ((PartialFunctionDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+            } else {
+                ((FunctionDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+            }
+        } else if (xtext_decl.getTraitdecl() != null) {
+            result = fromXtext(xtext_decl.getTraitdecl());
+            // TODO add annotations to trait declarations
+        } else if (xtext_decl.getInterfacedecl() != null) {
+            result = fromXtext(xtext_decl.getInterfacedecl());
+            ((InterfaceDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+        } else if (xtext_decl.getClassdecl() != null) {
+            result = fromXtext(xtext_decl.getClassdecl());
+            ((ClassDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
         } else {
             throw new NotImplementedYetException(new ASTNode(),
                                                  "No conversion to JastAdd implemented for Xtext node "
@@ -268,8 +276,6 @@ public class XtextToJastAdd {
             }
         }
         result.setName(xtext_decl.getName());
-
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
 
         for (org.abs_models.xtext.abs.DataConstructorDecl xtext_d : xtext_decl.getConstructors()) {
             DataConstructor constructor = new DataConstructor();
@@ -316,7 +322,6 @@ public class XtextToJastAdd {
     static TypeSynDecl fromXtext(org.abs_models.xtext.abs.TypeSynonymDecl xtext_decl) {
         TypeSynDecl result = new TypeSynDecl();
         result.setName(xtext_decl.getName());
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
         result.setValue(fromXtext(xtext_decl.getType()));
         return nodeWithLocation(result, xtext_decl);
     }
@@ -328,10 +333,9 @@ public class XtextToJastAdd {
             constructor.addConstructorArgNoTransform(fromXtext(arg));
         }
 
-        ExceptionDecl result = new ExceptionDecl(xtext_decl.getName(),
-                                                 annotationsfromXtext(xtext_decl.getAnnotations()),
-                                                 new List<DataConstructor>(constructor));
-
+        ExceptionDecl result = new ExceptionDecl();
+        result.setName(xtext_decl.getName());
+        result.setDataConstructorList(new List<DataConstructor>(constructor));
         return nodeWithLocation(result, xtext_decl);
     }
 
@@ -352,7 +356,6 @@ public class XtextToJastAdd {
                 result = new  PartialFunctionDecl();
             }
             result.setName(xtext_decl.getName());
-            result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
             result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
 
             for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
@@ -381,7 +384,6 @@ public class XtextToJastAdd {
                 result = new  FunctionDecl();
             }
             result.setName(xtext_decl.getName());
-            result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
             result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
 
             for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
@@ -447,8 +449,6 @@ public class XtextToJastAdd {
         InterfaceDecl result = new  InterfaceDecl();
         result.setName(xtext_decl.getName());
 
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-
         for (int i = 0; i < xtext_decl.getSuperinterfaces().size(); i++) {
             String iname = xtext_decl.getSuperinterfaces().get(i);
             result.addExtendedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDecl_Superinterfaces(), i));
@@ -475,7 +475,7 @@ public class XtextToJastAdd {
     static ClassDecl fromXtext(org.abs_models.xtext.abs.ClassDecl xtext_decl) {
         ClassDecl result = new  ClassDecl();
         result.setName(xtext_decl.getName());
-        result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
+
         for(org.abs_models.xtext.abs.ParamDecl arg : xtext_decl.getArgs()) {
             result.addParamNoTransform(fromXtext(arg));
         }

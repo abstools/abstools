@@ -44,17 +44,19 @@ Annotations: {Annotations} ( '[' annotations+=Annotation (',' annotations+=Annot
 // Declarations
 
 Declaration
-    : DataTypeDecl
-    | TypeSynonymDecl
-    | ExceptionDecl
-    | FunctionDecl
-    | TraitDecl
-    | InterfaceDecl
-    | ClassDecl
+    : annotations=Annotations
+        ( datatypedecl=DataTypeDecl
+        | typesynonymdecl=TypeSynonymDecl
+        | exceptiondecl=ExceptionDecl
+        | functiondecl=FunctionDecl
+        | traitdecl=TraitDecl
+        | interfacedecl=InterfaceDecl
+        | classdecl=ClassDecl
+        )
     ;
 
 DataTypeDecl
-    : annotations=Annotations 'data' name=TYPE_IDENTIFIER
+    : 'data' name=TYPE_IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         ('=' constructors+=DataConstructorDecl ('|' constructors+=DataConstructorDecl)* )?
         ';'
@@ -64,15 +66,15 @@ DataConstructorDecl : name=TYPE_IDENTIFIER ('(' args+=DataConstructorParamDecl (
 
 DataConstructorParamDecl : type=TypeUse (name=IDENTIFIER)? ;
 
-TypeSynonymDecl : annotations=Annotations 'type' name=TYPE_IDENTIFIER '=' type=TypeUse ';' ;
+TypeSynonymDecl : 'type' name=TYPE_IDENTIFIER '=' type=TypeUse ';' ;
 
 ExceptionDecl
-    : annotations=Annotations 'exception' name=TYPE_IDENTIFIER
+    : 'exception' name=TYPE_IDENTIFIER
         ('(' args+=DataConstructorParamDecl (',' args+=DataConstructorParamDecl)* ')')? ';'
     ;
 
 FunctionDecl
-    : annotations=Annotations 'def' resulttype=TypeUse name=IDENTIFIER
+    : 'def' resulttype=TypeUse name=IDENTIFIER
         ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
         ( '(' (function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)*)? ')')?
         '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
@@ -99,7 +101,7 @@ TraitOp
     ;
 
 InterfaceDecl
-    : annotations=Annotations 'interface' name=TYPE_IDENTIFIER
+    : 'interface' name=TYPE_IDENTIFIER
         ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
         '{' (methods+=MethodSignature ';' )* '}'
     ;
@@ -110,7 +112,7 @@ MethodSignature
     ;
 
 ClassDecl
-    : annotations=Annotations 'class' name=TYPE_IDENTIFIER
+    : 'class' name=TYPE_IDENTIFIER
         ( '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')' )?
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'

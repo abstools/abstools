@@ -26,13 +26,13 @@ public class FullAbsValidator extends AbstractDeclarativeValidator {
     @Check public void checkAllowedAddedDeclaration(DeltaModuleModifier mod) {
         if (mod.getAdded_decl() != null) {
             Declaration d = mod.getAdded_decl();
-            if (!(d instanceof ClassDecl
-                  || d instanceof InterfaceDecl
-                  || d instanceof FunctionDecl
-                  || d instanceof DataTypeDecl
-                  || d instanceof TypeSynonymDecl
+            if (!(d.getClassdecl() != null
+                  || d.getInterfacedecl() != null
+                  || d.getFunctiondecl() != null
+                  || d.getDatatypedecl() != null
+                  || d.getTypesynonymdecl() != null
                   )) {
-                error("Adding of " + d.getClass().getName() + " declarations is unsupported",
+                error("Trying to add an unsupported type of declaration",
                       AbsPackage.eINSTANCE.getDeltaModuleModifier_Added_decl());
             }
         }
