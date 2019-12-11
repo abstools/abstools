@@ -138,7 +138,17 @@ public class ParserTest extends FrontendTest {
         assertParse("class FooClass  implements Foo { {} } {} ");
         assertParse(bbclass);
         assertParseError("class FooClass implements {}" + "{}");
+    }
 
+    @Test
+    public void testTraitDecl() {
+        // trait with annotation
+        assertParse("[Cost: 15] trait T = { }");
+        assertParse("trait T = Unit foo() { }");
+        assertParse("trait T = { Unit foo() { } Unit bar() { } }");
+        assertParse("trait T = Unit foo() { } removes Unit foo(); adds Unit foo() { }");
+        assertParse("trait T = { Unit foo() { } } modifies Unit foo() { }");
+        assertParse("trait T = { Unit foo() { } Unit bar() { } } removes { Unit foo(); Unit bar(); } ");
     }
 
     // datatype declarations

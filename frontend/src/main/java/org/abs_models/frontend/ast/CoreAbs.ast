@@ -33,7 +33,7 @@ abstract Decl ::= <Name>;
 abstract BehaviorDecl: Decl ::= ; // Entities used in behavior expressions
 abstract TypeDecl: Decl; // Entities used in type expressions
 
-TraitDecl : Decl ::= TraitExpr;
+TraitDecl : Decl ::= Annotation* TraitExpr;
 
 abstract TraitExpr;
 TraitSetExpr : TraitExpr ::= MethodImpl*;

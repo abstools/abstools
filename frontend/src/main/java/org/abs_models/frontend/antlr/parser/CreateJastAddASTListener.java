@@ -172,7 +172,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new TraitUse(v(ctx.trait_expr())));
     }
     @Override public void exitTrait_decl( ABSParser.Trait_declContext ctx) {
-        setV(ctx, new TraitDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.trait_expr())));
+        setV(ctx, new TraitDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.trait_expr())));
     }
 
     // Declarations
