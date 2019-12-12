@@ -16,7 +16,7 @@ ModuleDecl
     : 'module' name=QualifiedTypeIdentifier ';'
         (exports+=ModuleExport | imports+=ModuleImport)*
         (declarations+=Declaration)*
-        ( main_annotations=Annotations main?='{' (mainblockstmts+=Stmt)* '}')?
+        (main?='{' (mainblockstmts+=Stmt)* '}')?
     ;
 
 ModuleExport
