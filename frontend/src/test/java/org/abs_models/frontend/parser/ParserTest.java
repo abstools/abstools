@@ -351,7 +351,7 @@ public class ParserTest extends FrontendTest {
         assertParse("export *;");
     }
 
-    @Test
+    @Test @Ignore("xtext branch bug #266")
     public void ticket189() {
         assertParseError("def Unit foo() = Unit;\n"+
          "class Bob { \n" +
