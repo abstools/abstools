@@ -205,7 +205,7 @@ public class ParserTest extends FrontendTest {
         assertParse("interface A { [Pre : x > 5, Post : x > 0] Int method(Int x); }");
         assertParse("class A { [Method : Testable] Int method(Int x) { return x; } }");
         assertParse("class A { Int method(Int x) { [Value: Good] return x; } }");
-        assertParse("{ Int x = 1; [Stmt: \"conditional\"] if (x == 1) [Branch: Then] x = 5; else [Branch: Else] x = -1; }");
+        assertParse("[Block: Init]{ Int x = 1; [Stmt: \"conditional\"] if (x == 1) [Branch: Then] x = 5; else [Branch: Else] x = -1; }");
         assertParse("[Test] class FooClass {} {}");
         assertParse("[\"value\"] class FooClass {} {}");
         assertParse("class FooClass([Test] T t) {}");
