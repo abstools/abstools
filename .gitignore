@@ -25,11 +25,10 @@ out/
 /abs-docs/**/*.toc
 /abs-docs/**/*.out
 /abs-docs/Ott/**/Makefile.coq
+/abs-docs/Ott/**/Makefile.coq.conf
 /abs-docs/Ott/**/*.glob
 /abs-docs/Ott/**/*.vo
 /abs-docs/Ott/**/.coqdeps.d
-/abs-docs/Ott/coq/_CoqProject
-/abs-docs/Ott/coq/Makefile.coq.conf
 /abs-docs/Ott/core_abs.v
 /abs-docs/Ott/core_abs.v.d
 /abs-docs/Ott/core-abs-coq.pdf

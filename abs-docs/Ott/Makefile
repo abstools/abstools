@@ -48,12 +48,12 @@ core_abs.vo: Makefile.coq
 	make -C coq
 	make -f Makefile.coq
 
-Makefile.coq: core_abs.v
-	coq_makefile -I $(realpath OTT_COQ_DIR) core_abs.v -o Makefile.coq
+Makefile.coq: core_abs.v _CoqProject
+	coq_makefile -f _CoqProject -I $(realpath $(OTT_COQ_DIR)) core_abs.v -o Makefile.coq
 
 clean:				## Remove intermediate and output files
 	make -C coq clean
-	rm -f *.aux *.log core-abs.pdf core-abs-coq.pdf core-abs_included.tex core-abs-coq.tex core_abs.v core_abs.vo core_abs.v.d core_abs.glob
+	rm -f *.aux *.log core-abs.pdf core-abs-coq.pdf core-abs_included.tex core-abs-coq.tex core_abs.v core_abs.vo core_abs.v.d core_abs.glob Makefile.coq Makefile.coq.conf
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
