@@ -11,7 +11,7 @@ that these expressions cannot modify state variables.
               \defc  \NT{DataConstrExp}
               \defc  \NT{FnAppExp}
               \defc  \NT{FnAppListExp}
-              \defc  \NT{IfExp}
+              \defc  \NT{WhenExp}
               \defc  \NT{CaseExp}
               \defc  \NT{OperatorExp}
               \defc  \TRS{(} \NT{PureExp} \TRS{)}\\
@@ -64,7 +64,7 @@ ABS.StdLib.head(list)
 ABS has a standard if-then-else expression.
 
 \begin{abssyntax}
-\NT{IfExp}  \defn \TR{if}\ \NT{PureExp}\ \TR{then} \NT{PureExp}\ \TR{else} \NT{PureExp}
+\NT{WhenExp}  \defn \TR{when}\ \NT{PureExp}\ \TR{then} \NT{PureExp}\ \TR{else} \NT{PureExp}
 \end{abssyntax}
 
 

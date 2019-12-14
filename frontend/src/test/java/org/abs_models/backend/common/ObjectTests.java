@@ -162,7 +162,7 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
-    public void fieldPatternMatchNestedCaseStmt() {
+    public void fieldPatternMatchNestedSwitchStmt() {
         assertEvalTrue(INTERFACE_I
                 + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { Bool result= False; switch (2) {a => {Int u=7; switch (2) { a=> result=True;}}  b => {Int u=3; result=False;}} return result;  } }"
                 + CALL_M);

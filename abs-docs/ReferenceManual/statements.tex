@@ -7,7 +7,7 @@ it would be the \absinline{Unit} value.
 \NT{Statement}    \defn \NT{CompoundStmt}
                \defc  \NT{VarDeclStmt}
                \defc  \NT{AssignStmt}
-               \defc  \NT{CaseStmt}
+               \defc  \NT{SwitchStmt}
                \defc  \NT{AwaitStmt}
                \defc  \NT{SuspendStmt}
                \defc  \NT{SkipStmt}
@@ -86,18 +86,18 @@ this.f = True;
 x = 5;
 \end{absexample}
 
-\section{Case Statement}
+\section{Switch Statement}
 
-The case statement, like the case expression, takes an expression as
+The switch statement, like the case expression, takes an expression as
 first argument, which is matched against a series of patterns.  The
-effect of executing the case statement is the execution of the statement
+effect of executing the switch statement is the execution of the statement
 (which can be a block) of the first branch whose pattern matches the
 expression.  It is an error if no pattern matches the expression.
 
 
 \begin{abssyntax}
-\NT{CaseStmt}       \defn \TR{case}\ \NT{PureExp}\ \TRS{\{} \MANY{\NT{CaseStmtBranch}}\ \TRS{\}}\\
-\NT{CaseStmtBranch}    \defn \NT{Pattern}\ \TRS{=>}\ \NT{Stmt}\ \TRS{;}\\
+\NT{SwitchStmt}       \defn \TR{switch}\ \NT{PureExp}\ \TRS{\{} \MANY{\NT{SwitchStmtBranch}}\ \TRS{\}}\\
+\NT{SwitchStmtBranch}    \defn \NT{Pattern}\ \TRS{=>}\ \NT{Stmt}\ \TRS{;}\\
 \NT{Pattern}       \defn \NT{Identifier}
                 \defc  \NT{Literal}
                 \defc  \NT{ConstrPattern}
@@ -106,7 +106,7 @@ expression.  It is an error if no pattern matches the expression.
 \NT{PatternList}   \defn \NT{Pattern}\ \MANYG{\TRS{,}\ \NT{Pattern}}
 \end{abssyntax}
 
-The case statement has the same pattern matching and binding semantics
+The switch statement has the same pattern matching and binding semantics
 as the case expression (see Section~\ref{sec:case-expr},
 page~\pageref{sec:case-expr} for reference), except that shadowing local
 variables is not allowed.
@@ -277,10 +277,10 @@ no suspension, blocking or \texttt{return} statement is allowed.
 \begin{abssyntax}
 \NT{TryCatchFinallyStmt} \defn \TR{try}\ \NT{Stmt}\
                                \TR{catch} \TRS{\{}
-                                 \MANY{\NT{CaseStmtBranch}}\
+                                 \MANY{\NT{SwitchStmtBranch}}\
                                \TRS{\}}
                                \OPTG{\TR{finally} \NT{Stmt}}\\
-\NT{CaseStmtBranch}    \defn \NT{Pattern}\ \TRS{=>} \NT{Stmt} \\
+\NT{SwitchStmtBranch}    \defn \NT{Pattern}\ \TRS{=>} \NT{Stmt} \\
 \NT{Pattern}       \defn \NT{Identifier}
                 \defc  \NT{Literal}
                 \defc  \NT{ConstrPattern}

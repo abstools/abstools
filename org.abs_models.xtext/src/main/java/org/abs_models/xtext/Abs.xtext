@@ -118,7 +118,7 @@ ClassDecl
         '{'
         (fields+=FieldDecl ';')*
         ( '{' initblockstmts+=Stmt* '}' )?
-        ( 'recover' '{' (recoverbranches+=CaseStmtBranch)* '}' )?
+        ( 'recover' '{' (recoverbranches+=SwitchStmtBranch)* '}' )?
         ( 'uses' used_traits+=TraitExp ';' )*
         (methods+=MethodDecl)*
         '}'
@@ -163,7 +163,7 @@ Stmt : Annotations
             'foreach' '(' loopvar=IDENTIFIER 'in' list=Exp ')' body=Stmt
         | {TryCatchFinallyStmt.annotations=current}
             'try' body=Stmt
-            'catch' (( '{' (branches+=CaseStmtBranch)* '}') | branches+=CaseStmtBranch)
+            'catch' (( '{' (branches+=SwitchStmtBranch)* '}') | branches+=SwitchStmtBranch)
             (=> 'finally' finally=Stmt)?
         // await is parsed as an expression; this way we catch both "await
         // o!m()" and "await f?;" in one syntax rule.  We disallow certain
@@ -180,8 +180,8 @@ Stmt : Annotations
             'movecogto' target=Exp ';'
         | {ExpStmt.annotations=current}
             exp=Exp ';'
-        | {CaseStmt.annotations=current}
-            'switch' '(' condition=Exp ')' '{' (branches+=CaseStmtBranch)* '}'
+        | {SwitchStmt.annotations=current}
+            'switch' '(' condition=Exp ')' '{' (branches+=SwitchStmtBranch)* '}'
         )
     ;
 
@@ -196,7 +196,7 @@ SingleGuard returns Guard
     | {DurationGuard} 'duration' '(' min=Exp ',' max=Exp ')'
     ;
 
-CaseStmtBranch : pattern=Pattern '=>' body=Stmt ;
+SwitchStmtBranch : pattern=Pattern '=>' body=Stmt ;
 
 Pattern
     : {WildcardPattern} '_'
@@ -297,7 +297,7 @@ PrimaryExp returns Exp
     | OriginalCallExp
     | CaseExp
     | LetExp
-    | IfExp
+    | WhenExp
     | FunctionAppExp
     | VariadicFunctionAppExp
     | ConstructorAppExp
@@ -334,8 +334,8 @@ LetExp returns Exp
         'in' body=Exp
     ;
 
-IfExp returns Exp
-    : {IfExp} 'when' condition=Exp 'then' consequence=Exp 'else' alternate=Exp
+WhenExp returns Exp
+    : {WhenExp} 'when' condition=Exp 'then' consequence=Exp 'else' alternate=Exp
     ;
 
 FunctionAppExp returns Exp

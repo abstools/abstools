@@ -6,7 +6,7 @@ import org.abs_models.xtext.abs.AbsPackage;
 import org.abs_models.xtext.abs.AndExp;
 import org.abs_models.xtext.abs.AwaitExp;
 import org.abs_models.xtext.abs.CaseExpBranch;
-import org.abs_models.xtext.abs.CaseStmtBranch;
+import org.abs_models.xtext.abs.SwitchStmtBranch;
 import org.abs_models.xtext.abs.ConstructorAppExp;
 import org.abs_models.xtext.abs.DataConstructorParamDecl;
 import org.abs_models.xtext.abs.ExpGuard;
@@ -502,7 +502,7 @@ public class XtextToJastAdd {
             result.addMethodNoTransform(fromXtext(methodDecl));
         }
 
-        for (CaseStmtBranch recover_branch : xtext_decl.getRecoverbranches()) {
+        for (SwitchStmtBranch recover_branch : xtext_decl.getRecoverbranches()) {
             result.addRecoverBranchNoTransform(fromXtext(recover_branch));
         }
         for (org.abs_models.xtext.abs.TraitExp trait_exp : xtext_decl.getUsed_traits()) {
@@ -727,8 +727,8 @@ public class XtextToJastAdd {
                 result = new ExpressionStmt(annotations, exp);
             }
         }
-        else if(stmt instanceof org.abs_models.xtext.abs.CaseStmt) {
-            org.abs_models.xtext.abs.CaseStmt value = (org.abs_models.xtext.abs.CaseStmt) stmt;
+        else if(stmt instanceof org.abs_models.xtext.abs.SwitchStmt) {
+            org.abs_models.xtext.abs.SwitchStmt value = (org.abs_models.xtext.abs.SwitchStmt) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
             PureExp condition = pureExpFromXtext(value.getCondition());
             List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
@@ -765,15 +765,15 @@ public class XtextToJastAdd {
         return result;
     }
 
-    private static List<CaseBranchStmt> caseBranchStmtsFromXtext(EList<CaseStmtBranch> statements) {
+    private static List<CaseBranchStmt> caseBranchStmtsFromXtext(EList<SwitchStmtBranch> statements) {
         List<CaseBranchStmt> branchStmts = new List<>();
-        for(CaseStmtBranch branch : statements) {
+        for(SwitchStmtBranch branch : statements) {
             branchStmts.add(fromXtext(branch));
         }
         return branchStmts;
     }
 
-    private static CaseBranchStmt fromXtext(CaseStmtBranch xtext_branch) {
+    private static CaseBranchStmt fromXtext(SwitchStmtBranch xtext_branch) {
         CaseBranchStmt result = new CaseBranchStmt();
         result.setLeft(fromXtext(xtext_branch.getPattern()));
 
@@ -1006,8 +1006,8 @@ public class XtextToJastAdd {
                                     pureExpFromXtext(xtextExp.getExps().get(i)),
                                     result);
             }
-        } else if(value instanceof org.abs_models.xtext.abs.IfExp) {
-            org.abs_models.xtext.abs.IfExp xtextExp = (org.abs_models.xtext.abs.IfExp) value;
+        } else if(value instanceof org.abs_models.xtext.abs.WhenExp) {
+            org.abs_models.xtext.abs.WhenExp xtextExp = (org.abs_models.xtext.abs.WhenExp) value;
             result = new IfExp(pureExpFromXtext(xtextExp.getCondition()),
                                pureExpFromXtext(xtextExp.getConsequence()),
                                pureExpFromXtext(xtextExp.getAlternate()));

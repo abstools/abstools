@@ -197,12 +197,12 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
-    public void testIfExp1() {
+    public void testWhenExp1() {
         assertTypeOK("def X frob<X>(X x) = x;");
     }
 
     @Test
-    public void testIfExp2() {
+    public void testWhenExp2() {
         assertTypeOK("def X frob<X>(X x) = when (True) then x else x;");
     }
 

@@ -239,6 +239,9 @@ public class Main {
         Model result = null;
         if (!hasErrors) {
             result = XtextToJastAdd.fromResourceSet(resourceSet);
+        } else {
+            System.out.println("\nNote that the ABS syntax has changed after release 1.8.2!");
+            System.out.println("For the conditional expression, write ‘when .. then .. else ..’\ninstead of ‘if .. then .. else ..’.\nFor the pattern-matching statement, write ‘switch’ instead of ‘case’.\n(For the pattern-matching expression, write ‘case’ as before.)");
         }
         return result;
 

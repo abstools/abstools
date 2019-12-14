@@ -87,8 +87,8 @@ s :: s_ ::=
     {{ com if else }}
   | while b { sl } :: :: while
     {{ com while loop }}
-  | case e { sbrl } :: :: case
-    {{ com case statement }}
+  | switch e { sbrl } :: :: case
+    {{ com switch statement }}
 
 rhs :: rhs_ ::=
   {{ com assignment right-hand side }}
@@ -106,10 +106,10 @@ rhs :: rhs_ ::=
     {{ com future value }}
 
 sbr :: sbr_ ::=
-  {{ com case statement branch }}
+  {{ com switch statement branch }}
   | p => sl :: :: p_sl
 
 
 sbrl {{ tex \overline{sbr} }} :: brl_ ::=
-  {{ com case statement branch list }}
+  {{ com switch statement branch list }}
   | sbr1 ... sbrn :: :: sbr_list
