@@ -38,3 +38,4 @@ out/
 /abs-docs/ReferenceManual/absrefmanual.pdf
 /abs-docs/ReferenceManual/gitRevision.tex
 /org.abs_models.xtext/model/generated/
+/org.abs_models.xtext.ide/dist/
