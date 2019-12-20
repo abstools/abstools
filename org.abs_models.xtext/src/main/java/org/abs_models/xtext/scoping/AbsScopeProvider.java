@@ -3,6 +3,9 @@
  */
 package org.abs_models.xtext.scoping;
 
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.xtext.scoping.IScope;
 
 /**
  * This class contains custom scoping description.
@@ -11,5 +14,10 @@ package org.abs_models.xtext.scoping;
  * on how and when to use it.
  */
 public class AbsScopeProvider extends AbstractAbsScopeProvider {
+
+    @Override
+    public IScope getScope(EObject context, EReference reference) {
+        return super.getScope(context, reference);
+    }
 
 }
