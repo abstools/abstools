@@ -258,7 +258,7 @@ public class XtextToJastAdd {
             ((ClassDecl)result).setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
         } else {
             throw new NotImplementedYetException(new ASTNode(),
-                                                 "No conversion to JastAdd implemented for Xtext node "
+                                                 "No conversion to JastAdd implemented for Xtext declaration node "
                                                  + xtext_decl.getClass().toString());
         }
         return result;
@@ -736,7 +736,7 @@ public class XtextToJastAdd {
         }
         else {
             throw new NotImplementedYetException(new ASTNode(),
-                "No conversion to JastAdd implemented for Xtext node "
+                "No conversion to JastAdd implemented for Xtext statement node "
                     + stmt.getClass().toString());
         }
         return nodeWithLocation(result, stmt);
@@ -759,7 +759,7 @@ public class XtextToJastAdd {
             result = nodeWithLocation(new org.abs_models.frontend.ast.AndGuard(fromXtext(aguard.getLeft()), fromXtext(aguard.getRight())), guard);
         } else {
             throw new NotImplementedYetException(new ASTNode(),
-               "No conversion to JastAdd implemented for Xtext node "
+               "No conversion to JastAdd implemented for Xtext guard node "
                    + guard.getClass().toString());
         }
         return result;
@@ -815,7 +815,7 @@ public class XtextToJastAdd {
             result = nodeWithLocation(presult, pattern);
         } else {
             throw new NotImplementedYetException(new ASTNode(),
-                "No conversion to JastAdd implemented for Xtext node "
+                "No conversion to JastAdd implemented for Xtext pattern node "
                     + pattern.getClass().toString());
         }
         return nodeWithLocation(result, pattern);
@@ -1087,7 +1087,7 @@ public class XtextToJastAdd {
             result = new NullExp();
         } else {
             throw new NotImplementedYetException(new ASTNode(),
-                "No conversion to JastAdd implemented for Xtext node "
+                "No conversion to JastAdd implemented for Xtext expression node "
                     + value.getClass().toString());
         }
         return nodeWithLocation(result, value);
@@ -1283,7 +1283,7 @@ public class XtextToJastAdd {
                 // into BoolVal later -- we catch invalid constructor names
                 // during xtext validation instead.
                 throw new NotImplementedYetException(new ASTNode(),
-                                                     "No conversion to JastAdd implemented for Xtext node "
+                                                     "No conversion to JastAdd implemented for Xtext product feature node "
                                                      + xtext_value.getClass().toString());
             }
             result.addAttrAssignment(nodeWithLocation(attr, xtext_attr));
@@ -1330,7 +1330,7 @@ public class XtextToJastAdd {
             }
         } else {
             throw new NotImplementedYetException(new ASTNode(),
-                                                 "No conversion to JastAdd implemented for Xtext node "
+                                                 "No conversion to JastAdd implemented for Xtext delta clause node "
                                                  + xtext_param.getClass().toString());
         }
         return nodeWithLocation(result, xtext_param);
@@ -1525,7 +1525,7 @@ public class XtextToJastAdd {
             result = new Exclude(new FeatVar(((org.abs_models.xtext.abs.MTVLExcludeConstraint)xtext_constr).getExclude()));
         } else {
             throw new NotImplementedYetException(new ASTNode(),
-                                                 "No conversion to JastAdd implemented for Xtext node "
+                                                 "No conversion to JastAdd implemented for Xtext mTVL constraint node "
                                                  + xtext_constr.getClass().toString());
         }
         return nodeWithLocation(result, xtext_constr);
