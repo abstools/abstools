@@ -2,6 +2,9 @@ package org.abs_models.xtext.tests;
 
 import com.google.inject.Inject;
 import org.abs_models.xtext.abs.CompilationUnit;
+import org.abs_models.xtext.abs.ExpStmt;
+import org.abs_models.xtext.abs.ModuleDecl;
+import org.abs_models.xtext.abs.NewExp;
 import org.abs_models.xtext.tests.AbsInjectorProvider;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -23,17 +26,36 @@ public class AbsParsingTest {
     private ParseHelper<CompilationUnit> parseHelper;
 
     @Test
+    public void linkClass() {
+        CompilationUnit result = parseString(
+                                             "module Decl;"
+                                             + "export *;"
+                                             + "class C { }"
+                                             + "module Main;"
+                                             + "import * from Decl;"
+                                             + "{ new C(); }"
+                                             );
+        ModuleDecl m = result.getModules().get(1);
+        
+        Assertions.assertEquals("Main", m.getName());
+        NewExp e = (NewExp)((ExpStmt)m.getMainblockstmts().get(0)).getExp();
+        Assertions.assertNotNull(e.getClassname());
+    }
+
+    @Test
     public void parseEmptyModule() {
-        parseErrorFreeString("module Xtext;");
+        CompilationUnit result = parseString("module Xtext;");
+        Assertions.assertEquals("Xtext", result.getModules().get(0).getName());
     }
 
 
     /**
-     * Parse a string and return the xtext CompilationUnit.
+     * Parse a string and return the xtext CompilationUnit.  Does not check
+     * for syntax errors etc.
      * @param model an ABS model as a string
      * @return the parsed model
      */
-    private CompilationUnit parseString(final String model) {
+    private CompilationUnit parseStringRaw(final String model) {
         CompilationUnit result = null;
         try {
             result = this.parseHelper.parse(model);
@@ -46,12 +68,12 @@ public class AbsParsingTest {
 
     /**
      * Parse a string and return the xtext CompilationUnit.  The result will
-     * contain a valid ABS model.
+     * contain a syntactically valid ABS model.
      * @param model  an ABS model as a string
      * @return the parsed model
      */
-    private CompilationUnit parseErrorFreeString(final String model) {
-        final CompilationUnit result = parseString(model);
+    private CompilationUnit parseString(final String model) {
+        final CompilationUnit result = parseStringRaw(model);
         Assertions.assertNotNull(result);
         final EList<Resource.Diagnostic> errors = result.eResource().getErrors();
         Assertions.assertTrue(errors.isEmpty(),
