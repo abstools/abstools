@@ -4,19 +4,47 @@ import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 generate abs "http://www.abs_models.org/xtext/Abs"
 
+// * Naming conventions
+//
+// This file is used to create Java class definitions.  Rule names become
+// class names, attribute names become setter and getter methods.  We choose
+// identifiers in this file with the aim of creating pleasant Java code.
+// Also, in the interest of autocompletion and IDE class browsing, we spell
+// out words instead of using abbreviations.
+//
+// - Use whole words: "Expression" instead of "Expr" or "Exp", "Declaration"
+//   instead of "Decl".
+//
+// - Begin rule names with uppercase, attribute names with lowercase.
+//
+// - Capitalize nouns in rule names.  Be inspired by the existing Java class
+//   naming conventions.
+//
+// - Capitalize nouns in attribute names ("usedTraits" not "usedtraits").  For
+//   compound nouns, choose which ones to capitalize with taste ("modulename"
+//   not "moduleName" but "typeParameter" not "typeparameter").
+//
+// Break the above rules with conviction and good taste.
+//
+// - A special case: boolean rules ("star?=’*’") are converted into boolean
+//   methods with "is" prefix ("isStar()").  This cannot be circumvented, even
+//   when we’d like to have a method "hasStar()" instead.  Make the best of
+//   this behavior.
+//
+
 CompilationUnit
-    : {CompilationUnit} (modules+=ModuleDecl)* (deltas+=DeltaDecl)*
-        productline=ProductlineDecl?
-        products+=ProductDecl*
-        ( root_features+=MTVLFeatureRoot
-        | feature_extensions+=MTVLFeatureExtension)*
+    : {CompilationUnit} (modules+=ModuleDeclaration)* (deltas+=DeltaDeclaration)*
+        productline=ProductlineDeclaration?
+        products+=ProductDeclaration*
+        ( rootFeatures+=MTVLFeatureRoot
+        | featureExtensions+=MTVLFeatureExtension)*
     ;
 
-ModuleDecl
+ModuleDeclaration
     : 'module' name=QualifiedTypeIdentifier ';'
         (exports+=ModuleExport | imports+=ModuleImport)*
         (declarations+=Declaration)*
-        ( main_annotations=Annotations main?='{' (mainblockstmts+=Stmt)* '}')?
+        ( mainblockAnnotations=Annotations main?='{' (mainblockStatements+=Stmt)* '}')?
     ;
 
 ModuleExport
@@ -45,62 +73,62 @@ Annotations: {Annotations} ( '[' annotations+=Annotation (',' annotations+=Annot
 
 Declaration
     : annotations=Annotations
-        ( datatypedecl=DataTypeDecl
-        | typesynonymdecl=TypeSynonymDecl
-        | exceptiondecl=ExceptionDecl
-        | functiondecl=FunctionDecl
-        | traitdecl=TraitDecl
-        | interfacedecl=InterfaceDecl
-        | classdecl=ClassDecl
+        ( datatypeDeclaration=DataTypeDeclaration
+        | typesynonymDeclaration=TypeSynonymDeclaration
+        | exceptionDeclaration=ExceptionDeclaration
+        | functionDeclaration=FunctionDeclaration
+        | traitDeclaration=TraitDeclaration
+        | interfaceDeclaration=InterfaceDeclaration
+        | classDeclaration=ClassDeclaration
         )
     ;
 
-DataTypeDecl
+DataTypeDeclaration
     : 'data' name=TYPE_IDENTIFIER
-        ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
-        ('=' constructors+=DataConstructorDecl ('|' constructors+=DataConstructorDecl)* )?
+        ('<' typeParameters+=TYPE_IDENTIFIER (',' typeParameters+=TYPE_IDENTIFIER)* '>')?
+        ('=' constructors+=DataConstructorDeclaration ('|' constructors+=DataConstructorDeclaration)* )?
         ';'
     ;
 
-DataConstructorDecl : name=TYPE_IDENTIFIER ('(' args+=DataConstructorParamDecl (',' args+=DataConstructorParamDecl)* ')')? ;
+DataConstructorDeclaration : name=TYPE_IDENTIFIER ('(' arguments+=DataConstructorParameter (',' arguments+=DataConstructorParameter)* ')')? ;
 
-DataConstructorParamDecl : type=TypeUse (name=IDENTIFIER)? ;
+DataConstructorParameter : type=TypeUse (name=IDENTIFIER)? ;
 
-TypeSynonymDecl : 'type' name=TYPE_IDENTIFIER '=' type=TypeUse ';' ;
+TypeSynonymDeclaration : 'type' name=TYPE_IDENTIFIER '=' type=TypeUse ';' ;
 
-ExceptionDecl
+ExceptionDeclaration
     : 'exception' name=TYPE_IDENTIFIER
-        ('(' args+=DataConstructorParamDecl (',' args+=DataConstructorParamDecl)* ')')? ';'
+        ('(' arguments+=DataConstructorParameter (',' arguments+=DataConstructorParameter)* ')')? ';'
     ;
 
-FunctionDecl
+FunctionDeclaration
     : 'def' resulttype=TypeUse name=IDENTIFIER
-        ('<' typeparams+=TYPE_IDENTIFIER (',' typeparams+=TYPE_IDENTIFIER)* '>')?
-        ( '(' (function_args+=IDENTIFIER (',' function_args+=IDENTIFIER)*)? ')')?
-        '(' (args+=ParamDecl (',' args+=ParamDecl)* )? ')'
+        ('<' typeParameters+=TYPE_IDENTIFIER (',' typeParameters+=TYPE_IDENTIFIER)* '>')?
+        ( '(' (functionArguments+=IDENTIFIER (',' functionArguments+=IDENTIFIER)*)? ')')?
+        '(' (arguments+=Parameter (',' arguments+=Parameter)* )? ')'
         '=' (builtin?='builtin' | body=Exp)
         ';'
     ;
 
-TraitDecl : 'trait' name=TYPE_IDENTIFIER '=' trait_exp=TraitExp ;
+TraitDeclaration : 'trait' name=TYPE_IDENTIFIER '=' traitExpression=TraitExp ;
 
-TraitExp : basic_exp=BasicTraitExp trait_ops+=TraitOp* ;
+TraitExp : basicExpression=BasicTraitExp traitOperations+=TraitOp* ;
 
 BasicTraitExp
-    : MethodSet?='{' methods+=MethodDecl* '}'
-    | methods+=MethodDecl
+    : MethodSet?='{' methods+=MethodDeclaration* '}'
+    | methods+=MethodDeclaration
     | ref=TYPE_IDENTIFIER
     ;
 
 TraitOp
     : 'removes'
-        ( RemoveMethodModifier?='{' ( removed_sigs+=MethodSignature ';' )* '}'
-        | removed_sigs+=MethodSignature ';' )
-    | 'adds' added_exp=BasicTraitExp
-    | 'modifies' modified_exp=BasicTraitExp
+        ( RemoveMethodModifier?='{' ( removedSignatures+=MethodSignature ';' )* '}'
+        | removedSignatures+=MethodSignature ';' )
+    | 'adds' addedExpression=BasicTraitExp
+    | 'modifies' modifiedExpression=BasicTraitExp
     ;
 
-InterfaceDecl
+InterfaceDeclaration
     : 'interface' name=TYPE_IDENTIFIER
         ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
         '{' (methods+=MethodSignature ';' )* '}'
@@ -108,37 +136,37 @@ InterfaceDecl
 
 MethodSignature
     : annotations=Annotations resulttype=TypeUseNoAnnotations name=IDENTIFIER
-        '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')'
+        '(' ( arguments+=Parameter (',' arguments+=Parameter)* )? ')'
     ;
 
-ClassDecl
+ClassDeclaration
     : 'class' name=TYPE_IDENTIFIER
-        ( '(' ( args+=ParamDecl (',' args+=ParamDecl)* )? ')' )?
+        ( '(' ( arguments+=Parameter (',' arguments+=Parameter)* )? ')' )?
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
-        (fields+=FieldDecl ';')*
+        (fields+=FieldDeclaration ';')*
         ( '{' initblockstmts+=Stmt* '}' )?
         ( 'recover' '{' (recoverbranches+=SwitchStmtBranch)* '}' )?
-        ( 'uses' used_traits+=TraitExp ';' )*
-        (methods+=MethodDecl)*
+        ( 'uses' usedTraits+=TraitExp ';' )*
+        (methods+=MethodDeclaration)*
         '}'
     ;
 
-FieldDecl
+FieldDeclaration
     : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
         (hasInit?='=' init=Exp)?
     ;
 
-MethodDecl
+MethodDeclaration
     : annotations=Annotations resulttype=TypeUseNoAnnotations name=IDENTIFIER
-        // Our JastAdd AST has an embedded MethodSig inside MethodDecl while
-        // in xtext we just parse name etc. directly.  `sig_end_position' is
+        // Our JastAdd AST has an embedded MethodSig inside MethodDeclaration while
+        // in xtext we just parse name etc. directly.  `sigEndPosition' is
         // used to calculate the end location of that embedded node.
-        '(' (args+=ParamDecl (',' args+=ParamDecl)* )? sig_end_position=')'
+        '(' (arguments+=Parameter (',' arguments+=Parameter)* )? sigEndPosition=')'
         '{' (statements+=Stmt)* '}'
     ;
 
-ParamDecl : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
+Parameter : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
 
 // Statements
 
@@ -146,13 +174,13 @@ Stmt : Annotations
         ( {VarDeclStmt.annotations=current}
             type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Exp )? ';'
         | {AssignStmt.annotations=current}
-            lhs=VarOrFieldExp '=' exp=Exp ';'
+            lhs=VarOrFieldExp '=' expression=Exp ';'
         | {SkipStmt.annotations=current}
              'skip' ';'
         | {ReturnStmt.annotations=current}
-            'return' exp=Exp ';'
+            'return' expression=Exp ';'
         | {AssertStmt.annotations=current}
-            'assert' exp=Exp ';'
+            'assert' expression=Exp ';'
         | {Block.annotations=current}
             '{' (stmts+=Stmt)* '}'
         | {IfStmt.annotations=current}
@@ -179,7 +207,7 @@ Stmt : Annotations
         | {MoveCogToStmt.annotations=current}
             'movecogto' target=Exp ';'
         | {ExpStmt.annotations=current}
-            exp=Exp ';'
+            expression=Exp ';'
         | {SwitchStmt.annotations=current}
             'switch' '(' condition=Exp ')' '{' (branches+=SwitchStmtBranch)* '}'
         )
@@ -192,7 +220,7 @@ AndGuard returns Guard
     ;
 
 SingleGuard returns Guard
-    : {ExpGuard} exp=Exp claim?='?'?
+    : {ExpGuard} expression=Exp claim?='?'?
     | {DurationGuard} 'duration' '(' min=Exp ',' max=Exp ')'
     ;
 
@@ -204,7 +232,7 @@ Pattern
     | {StringLiteralPattern} value=STRINGLITERAL
     | {FloatLiteralPattern} value=FLOATLITERAL
     | {VariablePattern} value=IDENTIFIER
-    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' (args+=Pattern (',' args+=Pattern)* )? ')' )?
+    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' (arguments+=Pattern (',' arguments+=Pattern)* )? ')' )?
     ;
 
 // Expressions
@@ -275,11 +303,11 @@ MethodCallExp returns Exp
 // the grammar simple.  It is better to have a loose grammar and a strict
 // validation phase (loose grammar, strict validation, see the presentation
 // Zarnekow 2012).” (Bettini 2016, pg. 207)
-    : GetExp ({MethodCallExp.target=current} operator=('!' | '.') methodname=IDENTIFIER '(' (args+=Exp ( ',' args+=Exp)* )? ')' )?
+    : GetExp ({MethodCallExp.target=current} operator=('!' | '.') methodname=IDENTIFIER '(' (arguments+=Exp ( ',' arguments+=Exp)* )? ')' )?
     ;
 
 GetExp returns Exp
-    : ConversionExp ({GetExp.futureExp=current} '.' 'get' )?
+    : ConversionExp ({GetExp.futureExpression=current} '.' 'get' )?
     ;
 
 ConversionExp returns Exp
@@ -315,10 +343,10 @@ UnaryExp returns Exp
 AwaitExp returns Exp : {AwaitExp} 'await' guard=Guard ;
 
 NewExp returns Exp :
-        {NewExp} 'new' (local?='local')? classname=QualifiedTypeIdentifier '('  (args+=Exp ( ',' args+=Exp)* )? ')'
+        {NewExp} 'new' (local?='local')? classname=QualifiedTypeIdentifier '('  (arguments+=Exp ( ',' arguments+=Exp)* )? ')'
     ;
 
-OriginalCallExp returns Exp : {OriginalCallExp} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (args+=Exp ( ',' args+=Exp)* )? ')' ;
+OriginalCallExp returns Exp : {OriginalCallExp} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (arguments+=Exp ( ',' arguments+=Exp)* )? ')' ;
 
 CaseExp returns Exp
     : {CaseExp} 'case' condition=Exp '{' (casebranches+=CaseExpBranch)* '}'
@@ -329,8 +357,8 @@ CaseExpBranch
     ;
 
 LetExp returns Exp
-    : {LetExp} 'let' '('? variables+=ParamDecl ')'? '=' exps+=Exp
-        (',' '('? variables+=ParamDecl ')'? '=' exps+=Exp)*
+    : {LetExp} 'let' '('? variables+=Parameter ')'? '=' exps+=Exp
+        (',' '('? variables+=Parameter ')'? '=' exps+=Exp)*
         'in' body=Exp
     ;
 
@@ -340,26 +368,26 @@ WhenExp returns Exp
 
 FunctionAppExp returns Exp
     : {FunctionAppExp} name=QualifiedIdentifier
-        ( '(' functionArgs+=PartialFunctionParam (',' functionArgs+=PartialFunctionParam )* ')' )?
-        '(' (args+=Exp ( ',' args+=Exp)* )? ')'
+        ( '(' functionArguments+=PartialFunctionParam (',' functionArguments+=PartialFunctionParam )* ')' )?
+        '(' (arguments+=Exp ( ',' arguments+=Exp)* )? ')'
     ;
 
 PartialFunctionParam
     : name=QualifiedIdentifier
-    | '(' ( params+=ParamDecl (',' params+=ParamDecl)* )? ')' "=>" body=Exp
+    | '(' ( parameters+=Parameter (',' parameters+=Parameter)* )? ')' "=>" body=Exp
     ;
 
 VariadicFunctionAppExp returns Exp
-    : {VariadicFunctionAppExp} name=QualifiedIdentifier '[' (args+=Exp ( ',' args+=Exp)* )? ']'
+    : {VariadicFunctionAppExp} name=QualifiedIdentifier '[' (arguments+=Exp ( ',' arguments+=Exp)* )? ']'
     ;
 
 ConstructorAppExp returns Exp
-    : {ConstructorAppExp} name=QualifiedTypeIdentifier ( '(' ( args+=Exp ( ',' args+=Exp)* )? ')' )?
+    : {ConstructorAppExp} name=QualifiedTypeIdentifier ( '(' ( arguments+=Exp ( ',' arguments+=Exp)* )? ')' )?
     ;
 
 TemplateStringExp returns Exp
     : {TemplateStringSimpleExp} string=TEMPLATESTRINGLITERAL
-    | {TemplateStringExp} startString=TEMPLATESTRINGSTART firstExp=Exp
+    | {TemplateStringExp} startString=TEMPLATESTRINGSTART firstExpression=Exp
         (betweenStrings+=TEMPLATESTRINGINBETWEEN exps+=Exp)*
         endString=TEMPLATESTRINGEND
     ;
@@ -386,7 +414,7 @@ TypeUse : annotations=Annotations type=TypeUseNoAnnotations ;
 // type.
 TypeUseNoAnnotations
     : name=QualifiedTypeIdentifier
-        ('<' params+=TypeUse (',' params+=TypeUse)* '>')?
+        ('<' parameters+=TypeUse (',' parameters+=TypeUse)* '>')?
     ;
 
 // Terminals
@@ -454,9 +482,9 @@ AnyIdentifier returns ecore::EString
 
 // Deltas
 
-DeltaDecl
+DeltaDeclaration
     : 'delta' name=TYPE_IDENTIFIER
-        ( '(' ( args+=DeltaParamDecl (',' args+=DeltaParamDecl)* )? ')' )?
+        ( '(' ( arguments+=DeltaParameter (',' arguments+=DeltaParameter)* )? ')' )?
         ';'
         // TODO: multiple in the antlr grammar but the AST only supports one
         // instance of this
@@ -464,53 +492,53 @@ DeltaDecl
         (modifiers+=DeltaModuleModifier)*
     ;
 
-DeltaParamDecl
-    : normalParam=ParamDecl
+DeltaParameter
+    : normalParameter=Parameter
     | ( classModifier=QualifiedTypeIdentifier condition=DeltaCondition )
     ;
 
 DeltaCondition
-    : 'hasField' deltaFieldCondition=FieldDecl
+    : 'hasField' deltaFieldCondition=FieldDeclaration
     | 'hasMethod' deltaMethodCondition=MethodSignature
     | 'hasInterface' deltaInterfaceCondition=QualifiedTypeIdentifier
     ;
 
 DeltaModuleModifier
     : 'adds'
-        ( added_decl=Declaration
-        | added_import=ModuleImport
-        | added_export=ModuleExport)
+        ( addedDeclaration=Declaration
+        | addedImport=ModuleImport
+        | addedExport=ModuleExport)
     | 'removes'
-        ( 'class' removed_class_name=QualifiedTypeIdentifier ';'
-        | 'interface' removed_interface_name=QualifiedTypeIdentifier ';')
+        ( 'class' removedClassName=QualifiedTypeIdentifier ';'
+        | 'interface' removedInterfaceName=QualifiedTypeIdentifier ';')
     | 'modifies'
-        ( 'class' modified_class_name=QualifiedTypeIdentifier
-            ('adds' added_interfaces+=QualifiedTypeIdentifier
-                (',' added_interfaces+=QualifiedTypeIdentifier)*)?
-            ('removes' removed_interfaces+=QualifiedTypeIdentifier
-                (',' removed_interfaces+=QualifiedTypeIdentifier)*)?
-            '{' (class_modifiers+=ClassModifier)* '}'
-        | 'interface' modified_interface_name=QualifiedTypeIdentifier
-            '{' (interface_modifiers+=InterfaceModifier)* '}'
-        | modified_typesyn=TypeSynonymDecl
-        | modified_datatype=DataTypeDecl
+        ( 'class' modifiedClassName=QualifiedTypeIdentifier
+            ('adds' addedInterfaces+=QualifiedTypeIdentifier
+                (',' addedInterfaces+=QualifiedTypeIdentifier)*)?
+            ('removes' removedInterfaces+=QualifiedTypeIdentifier
+                (',' removedInterfaces+=QualifiedTypeIdentifier)*)?
+            '{' (classModifiers+=ClassModifier)* '}'
+        | 'interface' modifiedInterfaceName=QualifiedTypeIdentifier
+            '{' (interfaceModifiers+=InterfaceModifier)* '}'
+        | modifiedTypesyn=TypeSynonymDeclaration
+        | modifiedDatatype=DataTypeDeclaration
         )
     ;
 
 ClassModifier
     : 'adds'
-        ( added_field=FieldDecl ';'
-        | '{' added_methods+=MethodDecl* '}'
-        | added_methods+=MethodDecl
-        | added_trait=TYPE_IDENTIFIER)
+        ( addedField=FieldDeclaration ';'
+        | '{' addedMethods+=MethodDeclaration* '}'
+        | addedMethods+=MethodDeclaration
+        | addedTrait=TYPE_IDENTIFIER)
     | 'removes'
-        ( removed_field=FieldDecl ';'
-        | '{' ( removed_methods+=MethodSignature ';' )* '}'
-        | removed_methods+=MethodSignature ';' )
+        ( removedField=FieldDeclaration ';'
+        | '{' ( removedMethods+=MethodSignature ';' )* '}'
+        | removedMethods+=MethodSignature ';' )
     | 'modifies'
-        ( modified_methods+=MethodDecl
-        | '{' modified_methods+=MethodDecl* '}'
-        | modified_trait=TYPE_IDENTIFIER
+        ( modifiedMethods+=MethodDeclaration
+        | '{' modifiedMethods+=MethodDeclaration* '}'
+        | modifiedTrait=TYPE_IDENTIFIER
         )
     ;
 
@@ -521,16 +549,16 @@ InterfaceModifier
 
 // Productline
 
-ProductlineDecl
+ProductlineDeclaration
     : 'productline' name=TYPE_IDENTIFIER ';'
         'features' features+=ProductFeature (',' features+=ProductFeature)* ';'
-        delta_clauses+=ProductlineDeltaClause*
+        deltaClauses+=ProductlineDeltaClause*
     ;
 
 ProductFeature
 // allow writing Feat' to refer to the intermediate feature "$feat"
     : name=TYPE_IDENTIFIER p?='\''?
-        ('{' attribute_assignments+=AttributeAssignment (',' attribute_assignments+=AttributeAssignment)* '}')?
+        ('{' attributeAssignments+=AttributeAssignment (',' attributeAssignments+=AttributeAssignment)* '}')?
     ;
 
 AttributeAssignment : name=IDENTIFIER '=' value = AttributeAssignmentValue ;
@@ -543,10 +571,10 @@ AttributeAssignmentValue
 
 ProductlineDeltaClause
     : 'delta' name=TYPE_IDENTIFIER
-        ('(' params+=DeltaClauseParam (',' params+=DeltaClauseParam)* ')')?
-        ('after' after_ids+=TYPE_IDENTIFIER (',' after_ids+=TYPE_IDENTIFIER)* )?
-        ('from' from_condition=DeltaClauseApplicationClause)?
-        (('when' | 'to') when_condition=DeltaClauseApplicationClause)?
+        ('(' parameters+=DeltaClauseParam (',' parameters+=DeltaClauseParam)* ')')?
+        ('after' afterIds+=TYPE_IDENTIFIER (',' afterIds+=TYPE_IDENTIFIER)* )?
+        ('from' fromCondition=DeltaClauseApplicationClause)?
+        (('when' | 'to') whenCondition=DeltaClauseApplicationClause)?
         ';'
     ;
 
@@ -554,8 +582,8 @@ DeltaClauseParam
 // CID | FID.aid | CONSTANT
 // The following comment copied from ABS.g4, which copied from ABS.parser:
 // TODO: accept feature, attributes, or constants (DataExp)
-    : {DeltaClauseParam_Int} int_param=INTLITERAL
-    | {DeltaClauseParam_Id} id_param=TYPE_IDENTIFIER ('.' fidaid_param=IDENTIFIER)?
+    : {DeltaClauseParam_Int} intParameter=INTLITERAL
+    | {DeltaClauseParam_Id} idParameter=TYPE_IDENTIFIER ('.' fidaidParameter=IDENTIFIER)?
     ;
 
 DeltaClauseApplicationClause : DeltaClauseApplicationClauseOr ;
@@ -569,35 +597,35 @@ DeltaClauseApplicationClauseAnd returns DeltaClauseApplicationClause
 DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
     : '!' not=DeltaClauseApplicationClausePrimary
     | '(' paren=DeltaClauseApplicationClause ')'
-    | feature_name=TYPE_IDENTIFIER
+    | featureName=TYPE_IDENTIFIER
     ;
 
 // Products
 
-ProductDecl
+ProductDeclaration
     : 'product' name=TYPE_IDENTIFIER
         ( '(' ( features+=ProductFeature (',' features+=ProductFeature)* )? ')' ';'
-        | '=' expr=ProductExpr ';' )
+        | '=' expression=ProductExpression ';' )
     ;
 
-ProductExpr : ProductExprDifference ;
+ProductExpression : ProductExprDifference ;
 
-ProductExprDifference returns ProductExpr
+ProductExprDifference returns ProductExpression
     : ProductExprUnion ({ProductExprDifference.left = current} '-' right=ProductExprUnion)*
     ;
 
-ProductExprUnion returns ProductExpr
+ProductExprUnion returns ProductExpression
     : ProductExprIntersect ({ProductExprUnion.left = current} '||' right=ProductExprIntersect)*
     ;
 
-ProductExprIntersect returns ProductExpr
+ProductExprIntersect returns ProductExpression
     : ProductExprPrimary ({ProductExprIntersect.left = current} '&&' right=ProductExprPrimary)*
     ;
 
-ProductExprPrimary returns ProductExpr
+ProductExprPrimary returns ProductExpression
     : '{' features+=ProductFeature (',' features+=ProductFeature)* '}'
     | prodname=TYPE_IDENTIFIER
-    | '(' paren=ProductExpr ')'
+    | '(' paren=ProductExpression ')'
     ;
 
 // Feature Model
@@ -610,18 +638,18 @@ MTVLFeatureRoot
         (
             '{'
             group=MTVLFeatureGroup?
-            (attributes+=MTVLAttributeDecl | constraints+=MTVLConstraint)*
+            (attributes+=MTVLAttributeDeclaration | constraints+=MTVLConstraint)*
             '}'
         )?
     ;
 
-MTVLFeatureDecl
+MTVLFeatureDeclaration
 // same as MTVLFeatureRoot without the ’root’ keyword in front
     : name=TYPE_IDENTIFIER
         (
             '{'
             group=MTVLFeatureGroup?
-            (attributes+=MTVLAttributeDecl | constraints+=MTVLConstraint)*
+            (attributes+=MTVLAttributeDeclaration | constraints+=MTVLConstraint)*
             '}'
         )?
     ;
@@ -630,7 +658,7 @@ MTVLFeatureExtension
     : 'extension' name=TYPE_IDENTIFIER
         '{'
         group=MTVLFeatureGroup?
-        (attributes+=MTVLAttributeDecl | constraints+=MTVLConstraint)*
+        (attributes+=MTVLAttributeDeclaration | constraints+=MTVLConstraint)*
         '}'
     ;
 
@@ -645,9 +673,9 @@ MTVLFeatureGroup
         '}'
     ;
 
-MTVLChildFeature : opt?='opt'? feature=MTVLFeatureDecl ;
+MTVLChildFeature : opt?='opt'? feature=MTVLFeatureDeclaration ;
 
-MTVLAttributeDecl
+MTVLAttributeDeclaration
     : type=TYPE_IDENTIFIER name=IDENTIFIER
         ('in'
             ( interval?='[' lower=MTVLIntLimit '..' upper=MTVLIntLimit ']'
@@ -661,63 +689,63 @@ MTVLIntLimit : star?='*' | minus?='-'? value=INTLITERAL ;
 MTVLIntValue : minus?='-'? value=INTLITERAL ;
 
 MTVLConstraint returns MTVLConstraint
-    : 'ifin' {MTVLIfInConstraint} ':' expr=MTVLConstraintExpr ';'
-    | 'ifout' {MTVLIfOutConstraint} ':' expr=MTVLConstraintExpr ';'
+    : 'ifin' {MTVLIfInConstraint} ':' expression=MTVLConstraintExpression ';'
+    | 'ifout' {MTVLIfOutConstraint} ':' expression=MTVLConstraintExpression ';'
     | 'require' {MTVLRequireConstraint} ':' require=TYPE_IDENTIFIER ';'
     | 'exclude' {MTVLExcludeConstraint} ':' exclude=TYPE_IDENTIFIER ';'
-    | {MTVLIfInConstraint} expr=MTVLConstraintExpr ';'
+    | {MTVLIfInConstraint} expression=MTVLConstraintExpression ';'
     ;
 
-MTVLConstraintExpr : MTVLConstraintExprOr ;
+MTVLConstraintExpression : MTVLConstraintOrExpression ;
 
-MTVLConstraintExprOr returns MTVLConstraintExpr
-    : MTVLConstraintExprAnd ({MTVLConstraintExprOr.left=current} '||' right=MTVLConstraintExprAnd)*
+MTVLConstraintOrExpression returns MTVLConstraintExpression
+    : MTVLConstraintAndExpression ({MTVLConstraintOrExpression.left=current} '||' right=MTVLConstraintAndExpression)*
     ; // left-assoc
 
-MTVLConstraintExprAnd returns MTVLConstraintExpr
-    : MTVLConstraintExprImplEqv ({MTVLConstraintExprAnd.left=current} '&&' right=MTVLConstraintExprImplEqv)*
+MTVLConstraintAndExpression returns MTVLConstraintExpression
+    : MTVLConstraintImplEqvExpression ({MTVLConstraintAndExpression.left=current} '&&' right=MTVLConstraintImplEqvExpression)*
     ; // left-assoc
 
-MTVLConstraintExprImplEqv returns MTVLConstraintExpr
-    : MTVLConstraintExprEqNeq
-        ( ({MTVLConstraintExprImpl.left=current} '->' right=MTVLConstraintExprEqNeq)
-        | ({MTVLConstraintExprEqv.left=current} '<->' right=MTVLConstraintExprEqNeq))?
+MTVLConstraintImplEqvExpression returns MTVLConstraintExpression
+    : MTVLConstraintEqNeqExpression
+        ( ({MTVLConstraintImplExpression.left=current} '->' right=MTVLConstraintEqNeqExpression)
+        | ({MTVLConstraintEqvExpression.left=current} '<->' right=MTVLConstraintEqNeqExpression))?
     ; // non-assoc
 
-MTVLConstraintExprEqNeq returns MTVLConstraintExpr
-    : MTVLConstraintExprCompare
-        ( ({MTVLConstraintExprEq.left=current} '==' right=MTVLConstraintExprCompare)
-        | ({MTVLConstraintExprNeq.left=current} '!=' right=MTVLConstraintExprCompare))?
+MTVLConstraintEqNeqExpression returns MTVLConstraintExpression
+    : MTVLConstraintCompareExpression
+        ( ({MTVLConstraintEqExpression.left=current} '==' right=MTVLConstraintCompareExpression)
+        | ({MTVLConstraintNeqExpression.left=current} '!=' right=MTVLConstraintCompareExpression))?
     ; // non-assoc
 
-MTVLConstraintExprCompare returns MTVLConstraintExpr
-    : MTVLConstraintExprPlusMinus
-        ( ({MTVLConstraintExprLT.left=current} '<' right=MTVLConstraintExprPlusMinus)
-        | ({MTVLConstraintExprGT.left=current} '>' right=MTVLConstraintExprPlusMinus)
-        | ({MTVLConstraintExprLTEQ.left=current} '<=' right=MTVLConstraintExprPlusMinus)
-        | ({MTVLConstraintExprGTEQ.left=current} '>=' right=MTVLConstraintExprPlusMinus))?
+MTVLConstraintCompareExpression returns MTVLConstraintExpression
+    : MTVLConstraintPlusMinusExpression
+        ( ({MTVLConstraintLTExpression.left=current} '<' right=MTVLConstraintPlusMinusExpression)
+        | ({MTVLConstraintGTExpression.left=current} '>' right=MTVLConstraintPlusMinusExpression)
+        | ({MTVLConstraintLTEQExpression.left=current} '<=' right=MTVLConstraintPlusMinusExpression)
+        | ({MTVLConstraintGTEQExpression.left=current} '>=' right=MTVLConstraintPlusMinusExpression))?
     ; // non-assoc
 
-MTVLConstraintExprPlusMinus returns MTVLConstraintExpr
-    : MTVLConstraintExprMulDivMod
-      ( ({MTVLConstraintExprPlus.left=current} '+' right=MTVLConstraintExprMulDivMod)
-        | ({MTVLConstraintExprMinus.left=current} '-' right=MTVLConstraintExprMulDivMod))*
+MTVLConstraintPlusMinusExpression returns MTVLConstraintExpression
+    : MTVLConstraintMulDivModExpression
+      ( ({MTVLConstraintPlusExpression.left=current} '+' right=MTVLConstraintMulDivModExpression)
+        | ({MTVLConstraintMinusExpression.left=current} '-' right=MTVLConstraintMulDivModExpression))*
     ; // left-assoc
 
-MTVLConstraintExprMulDivMod returns MTVLConstraintExpr
-    : MTVLConstraintExprPrimary
-      ( ({MTVLConstraintExprMul.left=current} '*' right=MTVLConstraintExprPrimary)
-        | ({MTVLConstraintExprDiv.left=current} '/' right=MTVLConstraintExprPrimary)
-        | ({MTVLConstraintExprMod.left=current} '%' right=MTVLConstraintExprPrimary))*
+MTVLConstraintMulDivModExpression returns MTVLConstraintExpression
+    : MTVLConstraintPrimaryExpression
+      ( ({MTVLConstraintMulExpression.left=current} '*' right=MTVLConstraintPrimaryExpression)
+        | ({MTVLConstraintDivExpression.left=current} '/' right=MTVLConstraintPrimaryExpression)
+        | ({MTVLConstraintModExpression.left=current} '%' right=MTVLConstraintPrimaryExpression))*
     ; // left-assoc
 
-MTVLConstraintExprPrimary returns MTVLConstraintExpr
-    : '(' paren_exp=MTVLConstraintExpr ')'
-    | '-' minus_exp=MTVLConstraintExprPrimary
-    | '!' neg_exp=MTVLConstraintExprPrimary
-    | int_exp=INTLITERAL
-    | id_exp=IDENTIFIER
-    | type_exp=TYPE_IDENTIFIER (dot?='.' dot_id=IDENTIFIER)?
+MTVLConstraintPrimaryExpression returns MTVLConstraintExpression
+    : '(' parenExpression=MTVLConstraintExpression ')'
+    | '-' minusExpression=MTVLConstraintPrimaryExpression
+    | '!' negExpression=MTVLConstraintPrimaryExpression
+    | intExpression=INTLITERAL
+    | idExpression=IDENTIFIER
+    | typeExpression=TYPE_IDENTIFIER (dot?='.' dotId=IDENTIFIER)?
     ;
 
 // Local Variables:

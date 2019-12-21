@@ -33,7 +33,7 @@ public class CoreAbsValidator extends AbstractDeclarativeValidator {
     }
     private boolean isSingleMethodCallGuard(Guard g) {
         return g instanceof ExpGuard
-            && ((ExpGuard)g).getExp() instanceof MethodCallExp;
+            && ((ExpGuard)g).getExpression() instanceof MethodCallExp;
     }
 
     @Check
@@ -88,11 +88,11 @@ public class CoreAbsValidator extends AbstractDeclarativeValidator {
         // Block "await o!m() & o!m();"
         Guard l = g.getLeft();
         Guard r = g.getRight();
-        if (l instanceof ExpGuard && ((ExpGuard)l).getExp() instanceof MethodCallExp) {
+        if (l instanceof ExpGuard && ((ExpGuard)l).getExpression() instanceof MethodCallExp) {
             error("A side-effect expression cannot be a sub-expression",
                   AbsPackage.eINSTANCE.getAndGuard_Left());
         }
-        if (r instanceof ExpGuard && ((ExpGuard)r).getExp() instanceof MethodCallExp) {
+        if (r instanceof ExpGuard && ((ExpGuard)r).getExpression() instanceof MethodCallExp) {
             error("A side-effect expression cannot be a sub-expression",
                   AbsPackage.eINSTANCE.getAndGuard_Left());
         }

@@ -18,27 +18,27 @@ public class FullAbsValidator extends AbstractDeclarativeValidator {
 
     @Override
     @Inject
-    public void register(EValidatorRegistrar registrar) {
+    public void register(final EValidatorRegistrar registrar) {
         // nothing to do
     }
 
     // Deltas
-    @Check public void checkAllowedAddedDeclaration(DeltaModuleModifier mod) {
-        if (mod.getAdded_decl() != null) {
-            Declaration d = mod.getAdded_decl();
-            if (!(d.getClassdecl() != null
-                  || d.getInterfacedecl() != null
-                  || d.getFunctiondecl() != null
-                  || d.getDatatypedecl() != null
-                  || d.getTypesynonymdecl() != null
+    @Check public void checkAllowedAddedDeclaration(final DeltaModuleModifier mod) {
+        if (mod.getAddedDeclaration() != null) {
+            final Declaration d = mod.getAddedDeclaration();
+            if (!(d.getClassDeclaration() != null
+                  || d.getInterfaceDeclaration() != null
+                  || d.getFunctionDeclaration() != null
+                  || d.getDatatypeDeclaration() != null
+                  || d.getTypesynonymDeclaration() != null
                   )) {
                 error("Trying to add an unsupported type of declaration",
-                      AbsPackage.eINSTANCE.getDeltaModuleModifier_Added_decl());
+                      AbsPackage.eINSTANCE.getDeltaModuleModifier_AddedDeclaration());
             }
         }
     }
 
-    @Check public void checkNoFieldInitializerForDeltaCondition(DeltaCondition d) {
+    @Check public void checkNoFieldInitializerForDeltaCondition(final DeltaCondition d) {
         if (d.getDeltaFieldCondition() != null
             && d.getDeltaFieldCondition().isHasInit()) {
             error("Cannot use a field initializer here",
@@ -46,35 +46,35 @@ public class FullAbsValidator extends AbstractDeclarativeValidator {
         }
     }
 
-    @Check public void checkNoFieldInitializerForRemovedField(ClassModifier cm) {
-        if (cm.getRemoved_field() != null
-            && cm.getRemoved_field().isHasInit()) {
+    @Check public void checkNoFieldInitializerForRemovedField(final ClassModifier cm) {
+        if (cm.getRemovedField() != null
+            && cm.getRemovedField().isHasInit()) {
             error("Cannot use a field initializer here",
-                  AbsPackage.eINSTANCE.getClassModifier_Removed_field());
+                  AbsPackage.eINSTANCE.getClassModifier_RemovedField());
         }
     }
 
-    @Check public void checkOnlyTrueOrFalseDeltaParameter(AttributeAssignmentValue_Bool aavb) {
+    @Check public void checkOnlyTrueOrFalseDeltaParameter(final AttributeAssignmentValue_Bool aavb) {
         if (!(aavb.getValue().equals("True") || aavb.getValue().equals("False"))) {
             error("Invalid Boolean value, must be ‘True’ or ‘False’.",
                   AbsPackage.eINSTANCE.getAttributeAssignmentValue_Bool_Value());
         }
     }
 
-    @Check public void checkFeatureAttributeParameterType(MTVLAttributeDecl ad) {
+    @Check public void checkFeatureAttributeParameterType(final MTVLAttributeDeclaration ad) {
         if (!(ad.getType().equals("Int")
               || ad.getType().equals("String")
               || ad.getType().equals("Bool"))) {
             error("Invalid attribute type, must be ‘Int’, ‘Bool’ or ‘String’.",
-                  AbsPackage.eINSTANCE.getMTVLAttributeDecl_Type());
+                  AbsPackage.eINSTANCE.getMTVLAttributeDeclaration_Type());
         } else if (!(ad.getType().equals("Int"))
                    && ad.isInterval()) {
             error("Can only specify an interval for type ‘Int’.",
-                  AbsPackage.eINSTANCE.getMTVLAttributeDecl_Interval());
+                  AbsPackage.eINSTANCE.getMTVLAttributeDeclaration_Interval());
         } else if (!(ad.getType().equals("Int"))
                    && ad.isSet()) {
             error("Can only specify a value set for type ‘Int’.",
-                  AbsPackage.eINSTANCE.getMTVLAttributeDecl_Set());
+                  AbsPackage.eINSTANCE.getMTVLAttributeDeclaration_Set());
         }
     }
 }
