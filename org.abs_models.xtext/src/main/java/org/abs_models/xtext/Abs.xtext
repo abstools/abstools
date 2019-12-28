@@ -13,7 +13,7 @@ generate abs "http://www.abs_models.org/xtext/Abs"
 // out words instead of using abbreviations.
 //
 // - Use whole words: "Expression" instead of "Expr" or "Exp", "Declaration"
-//   instead of "Decl".
+//   instead of "Decl", "Statement" instead of "Stmt".
 //
 // - Begin rule names with uppercase, attribute names with lowercase.
 //
@@ -44,7 +44,7 @@ ModuleDeclaration
     : 'module' name=QualifiedTypeIdentifier ';'
         (exports+=ModuleExport | imports+=ModuleImport)*
         (declarations+=Declaration)*
-        ( mainblockAnnotations=Annotations main?='{' (mainblockStatements+=Stmt)* '}')?
+        ( mainblockAnnotations=Annotations main?='{' (mainblockStatements+=Statement)* '}')?
     ;
 
 ModuleExport
@@ -65,7 +65,7 @@ ModuleImport
 
 // Annotations
 
-Annotation: (id=TYPE_IDENTIFIER ':')? value=Exp ;
+Annotation: (id=TYPE_IDENTIFIER ':')? value=Expression ;
 
 Annotations: {Annotations} ( '[' annotations+=Annotation (',' annotations+=Annotation)* ']')* ;
 
@@ -106,26 +106,26 @@ FunctionDeclaration
         ('<' typeParameters+=TYPE_IDENTIFIER (',' typeParameters+=TYPE_IDENTIFIER)* '>')?
         ( '(' (functionArguments+=IDENTIFIER (',' functionArguments+=IDENTIFIER)*)? ')')?
         '(' (arguments+=Parameter (',' arguments+=Parameter)* )? ')'
-        '=' (builtin?='builtin' | body=Exp)
+        '=' (builtin?='builtin' | body=Expression)
         ';'
     ;
 
-TraitDeclaration : 'trait' name=TYPE_IDENTIFIER '=' traitExpression=TraitExp ;
+TraitDeclaration : 'trait' name=TYPE_IDENTIFIER '=' traitExpression=TraitExpression ;
 
-TraitExp : basicExpression=BasicTraitExp traitOperations+=TraitOp* ;
+TraitExpression : basicExpression=BasicTraitExpression traitOperations+=TraitOperation* ;
 
-BasicTraitExp
+BasicTraitExpression
     : MethodSet?='{' methods+=MethodDeclaration* '}'
     | methods+=MethodDeclaration
     | ref=TYPE_IDENTIFIER
     ;
 
-TraitOp
+TraitOperation
     : 'removes'
         ( RemoveMethodModifier?='{' ( removedSignatures+=MethodSignature ';' )* '}'
         | removedSignatures+=MethodSignature ';' )
-    | 'adds' addedExpression=BasicTraitExp
-    | 'modifies' modifiedExpression=BasicTraitExp
+    | 'adds' addedExpression=BasicTraitExpression
+    | 'modifies' modifiedExpression=BasicTraitExpression
     ;
 
 InterfaceDeclaration
@@ -145,16 +145,16 @@ ClassDeclaration
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
         (fields+=FieldDeclaration ';')*
-        ( '{' initblockstmts+=Stmt* '}' )?
-        ( 'recover' '{' (recoverbranches+=SwitchStmtBranch)* '}' )?
-        ( 'uses' usedTraits+=TraitExp ';' )*
+        ( '{' initblockStatements+=Statement* '}' )?
+        ( 'recover' '{' (recoverbranches+=SwitchStatementBranch)* '}' )?
+        ( 'uses' usedTraits+=TraitExpression ';' )*
         (methods+=MethodDeclaration)*
         '}'
     ;
 
 FieldDeclaration
     : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
-        (hasInit?='=' init=Exp)?
+        (hasInit?='=' init=Expression)?
     ;
 
 MethodDeclaration
@@ -163,53 +163,58 @@ MethodDeclaration
         // in xtext we just parse name etc. directly.  `sigEndPosition' is
         // used to calculate the end location of that embedded node.
         '(' (arguments+=Parameter (',' arguments+=Parameter)* )? sigEndPosition=')'
-        '{' (statements+=Stmt)* '}'
+        '{' (statements+=Statement)* '}'
     ;
 
 Parameter : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
 
 // Statements
 
-Stmt : Annotations
-        ( {VarDeclStmt.annotations=current}
-            type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Exp )? ';'
-        | {AssignStmt.annotations=current}
-            lhs=VarOrFieldExp '=' expression=Exp ';'
-        | {SkipStmt.annotations=current}
+Statement : Annotations
+        ( {VariableDeclarationStatement.annotations=current}
+            type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Expression )? ';'
+        | {AssignStatement.annotations=current}
+            lhs=VariableOrFieldExpression '=' expression=Expression ';'
+        | {SkipStatement.annotations=current}
              'skip' ';'
-        | {ReturnStmt.annotations=current}
-            'return' expression=Exp ';'
-        | {AssertStmt.annotations=current}
-            'assert' expression=Exp ';'
+        | {ReturnStatement.annotations=current}
+            'return' expression=Expression ';'
+        | {AssertStatement.annotations=current}
+            'assert' expression=Expression ';'
         | {Block.annotations=current}
-            '{' (stmts+=Stmt)* '}'
-        | {IfStmt.annotations=current}
-            'if' '(' condition=Exp ')' consequence=Stmt (=>'else' alternate=Stmt)?
-        | {WhileStmt.annotations=current}
-            'while' '(' condition=Exp ')' body=Stmt
-        | {ForeachStmt.annotations=current}
-            'foreach' '(' loopvar=IDENTIFIER 'in' list=Exp ')' body=Stmt
-        | {TryCatchFinallyStmt.annotations=current}
-            'try' body=Stmt
-            'catch' (( '{' (branches+=SwitchStmtBranch)* '}') | branches+=SwitchStmtBranch)
-            (=> 'finally' finally=Stmt)?
+            '{' (statements+=Statement)* '}'
+        | {IfStatement.annotations=current}
+            'if' '(' condition=Expression ')' consequence=Statement
+            (=>'else' alternate=Statement)?
+        | {WhileStatement.annotations=current}
+            'while' '(' condition=Expression ')' body=Statement
+        | {ForeachStatement.annotations=current}
+            'foreach' '(' loopvar=IDENTIFIER 'in' list=Expression ')'
+            body=Statement
+        | {TryCatchFinallyStatement.annotations=current}
+            'try' body=Statement
+            'catch' (( '{' (branches+=SwitchStatementBranch)* '}')
+                     | branches+=SwitchStatementBranch)
+            (=> 'finally' finally=Statement)?
         // await is parsed as an expression; this way we catch both "await
         // o!m()" and "await f?;" in one syntax rule.  We disallow certain
-        // combinations of guards in validation -- see AbsValidator.checkSideEffectExpressionAllowed, AbsValidator.checkNoMethodCallInSubguard.
-        | {SuspendStmt.annotations=current}
+        // combinations of guards in validation -- see
+        // AbsValidator.checkSideEffectExpressionAllowed,
+        // AbsValidator.checkNoMethodCallInSubguard.
+        | {SuspendStatement.annotations=current}
             'suspend' ';'
-        | {DurationStmt.annotations=current}
-            'duration' '(' min=Exp ',' max=Exp ')' ';'
-        | {ThrowStmt.annotations=current}
-            'throw' exception=Exp ';'
-        | {DieStmt.annotations=current}
-            'die' exception=Exp ';'
-        | {MoveCogToStmt.annotations=current}
-            'movecogto' target=Exp ';'
-        | {ExpStmt.annotations=current}
-            expression=Exp ';'
-        | {SwitchStmt.annotations=current}
-            'switch' '(' condition=Exp ')' '{' (branches+=SwitchStmtBranch)* '}'
+        | {DurationStatement.annotations=current}
+            'duration' '(' min=Expression ',' max=Expression ')' ';'
+        | {ThrowStatement.annotations=current}
+            'throw' exception=Expression ';'
+        | {DieStatement.annotations=current}
+            'die' exception=Expression ';'
+        | {MoveCogToStatement.annotations=current}
+            'movecogto' target=Expression ';'
+        | {ExpressionStatement.annotations=current}
+            expression=Expression ';'
+        | {SwitchStatement.annotations=current}
+            'switch' '(' condition=Expression ')' '{' (branches+=SwitchStatementBranch)* '}'
         )
     ;
 
@@ -220,11 +225,11 @@ AndGuard returns Guard
     ;
 
 SingleGuard returns Guard
-    : {ExpGuard} expression=Exp claim?='?'?
-    | {DurationGuard} 'duration' '(' min=Exp ',' max=Exp ')'
+    : {ExpressionGuard} expression=Expression claim?='?'?
+    | {DurationGuard} 'duration' '(' min=Expression ',' max=Expression ')'
     ;
 
-SwitchStmtBranch : pattern=Pattern '=>' body=Stmt ;
+SwitchStatementBranch : pattern=Pattern '=>' body=Statement ;
 
 Pattern
     : {WildcardPattern} '_'
@@ -239,170 +244,172 @@ Pattern
 
 // KLUDGE: I did not manage to express the separation of side-effect and pure
 // expressions in the Xtext parser in the way that antlr4 did it -- having
-// PureExp as prefixes in GetExp, AsyncCallExp and SyncCallExp did not lead to
-// compile-time warnings for these expressions but mis-parsed them
-// nevertheless.
+// PureExpression as prefixes in GetExpression, AsyncCallExpression and
+// SyncCallExpression did not lead to compile-time warnings for these
+// expressions but mis-parsed them nevertheless.
 
-// KLUDGE: the expression grammar fragment is not LL(2) (although
-// Exp by itself is) -- we turned on backtracking in
-// `GenerateAbs.mwe2' for now.
-// TODO: check if this is still necessary now that we merged EffExp and PureExp
-Exp
-    : OrExp
+// KLUDGE: the expression grammar fragment is not LL(2) (although Expression
+// by itself is) -- we turned on backtracking in `GenerateAbs.mwe2' for now.
+
+// TODO: check if this is still necessary now that we merged EffExpression and
+// PureExpression
+Expression
+    : OrExpression
     ;
 
 // See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
 
-OrExp returns Exp
-    : AndExp ({OrExp.left=current} '||' right=AndExp)*
+OrExpression returns Expression
+    : AndExpression ({OrExpression.left=current} '||' right=AndExpression)*
     ; // left-assoc
 
-AndExp returns Exp
-    : EqExp ({AndExp.left=current} '&&' right=EqExp)*
+AndExpression returns Expression
+    : EqExpression ({AndExpression.left=current} '&&' right=EqExpression)*
     ; // left-assoc
 
-EqExp returns Exp
-    : CompareExp
-        (( {EqExp.left=current} '=='
-         | {NotEqExp.left=current} '!=')
-        right=CompareExp)?
+EqExpression returns Expression
+    : CompareExpression
+        (( {EqExpression.left=current} '=='
+         | {NotEqExpression.left=current} '!=')
+        right=CompareExpression)?
     ; // non-assoc
 
-CompareExp returns Exp
-    : PlusMinusExp
-        (( {LTExp.left=current} '<'
-         | {GTExp.left=current} '>'
-         | {LTEQExp.left=current} '<='
-         | {GTEQExp.left=current} '>=')
-        right=PlusMinusExp)?
+CompareExpression returns Expression
+    : PlusMinusExpression
+        (( {LTExpression.left=current} '<'
+         | {GTExpression.left=current} '>'
+         | {LTEQExpression.left=current} '<='
+         | {GTEQExpression.left=current} '>=')
+        right=PlusMinusExpression)?
     ; // non-assoc
 
-PlusMinusExp returns Exp
-    : MulDivModExp
-        (( {PlusExp.left=current} '+'
-         | {MinusExp.left=current} '-')
-        right=MulDivModExp)*
+PlusMinusExpression returns Expression
+    : MulDivModExpression
+        (( {PlusExpression.left=current} '+'
+         | {MinusExpression.left=current} '-')
+        right=MulDivModExpression)*
     ; // left-assoc
 
-MulDivModExp returns Exp
-    : MethodCallExp
-        (( {MulExp.left=current} '*'
-         | {DivExp.left=current}'/'
-         | {ModExp.left=current} '%')
-        right=MethodCallExp)*
+MulDivModExpression returns Expression
+    : MethodCallExpression
+        (( {MulExpression.left=current} '*'
+         | {DivExpression.left=current}'/'
+         | {ModExpression.left=current} '%')
+        right=MethodCallExpression)*
     ; // left-assoc
 
-MethodCallExp returns Exp
-// "await o!m()" is parsed as an AwaitExp with an ExpGuard containing a
-// MethodCallExp instead of a MethodCallExp with an "await" prefix -- see also
-// AbsValidator where we filter out invalid syntaxes, and XtextToJastAdd where
-// we disambiguate between AwaitStmt and AwaitAsyncCall; the code there is not
-// pretty.
+MethodCallExpression returns Expression
+// "await o!m()" is parsed as an AwaitExpression with an ExpressionGuard
+// containing a MethodCallExpression instead of a MethodCallExpression with an
+// "await" prefix -- see also AbsValidator where we filter out invalid
+// syntaxes, and XtextToJastAdd where we disambiguate between AwaitStatement
+// and AwaitAsyncCall; the code there is not pretty.
 //
 // But: “In general, a good practice in Xtext DSL implementations is to keep
 // the grammar simple.  It is better to have a loose grammar and a strict
 // validation phase (loose grammar, strict validation, see the presentation
 // Zarnekow 2012).” (Bettini 2016, pg. 207)
-    : GetExp ({MethodCallExp.target=current} operator=('!' | '.') methodname=IDENTIFIER '(' (arguments+=Exp ( ',' arguments+=Exp)* )? ')' )?
+    : GetExpression ({MethodCallExpression.target=current} operator=('!' | '.') methodname=IDENTIFIER '(' (arguments+=Expression ( ',' arguments+=Expression)* )? ')' )?
     ;
 
-GetExp returns Exp
-    : ConversionExp ({GetExp.futureExpression=current} '.' 'get' )?
+GetExpression returns Expression
+    : ConversionExpression ({GetExpression.futureExpression=current} '.' 'get' )?
     ;
 
-ConversionExp returns Exp
-    : PrimaryExp
-        (( {ImplementsExp.body=current} 'implements'
-         | {AsExp.body=current} 'as' )
+ConversionExpression returns Expression
+    : PrimaryExpression
+        (( {ImplementsExpression.body=current} 'implements'
+         | {AsExpression.body=current} 'as' )
         interface=QualifiedTypeIdentifier )?
     ;
 
-PrimaryExp returns Exp
-    :  '(' Exp ')'
-    | UnaryExp
-    | AwaitExp
-    | NewExp
-    | OriginalCallExp
-    | CaseExp
-    | LetExp
-    | WhenExp
-    | FunctionAppExp
-    | VariadicFunctionAppExp
-    | ConstructorAppExp
-    | TemplateStringExp
-    | AtomicExp
+PrimaryExpression returns Expression
+    :  '(' Expression ')'
+    | UnaryExpression
+    | AwaitExpression
+    | NewExpression
+    | OriginalCallExpression
+    | CaseExpression
+    | LetExpression
+    | WhenExpression
+    | FunctionAppExpression
+    | VariadicFunctionAppExpression
+    | ConstructorAppExpression
+    | TemplateStringExpression
+    | AtomicExpression
     ;
 
-UnaryExp returns Exp
-    : ( '!' PrimaryExp {NotExp.body=current}
-      | '-' PrimaryExp {NegExp.body=current}
-      // | '+' Exp {PosExp.body=current}
+UnaryExpression returns Expression
+    : ( '!' PrimaryExpression {NotExpression.body=current}
+      | '-' PrimaryExpression {NegExpression.body=current}
+      // | '+' PrimaryExpression {PosExpression.body=current}
     )
     ;
 
-AwaitExp returns Exp : {AwaitExp} 'await' guard=Guard ;
+AwaitExpression returns Expression : {AwaitExpression} 'await' guard=Guard ;
 
-NewExp returns Exp :
-        {NewExp} 'new' (local?='local')? classname=QualifiedTypeIdentifier '('  (arguments+=Exp ( ',' arguments+=Exp)* )? ')'
+NewExpression returns Expression
+    : {NewExpression} 'new' (local?='local')? classname=QualifiedTypeIdentifier '('  (arguments+=Expression ( ',' arguments+=Expression)* )? ')'
     ;
 
-OriginalCallExp returns Exp : {OriginalCallExp} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (arguments+=Exp ( ',' arguments+=Exp)* )? ')' ;
+OriginalCallExpression returns Expression
+    : {OriginalCallExpression} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (arguments+=Expression ( ',' arguments+=Expression)* )? ')' ;
 
-CaseExp returns Exp
-    : {CaseExp} 'case' condition=Exp '{' (casebranches+=CaseExpBranch)* '}'
+CaseExpression returns Expression
+    : {CaseExpression} 'case' condition=Expression '{' (casebranches+=CaseExpressionBranch)* '}'
     ;
 
-CaseExpBranch
-    : pattern=Pattern '=>' expression=Exp ';'
+CaseExpressionBranch
+    : pattern=Pattern '=>' expression=Expression ';'
     ;
 
-LetExp returns Exp
-    : {LetExp} 'let' '('? variables+=Parameter ')'? '=' exps+=Exp
-        (',' '('? variables+=Parameter ')'? '=' exps+=Exp)*
-        'in' body=Exp
+LetExpression returns Expression
+    : {LetExpression} 'let' '('? variables+=Parameter ')'? '=' expressions+=Expression
+        (',' '('? variables+=Parameter ')'? '=' expressions+=Expression)*
+        'in' body=Expression
     ;
 
-WhenExp returns Exp
-    : {WhenExp} 'when' condition=Exp 'then' consequence=Exp 'else' alternate=Exp
+WhenExpression returns Expression
+    : {WhenExpression} 'when' condition=Expression 'then' consequence=Expression 'else' alternate=Expression
     ;
 
-FunctionAppExp returns Exp
-    : {FunctionAppExp} name=QualifiedIdentifier
+FunctionAppExpression returns Expression
+    : {FunctionAppExpression} name=QualifiedIdentifier
         ( '(' functionArguments+=PartialFunctionParam (',' functionArguments+=PartialFunctionParam )* ')' )?
-        '(' (arguments+=Exp ( ',' arguments+=Exp)* )? ')'
+        '(' (arguments+=Expression ( ',' arguments+=Expression)* )? ')'
     ;
 
 PartialFunctionParam
     : name=QualifiedIdentifier
-    | '(' ( parameters+=Parameter (',' parameters+=Parameter)* )? ')' "=>" body=Exp
+    | '(' ( parameters+=Parameter (',' parameters+=Parameter)* )? ')' "=>" body=Expression
     ;
 
-VariadicFunctionAppExp returns Exp
-    : {VariadicFunctionAppExp} name=QualifiedIdentifier '[' (arguments+=Exp ( ',' arguments+=Exp)* )? ']'
+VariadicFunctionAppExpression returns Expression
+    : {VariadicFunctionAppExpression} name=QualifiedIdentifier '[' (arguments+=Expression ( ',' arguments+=Expression)* )? ']'
     ;
 
-ConstructorAppExp returns Exp
-    : {ConstructorAppExp} name=QualifiedTypeIdentifier ( '(' ( arguments+=Exp ( ',' arguments+=Exp)* )? ')' )?
+ConstructorAppExpression returns Expression
+    : {ConstructorAppExpression} name=QualifiedTypeIdentifier ( '(' ( arguments+=Expression ( ',' arguments+=Expression)* )? ')' )?
     ;
 
-TemplateStringExp returns Exp
-    : {TemplateStringSimpleExp} string=TEMPLATESTRINGLITERAL
-    | {TemplateStringExp} startString=TEMPLATESTRINGSTART firstExpression=Exp
-        (betweenStrings+=TEMPLATESTRINGINBETWEEN exps+=Exp)*
+TemplateStringExpression returns Expression
+    : {TemplateStringSimpleExpression} string=TEMPLATESTRINGLITERAL
+    | {TemplateStringExpression} startString=TEMPLATESTRINGSTART firstExpression=Expression
+        (betweenStrings+=TEMPLATESTRINGINBETWEEN expressions+=Expression)*
         endString=TEMPLATESTRINGEND
     ;
 
-AtomicExp returns Exp
+AtomicExpression returns Expression
     : {IntLiteral} value=INTLITERAL
     | {FloatLiteral} value=FLOATLITERAL
     | {StringLiteral} value=STRINGLITERAL
-    | VarOrFieldExp
-    | {ThisExp} 'this'
+    | VariableOrFieldExpression
+    | {ThisExpression} 'this'
     | {NullLiteral} 'null'
     ;
 
-VarOrFieldExp returns Exp
-    : {VarOrFieldExp} (field?='this' '.')? name=IDENTIFIER
+VariableOrFieldExpression returns Expression
+    : {VariableOrFieldExpression} (field?='this' '.')? name=IDENTIFIER
     ;
 
 // Types
@@ -581,7 +588,7 @@ ProductlineDeltaClause
 DeltaClauseParam
 // CID | FID.aid | CONSTANT
 // The following comment copied from ABS.g4, which copied from ABS.parser:
-// TODO: accept feature, attributes, or constants (DataExp)
+// TODO: accept feature, attributes, or constants (DataExpression)
     : {DeltaClauseParam_Int} intParameter=INTLITERAL
     | {DeltaClauseParam_Id} idParameter=TYPE_IDENTIFIER ('.' fidaidParameter=IDENTIFIER)?
     ;

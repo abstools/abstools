@@ -20,45 +20,45 @@ public class CoreAbsValidator extends AbstractDeclarativeValidator {
     public void register(EValidatorRegistrar registrar) {
         // nothing to do
     }
-    private boolean isSideEffectExpContainer(EObject stmt) {
+    private boolean isSideEffectExpContainer(EObject statement) {
         // We allow the following forms:
-        // - "f.get;" (ExpStmt)
-        // - "x = f.get;" (AssignStmt)
-        // - "T x = f.get" (VarDeclStmt)
-        // - "return f.get" (ReturnStmt)
-        return stmt instanceof ExpStmt
-            || stmt instanceof AssignStmt
-            || stmt instanceof VarDeclStmt
-            || stmt instanceof ReturnStmt;
+        // - "f.get;" (ExpressionStatement)
+        // - "x = f.get;" (AssignStatement)
+        // - "T x = f.get" (VarDeclStatement)
+        // - "return f.get" (ReturnStatement)
+        return statement instanceof ExpressionStatement
+            || statement instanceof AssignStatement
+            || statement instanceof VariableDeclarationStatement
+            || statement instanceof ReturnStatement;
     }
     private boolean isSingleMethodCallGuard(Guard g) {
-        return g instanceof ExpGuard
-            && ((ExpGuard)g).getExpression() instanceof MethodCallExp;
+        return g instanceof ExpressionGuard
+            && ((ExpressionGuard)g).getExpression() instanceof MethodCallExpression;
     }
 
     @Check
-    public void checkGetExpPlacement(GetExp e) {
+    public void checkGetExpPlacement(GetExpression e) {
         if(!isSideEffectExpContainer(e.eContainer())) {
             error("A get expression cannot be a sub-expression",
                   e.eContainer(), e.eContainingFeature());
         }
     }
     @Check
-    public void checkOriginalCallExpPlacement(OriginalCallExp e) {
+    public void checkOriginalCallExpPlacement(OriginalCallExpression e) {
         if(!isSideEffectExpContainer(e.eContainer())) {
             error("An original call expression cannot be a sub-expression",
                   e.eContainer(), e.eContainingFeature());
         }
     }
     @Check
-    public void checkNewExpPlacement(NewExp e) {
+    public void checkNewExpPlacement(NewExpression e) {
         if(!isSideEffectExpContainer(e.eContainer())) {
             error("A new expression cannot be a sub-expression",
                   e.eContainer(), e.eContainingFeature());
         }
     }
     @Check
-    public void checkAwaitExpPlacement(AwaitExp e) {
+    public void checkAwaitExpPlacement(AwaitExpression e) {
         if (isSingleMethodCallGuard(e.getGuard())) {
             // "await o!m()", i.e., an await expression
             if(!isSideEffectExpContainer(e.eContainer())) {
@@ -67,16 +67,16 @@ public class CoreAbsValidator extends AbstractDeclarativeValidator {
             }
         } else {
             // any other await, i.e., an await statement
-            if (!(e.eContainer() instanceof ExpStmt)) {
+            if (!(e.eContainer() instanceof ExpressionStatement)) {
                 error("Invalid placement of await statement",
                       e.eContainer(), e.eContainingFeature());
             }
         }
     }
     @Check
-    public void checkValidAwaitCall(MethodCallExp e) {
-        if (e.eContainer() instanceof ExpGuard
-            && ((MethodCallExp)e).getOperator().equals(".")) {
+    public void checkValidAwaitCall(MethodCallExpression e) {
+        if (e.eContainer() instanceof ExpressionGuard
+            && ((MethodCallExpression)e).getOperator().equals(".")) {
             // disallow "await o.m()"
             error("Cannot await on synchronous method call",
                   e.eContainer(), e.eContainingFeature());
@@ -88,11 +88,11 @@ public class CoreAbsValidator extends AbstractDeclarativeValidator {
         // Block "await o!m() & o!m();"
         Guard l = g.getLeft();
         Guard r = g.getRight();
-        if (l instanceof ExpGuard && ((ExpGuard)l).getExpression() instanceof MethodCallExp) {
+        if (l instanceof ExpressionGuard && ((ExpressionGuard)l).getExpression() instanceof MethodCallExpression) {
             error("A side-effect expression cannot be a sub-expression",
                   AbsPackage.eINSTANCE.getAndGuard_Left());
         }
-        if (r instanceof ExpGuard && ((ExpGuard)r).getExpression() instanceof MethodCallExp) {
+        if (r instanceof ExpressionGuard && ((ExpressionGuard)r).getExpression() instanceof MethodCallExpression) {
             error("A side-effect expression cannot be a sub-expression",
                   AbsPackage.eINSTANCE.getAndGuard_Left());
         }
