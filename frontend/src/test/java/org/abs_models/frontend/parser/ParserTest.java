@@ -377,6 +377,11 @@ public class ParserTest extends FrontendTest {
     }
 
     @Test
+    public void ticket267() {
+        assertParseError("module Test; data D; import * from ABS.StdLib;");
+    }
+
+    @Test
     public void entry_deltadecl() throws Exception {
         CompilationUnit u = parseString("delta Mon;").getCompilationUnit(1);
         DeltaDecl d = (DeltaDecl) u.getDeltaDecl(0);

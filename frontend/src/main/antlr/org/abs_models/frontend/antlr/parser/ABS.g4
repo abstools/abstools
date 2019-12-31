@@ -507,5 +507,5 @@ compilation_unit : module_decl* delta_decl*
         ('root' feature_decl | 'extension' fextension)*
     ;
 
-goal : compilation_unit ;
+goal : compilation_unit EOF ;
 
