@@ -21,11 +21,8 @@ public class DeltaSyntax extends DeltaTest {
 
     @Test
     public void deltaUses() throws DeltaModellingException {
-        Model model;
-        model = assertParse("module M; delta D; uses M;");
-        model = assertParse("module M; delta D; uses M; uses N;");
-        model = assertParse("module M; delta D1; uses M; delta D2; uses M;");
-        
+        assertParse("module M; delta D; uses M;");
+        assertParse("module M; delta D1; uses M; delta D2; uses M;");
     }
 
 }
