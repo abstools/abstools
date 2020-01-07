@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Multiple `uses` clauses in a delta now cause a compilation failure.  (The parser used to accept deltas with more than one `uses` clause, but they were silently ignored.)
+
 ## [1.8.2] - 2019-12-09
 
 ### Added

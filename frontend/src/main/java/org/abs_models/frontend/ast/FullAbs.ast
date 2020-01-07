@@ -11,7 +11,7 @@ CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* 
 
 // Deltas
 
-DeltaDecl ::= <Name> Param:DeltaParamDecl* DeltaAccess* ModuleModifier* ;
+DeltaDecl ::= <Name> Param:DeltaParamDecl* [ImportedModule:DeltaAccess] ModuleModifier* ;
 
 DeltaID ::= <Name>;
 

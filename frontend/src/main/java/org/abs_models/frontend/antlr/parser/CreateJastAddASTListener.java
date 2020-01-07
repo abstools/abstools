@@ -834,7 +834,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     // Deltas
     @Override public void exitDelta_decl(ABSParser.Delta_declContext ctx) {
         setV(ctx, new DeltaDecl(ctx.TYPE_IDENTIFIER().getText(),
-                                l(ctx.p), l(ctx.delta_access()),
+                                l(ctx.p), o(ctx.delta_used_module()),
                                 l(ctx.module_modifier())));
     }
 
@@ -859,7 +859,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new HasInterface(v(ctx.i)));
     }
 
-    @Override public void exitDelta_access(ABSParser.Delta_accessContext ctx) {
+    @Override public void exitDelta_used_module(ABSParser.Delta_used_moduleContext ctx) {
         setV(ctx, new DeltaAccess(ctx.qualified_type_identifier().getText()));
     }
 
