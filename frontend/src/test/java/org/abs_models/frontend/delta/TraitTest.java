@@ -54,7 +54,7 @@ public class TraitTest extends DeltaTest{
 
         DeltaDecl dd = new DeltaDecl();
         dd.setName("MyDelta");
-        dd.addDeltaAccess(acc);
+        dd.setImportedModule(acc);
         dd.addModuleModifier(mcn);
         mcn.addModifier(opr);
 
@@ -93,7 +93,7 @@ public class TraitTest extends DeltaTest{
 
         DeltaDecl dd = new DeltaDecl();
         dd.setName("MyDelta");
-        dd.addDeltaAccess(acc);
+        dd.setImportedModule(acc);
         dd.addModuleModifier(mcn);
         mcn.addModifier(opr);
 
@@ -130,7 +130,7 @@ public class TraitTest extends DeltaTest{
 
         DeltaDecl dd = new DeltaDecl();
         dd.setName("MyDelta");
-        dd.addDeltaAccess(acc);
+        dd.setImportedModule(acc);
         dd.addModuleModifier(mcn);
         mcn.addModifier(opr);
 

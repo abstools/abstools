@@ -674,7 +674,9 @@ aspect doPrettyPrinter {
         }
         stream.println(";");
         formatter.afterStmt();
-        getDeltaAccesss().doPrettyPrint(stream, formatter);
+        if (hasImportedModule()) {
+            getImportedModule().doPrettyPrint(stream, formatter);
+        }
         stream.println();
         getModuleModifierList().doPrettyPrint(stream, formatter);
 

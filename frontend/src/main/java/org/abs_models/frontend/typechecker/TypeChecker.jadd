@@ -1160,8 +1160,9 @@ aspect TypeCheckProductline {
     }
 
     protected void DeltaDecl.typeCheck(SemanticConditionList e) {
-        for (DeltaAccess acc : getDeltaAccessList())
-            acc.typeCheck(e);
+        if (hasImportedModule()) {
+            getImportedModule().typeCheck(e);
+        }
         for (ModuleModifier mod : getModuleModifiers())
             mod.typeCheck(e);
     }

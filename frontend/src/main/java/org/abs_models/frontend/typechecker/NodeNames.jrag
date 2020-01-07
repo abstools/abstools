@@ -5,7 +5,7 @@ aspect ModuleName {
     syn lazy String ModuleModifier.getModuleName();
     
     // By default look it up in the delta's 'uses' clause
-    eq ModuleModifier.getModuleName() = (getDelta().getDeltaAccessList().getNumChild() == 0) ? null : getDelta().getDeltaAccess(0).getModuleName();
+    eq ModuleModifier.getModuleName() = (getDelta().hasImportedModule()) ? getDelta().getImportedModule().getModuleName() : null;
     
     eq AddClassModifier.getModuleName() {
         // search in class name

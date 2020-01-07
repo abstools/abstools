@@ -50,21 +50,6 @@ aspect ModifyClassModifier {
     eq ModifyClassModifier.getModifier().getModifyClassModifier() = this;
 }
 
-// inform DeltaDecl about their 'used' modules
-aspect Uses {
-    syn lazy ArrayList<ModuleDecl> DeltaDecl.usesModules();
-    eq DeltaDecl.usesModules() {
-        ArrayList<ModuleDecl> usedModules = new ArrayList<ModuleDecl>();
-        for (DeltaAccess da : getDeltaAccessList()) {
-            for (ModuleDecl module : getModel().getModuleDecls()) {
-                if (da.getModuleName().equals(module.getName()))
-                    usedModules.add(module);
-            }
-        }
-        return usedModules;
-    }
-}
-
 aspect AsyncCallAnnotations {
     inh List<Annotation> AsyncCall.getAnnotations();
     inh List<Annotation> AwaitAsyncCall.getAnnotations();

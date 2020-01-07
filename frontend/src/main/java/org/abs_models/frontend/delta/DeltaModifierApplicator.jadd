@@ -299,12 +299,9 @@ aspect DeltaModifierApplicator {
         String moduleid;
         Name name = new Name(getName());
         if (name.isSimple()) {
-            // assume the module name was specified in a 'uses' statement
-            // For now we only check the first used module - does having multiple 'uses' statements ever make sense?
-            // If not, FIXME change the syntax accordingly.
-            try {
-                moduleid = getDelta().getDeltaAccess(0).getModuleName();
-            } catch(NullPointerException e) {
+            if (getDelta().hasImportedModule()) {
+                moduleid = getDelta().getImportedModule().getModuleName();
+            } else {
                 throw new DeltaModellingException(getDelta(),"Unqualified name of modified entity requires "
                         + "a \'uses\' statement inside the delta, to determine the module to be modified.");
             }

@@ -193,7 +193,7 @@ public class ProductLineTypeAnalysisTest extends DeltaTest {
 
             cu.addDeltaDecl(new DeltaDecl("D" + id,
                 new org.abs_models.frontend.ast.List<>(),
-                new org.abs_models.frontend.ast.List<>(),
+                new org.abs_models.frontend.ast.Opt<>(),
                 new org.abs_models.frontend.ast.List<>(cmod)));
 
             DeltaClause dc = new DeltaClause();

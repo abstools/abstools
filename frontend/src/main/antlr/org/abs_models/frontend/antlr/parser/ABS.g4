@@ -335,7 +335,7 @@ trait_usage: 'uses' trait_expr ';' ;
 
 delta_decl : 'delta' TYPE_IDENTIFIER
         ('(' p+=delta_param (',' p+=delta_param)* ')')? ';'
-        delta_access*
+        delta_used_module?
         module_modifier*
         ;
 
@@ -348,7 +348,7 @@ has_condition : 'hasField' f=field_decl             # DeltaHasFieldCondition
     | 'hasInterface' i=interface_name               # DeltaHasInterfaceCondition
     ;
 
-delta_access : 'uses' qualified_type_identifier ';' ;
+delta_used_module : 'uses' qualified_type_identifier ';' ;
 
 // If this rule becomes more complicated, adapt exitModule_modifier() in
 // CreateJastAddASTListener as well -- at the moment, we rely on there being
@@ -507,5 +507,5 @@ compilation_unit : module_decl* delta_decl*
         ('root' feature_decl | 'extension' fextension)*
     ;
 
-goal : compilation_unit ;
+goal : compilation_unit EOF ;
 
