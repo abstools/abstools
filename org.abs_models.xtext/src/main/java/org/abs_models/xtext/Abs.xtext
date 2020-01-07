@@ -495,7 +495,7 @@ DeltaDeclaration
         ';'
         // TODO: multiple in the antlr grammar but the AST only supports one
         // instance of this
-        ('uses' usedModulenames+=QualifiedTypeIdentifier ';')*
+        ('uses' usedModulename=QualifiedTypeIdentifier ';')?
         (modifiers+=DeltaModuleModifier)*
     ;
 

@@ -1144,9 +1144,9 @@ public class XtextToJastAdd {
                 result.addParam(nodeWithLocation(new DeltaClassParam(arg.getClassModifier(), fromXtext(arg.getCondition())), arg));
             }
         }
-        for (int i = 0; i < xtext_delta.getUsedModulenames().size(); i++) {
-            String iname = xtext_delta.getUsedModulenames().get(i);
-            result.addDeltaAccessNoTransform(nodeWithLocation(new DeltaAccess(iname), xtext_delta, AbsPackage.eINSTANCE.getDeltaDeclaration_UsedModulenames(), i));
+        if (xtext_delta.getUsedModulename() != null) {
+            String iname = xtext_delta.getUsedModulename();
+            result.setImportedModule(nodeWithLocation(new DeltaAccess(iname), xtext_delta, AbsPackage.eINSTANCE.getDeltaDeclaration_UsedModulename()));
         }
         for (org.abs_models.xtext.abs.DeltaModuleModifier m : xtext_delta.getModifiers()) {
             result.addModuleModifier(fromXtext(m));
