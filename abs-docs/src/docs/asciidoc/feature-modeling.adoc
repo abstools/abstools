@@ -83,12 +83,14 @@ execution or simulation environment.
 
 
 The `DeltaDecl` clause specifies the syntax of delta modules, consisting of a
-unique identifier, a module access directive, a list of parameters and a
-sequence of module modifiers.  The _module access_ directive gives the delta
-access to the namespace of a particular module.  In other words, it specifies
-the ABS module to which modifications using unqualified identifiers apply by
-default.  A delta can still make modifications to classes and interfaces in
-several modules by fully qualifying the `TypeName` of module modifiers.
+unique identifier, an optional list of delta parameters, an optional module
+access directive, and a sequence of module modifiers.
+
+The `ModuleAccess` clause specifies the semantics of unqualified identifiers
+within a delta.  Any identifiers without namespace prefix will be resolved
+as if they occurred in the module named in the `ModuleAccess` clause.  A delta
+can always make modifications to classes and interfaces in any module by fully
+qualifying the `TypeName` within module modifiers.
 
 While delta modeling supports a broad range of ways to modify an ABS model,
 not all ABS program entities are modifiable.  These unsupported modifications
