@@ -319,7 +319,7 @@ public class XtextToJastAdd {
         return nodeWithLocation(constructorArg, xtext_arg);
     }
 
-    static TypeSynDecl fromXtext(org.abs_models.xtext.abs.TypeSynonymDeclaration xtext_decl) {
+    static TypeSynDecl fromXtext(org.abs_models.xtext.abs.TypesynonymDeclaration xtext_decl) {
         TypeSynDecl result = new TypeSynDecl();
         result.setName(xtext_decl.getName());
         result.setValue(fromXtext(xtext_decl.getType()));
@@ -1241,8 +1241,8 @@ public class XtextToJastAdd {
                 }
             }
             result = mresult;
-        } else if (xtext_mod.getModifiedTypesyn() != null) {
-            result = new ModifyTypeSynModifier(fromXtext(xtext_mod.getModifiedTypesyn()));
+        } else if (xtext_mod.getModifiedTypesynonym() != null) {
+            result = new ModifyTypeSynModifier(fromXtext(xtext_mod.getModifiedTypesynonym()));
         } else if (xtext_mod.getModifiedDatatype() != null) {
             result = new ModifyDataTypeModifier(fromXtext(xtext_mod.getModifiedDatatype()));
         }

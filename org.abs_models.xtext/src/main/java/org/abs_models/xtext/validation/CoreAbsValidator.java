@@ -20,6 +20,7 @@ public class CoreAbsValidator extends AbstractDeclarativeValidator {
     public void register(EValidatorRegistrar registrar) {
         // nothing to do
     }
+
     private boolean isSideEffectExpContainer(EObject statement) {
         // We allow the following forms:
         // - "f.get;" (ExpressionStatement)
@@ -95,6 +96,58 @@ public class CoreAbsValidator extends AbstractDeclarativeValidator {
         if (r instanceof ExpressionGuard && ((ExpressionGuard)r).getExpression() instanceof MethodCallExpression) {
             error("A side-effect expression cannot be a sub-expression",
                   AbsPackage.eINSTANCE.getAndGuard_Left());
+        }
+    }
+
+    @Check
+    public void checkAllDeclarationsSimple(ModuleDeclaration m) {
+        for (Declaration d : m.getDeclarations()) {
+            checkSimpleName(d);
+        }
+    }
+    private void checkSimpleName(Declaration d) {
+        if (d.getDatatypeDeclaration() != null) {
+            if (d.getDatatypeDeclaration().getName().indexOf('.') != -1) {
+                error("Cannot use a qualified name to name a datatype",
+                      d.getDatatypeDeclaration(),
+                      AbsPackage.eINSTANCE.getDataTypeDeclaration_Name());
+            }
+        } else if (d.getTypesynonymDeclaration() != null) {
+            if (d.getTypesynonymDeclaration().getName().indexOf('.') != -1) {
+                error("Cannot use a qualified name to name a type synonym",
+                      d.getTypesynonymDeclaration(),
+                      AbsPackage.eINSTANCE.getTypesynonymDeclaration_Name());
+            }
+        } else if (d.getExceptionDeclaration() != null) {
+            if (d.getExceptionDeclaration().getName().indexOf('.') != -1) {
+                error("Cannot use a qualified name to name an exception",
+                      d.getExceptionDeclaration(),
+                      AbsPackage.eINSTANCE.getExceptionDeclaration_Name());
+            }
+        } else if (d.getFunctionDeclaration() != null) {
+            if (d.getFunctionDeclaration().getName().indexOf('.') != -1) {
+                error("Cannot use a qualified name to name a function",
+                      d.getFunctionDeclaration(),
+                      AbsPackage.eINSTANCE.getFunctionDeclaration_Name());
+            }
+        } else if (d.getTraitDeclaration() != null) {
+            if (d.getTraitDeclaration().getName().indexOf('.') != -1) {
+                error("Cannot use a qualified name to name a trait",
+                      d.getTraitDeclaration(),
+                      AbsPackage.eINSTANCE.getTraitDeclaration_Name());
+            }
+        } else if (d.getInterfaceDeclaration() != null) {
+            if (d.getInterfaceDeclaration().getName().indexOf('.') != -1) {
+                error("Cannot use a qualified name to name an interface",
+                      d.getInterfaceDeclaration(),
+                      AbsPackage.eINSTANCE.getInterfaceDeclaration_Name());
+            }
+        } else if (d.getClassDeclaration() != null) {
+            if (d.getClassDeclaration().getName().indexOf('.') != -1) {
+                error("Cannot use a qualified name to name a class",
+                      d.getClassDeclaration(),
+                      AbsPackage.eINSTANCE.getClassDeclaration_Name());
+            }
         }
     }
 }

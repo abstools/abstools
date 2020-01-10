@@ -74,7 +74,7 @@ Annotations: {Annotations} ( '[' annotations+=Annotation (',' annotations+=Annot
 Declaration
     : annotations=Annotations
         ( datatypeDeclaration=DataTypeDeclaration
-        | typesynonymDeclaration=TypeSynonymDeclaration
+        | typesynonymDeclaration=TypesynonymDeclaration
         | exceptionDeclaration=ExceptionDeclaration
         | functionDeclaration=FunctionDeclaration
         | traitDeclaration=TraitDeclaration
@@ -84,7 +84,7 @@ Declaration
     ;
 
 DataTypeDeclaration
-    : 'data' name=TYPE_IDENTIFIER
+    : 'data' name=QualifiedTypeIdentifier
         ('<' typeParameters+=TYPE_IDENTIFIER (',' typeParameters+=TYPE_IDENTIFIER)* '>')?
         ('=' constructors+=DataConstructorDeclaration ('|' constructors+=DataConstructorDeclaration)* )?
         ';'
@@ -94,15 +94,15 @@ DataConstructorDeclaration : name=TYPE_IDENTIFIER ('(' arguments+=DataConstructo
 
 DataConstructorParameter : type=TypeUse (name=IDENTIFIER)? ;
 
-TypeSynonymDeclaration : 'type' name=TYPE_IDENTIFIER '=' type=TypeUse ';' ;
+TypesynonymDeclaration : 'type' name=QualifiedTypeIdentifier '=' type=TypeUse ';' ;
 
 ExceptionDeclaration
-    : 'exception' name=TYPE_IDENTIFIER
+    : 'exception' name=QualifiedTypeIdentifier
         ('(' arguments+=DataConstructorParameter (',' arguments+=DataConstructorParameter)* ')')? ';'
     ;
 
 FunctionDeclaration
-    : 'def' resulttype=TypeUse name=IDENTIFIER
+    : 'def' resulttype=TypeUse name=QualifiedIdentifier
         ('<' typeParameters+=TYPE_IDENTIFIER (',' typeParameters+=TYPE_IDENTIFIER)* '>')?
         ( '(' (functionArguments+=IDENTIFIER (',' functionArguments+=IDENTIFIER)*)? ')')?
         '(' (arguments+=Parameter (',' arguments+=Parameter)* )? ')'
@@ -110,7 +110,7 @@ FunctionDeclaration
         ';'
     ;
 
-TraitDeclaration : 'trait' name=TYPE_IDENTIFIER '=' traitExpression=TraitExpression ;
+TraitDeclaration : 'trait' name=QualifiedTypeIdentifier '=' traitExpression=TraitExpression ;
 
 TraitExpression : basicExpression=BasicTraitExpression traitOperations+=TraitOperation* ;
 
@@ -129,7 +129,7 @@ TraitOperation
     ;
 
 InterfaceDeclaration
-    : 'interface' name=TYPE_IDENTIFIER
+    : 'interface' name=QualifiedTypeIdentifier
         ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
         '{' (methods+=MethodSignature ';' )* '}'
     ;
@@ -140,7 +140,7 @@ MethodSignature
     ;
 
 ClassDeclaration
-    : 'class' name=TYPE_IDENTIFIER
+    : 'class' name=QualifiedTypeIdentifier
         ( '(' ( arguments+=Parameter (',' arguments+=Parameter)* )? ')' )?
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
@@ -527,7 +527,7 @@ DeltaModuleModifier
             '{' (classModifiers+=ClassModifier)* '}'
         | 'interface' modifiedInterfaceName=QualifiedTypeIdentifier
             '{' (interfaceModifiers+=InterfaceModifier)* '}'
-        | modifiedTypesyn=TypeSynonymDeclaration
+        | modifiedTypesynonym=TypesynonymDeclaration
         | modifiedDatatype=DataTypeDeclaration
         )
     ;
