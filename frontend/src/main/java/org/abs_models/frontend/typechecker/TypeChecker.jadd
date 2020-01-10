@@ -52,6 +52,9 @@ aspect TypeChecker {
         TypeCheckerHelper.checkForDuplicateDecls(this,e);
 
         for (Decl d : getDecls()) {
+            if (d.getName().indexOf('.') != -1) {
+                e.add(new TypeError(d, ErrorMessage.NO_QUALIFIED_NAMES_IN_CORE_DECLARATION, d.getName()));
+            }
             d.typeCheck(e);
         }
 
@@ -1178,7 +1181,11 @@ aspect TypeCheckProductline {
         // Just check the module, the rest is done in the subclass
         ModuleDecl d = lookupModule(targetModuleName());
         if (d == null) {
-            e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, targetModuleName()));
+            if (new Name(getName()).isSimple()) {
+                e.add(new TypeError(this, ErrorMessage.SIMPLE_NAME_IN_DELTA_WITHOUT_USE, getName()));
+            } else {
+                e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, targetModuleName()));
+            }
         }
     }
 

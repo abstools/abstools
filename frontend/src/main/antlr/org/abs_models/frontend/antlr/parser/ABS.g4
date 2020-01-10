@@ -200,7 +200,7 @@ casestmtbranch : pattern '=>' stmt ;
 
 datatype_decl :
         annotations
-        'data' n=TYPE_IDENTIFIER
+        'data' n=qualified_type_identifier
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         ('=' c+=data_constructor ('|' c+=data_constructor)*)? ';' ;
 
@@ -212,18 +212,18 @@ data_constructor_arg : type_use IDENTIFIER? ;
 // Type synonyms
 
 typesyn_decl : annotations
-        'type' TYPE_IDENTIFIER '=' type_use ';' ;
+        'type' qualified_type_identifier '=' type_use ';' ;
 
 // Exceptions
 
 exception_decl : annotations
-        'exception' n=TYPE_IDENTIFIER
+        'exception' n=qualified_type_identifier
         ('(' a+=data_constructor_arg (',' a+=data_constructor_arg)* ')')? ';' ;
 
 // Functions
 
 function_decl : annotations
-        'def' type_use n=IDENTIFIER
+        'def' type_use n=qualified_identifier
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         paramlist
         '='
@@ -236,7 +236,7 @@ function_name_list: (function_name_decl (',' function_name_decl)*)? ;
 type_use_paramlist: ('<' p+=type_use (',' p+=type_use)* '>') ;
 
 par_function_decl : annotation*
-        'def' type_use n=IDENTIFIER
+        'def' type_use n=qualified_identifier
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         '(' functions=function_name_list ')'
         params=paramlist
@@ -255,7 +255,7 @@ anon_function_decl : params=paramlist '=>' pure_exp ;
 // Interfaces
 
 interface_decl : annotations
-        'interface' TYPE_IDENTIFIER
+        'interface' qualified_type_identifier
         ('extends' e+=interface_name (',' e+=interface_name)*)?
         '{' methodsig* '}'
     ;
@@ -265,7 +265,7 @@ methodsig : annotations type_use IDENTIFIER paramlist ';' ;
 // Classes
 
 class_decl : annotations
-        'class' TYPE_IDENTIFIER paramlist?
+        'class' qualified_type_identifier paramlist?
         ('implements' interface_name (',' interface_name)*)?
         '{'
         field_decl*
@@ -316,7 +316,7 @@ decl : datatype_decl
 
 
 trait_decl : annotations
-        'trait' TYPE_IDENTIFIER '=' trait_expr ;
+        'trait' qualified_type_identifier '=' trait_expr ;
 
 trait_expr : basic_trait_expr trait_oper* ;
 
