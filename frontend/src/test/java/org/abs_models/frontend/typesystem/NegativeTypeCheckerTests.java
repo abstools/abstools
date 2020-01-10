@@ -713,4 +713,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void annotationDataSizeInvalid() {
         assertTypeErrors("module M; import * from ABS.DC; def Rat error(Rat x) = x; interface I { Unit m(); } class C implements I { Unit m() { skip; } } { I i = new C(); [DataSize: error(False)] i!m(); } ");
     }
+
+    @Test
+    public void deltaWithoutUseClause() {
+        // Can add new classes etc. without a `uses` clause only with qualified name
+        assertTypeErrors("delta D1; adds interface I {}");
+    }
+
+    @Test
+    public void declarationQualifiedName() {
+        // Cannot use qualified names for declarations outside deltas
+        assertTypeErrors("module M; interface M.I {}");
+    }
 }

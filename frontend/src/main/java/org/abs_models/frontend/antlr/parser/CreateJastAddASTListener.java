@@ -172,7 +172,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new TraitUse(v(ctx.trait_expr())));
     }
     @Override public void exitTrait_decl( ABSParser.Trait_declContext ctx) {
-        setV(ctx, new TraitDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.trait_expr())));
+        setV(ctx, new TraitDecl(ctx.qualified_type_identifier().getText(), v(ctx.annotations()), v(ctx.trait_expr())));
     }
 
     // Declarations
@@ -274,7 +274,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
 
     @Override public void exitTypesyn_decl(ABSParser.Typesyn_declContext ctx) {
 
-        setV(ctx, new TypeSynDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.type_use())));
+        setV(ctx, new TypeSynDecl(ctx.qualified_type_identifier().getText(), v(ctx.annotations()), v(ctx.type_use())));
     }
 
     @Override public void exitException_decl(ABSParser.Exception_declContext ctx) {
@@ -307,7 +307,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
 
     // Interfaces
     @Override public void exitInterface_decl(ABSParser.Interface_declContext ctx) {
-        InterfaceDecl i = new InterfaceDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()), l(ctx.e), l(ctx.methodsig()));
+        InterfaceDecl i = new InterfaceDecl(ctx.qualified_type_identifier().getText(), v(ctx.annotations()), l(ctx.e), l(ctx.methodsig()));
         setV(ctx, i);
     }
 
@@ -317,7 +317,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
 
     // Classes
     @Override public void exitClass_decl(ABSParser.Class_declContext ctx) {
-        ClassDecl c = setV(ctx, new ClassDecl(ctx.TYPE_IDENTIFIER().getText(), v(ctx.annotations()),
+        ClassDecl c = setV(ctx, new ClassDecl(ctx.qualified_type_identifier().getText(), v(ctx.annotations()),
             new List<>(), l(ctx.interface_name()),
                                                          l(ctx.trait_usage()), new Opt<>(), l(ctx.casestmtbranch()), l(ctx.field_decl()), l(ctx.method())));
         if (ctx.paramlist() != null) {

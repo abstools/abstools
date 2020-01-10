@@ -187,13 +187,14 @@ aspect TypeResolution {
 
 
     syn lazy ModuleDecl Model.lookupModule(String name) {
-        assert name != null;
+        // KLUDGE: `name` can be null for deltas without a `uses` clause.
+        if (name == null) return null;
         for (CompilationUnit u : getCompilationUnits()) {
             for (ModuleDecl d : u.getModuleDecls()) {
                 if (d.getName().equals(name)) {
                     return d;
                 }
-            }    			
+            }
         }
         return null;
     }

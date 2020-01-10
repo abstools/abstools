@@ -14,7 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- Multiple `uses` clauses in a delta now cause a compilation failure.  (The parser used to accept deltas with more than one `uses` clause, but they were silently ignored.)
+- Multiple `uses` clauses in a delta now cause a compilation failure.  (The parser used to accept deltas with more than one `uses` clause, but all clauses except the first were silently ignored.)
+
+- It is now possible to use qualified names in `adds` module modifier clauses in deltas.
+
+- The error message when using a simple name in a modifier clause in a delta without a `uses` clause has been clarified.
 
 ## [1.8.2] - 2019-12-09
 
