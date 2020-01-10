@@ -2,9 +2,9 @@ package org.abs_models.xtext.tests;
 
 import com.google.inject.Inject;
 import org.abs_models.xtext.abs.CompilationUnit;
-import org.abs_models.xtext.abs.ExpStmt;
-import org.abs_models.xtext.abs.ModuleDecl;
-import org.abs_models.xtext.abs.NewExp;
+import org.abs_models.xtext.abs.ExpressionStatement;
+import org.abs_models.xtext.abs.ModuleDeclaration;
+import org.abs_models.xtext.abs.NewExpression;
 import org.abs_models.xtext.tests.AbsInjectorProvider;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -35,10 +35,10 @@ public class AbsParsingTest {
                                              + "import * from Decl;"
                                              + "{ new C(); }"
                                              );
-        ModuleDecl m = result.getModules().get(1);
+        ModuleDeclaration m = result.getModules().get(1);
         
         Assertions.assertEquals("Main", m.getName());
-        NewExp e = (NewExp)((ExpStmt)m.getMainblockstmts().get(0)).getExp();
+        NewExpression e = (NewExpression)((ExpressionStatement)m.getMainblockStatements().get(0)).getExpression();
         Assertions.assertNotNull(e.getClassname());
     }
 

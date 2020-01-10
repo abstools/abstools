@@ -15,7 +15,7 @@ dependencyManagement {
         mavenBom "org.eclipse.xtext:xtext-dev-bom:${xtextVersion}"
     }
 }
-apply plugin: 'org.xtext.xtend'
+apply plugin: "org.xtext.xtend"
 apply from: "${rootDir}/gradle/xtext-source-layout.gradle"
 apply plugin: 'eclipse'
 

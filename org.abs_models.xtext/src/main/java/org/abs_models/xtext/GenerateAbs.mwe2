@@ -11,10 +11,10 @@ Workflow {
             project = StandardProjectConfig {
                 baseName = "org.abs_models.xtext"
                 rootPath = rootPath
-                // // Do not create the .xtend test stub
-                // runtimeTest = {
-                //     enabled = true
-                // }
+                runtimeTest = {
+                    // do not create AbsParsingTest.xtend
+                    enabled = false
+                }
                 genericIde = {
                     enabled = true
                 }
