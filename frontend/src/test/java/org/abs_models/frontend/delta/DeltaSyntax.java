@@ -23,6 +23,7 @@ public class DeltaSyntax extends DeltaTest {
     public void deltaUses() throws DeltaModellingException {
         assertParse("module M; delta D; uses M;");
         assertParse("module M; delta D1; uses M; delta D2; uses M;");
+        assertParse("module M; delta D; adds interface M.I {}");
     }
 
 }
