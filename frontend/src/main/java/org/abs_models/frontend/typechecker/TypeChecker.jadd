@@ -330,6 +330,8 @@ aspect TypeChecker {
             if (nerrors == e.getErrorCount()) {
                 TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), def.getRhs());
             }
+        } else {
+            // BuiltinFunctionDef: parser guarantees that all arguments are string literals
         }
     }
 

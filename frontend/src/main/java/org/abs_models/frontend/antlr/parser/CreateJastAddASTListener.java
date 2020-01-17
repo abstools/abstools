@@ -235,7 +235,16 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         // TODO: datatypes do not distinguish between DataTypeDecl and
         // ParametricDataTypeDecl; it would be nice to do this for
         // functions as well.
-        FunctionDef d = ctx.e == null ? new BuiltinFunctionDef() : new ExpFunctionDef(v(ctx.e));
+        FunctionDef d;
+        if (ctx.e == null) {
+            BuiltinFunctionDef bd = new BuiltinFunctionDef();
+            for (Token t : ctx.builtin_args) {
+                bd.addStringArg(makeStringLiteral(t.getText()));
+            }
+            d = bd;
+        } else {
+            d = new ExpFunctionDef(v(ctx.e));
+        }
         List<ParamDecl> p = v(ctx.paramlist());
         TypeUse t = v(ctx.type_use());
         if (ctx.p != null && !ctx.p.isEmpty()) {

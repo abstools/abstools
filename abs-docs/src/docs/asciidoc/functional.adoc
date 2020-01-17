@@ -770,9 +770,12 @@ def A head<A>(List<A> list) = <3>
 <3> This parametric function returns the same type that is contained in the list.  (Note that `head` is a partial function which is not defined for empty lists.)
 
 NOTE: The ABS standard library contains some special functions that cannot be
-defined with pure expressions, for example the function `println`.  Each
-special function has to be implemented in each backend.  The details of
-implementing special functions are outside of the scope of this manual.
+defined with pure expressions, for example the function `println`.  The
+definition of such functions is done via a special function body of the form
+`builtin`, with optional string argument notation `builtin["a", "b"]`.  Such
+builtin functions have to be defined separately in the code generator for each
+backend where the model is compiled; details of this are
+implementation-specific and outside the scope of this manual.
 
 
 
