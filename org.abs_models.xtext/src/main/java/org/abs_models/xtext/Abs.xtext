@@ -106,7 +106,9 @@ FunctionDeclaration
         ('<' typeParameters+=TYPE_IDENTIFIER (',' typeParameters+=TYPE_IDENTIFIER)* '>')?
         ( '(' (functionArguments+=IDENTIFIER (',' functionArguments+=IDENTIFIER)*)? ')')?
         '(' (arguments+=Parameter (',' arguments+=Parameter)* )? ')'
-        '=' (builtin?='builtin' | body=Expression)
+        '='
+        (builtin?='builtin' ('[' (builtinArguments+=STRINGLITERAL (',' builtinArguments+=STRINGLITERAL)* )? ']')?
+        | body=Expression)
         ';'
     ;
 

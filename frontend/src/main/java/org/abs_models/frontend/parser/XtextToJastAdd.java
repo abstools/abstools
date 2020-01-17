@@ -391,7 +391,12 @@ public class XtextToJastAdd {
             }
 
             if (xtext_decl.isBuiltin()) {
-                result.setFunctionDef(nodeWithLocation(new BuiltinFunctionDef(), xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_Builtin()));
+                BuiltinFunctionDef bd = new BuiltinFunctionDef();
+                for (int i = 0; i < xtext_decl.getBuiltinArguments().size(); i++) {
+                    String barg = xtext_decl.getBuiltinArguments().get(i);
+                    bd.addStringArgNoTransform(nodeWithLocation(new StringLiteral(ASTPreProcessor.preprocessStringLiteral(barg)), xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_BuiltinArguments(), i));
+                }
+                result.setFunctionDef(nodeWithLocation(bd, xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_Builtin()));
             } else {
                 PureExp exp = pureExpFromXtext(xtext_decl.getBody());
                 result.setFunctionDef(nodeWithLocation(new ExpFunctionDef(exp), xtext_decl.getBody()));
