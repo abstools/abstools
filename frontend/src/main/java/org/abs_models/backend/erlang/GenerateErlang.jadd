@@ -935,7 +935,10 @@ aspect GenerateErlang {
         ecs.println(";");
         vars.hideIntroduced(v);
     }
-    ecs.println("_ -> exit(dataPatternMatchFailException)");
+    ecs.println("_ -> io:format(\"No match for "
+              + getExpr() + " at " + getFileName()
+              + ":" + getStartLine() + "~n\"), ");
+    ecs.println("exit(dataPatternMatchFailException)");
     ecs.decIndent();
     ecs.print("end");
     ecs.close();
