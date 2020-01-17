@@ -187,6 +187,14 @@ public class ParserTest extends FrontendTest {
     }
 
     @Test
+    public void testBuiltinFunctionDecl() {
+        assertParse("def Int f() = builtin;");
+        assertParse("def Int f() = builtin[];");
+        assertParse("def Int f() = builtin[\"a\"];");
+        assertParse("def Int f() = builtin[\"a\", \"b\", \"c\"];");
+    }
+
+    @Test
     public void testParametricFunctionDecl() {
         assertParse("def Int length<A>(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
         assertParse("def A nth<A>(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");

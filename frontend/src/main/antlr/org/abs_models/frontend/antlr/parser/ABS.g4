@@ -227,7 +227,10 @@ function_decl : annotations
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         paramlist
         '='
-        ('builtin' | e=pure_exp) ';' ;
+        ('builtin' ('[' (builtin_args+=STRINGLITERAL (',' builtin_args+=STRINGLITERAL)* )? ']')?
+        | e=pure_exp )
+        ';'
+    ;
 
 // Partially defined functions
 
