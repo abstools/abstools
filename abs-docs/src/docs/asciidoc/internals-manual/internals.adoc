@@ -1,0 +1,59 @@
+= ABSC Compiler Internals
+ABS Development Team
+:doctype: book
+:creator: ABS Development Team
+:lang: en
+:keywords: ABS, manual, modeling languages, programming languages
+:sectnumlevels: 2
+:copyright: CC-BY-SA 3.0
+:imagesdir: images
+:front-cover-image: image:Title_logo.png[width=1050,height=1600]
+
+// See https://rust-lang.github.io/rustc-guide/about-this-guide.html for an
+// example of where we want this document to be
+
+.About this guide
+
+This guide is meant to help document how absc -- the ABS compiler -- works, as
+well as to help new contributors get involved in development, and for using
+ABS as basis for their own research.  It is meant as a high-level overview,
+presenting the kinds of things that (ideally) do not change frequently.
+
+Part 1 contains general information that should be useful no matter how you
+are contributing.  Part 2 contains information about how various parts of the
+compiler work.
+
+This guide is currently a work-in-progress.  Contributions and corrections to
+this guide are very welcome!
+
+== Building, debugging, and contributing to absc
+
+=== About the compiler team
+
+=== How to build and run absc
+
+=== The testing framework
+
+=== Debugging the compiler
+
+=== Profiling the compiler
+
+=== Coding conventions
+
+=== Emitting errors and other diagnostics
+
+== How absc works
+
+=== High-level overview of the compiler source
+
+=== The command-line parser and dispatcher
+
+=== Lexing and parsing
+
+=== Abstract syntax tree rewriting
+
+=== Typechecking
+
+=== Backends and code generation
+
+
