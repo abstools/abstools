@@ -28,9 +28,9 @@ distributions {
 dependencies {
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
     implementation 'commons-io:commons-io:2.6'
-    implementation 'com.google.guava:guava:28.1-jre'
+    implementation 'com.google.guava:guava:28.2-jre'
     implementation files('lib/choco-solver-2.1.1.jar')
-    implementation 'org.eclipse.jdt:ecj:3.19.0'
+    implementation 'org.eclipse.jdt:ecj:3.20.0'
     implementation 'org.apfloat:apfloat:1.9.1'
     // our code fails to compile with newer versions of sat4j; leaving this at
     // version 2.3.0 for now.
@@ -39,7 +39,7 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    implementation 'info.picocli:picocli:4.1.1'
+    implementation 'info.picocli:picocli:4.1.4'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
@@ -48,7 +48,7 @@ dependencies {
     // Executes JUnit4 tests
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.5.2")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13'
     testImplementation 'org.easymock:easymock:4.1'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest-core:2.2'
