@@ -116,6 +116,9 @@ jar {
     from configurations.runtimeClasspath
         .findAll { it.name.endsWith('jar') }
         .collect { zipTree(it) }
+    // Avoid problems with signed jar dependencies -- see
+    // https://stackoverflow.com/a/34856095/564395
+    excludes = [ 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA' ]
     reproducibleFileOrder=true
 }
 
