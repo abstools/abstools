@@ -111,5 +111,9 @@ public class StmtTests extends SemanticTests {
         assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-empty.abs"));
      }
 
+    @Test
+    public void foreachNested() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-nested.abs"));
+     }
 
 }
