@@ -61,7 +61,6 @@ aspect AwaitAsyncCallExpander {
         Stmt stmt = this.closestParent(Stmt.class);
         Block block = stmt.closestParent(Block.class);
         List<Stmt> stmtlist = block.getStmtListNoTransform();
-        int pos = stmtlist.getIndexOfChild(stmt);
 
         Type calleetype = aac.getCallee().getType();
         Access a = (Access)calleetype.lookupMethod(aac.getMethod()).getReturnType();
@@ -86,7 +85,8 @@ aspect AwaitAsyncCallExpander {
         GetExp g = new GetExp(new VarUse(varName));
         g.setPositionFromNode(aac);
 
-        stmtlist.removeChild(pos);
+        int pos = stmtlist.getIndexOfChild(stmt);
+        stmtlist.removeChild(pos); // stmt can be re-inserted afterwards
         stmtlist.insertChild(vds, pos);
         pos++;
         stmtlist.insertChild(as, pos);
@@ -94,20 +94,20 @@ aspect AwaitAsyncCallExpander {
 
         if (stmt instanceof VarDeclStmt) {
             ((VarDeclStmt)stmt).getVarDecl().setInitExp(g);
-            stmtlist.insertChild(stmt.treeCopyNoTransform(), pos);
+            stmtlist.insertChild(stmt, pos);
         } else if (stmt instanceof AssignStmt) {
             ((AssignStmt)stmt).setValue(g);
-            stmtlist.insertChild(stmt.treeCopyNoTransform(), pos);
+            stmtlist.insertChild(stmt, pos);
         } else if (stmt instanceof ReturnStmt) {
             ((ReturnStmt)stmt).setRetExp(g);
-            stmtlist.insertChild(stmt.treeCopyNoTransform(), pos);
+            stmtlist.insertChild(stmt, pos);
         } else if (stmt instanceof ExpressionStmt) {
             // This branch intentionally left blank: do not execute the get
             // expression (we drop stmt in this case).  See
             // https://github.com/abstools/abstools/issues/115
         } else {
             // Should never happen -- AwaitAsyncCall is an EffExp so ABS.ast
-            // enumerates the places it can occur
+            // enumerates the statements where it can occur
             throw new NotImplementedYetException(this, "Don't know how to rewrite statement " + stmt.getClass().toString());
         }
     }

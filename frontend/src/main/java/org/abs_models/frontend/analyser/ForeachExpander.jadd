@@ -20,7 +20,7 @@ aspect ForeachExpander {
     }
 
     public void ModuleDecl.expandForeachLoops() {
-        for (ForeachStmt loop : this.findChildren(ForeachStmt.class, true)) {
+        for (ForeachStmt loop : this.findChildren(ForeachStmt.class)) {
             if (!loop.canBeRewritten()) {
                 continue;
             }
@@ -104,7 +104,14 @@ aspect ForeachExpander {
             whilebody.addStmt(loopvardecrement);
 
             // (6)
-            whilebody.addStmt(getBody().treeCopyNoTransform());
+
+            // Do not use getBody().treeCopyNoTransform() here, lest we create
+            // fresh nodes not included in the loop in
+            // `ModuleDecl.expandForeachLoops()` (see
+            // https://github.com/abstools/abstools/issues/270)
+            Block body = getBody();
+            body.setParent(null);
+            whilebody.addStmt(body);
         }
         this.replaceWith(result);
     }

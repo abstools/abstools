@@ -7,6 +7,7 @@ package org.abs_models.backend.common;
 import java.io.File;
 
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -111,5 +112,9 @@ public class StmtTests extends SemanticTests {
         assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-empty.abs"));
      }
 
+    @Test
+    public void foreachNested() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-nested.abs"));
+     }
 
 }

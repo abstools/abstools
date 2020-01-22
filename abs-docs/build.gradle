@@ -5,6 +5,7 @@ plugins {
 asciidoctor {
     sources {
         include 'index.adoc'
+        include 'internals-manual/internals.adoc'
     }
     resources {
         from(sourceDir) {

@@ -19,7 +19,7 @@ aspect PartialFunctionExpander {
 
     syn int ModuleDecl.getExpansionCount() {
         int result = 0;
-        for (FunctionDecl decl : getDeclsNoTransform().findChildren(FunctionDecl.class)) {
+        for (FunctionDecl decl : getDeclsNoTransform().findChildren(FunctionDecl.class, true)) {
             if (AnnotationUtil.getExpansionId(decl) > -1) {
                 ++result;
             }
