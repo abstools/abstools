@@ -112,7 +112,7 @@ public class StmtTests extends SemanticTests {
         assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-empty.abs"));
      }
 
-    @Test @Ignore("Activate when fixing #270")
+    @Test
     public void foreachNested() throws Exception {
         assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-nested.abs"));
      }
