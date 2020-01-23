@@ -37,7 +37,8 @@ public class ParserTest extends FrontendTest {
             "case set { EmptyStringSet => False ; InsertString(string2,set2) => True ;}",
             "when True then 5 else 6"};
 
-    private String[] effExp = { "new local Foo()  ", "new local Foo(a,b)  ", "o!init()  ", "o!init(y)  ", "o!init(y,z)  ",
+    // We use existing classes here since xtext will not parse otherwise.
+    private String[] effExp = { "new local ABS.Meta.Runtime()  ", "new local ABS.DC.CloudProvider(\"\")  ", "o!init()  ", "o!init(y)  ", "o!init(y,z)  ",
             "this!init(y,z)  ", "o.init(y,z,w)  ",
             // "this.init(y,z)",
             "y.get" };

@@ -62,7 +62,7 @@ public class AbsParsingTest {
 
         Assertions.assertEquals("Main", m.getName());
         NewExpression e = (NewExpression)((ExpressionStatement)m.getMainblockStatements().get(0)).getExpression();
-        Assertions.assertNotNull(e.getClassname());
+        Assertions.assertNotNull(e.getClass());
     }
 
     @Test

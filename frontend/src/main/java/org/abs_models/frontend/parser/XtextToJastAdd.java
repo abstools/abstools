@@ -9,6 +9,7 @@ import org.abs_models.xtext.abs.CaseExpressionBranch;
 import org.abs_models.xtext.abs.SwitchStatementBranch;
 import org.abs_models.xtext.abs.ConstructorAppExpression;
 import org.abs_models.xtext.abs.DataConstructorParameter;
+import org.abs_models.xtext.abs.DeltaDeclaration;
 import org.abs_models.xtext.abs.ExpressionGuard;
 import org.abs_models.xtext.abs.FloatLiteralPattern;
 import org.abs_models.xtext.abs.FunctionAppExpression;
@@ -16,6 +17,8 @@ import org.abs_models.xtext.abs.IntLiteralPattern;
 import org.abs_models.xtext.abs.MethodCallExpression;
 import org.abs_models.xtext.abs.MethodDeclaration;
 import org.abs_models.xtext.abs.MethodSignature;
+import org.abs_models.xtext.abs.ModuleDeclaration;
+import org.abs_models.xtext.abs.ModuleImport;
 import org.abs_models.xtext.abs.OrExpression;
 import org.abs_models.xtext.abs.OriginalCallExpression;
 import org.abs_models.xtext.abs.StringLiteralPattern;
@@ -27,10 +30,14 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.naming.QualifiedName;
 import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 import org.eclipse.xtext.resource.ILocationInFileProvider;
+import org.eclipse.xtext.resource.IResourceDescriptions;
 import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.resource.impl.ResourceDescriptionsProvider;
 import org.eclipse.xtext.util.ITextRegionWithLineInformation;
 import org.eclipse.xtext.util.LineAndColumn;
 
@@ -39,14 +46,16 @@ import org.eclipse.xtext.util.LineAndColumn;
 public class XtextToJastAdd {
 
     private static ILocationInFileProvider location_provider = Main.absinjector.getInstance(ILocationInFileProvider.class);
-    private static <T extends ASTNode<?>> T nodeWithLocation(T node, EObject obj) {
-        INode n = NodeModelUtils.findActualNodeFor(obj); // do we want .getNode() instead?
+    private static ResourceDescriptionsProvider rdp = Main.absinjector.getInstance(ResourceDescriptionsProvider.class);
+
+    private static <T extends ASTNode<?>> T nodeWithLocation(final T node, final EObject obj) {
+        final INode n = NodeModelUtils.findActualNodeFor(obj); // do we want .getNode() instead?
         if (n != null) {
-            ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getFullTextRegion(obj);
+            final ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getFullTextRegion(obj);
             // End location is untested since we only print beginning
             // locations in error output
-            LineAndColumn beg = NodeModelUtils.getLineAndColumn(n, location.getOffset());
-            LineAndColumn end = NodeModelUtils.getLineAndColumn(n, location.getOffset() + location.getLength());
+            final LineAndColumn beg = NodeModelUtils.getLineAndColumn(n, location.getOffset());
+            final LineAndColumn end = NodeModelUtils.getLineAndColumn(n, location.getOffset() + location.getLength());
             // Xtext column values are 1-based, we want 0-based
             node.setPosition(beg.getLine(), beg.getColumn() - 1,
                              end.getLine(), end.getColumn() - 1);
@@ -57,21 +66,21 @@ public class XtextToJastAdd {
         return node;
     }
 
-    private static <T extends ASTNode<?>> T nodeWithLocation(T node, EObject obj, EStructuralFeature feature) {
+    private static <T extends ASTNode<?>> T nodeWithLocation(final T node, final EObject obj, final EStructuralFeature feature) {
         // FIXME: there’s a constant defined somewhere deep in xtext for this
         // magic 0 value -- INSIGNIFICANT_INDEX or similar name
         return nodeWithLocation(node, obj, feature, 0);
     }
 
 
-    private static <T extends ASTNode<?>> T nodeWithLocation(T node, EObject obj, EStructuralFeature feature, int indexInList) {
-        INode n = NodeModelUtils.findActualNodeFor(obj); // do we want .getNode() instead?
+    private static <T extends ASTNode<?>> T nodeWithLocation(final T node, final EObject obj, final EStructuralFeature feature, final int indexInList) {
+        final INode n = NodeModelUtils.findActualNodeFor(obj); // do we want .getNode() instead?
         if (n != null) {
-            ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getFullTextRegion(obj, feature, indexInList);
+            final ITextRegionWithLineInformation location = (ITextRegionWithLineInformation)location_provider.getFullTextRegion(obj, feature, indexInList);
             // End location is untested since we only print beginning
             // locations in error output
-            LineAndColumn beg = NodeModelUtils.getLineAndColumn(n, location.getOffset());
-            LineAndColumn end = NodeModelUtils.getLineAndColumn(n, location.getOffset() + location.getLength());
+            final LineAndColumn beg = NodeModelUtils.getLineAndColumn(n, location.getOffset());
+            final LineAndColumn end = NodeModelUtils.getLineAndColumn(n, location.getOffset() + location.getLength());
             // Xtext column values are 1-based, we want 0-based
             node.setPosition(beg.getLine(), beg.getColumn() - 1,
                              end.getLine(), end.getColumn() - 1);
@@ -80,6 +89,57 @@ public class XtextToJastAdd {
             node.setFileName(filename);
         }
         return node;
+    }
+
+    /**
+     * Calculate the JastAdd-compliant name.  At this point, we only have
+     * references, but JastAdd wants either "A" or "M.A" depending on how we
+     * imported A into our current module.
+     *
+     * How to do this?  Our location is either inside a module or inside a
+     * delta.  If we’re in a delta without ‘uses’ clause, use the qualified
+     * name.  If we’re in a module (or delta with ‘uses’ clause), check if we
+     * have an ‘import’ clause giving the fully-qualified name; if yes, use
+     * it.  If no, use the simple name.
+     *
+     * @param location the context in which we want to resolve the reference
+     * @param reference the object for which we want to generate a name
+     * @param simpleName the simple name of the reference
+     * @return the qualified name of reference if reference is imported by its qualified name; simpleName otherwise.
+     */
+    private static String accessibleName(EObject location, EObject reference, String simpleName) {
+        final IResourceDescriptions index = rdp.getResourceDescriptions(location.eResource());
+        // Assume that reference is in the index -- true for everything we
+        // want to generate a qualified name for.
+        final String qualifiedName = index.getExportedObjectsByObject(reference).iterator().next().getName().toString();
+        ModuleDeclaration decl = EcoreUtil2.getContainerOfType(location, ModuleDeclaration.class);
+        if (decl == null) {
+            DeltaDeclaration delta = EcoreUtil2.getContainerOfType(location, DeltaDeclaration.class);
+            if (delta.getUsedModulename() == null) {
+                return qualifiedName;
+            } else {
+                // Assume that the validator has complained about a non-existent
+                // module already if there’s a typo in the ‘uses’ clause
+                decl = (ModuleDeclaration)
+                    index.getExportedObjects(AbsPackage.eINSTANCE.getModuleDeclaration(),
+                                             QualifiedName.create(delta.getUsedModulename().split("\\.")), false)
+                    .iterator().next().getEObjectOrProxy();
+            }
+        }
+        if (qualifiedName.startsWith(decl.getName())) {
+            // reference is defined in the current module
+            return simpleName;
+        } else {
+            for (final ModuleImport imp : decl.getImports()) {
+                if (imp.getModulename() == null
+                    && imp.getIdentifiers().contains(qualifiedName)) {
+                    // reference was imported via qualifed name: use that
+                    return qualifiedName;
+                }
+            }
+            // use simple name
+            return simpleName;
+        }
     }
 
     /**
@@ -94,11 +154,11 @@ public class XtextToJastAdd {
      * @param resourceSet The parsed ABS files, including one resource for the standard library
      * @return a fresh JastAdd Model object, processed by ASTPreProcessor
      */
-    public static Model fromResourceSet(XtextResourceSet resourceSet) {
-        Model result = new Model();
-        for (Resource r : resourceSet.getResources()) {
-            for (EObject unit : r.getContents()) {
-                CompilationUnit jastadd_unit = fromXtext((org.abs_models.xtext.abs.CompilationUnit) unit);
+    public static Model fromResourceSet(final XtextResourceSet resourceSet) {
+        final Model result = new Model();
+        for (final Resource r : resourceSet.getResources()) {
+            for (final EObject unit : r.getContents()) {
+                final CompilationUnit jastadd_unit = fromXtext((org.abs_models.xtext.abs.CompilationUnit) unit);
                 new ASTPreProcessor().preprocess(jastadd_unit);
                 result.addCompilationUnitNoTransform(jastadd_unit);
             }
@@ -106,46 +166,46 @@ public class XtextToJastAdd {
         return result;
     }
 
-    static CompilationUnit fromXtext(org.abs_models.xtext.abs.CompilationUnit xtext_unit) {
-        CompilationUnit result = new CompilationUnit();
+    static CompilationUnit fromXtext(final org.abs_models.xtext.abs.CompilationUnit xtext_unit) {
+        final CompilationUnit result = new CompilationUnit();
         result.setName(xtext_unit.eResource().getURI().toFileString());
-        for (org.abs_models.xtext.abs.ModuleDeclaration module : xtext_unit.getModules()) {
+        for (final org.abs_models.xtext.abs.ModuleDeclaration module : xtext_unit.getModules()) {
             result.addModuleDeclNoTransform(fromXtext(module));
         }
-        for (org.abs_models.xtext.abs.DeltaDeclaration delta : xtext_unit.getDeltas()) {
+        for (final org.abs_models.xtext.abs.DeltaDeclaration delta : xtext_unit.getDeltas()) {
             result.addDeltaDeclNoTransform(fromXtext(delta));
         }
         if (xtext_unit.getProductline() != null) {
             result.setProductLine(fromXtext(xtext_unit.getProductline()));
         }
-        for (org.abs_models.xtext.abs.ProductDeclaration product : xtext_unit.getProducts()) {
+        for (final org.abs_models.xtext.abs.ProductDeclaration product : xtext_unit.getProducts()) {
             result.addProductDeclNoTransform(fromXtext(product));
         }
-        for (org.abs_models.xtext.abs.MTVLFeatureRoot f : xtext_unit.getRootFeatures()) {
+        for (final org.abs_models.xtext.abs.MTVLFeatureRoot f : xtext_unit.getRootFeatures()) {
             result.addFeatureDeclNoTransform(fromXtext(f));
         }
-        for (org.abs_models.xtext.abs.MTVLFeatureExtension e : xtext_unit.getFeatureExtensions()) {
+        for (final org.abs_models.xtext.abs.MTVLFeatureExtension e : xtext_unit.getFeatureExtensions()) {
             result.addFExtNoTransform(fromXtext(e));
         }
         return nodeWithLocation(result, xtext_unit);
     }
 
-    static ModuleDecl fromXtext(org.abs_models.xtext.abs.ModuleDeclaration xtext_module) {
-        ModuleDecl result = new ModuleDecl();
+    static ModuleDecl fromXtext(final org.abs_models.xtext.abs.ModuleDeclaration xtext_module) {
+        final ModuleDecl result = new ModuleDecl();
         result.setName(xtext_module.getName());
-        for (org.abs_models.xtext.abs.ModuleExport export : xtext_module.getExports()) {
+        for (final org.abs_models.xtext.abs.ModuleExport export : xtext_module.getExports()) {
             result.addExportNoTransform(fromXtext(export));
         }
-        for (org.abs_models.xtext.abs.ModuleImport imp : xtext_module.getImports()) {
+        for (final org.abs_models.xtext.abs.ModuleImport imp : xtext_module.getImports()) {
             result.addImportNoTransform(fromXtext(imp));
         }
-        for (org.abs_models.xtext.abs.Declaration decl : xtext_module.getDeclarations()) {
+        for (final org.abs_models.xtext.abs.Declaration decl : xtext_module.getDeclarations()) {
             result.addDeclNoTransform(fromXtext(decl));
         }
 
         if(xtext_module.isMain()) {
-            List<Stmt> statements = new List<>();
-            for(org.abs_models.xtext.abs.Statement stmt : xtext_module.getMainblockStatements()) {
+            final List<Stmt> statements = new List<>();
+            for(final org.abs_models.xtext.abs.Statement stmt : xtext_module.getMainblockStatements()) {
                 statements.add(fromXtext(stmt));
             }
 
@@ -157,68 +217,68 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_module);
     }
 
-    private static Export fromXtext(org.abs_models.xtext.abs.ModuleExport xtext_export) {
+    private static Export fromXtext(final org.abs_models.xtext.abs.ModuleExport xtext_export) {
         Export result;
         if (xtext_export.isStar()) {
             // "export *;"
             // "export * from OtherModule;"
-            StarExport se = new StarExport();
+            final StarExport se = new StarExport();
             result = se;
             if (xtext_export.getModulename() != null)
                 se.setModuleName(nodeWithLocation(new Name(xtext_export.getModulename()), xtext_export, AbsPackage.eINSTANCE.getModuleExport_Modulename()));
         } else if (xtext_export.getModulename() != null) {
             // "export a, b from OtherModule;"
-            FromExport fe = new FromExport();
+            final FromExport fe = new FromExport();
             result = fe;
             fe.setModuleName(xtext_export.getModulename());
             for (int i = 0; i < xtext_export.getIdentifiers().size(); i++) {
-                String id = xtext_export.getIdentifiers().get(i);
+                final String id = xtext_export.getIdentifiers().get(i);
                 fe.addNameNoTransform(nodeWithLocation(new Name(id), xtext_export, AbsPackage.eINSTANCE.getModuleExport_Identifiers(), i));
             }
         } else {
             // "export a, b;"
-            NamedExport ne = new NamedExport();
+            final NamedExport ne = new NamedExport();
             result = ne;
             for (int i = 0; i < xtext_export.getIdentifiers().size(); i++) {
-                String id = xtext_export.getIdentifiers().get(i);
+                final String id = xtext_export.getIdentifiers().get(i);
                 ne.addNameNoTransform(nodeWithLocation(new Name(id), xtext_export, AbsPackage.eINSTANCE.getModuleExport_Identifiers(), i));
             }
         }
         return nodeWithLocation(result, xtext_export);
     }
 
-    private static Import fromXtext(org.abs_models.xtext.abs.ModuleImport xtext_import) {
+    private static Import fromXtext(final org.abs_models.xtext.abs.ModuleImport xtext_import) {
         Import result;
         if (xtext_import.isStar()) {
             // "import * from OtherModule;"
-            StarImport si = new StarImport(xtext_import.getModulename());
+            final StarImport si = new StarImport(xtext_import.getModulename());
             result = si;
         } else if (xtext_import.getModulename() != null) {
             // "import a, b from OtherModule;"
-            FromImport fi = new FromImport();
+            final FromImport fi = new FromImport();
             result = fi;
             fi.setModuleName(xtext_import.getModulename());
             for (int i = 0; i < xtext_import.getIdentifiers().size(); i++) {
-                String id = xtext_import.getIdentifiers().get(i);
+                final String id = xtext_import.getIdentifiers().get(i);
                 fi.addNameNoTransform(nodeWithLocation(new Name(id), xtext_import, AbsPackage.eINSTANCE.getModuleImport_Identifiers(), i));
             }
         } else {
             // "import OtherModule.a, OtherModule.b;"
-            NamedImport ni = new NamedImport();
+            final NamedImport ni = new NamedImport();
             result = ni;
             for (int i = 0; i < xtext_import.getIdentifiers().size(); i++) {
-                String id = xtext_import.getIdentifiers().get(i);
+                final String id = xtext_import.getIdentifiers().get(i);
                 ni.addNameNoTransform(nodeWithLocation(new Name(id), xtext_import, AbsPackage.eINSTANCE.getModuleImport_Identifiers(), i));
             }
         }
         return nodeWithLocation(result, xtext_import);
     }
 
-    private static List<Annotation> annotationsfromXtext(org.abs_models.xtext.abs.Annotations annotations) {
-        List<Annotation> annotationList = new List<>();
-        for(org.abs_models.xtext.abs.Annotation annotation : annotations.getAnnotations()) {
+    private static List<Annotation> annotationsfromXtext(final org.abs_models.xtext.abs.Annotations annotations) {
+        final List<Annotation> annotationList = new List<>();
+        for(final org.abs_models.xtext.abs.Annotation annotation : annotations.getAnnotations()) {
             Annotation astAnnotation;
-            PureExp exp = pureExpFromXtext(annotation.getValue());
+            final PureExp exp = pureExpFromXtext(annotation.getValue());
             if (annotation.getId() != null) {
                 astAnnotation = new TypedAnnotation(exp, nodeWithLocation(new UnresolvedTypeUse(annotation.getId(), new List<>()), AbsPackage.eINSTANCE.getAnnotation_Id()));
             } else {
@@ -229,7 +289,7 @@ public class XtextToJastAdd {
         return annotationList;
     }
 
-    static Decl fromXtext(org.abs_models.xtext.abs.Declaration xtext_decl) {
+    static Decl fromXtext(final org.abs_models.xtext.abs.Declaration xtext_decl) {
         Decl result = null;
         if (xtext_decl.getDatatypeDeclaration() != null) {
             result = fromXtext(xtext_decl.getDatatypeDeclaration());
@@ -264,24 +324,24 @@ public class XtextToJastAdd {
         return result;
     }
 
-    static DataTypeDecl fromXtext(org.abs_models.xtext.abs.DataTypeDeclaration xtext_decl) {
+    static DataTypeDecl fromXtext(final org.abs_models.xtext.abs.DataTypeDeclaration xtext_decl) {
         DataTypeDecl result;
         if (xtext_decl.getTypeParameters().isEmpty()) {
             result = new DataTypeDecl();
         } else {
             result = new ParametricDataTypeDecl();
             for (int i = 0; i < xtext_decl.getTypeParameters().size(); i++) {
-                String tp = xtext_decl.getTypeParameters().get(i);
+                final String tp = xtext_decl.getTypeParameters().get(i);
                 ((ParametricDataTypeDecl)result).addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getDataTypeDeclaration_TypeParameters(), i));
             }
         }
         result.setName(xtext_decl.getName());
 
-        for (org.abs_models.xtext.abs.DataConstructorDeclaration xtext_d : xtext_decl.getConstructors()) {
-            DataConstructor constructor = new DataConstructor();
+        for (final org.abs_models.xtext.abs.DataConstructorDeclaration xtext_d : xtext_decl.getConstructors()) {
+            final DataConstructor constructor = new DataConstructor();
             constructor.setName(xtext_d.getName());
 
-            for (DataConstructorParameter arg : xtext_d.getArguments()) {
+            for (final DataConstructorParameter arg : xtext_d.getArguments()) {
                 constructor.addConstructorArgNoTransform(fromXtext(arg));
             }
 
@@ -290,8 +350,8 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
-    private static ConstructorArg fromXtext(DataConstructorParameter xtext_arg) {
-        ConstructorArg constructorArg = new ConstructorArg();
+    private static ConstructorArg fromXtext(final DataConstructorParameter xtext_arg) {
+        final ConstructorArg constructorArg = new ConstructorArg();
         if(xtext_arg.getName() != null) {
             constructorArg.setSelectorName(nodeWithLocation(new Name(xtext_arg.getName()), xtext_arg, AbsPackage.eINSTANCE.getDataConstructorParameter_Name()));
         }
@@ -306,7 +366,7 @@ public class XtextToJastAdd {
 
         // The upshot: this code is cargo-culted and can be changed /
         // simplified if subsequent stages do not complain.
-        TypeUse tu = fromXtext(xtext_arg.getType());
+        final TypeUse tu = fromXtext(xtext_arg.getType());
         DataTypeUse turesolved;
         if (tu instanceof DataTypeUse) {
             turesolved = (DataTypeUse)tu;
@@ -319,37 +379,37 @@ public class XtextToJastAdd {
         return nodeWithLocation(constructorArg, xtext_arg);
     }
 
-    static TypeSynDecl fromXtext(org.abs_models.xtext.abs.TypesynonymDeclaration xtext_decl) {
-        TypeSynDecl result = new TypeSynDecl();
+    static TypeSynDecl fromXtext(final org.abs_models.xtext.abs.TypesynonymDeclaration xtext_decl) {
+        final TypeSynDecl result = new TypeSynDecl();
         result.setName(xtext_decl.getName());
         result.setValue(fromXtext(xtext_decl.getType()));
         return nodeWithLocation(result, xtext_decl);
     }
 
-    static ExceptionDecl fromXtext(org.abs_models.xtext.abs.ExceptionDeclaration xtext_decl) {
-        ExceptionConstructor constructor = new ExceptionConstructor();
+    static ExceptionDecl fromXtext(final org.abs_models.xtext.abs.ExceptionDeclaration xtext_decl) {
+        final ExceptionConstructor constructor = new ExceptionConstructor();
         constructor.setName(xtext_decl.getName());
-        for (DataConstructorParameter arg : xtext_decl.getArguments()) {
+        for (final DataConstructorParameter arg : xtext_decl.getArguments()) {
             constructor.addConstructorArgNoTransform(fromXtext(arg));
         }
 
-        ExceptionDecl result = new ExceptionDecl();
+        final ExceptionDecl result = new ExceptionDecl();
         result.setName(xtext_decl.getName());
         result.setDataConstructorList(new List<DataConstructor>(constructor));
         return nodeWithLocation(result, xtext_decl);
     }
 
-    static Decl fromXtext(org.abs_models.xtext.abs.FunctionDeclaration xtext_decl) {
+    static Decl fromXtext(final org.abs_models.xtext.abs.FunctionDeclaration xtext_decl) {
         // This parses FunctionDecl and PartialFunctionDecl; these are
         // unfortunately distinct classes in JastAdd, so we return type Decl
         // instead.
         if (xtext_decl.getFunctionArguments().size() > 0) {
             PartialFunctionDecl result;
             if (!xtext_decl.getTypeParameters().isEmpty()) {
-                ParametricPartialFunctionDecl presult = new ParametricPartialFunctionDecl();
+                final ParametricPartialFunctionDecl presult = new ParametricPartialFunctionDecl();
                 result = presult;
                 for (int i = 0; i < xtext_decl.getTypeParameters().size(); i++) {
-                    String tp = xtext_decl.getTypeParameters().get(i);
+                    final String tp = xtext_decl.getTypeParameters().get(i);
                     presult.addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_TypeParameters(), i));
                 }
             } else {
@@ -358,26 +418,26 @@ public class XtextToJastAdd {
             result.setName(xtext_decl.getName());
             result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
 
-            for(org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
+            for(final org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
                 result.addParamNoTransform(fromXtext(arg));
             }
 
             for (int i = 0; i < xtext_decl.getFunctionArguments().size(); i++) {
-                String fArg = xtext_decl.getFunctionArguments().get(i);
+                final String fArg = xtext_decl.getFunctionArguments().get(i);
                 result.addFuncParamNoTransform(nodeWithLocation(new FunctionParamDecl(fArg), xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_FunctionArguments(), i));
             }
 
-            PartialFunctionDef functionDef = new PartialFunctionDef(pureExpFromXtext(xtext_decl.getBody()));
+            final PartialFunctionDef functionDef = new PartialFunctionDef(pureExpFromXtext(xtext_decl.getBody()));
             result.setPartialFunctionDef(nodeWithLocation(functionDef, xtext_decl.getBody()));
 
             return nodeWithLocation(result, xtext_decl);
         } else {
             FunctionDecl result;
             if (!xtext_decl.getTypeParameters().isEmpty()) {
-                ParametricFunctionDecl presult = new ParametricFunctionDecl();
+                final ParametricFunctionDecl presult = new ParametricFunctionDecl();
                 result = presult;
                 for (int i = 0; i < xtext_decl.getTypeParameters().size(); i++) {
-                    String tp = xtext_decl.getTypeParameters().get(i);
+                    final String tp = xtext_decl.getTypeParameters().get(i);
                     presult.addTypeParameterNoTransform(nodeWithLocation(new TypeParameterDecl(tp), xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_TypeParameters(), i));
                 }
             } else {
@@ -386,45 +446,45 @@ public class XtextToJastAdd {
             result.setName(xtext_decl.getName());
             result.setTypeUse(fromXtext(xtext_decl.getResulttype()));
 
-            for(org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
+            for(final org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
                 result.addParamNoTransform(fromXtext(arg));
             }
 
             if (xtext_decl.isBuiltin()) {
-                BuiltinFunctionDef bd = new BuiltinFunctionDef();
+                final BuiltinFunctionDef bd = new BuiltinFunctionDef();
                 for (int i = 0; i < xtext_decl.getBuiltinArguments().size(); i++) {
-                    String barg = xtext_decl.getBuiltinArguments().get(i);
+                    final String barg = xtext_decl.getBuiltinArguments().get(i);
                     bd.addStringArgNoTransform(nodeWithLocation(new StringLiteral(ASTPreProcessor.preprocessStringLiteral(barg)), xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_BuiltinArguments(), i));
                 }
                 result.setFunctionDef(nodeWithLocation(bd, xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_Builtin()));
             } else {
-                PureExp exp = pureExpFromXtext(xtext_decl.getBody());
+                final PureExp exp = pureExpFromXtext(xtext_decl.getBody());
                 result.setFunctionDef(nodeWithLocation(new ExpFunctionDef(exp), xtext_decl.getBody()));
             }
             return nodeWithLocation(result, xtext_decl);
         }
     }
 
-    static TraitDecl fromXtext(org.abs_models.xtext.abs.TraitDeclaration xtext_decl) {
-        TraitDecl result = new TraitDecl();
+    static TraitDecl fromXtext(final org.abs_models.xtext.abs.TraitDeclaration xtext_decl) {
+        final TraitDecl result = new TraitDecl();
         result.setName(xtext_decl.getName());
         result.setTraitExpr(fromXtext(xtext_decl.getTraitExpression()));
         return nodeWithLocation(result, xtext_decl);
     }
 
-    static TraitExpr fromXtext(org.abs_models.xtext.abs.TraitExpression xtext_exp) {
+    static TraitExpr fromXtext(final org.abs_models.xtext.abs.TraitExpression xtext_exp) {
         TraitExpr result = fromXtext(xtext_exp.getBasicExpression());
-        for (org.abs_models.xtext.abs.TraitOperation op : xtext_exp.getTraitOperations()) {
+        for (final org.abs_models.xtext.abs.TraitOperation op : xtext_exp.getTraitOperations()) {
             result = new TraitModifyExpr(result, fromXtext(op));
         }
         return nodeWithLocation(result, xtext_exp);
     }
 
-    static TraitExpr fromXtext(org.abs_models.xtext.abs.BasicTraitExpression xtext_exp) {
+    static TraitExpr fromXtext(final org.abs_models.xtext.abs.BasicTraitExpression xtext_exp) {
         TraitExpr result = null;
         if (xtext_exp.isMethodSet() || xtext_exp.getMethods().size() > 0) {
-            TraitSetExpr fresult = new TraitSetExpr();
-            for (org.abs_models.xtext.abs.MethodDeclaration m : xtext_exp.getMethods()) {
+            final TraitSetExpr fresult = new TraitSetExpr();
+            for (final org.abs_models.xtext.abs.MethodDeclaration m : xtext_exp.getMethods()) {
                 fresult.addMethodImplNoTransform(fromXtext(m));
             }
             result = fresult;
@@ -434,11 +494,11 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_exp);
     }
 
-    static MethodModifier fromXtext(org.abs_models.xtext.abs.TraitOperation xtext_exp) {
+    static MethodModifier fromXtext(final org.abs_models.xtext.abs.TraitOperation xtext_exp) {
         MethodModifier result = null;
         if (xtext_exp.isRemoveMethodModifier() || xtext_exp.getRemovedSignatures().size() > 0) {
-            List<MethodSig> l = new List<>();
-            for (org.abs_models.xtext.abs.MethodSignature s : xtext_exp.getRemovedSignatures()) {
+            final List<MethodSig> l = new List<>();
+            for (final org.abs_models.xtext.abs.MethodSignature s : xtext_exp.getRemovedSignatures()) {
                 l.add(fromXtext(s));
             }
             result = new RemoveMethodModifier(l);
@@ -450,75 +510,75 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_exp);
     }
 
-    static InterfaceDecl fromXtext(org.abs_models.xtext.abs.InterfaceDeclaration xtext_decl) {
-        InterfaceDecl result = new  InterfaceDecl();
+    static InterfaceDecl fromXtext(final org.abs_models.xtext.abs.InterfaceDeclaration xtext_decl) {
+        final InterfaceDecl result = new  InterfaceDecl();
         result.setName(xtext_decl.getName());
 
         for (int i = 0; i < xtext_decl.getSuperinterfaces().size(); i++) {
-            String iname = xtext_decl.getSuperinterfaces().get(i);
+            final String iname = xtext_decl.getSuperinterfaces().get(i);
             result.addExtendedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDeclaration_Superinterfaces(), i));
         }
 
-        for (MethodSignature ms : xtext_decl.getMethods()) {
+        for (final MethodSignature ms : xtext_decl.getMethods()) {
             result.addBodyNoTransform(fromXtext(ms));
         }
 
         return nodeWithLocation(result, xtext_decl);
     }
 
-    private static MethodSig fromXtext(MethodSignature xtext_decl) {
-        MethodSig result = new MethodSig();
+    private static MethodSig fromXtext(final MethodSignature xtext_decl) {
+        final MethodSig result = new MethodSig();
         result.setName(xtext_decl.getName());
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-        for(org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
+        for(final org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
             result.addParamNoTransform(fromXtext(arg));
         }
         result.setReturnType(fromXtext(xtext_decl.getResulttype()));
         return nodeWithLocation(result, xtext_decl);
     }
 
-    static ClassDecl fromXtext(org.abs_models.xtext.abs.ClassDeclaration xtext_decl) {
-        ClassDecl result = new  ClassDecl();
+    static ClassDecl fromXtext(final org.abs_models.xtext.abs.ClassDeclaration xtext_decl) {
+        final ClassDecl result = new  ClassDecl();
         result.setName(xtext_decl.getName());
 
-        for(org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
+        for(final org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
             result.addParamNoTransform(fromXtext(arg));
         }
 
         for (int i = 0; i < xtext_decl.getInterfaces().size(); i++) {
-            String iname = xtext_decl.getInterfaces().get(i);
+            final String iname = xtext_decl.getInterfaces().get(i);
             result.addImplementedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDeclaration_Superinterfaces(), i));
         }
 
-        for(org.abs_models.xtext.abs.FieldDeclaration fieldDecl : xtext_decl.getFields()) {
+        for(final org.abs_models.xtext.abs.FieldDeclaration fieldDecl : xtext_decl.getFields()) {
             result.addFieldNoTransform(fromXtext(fieldDecl));
         }
 
         // TODO treat the case of an empty init block
         if (xtext_decl.getInitblockStatements().size() > 0) {
-            InitBlock astInitBlock = new InitBlock();
-            for(org.abs_models.xtext.abs.Statement statement : xtext_decl.getInitblockStatements()) {
+            final InitBlock astInitBlock = new InitBlock();
+            for(final org.abs_models.xtext.abs.Statement statement : xtext_decl.getInitblockStatements()) {
                 astInitBlock.addStmt(fromXtext(statement));
             }
             result.setInitBlock(astInitBlock);
         }
 
-        for(MethodDeclaration methodDecl : xtext_decl.getMethods()) {
+        for(final MethodDeclaration methodDecl : xtext_decl.getMethods()) {
             result.addMethodNoTransform(fromXtext(methodDecl));
         }
 
-        for (SwitchStatementBranch recover_branch : xtext_decl.getRecoverbranches()) {
+        for (final SwitchStatementBranch recover_branch : xtext_decl.getRecoverbranches()) {
             result.addRecoverBranchNoTransform(fromXtext(recover_branch));
         }
-        for (org.abs_models.xtext.abs.TraitExpression trait_exp : xtext_decl.getUsedTraits()) {
+        for (final org.abs_models.xtext.abs.TraitExpression trait_exp : xtext_decl.getUsedTraits()) {
             result.addTraitUseNoTransform(new TraitUse(fromXtext(trait_exp)));
         }
 
         return nodeWithLocation(result, xtext_decl);
     }
 
-    private static FieldDecl fromXtext(org.abs_models.xtext.abs.FieldDeclaration xtext_decl) {
-        FieldDecl result = new FieldDecl();
+    private static FieldDecl fromXtext(final org.abs_models.xtext.abs.FieldDeclaration xtext_decl) {
+        final FieldDecl result = new FieldDecl();
         result.setName(xtext_decl.getName());
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
         if (xtext_decl.getInit() != null) {
@@ -528,15 +588,15 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
-    private static MethodImpl fromXtext(org.abs_models.xtext.abs.MethodDeclaration xtext_decl) {
+    private static MethodImpl fromXtext(final org.abs_models.xtext.abs.MethodDeclaration xtext_decl) {
         // Initialize position here already so we can use it for the embedded
         // MethodSig
-        MethodImpl result = nodeWithLocation(new MethodImpl(), xtext_decl);
+        final MethodImpl result = nodeWithLocation(new MethodImpl(), xtext_decl);
 
-        MethodSig sig = new MethodSig();
+        final MethodSig sig = new MethodSig();
         sig.setName(xtext_decl.getName());
         sig.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-        for(org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
+        for(final org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
             sig.addParamNoTransform(fromXtext(arg));
         }
         sig.setReturnType(fromXtext(xtext_decl.getResulttype()));
@@ -547,8 +607,8 @@ public class XtextToJastAdd {
                         sig.getEndLine(), sig.getEndColumn());
         result.setMethodSig(sig);
 
-        Block block = new Block();
-        for(org.abs_models.xtext.abs.Statement stmt : xtext_decl.getStatements()) {
+        final Block block = new Block();
+        for(final org.abs_models.xtext.abs.Statement stmt : xtext_decl.getStatements()) {
             block.addStmtNoTransform(fromXtext(stmt));
         }
         result.setBlock(block);
@@ -556,8 +616,8 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
-    private static ParamDecl fromXtext(org.abs_models.xtext.abs.Parameter xtext_decl) {
-        ParamDecl result = new ParamDecl();
+    private static ParamDecl fromXtext(final org.abs_models.xtext.abs.Parameter xtext_decl) {
+        final ParamDecl result = new ParamDecl();
         result.setName(xtext_decl.getName());
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
         result.setAccess(fromXtext(xtext_decl.getType()));
@@ -571,24 +631,24 @@ public class XtextToJastAdd {
      * @param stmt The statement to be converted
      * @return a JastAdd Block containing the statement.
      */
-    private static Block blockFromXtext(org.abs_models.xtext.abs.Statement stmt) {
-        Stmt result = fromXtext(stmt);
+    private static Block blockFromXtext(final org.abs_models.xtext.abs.Statement stmt) {
+        final Stmt result = fromXtext(stmt);
         if (result instanceof Block) {
             return (Block)result;
         } else {
-            Block block = new Block();
+            final Block block = new Block();
             block.addStmtNoTransform(result);
             return nodeWithLocation(block, stmt);
         }
     }
 
-    private static Stmt fromXtext(org.abs_models.xtext.abs.Statement stmt) {
+    private static Stmt fromXtext(final org.abs_models.xtext.abs.Statement stmt) {
         Stmt result = null;
 
         if(stmt instanceof org.abs_models.xtext.abs.VariableDeclarationStatement) {
-            org.abs_models.xtext.abs.VariableDeclarationStatement value = (org.abs_models.xtext.abs.VariableDeclarationStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            VarDecl varDecl = new VarDecl();
+            final org.abs_models.xtext.abs.VariableDeclarationStatement value = (org.abs_models.xtext.abs.VariableDeclarationStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final VarDecl varDecl = new VarDecl();
             varDecl.setName(value.getVariablename());
             varDecl.setAccess(fromXtext(value.getType()));
             if (value.getInit() != null) {
@@ -597,12 +657,12 @@ public class XtextToJastAdd {
             result = new VarDeclStmt(annotations, varDecl);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.AssignStatement) {
-            org.abs_models.xtext.abs.AssignStatement value = (org.abs_models.xtext.abs.AssignStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            org.abs_models.xtext.abs.Expression lhsExp = value.getLhs();
+            final org.abs_models.xtext.abs.AssignStatement value = (org.abs_models.xtext.abs.AssignStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final org.abs_models.xtext.abs.Expression lhsExp = value.getLhs();
             VarOrFieldUse varOrFieldUse;
             if(lhsExp instanceof VariableOrFieldExpression) {
-                VariableOrFieldExpression lhs = (VariableOrFieldExpression) lhsExp;
+                final VariableOrFieldExpression lhs = (VariableOrFieldExpression) lhsExp;
                 if (lhs.isField()) {
                     varOrFieldUse = new FieldUse(lhs.getVariablename());
                 } else {
@@ -615,40 +675,40 @@ public class XtextToJastAdd {
                 assert false : "Invalid left-hand side expression in Xtext AST reached XtextToJastAdd -- check validation rules";
                 varOrFieldUse = null;
             }
-            Exp expresssion = fromXtext(value.getExpression());
+            final Exp expresssion = fromXtext(value.getExpression());
             result = new AssignStmt(annotations, varOrFieldUse, expresssion);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.SkipStatement) {
-            org.abs_models.xtext.abs.SkipStatement value = (org.abs_models.xtext.abs.SkipStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final org.abs_models.xtext.abs.SkipStatement value = (org.abs_models.xtext.abs.SkipStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
             result = new SkipStmt(annotations);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ReturnStatement) {
-            org.abs_models.xtext.abs.ReturnStatement value = (org.abs_models.xtext.abs.ReturnStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final org.abs_models.xtext.abs.ReturnStatement value = (org.abs_models.xtext.abs.ReturnStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 
             result = new ReturnStmt(annotations, fromXtext(value.getExpression()));
         }
         else if(stmt instanceof org.abs_models.xtext.abs.AssertStatement) {
-            org.abs_models.xtext.abs.AssertStatement value = (org.abs_models.xtext.abs.AssertStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final org.abs_models.xtext.abs.AssertStatement value = (org.abs_models.xtext.abs.AssertStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 
             result = new AssertStmt(annotations, pureExpFromXtext(value.getExpression()));
         }
         else if(stmt instanceof org.abs_models.xtext.abs.Block) {
-            org.abs_models.xtext.abs.Block value = (org.abs_models.xtext.abs.Block) stmt;
-            Block block = new Block();
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final org.abs_models.xtext.abs.Block value = (org.abs_models.xtext.abs.Block) stmt;
+            final Block block = new Block();
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
 
-            for(org.abs_models.xtext.abs.Statement subStmt : value.getStatements()) {
+            for(final org.abs_models.xtext.abs.Statement subStmt : value.getStatements()) {
                 block.addStmtNoTransform(fromXtext(subStmt));
             }
             block.setAnnotationList(annotations);
             result = block;
         }
         else if(stmt instanceof org.abs_models.xtext.abs.IfStatement) {
-            org.abs_models.xtext.abs.IfStatement value = (org.abs_models.xtext.abs.IfStatement) stmt;
-            IfStmt ifstmt = new IfStmt();
+            final org.abs_models.xtext.abs.IfStatement value = (org.abs_models.xtext.abs.IfStatement) stmt;
+            final IfStmt ifstmt = new IfStmt();
             ifstmt.setAnnotationList(annotationsfromXtext(value.getAnnotations()));
             ifstmt.setCondition(pureExpFromXtext(value.getCondition()));
             ifstmt.setThen(blockFromXtext(value.getConsequence()));
@@ -658,66 +718,66 @@ public class XtextToJastAdd {
             result = ifstmt;
         }
         else if(stmt instanceof org.abs_models.xtext.abs.WhileStatement) {
-            org.abs_models.xtext.abs.WhileStatement value = (org.abs_models.xtext.abs.WhileStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            PureExp condition = pureExpFromXtext(value.getCondition());
-            Block body = blockFromXtext(value.getBody());
+            final org.abs_models.xtext.abs.WhileStatement value = (org.abs_models.xtext.abs.WhileStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final PureExp condition = pureExpFromXtext(value.getCondition());
+            final Block body = blockFromXtext(value.getBody());
             result = new WhileStmt(annotations, condition, body);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ForeachStatement) {
-            org.abs_models.xtext.abs.ForeachStatement value = (org.abs_models.xtext.abs.ForeachStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            LoopVarDecl var = new LoopVarDecl(value.getLoopvar());
-            PureExp list = pureExpFromXtext(value.getList());
-            Block body = blockFromXtext(value.getBody());
+            final org.abs_models.xtext.abs.ForeachStatement value = (org.abs_models.xtext.abs.ForeachStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final LoopVarDecl var = new LoopVarDecl(value.getLoopvar());
+            final PureExp list = pureExpFromXtext(value.getList());
+            final Block body = blockFromXtext(value.getBody());
             result = new ForeachStmt(annotations, var, list, body);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.TryCatchFinallyStatement) {
-            org.abs_models.xtext.abs.TryCatchFinallyStatement value = (org.abs_models.xtext.abs.TryCatchFinallyStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            Block body = blockFromXtext(value.getBody());
-            List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
-            Opt<Block> finallyOpt = new Opt<>();
+            final org.abs_models.xtext.abs.TryCatchFinallyStatement value = (org.abs_models.xtext.abs.TryCatchFinallyStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final Block body = blockFromXtext(value.getBody());
+            final List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
+            final Opt<Block> finallyOpt = new Opt<>();
             if (value.getFinally() != null) {
-                Block finallyBlock = blockFromXtext(value.getFinally());
+                final Block finallyBlock = blockFromXtext(value.getFinally());
                 finallyOpt.setChild(finallyBlock, 0);
             }
             result = new TryCatchFinallyStmt(annotations, body, branches, finallyOpt);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.SuspendStatement) {
-            org.abs_models.xtext.abs.SuspendStatement value = (org.abs_models.xtext.abs.SuspendStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final org.abs_models.xtext.abs.SuspendStatement value = (org.abs_models.xtext.abs.SuspendStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
             result = new SuspendStmt(annotations);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.DurationStatement) {
-            org.abs_models.xtext.abs.DurationStatement value = (org.abs_models.xtext.abs.DurationStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            PureExp min = pureExpFromXtext(value.getMin());
-            PureExp max = pureExpFromXtext(value.getMax());
+            final org.abs_models.xtext.abs.DurationStatement value = (org.abs_models.xtext.abs.DurationStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final PureExp min = pureExpFromXtext(value.getMin());
+            final PureExp max = pureExpFromXtext(value.getMax());
             result = new DurationStmt(annotations, min, max);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ThrowStatement) {
-            org.abs_models.xtext.abs.ThrowStatement value = (org.abs_models.xtext.abs.ThrowStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            PureExp exception = pureExpFromXtext(value.getException());
+            final org.abs_models.xtext.abs.ThrowStatement value = (org.abs_models.xtext.abs.ThrowStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final PureExp exception = pureExpFromXtext(value.getException());
             result = new ThrowStmt(annotations, exception);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.DieStatement) {
-            org.abs_models.xtext.abs.DieStatement value = (org.abs_models.xtext.abs.DieStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            PureExp exception = pureExpFromXtext(value.getException());
+            final org.abs_models.xtext.abs.DieStatement value = (org.abs_models.xtext.abs.DieStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final PureExp exception = pureExpFromXtext(value.getException());
             result = new DieStmt(annotations, exception);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.MoveCogToStatement) {
-            org.abs_models.xtext.abs.MoveCogToStatement value = (org.abs_models.xtext.abs.MoveCogToStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            PureExp target = pureExpFromXtext(value.getTarget());
+            final org.abs_models.xtext.abs.MoveCogToStatement value = (org.abs_models.xtext.abs.MoveCogToStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final PureExp target = pureExpFromXtext(value.getTarget());
             result = new MoveCogToStmt(annotations, target);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ExpressionStatement) {
-            org.abs_models.xtext.abs.ExpressionStatement value = (org.abs_models.xtext.abs.ExpressionStatement) stmt;
-            org.abs_models.xtext.abs.Expression xtextExp = value.getExpression();
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final org.abs_models.xtext.abs.ExpressionStatement value = (org.abs_models.xtext.abs.ExpressionStatement) stmt;
+            final org.abs_models.xtext.abs.Expression xtextExp = value.getExpression();
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
             if (xtextExp instanceof AwaitExpression
                 && (!(((AwaitExpression)xtextExp).getGuard() instanceof ExpressionGuard)
                     || !(((org.abs_models.xtext.abs.ExpressionGuard)(((AwaitExpression)xtextExp).getGuard())).getExpression() instanceof MethodCallExpression))) {
@@ -725,18 +785,18 @@ public class XtextToJastAdd {
                 // "guard" with an asynchronous method call expression?  Then
                 // generate a JastAdd AwaitStatement.  (The "await o!m()" case is
                 // handled as part of fromXtext(Expression) below.)
-                Guard guard = fromXtext(((AwaitExpression)xtextExp).getGuard());
+                final Guard guard = fromXtext(((AwaitExpression)xtextExp).getGuard());
                 result = new AwaitStmt(annotations, guard);
             } else {
-                Exp exp = fromXtext(xtextExp);
+                final Exp exp = fromXtext(xtextExp);
                 result = new ExpressionStmt(annotations, exp);
             }
         }
         else if(stmt instanceof org.abs_models.xtext.abs.SwitchStatement) {
-            org.abs_models.xtext.abs.SwitchStatement value = (org.abs_models.xtext.abs.SwitchStatement) stmt;
-            List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            PureExp condition = pureExpFromXtext(value.getCondition());
-            List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
+            final org.abs_models.xtext.abs.SwitchStatement value = (org.abs_models.xtext.abs.SwitchStatement) stmt;
+            final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
+            final PureExp condition = pureExpFromXtext(value.getCondition());
+            final List<CaseBranchStmt> branches = caseBranchStmtsFromXtext(value.getBranches());
             result = new CaseStmt(annotations, condition, branches);
         }
         else {
@@ -747,20 +807,20 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, stmt);
     }
 
-    private static Guard fromXtext(org.abs_models.xtext.abs.Guard guard) {
+    private static Guard fromXtext(final org.abs_models.xtext.abs.Guard guard) {
         Guard result = null;
         if (guard instanceof org.abs_models.xtext.abs.DurationGuard) {
-            org.abs_models.xtext.abs.DurationGuard dguard = (org.abs_models.xtext.abs.DurationGuard) guard;
+            final org.abs_models.xtext.abs.DurationGuard dguard = (org.abs_models.xtext.abs.DurationGuard) guard;
             result = nodeWithLocation(new org.abs_models.frontend.ast.DurationGuard(pureExpFromXtext(dguard.getMin()), pureExpFromXtext(dguard.getMax())), guard);
         } else if (guard instanceof org.abs_models.xtext.abs.ExpressionGuard) {
-            org.abs_models.xtext.abs.ExpressionGuard eguard = (org.abs_models.xtext.abs.ExpressionGuard) guard;
+            final org.abs_models.xtext.abs.ExpressionGuard eguard = (org.abs_models.xtext.abs.ExpressionGuard) guard;
             if (eguard.isClaim()) {
                 result = nodeWithLocation(new org.abs_models.frontend.ast.ClaimGuard(pureExpFromXtext(eguard.getExpression())), guard);
             } else {
                 result = nodeWithLocation(new org.abs_models.frontend.ast.ExpGuard(pureExpFromXtext(eguard.getExpression())), guard);
             }
         } else if (guard instanceof org.abs_models.xtext.abs.AndGuard) {
-            org.abs_models.xtext.abs.AndGuard aguard = (org.abs_models.xtext.abs.AndGuard)guard;
+            final org.abs_models.xtext.abs.AndGuard aguard = (org.abs_models.xtext.abs.AndGuard)guard;
             result = nodeWithLocation(new org.abs_models.frontend.ast.AndGuard(fromXtext(aguard.getLeft()), fromXtext(aguard.getRight())), guard);
         } else {
             throw new NotImplementedYetException(new ASTNode(),
@@ -770,51 +830,51 @@ public class XtextToJastAdd {
         return result;
     }
 
-    private static List<CaseBranchStmt> caseBranchStmtsFromXtext(EList<SwitchStatementBranch> statements) {
-        List<CaseBranchStmt> branchStmts = new List<>();
-        for(SwitchStatementBranch branch : statements) {
+    private static List<CaseBranchStmt> caseBranchStmtsFromXtext(final EList<SwitchStatementBranch> statements) {
+        final List<CaseBranchStmt> branchStmts = new List<>();
+        for(final SwitchStatementBranch branch : statements) {
             branchStmts.add(fromXtext(branch));
         }
         return branchStmts;
     }
 
-    private static CaseBranchStmt fromXtext(SwitchStatementBranch xtext_branch) {
-        CaseBranchStmt result = new CaseBranchStmt();
+    private static CaseBranchStmt fromXtext(final SwitchStatementBranch xtext_branch) {
+        final CaseBranchStmt result = new CaseBranchStmt();
         result.setLeft(fromXtext(xtext_branch.getPattern()));
 
-        Block block = blockFromXtext(xtext_branch.getBody());
+        final Block block = blockFromXtext(xtext_branch.getBody());
         result.setRight(block);
 
         return nodeWithLocation(result, xtext_branch);
     }
 
-    private static Pattern fromXtext(org.abs_models.xtext.abs.Pattern pattern) {
+    private static Pattern fromXtext(final org.abs_models.xtext.abs.Pattern pattern) {
         Pattern result;
         if (pattern instanceof org.abs_models.xtext.abs.WildcardPattern) {
             result = nodeWithLocation(new UnderscorePattern(), pattern);
         } else if (pattern instanceof org.abs_models.xtext.abs.IntLiteralPattern) {
-            org.abs_models.xtext.abs.IntLiteralPattern value = (IntLiteralPattern) pattern;
-            LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.IntLiteral(value.getValue().toString()), value, AbsPackage.eINSTANCE.getIntLiteralPattern_Value());
+            final org.abs_models.xtext.abs.IntLiteralPattern value = (IntLiteralPattern) pattern;
+            final LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.IntLiteral(value.getValue().toString()), value, AbsPackage.eINSTANCE.getIntLiteralPattern_Value());
             result = nodeWithLocation(new LiteralPattern(exp), pattern);
         } else if (pattern instanceof org.abs_models.xtext.abs.StringLiteralPattern) {
-            org.abs_models.xtext.abs.StringLiteralPattern value = (StringLiteralPattern) pattern;
-            LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.StringLiteral(ASTPreProcessor.preprocessStringLiteral(value.getValue())), value, AbsPackage.eINSTANCE.getStringLiteralPattern_Value());
+            final org.abs_models.xtext.abs.StringLiteralPattern value = (StringLiteralPattern) pattern;
+            final LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.StringLiteral(ASTPreProcessor.preprocessStringLiteral(value.getValue())), value, AbsPackage.eINSTANCE.getStringLiteralPattern_Value());
             result = nodeWithLocation(new LiteralPattern(exp), pattern);
         }
         else if(pattern instanceof org.abs_models.xtext.abs.FloatLiteralPattern) {
-            org.abs_models.xtext.abs.FloatLiteralPattern value = (FloatLiteralPattern) pattern;
-            LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.FloatLiteral(Double.toString(value.getValue())), value, AbsPackage.eINSTANCE.getFloatLiteralPattern_Value());
+            final org.abs_models.xtext.abs.FloatLiteralPattern value = (FloatLiteralPattern) pattern;
+            final LiteralExp exp = nodeWithLocation(new org.abs_models.frontend.ast.FloatLiteral(Double.toString(value.getValue())), value, AbsPackage.eINSTANCE.getFloatLiteralPattern_Value());
             result = nodeWithLocation(new LiteralPattern(exp), pattern);
         } else if (pattern instanceof org.abs_models.xtext.abs.VariablePattern) {
-            org.abs_models.xtext.abs.VariablePattern value = (VariablePattern) pattern;
+            final org.abs_models.xtext.abs.VariablePattern value = (VariablePattern) pattern;
             result = nodeWithLocation(new PatternVarUse(value.getValue()), pattern);
         } else if (pattern instanceof org.abs_models.xtext.abs.ConstructorPattern) {
             // TODO: once Xtext linking is in place, create ExceptionPattern
             // here?
-            org.abs_models.xtext.abs.ConstructorPattern value = (org.abs_models.xtext.abs.ConstructorPattern) pattern;
-            ConstructorPattern presult = new ConstructorPattern();
+            final org.abs_models.xtext.abs.ConstructorPattern value = (org.abs_models.xtext.abs.ConstructorPattern) pattern;
+            final ConstructorPattern presult = new ConstructorPattern();
             presult.setConstructor(value.getConstructorname());
-            for(org.abs_models.xtext.abs.Pattern p : value.getArguments()) {
+            for(final org.abs_models.xtext.abs.Pattern p : value.getArguments()) {
                 presult.addParamNoTransform(fromXtext(p));
             }
             result = nodeWithLocation(presult, pattern);
@@ -826,20 +886,20 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, pattern);
     }
 
-    private static Exp fromXtext(org.abs_models.xtext.abs.Expression value) {
+    private static Exp fromXtext(final org.abs_models.xtext.abs.Expression value) {
         Exp result;
 
         if (value instanceof org.abs_models.xtext.abs.GetExpression) {
 
-            org.abs_models.xtext.abs.GetExpression xtextExp = (org.abs_models.xtext.abs.GetExpression) value;
-            GetExp exp = new GetExp(pureExpFromXtext(xtextExp.getFutureExpression()));
+            final org.abs_models.xtext.abs.GetExpression xtextExp = (org.abs_models.xtext.abs.GetExpression) value;
+            final GetExp exp = new GetExp(pureExpFromXtext(xtextExp.getFutureExpression()));
             result = nodeWithLocation(exp, value);
 
         } else if (value instanceof org.abs_models.xtext.abs.OriginalCallExpression) {
 
-            org.abs_models.xtext.abs.OriginalCallExpression xtextExp = (OriginalCallExpression) value;
-            List<PureExp> paramList = new List<>();
-            for(org.abs_models.xtext.abs.Expression e : xtextExp.getArguments()) {
+            final org.abs_models.xtext.abs.OriginalCallExpression xtextExp = (OriginalCallExpression) value;
+            final List<PureExp> paramList = new List<>();
+            for(final org.abs_models.xtext.abs.Expression e : xtextExp.getArguments()) {
                 paramList.add(pureExpFromXtext(e));
             }
             OriginalCall exp;
@@ -857,7 +917,7 @@ public class XtextToJastAdd {
 
         } else if (value instanceof org.abs_models.xtext.abs.MethodCallExpression) {
 
-            org.abs_models.xtext.abs.MethodCallExpression xtextExp = (MethodCallExpression) value;
+            final org.abs_models.xtext.abs.MethodCallExpression xtextExp = (MethodCallExpression) value;
             Call exp;
 
             if (xtextExp.getOperator().equals("!")) {
@@ -874,34 +934,35 @@ public class XtextToJastAdd {
             }
             exp.setMethod(xtextExp.getMethodname());
             exp.setCallee(pureExpFromXtext(xtextExp.getTarget()));
-            for (org.abs_models.xtext.abs.Expression e : xtextExp.getArguments()) {
+            for (final org.abs_models.xtext.abs.Expression e : xtextExp.getArguments()) {
                 exp.addParamNoTransform(pureExpFromXtext(e));
             }
             result = exp;
 
         } else if (value instanceof org.abs_models.xtext.abs.AwaitExpression) {
 
-            org.abs_models.xtext.abs.AwaitExpression awaitExp = (org.abs_models.xtext.abs.AwaitExpression) value;
+            final org.abs_models.xtext.abs.AwaitExpression awaitExp = (org.abs_models.xtext.abs.AwaitExpression) value;
             // Are we an await + single expression "guard" with an
             // asynchronous method call expression?  Then generate a JastAdd
             // AwaitAsyncCallExpression.  We rely on validation having blocked all
             // invalid constructs; fix the validator if there’s a class cast
             // exception in the code below.
-            ExpressionGuard guard = (ExpressionGuard)awaitExp.getGuard();
-            org.abs_models.xtext.abs.MethodCallExpression xtextExp = (MethodCallExpression) guard.getExpression();
-            AwaitAsyncCall exp = new AwaitAsyncCall();
+            final ExpressionGuard guard = (ExpressionGuard)awaitExp.getGuard();
+            final org.abs_models.xtext.abs.MethodCallExpression xtextExp = (MethodCallExpression) guard.getExpression();
+            final AwaitAsyncCall exp = new AwaitAsyncCall();
             exp.setMethod(xtextExp.getMethodname());
             exp.setCallee(pureExpFromXtext(xtextExp.getTarget()));
-            for (org.abs_models.xtext.abs.Expression e : xtextExp.getArguments()) {
+            for (final org.abs_models.xtext.abs.Expression e : xtextExp.getArguments()) {
                 exp.addParamNoTransform(pureExpFromXtext(e));
             }
             result = exp;
         } else if (value instanceof org.abs_models.xtext.abs.NewExpression) {
 
-            org.abs_models.xtext.abs.NewExpression xtextExp = (org.abs_models.xtext.abs.NewExpression)value;
-            NewExp exp = new NewExp();
-            exp.setClassName(xtextExp.getClassname());
-            for(org.abs_models.xtext.abs.Expression e : xtextExp.getArguments()) {
+            final org.abs_models.xtext.abs.NewExpression xtextExp = (org.abs_models.xtext.abs.NewExpression)value;
+            final NewExp exp = new NewExp();
+            exp.setClassName(accessibleName(xtextExp, xtextExp.getClass_(),
+                                            xtextExp.getClass_().getName()));
+            for(final org.abs_models.xtext.abs.Expression e : xtextExp.getArguments()) {
                 exp.addParamNoTransform(pureExpFromXtext(e));
             }
             if (xtextExp.isLocal()) {
@@ -915,93 +976,93 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, value);
     }
 
-    private static PureExp pureExpFromXtext(org.abs_models.xtext.abs.Expression value) {
+    private static PureExp pureExpFromXtext(final org.abs_models.xtext.abs.Expression value) {
         PureExp result = null;
 
         if(value instanceof org.abs_models.xtext.abs.OrExpression) {
-            org.abs_models.xtext.abs.OrExpression xtextExp = (OrExpression) value;
+            final org.abs_models.xtext.abs.OrExpression xtextExp = (OrExpression) value;
             result = new OrBoolExp(pureExpFromXtext(xtextExp.getLeft()),
                                    pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.AndExpression) {
-            org.abs_models.xtext.abs.AndExpression xtextExp = (AndExpression) value;
+            final org.abs_models.xtext.abs.AndExpression xtextExp = (AndExpression) value;
             result = new AndBoolExp(pureExpFromXtext(xtextExp.getLeft()),
                                     pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.EqExpression) {
-            org.abs_models.xtext.abs.EqExpression xtextExp = (org.abs_models.xtext.abs.EqExpression) value;
+            final org.abs_models.xtext.abs.EqExpression xtextExp = (org.abs_models.xtext.abs.EqExpression) value;
             result = new EqExp(pureExpFromXtext(xtextExp.getLeft()),
                                pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.NotEqExpression) {
-            org.abs_models.xtext.abs.NotEqExpression xtextExp = (org.abs_models.xtext.abs.NotEqExpression) value;
+            final org.abs_models.xtext.abs.NotEqExpression xtextExp = (org.abs_models.xtext.abs.NotEqExpression) value;
             result = new NotEqExp(pureExpFromXtext(xtextExp.getLeft()),
                                   pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.LTExpression) {
-            org.abs_models.xtext.abs.LTExpression xtextExp = (org.abs_models.xtext.abs.LTExpression) value;
+            final org.abs_models.xtext.abs.LTExpression xtextExp = (org.abs_models.xtext.abs.LTExpression) value;
             result = new LTExp(pureExpFromXtext(xtextExp.getLeft()),
                                pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.GTExpression) {
-            org.abs_models.xtext.abs.GTExpression xtextExp = (org.abs_models.xtext.abs.GTExpression) value;
+            final org.abs_models.xtext.abs.GTExpression xtextExp = (org.abs_models.xtext.abs.GTExpression) value;
             result = new GTExp(pureExpFromXtext(xtextExp.getLeft()),
                                pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.LTEQExpression) {
-            org.abs_models.xtext.abs.LTEQExpression xtextExp = (org.abs_models.xtext.abs.LTEQExpression) value;
+            final org.abs_models.xtext.abs.LTEQExpression xtextExp = (org.abs_models.xtext.abs.LTEQExpression) value;
             result = new LTEQExp(pureExpFromXtext(xtextExp.getLeft()),
                                  pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.GTEQExpression) {
-            org.abs_models.xtext.abs.GTEQExpression xtextExp = (org.abs_models.xtext.abs.GTEQExpression) value;
+            final org.abs_models.xtext.abs.GTEQExpression xtextExp = (org.abs_models.xtext.abs.GTEQExpression) value;
             result = new GTEQExp(pureExpFromXtext(xtextExp.getLeft()),
                                  pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.PlusExpression) {
-            org.abs_models.xtext.abs.PlusExpression xtextExp = (org.abs_models.xtext.abs.PlusExpression) value;
+            final org.abs_models.xtext.abs.PlusExpression xtextExp = (org.abs_models.xtext.abs.PlusExpression) value;
             result = new AddAddExp(pureExpFromXtext(xtextExp.getLeft()),
                                    pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.MinusExpression) {
-            org.abs_models.xtext.abs.MinusExpression xtextExp = (org.abs_models.xtext.abs.MinusExpression) value;
+            final org.abs_models.xtext.abs.MinusExpression xtextExp = (org.abs_models.xtext.abs.MinusExpression) value;
             result = new SubAddExp(pureExpFromXtext(xtextExp.getLeft()),
                                    pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.MulExpression) {
-            org.abs_models.xtext.abs.MulExpression xtextExp = (org.abs_models.xtext.abs.MulExpression) value;
+            final org.abs_models.xtext.abs.MulExpression xtextExp = (org.abs_models.xtext.abs.MulExpression) value;
             result = new MultMultExp(pureExpFromXtext(xtextExp.getLeft()),
                                      pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.DivExpression) {
-            org.abs_models.xtext.abs.DivExpression xtextExp = (org.abs_models.xtext.abs.DivExpression) value;
+            final org.abs_models.xtext.abs.DivExpression xtextExp = (org.abs_models.xtext.abs.DivExpression) value;
             result = new DivMultExp(pureExpFromXtext(xtextExp.getLeft()),
                                     pureExpFromXtext(xtextExp.getRight()));
         } else if(value instanceof org.abs_models.xtext.abs.ModExpression) {
-            org.abs_models.xtext.abs.ModExpression xtextExp = (org.abs_models.xtext.abs.ModExpression) value;
+            final org.abs_models.xtext.abs.ModExpression xtextExp = (org.abs_models.xtext.abs.ModExpression) value;
             result = new ModMultExp(pureExpFromXtext(xtextExp.getLeft()),
                                     pureExpFromXtext(xtextExp.getRight()));
         }
         // MethodCallExpression, GetExpression are handled in fromXtext(Expression)
         else if(value instanceof org.abs_models.xtext.abs.ImplementsExpression) {
-            org.abs_models.xtext.abs.ImplementsExpression xtextExp = (org.abs_models.xtext.abs.ImplementsExpression) value;
+            final org.abs_models.xtext.abs.ImplementsExpression xtextExp = (org.abs_models.xtext.abs.ImplementsExpression) value;
             result = new ImplementsExp(pureExpFromXtext(xtextExp.getBody()),
                                        new InterfaceTypeUse(xtextExp.getInterface(), new List<>()));
         } else if(value instanceof org.abs_models.xtext.abs.AsExpression) {
-            org.abs_models.xtext.abs.AsExpression xtextExp = (org.abs_models.xtext.abs.AsExpression) value;
+            final org.abs_models.xtext.abs.AsExpression xtextExp = (org.abs_models.xtext.abs.AsExpression) value;
             result = new AsExp(pureExpFromXtext(xtextExp.getBody()),
                                new InterfaceTypeUse(xtextExp.getInterface(), new List<>()));
         } else if(value instanceof org.abs_models.xtext.abs.NotExpression) {
-            org.abs_models.xtext.abs.NotExpression xtextExp = (org.abs_models.xtext.abs.NotExpression) value;
+            final org.abs_models.xtext.abs.NotExpression xtextExp = (org.abs_models.xtext.abs.NotExpression) value;
             result = new NegExp(pureExpFromXtext(xtextExp.getBody()));
         } else if(value instanceof org.abs_models.xtext.abs.NegExpression) {
-            org.abs_models.xtext.abs.NegExpression xtextExp = (org.abs_models.xtext.abs.NegExpression) value;
+            final org.abs_models.xtext.abs.NegExpression xtextExp = (org.abs_models.xtext.abs.NegExpression) value;
             result = new MinusExp(pureExpFromXtext(xtextExp.getBody()));
         }
         // AwaitExpression is handled in fromXtext(ExpressionStatement),
         // fromXtext(Expression) NewExpression, OriginalCallExpression are
         // handled in fromXtext(Expression)
         else  if(value instanceof org.abs_models.xtext.abs.CaseExpression) {
-            org.abs_models.xtext.abs.CaseExpression xtextExp = (org.abs_models.xtext.abs.CaseExpression) value;
-            List<CaseBranch> branches = new List<>();
-            for(CaseExpressionBranch cb : xtextExp.getCasebranches()) {
-                CaseBranch branch = new CaseBranch(fromXtext(cb.getPattern()),
+            final org.abs_models.xtext.abs.CaseExpression xtextExp = (org.abs_models.xtext.abs.CaseExpression) value;
+            final List<CaseBranch> branches = new List<>();
+            for(final CaseExpressionBranch cb : xtextExp.getCasebranches()) {
+                final CaseBranch branch = new CaseBranch(fromXtext(cb.getPattern()),
                                                    pureExpFromXtext(cb.getExpression()));
                 branches.add(branch);
             }
             result = new CaseExp(pureExpFromXtext(xtextExp.getCondition()),
                                  branches);
         } else if(value instanceof org.abs_models.xtext.abs.LetExpression) {
-            org.abs_models.xtext.abs.LetExpression xtextExp = (org.abs_models.xtext.abs.LetExpression) value;
+            final org.abs_models.xtext.abs.LetExpression xtextExp = (org.abs_models.xtext.abs.LetExpression) value;
             result = pureExpFromXtext(xtextExp.getBody());
             // Construct the wrapping LetExpression’s from the inside out -- later
             // expressions have access to the identifiers of earlier ones so
@@ -1013,34 +1074,34 @@ public class XtextToJastAdd {
                                     result);
             }
         } else if(value instanceof org.abs_models.xtext.abs.WhenExpression) {
-            org.abs_models.xtext.abs.WhenExpression xtextExp = (org.abs_models.xtext.abs.WhenExpression) value;
+            final org.abs_models.xtext.abs.WhenExpression xtextExp = (org.abs_models.xtext.abs.WhenExpression) value;
             result = new IfExp(pureExpFromXtext(xtextExp.getCondition()),
                                pureExpFromXtext(xtextExp.getConsequence()),
                                pureExpFromXtext(xtextExp.getAlternate()));
         } else if(value instanceof org.abs_models.xtext.abs.FunctionAppExpression) {
-            org.abs_models.xtext.abs.FunctionAppExpression xtextExp = (FunctionAppExpression) value;
+            final org.abs_models.xtext.abs.FunctionAppExpression xtextExp = (FunctionAppExpression) value;
             if (xtextExp.getFunctionArguments().size() > 0) {
-                ParFnApp exp = new ParFnApp();
+                final ParFnApp exp = new ParFnApp();
                 exp.setName(xtextExp.getFunctionname());
-                for (org.abs_models.xtext.abs.Expression arg : xtextExp.getArguments()) {
+                for (final org.abs_models.xtext.abs.Expression arg : xtextExp.getArguments()) {
                     exp.addParamNoTransform(pureExpFromXtext(arg));
                 }
-                for (org.abs_models.xtext.abs.PartialFunctionParam p : xtextExp.getFunctionArguments()) {
+                for (final org.abs_models.xtext.abs.PartialFunctionParam p : xtextExp.getFunctionArguments()) {
                     exp.addFuncParamNoTransform(fromXtext(p));
                 }
                 result = exp;
             } else {
-                FnApp exp = new FnApp();
+                final FnApp exp = new FnApp();
                 exp.setName(xtextExp.getFunctionname());
-                for (org.abs_models.xtext.abs.Expression arg : xtextExp.getArguments()) {
+                for (final org.abs_models.xtext.abs.Expression arg : xtextExp.getArguments()) {
                     exp.addParamNoTransform(pureExpFromXtext(arg));
                 }
                 result = exp;
             }
         } else if(value instanceof org.abs_models.xtext.abs.VariadicFunctionAppExpression) {
-            org.abs_models.xtext.abs.VariadicFunctionAppExpression xtextExp = (VariadicFunctionAppExpression) value;
-            List<PureExp> arglist = new List<PureExp>();
-            for (org.abs_models.xtext.abs.Expression arg : xtextExp.getArguments()) {
+            final org.abs_models.xtext.abs.VariadicFunctionAppExpression xtextExp = (VariadicFunctionAppExpression) value;
+            final List<PureExp> arglist = new List<PureExp>();
+            for (final org.abs_models.xtext.abs.Expression arg : xtextExp.getArguments()) {
                 arglist.add(pureExpFromXtext(arg));
             }
             PureExp args;
@@ -1051,37 +1112,37 @@ public class XtextToJastAdd {
             }
             result = new FnApp(xtextExp.getFunctionname(), new List<PureExp>(args));
         } else if(value instanceof org.abs_models.xtext.abs.ConstructorAppExpression) {
-            org.abs_models.xtext.abs.ConstructorAppExpression xtextExp = (ConstructorAppExpression) value;
-            List<PureExp> params = new List<>();
-            for(org.abs_models.xtext.abs.Expression param : xtextExp.getArguments()) {
+            final org.abs_models.xtext.abs.ConstructorAppExpression xtextExp = (ConstructorAppExpression) value;
+            final List<PureExp> params = new List<>();
+            for(final org.abs_models.xtext.abs.Expression param : xtextExp.getArguments()) {
                 params.add(pureExpFromXtext(param));
             }
             result = new DataConstructorExp(xtextExp.getConstructorname(), params);
         } else if(value instanceof org.abs_models.xtext.abs.TemplateStringSimpleExpression){
-            org.abs_models.xtext.abs.TemplateStringSimpleExpression xtextExp = (org.abs_models.xtext.abs.TemplateStringSimpleExpression) value;
+            final org.abs_models.xtext.abs.TemplateStringSimpleExpression xtextExp = (org.abs_models.xtext.abs.TemplateStringSimpleExpression) value;
             result = new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getString()));
         } else if(value instanceof org.abs_models.xtext.abs.TemplateStringExpression) {
-            org.abs_models.xtext.abs.TemplateStringExpression xtextExp = (org.abs_models.xtext.abs.TemplateStringExpression) value;
+            final org.abs_models.xtext.abs.TemplateStringExpression xtextExp = (org.abs_models.xtext.abs.TemplateStringExpression) value;
             PureExp exp = new AddAddExp(new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getStartString())),
                                         new FnApp("toString", new List<>(pureExpFromXtext(xtextExp.getFirstExpression()))));
             for (int i = 0; i < xtextExp.getExpressions().size(); i++) {
-                PureExp part = new AddAddExp(new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getBetweenStrings().get(i))),
+                final PureExp part = new AddAddExp(new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getBetweenStrings().get(i))),
                                              new FnApp("toString", new List<>(pureExpFromXtext(xtextExp.getExpressions().get(i)))));
                 exp = new AddAddExp(exp, part);
             }
             exp = new AddAddExp(exp, new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getEndString())));
             result = exp;
         } else if (value instanceof org.abs_models.xtext.abs.IntLiteral) {
-            org.abs_models.xtext.abs.IntLiteral xtextExp = (org.abs_models.xtext.abs.IntLiteral) value;
+            final org.abs_models.xtext.abs.IntLiteral xtextExp = (org.abs_models.xtext.abs.IntLiteral) value;
             result = new IntLiteral(xtextExp.getValue().toString());
         } else if (value instanceof org.abs_models.xtext.abs.FloatLiteral) {
-            org.abs_models.xtext.abs.FloatLiteral xtextExp = (org.abs_models.xtext.abs.FloatLiteral) value;
+            final org.abs_models.xtext.abs.FloatLiteral xtextExp = (org.abs_models.xtext.abs.FloatLiteral) value;
             result = new FloatLiteral(Double.toString(xtextExp.getValue()));
         } else if (value instanceof org.abs_models.xtext.abs.StringLiteral) {
-            org.abs_models.xtext.abs.StringLiteral xtextExp = (org.abs_models.xtext.abs.StringLiteral) value;
+            final org.abs_models.xtext.abs.StringLiteral xtextExp = (org.abs_models.xtext.abs.StringLiteral) value;
             result = new StringLiteral(ASTPreProcessor.preprocessStringLiteral(xtextExp.getValue()));
         } else if(value instanceof org.abs_models.xtext.abs.VariableOrFieldExpression) {
-            org.abs_models.xtext.abs.VariableOrFieldExpression xtextExp = (org.abs_models.xtext.abs.VariableOrFieldExpression) value;
+            final org.abs_models.xtext.abs.VariableOrFieldExpression xtextExp = (org.abs_models.xtext.abs.VariableOrFieldExpression) value;
             if (xtextExp.isField()) {
                 result = new FieldUse(xtextExp.getVariablename());
             } else {
@@ -1099,13 +1160,13 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, value);
     }
 
-    private static ParFnAppParam fromXtext(org.abs_models.xtext.abs.PartialFunctionParam p) {
+    private static ParFnAppParam fromXtext(final org.abs_models.xtext.abs.PartialFunctionParam p) {
         if (p.getFunctionname() != null) {
             return nodeWithLocation(new NamedParFnAppParam(p.getFunctionname()),
                                     p, AbsPackage.eINSTANCE.getPartialFunctionParam_Functionname());
         } else {
-            List<ParamDecl> params = new List<ParamDecl>();
-            for(org.abs_models.xtext.abs.Parameter arg : p.getParameters()) {
+            final List<ParamDecl> params = new List<ParamDecl>();
+            for(final org.abs_models.xtext.abs.Parameter arg : p.getParameters()) {
                 params.add(fromXtext(arg));
             }
 
@@ -1114,18 +1175,18 @@ public class XtextToJastAdd {
         }
     }
 
-    private static TypeUse fromXtext(org.abs_models.xtext.abs.TypeUse type) {
-        TypeUse result = fromXtext(type.getType());
+    private static TypeUse fromXtext(final org.abs_models.xtext.abs.TypeUse type) {
+        final TypeUse result = fromXtext(type.getType());
         result.setAnnotationList(annotationsfromXtext(type.getAnnotations()));
         return result;
     }
 
-    private static TypeUse fromXtext(org.abs_models.xtext.abs.TypeUseNoAnnotations type) {
+    private static TypeUse fromXtext(final org.abs_models.xtext.abs.TypeUseNoAnnotations type) {
         TypeUse result;
         if (!type.getParameters().isEmpty()) {
-            ParametricDataTypeUse presult = new ParametricDataTypeUse();
+            final ParametricDataTypeUse presult = new ParametricDataTypeUse();
             result = (ParametricDataTypeUse) presult;
-            for (org.abs_models.xtext.abs.TypeUse param : type.getParameters()) {
+            for (final org.abs_models.xtext.abs.TypeUse param : type.getParameters()) {
                 presult.addParamNoTransform(fromXtext(param));
             }
         } else {
@@ -1139,10 +1200,10 @@ public class XtextToJastAdd {
 
     // ========== end of Core ABS ==========
 
-    private static DeltaDecl fromXtext(org.abs_models.xtext.abs.DeltaDeclaration xtext_delta) {
-        DeltaDecl result = new DeltaDecl();
+    private static DeltaDecl fromXtext(final org.abs_models.xtext.abs.DeltaDeclaration xtext_delta) {
+        final DeltaDecl result = new DeltaDecl();
         result.setName(xtext_delta.getName());
-        for (org.abs_models.xtext.abs.DeltaParameter arg : xtext_delta.getArguments()) {
+        for (final org.abs_models.xtext.abs.DeltaParameter arg : xtext_delta.getArguments()) {
             if (arg.getNormalParameter() != null) {
                 result.addParam(nodeWithLocation(new DeltaFieldParam(fromXtext(arg.getNormalParameter())), arg));
             } else {
@@ -1150,16 +1211,16 @@ public class XtextToJastAdd {
             }
         }
         if (xtext_delta.getUsedModulename() != null) {
-            String iname = xtext_delta.getUsedModulename();
+            final String iname = xtext_delta.getUsedModulename();
             result.setImportedModule(nodeWithLocation(new DeltaAccess(iname), xtext_delta, AbsPackage.eINSTANCE.getDeltaDeclaration_UsedModulename()));
         }
-        for (org.abs_models.xtext.abs.DeltaModuleModifier m : xtext_delta.getModifiers()) {
+        for (final org.abs_models.xtext.abs.DeltaModuleModifier m : xtext_delta.getModifiers()) {
             result.addModuleModifier(fromXtext(m));
         }
         return nodeWithLocation(result, xtext_delta);
     }
 
-    private static HasCondition fromXtext(org.abs_models.xtext.abs.DeltaCondition xtext_cond) {
+    private static HasCondition fromXtext(final org.abs_models.xtext.abs.DeltaCondition xtext_cond) {
         HasCondition result = null;
         if (xtext_cond.getDeltaFieldCondition() != null) {
             result = new HasField(fromXtext(xtext_cond.getDeltaFieldCondition()));
@@ -1171,10 +1232,10 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_cond);
     }
 
-    private static ModuleModifier fromXtext(org.abs_models.xtext.abs.DeltaModuleModifier xtext_mod) {
+    private static ModuleModifier fromXtext(final org.abs_models.xtext.abs.DeltaModuleModifier xtext_mod) {
         ModuleModifier result = null;
         if (xtext_mod.getAddedDeclaration() != null) {
-            Decl d = fromXtext(xtext_mod.getAddedDeclaration());
+            final Decl d = fromXtext(xtext_mod.getAddedDeclaration());
             if (d instanceof ClassDecl) {
                 result = new AddClassModifier((ClassDecl) d);
             } else if (d instanceof InterfaceDecl) {
@@ -1195,22 +1256,22 @@ public class XtextToJastAdd {
         } else if (xtext_mod.getRemovedInterfaceName() != null) {
             result = new RemoveInterfaceModifier(xtext_mod.getRemovedInterfaceName());
         } else if (xtext_mod.getModifiedClassName() != null) {
-            ModifyClassModifier mresult = new ModifyClassModifier();
+            final ModifyClassModifier mresult = new ModifyClassModifier();
             mresult.setName(xtext_mod.getModifiedClassName());
             for (int i = 0; i < xtext_mod.getAddedInterfaces().size(); i++) {
-                String iname = xtext_mod.getAddedInterfaces().get(i);
+                final String iname = xtext_mod.getAddedInterfaces().get(i);
                 mresult.addAddedInterfaceNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_mod, AbsPackage.eINSTANCE.getDeltaModuleModifier_AddedInterfaces(), i));
             }
             for (int i = 0; i < xtext_mod.getRemovedInterfaces().size(); i++) {
-                String iname = xtext_mod.getRemovedInterfaces().get(i);
+                final String iname = xtext_mod.getRemovedInterfaces().get(i);
                 mresult.addRemovedInterfaceNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_mod, AbsPackage.eINSTANCE.getDeltaModuleModifier_RemovedInterfaces(), i));
             }
-            for (org.abs_models.xtext.abs.ClassModifier mod : xtext_mod.getClassModifiers()) {
+            for (final org.abs_models.xtext.abs.ClassModifier mod : xtext_mod.getClassModifiers()) {
                 if (mod.getAddedField() != null) {
                     mresult.addModifierNoTransform(new AddFieldModifier(fromXtext(mod.getAddedField())));
                 } else if (mod.getAddedMethods().size() > 0) {
-                    TraitSetExpr tse = new TraitSetExpr();
-                    for (org.abs_models.xtext.abs.MethodDeclaration m : mod.getAddedMethods()) {
+                    final TraitSetExpr tse = new TraitSetExpr();
+                    for (final org.abs_models.xtext.abs.MethodDeclaration m : mod.getAddedMethods()) {
                         tse.addMethodImplNoTransform(fromXtext(m));
                     }
                     mresult.addModifierNoTransform(new DeltaTraitModifier(new AddMethodModifier(tse)));
@@ -1219,14 +1280,14 @@ public class XtextToJastAdd {
                 } else if (mod.getRemovedField() != null) {
                     mresult.addModifierNoTransform(new RemoveFieldModifier(fromXtext(mod.getRemovedField())));
                 } else if (mod.getRemovedMethods().size() > 0) {
-                    List<MethodSig> methodlist = new List<MethodSig>();
-                    for (org.abs_models.xtext.abs.MethodSignature s : mod.getRemovedMethods()) {
+                    final List<MethodSig> methodlist = new List<MethodSig>();
+                    for (final org.abs_models.xtext.abs.MethodSignature s : mod.getRemovedMethods()) {
                         methodlist.add(fromXtext(s));
                     }
                     mresult.addModifierNoTransform(new DeltaTraitModifier(new RemoveMethodModifier(methodlist)));
                 } else if (mod.getModifiedMethods().size() > 0) {
-                    TraitSetExpr tse = new TraitSetExpr();
-                    for (org.abs_models.xtext.abs.MethodDeclaration m : mod.getModifiedMethods()) {
+                    final TraitSetExpr tse = new TraitSetExpr();
+                    for (final org.abs_models.xtext.abs.MethodDeclaration m : mod.getModifiedMethods()) {
                         tse.addMethodImplNoTransform(fromXtext(m));
                     }
                     mresult.addModifierNoTransform(new DeltaTraitModifier(new ModifyMethodModifier(tse)));
@@ -1236,9 +1297,9 @@ public class XtextToJastAdd {
             }
             result = mresult;
         } else if (xtext_mod.getModifiedInterfaceName() != null) {
-            ModifyInterfaceModifier mresult = new ModifyInterfaceModifier();
+            final ModifyInterfaceModifier mresult = new ModifyInterfaceModifier();
             mresult.setName(xtext_mod.getModifiedInterfaceName());
-            for (org.abs_models.xtext.abs.InterfaceModifier mod : xtext_mod.getInterfaceModifiers()) {
+            for (final org.abs_models.xtext.abs.InterfaceModifier mod : xtext_mod.getInterfaceModifiers()) {
                 if (mod.getAddedMethod() != null) {
                     mresult.addMethodSigModifier(new AddMethodSigModifier(fromXtext(mod.getAddedMethod())));
                 } else {
@@ -1256,33 +1317,33 @@ public class XtextToJastAdd {
 
     // Product lines
 
-    private static ProductLine fromXtext(org.abs_models.xtext.abs.ProductlineDeclaration xtext_decl) {
-        ProductLine result = new ProductLine();
+    private static ProductLine fromXtext(final org.abs_models.xtext.abs.ProductlineDeclaration xtext_decl) {
+        final ProductLine result = new ProductLine();
         result.setName(xtext_decl.getName());
-        for (org.abs_models.xtext.abs.ProductFeature feature : xtext_decl.getFeatures()) {
+        for (final org.abs_models.xtext.abs.ProductFeature feature : xtext_decl.getFeatures()) {
             result.addFeatureNoTransform(fromXtext(feature));
         }
-        for (org.abs_models.xtext.abs.ProductlineDeltaClause xtext_clause : xtext_decl.getDeltaClauses()) {
+        for (final org.abs_models.xtext.abs.ProductlineDeltaClause xtext_clause : xtext_decl.getDeltaClauses()) {
             result.addDeltaClause(fromXtext(xtext_clause));
         }
         return nodeWithLocation(result, xtext_decl);
     }
 
-    private static Feature fromXtext(org.abs_models.xtext.abs.ProductFeature xtext_feature) {
-        Feature result = new Feature();
+    private static Feature fromXtext(final org.abs_models.xtext.abs.ProductFeature xtext_feature) {
+        final Feature result = new Feature();
         result.setName(xtext_feature.getName());
-        for (org.abs_models.xtext.abs.AttributeAssignment xtext_attr : xtext_feature.getAttributeAssignments()) {
-            AttrAssignment attr = new AttrAssignment();
+        for (final org.abs_models.xtext.abs.AttributeAssignment xtext_attr : xtext_feature.getAttributeAssignments()) {
+            final AttrAssignment attr = new AttrAssignment();
             attr.setName(xtext_attr.getAttributename());
-            org.abs_models.xtext.abs.AttributeAssignmentValue xtext_value = xtext_attr.getValue();
+            final org.abs_models.xtext.abs.AttributeAssignmentValue xtext_value = xtext_attr.getValue();
             if (xtext_value instanceof org.abs_models.xtext.abs.AttributeAssignmentValue_Int) {
-                int value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_Int)xtext_value).getValue().intValue();
+                final int value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_Int)xtext_value).getValue().intValue();
                 attr.setValue(nodeWithLocation(new IntVal(value), xtext_value));
             } else if (xtext_value instanceof org.abs_models.xtext.abs.AttributeAssignmentValue_Bool) {
-                boolean value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_Bool)xtext_value).getValue().equals("True");
+                final boolean value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_Bool)xtext_value).getValue().equals("True");
                 attr.setValue(nodeWithLocation(new BoolVal(value), xtext_value));
             } else if (xtext_value instanceof org.abs_models.xtext.abs.AttributeAssignmentValue_String) {
-                String value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_String)xtext_value).getValue();
+                final String value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_String)xtext_value).getValue();
                 attr.setValue(nodeWithLocation(new StringVal(value), xtext_value));
             } else {
                 // The antlr code created an UnknownValue here and rewrote it
@@ -1297,15 +1358,15 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_feature);
     }
 
-    private static DeltaClause fromXtext(org.abs_models.xtext.abs.ProductlineDeltaClause xtext_clause) {
-        DeltaClause result = new DeltaClause();
-        Deltaspec result_name = new Deltaspec();
+    private static DeltaClause fromXtext(final org.abs_models.xtext.abs.ProductlineDeltaClause xtext_clause) {
+        final DeltaClause result = new DeltaClause();
+        final Deltaspec result_name = new Deltaspec();
         result_name.setDeltaID(xtext_clause.getName());
-        for (org.abs_models.xtext.abs.DeltaClauseParam param : xtext_clause.getParameters()) {
+        for (final org.abs_models.xtext.abs.DeltaClauseParam param : xtext_clause.getParameters()) {
             result_name.addDeltaparam(fromXtext(param));
         }
         result.setDeltaspec(result_name);
-        for (String after_id : xtext_clause.getAfterIds()) {
+        for (final String after_id : xtext_clause.getAfterIds()) {
             result.addAfterDeltaID(new DeltaID(after_id));
         }
         if (xtext_clause.getFromCondition() != null) {
@@ -1317,12 +1378,12 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_clause);
     }
 
-    private static Deltaparam fromXtext(org.abs_models.xtext.abs.DeltaClauseParam xtext_param) {
+    private static Deltaparam fromXtext(final org.abs_models.xtext.abs.DeltaClauseParam xtext_param) {
         Deltaparam result = null;
         if (xtext_param instanceof org.abs_models.xtext.abs.DeltaClauseParam_Int) {
             result = new Const(new IntVal(((org.abs_models.xtext.abs.DeltaClauseParam_Int)xtext_param).getIntParameter().intValue()));
         } else if (xtext_param instanceof org.abs_models.xtext.abs.DeltaClauseParam_Id) {
-            org.abs_models.xtext.abs.DeltaClauseParam_Id id_param = (org.abs_models.xtext.abs.DeltaClauseParam_Id) xtext_param;
+            final org.abs_models.xtext.abs.DeltaClauseParam_Id id_param = (org.abs_models.xtext.abs.DeltaClauseParam_Id) xtext_param;
             if (id_param.getFidaidParameter() == null) {
                 if (id_param.getIdParameter().equals("True")) {
                     result = new Const(new BoolVal(true));
@@ -1342,7 +1403,7 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_param);
     }
 
-    private static AppCond fromXtext(org.abs_models.xtext.abs.DeltaClauseApplicationClause xtext_clause) {
+    private static AppCond fromXtext(final org.abs_models.xtext.abs.DeltaClauseApplicationClause xtext_clause) {
         AppCond result = null;
         if (xtext_clause instanceof org.abs_models.xtext.abs.DeltaClauseApplicationClauseOr) {
             result = new AppCondOr(fromXtext(xtext_clause.getLeft()),
@@ -1365,16 +1426,16 @@ public class XtextToJastAdd {
 
     // Products
 
-    private static ProductDecl fromXtext(org.abs_models.xtext.abs.ProductDeclaration xtext_decl) {
-        ProductDecl result = new ProductDecl();
+    private static ProductDecl fromXtext(final org.abs_models.xtext.abs.ProductDeclaration xtext_decl) {
+        final ProductDecl result = new ProductDecl();
         result.setName(xtext_decl.getName());
         if (xtext_decl.getExpression() != null) {
             // new syntax
             result.setProductExpr(fromXtext(xtext_decl.getExpression()));
         } else {
             // old syntax
-            ProductFeatureSet fs = new ProductFeatureSet();
-            for (org.abs_models.xtext.abs.ProductFeature feat : xtext_decl.getFeatures()) {
+            final ProductFeatureSet fs = new ProductFeatureSet();
+            for (final org.abs_models.xtext.abs.ProductFeature feat : xtext_decl.getFeatures()) {
                 fs.addFeature(fromXtext(feat));
             }
             result.setProductExpr(fs);
@@ -1382,7 +1443,7 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_decl);
     }
 
-    private static ProductExpr fromXtext(org.abs_models.xtext.abs.ProductExpression xtext_exp) {
+    private static ProductExpr fromXtext(final org.abs_models.xtext.abs.ProductExpression xtext_exp) {
         ProductExpr result = null;
         if (xtext_exp instanceof org.abs_models.xtext.abs.ProductExprDifference) {
             result = new ProductDifference(fromXtext(xtext_exp.getLeft()),
@@ -1400,7 +1461,7 @@ public class XtextToJastAdd {
                 return fromXtext(xtext_exp.getParen());
             } else {
                 result = new ProductFeatureSet();
-                for (org.abs_models.xtext.abs.ProductFeature feat : xtext_exp.getFeatures()) {
+                for (final org.abs_models.xtext.abs.ProductFeature feat : xtext_exp.getFeatures()) {
                     ((ProductFeatureSet)result).addFeature(fromXtext(feat));
                 }
             }
@@ -1410,59 +1471,59 @@ public class XtextToJastAdd {
 
     // mTVL
 
-    private static FeatureDecl fromXtext(org.abs_models.xtext.abs.MTVLFeatureRoot xtext_root) {
-        FeatureDecl result = new FeatureDecl();
+    private static FeatureDecl fromXtext(final org.abs_models.xtext.abs.MTVLFeatureRoot xtext_root) {
+        final FeatureDecl result = new FeatureDecl();
         result.setName(xtext_root.getName());
         if (xtext_root.getGroup() != null) {
             result.setGroup(fromXtext(xtext_root.getGroup()));
         }
-        AttrConstraints constraints = new AttrConstraints();
-        for (org.abs_models.xtext.abs.MTVLAttributeDeclaration attr : xtext_root.getAttributes()) {
+        final AttrConstraints constraints = new AttrConstraints();
+        for (final org.abs_models.xtext.abs.MTVLAttributeDeclaration attr : xtext_root.getAttributes()) {
             constraints.addAttributeNoTransform(fromXtext(attr));
         }
-        for (org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_root.getConstraints()) {
+        for (final org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_root.getConstraints()) {
             constraints.addConstrNoTransform(fromXtext(constraint));
         }
         result.setAttrConstraints(constraints);
         return nodeWithLocation(result, xtext_root);
     }
 
-    private static FeatureDecl fromXtext(org.abs_models.xtext.abs.MTVLFeatureDeclaration xtext_feature) {
-        FeatureDecl result = new FeatureDecl();
+    private static FeatureDecl fromXtext(final org.abs_models.xtext.abs.MTVLFeatureDeclaration xtext_feature) {
+        final FeatureDecl result = new FeatureDecl();
         result.setName(xtext_feature.getName());
         if (xtext_feature.getGroup() != null) {
             result.setGroup(fromXtext(xtext_feature.getGroup()));
         }
-        AttrConstraints constraints = new AttrConstraints();
-        for (org.abs_models.xtext.abs.MTVLAttributeDeclaration attr : xtext_feature.getAttributes()) {
+        final AttrConstraints constraints = new AttrConstraints();
+        for (final org.abs_models.xtext.abs.MTVLAttributeDeclaration attr : xtext_feature.getAttributes()) {
             constraints.addAttributeNoTransform(fromXtext(attr));
         }
-        for (org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_feature.getConstraints()) {
+        for (final org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_feature.getConstraints()) {
             constraints.addConstrNoTransform(fromXtext(constraint));
         }
         result.setAttrConstraints(constraints);
         return nodeWithLocation(result, xtext_feature);
     }
 
-    private static FExt fromXtext(org.abs_models.xtext.abs.MTVLFeatureExtension xtext_ext) {
-        FExt result = new FExt();
+    private static FExt fromXtext(final org.abs_models.xtext.abs.MTVLFeatureExtension xtext_ext) {
+        final FExt result = new FExt();
         result.setName(xtext_ext.getName());
         if (xtext_ext.getGroup() != null) {
             result.setGroup(fromXtext(xtext_ext.getGroup()));
         }
-        AttrConstraints constraints = new AttrConstraints();
-        for (org.abs_models.xtext.abs.MTVLAttributeDeclaration attr : xtext_ext.getAttributes()) {
+        final AttrConstraints constraints = new AttrConstraints();
+        for (final org.abs_models.xtext.abs.MTVLAttributeDeclaration attr : xtext_ext.getAttributes()) {
             constraints.addAttributeNoTransform(fromXtext(attr));
         }
-        for (org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_ext.getConstraints()) {
+        for (final org.abs_models.xtext.abs.MTVLConstraint constraint : xtext_ext.getConstraints()) {
             constraints.addConstrNoTransform(fromXtext(constraint));
         }
         result.setAttrConstraints(constraints);
         return nodeWithLocation(result, xtext_ext);
     }
 
-    private static Group fromXtext(org.abs_models.xtext.abs.MTVLFeatureGroup xtext_group) {
-        Group result = new Group();
+    private static Group fromXtext(final org.abs_models.xtext.abs.MTVLFeatureGroup xtext_group) {
+        final Group result = new Group();
         if (xtext_group.isAllof()) {
             result.setCard(new AllOf());
         } else if(xtext_group.isOneof()) {
@@ -1473,14 +1534,14 @@ public class XtextToJastAdd {
             result.setCard(new CRange(xtext_group.getLower().intValue(),
                                       xtext_group.getUpper().getValue().intValue()));
         }
-        for (org.abs_models.xtext.abs.MTVLChildFeature f : xtext_group.getChildren()) {
+        for (final org.abs_models.xtext.abs.MTVLChildFeature f : xtext_group.getChildren()) {
             result.addFNodeNoTransform(fromXtext(f));
         }
         return nodeWithLocation(result, xtext_group);
     }
 
-    private static Attribute fromXtext(org.abs_models.xtext.abs.MTVLAttributeDeclaration xtext_attr) {
-        Attribute result = new Attribute();
+    private static Attribute fromXtext(final org.abs_models.xtext.abs.MTVLAttributeDeclaration xtext_attr) {
+        final Attribute result = new Attribute();
         result.setName(xtext_attr.getName());
         if (xtext_attr.getType().equals("Int")) {
             if (xtext_attr.isInterval()) {
@@ -1488,8 +1549,8 @@ public class XtextToJastAdd {
                                              fromXtext(xtext_attr.getLower()),
                                              fromXtext(xtext_attr.getUpper())));
             } else if (xtext_attr.isSet()) {
-                IntListMType mt = new IntListMType("Int", new List<>());
-                for (org.abs_models.xtext.abs.MTVLIntValue v : xtext_attr.getContent()) {
+                final IntListMType mt = new IntListMType("Int", new List<>());
+                for (final org.abs_models.xtext.abs.MTVLIntValue v : xtext_attr.getContent()) {
                     mt.addBoundaryValNoTransform(new BoundaryVal((v.isMinus() ? -1 : +1)
                                                                  * v.getValue().intValue()));
                 }
@@ -1508,7 +1569,7 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_attr);
     }
 
-    private static BoundaryInt fromXtext(org.abs_models.xtext.abs.MTVLIntLimit xtext_lim) {
+    private static BoundaryInt fromXtext(final org.abs_models.xtext.abs.MTVLIntLimit xtext_lim) {
         BoundaryInt result = null;
         if (xtext_lim.isStar()) {
             result = new Limit();
@@ -1519,7 +1580,7 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_lim);
     }
 
-    private static Constr fromXtext(org.abs_models.xtext.abs.MTVLConstraint xtext_constr) {
+    private static Constr fromXtext(final org.abs_models.xtext.abs.MTVLConstraint xtext_constr) {
         Constr result = null;
         if (xtext_constr instanceof org.abs_models.xtext.abs.MTVLIfInConstraint) {
             result = new IfIn(fromXtext(((org.abs_models.xtext.abs.MTVLIfInConstraint)xtext_constr).getExpression()));
@@ -1537,7 +1598,7 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_constr);
     }
 
-    private static FNode fromXtext(org.abs_models.xtext.abs.MTVLChildFeature xtext_feat) {
+    private static FNode fromXtext(final org.abs_models.xtext.abs.MTVLChildFeature xtext_feat) {
         FNode result = null;
         if (xtext_feat.isOpt()) {
             result = new OptFeat(fromXtext(xtext_feat.getFeature()));
@@ -1547,7 +1608,7 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_feat);
     }
 
-    private static MExp fromXtext(org.abs_models.xtext.abs.MTVLConstraintExpression xtext_exp) {
+    private static MExp fromXtext(final org.abs_models.xtext.abs.MTVLConstraintExpression xtext_exp) {
         MExp result = null;
 
         if (xtext_exp instanceof org.abs_models.xtext.abs.MTVLConstraintOrExpression) {

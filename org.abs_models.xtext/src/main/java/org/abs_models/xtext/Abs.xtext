@@ -358,7 +358,7 @@ UnaryExpression returns Expression
 AwaitExpression returns Expression : {AwaitExpression} 'await' guard=Guard ;
 
 NewExpression returns Expression
-    : {NewExpression} 'new' (local?='local')? classname=QualifiedTypeIdentifier '('  (arguments+=Expression ( ',' arguments+=Expression)* )? ')'
+    : {NewExpression} 'new' (local?='local')? class=[ClassDeclaration|QualifiedTypeIdentifier] '('  (arguments+=Expression ( ',' arguments+=Expression)* )? ')'
     ;
 
 OriginalCallExpression returns Expression

@@ -311,7 +311,8 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void newError() {
-        assertTypeErrors("interface I { } { I i; i = new local I(); }");
+        // KLUDGE: this used to be assertTypeErrors but xtext detects the error during parsing
+        assertParseError("interface I { } { I i; i = new local I(); }");
     }
 
     @Test
