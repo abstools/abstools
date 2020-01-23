@@ -28,7 +28,7 @@ public final class AnyType extends Type {
 
     @Override
     public boolean isAssignableTo(Type t) {
-        return t instanceof AnyType; // TODO: Sane decision?
+        return t instanceof AnyType;
     }
 
     public boolean isAnyType() {

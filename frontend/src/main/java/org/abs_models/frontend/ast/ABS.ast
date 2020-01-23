@@ -140,7 +140,7 @@ abstract Access: PureExp;
 abstract IdUse: Access ::= <Name>;
 abstract TypeUse: IdUse ::= Annotation*;
 InterfaceTypeUse: TypeUse; // TODO: reconsider hierarchy of expressions?
-AnyTypeUse: TypeUse; // TODO: AnyType does not have any annotations (does it?)
+AnyTypeUse: TypeUse;
 DataTypeUse: TypeUse;
 ParametricDataTypeUse: DataTypeUse ::= Param:TypeUse* ;
 ExceptionTypeUse: DataTypeUse;
