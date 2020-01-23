@@ -47,7 +47,6 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
             boolean hasStdLibImport = false;
             final ModuleDeclaration moduleDecl = (ModuleDeclaration) context;
             for (final ModuleImport moduleImport : moduleDecl.getImports()) {
-                // TODO: check if any import is from ABS.StdLib; add import of that namespace otherwise.
                 if (moduleImport.isStar()) {
                     // import * from Modulename;
                     final String name = moduleImport.getModulename();
@@ -70,13 +69,13 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                     // we do not want, and Xtext already resolves the
                     // qualified name.
                 }
-                if (!hasStdLibImport) {
-                    // We do not override `getImplicitImports` since we only
-                    // import all of ABS.StdLib if no part of it has been
-                    // explicitly imported.
-                    final ImportNormalizer resolver = createImportedNamespaceResolver("ABS.StdLib.*", ignoreCase);
-                    if (resolver != null) importedNamespaceResolvers.add(resolver);
-                }
+            }
+            if (!hasStdLibImport) {
+                // We do not override the `getImplicitImports` method since we
+                // only import all of ABS.StdLib if no part of it has been
+                // explicitly imported.
+                final ImportNormalizer resolver = createImportedNamespaceResolver("ABS.StdLib.*", ignoreCase);
+                if (resolver != null) importedNamespaceResolvers.add(resolver);
             }
         } else if (context instanceof DeltaDeclaration) {
             final DeltaDeclaration deltaDecl = (DeltaDeclaration) context;
@@ -91,6 +90,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                                                                                elem -> elem instanceof ModuleDeclaration
                                                                                && ((ModuleDeclaration)elem).getName().equals(name),
                                                                                null);
+                // TODO import everything from all Deltas that have the same `uses` clause
                 if (m != null) {
                     importedNamespaceResolvers.addAll(internalGetImportedNamespaceResolvers(m, ignoreCase));
                 } else {
