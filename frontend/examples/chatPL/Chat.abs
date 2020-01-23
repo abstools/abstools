@@ -43,6 +43,8 @@ modifies class ClientImpl adds Voice {
 
 adds interface AudioStream {/*...*/}
 
+adds class AudioStream implements AudioStream { /*...*/ }
+
 adds interface Call {
     Unit pickup();
     Unit hangup();
@@ -82,6 +84,10 @@ adds interface Video {
 modifies class ClientImpl adds Video {
     adds Call videoCall(Client client) {/*...*/}
 }
+
+adds interface VideoStream {/*...*/}
+
+adds class VideoStream implements VideoStream { /*...*/ }
 
 modifies interface Call {
     adds Unit startVideo();
