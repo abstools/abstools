@@ -36,4 +36,48 @@ public class AnyTypeTests extends FrontendTest {
         assertEquals(m.getAnyType(), getTypeOfNthAssignment(m, 2));
         assertEquals(m.getAnyType(), getTypeOfNthVariableDeclaration(m, 2));
     }
+
+    @Test
+    public void testAssignInterfaceToAny() {
+        Model m = assertParse(
+                String.join(System.lineSeparator(),
+                    "interface Foo {}",
+                    "class Bar implements Foo {}",
+
+                    "{",
+                        "Foo x = new Bar();",
+                        "Any y = x;",
+                    "}"
+                )
+            );
+
+        assertEquals(m.getAnyType(), getTypeOfNthVariableDeclaration(m, 2));
+    }
+
+    @Test
+    public void noImplicitDowncastFromAny_DataTypes() {
+        assertTypeErrors(
+                String.join(System.lineSeparator(),
+                    "{",
+                        "Any x = True;",
+                        "Bool y = x;",
+                    "}"
+                )
+        );
+    }
+
+    @Test
+    public void noImplicitDowncastFromAny_InterfaceTypes() {
+        assertTypeErrors(
+                String.join(System.lineSeparator(),
+                    "interface Foo {}",
+                    "class Bar implements Foo {}",
+
+                    "{",
+                        "Any x = new Bar();",
+                        "Foo y = x;",
+                    "}"
+                )
+        );
+    }
 }

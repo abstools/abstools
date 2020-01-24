@@ -93,7 +93,10 @@ public class DataTypeType extends Type  {
      * which would be difficult to handle in aspects (at least declarative ones).
      */
     private boolean hasReferences(Set<DataTypeDecl> checkedDecls) {
-        if (isFutureType()) {
+        if (
+                isFutureType()
+             || isAnyType() // since values typed by Any may be futures
+        ) {
             return true;
         }
 
@@ -238,6 +241,10 @@ public class DataTypeType extends Type  {
 
     public boolean isExceptionType() {
         return decl.getName().equals("Exception");
+    }
+
+    public boolean isAnyType() {
+        return decl.getName().equals("Any");
     }
 
     public String toString() {

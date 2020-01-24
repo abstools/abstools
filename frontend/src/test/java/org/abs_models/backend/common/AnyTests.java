@@ -24,32 +24,52 @@ public class AnyTests extends SemanticTests {
      **/
     @Test
     public void anyCompareInt() {
-        if (driver.getBackendName() == BackendTestDriver.BackendName.ERLANG) {
-            assertEvalTrue(
-                    String.join(System.lineSeparator(),
-                        "{",
-                            "Any x = 42;",
-                            "Bool testresult = x == 42 && 42 == x && x != 0 && 0 != x;",
-                        "}"
-                    )
-            );
-        }
+        assertEvalTrue(
+                String.join(System.lineSeparator(),
+                    "{",
+                        "Any x = 42;",
+                        "Bool testresult = x == 42 && 42 == x && x != 0 && 0 != x;",
+                    "}"
+                )
+        );
     }
 
     @Test
     public void anyCompareAny() {
-        if (driver.getBackendName() == BackendTestDriver.BackendName.ERLANG) {
-            assertEvalTrue(
-                    String.join(System.lineSeparator(),
-                        "{",
-                            "Any x = 42;",
-                            "Any y = 42;",
-                            "Any z = 0;",
-                            "Bool testresult = x == y && y == x && x != z && z != x;",
-                        "}"
-                    )
-            );
-        }
+        assertEvalTrue(
+                String.join(System.lineSeparator(),
+                    "{",
+                        "Any x = 42;",
+                        "Any y = 42;",
+                        "Any z = 0;",
+                        "Bool testresult = x == y && y == x && x != z && z != x;",
+                    "}"
+                )
+        );
+    }
+
+    @Test
+    public void anyCompareInterface() {
+        assertEvalTrue(
+                String.join(System.lineSeparator(),
+                    "interface Foo {}",
+                    "class Bar(Int x) implements Foo {}",
+
+                    "{",
+                        "Foo x = new Bar(42);",
+                        "Foo y = new Bar(0);",
+
+                        "Any anyX = x;",
+                        "Any anyY = y;",
+
+                        "Bool testresult = ",
+                               "x == x && y == y && x != y && y != x",
+                            "&& anyX == anyX && anyY == anyY && anyX != anyY && anyY != anyX",
+                            "&& anyX == x && x == anyX && anyX != y && y != anyX",
+                        ";",
+                    "}"
+                )
+        );
     }
 
     /**

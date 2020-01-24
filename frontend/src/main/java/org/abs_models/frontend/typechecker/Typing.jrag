@@ -59,7 +59,7 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
-    syn Type Model.getAnyType() = AnyType.INSTANCE;
+    syn Type Model.getAnyType() = getStdDataType("Any");
     syn DataTypeType Model.getMaybeType(Type typeArg) = ((DataTypeType)getStdDataType("Maybe")).withTypeArgs(typeArg);
     syn Type Model.getListType() = (DataTypeType)getStdDataType("List");
     syn Type Model.getListType(Type typeArg) = ((DataTypeType)getStdDataType("List")).withTypeArgs(typeArg);
@@ -111,7 +111,6 @@ aspect Typing {
 
     eq ExceptionDecl.getType() = getModel().getExceptionType();
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
-    eq AnyTypeDecl.getType() = AnyType.INSTANCE;
     eq AmbiguousDecl.getType() = UnknownType.INSTANCE;
     
     syn Type ConstructorArg.getType();
@@ -224,7 +223,6 @@ aspect Typing {
         return d.getType();
     }
     eq TypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
-    eq AnyTypeUse.getType() = AnyType.INSTANCE;
     eq ParametricDataTypeUse.getType() {
         Decl d = getDecl();
         if (d == null || !(d instanceof ParametricDataTypeDecl))
@@ -356,7 +354,7 @@ aspect Typing {
     	
     } 
     eq PatternVar.getType() = getInhType();  
-    eq UnderscorePattern.getType() = AnyType.INSTANCE;
+    eq UnderscorePattern.getType() = getCompilationUnit().getModel().getAnyType();
     eq LiteralPattern.getType() = getLiteral().getType();
     
     inh Type Pattern.getInhType();

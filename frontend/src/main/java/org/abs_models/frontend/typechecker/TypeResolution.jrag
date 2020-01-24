@@ -15,7 +15,6 @@ aspect TypeResolution {
     syn boolean Decl.isDataType() = false;
     syn boolean Decl.isDataConstructor() = false;
     syn boolean Decl.isInterface() = false;
-    syn boolean Decl.isAnyType() = false;
     syn boolean Decl.isTypeSyn() = false;
     syn boolean Decl.isTypeParameter() = false;
     syn boolean Decl.isFuture() = false;
@@ -26,7 +25,6 @@ aspect TypeResolution {
     eq ClassDecl.isClass() = true;
     eq FunctionDecl.isFunction() = true;
     eq InterfaceDecl.isInterface() = true;
-    eq AnyTypeDecl.isAnyType() = true;
     eq DataTypeDecl.isDataType() = true;
     eq DataConstructor.isDataConstructor() = true;
     eq TypeSynDecl.isTypeSyn() = true;
@@ -225,12 +223,7 @@ aspect TypeResolution {
     eq CompilationUnit.getModuleDecl().lookupModule(String name) = lookupModule(name);
     eq Model.getCompilationUnit().lookupModule(String name) = lookupModule(name);
 
-    public final static AnyTypeDecl Model.superDecl = new AnyTypeDecl();
     syn lazy Decl Model.lookup(KindedName name) {
-        if (name.getName().equals("Any")) {
-            return superDecl;
-        }
-
         for (CompilationUnit u : getCompilationUnits()) {
             for (ModuleDecl d : u.getModuleDecls()) {
                 Decl decl = d.lookup(name);
@@ -399,17 +392,6 @@ aspect TypeResolution {
         when (getDecl().isTypeParameter())
         to TypeParameterUse {
             TypeParameterUse tu = new TypeParameterUse(getName(), getAnnotations());
-            tu.setPositionFromNode(this);
-            return tu;
-        }
-        //System.out.println("CHECKING FOR SUPER");
-        //System.out.println(getName());
-        //System.out.println(this.toString());
-        when(getDecl().isAnyType())
-        to AnyTypeUse {
-            // The super-type does not have any annotations.
-            // TODO: Modify ABS.ast to drop annotations for super type
-            AnyTypeUse tu = new AnyTypeUse(getName(), getAnnotations());
             tu.setPositionFromNode(this);
             return tu;
         }

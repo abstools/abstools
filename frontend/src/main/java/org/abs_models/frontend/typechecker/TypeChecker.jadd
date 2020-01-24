@@ -486,9 +486,6 @@ aspect TypeChecker {
     public void UnknownDecl.typeCheck(SemanticConditionList e) {
     /* nothing to check */ }
 
-    public void AnyTypeDecl.typeCheck(SemanticConditionList e) {
-    /* nothing to check */ }
-
     public void Block.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
         for (Stmt s : getStmts()) {
@@ -837,9 +834,6 @@ aspect TypeChecker {
         if (!(d instanceof InterfaceDecl)) {
             e.add(new SemanticError(this,ErrorMessage.UNKOWN_INTERFACE,getName()));
         }
-    }
-    public void AnyTypeUse.typeCheck(SemanticConditionList e) {
-        //TODO
     }
 
     public void UnresolvedTypeUse.typeCheck(SemanticConditionList e) {

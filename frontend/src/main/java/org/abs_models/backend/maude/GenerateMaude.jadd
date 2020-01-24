@@ -571,11 +571,6 @@ aspect GenerateMaude {
 		stream.println("--- Unknown declaration " + getName());
 	}
 
-	public void AnyTypeDecl.generateMaude(PrintStream stream) {
-        stream.println("--- Hey, I didn't expect this to be generated! " + getName());
-        throw new NotImplementedYetException(this);
-	}
-
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         PureExp scheduler = AnnotationHelper.getAnnotationValueFromName(this.getAnnotationList(), "ABS.Scheduler.Scheduler");
