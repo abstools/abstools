@@ -1,10 +1,20 @@
 ---
-title: "Selected Publications"
-date: 2018-03-22T12:22:31+01:00
+title: "Publications and Workshops"
+date: 2020-02-04T12:22:31+01:00
 weight: 4
 ---
 
-This page contains selected research papers on the development and usage of the ABS modeling language and analysis tools.
+This page links ABS workshops, as well as selected research papers on the development and usage of the ABS modeling language and analysis tools.
+
+## ABS Workshops
+
+- **2017** First International ABS Workshop: May 31--June 2, 2017, Oslo, Norway.
+
+- **2018** Second International ABS Workshop: May 28--May 30, 2018, Darmstadt, Germany.  https://formbar.raillab.de/en/abs2018/
+
+- **2019** Third International ABS Workshop: May 13--May 15, 2019, Amsterdam, The Netherlands.   https://www.cwi.nl/research/groups/formal-methods/events/third-international-workshop-on-the-abs-modeling-language-and-tools
+
+- **2020**  Fourth International ABS Workshop: June 3--June 5, 2020, Torino, Italy.  https://abs2020.di.unito.it
 
 ## Case Studies
 
