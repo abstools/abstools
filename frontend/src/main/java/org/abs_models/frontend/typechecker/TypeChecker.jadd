@@ -734,6 +734,13 @@ aspect TypeChecker {
         }
     }
 
+    public void CaseStmtOld.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+        e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_CASE_STMT, ""));
+    }
+
+
+
     public void CaseBranchStmt.typeCheck(SemanticConditionList e, DataTypeType t) {
         getLeft().typeCheck(e,t);
         getRight().typeCheck(e);
@@ -972,6 +979,11 @@ aspect TypeChecker {
                 e.add(new TypeError(this, ErrorMessage.IF_DIFFERENT_TYPE, tt, et));
             }
         }
+    }
+
+    public void IfExpOld.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+        e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_IF_EXPRESSION, ""));
     }
 
     public void CaseExp.typeCheck(SemanticConditionList e) {

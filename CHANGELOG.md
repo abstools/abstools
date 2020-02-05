@@ -12,9 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The toolchain now uses Xtext (https://eclipse.org/Xtext) as parsing framework.  This switch caused some minor syntax changes, listed below.
 
-  - Incompatible change: the conditional expression now uses `when` as keyword instead of `if`.  (The conditional statement uses `if` as before.)
+- The pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.
 
-  - Incompatible change: the pattern matching statement now uses `switch` as keyword instead of `case`.  (The pattern-matching expression uses `case` as before.)
+- The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  (We still do not use the C-style `?:` ternary operator.)
 
 ### Removed
 

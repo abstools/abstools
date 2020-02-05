@@ -141,6 +141,8 @@ public enum ErrorMessage {
     MAIN_BLOCK_NOT_FOUND("Warning: no main block found."),
     MAIN_BLOCK_AMBIGUOUS("Warning: this main block is shadowed by the main block from module %s."),
     DEPRECATED_CONSTRUCTOR("Warning: The constructor %s is deprecated (use exported functions instead)."),
+    DEPRECATED_IF_EXPRESSION("Warning: use 'when ... then ... else ...' instead of 'if ... then ... else ...' (the old syntax will stop working in a future version of abs)."),
+    DEPRECATED_CASE_STMT("Warning: use 'switch (...) { ... }' instead of 'case (...) { ... }' (the old syntax will stop working in a future version of abs)."),
     UNDECLARED_PRODUCT("Product %s is not declared"),
     INVALID_PRODUCT("Product %s does not satisfy the feature model. Constraints failed: %s."),
     MATCHING_NOT_ALLOWED_IN_CATCH("Non-free pattern variable %s (not allowed in catch branches)."),

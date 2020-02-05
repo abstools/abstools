@@ -455,9 +455,8 @@ aspect doPrettyPrinter {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
         stream.print("switch (");
         getExpr().doPrettyPrint(stream, formatter);
-        stream.print(")");
         formatter.beforeOpenBrace();
-        stream.println(" {");
+        stream.println(") {");
         formatter.afterOpenBrace();
         for (CaseBranchStmt b : getBranchList()) {
             formatter.afterStmt();

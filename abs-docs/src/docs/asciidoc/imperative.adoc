@@ -363,7 +363,7 @@ For a description of the pattern syntax, see <<case-expression>>.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _SwitchStmt_ ::= | `switch` _PureExp_ `{` { _SwitchStmtBranch_ } `}`
+| _SwitchStmt_ ::= | `switch` `(` _PureExp_ `)` `{` { _SwitchStmtBranch_ } `}`
 | _SwitchStmtBranch_ ::= | _Pattern_ `\=>` _Stmt_
 |====
 

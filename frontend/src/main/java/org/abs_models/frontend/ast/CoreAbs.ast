@@ -139,6 +139,7 @@ IfStmt: Stmt ::= Condition:PureExp Then:Block [Else:Block];
 WhileStmt: Stmt ::= Condition:PureExp Body:Block;
 ForeachStmt: Stmt ::= LoopVarDecl ListExp:PureExp Body:Block;
 CaseStmt : Stmt ::= Expr:PureExp Branch:CaseBranchStmt* ;
+CaseStmtOld : CaseStmt ;     // old-style syntax, used for deprecation warning
 CaseBranchStmt ::= Left:Pattern Right:Block ;
 TryCatchFinallyStmt : Stmt ::= Body:Block Catch:CaseBranchStmt* [Finally:Block] ;
 // A Block is the body of programs and methods and is also used for initblocks
@@ -199,6 +200,7 @@ ParFnApp : PureExp ::= <Name> Param:PureExp* FuncParam:ParFnAppParam* ;
 
 CaseExp : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
 IfExp : PureExp ::= CondExp:PureExp ThenExp:PureExp ElseExp:PureExp ;
+IfExpOld : IfExp ;           // old-style syntax, used for deprecation warning
 CaseBranch ::= Left:Pattern Right:PureExp ;
 
 //Patterns

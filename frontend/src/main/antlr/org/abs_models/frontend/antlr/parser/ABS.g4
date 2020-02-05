@@ -3,10 +3,6 @@
  * This file is licensed under the terms of the Modified BSD License.
  */
 
-// TODO for moving tools from beaver/flex to antlr:
-// - Generate code for full ABS
-// - Implement the raiseExceptions flag
-
 grammar ABS;
 
 TraditionalComment : '/*' .*? '*/' -> skip ;
@@ -129,7 +125,9 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | 'null'                                               # NullExp
     | e=pure_exp 'implements' i=interface_name             # ImplementsExp
     | e=pure_exp 'as' i=interface_name                     # AsExp
-    | 'if' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp  # IfExp
+    | 'when' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp
+                                                           # WhenExp
+    | 'if' c=pure_exp 'then' l=pure_exp 'else' r=pure_exp  # IfExpOld
     | 'case' c=pure_exp '{' casebranch+ '}'                # CaseExp
         // backward compatibility: do not demand (parentheses) around
         // the variable declaration but silently accept them for now.
@@ -169,6 +167,8 @@ stmt : annotations type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotations 'assert' exp ';'                                 # AssertStmt
     | annotations '{' stmt* '}'                                    # BlockStmt
     | annotations 'if' '(' c=pure_exp ')' l=stmt ('else' r=stmt)?  # IfStmt
+    | annotations 'switch' '(' c=pure_exp ')' '{' casestmtbranch* '}'
+                                                                   # SwitchStmt
     | annotations 'while' '(' c=pure_exp ')' stmt                  # WhileStmt
     | annotations 'foreach' '(' i=IDENTIFIER 'in' l=pure_exp ')' stmt
                                                                    # ForeachStmt
@@ -182,16 +182,16 @@ stmt : annotations type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotations 'die' pure_exp ';'                               # DieStmt
     | annotations 'movecogto' pure_exp ';'                         # MoveCogToStmt
     | annotations exp ';'                                          # ExpStmt
-        // Prefer case expression to case statement, so case statement comes later
-    | annotations 'case' c=pure_exp '{' casestmtbranch* '}'        # CaseStmt
-        // case
+        // Prefer case expression to old-style case statement, so case
+        // statement comes later
+    | annotations 'case' c=pure_exp '{' casestmtbranch* '}'        # CaseStmtOld
     ;
 
 guard : var_or_field_ref '?'                           # ClaimGuard
     | 'duration' '(' min=pure_exp ',' max=pure_exp ')' # DurationGuard
     | e=pure_exp                                       # ExpGuard
     | l=guard '&' r=guard                              # AndGuard
-    ;                           // TODO: objectguard
+    ;
 
 casestmtbranch : pattern '=>' stmt ;
 
