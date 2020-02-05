@@ -15,7 +15,7 @@ def Rat randomf() = random(10000000)/10000000;
 def Int ceiling(Rat r) = truncate(r) + 1;
 
 def Int next_power_of_2(Rat r, Int current) =
-  if r < current then current else next_power_of_2(r, current * 2);
+  when r < current then current else next_power_of_2(r, current * 2);
 def Rat rsqrt(Rat r) = sqrt_newton(r, r, 1/100);
 
 //==========================================================================

@@ -94,7 +94,7 @@ public class PrettyPrinterTests extends ABSTest {
 
     @Test
     public void bug249() throws Exception {
-        String ms = "module UnitTest; export *; { ((if True then 0 else 0) == 0); }";
+        String ms = "module UnitTest; export *; { ((when True then 0 else 0) == 0); }";
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING_AFTER_TYPECHECK);
         assertEqualsAndParses(ms, m);
     }

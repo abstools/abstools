@@ -34,7 +34,7 @@ public class ParserTest extends FrontendTest {
             // case expression
             "case set { EmptyStringSet => False ; }", "case set { EmptyStringSet() => False ; }",
             "case set { EmptyStringSet => False ; InsertString(string2,set2) => True ;}",
-            "if True then 5 else 6"};
+            "when True then 5 else 6"};
 
     private String[] effExp = { "new local Foo()  ", "new local Foo(a,b)  ", "o!init()  ", "o!init(y)  ", "o!init(y,z)  ",
             "this!init(y,z)  ", "o.init(y,z,w)  ",
@@ -72,9 +72,8 @@ public class ParserTest extends FrontendTest {
 
     @Test
     public void ifExp() {
-        assertParse("{ (if True then x else x).get; }");
-        assertParse("{ Int x = 5; if(if 4 == 5 then True else False) { x = 4; } else { x = 3; } }");
-        assertParse("{ if True then x else x.get; }");
+        assertParse("{ (when True then x else x).get; }");
+        assertParse("{ Int x = 5; if(when 4 == 5 then True else False) { x = 4; } else { x = 3; } }");
     }
 
 

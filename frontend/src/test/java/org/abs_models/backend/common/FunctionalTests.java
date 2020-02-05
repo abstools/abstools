@@ -187,7 +187,7 @@ public class FunctionalTests extends SemanticTests {
     
     @Test
     public void exceptionDataType() {
-        assertEvalTrue("exception MyE(Bool); { Bool testresult = False; MyE e = MyE(True); case e { MyE(value) => testresult = value; } }");
+        assertEvalTrue("exception MyE(Bool); { Bool testresult = False; MyE e = MyE(True); switch (e) { MyE(value) => testresult = value; } }");
     }
     
     @Test
@@ -253,12 +253,12 @@ public class FunctionalTests extends SemanticTests {
 
     @Test
     public void ifExp1() {
-        assertEvalTrue("def Bool f(Bool x) = if x then True else False ; " + CALL_F_TRUE);
+        assertEvalTrue("def Bool f(Bool x) = when x then True else False ; " + CALL_F_TRUE);
     }
 
     @Test
     public void ifExp2() {
-        assertEvalTrue("def Bool f(Bool x) = if !x then False else True ; " + CALL_F_TRUE);
+        assertEvalTrue("def Bool f(Bool x) = when !x then False else True ; " + CALL_F_TRUE);
     }
 
     @Test
@@ -350,12 +350,12 @@ public class FunctionalTests extends SemanticTests {
     /* https://github.com/abstools/abstools/issues/62 - Int vs. Rat */
     @Test
     public void testPow1() {
-        assertEvalTrue("def Rat pow2(Int n, Int i) = if i < 0 then 1 / pow2(n, -i) else case i { 0 => 1; _ => n * pow2(n, i-1);  }; { Bool testresult = True; }");
+        assertEvalTrue("def Rat pow2(Int n, Int i) = when i < 0 then 1 / pow2(n, -i) else case i { 0 => 1; _ => n * pow2(n, i-1);  }; { Bool testresult = True; }");
     }
 
     @Test
     public void testPow2() {
-        assertEvalTrue("def Rat pow2(Int n, Int i) = if i < 0 then 1 / pow2(n, -i) else case i { 0 => 1; _ => n * pow2(n, i-1);  }; { Bool testresult = True; }");
+        assertEvalTrue("def Rat pow2(Int n, Int i) = when i < 0 then 1 / pow2(n, -i) else case i { 0 => 1; _ => n * pow2(n, i-1);  }; { Bool testresult = True; }");
     }
     
     @Test

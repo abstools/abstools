@@ -11,4 +11,4 @@ delta D(F.a) when F;
 product P1(F{a=0});
 product P2(F{a=17});
 
-root F { Int param in [0..99]; }
+root F { Int param in [0 .. 99]; }

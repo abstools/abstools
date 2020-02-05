@@ -23,7 +23,7 @@ module BackendTest;
     foreach (i in list[1, 2, 3]) {
         println(toString(i));
     }
-    [Atomic] case x {
+    [Atomic] switch (x) {
         5 => { skip; }
         7 => { x = (x + 1); }
         _ => {

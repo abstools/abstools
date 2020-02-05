@@ -460,8 +460,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitExpStmt(ABSParser.ExpStmtContext ctx) {
         setV(ctx, new ExpressionStmt(v(ctx.annotations()), v(ctx.exp())));
     }
-    @Override public void exitCaseStmt(ABSParser.CaseStmtContext ctx) {
+    @Override public void exitSwitchStmt(ABSParser.SwitchStmtContext ctx) {
         setV(ctx, new CaseStmt(v(ctx.annotations()), v(ctx.c), l(ctx.casestmtbranch())));
+    }
+    @Override public void exitCaseStmtOld(ABSParser.CaseStmtOldContext ctx) {
+        setV(ctx, new CaseStmtOld(v(ctx.annotations()), v(ctx.c), l(ctx.casestmtbranch())));
     }
     @Override public void exitCasestmtbranch(ABSParser.CasestmtbranchContext ctx) {
         Stmt body = v(ctx.stmt());
@@ -689,8 +692,13 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     @Override public void exitNullExp(ABSParser.NullExpContext ctx) {
         setV(ctx, new NullExp());
     }
-    @Override public void exitIfExp(ABSParser.IfExpContext ctx) {
+    @Override public void exitWhenExp(ABSParser.WhenExpContext ctx) {
         setV(ctx, new IfExp(v(ctx.c),
+            v(ctx.l),
+            v(ctx.r)));
+    }
+    @Override public void exitIfExpOld(ABSParser.IfExpOldContext ctx) {
+        setV(ctx, new IfExpOld(v(ctx.c),
             v(ctx.l),
             v(ctx.r)));
     }

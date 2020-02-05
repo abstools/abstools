@@ -24,7 +24,7 @@ public class DeltaTrieTest extends DeltaTest {
             + "delta D1 after D2 when A;"
             + "delta D2 when B;"
             + "root FM {"
-            + " group [0..*] { A, B }"
+            + " group [0 .. *] { A, B }"
             + "}");
         ProductLine pl = model.getProductLine();
         DeltaTrie pfgt = ProductLineAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
@@ -52,7 +52,7 @@ public class DeltaTrieTest extends DeltaTest {
             + "delta D2 after D1 when B;"
             + "delta D3 after D2 when C;"
             + "root FM {"
-            + " group [0..*] { A, B, C }"
+            + " group [0 .. *] { A, B, C }"
             + "}");
         ProductLine pl = model.getProductLine();
         DeltaTrie pfgt = ProductLineAnalysisHelper.buildPFGT(pl, new SemanticConditionList());
@@ -91,7 +91,7 @@ public class DeltaTrieTest extends DeltaTest {
             + "delta D2 after D1 when B;"
             + "delta D3 after D1,D2 when A && B;"
             + "root FM {"
-            + " group [1..*] { A, B }"
+            + " group [1 .. *] { A, B }"
             + "}");
 
         ProductLine pl = model.getProductLine();

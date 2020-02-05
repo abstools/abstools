@@ -10,13 +10,13 @@ public class JavaExprTests extends JavaBackendTest {
 
     @Test
     public void ifExp() throws Exception {
-        assertValid("def Bool f(Bool x) = if x then True else False; ");
+        assertValid("def Bool f(Bool x) = when x then True else False; ");
     }
 
     @Test
     public void ifInLetExp() throws Exception {
         // see bug 343
-        assertValid("def Int f(Int x) = let (Int y) = 3 in if x == y then 42 else 41; ");
+        assertValid("def Int f(Int x) = let (Int y) = 3 in when x == y then 42 else 41; ");
     }
     
     @Test

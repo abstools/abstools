@@ -17,7 +17,7 @@ This chapter specifies all ABS statements.
 {vbar} _ReturnStmt_ +
 {vbar} _Block_ +
 {vbar} _IfStmt_ +
-{vbar} _CaseStmt_ +
+{vbar} _SwitchStmt_ +
 {vbar} _WhileStmt_ +
 {vbar} _ForeachStmt_ +
 {vbar} _TryCatchFinallyStmt_
@@ -343,14 +343,14 @@ if (True)
   x = 5;
 ----
 
-[[case-stmt]]
-=== Case: Pattern Matching
+[[switch-stmt]]
+=== Switch: Pattern Matching
 
-The case statement, like the case expression (see <<case-expression>>),
+The switch statement, like the case expression (see <<case-expression>>),
 consists of an expression and a series of branches, each consisting of a
 pattern and a statement (which can be a block).
 
-When a case statement is executed, its input expression is evaluated and the
+When a switch statement is executed, its input expression is evaluated and the
 value matched against the branches until a matching pattern is found.  The
 statement in the right-hand side of that branch is then executed.  Any
 variable bindings introduced by matching the pattern are in effect while
@@ -363,8 +363,8 @@ For a description of the pattern syntax, see <<case-expression>>.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _CaseStmt_ ::= | `case` _PureExp_ `{` { _CaseStmtBranch_ } `}`
-| _CaseStmtBranch_ ::= | _Pattern_ `\=>` _Stmt_
+| _SwitchStmt_ ::= | `switch` `(` _PureExp_ `)` `{` { _SwitchStmtBranch_ } `}`
+| _SwitchStmtBranch_ ::= | _Pattern_ `\=>` _Stmt_
 |====
 
 [source]
@@ -372,7 +372,7 @@ For a description of the pattern syntax, see <<case-expression>>.
 ----
 Pair<Int, Int> p = Pair(2, 3);
 Int x = 0;
-case p {
+switch p {
   Pair(2, y) => { x = y; skip; }
   _ => x = -1;
 }
@@ -438,7 +438,7 @@ execution afterwards.
 .Syntax
 |====
 | _TryCatchFinallyStmt_ ::= | `try` _Stmt_ +
-                              `catch` ( `{` { _CaseStmtBranch_ } `}`  {vbar} _CaseStmtBranch_ ) +
+                              `catch` ( `{` { _SwitchStmtBranch_ } `}`  {vbar} _SwitchStmtBranch_ ) +
                               [ `finally` _Stmt_ ]
 |====
 
@@ -449,7 +449,7 @@ statement, then with the next statement after the try-catch-finally statement.
 If during execution of the statement protected by `try` an exception is
 thrown, it is matched one-by-one against the exception patterns defined in the
 `catch` block.  The statement following the first matching pattern will be
-executed, as in the case statement (see <<case-stmt>>).  Execution continues
+executed, as in the switch statement (see <<switch-stmt>>).  Execution continues
 with the optional `finally` statement, then with the statement following the
 try-catch-finally statement.
 

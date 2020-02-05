@@ -4,6 +4,7 @@
  */
 package deadlock;
 
+import org.junit.Assert;
 import org.junit.Assume;
 
 import deadlock.analyser.Analyser;
@@ -24,6 +25,7 @@ public class DeadlockCheckerTests extends ExamplesTypeChecking {
     @Override
     protected Model parse(String input) throws Exception {
         Model m = super.parse(input);
+        Assert.assertNotNull(m);
         Assume.assumeTrue(m.hasMainBlock());
         (new Analyser()).deadlockAnalysis(m, true, 2, 2, System.out);
         return m;

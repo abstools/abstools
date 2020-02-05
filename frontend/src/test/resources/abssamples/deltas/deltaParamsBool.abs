@@ -16,4 +16,4 @@ product P1(A,F);
 product P2(A,B,F);
 product P3(A,B,C,F);
 
-root F { group [0..*] { A, B, C } }
+root F { group [0 .. *] { A, B, C } }

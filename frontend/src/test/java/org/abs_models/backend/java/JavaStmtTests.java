@@ -97,7 +97,7 @@ public class JavaStmtTests extends JavaBackendTest {
     
     @Test
     public void awaitStmtExpGuardParameter_ifExpr() throws Exception {
-        assertValid("class C { Int counter = 0; Unit m(Int i) { await if counter > i then counter > i else False; } }");
+        assertValid("class C { Int counter = 0; Unit m(Int i) { await when counter > i then counter > i else False; } }");
     }
     
     @Test

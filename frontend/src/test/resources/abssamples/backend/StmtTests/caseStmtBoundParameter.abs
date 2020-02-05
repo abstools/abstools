@@ -7,7 +7,7 @@ interface I {
 class C implements I {
     Bool test(Int field) {
         Bool testresult = False;
-        case 0 {
+        switch (0) {
             field => testresult = True;
             _ => skip;
         }

@@ -1422,13 +1422,13 @@ product OneCustomer (Customer{customer=1});
 product Test1(Customer{customer=1},UserLog);
 
 root Scaling {
-	group [1..2] {
+	group [1 .. 2] {
 		Customer { Int customer in [1 .. 3]; },
 		Network { Int latency in [1 .. 100]; },
 		Request { Int size in [1 .. 100]; },
 		Stability { Int percent in [1 .. 100]; },
 		Log {
-            group [0..*] {
+            group [0 .. *] {
                 ResourceLog,
 		        UserLog
             }

@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- The pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.  Using the old syntax emits a compile-time warning for now.
+
+- The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  Using the old syntax emits a compile-time warning for now.  (We still do not use the C-style `?:` ternary operator.)
+
 ### Removed
 
 ### Fixed

@@ -42,7 +42,7 @@ multiple times without influencing the execution semantics.
  {vbar} _FnAppExp_ +
  {vbar} _FnAppListExp_ +
  {vbar} _ParFnAppExp_ +
- {vbar} _IfExp_ +
+ {vbar} _WhenExp_ +
  {vbar} _CaseExp_ +
  {vbar} _OperatorExp_ +
  {vbar} _TypeCheckExp_ +
@@ -282,7 +282,7 @@ filter((Int i) => i > 0)(list[0, 1, 2])
 
 ==== The Conditional Expression
 
-The value of the conditional expression `if c then e1 else e2` is either the
+The value of the conditional expression `when c then e1 else e2` is either the
 value of `e1` or the value of `e2`, depending on the value of `c`, which must
 be of type `Bool`.  Depending on the value of `c`, either `e1` or `e2` is
 evaluated, but not both.
@@ -290,13 +290,13 @@ evaluated, but not both.
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _IfExp_ ::= | `if` _PureExp_ `then` _PureExp_ `else` _PureExp_
+| _WhenExp_ ::= | `when` _PureExp_ `then` _PureExp_ `else` _PureExp_
 |====
 
 [source]
 .Example
 ----
-if 5 == 4 then True else False
+when 5 == 4 then True else False
 ----
 
 [[case-expression]]

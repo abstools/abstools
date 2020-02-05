@@ -37,7 +37,7 @@ public class SearchSolutionsTest extends FrontendTest {
         "        group oneof { English, Dutch, French, German }" +
         "      }," +
         "      opt Repeat {" +
-        "        Int times in [0..10];" +
+        "        Int times in [0 .. 10];" +
         "        ifin: times > 0; " +
         "      } " +
         "    } " +

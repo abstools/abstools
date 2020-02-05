@@ -63,7 +63,7 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
             + "    delta D(A,B,C) when F;"
             + "product P1(F,A);"
             + "product P2(F,B);"
-            + "root F { group [0..*] { A, B, C } }");
+            + "root F { group [0 .. *] { A, B, C } }");
         
         model.evaluateAllProductDeclarations();
         model.flattenForProduct(product);

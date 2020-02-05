@@ -90,13 +90,13 @@ interface Object { }
 def Bool and(Bool a, Bool b) = a && b;
 def Bool not(Bool a) = !a;
 
-def A max<A>(A a, A b) = if a > b then a else b;
-def A min<A>(A a, A b) = if a < b then a else b;
+def A max<A>(A a, A b) = when a > b then a else b;
+def A min<A>(A a, A b) = when a < b then a else b;
 
-def Rat abs(Rat x) = if x > 0 then x else -x;
+def Rat abs(Rat x) = when x > 0 then x else -x;
 
 def Rat pow(Rat b, Int n) =
-    if n < 0
+    when n < 0
     then 1 / pow(b, -n)
     else case n {
         0 => 1;
@@ -105,7 +105,7 @@ def Rat pow(Rat b, Int n) =
 
 def Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon) =
   let (Rat next) = (estimate + x / estimate)/2
-  in if abs(estimate - next) < epsilon
+  in when abs(estimate - next) < epsilon
     then estimate
     else sqrt_newton(x, next, epsilon);
 
@@ -117,12 +117,12 @@ def Float exp(Float x) = builtin;
 
 def Rat exp_newton_helper(Rat acc, Rat x, Int next_round, Rat numerator, Int denominator, Rat epsilon) =
   let (Rat next) = (numerator * x) / (denominator * next_round)
-  in if abs(next) < epsilon
+  in when abs(next) < epsilon
     then acc + next
     else exp_newton_helper(acc + next, x, next_round + 1, numerator * x, denominator * next_round, epsilon);
 
 def Rat exp_newton(Rat x, Rat epsilon) =
-  if (x < 0) then 1/exp_newton_helper((1 - x + (x * x) / 2), -x, 3, x*x, 2, epsilon)
+  when (x < 0) then 1/exp_newton_helper((1 - x + (x * x) / 2), -x, 3, x*x, 2, epsilon)
   else exp_newton_helper((1 + x + (x * x) / 2), x, 3, x * x, 2, epsilon);
 
 
@@ -209,7 +209,7 @@ def Bool contains<A>(Set<A> ss, A e) =
   case ss {
     EmptySet => False ;
     Insert(e, _) => True;
-    Insert(x, xs) => if x > e then False else contains(xs, e);
+    Insert(x, xs) => when x > e then False else contains(xs, e);
   };
   
 /**
@@ -245,7 +245,7 @@ def Set<A> union<A>(Set<A> set1, Set<A> set2) =
           EmptySet => set1;
           Insert(e1, ss2) => Insert(e1, union(ss1, ss2));
           Insert(e2, ss2) =>
-            if e1 < e2
+            when e1 < e2
             then Insert(e1, union(ss1, set2))
             else Insert(e2, union(set1, ss2));
       };
@@ -261,7 +261,7 @@ def Set<A> intersection<A>(Set<A> set1, Set<A> set2) =
           EmptySet => EmptySet;
           Insert(e1, ss2) => Insert(e1, intersection(ss1, ss2));
           Insert(e2, ss2) =>
-            if e1 < e2
+            when e1 < e2
             then intersection(ss1, set2)
             else intersection(set1, ss2);
       };
@@ -278,7 +278,7 @@ def Set<A> difference<A>(Set<A> set1, Set<A> set2) =
           EmptySet => set1;
           Insert(e1, ss2) => difference(ss1, ss2);
           Insert(e2, ss2) =>
-            if e1 < e2
+            when e1 < e2
             then Insert(e1, difference(ss1, set2))
             else difference(set1, ss2);
       };
@@ -303,7 +303,7 @@ def Set<A> insertElement<A>(Set<A> xs, A e) =
   case xs {
       EmptySet => Insert(e, EmptySet);
       Insert(e, _) => xs;
-      Insert(x, ss) => if e < x then Insert(e, xs) else Insert(x, insertElement(ss, e));
+      Insert(x, ss) => when e < x then Insert(e, xs) else Insert(x, insertElement(ss, e));
   };
 
 /**
@@ -313,7 +313,7 @@ def Set<A> remove<A>(Set<A> xs, A e) =
   case xs {
      EmptySet => EmptySet ;
      Insert(e, ss) => ss;
-     Insert(x, ss) => if e < x then xs else Insert(x, remove(ss, e));
+     Insert(x, ss) => when e < x then xs else Insert(x, remove(ss, e));
   };
 
 /**
@@ -650,7 +650,7 @@ def List<B> map<A, B>(f)(List<A> list) = case list {
 
 def List<T> filter<T>(predicate)(List<T> list) = case list {
 	Nil => Nil;
-	Cons(x1111111111, xs1111111111) => let (List<T> filtered) = filter(xs1111111111) in if (predicate(x1111111111)) then Cons(x1111111111, filtered) else filtered;
+	Cons(x1111111111, xs1111111111) => let (List<T> filtered) = filter(xs1111111111) in when (predicate(x1111111111)) then Cons(x1111111111, filtered) else filtered;
 };
 
 def B foldl<A, B>(f)(List<A> list, B val) = case list {
@@ -763,13 +763,13 @@ data InfRat = InfRat | Fin(Rat finvalue);
 // Sums things up in percents (thus the * 100, which makes us not lose
 // precision.)
 def Rat sumDivsN(List<Rat> consumeds, List<Rat> totals, Int n) =
-  if (n==0 || isEmpty(consumeds) || isEmpty(totals))
+  when (n==0 || isEmpty(consumeds) || isEmpty(totals))
   then 0
   else (head(consumeds) * 100 / head(totals)) + sumDivsN(tail(consumeds), tail(totals), n-1);
 
 def Rat averageDivsN(List<Rat> consumeds, List<Rat> totals, Int length) =
   let (Int mins) = min(length, min(length(consumeds), length(totals)))
-  in if mins == 0 then 0 else sumDivsN(consumeds, totals, mins) / mins;
+  in when mins == 0 then 0 else sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
     // Return the load (0-100) for given resourcetype over the last n periods.
@@ -1052,7 +1052,7 @@ implements DeploymentComponentForCloudProvider {
     }
     [Atomic] Rat load(Resourcetype rtype, Int periods) {
         Rat result = 0;
-        case (rtype) {
+        switch (rtype) {
             Speed => {
                 if (cpu != InfRat) {
                     result = averageDivsN(cpuhistory, cpuhistorytotal, periods);
@@ -1073,7 +1073,7 @@ implements DeploymentComponentForCloudProvider {
     }
     [Atomic] InfRat total(Resourcetype rtype) {
         InfRat result = InfRat;
-        case (rtype) {
+        switch (rtype) {
             Speed => result = cpu;
             Bandwidth => result = bw;
             Memory => result = memory;
@@ -1091,7 +1091,7 @@ implements DeploymentComponentForCloudProvider {
     }
 
     [Atomic] Rat decrementResources(Rat amount, Resourcetype rtype) {
-        case (rtype) {
+        switch (rtype) {
             Speed => if (cpunext != InfRat) {
                 amount = min(amount, finvalue(cpunext));
                 cpunext = Fin(finvalue(cpunext) - amount);
@@ -1108,7 +1108,7 @@ implements DeploymentComponentForCloudProvider {
         return amount;
     }
     [Atomic] Rat incrementResources(Rat amount, Resourcetype rtype) {
-        case (rtype) {
+        switch (rtype) {
             Speed => {
                 if (cpunext != InfRat) {
                     cpunext = Fin(finvalue(cpunext) + amount);
@@ -1378,7 +1378,7 @@ def String iterateTS(List<Testsuite> tss) =
 def String writeTestsuite(Testsuite ts) = writeWithHeader(True,ts);
 
 def String writeWithHeader(Bool withHeader, Testsuite ts) =
-    if (withHeader) then "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" else ""
+    when (withHeader) then "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" else ""
     + "<testsuite"
     + " name=\"" +name(ts) +"\" tests=\""+toString(length(tcs(ts)))+"\">\n"
     + iterate(tcs(ts))

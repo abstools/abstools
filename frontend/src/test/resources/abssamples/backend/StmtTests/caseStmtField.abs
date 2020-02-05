@@ -8,7 +8,7 @@ class C implements I {
     Int field = 0;
     Bool test() {
         Bool testresult = False;
-        case 0 {
+        switch (0) {
             field => testresult = True;
             _ => skip;
         }

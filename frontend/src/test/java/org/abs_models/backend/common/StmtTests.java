@@ -48,15 +48,15 @@ public class StmtTests extends SemanticTests {
     }
     
     @Test
-    public void declIfExpStmt() {
+    public void declWhenExpStmt() {
         // dynamic Java backend generated invalid code for this case
-        assertEvalTrue("{Bool x = True; Int i = if x then 1 else 2; Bool testresult = (i == 1); }");
+        assertEvalTrue("{Bool x = True; Int i = when x then 1 else 2; Bool testresult = (i == 1); }");
     }
 
     @Test
-    public void assignIfExpStmt() {
+    public void assignWhenExpStmt() {
         // dynamic Java backend generated invalid code for this case
-        assertEvalTrue("{Bool x = True; Int i = 0; i = if x then 1 else 2; Bool testresult = (i == 1); }");
+        assertEvalTrue("{Bool x = True; Int i = 0; i = when x then 1 else 2; Bool testresult = (i == 1); }");
     }
 
     @Test
@@ -66,7 +66,7 @@ public class StmtTests extends SemanticTests {
 
     @Test
     public void caseStatementTest() {
-        assertEvalTrue("{ Int x = 0; case Pair(2, 3) { Pair(2, y) => x = y; _ => skip; } Bool testresult = x == 3; }");
+        assertEvalTrue("{ Int x = 0; switch (Pair(2, 3)) { Pair(2, y) => x = y; _ => skip; } Bool testresult = x == 3; }");
     }
     
     @Test
@@ -92,7 +92,7 @@ public class StmtTests extends SemanticTests {
     @Test
     public void caseStmtEmbeddedVarDecl() {
         // bug 164
-        assertEvalTrue("{ case Just(5) { Just(y) => { Rat z = abs(y); } } Bool testresult = True; }");
+        assertEvalTrue("{ switch (Just(5)) { Just(y) => { Rat z = abs(y); } } Bool testresult = True; }");
     }
 
     @Test

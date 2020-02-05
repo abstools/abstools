@@ -138,7 +138,7 @@ public class FreeVarTest extends FrontendTest {
 
     @Test
     public void ifExpr() {
-        Exp e = getExp("{ Int x = 3; Int y = 4; Int z = 5; Int a = if x == 3 then y else z; }", 3);
+        Exp e = getExp("{ Int x = 3; Int y = 4; Int z = 5; Int a = when x == 3 then y else z; }", 3);
         assertEquals(e.getFreeVars(), "x", "y", "z");
     }
 
