@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  Using the old syntax emits a compile-time warning for now.  (We still do not use the C-style `?:` ternary operator.)
 
+- Minor incompatible change: the plain export clause `export Name;` will only export `Name` if `Name` is defined in the current module; use `export Name from OtherModule;` to re-export `Name` imported from `OtherModule`.  This mirrors the behavior of `export *;` vs. `export * from OtherModule;`.
+
 ### Removed
 
 ### Fixed

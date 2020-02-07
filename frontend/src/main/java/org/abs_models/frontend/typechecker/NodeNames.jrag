@@ -95,6 +95,13 @@ aspect SimpleName {
         Name name = new Name(this.getName());
         return name.getSimpleName();
     }
+
+    public boolean Name.isQualifiedName() {
+        return getName().indexOf('.') > -1;
+    }
+    public boolean Name.isSimpleName() {
+        return !isQualifiedName();
+    }
 }
 
 // qualify node names with the name of the module where they were defined

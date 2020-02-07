@@ -107,10 +107,10 @@ aspect TypeChecker {
 
         for (Name name : getNames()) {
             if (!name.isSimple()) {
-                e.add(new TypeError(this, ErrorMessage.ONLY_UNQUALIFIED_NAMES_ALLOWED, name.getName()));
+                e.add(new TypeError(name, ErrorMessage.ONLY_UNQUALIFIED_NAMES_ALLOWED_IN_IMPORT, name.getName()));
             } else {
                 if (!d.exportsName(name.getName())) {
-                    e.add(new TypeError(this, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, name.getName(), getModuleName()));
+                    e.add(new TypeError(name, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, name.getName(), getModuleName()));
                 }
             }
         }
@@ -122,8 +122,21 @@ aspect TypeChecker {
         ModuleDecl mod = getModuleDecl();
         for (Name name: getNames()) {
             String s = name.getName();
-            if (!mod.isVisible(s)) {
-                e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+            if (name.isSimpleName()) {
+                if (!mod.isDefined(s)) {
+                    ResolvedMap m = mod.getVisibleNames().getAllNames(s);
+                    if (m.isEmpty()) {
+                        e.add(new TypeError(name, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+                    } else {
+                        ResolvedName n = m.values().iterator().next();
+                        // give a hint on how to re-export
+                        e.add(new TypeError(name, ErrorMessage.NO_IMPLICIT_NAME_REEXPORT, s, s, n.getQualifiedName().getModuleName()));
+                    }
+                }
+            } else {
+                if (!mod.isVisible(s)) {
+                    e.add(new TypeError(name, ErrorMessage.NAME_NOT_RESOLVABLE, s + " as qualified name, not visible"));
+                }
             }
         }
     }
@@ -137,9 +150,13 @@ aspect TypeChecker {
 
         ModuleDecl mod = getModuleDecl();
         for (Name name: getNames()) {
-            String s = d.getName()+"."+name.getName();
-            if (!mod.isVisible(s)) {
-                e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+            if (name.isQualifiedName()) {
+                e.add(new TypeError(name, ErrorMessage.ONLY_UNQUALIFIED_NAMES_ALLOWED_IN_EXPORT, name.getName()));
+            } else {
+                String s = d.getName()+"."+name.getName();
+                if (!mod.isVisible(s)) {
+                    e.add(new TypeError(name, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+                }
             }
         }
     }

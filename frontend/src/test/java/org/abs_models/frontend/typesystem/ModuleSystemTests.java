@@ -232,12 +232,12 @@ public class ModuleSystemTests extends FrontendTest {
                     "interface I {}" +
                     
                     "module M2;" +
-                    "export I;" +
                     "import I from M;" +
+                    "export I from M;" +
                     
                     "module M3;" +
-                    "export I;" +
                     "import I from M;" +
+                    "export I from M;" +
                     
                     "module Test;" +
                     "import * from M2;" +
