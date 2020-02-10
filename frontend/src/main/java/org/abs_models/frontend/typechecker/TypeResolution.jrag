@@ -79,6 +79,10 @@ aspect TypeResolution {
         return ! getVisibleNames().getAllNames(name).isEmpty();
     }
 
+    syn lazy boolean ModuleDecl.isDefined(String name) {
+        return ! getDefinedNames().getAllNames(name).isEmpty();
+    }
+
     syn lazy Collection<ModuleDecl> Model.getModuleDecls() {
         ArrayList<ModuleDecl> res = new ArrayList<ModuleDecl>();
         for (CompilationUnit u : getCompilationUnits()) {

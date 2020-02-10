@@ -76,8 +76,9 @@ type without any of its constructors, one can realize _abstract data types_
 in ABS.
 
 A special export clause `export *;` exports all names that are defined in the
-module.  Note that imported names are _not_ re-exported by `export *;` (but
-can be re-exported via `export * from OtherModule;` clauses).
+module.  Note that imported names are _not_ re-exported by `export *;` or
+`export Name;` (but can be re-exported via `export * from OtherModule;` and
+`export Name from OtherModule;` clauses).
 
 [source]
 .Example
@@ -148,7 +149,7 @@ To re-export only selected names, include only these names in the export list:
 ----
 module Bar;
 import * from Drinks;
-export Drink; <1>
+export Drink from Drinks; <1>
 ----
 Only `Drink` is exported from `Bar`.
 

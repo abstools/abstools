@@ -69,7 +69,7 @@ export watch, watchEx;
 // Input/Output
 export println, print, readln;
 
-export Cost;
+export Cost from ABS.DC;
 export * from ABS.StdLib.Exceptions;
 
 import Cost from ABS.DC;
