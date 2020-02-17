@@ -1,0 +1,55 @@
+module BackendTest;
+
+// This tests for https://github.com/abstools/abstools/issues/274 -- time
+// doesn’t advance when one dc waits for duration *and* resources at the same
+// time
+
+// Sadly, I didn’t find a way to test for this except to make it hang
+
+import * from ABS.DC;
+import * from ABS.Scheduler;
+
+def Process scheduleTimeFirst(List<Process> queue) =
+    let (List<Process> times) = filter((Process p) => method(p) == "useTime")(queue)
+    in when times == list[] then head(queue) else head(times);
+
+interface Test {
+    Unit doit();
+    Bool getResult();
+}
+
+[Scheduler: scheduleTimeFirst(queue)]
+class Test implements Test {
+    Bool result = False;
+    Bool sync = False;
+    Unit useResource() {
+        println(`useResource() starting at $now()$`);
+        [Cost: 2] skip;
+        println(`useResource() finishing at $now()$`);
+    }
+    Unit useTime() {
+        println(`useTime() starting at $now()$`);
+        await duration(1, 1);
+        println(`useTime() finishing at $now()$`);
+    }
+    Unit doit() {
+        Fut<Unit> f2 = this!useTime();
+        Fut<Unit> f1 = this!useResource();
+        await f1? & f2?;
+        sync = True;
+        result = True;
+    }
+    Bool getResult() {
+        await sync;
+        return result;
+    }
+}
+
+{
+    Bool testresult = False;
+    DeploymentComponent dc = new DeploymentComponent("", map[Pair(Speed, 1)]);
+    [DC: dc] Test test = new Test();
+    await test!doit();
+    testresult = await test!getResult();
+    println(`Done; testresult = $testresult$`);
+}
