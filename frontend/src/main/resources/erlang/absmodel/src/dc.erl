@@ -561,7 +561,7 @@ mte(Data=#data{clock_waiting=ClockWaiting,
         {infinity, infinity} -> infinity;
         {infinity, TimeMTE} -> TimeMTE;
         {ResMTE, infinity} -> ResMTE;
-        _ -> infinity
+        {ResMTE, TimeMTE} -> rationals:min(ResMTE, TimeMTE)
     end.
 
 can_switch_to_idle(_Data=#data{active=A, active_before_next_clock=ABNC}) ->
