@@ -2,6 +2,7 @@
 title: "Running a Browser-Based IDE"
 date: 2018-08-15T09:20:37+02:00
 weight: 2
+description: "The collaboratory is a browser-based development environment for ABS.  It integrates an editor, the syntax checker and simulator, and the SACO resource analysis tool."
 ---
 
 The collaboratory is a browser-based development environment for ABS.  It

@@ -2,6 +2,7 @@
 title: "Installing Editor Support"
 date: 2018-09-05T09:46:58+02:00
 weight: 3
+description: "We provide support for Emacs, Atom and Visual Studio Code."
 ---
 
 We provide support for Emacs, Atom and Visual Studio Code.
