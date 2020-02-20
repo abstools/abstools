@@ -24,11 +24,8 @@ Folders
 -------
 
 * `frontend` - the ABS compiler and runtime support.  See
-  frontend/README.md for installation instructions.  (short version:
-  install jdk8 and erlang version 21, then run `make frontend` or
-  `./gradlew assemble` in this directory, or `.\gradlew.bat assemble`
-  on windows.)
-
+  <https://abs-models.org/getting_started/local-install/> for installation
+  instructions.
 
 * `abs-docs` - the ABS language manual, available online at
   http://docs.abs-models.org.  To generate the manual locally,
