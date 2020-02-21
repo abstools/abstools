@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The `case` pattern matching expresssion now uses bars (`|`) to separate case branches.  The older syntax (`;` to terminate each branch) is still supported by the parser and will not lead to compile-time warnings.
+
 ### Changed
 
 - The toolchain now uses Xtext (https://eclipse.org/Xtext) as parsing framework.  This switch caused some minor syntax changes, listed below.

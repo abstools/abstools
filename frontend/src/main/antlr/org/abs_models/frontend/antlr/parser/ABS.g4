@@ -137,7 +137,11 @@ pure_exp : qualified_identifier '(' pure_exp_list ')'      # FunctionExp
     | '(' pure_exp ')'                                     # ParenExp
     ;
 
-casebranch : pattern '=>' pure_exp ';' ;
+casebranch :
+        // This slightly funky rule lets us use ‘;’ as branch terminator and
+        // ‘|’ as branch separator (and also put a ‘|’ before the first branch
+        // for aesthetic reasons).  This hack can stay indefinitely.
+        ('|')? pattern '=>' pure_exp (';')? ;
 
 pattern : '_'                                              # UnderscorePattern
     | INTLITERAL                                           # IntPattern

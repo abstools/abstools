@@ -583,8 +583,8 @@ The `takeMaybe` function can be used to iterate through a set.  It is used as fo
 
 def Unit printAll<A>(Set<A> set) =
   case takeMaybe(set) {
-    Nothing => println("Finished");
-    Just(e) => let (Unit dummy) = println("Element " + toString(e)) in printAll(remove(set, e));
+    Nothing => println("Finished")
+    | Just(e) => let (Unit dummy) = println("Element " + toString(e)) in printAll(remove(set, e))
   };
 ----
 

@@ -1,38 +1,32 @@
 # How to install and use the ABS Compiler #
 
-## Preliminaries ##
-
-Compiling ABS needs the [Java
-JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-version 8 or later and [Erlang](http://www.erlang.org/downloads) version 21
-or later.  If using the Maude backend, also install
-[Maude](http://maude.cs.uiuc.edu/download/).
-
 ## Building the compiler ##
 
-To build the compiler, run `./gradlew assemble` in the project root
-directory (`..\gradlew.bat assemble` on windows).  A successful build
-generates the file `frontend/dist/absfrontend.jar` which contains the
-compiler and runtime support files.  A convenience script called
-`absc` that invokes the ABS compiler can be found in
-`frontend/bin/bash/` (for Unix-like systems) and `frontend/bin/win`
-(for Windows).  For a list of options to the compiler, see the output
-of `absc -help`.
+See <https://abs-models.org/getting_started/local-install/> for installation instructions.
+
+## Running the compiler ##
+
+After building, the command `java -jar frontend/dist/absfrontend.jar` will run
+the compiler and output a help message.
+
+A convenience script called `absc` that invokes the ABS compiler can be found
+in `frontend/bin/bash/` (for Unix-like systems) and `frontend/bin/win` (for
+Windows).  For a list of options to the compiler, see the output of `absc
+--help`.
 
 ## Checking ABS code ##
 
 Invoke the ABS compiler with
 
-    bin/bash/absc <absfiles>
+    absc <absfiles>
 
-This will type-check the given input files and output a list of warnings and
-errors.
+This will check the given input files and output a list of warnings and errors.
 
 ## Using the Erlang backend ##
 
 Compile to Erlang with
 
-      bin/bash/absc --erlang [options] <absfiles>
+      absc --erlang [options] <absfiles>
 
 The output will be put in `gen/erl`.
 
@@ -42,31 +36,12 @@ generated inside `gen/erl`:
     $ gen/erl/run
     $ gen/erl/start_console
 
-The command `run` launches an Erlang script that terminates after the
-model terminates; `start_console` launches an Erlang shell and
-executes the given main module, offering an Erlang prompt afterwards.
-For windows, start the model with `run.bat`.
+The command `run` launches an Erlang script that terminates after the model
+terminates; `start_console` launches an Erlang shell and executes the given
+main module, offering an Erlang prompt afterwards. For windows, start the
+model with `run.bat`.
 
 Running `gen/erl/run -h` gives a list of command-line options.
-
-
-## Using the Maude backend ##
-
-Compile to Maude with
-
-    bin/bash/absc --maude <absfiles> -o <file.maude>
-
-To run the model, start Maude and load the compiled model with `in
-<file.maude>`.
-
-After loading the model into Maude, start it with the command
-
-    rew start .
-
-(This assumes that the model terminates - if it does not, you can
-restrict the number of rewrite steps via the usual options to the
-`rew` or `frew` command.)
-
 
 ## Using the Java backend ##
 
@@ -75,11 +50,10 @@ will compile or run.
 
 Compile to Java with
 
-    bin/bash/absc --java [options] <absfiles>
+    absc --java [options] <absfiles>
 
-This will generate Java source files and corresponding `.class` files
-into the directory `gen`, where additional subdirectories are created
-for each module.
+This will generate Java source files and corresponding `.class` files into the
+directory `gen`, where additional subdirectories are created for each module.
 
 It is also possible to only generate the Java source files and not the
 `.class` files by using the `--sourceonly` option. In that case the resulting

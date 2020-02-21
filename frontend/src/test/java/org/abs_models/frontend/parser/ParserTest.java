@@ -359,20 +359,6 @@ public class ParserTest extends FrontendTest {
         assertParse("export *;");
     }
 
-    @Test @Ignore("xtext branch bug #266")
-    public void ticket189() {
-        assertParseError("def Unit foo() = Unit;\n"+
-         "class Bob { \n" +
-         "   Unit run() { " +
-         "      case Nil {"+
-               "    Nil => Unit;"+
-               "   _ => foo() // Note missing semicolon\n"+
-               "}; \n" +
-             "} \n" +
-          "} \n");
-    }
-
-
     @Test
     public void ticket203() {
         assertParseError("def Bool g() = f(s a, s b);");
