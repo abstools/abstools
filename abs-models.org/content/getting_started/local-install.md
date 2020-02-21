@@ -55,7 +55,7 @@ frontend/bin/bash/absc --help
 ```powershell
 # on Windows
 git clone "https://github.com/abstools/abstools.git"
-excd abstools
+cd abstools
 .\gradlew assemble
 frontend\bin\win\absc --help
 ```
