@@ -178,8 +178,8 @@ expressions via a user-supplied function.
 ----
 def Set<A> set<A>(List<A> l) = <1>
     case l {
-       Nil => EmptySet;
-       Cons(x,xs) => insertElement(set(xs), x);
+       Nil => EmptySet
+       | Cons(x,xs) => insertElement(set(xs), x)
     };
 
 {

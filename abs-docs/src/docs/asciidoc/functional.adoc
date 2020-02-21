@@ -323,8 +323,8 @@ There are four different kinds of patterns available in ABS:
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _CaseExp_ ::= | `case` _PureExp_ `{` _CaseExpBranch_ { _CaseExpBranch_ } `}`
-| _CaseExpBranch_ ::=  | _Pattern_ `\=>` _PureExp_ `;`
+| _CaseExp_ ::= | `case` _PureExp_ `{` _CaseExpBranch_ { `|` _CaseExpBranch_ } `}`
+| _CaseExpBranch_ ::=  | _Pattern_ `\=>` _PureExp_
 | _Pattern_ ::= | `_` +
                  {vbar} __SimpleIdentifier__ +
                  {vbar} __Literal__ +
@@ -332,6 +332,8 @@ There are four different kinds of patterns available in ABS:
 | _ConstrPattern_ ::= | _TypeIdentifier_ [ `(` [ _Pattern_ { `,` _Pattern_ }  ] `)` ]
 |====
 
+NOTE: Older versions of the ABS language used the semicolon (`’`) to terminate
+case branches.  This older syntax is still supported by the compiler.
 
 ===== The Variable Pattern
 
@@ -353,8 +355,8 @@ data constructors.  For example:
 ----
 let (Pair<Int, Int> a) = Pair(5, 5) in
   case a {
-    Pair(x, x) => x; <1>
-    Pair(x, y) => y; <2>
+    Pair(x, x) => x <1>
+    | Pair(x, y) => y <2>
   } <3>
 ----
 <1> This branch matches a pair with identical values.
@@ -367,9 +369,9 @@ let (Pair<Int, Int> a) = Pair(5, 5) in
 ----
 let (x = 7) in
   case Pair(5, 5) {
-    Pair(x, x) => x; <1>
-    Pair(x, y) => y; <2>
-    Pair(y, z) => z; <3>
+    Pair(x, x) => x <1>
+    | Pair(x, y) => y <2>
+    | Pair(y, z) => z <3>
   } <4>
 ----
 <1> This pattern does not match since `x` is bound to 7 and does not match 5.
@@ -389,8 +391,8 @@ case expression is equal to the literal value.
 ----
 let (Pair<Int, Int> a) = Pair(5, 5) in
   case a {
-    Pair(3, x) => x; <1>
-    Pair(x, y) => y; <2>
+    Pair(3, x) => x <1>
+    | Pair(x, y) => y <2>
   } <3>
 ----
 <1> The pattern `3` does not match the value in the first position of the `Pair` constructor pattern.
@@ -409,9 +411,9 @@ Constructor arguments are again patterns.
 ----
 let (List<Int> l) = list[1, 2, 3] in
   case l {
-    Nil => 0; <1>
-    Cons(1, _) => 15; <2>
-    Cons(_, Cons(y, _)) => y; <3>
+    Nil => 0 <1>
+    | Cons(1, _) => 15 <2>
+    | Cons(_, Cons(y, _)) => y <3>
   } <4>
 ----
 <1> This pattern matches the empty list.
@@ -429,8 +431,8 @@ The wildcard pattern, written with an underscore (`_`) matches any value.
 ----
 let (List<Int> l) = list[1, 2, 3] in
   case l {
-    Nil => True; <1>
-    _ => False; <2>
+    Nil => True <1>
+    | _ => False <2>
 }; <3>
 ----
 <1> This pattern matches the empty list.
@@ -758,12 +760,12 @@ def Rat abs(Rat x) = if x > 0 then x else -x; <1>
 
 def Int length<A>(List<A> list) = <2>
 case list {
-  Nil => 0;
-  Cons(_, ls) => 1 + length(ls);
+  Nil => 0
+  | Cons(_, ls) => 1 + length(ls)
 };
 
 def A head<A>(List<A> list) = <3>
-  case list { Cons(x, _) => x; };
+  case list { Cons(x, _) => x };
 ----
 <1> The `abs` function returns the absolute value of its argument.
 <2> This parametric function takes lists with arbitrary values and returns an Integer.
@@ -830,8 +832,8 @@ def Int double(Int x) = x * 2;
 .Example
 ----
 def List<B> map<A, B>(f)(List<A> list) = case list { <1>
-    Nil => Nil;
-    Cons(x, xs) => Cons(f(x), map(xs)); <2>
+    Nil => Nil
+    | Cons(x, xs) => Cons(f(x), map(xs)) <2>
 };
 
 def Int double(Int x) = x * 2;
