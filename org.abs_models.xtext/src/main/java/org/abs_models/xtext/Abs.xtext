@@ -362,7 +362,7 @@ CaseExpression returns Expression
     ;
 
 CaseExpressionBranch
-    : pattern=Pattern '=>' expression=Expression ';'
+    : '|'? pattern=Pattern '=>' expression=Expression ';'?
     ;
 
 LetExpression returns Expression
