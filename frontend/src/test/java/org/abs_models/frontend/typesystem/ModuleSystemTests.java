@@ -245,7 +245,22 @@ public class ModuleSystemTests extends FrontendTest {
                     
                     "class C implements I {} ");
     }
-    
+
+    @Test
+    public void importTransitiveStar() {
+        assertTypeOK("module M1; export *; class A {}"
+        + "module M2; import * from M1; export * from M1;"
+        + "module M3; import * from M2; { new A(); }");
+    }
+
+    @Test
+    public void importTransitiveNamed() {
+        assertTypeOK("module M1; export A; class A {}"
+            + "module M2; import A from M1; export A from M1;"
+            + "module M3; import A from M2; { new A(); }");
+    }
+
+
     @Test
     public void selfImport() {
         // see bug #94
