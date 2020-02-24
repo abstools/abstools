@@ -1,17 +1,22 @@
 package org.abs_models.xtext.scoping;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.abs_models.xtext.abs.DeltaDeclaration;
 import org.abs_models.xtext.abs.ModuleDeclaration;
+import org.abs_models.xtext.abs.ModuleExport;
 import org.abs_models.xtext.abs.ModuleImport;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.xtext.naming.IQualifiedNameConverter;
+import org.eclipse.xtext.resource.IEObjectDescription;
+import org.eclipse.xtext.resource.IResourceDescriptions;
+import org.eclipse.xtext.resource.impl.ResourceDescriptionsProvider;
 import org.eclipse.xtext.scoping.impl.ImportNormalizer;
 import org.eclipse.xtext.scoping.impl.ImportedNamespaceAwareLocalScopeProvider;
 
@@ -28,9 +33,14 @@ import org.eclipse.xtext.scoping.impl.ImportedNamespaceAwareLocalScopeProvider;
  * @author Rudi Schlatte
  */
 public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespaceAwareLocalScopeProvider {
-    // We override this method instead of `getImportedNamespaceResolvers`
-    // because we do want to cache the result and the `cache` instance
-    // variable is private.
+
+    @Inject
+    private ResourceDescriptionsProvider rdp;
+
+
+    // We override `internalGetImportedNamespaceResolvers` instead of
+    // `getImportedNamespaceResolvers` because we do want to cache the result
+    // and the `cache` instance variable is private.
     //
     // We override this method instead of `getImportedNamespace` or
     // `createImportedNamespaceResolver` because `import` statements can
@@ -38,29 +48,38 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
     // result in two `ImportNormalizer` instances.
     //
     // https://www.euclideanspace.com/software/development/eclipse/xtext/infrastructure/importing/index.htm
-    // overrides the same method.
+    // and Bettini, “Implementing Domain-Specific Langauges with Xtext and
+    // Xtend” (2nd Ed) pg. 279 override the same method.
     @Override
     protected List<ImportNormalizer> internalGetImportedNamespaceResolvers(final EObject context, final boolean ignoreCase) {
-
-        final List<ImportNormalizer> importedNamespaceResolvers = Lists.newArrayList();
+        final List<ImportNormalizer> importedNamespaceResolvers
+            = super.internalGetImportedNamespaceResolvers(context, ignoreCase);
         if (context instanceof ModuleDeclaration) {
-            boolean hasStdLibImport = false;
             final ModuleDeclaration moduleDecl = (ModuleDeclaration) context;
+            // Find all module declarations -- this happens before linking so
+            // we have to do it manually
+            Map<String, ModuleDeclaration> modules = new HashMap<>();
+            IResourceDescriptions index = rdp.getResourceDescriptions(moduleDecl.eResource());
+            for (IEObjectDescription d : index.getExportedObjectsByType(moduleDecl.eClass())) {
+                modules.put(d.getQualifiedName().toString(), (ModuleDeclaration) d.getEObjectOrProxy());
+            }
+            // Handle implicit import of standard library.  We do not override
+            // the `getImplicitImports` method since we only import all of
+            // ABS.StdLib if no part of it has been explicitly imported.
+            boolean hasStdLibImport = moduleDecl.getImports().stream().anyMatch(i -> i.getModulename().equals("ABS.StdLib"));
+            if (!hasStdLibImport) {
+                final ImportNormalizer resolver = createImportedNamespaceResolver("ABS.StdLib.*", ignoreCase);
+                if (resolver != null) importedNamespaceResolvers.add(resolver);
+            }
             for (final ModuleImport moduleImport : moduleDecl.getImports()) {
                 if (moduleImport.isStar()) {
                     // import * from Modulename;
                     final String name = moduleImport.getModulename();
-                    if (name.equals("ABS.StdLib")) hasStdLibImport = true;
-                    final ImportNormalizer resolver = createImportedNamespaceResolver(name  + ".*", ignoreCase);
-                    if (resolver != null) importedNamespaceResolvers.add(resolver);
+                    importAllFromModule(importedNamespaceResolvers, name, modules, ignoreCase);
                 } else if (moduleImport.getModulename() != null) {
                     // import A, B from Modulename;
                     final String name = moduleImport.getModulename();
-                    if (name.equals("ABS.StdLib")) hasStdLibImport = true;
-                    for (final String id : moduleImport.getIdentifiers()) {
-                        final ImportNormalizer resolver = createImportedNamespaceResolver(name + "." + id, ignoreCase);
-                        if (resolver != null) importedNamespaceResolvers.add(resolver);
-                    }
+                    importNamesFromModule(importedNamespaceResolvers, name, moduleImport.getIdentifiers(), modules, ignoreCase);
                 } else {
                     // import Modulename.A, Modulename.B;
 
@@ -69,13 +88,6 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                     // we do not want, and Xtext already resolves the
                     // qualified name.
                 }
-            }
-            if (!hasStdLibImport) {
-                // We do not override the `getImplicitImports` method since we
-                // only import all of ABS.StdLib if no part of it has been
-                // explicitly imported.
-                final ImportNormalizer resolver = createImportedNamespaceResolver("ABS.StdLib.*", ignoreCase);
-                if (resolver != null) importedNamespaceResolvers.add(resolver);
             }
         } else if (context instanceof DeltaDeclaration) {
             final DeltaDeclaration deltaDecl = (DeltaDeclaration) context;
@@ -101,4 +113,86 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
         return importedNamespaceResolvers;
     }
 
+    /**
+     * Import all exported symbols from target module, including re-exported
+     * symbols.
+     *
+     * @param resolvers the list of resolvers to add to
+     * @param moduleName the name of the module we’re importing from
+     * @param ignoreCase whether to ignore case
+     */
+    private void importAllFromModule(List<ImportNormalizer> resolvers, String moduleName, Map<String, ModuleDeclaration> modules, boolean ignoreCase) {
+        // Give up early if module not found -- will be caught during
+        // validation
+        if (!modules.containsKey(moduleName)) return;
+        ModuleDeclaration module = modules.get(moduleName);
+        if (module == null) return;
+        for (ModuleExport export : module.getExports()) {
+            if (export.getModulename() != null) {
+                if (export.isStar()) {
+                    // export * from Mod;
+                    for (ModuleImport imp : module.getImports()) {
+                        if (export.getModulename().equals(imp.getModulename())) {
+                            if (imp.isStar()) {
+                                // export * from Mod; + import * from Mod;
+                                importAllFromModule(resolvers, imp.getModulename(), modules, ignoreCase);
+                            } else {
+                                // export * from Mod; + import A, B, C from Mod;
+                                importNamesFromModule(resolvers, imp.getModulename(), imp.getIdentifiers(), modules, ignoreCase);
+                            }
+                        }
+                    }
+                } else {
+                    // export A, b, C from Mod;
+                    // TODO write validator that checks for import of at least A, b, C
+                    for (ModuleImport imp : module.getImports()) {
+                        if (export.getModulename().equals(imp.getModulename())) {
+                            if (imp.isStar()) {
+                                // export A, b, C from Mod; + import * from Mod;
+                                importNamesFromModule(resolvers, imp.getModulename(), export.getIdentifiers(), modules, ignoreCase);
+                            } else {
+                                // export A, b, C from Mod; + import A, e, F from Mod;
+
+                                // KLUDGE: this set operation is expensive,
+                                // but the number of inputs is small
+                                importNamesFromModule(resolvers, imp.getModulename(),
+                                                      export.getIdentifiers().stream().filter(s -> imp.getIdentifiers().contains(s))
+                                                      .collect(Collectors.toList()), modules, ignoreCase);
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (export.isStar()) {
+                    // export *;
+                    final ImportNormalizer resolver = createImportedNamespaceResolver(moduleName  + ".*", ignoreCase);
+                    if (resolver != null) resolvers.add(resolver);
+                } else {
+                    // export A, b, C;
+                    for (String id : export.getIdentifiers()) {
+                        final ImportNormalizer resolver = createImportedNamespaceResolver(moduleName + "." + id, ignoreCase);
+                        if (resolver != null) resolvers.add(resolver);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Import all symbols from target module that that module actually exports
+     * (i.e., the intersection between ‘simpleNames’ and the module exports).
+     * This includes re-exported modules.
+     *
+     * @param resolvers the list of resolvers to add to
+     * @param moduleName the name of the module we’re importing from
+     * @param simpleNames the list of names to be imported.
+     * @param ignoreCase whether to ignore case
+     */
+    private void importNamesFromModule(List<ImportNormalizer> resolvers, String moduleName, List<String> simpleNames, Map<String, ModuleDeclaration> modules, boolean ignoreCase) {
+        // TODO: find module, import intersection of simpleNames and exported names
+        for (final String id : simpleNames) {
+            final ImportNormalizer resolver = createImportedNamespaceResolver(moduleName + "." + id, ignoreCase);
+            if (resolver != null) resolvers.add(resolver);
+        }
+    }
 }
