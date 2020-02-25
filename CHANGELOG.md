@@ -12,13 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- The toolchain now uses Xtext (https://eclipse.org/Xtext) as parsing framework.  This switch caused some minor syntax changes, listed below.
+- Incompatible change: deltas now share a namespace with modules.  Defining a delta with the same name as a module leads to a compile-time error.
 
-- The pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.
+- Incompatible change: the plain export clause `export Name;` will only export `Name` if `Name` is defined in the current module; use `export Name from OtherModule;` to re-export `Name` imported from `OtherModule`.  This mirrors the behavior of `export *;` vs. `export * from OtherModule;`.
 
-- The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  (We still do not use the C-style `?:` ternary operator.)
+- The toolchain now uses Xtext (https://eclipse.org/Xtext) as parsing framework.  This switch caused some incompatible changes, listed below.
 
-- Minor incompatible change: the plain export clause `export Name;` will only export `Name` if `Name` is defined in the current module; use `export Name from OtherModule;` to re-export `Name` imported from `OtherModule`.  This mirrors the behavior of `export *;` vs. `export * from OtherModule;`.
+  - Incompatible change: the pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.
+
+  - Incompatible change: The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  (We still do not use the C-style `?:` ternary operator.)
 
 ### Removed
 
