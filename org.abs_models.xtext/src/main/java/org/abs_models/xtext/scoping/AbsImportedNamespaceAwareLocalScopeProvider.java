@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
+import org.abs_models.xtext.abs.AbsPackage;
 import org.abs_models.xtext.abs.DeltaDeclaration;
 import org.abs_models.xtext.abs.ModuleDeclaration;
 import org.abs_models.xtext.abs.ModuleExport;
@@ -53,15 +54,16 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
     protected List<ImportNormalizer> internalGetImportedNamespaceResolvers(final EObject context, final boolean ignoreCase) {
         final List<ImportNormalizer> importedNamespaceResolvers
             = super.internalGetImportedNamespaceResolvers(context, ignoreCase);
+        // Find all module declarations -- this happens before linking so
+        // we have to do it manually
+        final Map<String, ModuleDeclaration> modules = new HashMap<>();
+        final IResourceDescriptions index = rdp.getResourceDescriptions(context.eResource());
+        for (final IEObjectDescription d : index.getExportedObjectsByType(AbsPackage.eINSTANCE.getModuleDeclaration())) {
+            modules.put(d.getQualifiedName().toString(),
+                        (ModuleDeclaration) d.getEObjectOrProxy());
+        }
         if (context instanceof ModuleDeclaration) {
             final ModuleDeclaration moduleDecl = (ModuleDeclaration) context;
-            // Find all module declarations -- this happens before linking so
-            // we have to do it manually
-            final Map<String, ModuleDeclaration> modules = new HashMap<>();
-            final IResourceDescriptions index = rdp.getResourceDescriptions(moduleDecl.eResource());
-            for (final IEObjectDescription d : index.getExportedObjectsByType(moduleDecl.eClass())) {
-                modules.put(d.getQualifiedName().toString(), (ModuleDeclaration) d.getEObjectOrProxy());
-            }
             // Handle implicit import of standard library.  We do not override
             // the `getImplicitImports` method since we only import all of
             // ABS.StdLib if no part of it has been explicitly imported.
@@ -93,20 +95,10 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
             if (deltaDecl.getUsedModulename() != null) {
                 // A `uses` clause imports everything from the module, plus
                 // inherits all of the module’s import clauses.
-                final String name = deltaDecl.getUsedModulename();
-                final ImportNormalizer resolver = createImportedNamespaceResolver(name + ".*", ignoreCase);
-                if (resolver != null) importedNamespaceResolvers.add(resolver);
-                final ResourceSet set = context.eResource().getResourceSet();
-                final ModuleDeclaration m = (ModuleDeclaration) Iterators.find(set.getAllContents(),
-                                                                               elem -> elem instanceof ModuleDeclaration
-                                                                               && ((ModuleDeclaration)elem).getName().equals(name),
-                                                                               null);
+                importAllFromModule(importedNamespaceResolvers,
+                                    deltaDecl.getUsedModulename(),
+                                    modules, ignoreCase);
                 // TODO import everything from all Deltas that have the same `uses` clause
-                if (m != null) {
-                    importedNamespaceResolvers.addAll(internalGetImportedNamespaceResolvers(m, ignoreCase));
-                } else {
-                    // shouldn’t happen, will probably result in errors later
-                }
             }
         }
         return importedNamespaceResolvers;

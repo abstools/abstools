@@ -7,6 +7,11 @@ import com.google.inject.Binder;
 import com.google.inject.name.Names;
 
 import org.abs_models.xtext.scoping.AbsImportedNamespaceAwareLocalScopeProvider;
+import org.abs_models.xtext.scoping.AbsQualifiedNameProvider;
+import org.abs_models.xtext.scoping.AbsResourceDescriptionStrategy;
+import org.eclipse.xtext.naming.DefaultDeclarativeQualifiedNameProvider;
+import org.eclipse.xtext.naming.IQualifiedNameProvider;
+import org.eclipse.xtext.resource.IDefaultResourceDescriptionStrategy;
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -17,6 +22,15 @@ public class AbsRuntimeModule extends AbstractAbsRuntimeModule {
     @Override
     public void configureIScopeProviderDelegate(Binder binder) {
         binder.bind(org.eclipse.xtext.scoping.IScopeProvider.class).annotatedWith(Names.named(org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider.NAMED_DELEGATE)).to(AbsImportedNamespaceAwareLocalScopeProvider.class);
+    }
+
+    public Class<? extends IQualifiedNameProvider> bindIQualifiedNameProvider() {
+        return AbsQualifiedNameProvider.class;
+    }
+
+
+    public Class<? extends IDefaultResourceDescriptionStrategy> bindIDefaultResourceDescriptionStrategy() {
+        return AbsResourceDescriptionStrategy.class;
     }
 
 }
