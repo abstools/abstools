@@ -12,11 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- The pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.  Using the old syntax emits a compile-time warning for now.
+- Incompatible change: deltas now share a namespace with modules.  Defining a delta with the same name as a module leads to a compile-time error.
 
-- The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  Using the old syntax emits a compile-time warning for now.  (We still do not use the C-style `?:` ternary operator.)
+- Incompatible change: the plain export clause `export Name;` will only export `Name` if `Name` is defined in the current module; use `export Name from OtherModule;` to re-export `Name` imported from `OtherModule`.  This mirrors the behavior of `export *;` vs. `export * from OtherModule;`.
 
-- Minor incompatible change: the plain export clause `export Name;` will only export `Name` if `Name` is defined in the current module; use `export Name from OtherModule;` to re-export `Name` imported from `OtherModule`.  This mirrors the behavior of `export *;` vs. `export * from OtherModule;`.
+- Future incompatible change: the pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.  Using the old syntax emits a compile-time warning for now.
+
+- Future incompatible change: The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  Using the old syntax emits a compile-time warning for now.  (We still do not use the C-style `?:` ternary operator.)
 
 ### Removed
 

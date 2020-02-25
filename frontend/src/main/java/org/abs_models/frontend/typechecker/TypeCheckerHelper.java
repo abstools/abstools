@@ -546,6 +546,15 @@ public class TypeCheckerHelper {
                 }
             }
             for (DeltaDecl d : u.getDeltaDecls()) {
+                if (seenModules.containsKey(d.getName())) {
+                    ModuleDecl prev = seenModules.get(d.getName());
+                    String location = "";
+                    if (!prev.getFileName().equals(Main.UNKNOWN_FILENAME)) {
+                        location = " at " + prev.getFileName()
+                            + ":" + prev.getStartLine() + ":" + prev.getStartColumn();
+                    }
+                    errors.add(new TypeError(d, ErrorMessage.DELTA_USES_NAME_OF_MODULE, d.getName(), location));
+                }
                 if (seenDeltas.containsKey(d.getName())) {
                     DeltaDecl prev = seenDeltas.get(d.getName());
                     String location = "";
