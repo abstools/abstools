@@ -213,13 +213,13 @@ public class Main {
         // obtain a resourceset from the injector
         XtextResourceSet resourceSet = absinjector.getInstance(XtextResourceSet.class);
 
-        // load the standard library
-        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(ABS_STD_LIB).toString()))
-            .load(null);
         for (File file : fileNames) {
             resourceSet.createResource(org.eclipse.emf.common.util.URI.createFileURI(file.toString()))
                 .load(null);
         }
+        // load the standard library
+        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(ABS_STD_LIB).toString()))
+            .load(null);
         boolean hasErrors = false;
         for (Resource r : resourceSet.getResources()) {
             IResourceValidator validator = ((XtextResource)r).getResourceServiceProvider().getResourceValidator();
