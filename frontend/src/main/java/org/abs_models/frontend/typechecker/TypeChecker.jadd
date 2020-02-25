@@ -29,8 +29,7 @@ aspect TypeChecker {
 
     public void Model.typeCheck(SemanticConditionList errors) {
         try {
-            TypeCheckerHelper.checkForDuplicateModules(errors, getCompilationUnits());
-            TypeCheckerHelper.checkForDuplicateDeltas(errors, getCompilationUnits());
+            TypeCheckerHelper.checkForDuplicateModulesAndDeltas(errors, getCompilationUnits());
             TypeCheckerHelper.checkForDuplicateProducts(errors, getCompilationUnits());
             for (CompilationUnit u : getCompilationUnits()) {
                 u.typeCheck(errors);

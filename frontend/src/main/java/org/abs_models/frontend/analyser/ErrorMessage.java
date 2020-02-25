@@ -115,7 +115,7 @@ public enum ErrorMessage {
     UNEXPECTED_ATTRIBUTE_TYPE("Unexpected attribute type %s, expected %s."),
     DUPLICATE_FEATURE("Feature %s is already defined."),
     DUPLICATE_PRODUCT("Product %s is already defined."),
-    DUPLICATE_DELTA("Delta Module %s is already defined."),
+    DUPLICATE_DELTA("Delta %s is already defined%s."),
     DUPLICATE_DELTA_CLAUSE("Delta clause %s is already defined in product line %s."),
     DUPLICATE_UPDATE("State Update %s is already defined."),
     DUPLICATE_RECONFIGURATION("Reconfiguration to product %s is already defined."),

@@ -528,8 +528,9 @@ public class TypeCheckerHelper {
     /**
      * check a list of compilation units for duplicate module names, product names, delta names
      */
-    public static void checkForDuplicateModules(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
+    public static void checkForDuplicateModulesAndDeltas(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Map<String, ModuleDecl> seenModules = new HashMap<>();
+        Map<String, DeltaDecl> seenDeltas = new HashMap<>();
         for (CompilationUnit u : compilationUnits) {
             for (ModuleDecl module : u.getModuleDecls()) {
                 if (seenModules.containsKey(module.getName())) {
@@ -544,23 +545,28 @@ public class TypeCheckerHelper {
                     seenModules.put(module.getName(), module);
                 }
             }
+            for (DeltaDecl d : u.getDeltaDecls()) {
+                if (seenDeltas.containsKey(d.getName())) {
+                    DeltaDecl prev = seenDeltas.get(d.getName());
+                    String location = "";
+                    if (!prev.getFileName().equals(Main.UNKNOWN_FILENAME)) {
+                        location = " at " + prev.getFileName()
+                            + ":" + prev.getStartLine() + ":" + prev.getStartColumn();
+                    }
+                    errors.add(new TypeError(d, ErrorMessage.DUPLICATE_DELTA, d.getName(), location));
+                } else {
+                    seenDeltas.put(d.getName(), d);
+                }
+            }
         }
     }
+
     public static void checkForDuplicateProducts(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Set<String> seen = new HashSet<>();
         for (CompilationUnit u : compilationUnits) {
             for (ProductDecl p : u.getProductDecls()) {
                 if (!seen.add(p.getName()))
                     errors.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, p.getName()));
-            }
-        }
-    }
-    public static void checkForDuplicateDeltas(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
-        Set<String> seen = new HashSet<>();
-        for (CompilationUnit u : compilationUnits) {
-            for (DeltaDecl d : u.getDeltaDecls()) {
-                if (!seen.add(d.getName()))
-                    errors.add(new TypeError(d, ErrorMessage.DUPLICATE_DELTA, d.getName()));
             }
         }
     }
