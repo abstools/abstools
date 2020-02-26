@@ -34,6 +34,15 @@ public class AbsQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
      * module.)
      */
     protected QualifiedName qualifiedName(final DeltaDeclaration d) {
+        // KLUDGE: this makes the index automatically work for all and lookups
+        // inside this delta, but means the delta itself will not get added to
+        // the index or added with the same name as its module.  To fix this,
+        // add a method `computeFullyQualifiedNameFromNameAttribute(EObject)`
+        // and replace the prefix of qualified names instead.  (We cannot do
+        // this in `qualifiedName(EObject)` since that method gets called
+        // recursively.)
+        //
+        // See `EcoreUtil2.getParentOfType` to check whether we are in a delta.
         if (d.getUsedModulename() != null) {
             return QualifiedName.create(d.getUsedModulename().split("\\."));
         } else {
