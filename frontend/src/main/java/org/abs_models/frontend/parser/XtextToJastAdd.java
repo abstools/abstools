@@ -589,7 +589,7 @@ public class XtextToJastAdd {
             org.abs_models.xtext.abs.VariableDeclarationStatement value = (org.abs_models.xtext.abs.VariableDeclarationStatement) stmt;
             List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
             VarDecl varDecl = new VarDecl();
-            varDecl.setName(value.getName());
+            varDecl.setName(value.getVariablename());
             varDecl.setAccess(fromXtext(value.getType()));
             if (value.getInit() != null) {
                 varDecl.setInitExp(fromXtext(value.getInit()));
@@ -604,12 +604,12 @@ public class XtextToJastAdd {
             if(lhsExp instanceof VariableOrFieldExpression) {
                 VariableOrFieldExpression lhs = (VariableOrFieldExpression) lhsExp;
                 if (lhs.isField()) {
-                    varOrFieldUse = new FieldUse(lhs.getName());
+                    varOrFieldUse = new FieldUse(lhs.getVariablename());
                 } else {
                     // might still get rewritten to FieldUse by JastAdd
                     // TODO: make this more precise once scoping / linking is
                     // implemented
-                    varOrFieldUse = new VarUse(lhs.getName());
+                    varOrFieldUse = new VarUse(lhs.getVariablename());
                 }
             } else {
                 assert false : "Invalid left-hand side expression in Xtext AST reached XtextToJastAdd -- check validation rules";
@@ -813,7 +813,7 @@ public class XtextToJastAdd {
             // here?
             org.abs_models.xtext.abs.ConstructorPattern value = (org.abs_models.xtext.abs.ConstructorPattern) pattern;
             ConstructorPattern presult = new ConstructorPattern();
-            presult.setConstructor(value.getName());
+            presult.setConstructor(value.getConstructorname());
             for(org.abs_models.xtext.abs.Pattern p : value.getArguments()) {
                 presult.addParamNoTransform(fromXtext(p));
             }
@@ -1021,7 +1021,7 @@ public class XtextToJastAdd {
             org.abs_models.xtext.abs.FunctionAppExpression xtextExp = (FunctionAppExpression) value;
             if (xtextExp.getFunctionArguments().size() > 0) {
                 ParFnApp exp = new ParFnApp();
-                exp.setName(xtextExp.getName());
+                exp.setName(xtextExp.getFunctionname());
                 for (org.abs_models.xtext.abs.Expression arg : xtextExp.getArguments()) {
                     exp.addParamNoTransform(pureExpFromXtext(arg));
                 }
@@ -1031,7 +1031,7 @@ public class XtextToJastAdd {
                 result = exp;
             } else {
                 FnApp exp = new FnApp();
-                exp.setName(xtextExp.getName());
+                exp.setName(xtextExp.getFunctionname());
                 for (org.abs_models.xtext.abs.Expression arg : xtextExp.getArguments()) {
                     exp.addParamNoTransform(pureExpFromXtext(arg));
                 }
@@ -1049,14 +1049,14 @@ public class XtextToJastAdd {
             } else {
                 args = new ListLiteral(arglist);
             }
-            result = new FnApp(xtextExp.getName(), new List<PureExp>(args));
+            result = new FnApp(xtextExp.getFunctionname(), new List<PureExp>(args));
         } else if(value instanceof org.abs_models.xtext.abs.ConstructorAppExpression) {
             org.abs_models.xtext.abs.ConstructorAppExpression xtextExp = (ConstructorAppExpression) value;
             List<PureExp> params = new List<>();
             for(org.abs_models.xtext.abs.Expression param : xtextExp.getArguments()) {
                 params.add(pureExpFromXtext(param));
             }
-            result = new DataConstructorExp(xtextExp.getName(), params);
+            result = new DataConstructorExp(xtextExp.getConstructorname(), params);
         } else if(value instanceof org.abs_models.xtext.abs.TemplateStringSimpleExpression){
             org.abs_models.xtext.abs.TemplateStringSimpleExpression xtextExp = (org.abs_models.xtext.abs.TemplateStringSimpleExpression) value;
             result = new StringLiteral(ASTPreProcessor.preprocessTemplateStringLiteral(xtextExp.getString()));
@@ -1083,9 +1083,9 @@ public class XtextToJastAdd {
         } else if(value instanceof org.abs_models.xtext.abs.VariableOrFieldExpression) {
             org.abs_models.xtext.abs.VariableOrFieldExpression xtextExp = (org.abs_models.xtext.abs.VariableOrFieldExpression) value;
             if (xtextExp.isField()) {
-                result = new FieldUse(xtextExp.getName());
+                result = new FieldUse(xtextExp.getVariablename());
             } else {
-                result = new VarUse(xtextExp.getName());
+                result = new VarUse(xtextExp.getVariablename());
             }
         } else if(value instanceof org.abs_models.xtext.abs.ThisExpression) {
             result = new ThisExp();
@@ -1100,9 +1100,9 @@ public class XtextToJastAdd {
     }
 
     private static ParFnAppParam fromXtext(org.abs_models.xtext.abs.PartialFunctionParam p) {
-        if (p.getName() != null) {
-            return nodeWithLocation(new NamedParFnAppParam(p.getName()),
-                                    p, AbsPackage.eINSTANCE.getPartialFunctionParam_Name());
+        if (p.getFunctionname() != null) {
+            return nodeWithLocation(new NamedParFnAppParam(p.getFunctionname()),
+                                    p, AbsPackage.eINSTANCE.getPartialFunctionParam_Functionname());
         } else {
             List<ParamDecl> params = new List<ParamDecl>();
             for(org.abs_models.xtext.abs.Parameter arg : p.getParameters()) {
@@ -1133,7 +1133,7 @@ public class XtextToJastAdd {
             // and linking, we can use the exact class here
             result = new UnresolvedTypeUse();
         }
-        result.setName(type.getName());
+        result.setName(type.getTypename());
         return nodeWithLocation(result, type);
     }
 
@@ -1273,7 +1273,7 @@ public class XtextToJastAdd {
         result.setName(xtext_feature.getName());
         for (org.abs_models.xtext.abs.AttributeAssignment xtext_attr : xtext_feature.getAttributeAssignments()) {
             AttrAssignment attr = new AttrAssignment();
-            attr.setName(xtext_attr.getName());
+            attr.setName(xtext_attr.getAttributename());
             org.abs_models.xtext.abs.AttributeAssignmentValue xtext_value = xtext_attr.getValue();
             if (xtext_value instanceof org.abs_models.xtext.abs.AttributeAssignmentValue_Int) {
                 int value = ((org.abs_models.xtext.abs.AttributeAssignmentValue_Int)xtext_value).getValue().intValue();

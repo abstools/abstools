@@ -26,11 +26,16 @@ generate abs "http://www.abs_models.org/xtext/Abs"
 //
 // Break the above rules with conviction and good taste.
 //
-// - A special case: boolean rules ("star?=’*’") are converted into boolean
-//   methods with "is" prefix ("isStar()").  This cannot be circumvented, even
-//   when we’d like to have a method "hasStar()" instead.  Make the best of
-//   this behavior.
+// * Special Cases
 //
+// - Boolean rules ("star?=’*’") are converted into boolean methods with "is"
+//   prefix ("isStar()").  This cannot be circumvented, even when we’d like to
+//   have a method "hasStar()" instead.  Make the best of this behavior.
+//
+// - An attribute named "name" will lead to the element being treated as a
+//   definition, and being included in the Xtext index.  So, use "name" for,
+//   e.g., variable declarations but not variable uses.  In the latter case,
+//   use "variablename" or similar as the attribute name.
 
 CompilationUnit
     : {CompilationUnit} (modules+=ModuleDeclaration)* (deltas+=DeltaDeclaration)*
@@ -174,7 +179,8 @@ Parameter : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
 
 Statement : Annotations
         ( {VariableDeclarationStatement.annotations=current}
-            type=TypeUseNoAnnotations name=IDENTIFIER ( '=' init=Expression )? ';'
+            type=TypeUseNoAnnotations variablename=IDENTIFIER
+            ( '=' init=Expression )? ';'
         | {AssignStatement.annotations=current}
             lhs=VariableOrFieldExpression '=' expression=Expression ';'
         | {SkipStatement.annotations=current}
@@ -239,7 +245,8 @@ Pattern
     | {StringLiteralPattern} value=STRINGLITERAL
     | {FloatLiteralPattern} value=FLOATLITERAL
     | {VariablePattern} value=IDENTIFIER
-    | {ConstructorPattern} name=QualifiedTypeIdentifier ( '(' (arguments+=Pattern (',' arguments+=Pattern)* )? ')' )?
+    | {ConstructorPattern} constructorname=QualifiedTypeIdentifier
+        ( '(' (arguments+=Pattern (',' arguments+=Pattern)* )? ')' )?
     ;
 
 // Expressions
@@ -376,22 +383,22 @@ WhenExpression returns Expression
     ;
 
 FunctionAppExpression returns Expression
-    : {FunctionAppExpression} name=QualifiedIdentifier
+    : {FunctionAppExpression} functionname=QualifiedIdentifier
         ( '(' functionArguments+=PartialFunctionParam (',' functionArguments+=PartialFunctionParam )* ')' )?
         '(' (arguments+=Expression ( ',' arguments+=Expression)* )? ')'
     ;
 
 PartialFunctionParam
-    : name=QualifiedIdentifier
+    : functionname=QualifiedIdentifier
     | '(' ( parameters+=Parameter (',' parameters+=Parameter)* )? ')' "=>" body=Expression
     ;
 
 VariadicFunctionAppExpression returns Expression
-    : {VariadicFunctionAppExpression} name=QualifiedIdentifier '[' (arguments+=Expression ( ',' arguments+=Expression)* )? ']'
+    : {VariadicFunctionAppExpression} functionname=QualifiedIdentifier '[' (arguments+=Expression ( ',' arguments+=Expression)* )? ']'
     ;
 
 ConstructorAppExpression returns Expression
-    : {ConstructorAppExpression} name=QualifiedTypeIdentifier ( '(' ( arguments+=Expression ( ',' arguments+=Expression)* )? ')' )?
+    : {ConstructorAppExpression} constructorname=QualifiedTypeIdentifier ( '(' ( arguments+=Expression ( ',' arguments+=Expression)* )? ')' )?
     ;
 
 TemplateStringExpression returns Expression
@@ -411,7 +418,7 @@ AtomicExpression returns Expression
     ;
 
 VariableOrFieldExpression returns Expression
-    : {VariableOrFieldExpression} (field?='this' '.')? name=IDENTIFIER
+    : {VariableOrFieldExpression} (field?='this' '.')? variablename=IDENTIFIER
     ;
 
 // Types
@@ -422,7 +429,7 @@ TypeUse : annotations=Annotations type=TypeUseNoAnnotations ;
 // annotations are parsed as part of the method / parameter, not its
 // type.
 TypeUseNoAnnotations
-    : name=QualifiedTypeIdentifier
+    : typename=QualifiedTypeIdentifier
         ('<' parameters+=TypeUse (',' parameters+=TypeUse)* '>')?
     ;
 
@@ -570,7 +577,7 @@ ProductFeature
         ('{' attributeAssignments+=AttributeAssignment (',' attributeAssignments+=AttributeAssignment)* '}')?
     ;
 
-AttributeAssignment : name=IDENTIFIER '=' value = AttributeAssignmentValue ;
+AttributeAssignment : attributename=IDENTIFIER '=' value = AttributeAssignmentValue ;
 
 AttributeAssignmentValue
     : {AttributeAssignmentValue_Int} value=INTLITERAL
