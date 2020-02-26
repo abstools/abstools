@@ -34,6 +34,19 @@ public class ModuleSystemTests extends FrontendTest {
     }
 
     @Test
+    public void qualifiedUnqualifiedImport() {
+        assertTypeOK("module Definitions; export *;"
+                     + "class A {} class B {}"
+                     + "module Importer;"
+                     + "import A from Definitions; import Definitions.B;"
+                     + "{"
+                     + "    new A();"
+                     + "    new Definitions.B();"
+                     + "}"
+                     );
+    }
+
+    @Test
     public void starImport() {
         assertTypeOK("module A; export X; data X; module B; import * from A; type Y = X;");
     }
