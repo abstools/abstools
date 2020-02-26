@@ -67,7 +67,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
             // Handle implicit import of standard library.  We do not override
             // the `getImplicitImports` method since we only import all of
             // ABS.StdLib if no part of it has been explicitly imported.
-            final boolean hasStdLibImport = moduleDecl.getImports().stream().anyMatch(i -> i.getModulename().equals("ABS.StdLib"));
+            final boolean hasStdLibImport = moduleDecl.getImports().stream().anyMatch(i -> "ABS.StdLib".equals(i.getModulename()));
             if (!hasStdLibImport) {
                 final ImportNormalizer resolver = createImportedNamespaceResolver("ABS.StdLib.*", ignoreCase);
                 if (resolver != null) importedNamespaceResolvers.add(resolver);
@@ -148,7 +148,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                             if (imp.isStar()) {
                                 // export * from Mod; + import * from Mod;
                                 importAllFromModule(resolvers, imp.getModulename(), modules, ignoreCase);
-                            } else if (imp.getModulename() != null) {
+                            } else /* if (imp.getModulename() != null) */ {
                                 // export * from Mod; + import A, B, C from Mod;
                                 importNamesFromModule(resolvers, imp.getModulename(), imp.getIdentifiers(), modules, ignoreCase);
                             }
@@ -162,7 +162,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                             if (imp.isStar()) {
                                 // export A, b, C from Mod; + import * from Mod;
                                 importNamesFromModule(resolvers, imp.getModulename(), export.getIdentifiers(), modules, ignoreCase);
-                            } else if (imp.getModulename() != null) {
+                            } else /* if (imp.getModulename() != null) */ {
                                 // export A, b, C from Mod; + import A, e, F from Mod;
                                 importNamesFromModule(resolvers,
                                                       imp.getModulename(),
@@ -222,7 +222,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                                                       imp.getModulename(),
                                                       simpleNames,
                                                       modules, ignoreCase);
-                            } else if (imp.getModulename() != null) {
+                            } else /* if (imp.getModulename() != null) */ {
                                 importNamesFromModule(resolvers,
                                                       imp.getModulename(),
                                                       intersect_ids(simpleNames, imp.getIdentifiers()),
@@ -241,7 +241,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                                                           simpleNames2,
                                                           modules,
                                                           ignoreCase);
-                                } else if (imp.getModulename() != null) {
+                                } else /* if (imp.getModulename() != null) */ {
                                     // Double subtraction:
                                     // - We wanted A,b,C from M1 == simpleNames
                                     // - M1 exports A,b from M2  == simpleNames2
