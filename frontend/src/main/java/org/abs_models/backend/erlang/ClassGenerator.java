@@ -223,7 +223,7 @@ public class ClassGenerator {
             ecs.pf(" %%%% %s:%s", f.getFileName(), f.getStartLine());
             ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
                                    "'" + f.getName() + "'");
-            // ecs.println("object:register_read('" + f.getName() + "'),");
+            ecs.println("object:register_read('" + f.getName() + "'),");
             ecs.println("G;");
             ecs.decIndent();
         }
@@ -243,7 +243,7 @@ public class ClassGenerator {
                 first = false;
                 ecs.pf(" %%%% %s:%s", f.getFileName(), f.getStartLine());
                 ErlUtil.functionHeader(ecs, "set_val_internal", Mask.none, "S", "'" + f.getName() + "'", "V");
-                // ecs.println("object:register_write('" + f.getName() + "'),");
+                ecs.println("object:register_write('" + f.getName() + "'),");
                 ecs.format("S#state{'%s'=V}", f.getName());
             }
             ecs.println(".");
