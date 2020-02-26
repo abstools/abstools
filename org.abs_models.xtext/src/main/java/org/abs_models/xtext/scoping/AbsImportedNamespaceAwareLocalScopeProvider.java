@@ -72,36 +72,53 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                 final ImportNormalizer resolver = createImportedNamespaceResolver("ABS.StdLib.*", ignoreCase);
                 if (resolver != null) importedNamespaceResolvers.add(resolver);
             }
-            for (final ModuleImport moduleImport : moduleDecl.getImports()) {
-                if (moduleImport.isStar()) {
-                    // import * from Modulename;
-                    final String name = moduleImport.getModulename();
-                    importAllFromModule(importedNamespaceResolvers, name, modules, ignoreCase);
-                } else if (moduleImport.getModulename() != null) {
-                    // import A, B from Modulename;
-                    final String name = moduleImport.getModulename();
-                    importNamesFromModule(importedNamespaceResolvers, name, moduleImport.getIdentifiers(), modules, ignoreCase);
-                } else {
-                    // import Modulename.A, Modulename.B;
-
-                    // Nothing to do here: if we created an ImportNormalizer,
-                    // it would make Modulename.A available as plain A, which
-                    // we do not want, and Xtext already resolves the
-                    // qualified name.
-                }
-            }
+            handleImports(importedNamespaceResolvers, moduleDecl.getImports(),
+                          modules, ignoreCase);
         } else if (context instanceof DeltaDeclaration) {
             final DeltaDeclaration deltaDecl = (DeltaDeclaration) context;
-            if (deltaDecl.getUsedModulename() != null) {
-                // A `uses` clause imports everything from the module, plus
-                // inherits all of the module’s import clauses.
+            String usedModulename = deltaDecl.getUsedModulename();
+            if (usedModulename != null) {
+                // A `uses` clause behaves as if the Delta was in the same
+                // namespace as the module, including access to internal
+                // names.  Import everything from the module, then import
+                // everything from its import clauses.
                 importAllFromModule(importedNamespaceResolvers,
-                                    deltaDecl.getUsedModulename(),
-                                    modules, ignoreCase);
-                // TODO import everything from all Deltas that have the same `uses` clause
+                                    usedModulename, modules, ignoreCase);
+                final ModuleDeclaration module = modules.get(usedModulename);
+                if (module != null) {
+                    handleImports(importedNamespaceResolvers, module.getImports(),
+                                  modules, ignoreCase);
+                }
+                // TODO import everything from all Deltas that have the same
+                // `uses` clause?
             }
         }
         return importedNamespaceResolvers;
+    }
+
+    private void handleImports(final List<ImportNormalizer> resolvers,
+                               final List<ModuleImport> imports,
+                               final Map<String, ModuleDeclaration> modules,
+                               final boolean ignoreCase)
+    {
+        for (final ModuleImport imp : imports) {
+            if (imp.isStar()) {
+                // import * from Modulename;
+                final String name = imp.getModulename();
+                importAllFromModule(resolvers, name, modules, ignoreCase);
+            } else if (imp.getModulename() != null) {
+                // import A, B from Modulename;
+                final String name = imp.getModulename();
+                importNamesFromModule(resolvers, name, imp.getIdentifiers(), modules, ignoreCase);
+            } else {
+                // import Modulename.A, Modulename.B;
+
+                // Nothing to do here: if we created an ImportNormalizer,
+                // it would make Modulename.A available as plain A, which
+                // we do not want, and Xtext already resolves the
+                // qualified name.
+            }
+        }
     }
 
     /**
@@ -131,7 +148,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                             if (imp.isStar()) {
                                 // export * from Mod; + import * from Mod;
                                 importAllFromModule(resolvers, imp.getModulename(), modules, ignoreCase);
-                            } else {
+                            } else if (imp.getModulename() != null) {
                                 // export * from Mod; + import A, B, C from Mod;
                                 importNamesFromModule(resolvers, imp.getModulename(), imp.getIdentifiers(), modules, ignoreCase);
                             }
@@ -145,7 +162,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                             if (imp.isStar()) {
                                 // export A, b, C from Mod; + import * from Mod;
                                 importNamesFromModule(resolvers, imp.getModulename(), export.getIdentifiers(), modules, ignoreCase);
-                            } else {
+                            } else if (imp.getModulename() != null) {
                                 // export A, b, C from Mod; + import A, e, F from Mod;
                                 importNamesFromModule(resolvers,
                                                       imp.getModulename(),
@@ -205,7 +222,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                                                       imp.getModulename(),
                                                       simpleNames,
                                                       modules, ignoreCase);
-                            } else {
+                            } else if (imp.getModulename() != null) {
                                 importNamesFromModule(resolvers,
                                                       imp.getModulename(),
                                                       intersect_ids(simpleNames, imp.getIdentifiers()),
@@ -224,7 +241,7 @@ public class AbsImportedNamespaceAwareLocalScopeProvider extends ImportedNamespa
                                                           simpleNames2,
                                                           modules,
                                                           ignoreCase);
-                                } else {
+                                } else if (imp.getModulename() != null) {
                                     // Double subtraction:
                                     // - We wanted A,b,C from M1 == simpleNames
                                     // - M1 exports A,b from M2  == simpleNames2
