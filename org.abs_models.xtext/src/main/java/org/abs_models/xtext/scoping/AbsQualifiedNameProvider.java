@@ -29,9 +29,9 @@ public class AbsQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
     }
 
     /**
-     * Use the name of the module in the ‘uses’ clause, or null if no module
-     * used.  (Unqualified declarations in a delta are added to its used
-     * module.)
+     * Adapt all our names so that they’re findable by module name, not delta
+     * name.  Note that all other ‘qualifiedName’ methods must handle their
+     * result in the same way.
      */
     protected QualifiedName qualifiedName(final EObject o) {
         QualifiedName result = computeFullyQualifiedNameFromNameAttribute(o);
