@@ -25,7 +25,7 @@ public class AbsQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
                 result = result.skipLast(2).append(result.getLastSegment());
             }
         }
-        return result;
+        return normalizeNameAgainstDelta(ele, result);
     }
 
     /**
@@ -33,21 +33,30 @@ public class AbsQualifiedNameProvider extends DefaultDeclarativeQualifiedNamePro
      * used.  (Unqualified declarations in a delta are added to its used
      * module.)
      */
-    protected QualifiedName qualifiedName(final DeltaDeclaration d) {
-        // KLUDGE: this makes the index automatically work for all and lookups
-        // inside this delta, but means the delta itself will not get added to
-        // the index or added with the same name as its module.  To fix this,
-        // add a method `computeFullyQualifiedNameFromNameAttribute(EObject)`
-        // and replace the prefix of qualified names instead.  (We cannot do
-        // this in `qualifiedName(EObject)` since that method gets called
-        // recursively.)
-        //
-        // See `EcoreUtil2.getParentOfType` to check whether we are in a delta.
-        if (d.getUsedModulename() != null) {
-            return QualifiedName.create(d.getUsedModulename().split("\\."));
-        } else {
-            return null;
+    protected QualifiedName qualifiedName(final EObject o) {
+        QualifiedName result = computeFullyQualifiedNameFromNameAttribute(o);
+        return normalizeNameAgainstDelta(o, result);
+    }
+
+    /**
+     * Normalize the qualified name.  If o is contained in a delta, change its
+     * qname to be prefixed with the delta’s uses clause, or nothing.
+     *
+     * @param o the object under consideration
+     * @param qname the qualified name of o before normalization, or null
+     * @return qname if o is not contained in a delta or if qname is null, a normalized name otherwise.
+     */
+    private static QualifiedName normalizeNameAgainstDelta(EObject o, QualifiedName qname) {
+        if (qname == null) return qname;
+        DeltaDeclaration d = EcoreUtil2.getContainerOfType(o, DeltaDeclaration.class);
+        if (d == null || o.equals(d)) return qname;
+        QualifiedName deltaname = QualifiedName.create(d.getName().split("\\."));
+        qname = qname.skipFirst(deltaname.getSegmentCount());
+        String usedname = d.getUsedModulename();
+        if (usedname != null) {
+            qname = QualifiedName.create(usedname.split("\\.")).append(qname);
         }
+        return qname;
     }
 
 }
