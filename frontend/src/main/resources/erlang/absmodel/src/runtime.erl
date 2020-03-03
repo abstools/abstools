@@ -19,7 +19,7 @@
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
          {dump_trace,$t,"dump-trace",{string, none},"Dump the trace as a JSON file"},
          {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
-         {explore,undefined,"explore",undefined,"Explore different execution paths"},
+         {exo,undefined,"exo",undefined,"Model exploration via Exogenous"},
          {verbose,$v,"verbose",undefined,"Print status messages to stderr"},
          {debug,undefined,"debug",{integer,0},"Turn on debug mode when > 0 (model will run much slower; diagnostic output when > 1)"},
          {version,$V,"version",undefined,"Output version and exit"},
@@ -39,7 +39,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, false, none, none, maps:new(), false);
+            run_mod(?ABSMAINMODULE, false, false, false, none, none, maps:new(), false, false);
         Args->
             start(Args)
    end.
@@ -88,7 +88,7 @@ parse(Args,Exec)->
             Schedulers=proplists:get_value(schedulers,Parsed,none),
             DumpTrace=proplists:get_value(dump_trace,Parsed,none),
             ReplayMode=proplists:get_value(replay_trace,Parsed,none),
-            ExploreMode=proplists:get_value(explore,Parsed,false),
+            ExoMode=proplists:get_value(exo,Parsed,false),
 
             case Schedulers of
                 none -> none;
@@ -101,17 +101,16 @@ parse(Args,Exec)->
                      erlang:system_flag(schedulers_online,
                                         min(Schedulers, MaxSchedulers))
             end,
-            ReplayTrace = case ReplayMode of
-                              none -> maps:new();
-                              FileName ->
-                                  {ok, File} = file:read_file(FileName),
-                                  modelapi_v2:json_to_scheduling_trace(File)
+            ReplayTrace = case {ReplayMode, ExoMode} of
+                              {none, false} -> maps:new();
+                              {FileName, false} ->
+                                  {ok, JSON} = file:read_file(FileName),
+                                  modelapi_v2:json_to_scheduling_trace(JSON);
+                              {_, true} ->
+                                  %% Read trace from stdin here
+                                  maps:new()
                           end,
-            case ExploreMode of
-                true -> dpor:start_link(Module, Clocklimit);
-                false -> run_mod(Module, Verbose, Debug, GCStatistics, Port,
-                                 Clocklimit, ReplayTrace, DumpTrace)
-            end;
+            run_mod(Module, Verbose, Debug, GCStatistics, Port, Clocklimit, ReplayTrace, DumpTrace, ExoMode);
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
     end.
@@ -161,7 +160,7 @@ start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
                           this=null, destiny=null},
     {ok, cog:add_main_task(Cog,[Module,self()], TaskInfo)}.
 
-end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
+end_mod(TaskRef, Verbose, DumpTrace, StartTime, ExoMode) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     coverage:write_files(),
@@ -175,6 +174,12 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
         _ -> JsonTrace = modelapi_v2:get_trace_json(),
              file:write_file(DumpTrace, JsonTrace)
     end,
+
+    case ExoMode of
+        true -> io:format("ExoJSON: ~s~n", [exo:response()]);
+        _ -> ok
+    end,
+
     Ret = case Status of
               success -> RetVal;
               _ -> {exit_with, Status}
@@ -186,7 +191,7 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     Ret.
 
 
-run_mod(Module, Verbose, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace)  ->
+run_mod(Module, Verbose, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace, ExoMode)  ->
     case Port of
         _ when is_integer(Port) ->
             start_http(Port, Module, Verbose, Debug, GCStatistics, Clocklimit, Trace),
@@ -194,7 +199,7 @@ run_mod(Module, Verbose, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace
         _ ->
             StartTime = erlang:timestamp(),
             {ok, R}=start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, false, Trace),
-            end_mod(R, Verbose, DumpTrace, StartTime)
+            end_mod(R, Verbose, DumpTrace, StartTime, ExoMode)
     end.
 
 run_dpor_slave(Module, Clocklimit, Trace) ->

@@ -1,20 +1,13 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(exo).
--behaviour(gen_statem).
 
 -include_lib("abs_types.hrl").
 
--export([gen_rels/1]).
-
-index_of(Pred, L) ->
-    case lists:takewhile(fun (X) -> not(Pred(X)) end, L) of
-        L -> false;
-        XS -> length(XS)
-    end.
+-export([response/0]).
 
 local_trace_to_event_keys(Cog, LocalTrace) ->
     Len = length(LocalTrace),
-    lists:zip(lists:duplicate(Len, Cog), lists:seq(0, Len - 1)).
+    [[Cog, I] || I <- lists:seq(0, Len - 1)].
 
 trace_to_event_keys(Trace) ->
     F = fun(Cog, LocalTrace, Acc) ->
@@ -22,127 +15,122 @@ trace_to_event_keys(Trace) ->
         end,
     maps:fold(F, [], Trace).
 
-event_key_to_event({Cog, I}, Trace) ->
+event_key_to_event([Cog, I], Trace) ->
     LocalTrace = maps:get(Cog, Trace),
     lists:nth(I+1, LocalTrace).
 
 event_type(#event{type=T}) ->
+    T;
+event_type(#dc_event{type=T}) ->
     T.
 event_type(EventKey, Trace) ->
     event_type(event_key_to_event(EventKey, Trace)).
 
-event_ids_match(E1=#event{caller_id=Cid, local_id=Lid},
-                E2=#event{caller_id=Cid, local_id=Lid}) ->
-    true;
+event_time(#event{time=T}) ->
+    T;
+event_time(#dc_event{time=T}) ->
+    T.
+
+event_id(#event{caller_id=Cid, local_id=Lid}) ->
+    {Cid, Lid};
+event_id(#dc_event{caller_id=Cid, local_id=Lid}) ->
+    {Cid, Lid}.
+
 event_ids_match(E1, E2) ->
-    false.
+    event_id(E1) =:= event_id(E2).
 
-schedule_event_map(Trace, EventKeys) -> schedule_event_map(Trace, EventKeys, #{}).
-schedule_event_map(_Trace, [], Acc) -> Acc;
-schedule_event_map(Trace, EventKeys, Acc) ->
-    [SchedEv | Xs] = EventKeys,
-    {Block, Ys} = lists:splitwith(fun(E) ->
-                                          event_type(E, Trace) /= schedule
-                                  end, Xs),
-    NewAcc = lists:foldl(fun (E, M) ->
-                                 maps:put(E, SchedEv, M)
-                         end, Acc, [SchedEv | Block]),
-    schedule_event_map(Trace, Ys, maps:put(SchedEv, SchedEv, NewAcc)).
+event_key_to_last_schedule(Trace, [Cog, I]) ->
+    case event_type([Cog, I], Trace) of
+        schedule -> [Cog, I];
+        _ -> event_key_to_last_schedule(Trace, [Cog, I-1])
+    end.
 
-interference({Reads1, Writes1}, {Reads2, Writes2}) ->
+schedule_event_map(Trace, EventKeys) ->
+    Pairs = [{EK, event_key_to_last_schedule(Trace, EK)} || EK <- EventKeys],
+    maps:from_list(Pairs).
+
+interference([Cog, I]=EK1, [Cog, J]=EK2, Trace) when I < J ->
+    #event{reads=Reads1, writes=Writes1} = event_key_to_event(EK1, Trace),
+    #event{reads=Reads2, writes=Writes2} = event_key_to_event(EK2, Trace),
     not (ordsets:is_disjoint(Reads1, Writes2) andalso
          ordsets:is_disjoint(Writes1, Reads2) andalso
-         ordsets:is_disjoint(Writes1, Writes2)).
+         ordsets:is_disjoint(Writes1, Writes2));
+interference(_, _, _) ->
+    false.
 
-corresponding_event_fun(E1=#event{type=T1}) ->
-    fun (E2=#event{type=T2}) ->
-            event_ids_match(E1, E2) andalso
-                case {T1, T2} of
-                    {schedule, suspend} -> true;
-                    {schedule, invocation} -> true;
-                    {schedule, new_object} -> true;
-                    {future_read, future_write} -> true;
-                    {await_future, future_write} -> true;
+causal_dependency(Event1, Event2) ->
+    case {event_type(Event1), event_type(Event2)} of
+        {new_object, schedule} -> true;
+        {invocation, schedule} -> true;
+        %% Do we need to deal with future read/write dependencies?
+        %% {future_write, future_read} -> true;
+        {future_write, await_future} -> true;
+        _ -> false
+    end.
+
+local_dependency(EK1, EK2, Event1, Event2) ->
+    [Cog1, I] = EK1,
+    [Cog2, J] = EK2,
+    Cog1 =:= Cog2
+        andalso I < J
+        andalso case {Event1, Event2} of
+                    {#event{type=schedule, name=init}, _} -> true;
+                    {E, E} -> true;
                     _ -> false
-                end
-    end.
+                end.
 
-first_global_match(E1, [], Trace) ->
-    false;
-first_global_match(E1, [Cog | Cogs], Trace) ->
-    LocalTrace = maps:get(Cog, Trace, []),
-    case index_of(corresponding_event_fun(E1), LocalTrace) of
-        false -> first_global_match(E1, Cogs, Trace);
-        N -> {Cog, N}
-    end.
-%% Search for the a matching event at the caller first, which will always be
-%% the case for a schedule event. Futures will on the other hand may be read
-%% from any cog, so a search is necessary.
-first_global_match(E1=#event{caller_id=Cog}, Trace) ->
-    Cogs = [Cog | lists:delete(Cog, maps:keys(Trace))],
-    first_global_match(E1, Cogs, Trace).
+must_happen_before(EK1, EK2, Trace) ->
+    Event1 = event_key_to_event(EK1, Trace),
+    Event2 = event_key_to_event(EK2, Trace),
+    Causal = event_ids_match(Event1, Event2) andalso causal_dependency(Event1, Event2),
+    Local = local_dependency(EK1, EK2, Event1, Event2),
+    Time = event_time(Event1) < event_time(Event2),
+    Causal orelse Local orelse Time.
 
-last_local_match(E1, {Cog, I}, LocalTrace) ->
-    N = index_of(corresponding_event_fun(E1), lists:reverse(lists:sublist(LocalTrace, I))),
-    case N of
-        false -> false;
-        N -> {Cog, I - N - 1}
-    end.
-
-must_happen_before(E1=#event{type=schedule}, {Cog, I}, Trace) ->
-    LocalTrace = maps:get(Cog, Trace),
-
-    %% A local dependency here is, if it exists, a suspend event. If there is
-    %% no suspend, and it is not the main task, then we need look for a
-    %% invocation event.
-    LocalDep = last_local_match(E1, {Cog, I}, LocalTrace),
-    EventKey = case LocalDep of
-                   false when I > 0 -> first_global_match(E1, Trace);
-                   _ -> LocalDep
-               end,
-
-    case EventKey of
-        false -> [];
-        _ -> [{EventKey, {Cog, I}}]
-    end;
-must_happen_before(E, EventKey1, Trace) ->
-    case first_global_match(E, Trace) of
-        false -> [];
-        EventKey2 -> [{EventKey2, EventKey1}]
-    end.
 
 lift_to_scheduling_events(R, SMap) ->
-    lists:foldl(fun({E1, E2}, Acc) ->
-                        [{maps:get(E1, SMap),
-                          maps:get(E2, SMap)}
-                         | Acc]
-                end, [], R).
+    SR = lists:foldl(fun([E1, E2], Acc) ->
+                             case [maps:get(E1, SMap), maps:get(E2, SMap)] of
+                                 [S, S] -> Acc;
+                                 [S1, S2] -> [[S1, S2] | Acc]
+                             end
+                     end, [], R),
+    ordsets:from_list(SR).
 
-gen_mhb(Trace, EventKeys, SMap) ->
-    MHB = lists:foldl(fun (K, MHB) ->
-                              Event = event_key_to_event(K, Trace),
-                              must_happen_before(Event, K, Trace) ++ MHB
-                      end, [], EventKeys),
-    ordsets:from_list(MHB).
+gen_mhb(Trace, EventKeys) ->
+    R = [[EK1, EK2] || EK1 <- EventKeys,
+                       EK2 <- EventKeys,
+                       must_happen_before(EK1, EK2, Trace)],
+    ordsets:from_list(R).
 
-gen_interference(Trace, EventKeys, SMap) ->
-    F = fun (K, M) ->
-                S = maps:get(K, SMap),
-                G = fun ({R1, W1}) ->
-                            #event{reads=R2, writes=W2} = event_key_to_event(K, Trace),
-                            {ordsets:union(R1, R2), ordsets:union(W1, W2)}
-                    end,
-                maps:update_with(S, G, {[], []}, M)
-        end,
-    ReadWrites = maps:to_list(lists:foldl(F, #{}, EventKeys)),
-    R = [{{Cog, I}, {Cog, J}} || {{Cog, I}, RW1} <- ReadWrites,
-                                 {{Cog, J}, RW2} <- ReadWrites,
-                                 I =/= J, interference(RW1, RW2)],
+gen_interference(Trace, EventKeys) ->
+    R = [[EK1, EK2] || EK1 <- EventKeys,
+                       EK2 <- EventKeys,
+                       interference(EK1, EK2, Trace)],
     ordsets:from_list(R).
 
 gen_rels(Trace) ->
     EventKeys = trace_to_event_keys(Trace),
     SMap = schedule_event_map(Trace, EventKeys),
-    MHB = gen_mhb(Trace, EventKeys, SMap),
-    Interference = gen_interference(Trace, EventKeys, SMap),
-    {MHB, Interference}.
+    MHB = lift_to_scheduling_events(gen_mhb(Trace, EventKeys), SMap),
+    Interference = lift_to_scheduling_events(gen_interference(Trace, EventKeys), SMap),
+    {MHB, Interference, ordsets:from_list(maps:values(SMap))}.
+
+unpack_json(JSON) ->
+    #{raw_trace := RawTrace,
+      mhb := MHB,
+      interference := Interference,
+      domain := Domain} = jsx:decode(JSON, [{labels, atom}, return_maps]),
+    {binary_to_term(list_to_binary(RawTrace)), MHB, Interference, Domain}.
+
+pack_json(Trace, MHB, Interference, Domain) ->
+    RawTrace = binary_to_list(term_to_binary(Trace)),
+    jsx:encode(#{raw_trace => RawTrace,
+                 mhb => MHB,
+                 interference => Interference,
+                 domain => Domain}).
+
+response() ->
+    Trace = cog_monitor:get_trace(),
+    {MHB, Interference, Domain} = gen_rels(Trace),
+    pack_json(Trace, MHB, Interference, Domain).
