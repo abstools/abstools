@@ -666,10 +666,12 @@ record_termination_or_suspension(R, TaskInfos, PollingStates, NewPollingStates, 
                                              end
                                   end, Changed),
     TaskInfo = maps:get(R, TaskInfos),
-    LastEvent = TaskInfo#task_info.event,
+    #event{caller_id=Cid, local_id=Lid, name=Name, reads=Reads, writes=Writes} = TaskInfo#task_info.event,
     Event = case TaskState of
-                done -> LastEvent#event{type=future_write};
-                _    -> LastEvent#event{type=suspend}
+                done -> #event{type=future_write, caller_id=Cid, local_id=Lid,
+                               name=Name, reads=Reads, writes=Writes};
+                _    -> #event{type=suspend, caller_id=Cid, local_id=Lid,
+                               name=Name, reads=Reads, writes=Writes}
             end,
     [Event | AwaitEvents] ++ Recorded.
 
