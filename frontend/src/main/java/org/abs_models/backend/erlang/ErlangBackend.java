@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -20,6 +22,7 @@ import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 
@@ -136,12 +139,22 @@ public class ErlangBackend extends Main {
         compile_command.add(destDir + "/absmodel/include");
         compile_command.add("-o");
         compile_command.add(destDir + "/absmodel/ebin");
+        Set<String> compiled_basenames =
+            Arrays.stream(new File(destDir, "absmodel/ebin/").listFiles())
+            .map((File f) -> FilenameUtils.removeExtension(f.getName()))
+            .collect(Collectors.toSet());
         Arrays.stream(new File(destDir, "absmodel/src/")
                       .listFiles(new FilenameFilter() {
                               public boolean accept(File dir, String name) {
-                                  return name.endsWith(".erl");
-                              }}))
+                                  return name.endsWith(".erl")
+                                      && !compiled_basenames.contains(FilenameUtils.removeExtension(name));
+                              }
+                          }))
             .forEach((File f) -> compile_command.add(f.toString()));
+        if (options.contains(CompileOptions.VERBOSE)) {
+            System.out.println("Compiling erlang files with command: "
+                               + String.join(" ", compile_command));
+        }
         Process p = Runtime.getRuntime().exec(compile_command.toArray(new String[0]));
         if (options.contains(CompileOptions.VERBOSE)) IOUtils.copy(p.getInputStream(), System.out);
         else IOUtils.copy(p.getInputStream(), new NullOutputStream());
