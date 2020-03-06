@@ -39,7 +39,7 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    implementation 'info.picocli:picocli:4.1.4'
+    implementation 'info.picocli:picocli:4.2.0'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
