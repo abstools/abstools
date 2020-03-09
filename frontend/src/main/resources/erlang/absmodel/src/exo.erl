@@ -26,15 +26,15 @@ event_key_to_event([Cog, I], Trace) ->
     lists:nth(I+1, LocalTrace).
 
 canonicalize_scheduling_event([Cog, I], Trace) ->
-    #event{caller_id=Cid, local_id=Lid, time=Time} = event_key_to_event([Cog, I], Trace),
+    #event{caller_id=Cid, local_id=Lid, name=Name, time=Time} = event_key_to_event([Cog, I], Trace),
     LocalTrace = lists:sublist(maps:get(Cog, Trace), I),
     Occurences = [E || E <- LocalTrace,
                        E#event.type == schedule,
                        E#event.caller_id == Cid,
                        E#event.local_id == Lid],
-    [Cog, Cid, Lid, Time, length(Occurences)].
+    [Cog, Cid, Lid, Name, Time, length(Occurences)].
 
-canonicalized_to_scheduling_event([Cog, Cid, Lid, Time, _Occurences]) ->
+canonicalized_to_scheduling_event([Cog, Cid, Lid, _Name, Time, _Occurences]) ->
     {Cog, #event{type=schedule, caller_id=atomize(Cid), local_id=atomize(Lid), time=Time}}.
 
 event_type(#event{type=T}) ->
@@ -136,7 +136,8 @@ gen_rels(Trace) ->
     SMap = schedule_event_map(Trace, EventKeys),
     MHB = lift_to_scheduling_events(gen_mhb(Trace, EventKeys), SMap, Trace),
     Interference = lift_to_scheduling_events(gen_interference(Trace, EventKeys), SMap, Trace),
-    Domain = [canonicalize_scheduling_event(EK, Trace) || EK <- ordsets:from_list(maps:values(SMap))],
+    Domain = [[I, canonicalize_scheduling_event([Cog, I], Trace)]
+              || [Cog, I] <- ordsets:from_list(maps:values(SMap))],
     {MHB, Interference, Domain}.
 
 unpack_json(JSON) ->
