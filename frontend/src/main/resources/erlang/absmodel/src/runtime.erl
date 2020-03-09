@@ -108,7 +108,8 @@ parse(Args,Exec)->
                                   modelapi_v2:json_to_scheduling_trace(JSON);
                               {_, true} ->
                                   %% Read trace from stdin here
-                                  maps:new()
+                                  JSON = list_to_binary(io:get_line("ExoJSON: ")),
+                                  exo:json_to_scheduling_trace(JSON)
                           end,
             run_mod(Module, Verbose, Debug, GCStatistics, Port, Clocklimit, ReplayTrace, DumpTrace, ExoMode);
         _ ->

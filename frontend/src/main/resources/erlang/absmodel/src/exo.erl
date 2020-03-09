@@ -3,7 +3,13 @@
 
 -include_lib("abs_types.hrl").
 
--export([response/0]).
+-export([response/0, json_to_scheduling_trace/1]).
+
+%% Duplicate from modelapi_v2. Refactor this.
+atomize(L) when is_binary(L) ->
+    list_to_atom(binary_to_list(L));
+atomize(L) ->
+    L.
 
 local_trace_to_event_keys(Cog, LocalTrace) ->
     Len = length(LocalTrace),
@@ -18,6 +24,18 @@ trace_to_event_keys(Trace) ->
 event_key_to_event([Cog, I], Trace) ->
     LocalTrace = maps:get(Cog, Trace),
     lists:nth(I+1, LocalTrace).
+
+canonicalize_scheduling_event([Cog, I], Trace) ->
+    #event{caller_id=Cid, local_id=Lid, time=Time} = event_key_to_event([Cog, I], Trace),
+    LocalTrace = lists:sublist(maps:get(Cog, Trace), I),
+    Occurences = [E || E <- LocalTrace,
+                       E#event.type == schedule,
+                       E#event.caller_id == Cid,
+                       E#event.local_id == Lid],
+    [Cog, Cid, Lid, Time, length(Occurences)].
+
+canonicalized_to_scheduling_event([Cog, Cid, Lid, Time, _Occurences]) ->
+    {Cog, #event{type=schedule, caller_id=atomize(Cid), local_id=atomize(Lid), time=Time}}.
 
 event_type(#event{type=T}) ->
     T;
@@ -88,11 +106,15 @@ must_happen_before(EK1, EK2, Trace) ->
     Causal orelse Local orelse Time.
 
 
-lift_to_scheduling_events(R, SMap) ->
-    SR = lists:foldl(fun([E1, E2], Acc) ->
-                             case [maps:get(E1, SMap), maps:get(E2, SMap)] of
-                                 [S, S] -> Acc;
-                                 [S1, S2] -> [[S1, S2] | Acc]
+lift_to_scheduling_events(R, SMap, Trace) ->
+    SR = lists:foldl(fun([EK1, EK2], Acc) ->
+                             S1 = maps:get(EK1, SMap),
+                             S2 = maps:get(EK2, SMap),
+                             E1 = canonicalize_scheduling_event(S1, Trace),
+                             E2 = canonicalize_scheduling_event(S2, Trace),
+                             case E1 == E2 of
+                                 true -> Acc;
+                                 false -> [[E1, E2] | Acc]
                              end
                      end, [], R),
     ordsets:from_list(SR).
@@ -112,21 +134,25 @@ gen_interference(Trace, EventKeys) ->
 gen_rels(Trace) ->
     EventKeys = trace_to_event_keys(Trace),
     SMap = schedule_event_map(Trace, EventKeys),
-    MHB = lift_to_scheduling_events(gen_mhb(Trace, EventKeys), SMap),
-    Interference = lift_to_scheduling_events(gen_interference(Trace, EventKeys), SMap),
-    {MHB, Interference, ordsets:from_list(maps:values(SMap))}.
+    MHB = lift_to_scheduling_events(gen_mhb(Trace, EventKeys), SMap, Trace),
+    Interference = lift_to_scheduling_events(gen_interference(Trace, EventKeys), SMap, Trace),
+    Domain = [canonicalize_scheduling_event(EK, Trace) || EK <- ordsets:from_list(maps:values(SMap))],
+    {MHB, Interference, Domain}.
 
 unpack_json(JSON) ->
-    #{raw_trace := RawTrace,
-      mhb := MHB,
-      interference := Interference,
-      domain := Domain} = jsx:decode(JSON, [{labels, atom}, return_maps]),
-    {binary_to_term(list_to_binary(RawTrace)), MHB, Interference, Domain}.
+    jsx:decode(JSON, [{labels, atom}, return_maps]).
+
+json_to_scheduling_trace(JSON) ->
+    #{trace := SequentialTrace} = unpack_json(JSON),
+    F = fun (CanonEvent, Trace) ->
+                {Cog, E} = canonicalized_to_scheduling_event(CanonEvent),
+                LocalTrace = maps:get(Cog, Trace, []),
+                maps:put(Cog, [E | LocalTrace], Trace)
+        end,
+   lists:foldl(F, #{}, lists:reverse(SequentialTrace)).
 
 pack_json(Trace, MHB, Interference, Domain) ->
-    RawTrace = binary_to_list(term_to_binary(Trace)),
-    jsx:encode(#{raw_trace => RawTrace,
-                 mhb => MHB,
+    jsx:encode(#{mhb => MHB,
                  interference => Interference,
                  domain => Domain}).
 
