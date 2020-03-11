@@ -21,13 +21,13 @@ public class ExceptionTests extends SemanticTests {
    }
         
    @Test
-   public void ticket175() {
+   public void ticket175() throws Exception {
        Assume.assumeFalse("Not implemented on Java backend yet", driver.getBackendName() == BackendName.JAVA);
        assertEvalTrue(new File("abssamples/backend/StmtTests/exception_ticket175.abs"));
    }
  
    @Test
-   public void testException() {
+   public void testException() throws Exception {
        Assume.assumeFalse("Not implemented on Java backend yet", driver.getBackendName() == BackendName.JAVA);
        assertEvalTrue("exception MyE(Bool); { Bool testresult = False; try throw MyE(True); catch MyE(value) => testresult = value; }");
    }
@@ -45,26 +45,26 @@ public class ExceptionTests extends SemanticTests {
    }
 
    @Test
-   public void testExceptionPropagation() {
+   public void testExceptionPropagation() throws Exception {
        Assume.assumeFalse("Not implemented on Java backend yet", driver.getBackendName() == BackendName.JAVA);
        assertEvalTrue(new File("abssamples/backend/StmtTests/exception_propagation.abs"));
    }
    
    @Test
-   public void testExceptionNoPropagation() {
+   public void testExceptionNoPropagation() throws Exception {
        // https://github.com/abstools/abstools/issues/115
        Assume.assumeFalse("Not implemented on Java backend yet", driver.getBackendName() == BackendName.JAVA);
        assertEvalTrue(new File("abssamples/backend/StmtTests/exception_no_propagation.abs"));
    }
    
    @Test
-   public void testExceptionNullFuture() {
+   public void testExceptionNullFuture() throws Exception {
        Assume.assumeFalse("Not implemented on Java / Maude backend yet", driver.getBackendName() == BackendName.JAVA || driver.getBackendName() == BackendName.MAUDE);
        assertEvalTrue(new File("abssamples/backend/StmtTests/exception_nullfuture.abs"));
    }
 
    @Test
-   public void testExceptionGuard() {
+   public void testExceptionGuard() throws Exception {
        Assume.assumeFalse("Not implemented on Java / Maude backend yet", driver.getBackendName() == BackendName.JAVA || driver.getBackendName() == BackendName.MAUDE);
        assertEvalTrue(new File("abssamples/backend/ObjectTests/exception_guard.abs"));
    }

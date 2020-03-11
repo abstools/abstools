@@ -84,7 +84,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * @param absCode
      * @return either the Result, or null if an execution error occurred
      */
-    private String runAndCheck(String absCode) {
+    private String runAndCheck(String absCode) throws Exception {
         File f = null;
         try {
             f = Files.createTempDir();
@@ -92,8 +92,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             Model model = assertParse(absCode, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);
             return runAndCheck(f, mainModule);
-        } catch (Exception e) {
-            return null;
         } finally {
             try {
                 FileUtils.deleteDirectory(f);
@@ -352,7 +350,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         int res = p.waitFor();
         t.interrupt();
         if (res != 0)
-            return null;
+            throw new RuntimeException("Timeout during test");
         return val;
     }
 

@@ -23,7 +23,7 @@ public class DeltaTests extends SemanticTests {
     static String CALL_DELTA = "{Bool testresult = False; Int s = 0; I i; i = new local C(); s = i.m(); testresult = s == 2;}";
 
     @Test
-    public void nonAppliedDelta() {
+    public void nonAppliedDelta() throws Exception {
         assertEvalTrue(INTERFACE_I + CLASS_C + CALL_ORIGINAL + DELTA_D);
     }
     // TODO: design a way to give arguments to assertEvalTrue (we will need this
