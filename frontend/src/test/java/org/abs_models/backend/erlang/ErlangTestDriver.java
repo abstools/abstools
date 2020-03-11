@@ -428,7 +428,7 @@ class TimeoutThread implements Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep(10000); // 10 second timeout before aborting the test (which for example can happen in the case of a deadlock test)
+            Thread.sleep(20000); // timeout before aborting the test (which for example can happen in the case of a deadlock test)
 
             if (p.isAlive()) { // If the test is still running by now, terminate it
                 p.destroyForcibly();
