@@ -81,7 +81,7 @@ causal_dependency(Event1, Event2) ->
         {new_object, schedule} -> true;
         {invocation, schedule} -> true;
         %% Do we need to deal with future read/write dependencies?
-        %% {future_write, future_read} -> true;
+        {future_write, future_read} -> true;
         {future_write, await_future} -> true;
         _ -> false
     end.
@@ -112,7 +112,7 @@ lift_to_scheduling_events(R, SMap, Trace) ->
                              S2 = maps:get(EK2, SMap),
                              E1 = canonicalize_scheduling_event(S1, Trace),
                              E2 = canonicalize_scheduling_event(S2, Trace),
-                             case E1 == E2 of
+                             case S1 == S2 of
                                  true -> Acc;
                                  false -> [[E1, E2] | Acc]
                              end
