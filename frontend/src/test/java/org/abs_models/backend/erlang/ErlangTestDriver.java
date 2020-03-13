@@ -298,13 +298,14 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * Executes a model and returns its output as a list of strings, one per
      * line.
      *
-     * To detect faults, we have a Timeout process which will kill the
-     * runtime system after 10 seconds
+     * To detect faults, we have a Timeout process which will kill the runtime
+     * system after a timeout.  We always return the accumulated output, no
+     * matter how the process was terminated.
      *
      * @param workDir a temporary directory containing a compiled model.
      * @param mainModule the module whose main block should be executed.
      * @param arguments additional arguments to pass to the model
-     * @return the remainder of an output line starting with "RES=" or null if none found.
+     * @return the lines output by the process until finished or killed by timeout
      */
     public java.util.List<String> runCompiledModel(File workDir, String mainModule, String... arguments) throws Exception {
         ArrayList<String> val = new ArrayList<String>();
@@ -347,10 +348,8 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             }
         }
 
-        int res = p.waitFor();
+        p.waitFor();
         t.interrupt();
-        if (res != 0)
-            throw new RuntimeException("Timeout during test");
         return val;
     }
 
