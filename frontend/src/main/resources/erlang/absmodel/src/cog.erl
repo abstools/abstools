@@ -1197,6 +1197,27 @@ waiting_for_gc_stop(cast, {task_blocked, R, TaskInfo, ObjectState},
               Data#data{next_state_after_gc=task_blocked,
                         object_states=NewObjectStates, task_infos=NewTaskInfos}}
     end;
+waiting_for_gc_stop(cast, {task_blocked_for_future, R, TaskInfo, ObjectState, Future},
+             Data=#data{running_task=R,task_infos=TaskInfos,
+                        object_states=ObjectStates, dcref=DCRef,dc=DC,
+                        replaying=Replaying}) ->
+    dc:cog_blocked(DCRef, self()),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+    WaitReason=TaskInfo#task_info.wait_reason,
+    NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), R, blocked),
+    This=TaskInfo#task_info.this,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
+    NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
+    case NewTaskState of
+        runnable ->
+            {next_state, in_gc,
+             Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos,
+                       next_state_after_gc=task_blocked},
+             {next_event, cast, {task_runnable, R, none}}};
+        _ -> {next_state, in_gc,
+              Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos,
+                       next_state_after_gc=task_blocked}}
+    end;
 waiting_for_gc_stop(cast, {task_blocked_for_clock, R, TaskInfo, ObjectState,
                           Min, Max},
                     Data=#data{running_task=R,task_infos=TaskInfos, object_states=ObjectStates,dcref=DCRef,dc=DC}) ->
