@@ -40,6 +40,8 @@ jobs:
 
       - run: ../gradlew build -x test -x check
 
+      - run: ../gradlew test
+
       - store_artifacts:
           path: dist
           destination: dist
