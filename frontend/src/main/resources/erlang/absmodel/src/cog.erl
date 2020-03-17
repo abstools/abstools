@@ -1230,6 +1230,30 @@ waiting_for_gc_stop(cast, {task_blocked_for_clock, R, TaskInfo, ObjectState,
                           TaskInfos),
     {next_state, in_gc,
      Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates, task_infos=NewTaskInfos}};
+waiting_for_gc_stop(cast, {task_blocked_for_resource, R, TaskInfo, ObjectState,
+                          Resourcetype, Amount},
+                    Data=#data{running_task=R, task_infos=TaskInfos,
+                               object_states=ObjectStates, dcref=DCRef,dc=DC,
+                               id=Id, next_stable_id=N, recorded=Recorded}) ->
+    Event = #event{type=resource, caller_id=Id, local_id=N, name=Resourcetype},
+    RequestEvent = #dc_event{type=Resourcetype, caller_id=Id, local_id=N, amount=Amount},
+    dc:block_task_for_resource(DCRef, self(), R, RequestEvent),
+    %% dc will call task_is_runnable as needed and/or register our blockedness
+    WaitReason=TaskInfo#task_info.wait_reason,
+    NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), R, blocked),
+    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+    This=TaskInfo#task_info.this,
+    NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
+    %% We never pass TaskInfo back to the process, so we can mutate it here.
+    %% Also: since resource waiting might cause time advance, arrange to
+    %% confirm task wakeup here even though we’re not strictly waiting for the
+    %% clock.  (The DC expects `task_confirm_clock_wakeup' in all cases,
+    %% including when the clock did not actually advance.)
+    NewTaskInfos=maps:put(R, TaskInfo#task_info{wait_reason={waiting_on_clock, none, none}}, TaskInfos),
+    {next_state, in_gc,
+     Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates,
+               task_infos=NewTaskInfos,
+               next_stable_id=N+1, recorded=[Event | Recorded]}};
 waiting_for_gc_stop(cast, {task_blocked_for_gc, R, TaskInfo, ObjectState},
                     Data=#data{running_task=R,task_infos=TaskInfos,
                                object_states=ObjectStates,dc=DC}) ->
