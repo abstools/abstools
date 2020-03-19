@@ -140,7 +140,7 @@ The function `durationValue` returns the value of its argument as a rational num
 
 [source]
 ----
-def Rat durationValue(Time t);
+def Rat durationValue(Duration t);
 ----
 
 .isDurationInfinite
