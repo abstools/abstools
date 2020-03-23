@@ -69,7 +69,12 @@ cog_unblocked(DCRef, CogRef) ->
 
 cog_idle(DCRef, CogRef) ->
     %% active -> idle
-    gen_statem:call(DCRef, {cog_idle, CogRef}).
+    case DCRef of
+        %% pathological case: we start gc before scheduling the first main
+        %% task (happens during debugging only)
+        none -> ok;
+        _ -> gen_statem:call(DCRef, {cog_idle, CogRef})
+    end.
 
 cog_blocked_for_clock(DCRef, CogRef, TaskRef, Min, Max) ->
     %% active -> blocked + send cog_monitor:dc_mte

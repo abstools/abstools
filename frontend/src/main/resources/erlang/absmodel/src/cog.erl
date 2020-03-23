@@ -336,6 +336,7 @@ block_current_task_for_bandwidth(Cog=#cog{ref=CogRef}, null,
 block_current_task_for_future(#cog{ref=CogRef}, Future, Stack) ->
     gen_statem:cast(CogRef, {task_blocked_for_future,
                              self(),
+                             %% TODO: pass the wait_reason in another way
                              (get(task_info))#task_info{wait_reason={waiting_on_future, Future}},
                              get(this),
                              Future}).
@@ -348,7 +349,13 @@ return_token(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState) ->
     #task_info{event=Event} = TaskInfo,
     gen_statem:call(Cog, {token, TaskRef, State, TaskInfo, ObjectState}),
     Event2 = Event#event{reads = ordsets:new(), writes = ordsets:new()},
-    put(task_info, TaskInfo#task_info{event=Event2}).
+    put(task_info, TaskInfo#task_info{event=Event2,
+                                      %% Since we use task_info for unrelated
+                                      %% info, we need to clean up here
+                                      %% (`block_current_task_for_future' sets
+                                      %% this field and calls us).  This
+                                      %% indicates we shouldn’t do that.
+                                      wait_reason=none}).
 
 task_poll_is_ready(#cog{ref=Cog}, TaskRef, TaskInfo) ->
     Cog ! {TaskRef, true, TaskInfo}.
@@ -854,6 +861,8 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
     NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), R, TaskState),
     This=TaskInfo#task_info.this,
     NewObjectStates=update_object_state_map(This, ObjectState, ObjectStates),
+    %% for `NewTaskState' = `done', we just drop the task from Run (it can't
+    %% be in Wai or Pol)
     NewRunnable = case NewTaskState of runnable -> Run;
                       _ -> gb_sets:del_element(R, Run) end,
     NewWaiting = case NewTaskState of waiting -> gb_sets:add_element(R, Wai);
@@ -868,8 +877,6 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
 
     case GCWaitingToStart of
         false ->
-            %% for `NewTaskState' = `done', we just drop the task from Run (it
-            %% can't be in Wai or Pol)
             Candidates = get_candidate_set(NewRunnable, NewPolling, NewPollingStates),
             T = choose_runnable_task(Scheduler, Candidates, NewTaskInfos, NewObjectStates, Replaying),
             case T of
