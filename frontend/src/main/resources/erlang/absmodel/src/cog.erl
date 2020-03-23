@@ -25,7 +25,7 @@
 -export([return_token/5]).
 %% Called by cog_monitor
 -export([inc_ref_count/1,dec_ref_count/1]).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 
 %%Garbage collector callbacks
 %%stop_world and resume_world are COG specific

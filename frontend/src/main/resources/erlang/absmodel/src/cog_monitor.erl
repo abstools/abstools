@@ -3,7 +3,7 @@
 
 -module(cog_monitor).
 -behaviour(gen_statem).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 
 -export([start_link/3, stop/0, waitfor/0]).
 

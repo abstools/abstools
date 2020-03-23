@@ -8,7 +8,7 @@
 %%API for tasks
 -export([wait_for_token/2]).
 -export([behaviour_info/1]).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 
 -behaviour(gc).
 -export([send_stop_for_gc/1, get_references_for_cog/1]).

@@ -18,7 +18,7 @@
 
 -export([new/2,get_description/1]).
 -export([get_resource_history/2]).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 
 -export([new_cog/3, cog_died/3]).
 -export([cog_active/2, cog_idle/2, cog_blocked/2, cog_blocked_for_clock/5, cog_unblocked/2]).

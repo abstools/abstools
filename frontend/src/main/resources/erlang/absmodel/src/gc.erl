@@ -44,7 +44,10 @@
           log=false, debug=false}).
 
 behaviour_info(callbacks) ->
-    [{get_references, 1}].
+    [{get_references, 1}];
+behaviour_info(_) ->
+    undefined.
+
 
 start(Log, Debug) ->
     gen_statem:start_link({global, gc}, ?MODULE, [Log, Debug], []).
