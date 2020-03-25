@@ -746,7 +746,7 @@ p { margin-bottom: 1.25rem; }
 <h1>ABS Documentation</h1>
 <div class="details">
 <span id="author" class="author">ABS Development Team</span><br>
-<span id="revnumber">version v1.8.2</span>
+<span id="revnumber">version v1.9.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -802,7 +802,7 @@ p { margin-bottom: 1.25rem; }
 <li><a href="#throw-statement">6.9. Throw</a></li>
 <li><a href="#-blocks-of-statements">6.10. Blocks of Statements</a></li>
 <li><a href="#-conditionals">6.11. Conditionals</a></li>
-<li><a href="#case-stmt">6.12. Case: Pattern Matching</a></li>
+<li><a href="#switch-stmt">6.12. Switch: Pattern Matching</a></li>
 <li><a href="#-the-while-loop">6.13. The While Loop</a></li>
 <li><a href="#foreach-loop">6.14. The Foreach Loop</a></li>
 <li><a href="#try-catch-finally-stmt">6.15. Handling Exceptions with Try-Catch-Finally</a></li>
@@ -1813,8 +1813,8 @@ expressions via a user-supplied function.</p>
 <div class="content">
 <pre class="highlight"><code>def Set&lt;A&gt; set&lt;A&gt;(List&lt;A&gt; l) = <i class="conum" data-value="1"></i><b>(1)</b>
     case l {
-       Nil =&gt; EmptySet;
-       Cons(x,xs) =&gt; insertElement(set(xs), x);
+       Nil =&gt; EmptySet
+       | Cons(x,xs) =&gt; insertElement(set(xs), x)
     };
 
 {
@@ -2014,7 +2014,7 @@ multiple times without influencing the execution semantics.</p>
  | <em>FnAppExp</em><br>
  | <em>FnAppListExp</em><br>
  | <em>ParFnAppExp</em><br>
- | <em>IfExp</em><br>
+ | <em>WhenExp</em><br>
  | <em>CaseExp</em><br>
  | <em>OperatorExp</em><br>
  | <em>TypeCheckExp</em><br>
@@ -2472,7 +2472,7 @@ filter((Int i) =&gt; i &gt; 0)(list[0, 1, 2])</code></pre>
 <div class="sect3">
 <h4 id="-the-conditional-expression">The Conditional Expression</h4>
 <div class="paragraph">
-<p>The value of the conditional expression <code>if c then e1 else e2</code> is either the
+<p>The value of the conditional expression <code>when c then e1 else e2</code> is either the
 value of <code>e1</code> or the value of <code>e2</code>, depending on the value of <code>c</code>, which must
 be of type <code>Bool</code>.  Depending on the value of <code>c</code>, either <code>e1</code> or <code>e2</code> is
 evaluated, but not both.</p>
@@ -2485,15 +2485,15 @@ evaluated, but not both.</p>
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>IfExp</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>if</code> <em>PureExp</em> <code>then</code> <em>PureExp</em> <code>else</code> <em>PureExp</em></p></td>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>WhenExp</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>when</code> <em>PureExp</em> <code>then</code> <em>PureExp</em> <code>else</code> <em>PureExp</em></p></td>
 </tr>
 </tbody>
 </table>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>if 5 == 4 then True else False</code></pre>
+<pre class="highlight"><code>when 5 == 4 then True else False</code></pre>
 </div>
 </div>
 </div>
@@ -2541,25 +2541,38 @@ right-hand side of the first matching pattern.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>CaseExp</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>case</code> <em>PureExp</em> <code>{</code> <em>CaseExpBranch</em> { <em>CaseExpBranch</em> } <code>}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>case</code> <em>PureExp</em> <code>{</code> <em>CaseExpBranch</em> { `</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>CaseExpBranch</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Pattern</em> <code>=&gt;</code> <em>PureExp</em> <code>;</code></p></td>
+<td class="tableblock halign-right valign-top"><p class="tableblock">` <em>CaseExpBranch</em> } <code>}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>CaseExpBranch</em> ::=</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Pattern</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>_</code><br>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Pattern</em> <code>=&gt;</code> <em>PureExp</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Pattern</em> ::=</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><code>_</code><br>
                  | <em>SimpleIdentifier</em><br>
                  | <em>Literal</em><br>
                  | <em>ConstrPattern</em></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>ConstrPattern</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>TypeIdentifier</em> [ <code>(</code> [ <em>Pattern</em> { <code>,</code> <em>Pattern</em> }  ] <code>)</code> ]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>ConstrPattern</em> ::=</p></td>
 </tr>
 </tbody>
 </table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Older versions of the ABS language used the semicolon (<code>’</code>) to terminate
+case branches.  This older syntax is still supported by the compiler.
+</td>
+</tr>
+</table>
+</div>
 <div class="sect4">
 <h5 id="-the-variable-pattern">The Variable Pattern</h5>
 <div class="paragraph">
@@ -2581,8 +2594,8 @@ data constructors.  For example:</p>
 <div class="content">
 <pre class="highlight"><code>let (Pair&lt;Int, Int&gt; a) = Pair(5, 5) in
   case a {
-    Pair(x, x) =&gt; x; <i class="conum" data-value="1"></i><b>(1)</b>
-    Pair(x, y) =&gt; y; <i class="conum" data-value="2"></i><b>(2)</b>
+    Pair(x, x) =&gt; x <i class="conum" data-value="1"></i><b>(1)</b>
+    | Pair(x, y) =&gt; y <i class="conum" data-value="2"></i><b>(2)</b>
   } <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
@@ -2607,9 +2620,9 @@ data constructors.  For example:</p>
 <div class="content">
 <pre class="highlight"><code>let (x = 7) in
   case Pair(5, 5) {
-    Pair(x, x) =&gt; x; <i class="conum" data-value="1"></i><b>(1)</b>
-    Pair(x, y) =&gt; y; <i class="conum" data-value="2"></i><b>(2)</b>
-    Pair(y, z) =&gt; z; <i class="conum" data-value="3"></i><b>(3)</b>
+    Pair(x, x) =&gt; x <i class="conum" data-value="1"></i><b>(1)</b>
+    | Pair(x, y) =&gt; y <i class="conum" data-value="2"></i><b>(2)</b>
+    | Pair(y, z) =&gt; z <i class="conum" data-value="3"></i><b>(3)</b>
   } <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
 </div>
 </div>
@@ -2645,8 +2658,8 @@ case expression is equal to the literal value.</p>
 <div class="content">
 <pre class="highlight"><code>let (Pair&lt;Int, Int&gt; a) = Pair(5, 5) in
   case a {
-    Pair(3, x) =&gt; x; <i class="conum" data-value="1"></i><b>(1)</b>
-    Pair(x, y) =&gt; y; <i class="conum" data-value="2"></i><b>(2)</b>
+    Pair(3, x) =&gt; x <i class="conum" data-value="1"></i><b>(1)</b>
+    | Pair(x, y) =&gt; y <i class="conum" data-value="2"></i><b>(2)</b>
   } <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
@@ -2678,9 +2691,9 @@ Constructor arguments are again patterns.</p>
 <div class="content">
 <pre class="highlight"><code>let (List&lt;Int&gt; l) = list[1, 2, 3] in
   case l {
-    Nil =&gt; 0; <i class="conum" data-value="1"></i><b>(1)</b>
-    Cons(1, _) =&gt; 15; <i class="conum" data-value="2"></i><b>(2)</b>
-    Cons(_, Cons(y, _)) =&gt; y; <i class="conum" data-value="3"></i><b>(3)</b>
+    Nil =&gt; 0 <i class="conum" data-value="1"></i><b>(1)</b>
+    | Cons(1, _) =&gt; 15 <i class="conum" data-value="2"></i><b>(2)</b>
+    | Cons(_, Cons(y, _)) =&gt; y <i class="conum" data-value="3"></i><b>(3)</b>
   } <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
 </div>
 </div>
@@ -2715,8 +2728,8 @@ Constructor arguments are again patterns.</p>
 <div class="content">
 <pre class="highlight"><code>let (List&lt;Int&gt; l) = list[1, 2, 3] in
   case l {
-    Nil =&gt; True; <i class="conum" data-value="1"></i><b>(1)</b>
-    _ =&gt; False; <i class="conum" data-value="2"></i><b>(2)</b>
+    Nil =&gt; True <i class="conum" data-value="1"></i><b>(1)</b>
+    | _ =&gt; False <i class="conum" data-value="2"></i><b>(2)</b>
 }; <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
@@ -3142,12 +3155,12 @@ function name.</p>
 
 def Int length&lt;A&gt;(List&lt;A&gt; list) = <i class="conum" data-value="2"></i><b>(2)</b>
 case list {
-  Nil =&gt; 0;
-  Cons(_, ls) =&gt; 1 + length(ls);
+  Nil =&gt; 0
+  | Cons(_, ls) =&gt; 1 + length(ls)
 };
 
 def A head&lt;A&gt;(List&lt;A&gt; list) = <i class="conum" data-value="3"></i><b>(3)</b>
-  case list { Cons(x, _) =&gt; x; };</code></pre>
+  case list { Cons(x, _) =&gt; x };</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3174,9 +3187,12 @@ def A head&lt;A&gt;(List&lt;A&gt; list) = <i class="conum" data-value="3"></i><b
 </td>
 <td class="content">
 The ABS standard library contains some special functions that cannot be
-defined with pure expressions, for example the function <code>println</code>.  Each
-special function has to be implemented in each backend.  The details of
-implementing special functions are outside of the scope of this manual.
+defined with pure expressions, for example the function <code>println</code>.  The
+definition of such functions is done via a special function body of the form
+<code>builtin</code>, with optional string argument notation <code>builtin["a", "b"]</code>.  Such
+builtin functions have to be defined separately in the code generator for each
+backend where the model is compiled; details of this are
+implementation-specific and outside the scope of this manual.
 </td>
 </tr>
 </table>
@@ -3241,8 +3257,8 @@ def Int double(Int x) = x * 2;
 <div class="title">Example</div>
 <div class="content">
 <pre class="highlight"><code>def List&lt;B&gt; map&lt;A, B&gt;(f)(List&lt;A&gt; list) = case list { <i class="conum" data-value="1"></i><b>(1)</b>
-    Nil =&gt; Nil;
-    Cons(x, xs) =&gt; Cons(f(x), map(xs)); <i class="conum" data-value="2"></i><b>(2)</b>
+    Nil =&gt; Nil
+    | Cons(x, xs) =&gt; Cons(f(x), map(xs)) <i class="conum" data-value="2"></i><b>(2)</b>
 };
 
 def Int double(Int x) = x * 2;
@@ -3384,7 +3400,7 @@ code.
 | <em>ReturnStmt</em><br>
 | <em>Block</em><br>
 | <em>IfStmt</em><br>
-| <em>CaseStmt</em><br>
+| <em>SwitchStmt</em><br>
 | <em>WhileStmt</em><br>
 | <em>ForeachStmt</em><br>
 | <em>TryCatchFinallyStmt</em></p></td>
@@ -3884,14 +3900,14 @@ if (True)
 </div>
 </div>
 <div class="sect2">
-<h3 id="case-stmt">6.12. Case: Pattern Matching</h3>
+<h3 id="switch-stmt">6.12. Switch: Pattern Matching</h3>
 <div class="paragraph">
-<p>The case statement, like the case expression (see <a href="#case-expression">Case Expressions</a>),
+<p>The switch statement, like the case expression (see <a href="#case-expression">Case Expressions</a>),
 consists of an expression and a series of branches, each consisting of a
 pattern and a statement (which can be a block).</p>
 </div>
 <div class="paragraph">
-<p>When a case statement is executed, its input expression is evaluated and the
+<p>When a switch statement is executed, its input expression is evaluated and the
 value matched against the branches until a matching pattern is found.  The
 statement in the right-hand side of that branch is then executed.  Any
 variable bindings introduced by matching the pattern are in effect while
@@ -3911,11 +3927,11 @@ executing that statement.</p>
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>CaseStmt</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>case</code> <em>PureExp</em> <code>{</code> { <em>CaseStmtBranch</em> } <code>}</code></p></td>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>SwitchStmt</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>switch</code> <code>(</code> <em>PureExp</em> <code>)</code> <code>{</code> { <em>SwitchStmtBranch</em> } <code>}</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>CaseStmtBranch</em> ::=</p></td>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>SwitchStmtBranch</em> ::=</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Pattern</em> <code>=&gt;</code> <em>Stmt</em></p></td>
 </tr>
 </tbody>
@@ -3925,7 +3941,7 @@ executing that statement.</p>
 <div class="content">
 <pre class="highlight"><code>Pair&lt;Int, Int&gt; p = Pair(2, 3);
 Int x = 0;
-case p {
+switch p {
   Pair(2, y) =&gt; { x = y; skip; }
   _ =&gt; x = -1;
 }</code></pre>
@@ -4022,7 +4038,7 @@ execution afterwards.</p>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>TryCatchFinallyStmt</em> ::=</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>try</code> <em>Stmt</em><br>
-                              <code>catch</code> ( <code>{</code> { <em>CaseStmtBranch</em> } <code>}</code>  | <em>CaseStmtBranch</em> )<br>
+                              <code>catch</code> ( <code>{</code> { <em>SwitchStmtBranch</em> } <code>}</code>  | <em>SwitchStmtBranch</em> )<br>
                               [ <code>finally</code> <em>Stmt</em> ]</p></td>
 </tr>
 </tbody>
@@ -4036,7 +4052,7 @@ statement, then with the next statement after the try-catch-finally statement.</
 <p>If during execution of the statement protected by <code>try</code> an exception is
 thrown, it is matched one-by-one against the exception patterns defined in the
 <code>catch</code> block.  The statement following the first matching pattern will be
-executed, as in the case statement (see <a href="#case-stmt">Case: Pattern Matching</a>).  Execution continues
+executed, as in the switch statement (see <a href="#switch-stmt">Switch: Pattern Matching</a>).  Execution continues
 with the optional <code>finally</code> statement, then with the statement following the
 try-catch-finally statement.</p>
 </div>
@@ -4707,8 +4723,9 @@ in ABS.</p>
 </div>
 <div class="paragraph">
 <p>A special export clause <code>export *;</code> exports all names that are defined in the
-module.  Note that imported names are <em>not</em> re-exported by <code>export *;</code> (but
-can be re-exported via <code>export * from OtherModule;</code> clauses).</p>
+module.  Note that imported names are <em>not</em> re-exported by <code>export *;</code> or
+<code>export Name;</code> (but can be re-exported via <code>export * from OtherModule;</code> and
+<code>export Name from OtherModule;</code> clauses).</p>
 </div>
 <div class="listingblock">
 <div class="title">Example</div>
@@ -4801,7 +4818,7 @@ accessible as well.</p>
 <div class="content">
 <pre class="highlight"><code>module Bar;
 import * from Drinks;
-export Drink; <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+export Drink from Drinks; <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5699,8 +5716,8 @@ element, use <code>remove</code>.  To test for set membership, use the function
 <div class="content">
 <pre class="highlight"><code>def Unit printAll&lt;A&gt;(Set&lt;A&gt; set) =
   case takeMaybe(set) {
-    Nothing =&gt; println("Finished");
-    Just(e) =&gt; let (Unit dummy) = println("Element " + toString(e)) in printAll(remove(set, e));
+    Nothing =&gt; println("Finished")
+    | Just(e) =&gt; let (Unit dummy) = println("Element " + toString(e)) in printAll(remove(set, e))
   };</code></pre>
 </div>
 </div>
@@ -6764,7 +6781,7 @@ is less than the value of its second argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Rat durationValue(Time t);</code></pre>
+<pre class="highlight"><code>def Rat durationValue(Duration t);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7990,12 +8007,18 @@ execution or simulation environment.</p>
 </table>
 <div class="paragraph">
 <p>The <code>DeltaDecl</code> clause specifies the syntax of delta modules, consisting of a
-unique identifier, a module access directive, a list of parameters and a
-sequence of module modifiers.  The <em>module access</em> directive gives the delta
-access to the namespace of a particular module.  In other words, it specifies
-the ABS module to which modifications using unqualified identifiers apply by
-default.  A delta can still make modifications to classes and interfaces in
-several modules by fully qualifying the <code>TypeName</code> of module modifiers.</p>
+unique identifier, an optional list of delta parameters, an optional module
+access directive, and a sequence of module modifiers.</p>
+</div>
+<div class="paragraph">
+<p>The <code>ModuleAccess</code> clause specifies the semantics of unqualified identifiers
+within a delta.  Any identifiers without namespace prefix will be resolved as
+if they occurred in the module named in the <code>ModuleAccess</code> clause.  A delta
+can always make additions and modifications in any module by fully qualifying
+the <code>TypeName</code> within module modifiers.  New program elements (classes,
+interfaces, etc.) with unqualified names are added to the module given in the
+<code>uses</code> clause; it is an error to add new program elements with unqualified
+names in a delta that does not have a <code>uses</code> clause.</p>
 </div>
 <div class="paragraph">
 <p>While delta modeling supports a broad range of ways to modify an ABS model,
@@ -8904,8 +8927,8 @@ No other runtime system libraries and dependencies will be generated.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version v1.8.2<br>
-Last updated 2019-12-09 14:23:48 +0100
+Version v1.9.0<br>
+Last updated 2020-03-19 17:59:24 +0100
 </div>
 </div>
 </body>
