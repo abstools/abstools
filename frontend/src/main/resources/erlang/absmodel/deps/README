@@ -1,3 +1,0 @@
-Third-party library dependencies.  We don't want to do the "git
-submodule" dance so we check out elsewhere and then copy over to this
-repository.

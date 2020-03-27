@@ -110,7 +110,7 @@ compileJava.dependsOn 'generateGrammarSource'
 task compileErlangBackend(type: Exec, dependsOn: processResources) {
     description 'Compiles Erlang backend support files.'
     workingDir 'build/resources/main/erlang/absmodel'
-    commandLine 'escript', '../bin/rebar', 'compile'
+    commandLine 'escript', '../bin/rebar3', 'compile'
 }
 clean {
     // This removes beam files left over after updating from old versions
