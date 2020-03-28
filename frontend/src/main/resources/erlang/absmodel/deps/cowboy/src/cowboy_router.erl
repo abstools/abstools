@@ -82,6 +82,8 @@ compile_paths([{PathMatch, Fields, Handler, Opts}|Tail], Acc)
 		Fields, Handler, Opts}|Tail], Acc);
 compile_paths([{'_', Fields, Handler, Opts}|Tail], Acc) ->
 	compile_paths(Tail, [{'_', Fields, Handler, Opts}] ++ Acc);
+compile_paths([{<<"*">>, Fields, Handler, Opts}|Tail], Acc) ->
+	compile_paths(Tail, [{<<"*">>, Fields, Handler, Opts}|Acc]);
 compile_paths([{<< $/, PathMatch/bits >>, Fields, Handler, Opts}|Tail],
 		Acc) ->
 	PathRules = compile_rules(PathMatch, $/, [], [], <<>>),
@@ -99,12 +101,11 @@ compile_rules(<< S, Rest/bits >>, S, Segments, Rules, <<>>) ->
 	compile_rules(Rest, S, Segments, Rules, <<>>);
 compile_rules(<< S, Rest/bits >>, S, Segments, Rules, Acc) ->
 	compile_rules(Rest, S, [Acc|Segments], Rules, <<>>);
+%% Colon on path segment start is special, otherwise allow.
 compile_rules(<< $:, Rest/bits >>, S, Segments, Rules, <<>>) ->
 	{NameBin, Rest2} = compile_binding(Rest, S, <<>>),
 	Name = binary_to_atom(NameBin, utf8),
 	compile_rules(Rest2, S, Segments, Rules, Name);
-compile_rules(<< $:, _/bits >>, _, _, _, _) ->
-	error(badarg);
 compile_rules(<< $[, $., $., $., $], Rest/bits >>, S, Segments, Rules, Acc)
 		when Acc =:= <<>> ->
 	compile_rules(Rest, S, ['...'|Segments], Rules, Acc);
@@ -159,7 +160,11 @@ compile_brackets_split(<< C, Rest/bits >>, Acc, N) ->
 -spec execute(Req, Env)
 	-> {ok, Req, Env} | {stop, Req}
 	when Req::cowboy_req:req(), Env::cowboy_middleware:env().
-execute(Req=#{host := Host, path := Path}, Env=#{dispatch := Dispatch}) ->
+execute(Req=#{host := Host, path := Path}, Env=#{dispatch := Dispatch0}) ->
+	Dispatch = case Dispatch0 of
+		{persistent_term, Key} -> persistent_term:get(Key);
+		_ -> Dispatch0
+	end,
 	case match(Dispatch, Host, Path) of
 		{ok, Handler, HandlerOpts, Bindings, HostInfo, PathInfo} ->
 			{ok, Req#{
@@ -252,6 +257,8 @@ match_path([{'_', [], Handler, Opts}|_Tail], HostInfo, _, Bindings) ->
 	{ok, Handler, Opts, Bindings, HostInfo, undefined};
 match_path([{<<"*">>, _, Handler, Opts}|_Tail], HostInfo, <<"*">>, Bindings) ->
 	{ok, Handler, Opts, Bindings, HostInfo, undefined};
+match_path([_|Tail], HostInfo, <<"*">>, Bindings) ->
+	match_path(Tail, HostInfo, <<"*">>, Bindings);
 match_path([{PathMatch, Fields, Handler, Opts}|Tail], HostInfo, Tokens,
 		Bindings) when is_list(Tokens) ->
 	case list_match(Tokens, PathMatch, Bindings) of
@@ -325,9 +332,8 @@ split_path(Path, Acc) ->
 				<< Segment:Pos/binary, _:8, Rest/bits >> = Path,
 				split_path(Rest, [Segment|Acc])
 		end
-	catch
-		error:badarg ->
-			badrequest
+	catch error:_ ->
+		badrequest
 	end.
 
 remove_dot_segments([], Acc) ->
@@ -426,13 +432,18 @@ compile_test_() ->
 					{[<<"horses">>], [], h, o},
 					{[<<"hats">>], [], h, o},
 					{[<<"hats">>, <<"page">>, number], [], h, o}]}]},
+		{[{'_', [{"/hats/:page/:number", h, o}]}], [{'_', [], [
+			{[<<"hats">>, page, number], [], h, o}]}]},
 		{[{'_', [{"/hats/[page/[:number]]", h, o}]}], [{'_', [], [
 			{[<<"hats">>], [], h, o},
 			{[<<"hats">>, <<"page">>], [], h, o},
 			{[<<"hats">>, <<"page">>, number], [], h, o}]}]},
 		{[{"[...]ninenines.eu", [{"/hats/[...]", h, o}]}],
 			[{[<<"eu">>, <<"ninenines">>, '...'], [], [
-				{[<<"hats">>, '...'], [], h, o}]}]}
+				{[<<"hats">>, '...'], [], h, o}]}]},
+		%% Path segment containing a colon.
+		{[{'_', [{"/foo/bar:blah", h, o}]}], [{'_', [], [
+			{[<<"foo">>, <<"bar:blah">>], [], h, o}]}]}
 	],
 	[{lists:flatten(io_lib:format("~p", [Rt])),
 		fun() -> Rs = compile(Rt) end} || {Rt, Rs} <- Tests].

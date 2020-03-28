@@ -15,9 +15,17 @@
 -module(cowboy_loop).
 -behaviour(cowboy_sub_protocol).
 
+-ifdef(OTP_RELEASE).
+-compile({nowarn_deprecated_function, [{erlang, get_stacktrace, 0}]}).
+-endif.
+
 -export([upgrade/4]).
 -export([upgrade/5]).
 -export([loop/4]).
+
+-export([system_continue/3]).
+-export([system_terminate/4]).
+-export([system_code_change/4]).
 
 -callback init(Req, any())
 	-> {ok | module(), Req, any()}
@@ -49,8 +57,18 @@ upgrade(Req, Env, Handler, HandlerState, hibernate) ->
 	-> {ok, Req, Env} | {suspend, ?MODULE, loop, [any()]}
 	when Req::cowboy_req:req(), Env::cowboy_middleware:env().
 %% @todo Handle system messages.
-loop(Req, Env, Handler, HandlerState) ->
+loop(Req=#{pid := Parent}, Env, Handler, HandlerState) ->
 	receive
+		%% System messages.
+		{'EXIT', Parent, Reason} ->
+			terminate(Req, Env, Handler, HandlerState, Reason);
+		{system, From, Request} ->
+			sys:handle_system_msg(Request, From, Parent, ?MODULE, [],
+				{Req, Env, Handler, HandlerState});
+		%% Calls from supervisor module.
+		{'$gen_call', From, Call} ->
+			cowboy_children:handle_supervisor_call(Call, From, [], ?MODULE),
+			loop(Req, Env, Handler, HandlerState);
 		Message ->
 			call(Req, Env, Handler, HandlerState, Message)
 	end.
@@ -64,8 +82,9 @@ call(Req0, Env, Handler, HandlerState0, Message) ->
 		{stop, Req, HandlerState} ->
 			terminate(Req, Env, Handler, HandlerState, stop)
 	catch Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
 		cowboy_handler:terminate({crash, Class, Reason}, Req0, HandlerState0, Handler),
-		erlang:raise(Class, Reason, erlang:get_stacktrace())
+		erlang:raise(Class, Reason, StackTrace)
 	end.
 
 suspend(Req, Env, Handler, HandlerState) ->
@@ -74,3 +93,21 @@ suspend(Req, Env, Handler, HandlerState) ->
 terminate(Req, Env, Handler, HandlerState, Reason) ->
 	Result = cowboy_handler:terminate(Reason, Req, HandlerState, Handler),
 	{ok, Req, Env#{result => Result}}.
+
+%% System callbacks.
+
+-spec system_continue(_, _, {Req, Env, module(), any()})
+	-> {ok, Req, Env} | {suspend, ?MODULE, loop, [any()]}
+	when Req::cowboy_req:req(), Env::cowboy_middleware:env().
+system_continue(_, _, {Req, Env, Handler, HandlerState}) ->
+	loop(Req, Env, Handler, HandlerState).
+
+-spec system_terminate(any(), _, _, {Req, Env, module(), any()})
+	-> {ok, Req, Env} when Req::cowboy_req:req(), Env::cowboy_middleware:env().
+system_terminate(Reason, _, _, {Req, Env, Handler, HandlerState}) ->
+	terminate(Req, Env, Handler, HandlerState, Reason).
+
+-spec system_code_change(Misc, _, _, _) -> {ok, Misc}
+	when Misc::{cowboy_req:req(), cowboy_middleware:env(), module(), any()}.
+system_code_change(Misc, _, _, _) ->
+	{ok, Misc}.

@@ -20,6 +20,10 @@
 -module(cowboy_handler).
 -behaviour(cowboy_middleware).
 
+-ifdef(OTP_RELEASE).
+-compile({nowarn_deprecated_function, [{erlang, get_stacktrace, 0}]}).
+-endif.
+
 -export([execute/2]).
 -export([terminate/4]).
 
@@ -28,7 +32,7 @@
 	| {module(), Req, any(), any()}
 	when Req::cowboy_req:req().
 
--callback terminate(any(), cowboy_req:req(), any()) -> ok.
+-callback terminate(any(), map(), any()) -> ok.
 -optional_callbacks([terminate/3]).
 
 -spec execute(Req, Env) -> {ok, Req, Env}
@@ -43,8 +47,9 @@ execute(Req, Env=#{handler := Handler, handler_opts := HandlerOpts}) ->
 		{Mod, Req2, State, Opts} ->
 			Mod:upgrade(Req2, Env, Handler, State, Opts)
 	catch Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
 		terminate({crash, Class, Reason}, Req, HandlerOpts, Handler),
-		erlang:raise(Class, Reason, erlang:get_stacktrace())
+		erlang:raise(Class, Reason, StackTrace)
 	end.
 
 -spec terminate(any(), Req | undefined, any(), module()) -> ok when Req::cowboy_req:req().

@@ -4,7 +4,7 @@ use Mix.Project
   def project do
     [
       app: :jsx,
-      version: "2.8.2",
+      version: "2.9.0",
       description: "an erlang application for consuming, producing and manipulating json. inspired by yajl",
       deps: deps(Mix.env),
       package: package(),
@@ -36,7 +36,6 @@ use Mix.Project
         "src"
       ],
       contributors: ["alisdair sullivan"],
-      maintainers: ["@talentdeficit"],
       links: %{"github" => "https://github.com/talentdeficit/jsx"},
       licenses: ["MIT"]
     ]

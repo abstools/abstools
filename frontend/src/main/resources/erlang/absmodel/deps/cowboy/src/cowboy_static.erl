@@ -19,15 +19,18 @@
 -export([malformed_request/2]).
 -export([forbidden/2]).
 -export([content_types_provided/2]).
+-export([charsets_provided/2]).
+-export([ranges_provided/2]).
 -export([resource_exists/2]).
 -export([last_modified/2]).
 -export([generate_etag/2]).
 -export([get_file/2]).
 
+-type extra_charset() :: {charset, module(), function()} | {charset, binary()}.
 -type extra_etag() :: {etag, module(), function()} | {etag, false}.
 -type extra_mimetypes() :: {mimetypes, module(), function()}
 	| {mimetypes, binary() | {binary(), binary(), [{binary(), binary()}]}}.
--type extra() :: [extra_etag() | extra_mimetypes()].
+-type extra() :: [extra_charset() | extra_etag() | extra_mimetypes()].
 -type opts() :: {file | dir, string() | binary()}
 	| {file | dir, string() | binary(), extra()}
 	| {priv_file | priv_dir, atom(), string() | binary()}
@@ -116,32 +119,51 @@ init_dir(Req, Path, HowToAccess, Extra) when is_list(Path) ->
 	init_dir(Req, list_to_binary(Path), HowToAccess, Extra);
 init_dir(Req, Path, HowToAccess, Extra) ->
 	Dir = fullpath(filename:absname(Path)),
-	PathInfo = cowboy_req:path_info(Req),
-	Filepath = filename:join([Dir|[escape_reserved(P, <<>>) || P <- PathInfo]]),
-	Len = byte_size(Dir),
-	case fullpath(Filepath) of
-		<< Dir:Len/binary, $/, _/binary >> ->
-			init_info(Req, Filepath, HowToAccess, Extra);
-		<< Dir:Len/binary >> ->
-			init_info(Req, Filepath, HowToAccess, Extra);
-		_ ->
-			{cowboy_rest, Req, error}
+	case cowboy_req:path_info(Req) of
+		%% When dir/priv_dir are used and there is no path_info
+		%% this is a configuration error and we abort immediately.
+		undefined ->
+			{ok, cowboy_req:reply(500, Req), error};
+		PathInfo ->
+			case validate_reserved(PathInfo) of
+				error ->
+					{cowboy_rest, Req, error};
+				ok ->
+					Filepath = filename:join([Dir|PathInfo]),
+					Len = byte_size(Dir),
+					case fullpath(Filepath) of
+						<< Dir:Len/binary, $/, _/binary >> ->
+							init_info(Req, Filepath, HowToAccess, Extra);
+						<< Dir:Len/binary >> ->
+							init_info(Req, Filepath, HowToAccess, Extra);
+						_ ->
+							{cowboy_rest, Req, error}
+					end
+			end
 	end.
 
-%% We escape the slash found in path segments because
-%% a segment corresponds to a directory entry, and
-%% therefore those slashes are expected to be part of
-%% the directory name.
-%%
-%% Note that on most systems the slash is prohibited
-%% and cannot appear in filenames, which means the
-%% requested file will end up being not found.
-escape_reserved(<<>>, Acc) ->
-	Acc;
-escape_reserved(<< $/, Rest/bits >>, Acc) ->
-	escape_reserved(Rest, << Acc/binary, $\\, $/ >>);
-escape_reserved(<< C, Rest/bits >>, Acc) ->
-	escape_reserved(Rest, << Acc/binary, C >>).
+validate_reserved([]) ->
+	ok;
+validate_reserved([P|Tail]) ->
+	case validate_reserved1(P) of
+		ok -> validate_reserved(Tail);
+		error -> error
+	end.
+
+%% We always reject forward slash, backward slash and NUL as
+%% those have special meanings across the supported platforms.
+%% We could support the backward slash on some platforms but
+%% for the sake of consistency and simplicity we don't.
+validate_reserved1(<<>>) ->
+	ok;
+validate_reserved1(<<$/, _/bits>>) ->
+	error;
+validate_reserved1(<<$\\, _/bits>>) ->
+	error;
+validate_reserved1(<<0, _/bits>>) ->
+	error;
+validate_reserved1(<<_, Rest/bits>>) ->
+	validate_reserved1(Rest).
 
 fullpath(Path) ->
 	fullpath(filename:split(Path), []).
@@ -284,7 +306,7 @@ bad_path_win32_check_test_() ->
 -endif.
 
 %% Reject requests that tried to access a file outside
-%% the target directory.
+%% the target directory, or used reserved characters.
 
 -spec malformed_request(Req, State)
 	-> {boolean(), Req, State}.
@@ -312,7 +334,7 @@ forbidden(Req, State) ->
 -spec content_types_provided(Req, State)
 	-> {[{binary(), get_file}], Req, State}
 	when State::state().
-content_types_provided(Req, State={Path, _, Extra}) ->
+content_types_provided(Req, State={Path, _, Extra}) when is_list(Extra) ->
 	case lists:keyfind(mimetypes, 1, Extra) of
 		false ->
 			{[{cow_mimetypes:web(Path), get_file}], Req, State};
@@ -321,6 +343,30 @@ content_types_provided(Req, State={Path, _, Extra}) ->
 		{mimetypes, Type} ->
 			{[{Type, get_file}], Req, State}
 	end.
+
+%% Detect the charset of the file.
+
+-spec charsets_provided(Req, State)
+	-> {[binary()], Req, State}
+	when State::state().
+charsets_provided(Req, State={Path, _, Extra}) ->
+	case lists:keyfind(charset, 1, Extra) of
+		%% We simulate the callback not being exported.
+		false ->
+			no_call;
+		{charset, Module, Function} ->
+			{[Module:Function(Path)], Req, State};
+		{charset, Charset} when is_binary(Charset) ->
+			{[Charset], Req, State}
+	end.
+
+%% Enable support for range requests.
+
+-spec ranges_provided(Req, State)
+	-> {[{binary(), auto}], Req, State}
+	when State::state().
+ranges_provided(Req, State) ->
+	{[{<<"bytes">>, auto}], Req, State}.
 
 %% Assume the resource doesn't exist if it's not a regular file.
 

@@ -29,25 +29,29 @@
 	:: {response, cowboy:http_status(), cowboy:http_headers(), cowboy_req:resp_body()}.
 -export_type([resp_command/0]).
 
--type commands() :: [resp_command()
+-type commands() :: [{inform, cowboy:http_status(), cowboy:http_headers()}
+	| resp_command()
 	| {headers, cowboy:http_status(), cowboy:http_headers()}
-	| {data, fin(), iodata()}
+	| {data, fin(), cowboy_req:resp_body()}
+	| {trailers, cowboy:http_headers()}
 	| {push, binary(), binary(), binary(), inet:port_number(),
 		binary(), binary(), cowboy:http_headers()}
-	| {flow, auto | integer()}
+	| {flow, pos_integer()}
 	| {spawn, pid(), timeout()}
 	| {error_response, cowboy:http_status(), cowboy:http_headers(), iodata()}
 	| {switch_protocol, cowboy:http_headers(), module(), state()}
 	| {internal_error, any(), human_reason()}
+	| {set_options, map()}
+	| {log, logger:level(), io:format(), list()}
 	| stop].
 -export_type([commands/0]).
 
--type reason() :: normal
+-type reason() :: normal | switch_protocol
 	| {internal_error, timeout | {error | exit | throw, any()}, human_reason()}
 	| {socket_error, closed | atom(), human_reason()}
 	| {stream_error, cow_http2:error(), human_reason()}
 	| {connection_error, cow_http2:error(), human_reason()}
-	| {stop, cow_http2:frame(), human_reason()}.
+	| {stop, cow_http2:frame() | {exit, any()}, human_reason()}.
 -export_type([reason/0]).
 
 -type partial_req() :: map(). %% @todo Take what's in cowboy_req with everything? optional.
@@ -76,6 +80,7 @@
 -export([info/3]).
 -export([terminate/3]).
 -export([early_error/5]).
+-export([make_error_log/5]).
 
 %% Note that this and other functions in this module do NOT catch
 %% exceptions. We want the exception to go all the way down to the
@@ -144,3 +149,45 @@ early_error(StreamID, Reason, PartialReq, Resp, Opts) ->
 			Handler:early_error(StreamID, Reason,
 				PartialReq, Resp, Opts#{stream_handlers => Tail})
 	end.
+
+-spec make_error_log(init | data | info | terminate | early_error,
+	list(), error | exit | throw, any(), list())
+	-> {log, error, string(), list()}.
+make_error_log(init, [StreamID, Req, Opts], Class, Exception, Stacktrace) ->
+	{log, error,
+		"Unhandled exception ~p:~p in cowboy_stream:init(~p, Req, Opts)~n"
+		"Stacktrace: ~p~n"
+		"Req: ~p~n"
+		"Opts: ~p~n",
+		[Class, Exception, StreamID, Stacktrace, Req, Opts]};
+make_error_log(data, [StreamID, IsFin, Data, State], Class, Exception, Stacktrace) ->
+	{log, error,
+		"Unhandled exception ~p:~p in cowboy_stream:data(~p, ~p, Data, State)~n"
+		"Stacktrace: ~p~n"
+		"Data: ~p~n"
+		"State: ~p~n",
+		[Class, Exception, StreamID, IsFin, Stacktrace, Data, State]};
+make_error_log(info, [StreamID, Msg, State], Class, Exception, Stacktrace) ->
+	{log, error,
+		"Unhandled exception ~p:~p in cowboy_stream:info(~p, Msg, State)~n"
+		"Stacktrace: ~p~n"
+		"Msg: ~p~n"
+		"State: ~p~n",
+		[Class, Exception, StreamID, Stacktrace, Msg, State]};
+make_error_log(terminate, [StreamID, Reason, State], Class, Exception, Stacktrace) ->
+	{log, error,
+		"Unhandled exception ~p:~p in cowboy_stream:terminate(~p, Reason, State)~n"
+		"Stacktrace: ~p~n"
+		"Reason: ~p~n"
+		"State: ~p~n",
+		[Class, Exception, StreamID, Stacktrace, Reason, State]};
+make_error_log(early_error, [StreamID, Reason, PartialReq, Resp, Opts],
+		Class, Exception, Stacktrace) ->
+	{log, error,
+		"Unhandled exception ~p:~p in cowboy_stream:early_error(~p, Reason, PartialReq, Resp, Opts)~n"
+		"Stacktrace: ~p~n"
+		"Reason: ~p~n"
+		"PartialReq: ~p~n"
+		"Resp: ~p~n"
+		"Opts: ~p~n",
+		[Class, Exception, StreamID, Stacktrace, Reason, PartialReq, Resp, Opts]}.

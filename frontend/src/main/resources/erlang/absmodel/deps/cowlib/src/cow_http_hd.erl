@@ -1,4 +1,4 @@
-%% Copyright (c) 2014-2015, Loïc Hoguin <essen@ninenines.eu>
+%% Copyright (c) 2014-2018, Loïc Hoguin <essen@ninenines.eu>
 %%
 %% Permission to use, copy, modify, and/or distribute this software for any
 %% purpose with or without fee is hereby granted, provided that the above
@@ -241,7 +241,21 @@ media_range_param_sep(<< C, R/bits >>, Acc, T, S, P) when ?IS_WS(C) -> media_ran
 
 media_range_before_param(<< C, R/bits >>, Acc, T, S, P) when ?IS_WS(C) -> media_range_before_param(R, Acc, T, S, P);
 media_range_before_param(<< $q, $=, R/bits >>, Acc, T, S, P) -> media_range_weight(R, Acc, T, S, P);
+media_range_before_param(<< "charset=", $", R/bits >>, Acc, T, S, P) -> media_range_charset_quoted(R, Acc, T, S, P, <<>>);
+media_range_before_param(<< "charset=", R/bits >>, Acc, T, S, P) -> media_range_charset(R, Acc, T, S, P, <<>>);
 media_range_before_param(<< C, R/bits >>, Acc, T, S, P) when ?IS_TOKEN(C) -> ?LOWER(media_range_param, R, Acc, T, S, P, <<>>).
+
+media_range_charset_quoted(<< $", R/bits >>, Acc, T, S, P, V) ->
+	media_range_param_sep(R, Acc, T, S, [{<<"charset">>, V}|P]);
+media_range_charset_quoted(<< $\\, C, R/bits >>, Acc, T, S, P, V) when ?IS_VCHAR_OBS(C) ->
+	?LOWER(media_range_charset_quoted, R, Acc, T, S, P, V);
+media_range_charset_quoted(<< C, R/bits >>, Acc, T, S, P, V) when ?IS_VCHAR_OBS(C) ->
+	?LOWER(media_range_charset_quoted, R, Acc, T, S, P, V).
+
+media_range_charset(<< C, R/bits >>, Acc, T, S, P, V) when ?IS_TOKEN(C) ->
+	?LOWER(media_range_charset, R, Acc, T, S, P, V);
+media_range_charset(R, Acc, T, S, P, V) ->
+	media_range_param_sep(R, Acc, T, S, [{<<"charset">>, V}|P]).
 
 media_range_param(<< $=, $", R/bits >>, Acc, T, S, P, K) -> media_range_quoted(R, Acc, T, S, P, K, <<>>);
 media_range_param(<< $=, C, R/bits >>, Acc, T, S, P, K) when ?IS_TOKEN(C) -> media_range_value(R, Acc, T, S, P, K, << C >>);
@@ -299,15 +313,24 @@ accept_value(R, Acc, T, S, P, Q, E, K, V) -> accept_ext_sep(R, Acc, T, S, P, Q, 
 accept_ext() ->
 	oneof([token(), parameter()]).
 
-accept_params() ->
+accept_exts() ->
 	frequency([
 		{90, []},
 		{10, small_list(accept_ext())}
 	]).
 
+accept_param() ->
+	frequency([
+		{90, parameter()},
+		{10, {<<"charset">>, oneof([token(), quoted_string()]), <<>>, <<>>}}
+	]).
+
+accept_params() ->
+	small_list(accept_param()).
+
 accept() ->
 	?LET({T, S, P, W, E},
-		{token(), token(), small_list(parameter()), weight(), accept_params()},
+		{token(), token(), accept_params(), weight(), accept_exts()},
 		{T, S, P, W, E, iolist_to_binary([T, $/, S,
 			[[OWS1, $;, OWS2, K, $=, V] || {K, V, OWS1, OWS2} <- P],
 			case W of
@@ -328,7 +351,10 @@ prop_parse_accept() ->
 			<< _, Accept/binary >> = iolist_to_binary([[$,, A] || {_, _, _, _, _, A} <- L]),
 			ResL = parse_accept(Accept),
 			CheckedL = [begin
-				ExpectedP = [{?LOWER(K), unquote(V)} || {K, V, _, _} <- P],
+				ExpectedP = [case ?LOWER(K) of
+					<<"charset">> -> {<<"charset">>, ?LOWER(unquote(V))};
+					LowK -> {LowK, unquote(V)}
+				end || {K, V, _, _} <- P],
 				ExpectedE = [case Ext of
 					{K, V, _, _} -> {?LOWER(K), unquote(V)};
 					K -> ?LOWER(K)
@@ -385,6 +411,9 @@ parse_accept_test_() ->
 			{{<<"image">>, <<"jpeg">>, []}, 1000, []},
 			{{<<"*">>, <<"*">>, []}, 200, []},
 			{{<<"*">>, <<"*">>, []}, 200, []}
+		]},
+		{<<"text/plain; charset=UTF-8">>, [
+			{{<<"text">>, <<"plain">>, [{<<"charset">>, <<"utf-8">>}]}, 1000, []}
 		]}
 	],
 	[{V, fun() -> R = parse_accept(V) end} || {V, R} <- Tests].
@@ -858,12 +887,22 @@ horse_parse_allow() ->
 	-> {basic, binary(), binary()}
 	| {bearer, binary()}
 	| {digest, [{binary(), binary()}]}.
-parse_authorization(<<"Basic ", R/bits >>) ->
+parse_authorization(<<B, A, S, I, C, " ", R/bits >>)
+		when ((B =:= $B) or (B =:= $b)), ((A =:= $A) or (A =:= $a)),
+			((S =:= $S) or (S =:= $s)), ((I =:= $I) or (I =:= $i)),
+			((C =:= $C) or (C =:= $c)) ->
 	auth_basic(base64:decode(R), <<>>);
-parse_authorization(<<"Bearer ", R/bits >>) when R =/= <<>> ->
+parse_authorization(<<B, E1, A, R1, E2, R2, " ", R/bits >>)
+		when (R =/= <<>>), ((B =:= $B) or (B =:= $b)),
+			((E1 =:= $E) or (E1 =:= $e)), ((A =:= $A) or (A =:= $a)),
+			((R1 =:= $R) or (R1 =:= $r)), ((E2 =:= $E) or (E2 =:= $e)),
+			((R2 =:= $R) or (R2 =:= $r)) ->
 	validate_auth_bearer(R),
 	{bearer, R};
-parse_authorization(<<"Digest ", R/bits >>) ->
+parse_authorization(<<D, I, G, E, S, T, " ", R/bits >>)
+		when ((D =:= $D) or (D =:= $d)), ((I =:= $I) or (I =:= $i)),
+			((G =:= $G) or (G =:= $g)), ((E =:= $E) or (E =:= $e)),
+			((S =:= $S) or (S =:= $s)), ((T =:= $T) or (T =:= $t)) ->
 	{digest, nonempty(auth_digest_list(R, []))}.
 
 auth_basic(<< $:, Password/bits >>, UserID) -> {basic, UserID, Password};
@@ -914,7 +953,9 @@ auth_digest_list_sep(<< C, R/bits >>, Acc) when ?IS_WS(C) -> auth_digest_list_se
 parse_authorization_test_() ->
 	Tests = [
 		{<<"Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==">>, {basic, <<"Aladdin">>, <<"open sesame">>}},
+		{<<"bAsIc QWxhZGRpbjpvcGVuIHNlc2FtZQ==">>, {basic, <<"Aladdin">>, <<"open sesame">>}},
 		{<<"Bearer mF_9.B5f-4.1JqM">>, {bearer, <<"mF_9.B5f-4.1JqM">>}},
+		{<<"bEaRer mF_9.B5f-4.1JqM">>, {bearer, <<"mF_9.B5f-4.1JqM">>}},
 		{<<"Digest username=\"Mufasa\","
 				"realm=\"testrealm@host.com\","
 				"nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\","
@@ -2624,12 +2665,13 @@ parse_sec_websocket_key(SecWebSocketKey) ->
 
 -spec parse_sec_websocket_protocol_req(binary()) -> [binary()].
 parse_sec_websocket_protocol_req(SecWebSocketProtocol) ->
-	nonempty(token_ci_list(SecWebSocketProtocol, [])).
+	nonempty(token_list(SecWebSocketProtocol, [])).
 
 -ifdef(TEST).
 parse_sec_websocket_protocol_req_test_() ->
 	Tests = [
-		{<<"chat, superchat">>, [<<"chat">>, <<"superchat">>]}
+		{<<"chat, superchat">>, [<<"chat">>, <<"superchat">>]},
+		{<<"Chat, SuperChat">>, [<<"Chat">>, <<"SuperChat">>]}
 	],
 	[{V, fun() -> R = parse_sec_websocket_protocol_req(V) end} || {V, R} <- Tests].
 
@@ -2649,23 +2691,21 @@ horse_parse_sec_websocket_protocol_req() ->
 %% @doc Parse the Sec-Websocket-Protocol response header.
 
 -spec parse_sec_websocket_protocol_resp(binary()) -> binary().
-parse_sec_websocket_protocol_resp(<< C, R/bits >>) when ?IS_TOKEN(C) ->
-	?LOWER(token_ci, R, <<>>).
-
-token_ci(<<>>, T) -> T;
-token_ci(<< C, R/bits >>, T) when ?IS_TOKEN(C) ->
-	?LOWER(token_ci, R, T).
+parse_sec_websocket_protocol_resp(Protocol) ->
+	true = <<>> =/= Protocol,
+	ok = validate_token(Protocol),
+	Protocol.
 
 -ifdef(TEST).
 prop_parse_sec_websocket_protocol_resp() ->
 	?FORALL(T,
 		token(),
-		?LOWER(T) =:= parse_sec_websocket_protocol_resp(T)).
+		T =:= parse_sec_websocket_protocol_resp(T)).
 
 parse_sec_websocket_protocol_resp_test_() ->
 	Tests = [
 		{<<"chat">>, <<"chat">>},
-		{<<"CHAT">>, <<"chat">>}
+		{<<"CHAT">>, <<"CHAT">>}
 	],
 	[{V, fun() -> R = parse_sec_websocket_protocol_resp(V) end} || {V, R} <- Tests].
 
@@ -3202,13 +3242,53 @@ horse_parse_www_authenticate() ->
 
 -spec parse_x_forwarded_for(binary()) -> [binary()].
 parse_x_forwarded_for(XForwardedFor) ->
-	nonempty(token_list(XForwardedFor, [])).
+	nonempty(nodeid_list(XForwardedFor, [])).
+
+-define(IS_NODEID_TOKEN(C),
+	?IS_ALPHA(C) or ?IS_DIGIT(C)
+		or (C =:= $:) or (C =:= $.) or (C =:= $_)
+		or (C =:= $-) or (C =:= $[) or (C =:= $])).
+
+nodeid_list(<<>>, Acc) -> lists:reverse(Acc);
+nodeid_list(<<C, R/bits>>, Acc) when ?IS_WS_COMMA(C) -> nodeid_list(R, Acc);
+nodeid_list(<<C, R/bits>>, Acc) when ?IS_NODEID_TOKEN(C) -> nodeid(R, Acc, <<C>>).
+
+nodeid(<<C, R/bits>>, Acc, T) when ?IS_NODEID_TOKEN(C) -> nodeid(R, Acc, <<T/binary, C>>);
+nodeid(R, Acc, T) -> nodeid_list_sep(R, [T|Acc]).
+
+nodeid_list_sep(<<>>, Acc) -> lists:reverse(Acc);
+nodeid_list_sep(<<C, R/bits>>, Acc) when ?IS_WS(C) -> nodeid_list_sep(R, Acc);
+nodeid_list_sep(<<$,, R/bits>>, Acc) -> nodeid_list(R, Acc).
 
 -ifdef(TEST).
 parse_x_forwarded_for_test_() ->
 	Tests = [
-		{<<"client, proxy1, proxy2">>, [<<"client">>, <<"proxy1">>, <<"proxy2">>]},
-		{<<"128.138.243.150, unknown, 192.52.106.30">>, [<<"128.138.243.150">>, <<"unknown">>, <<"192.52.106.30">>]}
+		{<<"client, proxy1, proxy2">>,
+			[<<"client">>, <<"proxy1">>, <<"proxy2">>]},
+		{<<"128.138.243.150, unknown, 192.52.106.30">>,
+			[<<"128.138.243.150">>, <<"unknown">>, <<"192.52.106.30">>]},
+		%% Examples from Mozilla DN.
+		{<<"2001:db8:85a3:8d3:1319:8a2e:370:7348">>,
+			[<<"2001:db8:85a3:8d3:1319:8a2e:370:7348">>]},
+		{<<"203.0.113.195">>,
+			[<<"203.0.113.195">>]},
+		{<<"203.0.113.195, 70.41.3.18, 150.172.238.178">>,
+			[<<"203.0.113.195">>, <<"70.41.3.18">>, <<"150.172.238.178">>]},
+		%% Examples from RFC7239 modified for x-forwarded-for.
+		{<<"[2001:db8:cafe::17]:4711">>,
+			[<<"[2001:db8:cafe::17]:4711">>]},
+		{<<"192.0.2.43, 198.51.100.17">>,
+			[<<"192.0.2.43">>, <<"198.51.100.17">>]},
+		{<<"_hidden">>,
+			[<<"_hidden">>]},
+		{<<"192.0.2.43,[2001:db8:cafe::17],unknown">>,
+			[<<"192.0.2.43">>, <<"[2001:db8:cafe::17]">>, <<"unknown">>]},
+		{<<"192.0.2.43, [2001:db8:cafe::17], unknown">>,
+			[<<"192.0.2.43">>, <<"[2001:db8:cafe::17]">>, <<"unknown">>]},
+		{<<"192.0.2.43, 2001:db8:cafe::17">>,
+			[<<"192.0.2.43">>, <<"2001:db8:cafe::17">>]},
+		{<<"192.0.2.43, [2001:db8:cafe::17]">>,
+			[<<"192.0.2.43">>, <<"[2001:db8:cafe::17]">>]}
 	],
 	[{V, fun() -> R = parse_x_forwarded_for(V) end} || {V, R} <- Tests].
 

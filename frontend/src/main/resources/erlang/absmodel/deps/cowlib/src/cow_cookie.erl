@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2015, Loïc Hoguin <essen@ninenines.eu>
+%% Copyright (c) 2013-2018, Loïc Hoguin <essen@ninenines.eu>
 %%
 %% Permission to use, copy, modify, and/or distribute this software for any
 %% purpose with or without fee is hereby granted, provided that the above
@@ -17,10 +17,14 @@
 -export([parse_cookie/1]).
 -export([setcookie/3]).
 
--type cookie_option() :: {max_age, non_neg_integer()}
-	| {domain, binary()} | {path, binary()}
-	| {secure, boolean()} | {http_only, boolean()}.
--type cookie_opts() :: [cookie_option()].
+-type cookie_opts() :: #{
+	domain => binary(),
+	http_only => boolean(),
+	max_age => non_neg_integer(),
+	path => binary(),
+	same_site => lax | strict,
+	secure => boolean()
+}.
 -export_type([cookie_opts/0]).
 
 %% @doc Parse a cookie header string and return a list of key/values.
@@ -53,16 +57,16 @@ skip_cookie(<< $;, Rest/binary >>, Acc) ->
 skip_cookie(<< _, Rest/binary >>, Acc) ->
 	skip_cookie(Rest, Acc).
 
-parse_cookie_name(<<>>, _, _) ->
-	error(badarg);
+parse_cookie_name(<<>>, Acc, Name) ->
+	lists:reverse([{Name, <<>>}|Acc]);
 parse_cookie_name(<< $=, _/binary >>, _, <<>>) ->
 	error(badarg);
 parse_cookie_name(<< $=, Rest/binary >>, Acc, Name) ->
 	parse_cookie_value(Rest, Acc, Name, <<>>);
 parse_cookie_name(<< $,, _/binary >>, _, _) ->
 	error(badarg);
-parse_cookie_name(<< $;, _/binary >>, _, _) ->
-	error(badarg);
+parse_cookie_name(<< $;, Rest/binary >>, Acc, Name) ->
+	parse_cookie(Rest, [{Name, <<>>}|Acc]);
 parse_cookie_name(<< $\s, _/binary >>, _, _) ->
 	error(badarg);
 parse_cookie_name(<< $\t, _/binary >>, _, _) ->
@@ -151,8 +155,14 @@ parse_cookie_test_() ->
 		{<<"foo=;bar=">>, [{<<"foo">>, <<>>}, {<<"bar">>, <<>>}]},
 		{<<"foo=\\\";;bar=good ">>,
 			[{<<"foo">>, <<"\\\"">>}, {<<"bar">>, <<"good">>}]},
+		{<<"foo=\"\\\";bar=good">>,
+			[{<<"foo">>, <<"\"\\\"">>}, {<<"bar">>, <<"good">>}]},
 		{<<>>, []}, %% Flash player.
-		{<<"foo=bar , baz=wibble ">>, [{<<"foo">>, <<"bar , baz=wibble">>}]}
+		{<<"foo=bar , baz=wibble ">>, [{<<"foo">>, <<"bar , baz=wibble">>}]},
+		%% Technically invalid, but seen in the wild
+		{<<"foo">>, [{<<"foo">>, <<>>}]},
+		{<<"foo;">>, [{<<"foo">>, <<>>}]},
+		{<<"bar;foo=1">>, [{<<"bar">>, <<"">>}, {<<"foo">>, <<"1">>}]}
 	],
 	[{V, fun() -> R = parse_cookie(V) end} || {V, R} <- Tests].
 
@@ -160,9 +170,7 @@ parse_cookie_error_test_() ->
 	%% Value.
 	Tests = [
 		<<"=">>,
-		<<"  foo ; bar  ">>,
-		<<"foo=\\\";;bar ">>,
-		<<"foo=\"\\\";bar">>
+		<<"foo ">>
 	],
 	[{V, fun() -> {'EXIT', {badarg, _}} = (catch parse_cookie(V)) end} || V <- Tests].
 -endif.
@@ -175,64 +183,60 @@ parse_cookie_error_test_() ->
 %% Initial binary implementation:
 %%   * Copyright 2011 Thomas Burdick <thomas.burdick@gmail.com>
 
--spec setcookie(iodata(), iodata(), cookie_opts()) -> iodata().
+-spec setcookie(iodata(), iodata(), cookie_opts()) -> iolist().
 setcookie(Name, Value, Opts) ->
 	nomatch = binary:match(iolist_to_binary(Name), [<<$=>>, <<$,>>, <<$;>>,
 			<<$\s>>, <<$\t>>, <<$\r>>, <<$\n>>, <<$\013>>, <<$\014>>]),
 	nomatch = binary:match(iolist_to_binary(Value), [<<$,>>, <<$;>>,
 			<<$\s>>, <<$\t>>, <<$\r>>, <<$\n>>, <<$\013>>, <<$\014>>]),
-	MaxAgeBin = case lists:keyfind(max_age, 1, Opts) of
-		false -> <<>>;
-		{_, 0} ->
-			%% MSIE requires an Expires date in the past to delete a cookie.
-			<<"; Expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0">>;
-		{_, MaxAge} when is_integer(MaxAge), MaxAge > 0 ->
-			UTC = calendar:universal_time(),
-			Secs = calendar:datetime_to_gregorian_seconds(UTC),
-			Expires = calendar:gregorian_seconds_to_datetime(Secs + MaxAge),
-			[<<"; Expires=">>, cow_date:rfc2109(Expires),
-				<<"; Max-Age=">>, integer_to_list(MaxAge)]
-	end,
-	DomainBin = case lists:keyfind(domain, 1, Opts) of
-		false -> <<>>;
-		{_, Domain} -> [<<"; Domain=">>, Domain]
-	end,
-	PathBin = case lists:keyfind(path, 1, Opts) of
-		false -> <<>>;
-		{_, Path} -> [<<"; Path=">>, Path]
-	end,
-	SecureBin = case lists:keyfind(secure, 1, Opts) of
-		false -> <<>>;
-		{_, false} -> <<>>;
-		{_, true} -> <<"; Secure">>
-	end,
-	HttpOnlyBin = case lists:keyfind(http_only, 1, Opts) of
-		false -> <<>>;
-		{_, false} -> <<>>;
-		{_, true} -> <<"; HttpOnly">>
-	end,
-	[Name, <<"=">>, Value, <<"; Version=1">>,
-		MaxAgeBin, DomainBin, PathBin, SecureBin, HttpOnlyBin].
+	[Name, <<"=">>, Value, <<"; Version=1">>, attributes(maps:to_list(Opts))].
+
+attributes([]) -> [];
+attributes([{domain, Domain}|Tail]) -> [<<"; Domain=">>, Domain|attributes(Tail)];
+attributes([{http_only, false}|Tail]) -> attributes(Tail);
+attributes([{http_only, true}|Tail]) -> [<<"; HttpOnly">>|attributes(Tail)];
+%% MSIE requires an Expires date in the past to delete a cookie.
+attributes([{max_age, 0}|Tail]) ->
+	[<<"; Expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0">>|attributes(Tail)];
+attributes([{max_age, MaxAge}|Tail]) when is_integer(MaxAge), MaxAge > 0 ->
+	Secs = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
+	Expires = cow_date:rfc2109(calendar:gregorian_seconds_to_datetime(Secs + MaxAge)),
+	[<<"; Expires=">>, Expires, <<"; Max-Age=">>, integer_to_list(MaxAge)|attributes(Tail)];
+attributes([Opt={max_age, _}|_]) ->
+	error({badarg, Opt});
+attributes([{path, Path}|Tail]) -> [<<"; Path=">>, Path|attributes(Tail)];
+attributes([{secure, false}|Tail]) -> attributes(Tail);
+attributes([{secure, true}|Tail]) -> [<<"; Secure">>|attributes(Tail)];
+attributes([{same_site, lax}|Tail]) -> [<<"; SameSite=Lax">>|attributes(Tail)];
+attributes([{same_site, strict}|Tail]) -> [<<"; SameSite=Strict">>|attributes(Tail)];
+%% Skip unknown options.
+attributes([_|Tail]) -> attributes(Tail).
 
 -ifdef(TEST).
 setcookie_test_() ->
 	%% {Name, Value, Opts, Result}
 	Tests = [
 		{<<"Customer">>, <<"WILE_E_COYOTE">>,
-			[{http_only, true}, {domain, <<"acme.com">>}],
+			#{http_only => true, domain => <<"acme.com">>},
 			<<"Customer=WILE_E_COYOTE; Version=1; "
 				"Domain=acme.com; HttpOnly">>},
 		{<<"Customer">>, <<"WILE_E_COYOTE">>,
-			[{path, <<"/acme">>}],
+			#{path => <<"/acme">>},
 			<<"Customer=WILE_E_COYOTE; Version=1; Path=/acme">>},
 		{<<"Customer">>, <<"WILE_E_COYOTE">>,
-			[{secure, true}],
+			#{secure => true},
 			<<"Customer=WILE_E_COYOTE; Version=1; Secure">>},
 		{<<"Customer">>, <<"WILE_E_COYOTE">>,
-			[{secure, false}, {http_only, false}],
+			#{secure => false, http_only => false},
 			<<"Customer=WILE_E_COYOTE; Version=1">>},
 		{<<"Customer">>, <<"WILE_E_COYOTE">>,
-			[{path, <<"/acme">>}, {badoption, <<"negatory">>}],
+			#{same_site => lax},
+			<<"Customer=WILE_E_COYOTE; Version=1; SameSite=Lax">>},
+		{<<"Customer">>, <<"WILE_E_COYOTE">>,
+			#{same_site => strict},
+			<<"Customer=WILE_E_COYOTE; Version=1; SameSite=Strict">>},
+		{<<"Customer">>, <<"WILE_E_COYOTE">>,
+			#{path => <<"/acme">>, badoption => <<"negatory">>},
 			<<"Customer=WILE_E_COYOTE; Version=1; Path=/acme">>}
 	],
 	[{R, fun() -> R = iolist_to_binary(setcookie(N, V, O)) end}
@@ -248,20 +252,20 @@ setcookie_max_age_test() ->
 		<<" Expires=", _/binary>>,
 		<<" Max-Age=111">>,
 		<<" Secure">>] = F(<<"Customer">>, <<"WILE_E_COYOTE">>,
-			[{max_age, 111}, {secure, true}]),
-	case catch F(<<"Customer">>, <<"WILE_E_COYOTE">>, [{max_age, -111}]) of
-		{'EXIT', {{case_clause, {max_age, -111}}, _}} -> ok
+			#{max_age => 111, secure => true}),
+	case catch F(<<"Customer">>, <<"WILE_E_COYOTE">>, #{max_age => -111}) of
+		{'EXIT', {{badarg, {max_age, -111}}, _}} -> ok
 	end,
 	[<<"Customer=WILE_E_COYOTE">>,
 		<<" Version=1">>,
 		<<" Expires=", _/binary>>,
 		<<" Max-Age=86417">>] = F(<<"Customer">>, <<"WILE_E_COYOTE">>,
-			 [{max_age, 86417}]),
+			 #{max_age => 86417}),
 	ok.
 
 setcookie_failures_test_() ->
 	F = fun(N, V) ->
-		try setcookie(N, V, []) of
+		try setcookie(N, V, #{}) of
 			_ ->
 				false
 		catch _:_ ->
