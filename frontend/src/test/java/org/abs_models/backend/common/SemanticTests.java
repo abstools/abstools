@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.erlang.ErlangTestDriver;
+import org.abs_models.backend.java.JavaTestDriver;
 import org.abs_models.backend.maude.MaudeCompiler;
 import org.abs_models.backend.maude.MaudeTestDriver;
 import org.abs_models.frontend.ast.Model;
@@ -59,12 +60,8 @@ public abstract class SemanticTests {
          * not code-gen options. So we could actually just compile the code to
          * Java once, and then run it with the different options.
          */
-
-        // rudi Temporarily disabled due to gradle crash, and the Java backend
-        // being mostly unsupported in general
-
-        // data.add(new Object[] { new JavaTestDriver() });
-        // data.add(new Object[] { new JavaTestDriver(1) });
+        data.add(new Object[] { new JavaTestDriver() });
+        data.add(new Object[] { new JavaTestDriver(1) });
         /* XXX [stolz] Disabled due to non-deterministic test-runs.
          * Switch back on when Radu comes back.
          */
