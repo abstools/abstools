@@ -1017,7 +1017,6 @@ task_running(cast, {task_blocked_for_future, TaskRef, TaskInfo, ObjectState, Fut
              Data=#data{gc_waiting_to_start=GCWaitingToStart,
                         task_infos=TaskInfos,object_states=ObjectStates,
                         dc=DC, dcref=DCRef, replaying=Replaying}) ->
-    dc:cog_blocked(DCRef, self()),
     WaitReason=TaskInfo#task_info.wait_reason,
     NewTaskState=register_waiting_task_if_necessary(WaitReason, DCRef, self(), TaskRef, blocked),
     This=TaskInfo#task_info.this,
@@ -1030,8 +1029,10 @@ task_running(cast, {task_blocked_for_future, TaskRef, TaskInfo, ObjectState, Fut
                     {next_state, task_blocked,
                      Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos},
                      {next_event, cast, {task_runnable, TaskRef, none}}};
-                _ -> {next_state, task_blocked,
-                      Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}}
+                _ ->
+                    dc:cog_blocked(DCRef, self()),
+                    {next_state, task_blocked,
+                     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}}
             end;
         true ->
             gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
@@ -1041,9 +1042,11 @@ task_running(cast, {task_blocked_for_future, TaskRef, TaskInfo, ObjectState, Fut
                      Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos,
                                next_state_after_gc=task_blocked},
                      {next_event, cast, {task_runnable, TaskRef, none}}};
-                _ -> {next_state, in_gc,
-                      Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos,
-                                next_state_after_gc=task_blocked}}
+                _ ->
+                    dc:cog_blocked(DCRef, self()),
+                    {next_state, in_gc,
+                     Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos,
+                               next_state_after_gc=task_blocked}}
             end
     end;
 task_running(cast, {task_blocked_for_clock, TaskRef, TaskInfo, ObjectState,
