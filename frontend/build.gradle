@@ -95,6 +95,15 @@ task compileErlangBackend(type: Exec, dependsOn: processResources) {
     workingDir 'build/resources/main/erlang/absmodel'
     commandLine 'escript', '../bin/rebar', 'compile'
 }
+clean {
+    // This removes beam files left over after updating from old versions
+    // (e.g. v1.8.1), when we precompiled the erlang backend in `src/` instead
+    // of in `build/`.
+    delete fileTree('src/main/resources/erlang') {
+        include '**/*.beam'
+        include '**/.rebar/'
+    }
+}
 jar.dependsOn 'compileErlangBackend'
 
 // jar
