@@ -167,7 +167,7 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     coverage:write_files(),
     Status = cog_monitor:waitfor(),
     case Verbose of
-        true -> io:format("Simulation time: ~p us with status ~w~n", [timer:now_diff(erlang:timestamp(), StartTime), Status]);
+        true -> io:format("Simulation time: ~p ms with status ~w~n", [erlang:system_time(millisecond) - StartTime, Status]);
         _ -> ok
     end,
     case DumpTrace of
@@ -192,7 +192,7 @@ run_mod(Module, Verbose, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace
             start_http(Port, Module, Verbose, Debug, GCStatistics, Clocklimit, Trace),
             receive ok -> ok end;
         _ ->
-            StartTime = erlang:timestamp(),
+            StartTime = erlang:system_time(millisecond),
             {ok, R}=start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, false, Trace),
             end_mod(R, Verbose, DumpTrace, StartTime)
     end.

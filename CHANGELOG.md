@@ -10,9 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Wall-clock time for running a model is now reported in milliseconds instead  of microseconds.  (To see the elapsed time, start the model with parameter `-v`.)
+
 ### Removed
 
 ### Fixed
+
+- Fixed a potential hang in the erlang backend.
 
 ## [1.9.0] - 2020-03-25
 
