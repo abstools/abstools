@@ -45,7 +45,7 @@ export emptyMap, removeKey, values, keys, entries,
 export toString, intToString, substr, strlen;
 
 // Real-Time ABS datatypes
-export Time, timeValue, currentms, now, timeDifference, timeLessThan;
+export Time, timeValue, currentms, now, ms_since_model_start, timeDifference, timeLessThan;
 export Duration, InfDuration, durationValue, isDurationInfinite, addDuration, subtractDuration, durationLessThan, subtractFromDuration;
 export lowlevelDeadline, deadline;
 export Deadline, Critical;
@@ -547,12 +547,16 @@ def String toString<T>(T t) = builtin;
 
 // Time can be an integer value or InfTime.  Duration is aways an
 // integer.
-// 
+//
 // Durations can be added and subtracted from Times, and compared to
 // each other.  Times can be compared to each other.
 data Time = Time(Rat timeValue);
 def Rat currentms() = builtin;
 def Time now() = Time(currentms());
+
+// The time since the model is started, in milliseconds.  Used for timing /
+// benchmarking.
+def Int ms_since_model_start() = builtin;
 
 // use this like so:
 //   Time t = now(); await timeDifference(now(), t) > 5;

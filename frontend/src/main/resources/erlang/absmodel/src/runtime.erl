@@ -123,12 +123,13 @@ parse(Args,Exec)->
 start_link(Args) ->
     case Args of
         [Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace] ->
-            {ok, _T} = start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace),
+            StartTime = erlang:system_time(millisecond),
+            {ok, _T} = start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace, StartTime),
             supervisor:start_link({local, ?MODULE}, ?MODULE, []);
         _ -> {error, false}
     end.
 
-start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
+start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace, StartTime) ->
     case Verbose of
         true -> io:format(standard_error, "Start ~w~n",[Module]);
         _ -> ok
@@ -138,7 +139,7 @@ start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace) ->
     %% Init garbage collector
     {ok, _GC} = gc:start(GCStatistics, Debug),
     %% Init simulation clock
-    {ok, _Clock} = clock:start_link(Clocklimit),
+    {ok, _Clock} = clock:start_link(Clocklimit, StartTime),
     {ok, _Coverage} = coverage:start_link(),
 
     %% Bootstrap initial cog and deployment component.  In the end, `Cog' has
@@ -193,12 +194,13 @@ run_mod(Module, Verbose, Debug, GCStatistics, Port, Clocklimit, Trace, DumpTrace
             receive ok -> ok end;
         _ ->
             StartTime = erlang:system_time(millisecond),
-            {ok, R}=start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, false, Trace),
+            {ok, R}=start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, false, Trace, StartTime),
             end_mod(R, Verbose, DumpTrace, StartTime)
     end.
 
 run_dpor_slave(Module, Clocklimit, Trace) ->
-    {ok, TaskRef} = start_mod(Module, false, false, none, Clocklimit, false, Trace),
+    StartTime = erlang:system_time(millisecond),
+    {ok, TaskRef} = start_mod(Module, false, false, none, Clocklimit, false, Trace, StartTime),
     RetVal=task:join(TaskRef),
     Status = cog_monitor:waitfor(),
     NewTrace = cog_monitor:get_trace(),

@@ -115,7 +115,7 @@ aspect GenerateErlang {
   }
 
   private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
-      "ABS.StdLib.currentms", "ABS.Meta.getProductLine",
+      "ABS.StdLib.currentms", "ABS.StdLib.ms_since_model_start", "ABS.Meta.getProductLine",
       "ABS.StdLib.lowlevelDeadline", "ABS.StdLib.print", "ABS.StdLib.println",
       "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
       "ABS.DC.thisDC", "ABS.StdLib.toString",

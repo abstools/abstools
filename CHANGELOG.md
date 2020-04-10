@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The new function `ms_since_model_start` returns an integer containing the elapsed time in milliseonds since the model was started.
+
 ### Changed
 
 - Wall-clock time for running a model is now reported in milliseconds instead  of microseconds.  (To see the elapsed time, start the model with parameter `-v`.)
