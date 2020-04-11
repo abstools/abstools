@@ -5,7 +5,7 @@
 %% This should probably be changed if we want one process per COG
 
 -include_lib("../include/abs_types.hrl").
--export([start/3, stop/0, extract_references/1, get_references/1]).
+-export([start/2, stop/0, extract_references/1, get_references/1]).
 -export([register_future/1, unroot_future/1]).
 -export([register_cog/1, unregister_cog/1, cog_stopped/1]).
 -export([register_object/1,unregister_object/1]).
@@ -41,7 +41,7 @@
                cogs_waiting_to_stop=gb_sets:empty(), %used during collection
                previous=erlang:monotonic_time(milli_seconds),
                limit=?MIN_THRESH, proc_factor=?MIN_PROC_FACTOR,
-               log=false, debug=false, verbose=false,
+               debug=false, verbose=0,
                n_cycles=0}).
 
 behaviour_info(callbacks) ->
@@ -50,16 +50,16 @@ behaviour_info(_) ->
     undefined.
 
 
-start(Log, Debug, Verbose) ->
-    gen_statem:start_link({global, gc}, ?MODULE, [Log, Debug, Verbose], []).
+start(Debug, Verbose) ->
+    gen_statem:start_link({global, gc}, ?MODULE, [Debug, Verbose], []).
 
 stop() ->
     gen_statem:stop({global, gc}).
 
 gcstats(Log, Statistics) ->
     case Log of
-        true -> io:format("~p.~n",[{gcstats, erlang:monotonic_time(milli_seconds), Statistics}]);
-        false -> ok
+        _ when Log > 1 -> io:format("~p.~n",[{gcstats, erlang:monotonic_time(milli_seconds), Statistics}]);
+        _ -> ok
     end.
 
 
@@ -94,13 +94,13 @@ unregister_object(O=#object{oid=_Oid}) ->
 
 callback_mode() -> state_functions.
 
-init([Log, Debug, Verbose]) ->
-    {ok, idle, #data{log=Log, debug=Debug, verbose=Verbose}}.
+init([Debug, Verbose]) ->
+    {ok, idle, #data{debug=Debug, verbose=Verbose}}.
 
 terminate(_Reason, _State, _Data=#data{verbose=Verbose, n_cycles=NCycles}) ->
     case Verbose of
-        true -> io:format(standard_error, "GC stopping (collection cycles: ~w)~n",[NCycles]);
-        _ -> ok
+        0 -> ok;
+        _ -> io:format(standard_error, "GC stopping (collection cycles: ~w)~n",[NCycles])
     end,
     ok.
 
@@ -112,10 +112,10 @@ code_change(_OldVsn, State, Data, _Extra) ->
 
 %% idle: collect cogs and futures, possibly switch to stop_world
 
-idle_state_next(Data=#data{log=Log, cogs=Cogs, n_cycles=NCycles}) ->
+idle_state_next(Data=#data{verbose=Verbose, cogs=Cogs, n_cycles=NCycles}) ->
     case is_collection_needed(Data) of
         true ->
-            gcstats(Log, stop_world),
+            gcstats(Verbose, {stop_world, {cogs, gb_sets:size(Cogs)}}),
             gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, Cogs),
             {collecting, Data#data{cogs_waiting_to_stop=Cogs,n_cycles=NCycles+1}};
         false ->
@@ -151,15 +151,15 @@ idle(_Event, _From, Data) ->
     {stop, not_supported, Data}.
 
 
-collecting_state_next(Data=#data{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, root_futures=RootFutures, log=Log}) ->
+collecting_state_next(Data=#data{cogs_waiting_to_stop=RunningCogs, cogs=Cogs, root_futures=RootFutures, verbose=Verbose}) ->
     case gb_sets:is_empty(RunningCogs) of
         true ->
-            gcstats(Log, mark),
+            gcstats(Verbose, mark),
             Exported=gb_sets:from_list(
                        lists:map(fun(O=#object{oid=_Oid}) -> {object, O} end,
                                  cog_monitor:list_registered_http_objects())),
             Black=mark([], ordsets:from_list(gb_sets:to_list(gb_sets:union([Cogs, RootFutures, Exported])))),
-            gcstats(Log, sweep),
+            gcstats(Verbose, sweep),
             DataAfterSweep=sweep(Data, gb_sets:from_ordset(Black)),
             {idle, DataAfterSweep};
         false ->
@@ -201,16 +201,20 @@ mark(Black, Gray) ->
     mark(NewBlack, NewGray).
 
 sweep(Data=#data{cogs=Cogs,objects=Objects,futures=Futures,
-                   limit=Lim, proc_factor=PFactor, log=Log},Black) ->
+                   limit=Lim, proc_factor=PFactor, verbose=Verbose},Black) ->
     WhiteObjects = gb_sets:subtract(Objects, Black),
     WhiteFutures = gb_sets:subtract(Futures, Black),
     BlackObjects = gb_sets:intersection(Objects, Black),
     BlackFutures = gb_sets:intersection(Futures, Black),
-    gcstats(Log,{sweep, {objects, gb_sets:size(WhiteObjects), gb_sets:size(BlackObjects)},
-             {futures, gb_sets:size(WhiteFutures), gb_sets:size(BlackFutures)}}),
+    NWhiteObjects = gb_sets:size(WhiteObjects),
+    NBlackObjects = gb_sets:size(BlackObjects),
+    NWhiteFutures = gb_sets:size(WhiteFutures),
+    NBlackFutures = gb_sets:size(BlackFutures),
+    gcstats(Verbose,{sweep, {objects, NWhiteObjects}, {futures, NWhiteFutures}}),
     gb_sets:fold(fun ({object, O}, ok) -> object:die(O, gc), ok end, ok, WhiteObjects),
     gb_sets:fold(fun ({future, Ref}, ok) -> future:die(Ref, gc), ok end, ok, WhiteFutures),
-    gcstats(Log,resume_world),
+    gcstats(Verbose,{resume_world, {objects, {collected, NWhiteObjects}, {kept, NBlackObjects}},
+             {futures, {collected, NWhiteFutures}, {kept, NBlackFutures}}}),
     gb_sets:fold(fun ({cog, Ref}, ok) -> cog:resume_world(Ref) end, ok, Cogs),
     Count = gb_sets:size(BlackObjects) + gb_sets:size(BlackFutures),
     NewLim = if Count > Lim * ?INC_THRESH -> Lim * 2;
