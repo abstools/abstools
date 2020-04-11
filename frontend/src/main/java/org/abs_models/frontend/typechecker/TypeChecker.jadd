@@ -129,7 +129,7 @@ aspect TypeChecker {
                     } else {
                         ResolvedName n = m.values().iterator().next();
                         // give a hint on how to re-export
-                        e.add(new TypeError(name, ErrorMessage.NO_IMPLICIT_NAME_REEXPORT, s, s, n.getQualifiedName().getModuleName()));
+                        e.add(new SemanticWarning(name, ErrorMessage.NO_IMPLICIT_NAME_REEXPORT, s, s, n.getQualifiedName().getModuleName()));
                     }
                 }
             } else {

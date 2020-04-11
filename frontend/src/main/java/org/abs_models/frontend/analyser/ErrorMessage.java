@@ -77,7 +77,7 @@ public enum ErrorMessage {
     RETURN_STMT_MUST_BE_LAST("Return statements can only appear as last statement of a method."),
     NO_QUALIFIED_NAMES_IN_CORE_DECLARATION("Qualified names (%s) are not allowed as names for declarations in modules."),
     NAME_NOT_EXPORTED_BY_MODULE("Imported name %s is not exported by module %s."),
-    NO_IMPLICIT_NAME_REEXPORT("Name %s is not defined in this module (use 'export %s from %s;' instead)."),
+    NO_IMPLICIT_NAME_REEXPORT("Warning: %s is exported but not defined in this module (use 'export %s from %s;' instead)."),
     ONLY_UNQUALIFIED_NAMES_ALLOWED_IN_IMPORT("Qualified name (%s) is not allowed in an `import from' clause."),
     ONLY_UNQUALIFIED_NAMES_ALLOWED_IN_EXPORT("Qualified name (%s) is not allowed in an `export from' clause."),
     ONLY_QUALIFIED_NAMES_ALLOWED("Trying to import unqualified name %s, needs `from <Modulename>'."),

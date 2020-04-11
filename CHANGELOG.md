@@ -12,7 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Wall-clock time for running a model is now reported in milliseconds instead  of microseconds.  (To see the elapsed time, start the model with parameter `-v`.)
+- The import/export combination `import A from OtherModule; export A;` now issues a compile-time warning instead of an error.  This keeps older models running while announcing the upcoming change (the same construct is an error in the xtext branch already).
+
+- In the Erlang backend, wall-clock time for running a model is now reported in milliseconds instead  of microseconds.  (To see the elapsed time, start the model with parameter `-v`.)
 
 ### Removed
 
