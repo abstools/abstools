@@ -4,8 +4,8 @@
 %% For now implemented as a registered process running globally
 %% This should probably be changed if we want one process per COG
 
--include_lib("abs_types.hrl").
--export([start/2, stop/0, extract_references/1, get_references/1]).
+-include_lib("../include/abs_types.hrl").
+-export([start/3, stop/0, extract_references/1, get_references/1]).
 -export([register_future/1, unroot_future/1]).
 -export([register_cog/1, unregister_cog/1, cog_stopped/1]).
 -export([register_object/1,unregister_object/1]).
@@ -34,14 +34,15 @@
 -define(INC_THRESH, 0.75).
 
 -record(data, {
-          cogs=gb_sets:empty(),                 %root
-          root_futures=gb_sets:empty(),         %root
-          objects=gb_sets:empty(),              %collected
-          futures=gb_sets:empty(),              %collected
-          cogs_waiting_to_stop=gb_sets:empty(), %used during collection
-          previous=erlang:monotonic_time(milli_seconds),
-          limit=?MIN_THRESH, proc_factor=?MIN_PROC_FACTOR,
-          log=false, debug=false}).
+               cogs=gb_sets:empty(),                 %root
+               root_futures=gb_sets:empty(),         %root
+               objects=gb_sets:empty(),              %collected
+               futures=gb_sets:empty(),              %collected
+               cogs_waiting_to_stop=gb_sets:empty(), %used during collection
+               previous=erlang:monotonic_time(milli_seconds),
+               limit=?MIN_THRESH, proc_factor=?MIN_PROC_FACTOR,
+               log=false, debug=false, verbose=false,
+               n_cycles=0}).
 
 behaviour_info(callbacks) ->
     [{get_references, 1}];
@@ -49,8 +50,8 @@ behaviour_info(_) ->
     undefined.
 
 
-start(Log, Debug) ->
-    gen_statem:start_link({global, gc}, ?MODULE, [Log, Debug], []).
+start(Log, Debug, Verbose) ->
+    gen_statem:start_link({global, gc}, ?MODULE, [Log, Debug, Verbose], []).
 
 stop() ->
     gen_statem:stop({global, gc}).
@@ -93,10 +94,14 @@ unregister_object(O=#object{oid=_Oid}) ->
 
 callback_mode() -> state_functions.
 
-init([Log, Debug]) ->
-    {ok, idle, #data{log=Log, debug=Debug}}.
+init([Log, Debug, Verbose]) ->
+    {ok, idle, #data{log=Log, debug=Debug, verbose=Verbose}}.
 
-terminate(_Reason, _State, _Data) ->
+terminate(_Reason, _State, _Data=#data{verbose=Verbose, n_cycles=NCycles}) ->
+    case Verbose of
+        true -> io:format(standard_error, "GC stopping (collection cycles: ~w)~n",[NCycles]);
+        _ -> ok
+    end,
     ok.
 
 code_change(_OldVsn, State, Data, _Extra) ->
@@ -107,12 +112,12 @@ code_change(_OldVsn, State, Data, _Extra) ->
 
 %% idle: collect cogs and futures, possibly switch to stop_world
 
-idle_state_next(Data=#data{log=Log, cogs=Cogs}) ->
+idle_state_next(Data=#data{log=Log, cogs=Cogs, n_cycles=NCycles}) ->
     case is_collection_needed(Data) of
         true ->
             gcstats(Log, stop_world),
             gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, Cogs),
-            {collecting, Data#data{cogs_waiting_to_stop=Cogs}};
+            {collecting, Data#data{cogs_waiting_to_stop=Cogs,n_cycles=NCycles+1}};
         false ->
             {idle, Data}
     end.

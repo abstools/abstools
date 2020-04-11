@@ -137,7 +137,7 @@ start_mod(Module, Verbose, Debug, GCStatistics, Clocklimit, Keepalive, Trace, St
     %%Init logging
     {ok, _CogMonitor} = cog_monitor:start_link(self(), Keepalive, Trace),
     %% Init garbage collector
-    {ok, _GC} = gc:start(GCStatistics, Debug),
+    {ok, _GC} = gc:start(GCStatistics, Debug, Verbose),
     %% Init simulation clock
     {ok, _Clock} = clock:start_link(Clocklimit, StartTime),
     {ok, _Coverage} = coverage:start_link(),
