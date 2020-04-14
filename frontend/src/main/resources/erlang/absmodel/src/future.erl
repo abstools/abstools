@@ -1,6 +1,5 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
--export([start/6,start_for_rest/4]).
 -export([get_after_await/2,get_blocking/3,await/3,has_value/1,die/2,value_available/6]).
 -export([task_started/3]).
 -export([get_for_rest/1]).
@@ -36,39 +35,6 @@
               }).
 
 %% Interacting with a future caller-side
-
-start(null,_Method,_Params, _Info, _Cog, _Stack) ->
-    throw(dataNullPointerException);
-start(Callee,Method,Params, Info, Cog, Stack) ->
-    %% Create the schedule event based on the invocation event; this is because
-    %% we don't have access to the caller id from the callee.
-    #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(Cog, Method),
-    ScheduleEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=Name},
-    NewInfo = Info#task_info{event=ScheduleEvent},
-    {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,true,self()], []),
-    wait_for_future_start(Ref, Cog, Stack),
-    Ref.
-
-wait_for_future_start(Ref, Cog, Stack) ->
-    receive
-        {started, _Ref} ->
-            ok;
-        {stop_world, _Sender} ->
-            cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),
-            cog:task_is_runnable(Cog, self()),
-            task:wait_for_token(Cog, [Ref | Stack]),
-            wait_for_future_start(Ref, Cog, Stack);
-        {get_references, Sender} ->
-            cog:submit_references(Sender, gc:extract_references([Ref | Stack])),
-            wait_for_future_start(Ref, Cog, Stack)
-    end.
-
-
-start_for_rest(Callee, Method, Params, Info) ->
-    ScheduleEvent = #event{type=schedule, caller_id=modelapi, local_id={Method, Params}, name=Method},
-    NewInfo = Info#task_info{event=ScheduleEvent},
-    {ok, Ref} = gen_statem:start(?MODULE,[Callee,Method,Params,NewInfo,false,none], []),
-    Ref.
 
 get_after_await(null, _Cog) ->
     throw(dataNullPointerException);
@@ -217,20 +183,7 @@ init([Callee=#object{oid=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,Reg
                         waiting_tasks=ordsets:new(),
                         register_in_gc=RegisterInGC,
                         caller=Caller,
-                        event=Info#task_info.event}};
-init([_Callee=null,_Method,_Params,RegisterInGC,Caller]) ->
-    %% This is dead code, left in for reference; a `null' callee is caught in
-    %% future:start above.
-    case Caller of
-        none -> ok;
-        _ -> Caller ! {started, self()}
-    end,
-    {ok, completed, #data{value={error, dataNullPointerException},
-                          calleecog=none,
-                          calleetask=none,
-                          register_in_gc=RegisterInGC}}.
-
-
+                        event=Info#task_info.event}}.
 
 handle_info({'EXIT',_Pid,Reason}, running,
             Data=#data{register_in_gc=RegisterInGC,

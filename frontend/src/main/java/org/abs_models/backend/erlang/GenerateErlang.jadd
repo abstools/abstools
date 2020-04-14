@@ -476,7 +476,7 @@ aspect GenerateErlang {
     ecs.decIndent().println("Callee ->");
     ecs.incIndent();
     ecs.println("%% remote call");
-    ecs.format("TempFuture = future:start(Callee,'m_%s',",getMethod());
+    ecs.format("TempFuture = cog:create_task(Callee,'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.format(",#task_info{method= <<\"%s\"/utf8>>},", getMethod());
     ecs.print("Cog,");
@@ -492,7 +492,7 @@ aspect GenerateErlang {
   public void AsyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     Stmt stmt = CompilerUtils.findStmtForExpression(this);
     PureExp deadline = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.StdLib.Deadline");
-    ecs.print("future:start(");
+    ecs.print("cog:create_task(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);

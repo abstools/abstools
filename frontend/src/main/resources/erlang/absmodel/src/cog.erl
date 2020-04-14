@@ -1,6 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
 -export([start/0,start/1,start/2,start/3,add_main_task/3,add_task/7]).
+-export([create_task/6, create_model_api_task/4]).
 -export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
 -export([set_dc/2,get_dc_ref/2]).
 %% function informing cog about future state change
@@ -154,6 +155,39 @@ add_main_task(Cog=#cog{ref=CogRef},Args,Info)->
     gen_statem:cast(CogRef, {new_task,main_task,none,null,Args,Info,self(),true,{started, main_task}}),
     TaskRef=await_start(CogRef, main_task, Args),
     TaskRef.
+
+
+create_task(null,_Method,_Params, _Info, _Cog, _Stack) ->
+    throw(dataNullPointerException);
+create_task(Callee,Method,Params, Info, Cog, Stack) ->
+    %% Create the schedule event based on the invocation event; this is because
+    %% we don't have access to the caller id from the callee.
+    #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(Cog, Method),
+    ScheduleEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=Name},
+    NewInfo = Info#task_info{event=ScheduleEvent},
+    {ok, Ref} = gen_statem:start(future,[Callee,Method,Params,NewInfo,true,self()], []),
+    wait_for_future_start(Ref, Cog, Stack),
+    Ref.
+
+create_model_api_task(Callee, Method, Params, Info) ->
+    ScheduleEvent = #event{type=schedule, caller_id=modelapi, local_id={Method, Params}, name=Method},
+    NewInfo = Info#task_info{event=ScheduleEvent},
+    {ok, Ref} = gen_statem:start(future,[Callee,Method,Params,NewInfo,false,none], []),
+    Ref.
+
+wait_for_future_start(Ref, Cog, Stack) ->
+    receive
+        {started, _Ref} ->
+            ok;
+        {stop_world, _Sender} ->
+            cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),
+            cog:task_is_runnable(Cog, self()),
+            task:wait_for_token(Cog, [Ref | Stack]),
+            wait_for_future_start(Ref, Cog, Stack);
+        {get_references, Sender} ->
+            cog:submit_references(Sender, gc:extract_references([Ref | Stack])),
+            wait_for_future_start(Ref, Cog, Stack)
+    end.
 
 new_object(Cog=#cog{ref=CogRef}, Class, ObjectState) ->
     Oid=gen_statem:call(CogRef, {new_object_state, ObjectState}),
