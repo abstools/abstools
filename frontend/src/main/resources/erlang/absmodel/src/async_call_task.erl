@@ -12,7 +12,10 @@
 -record(state,{obj,meth,params,fut}).
 
 init(_Cog,Future,CalleeObj,[Method|Params])->
-    link(Future),
+    case Future of
+        null -> ok;
+        _ -> link(Future)
+    end,
     #state{fut=Future,obj=CalleeObj,meth=Method,params=Params}.
 
 
@@ -29,6 +32,9 @@ start(#state{fut=Future,obj=O=#object{cog=Cog=#cog{ref=CogRef,dcobj=DC}},meth=M,
             complete_future(Future, exception, error_transform:transform(Reason), Cog, [O|P])
     end.
 
+complete_future(null, _Status, _Value, _Cog, _Stack) ->
+    %% no future: we were called without storing the future
+    ok;
 complete_future(Future, Status, Value, Cog, Stack) ->
     future:value_available(Future, Status, Value, self(), Cog, value_accepted),
     (fun Loop() ->

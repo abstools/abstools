@@ -479,9 +479,7 @@ aspect GenerateErlang {
     ecs.format("TempFuture = cog:create_task(Callee,'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.format(",#task_info{method= <<\"%s\"/utf8>>},", getMethod());
-    ecs.print("Cog,");
-    ecs.print(vars.toStack());
-    ecs.println("),");
+    ecs.println("Cog, true),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());
     ecs.println(")");
@@ -503,7 +501,11 @@ aspect GenerateErlang {
         ecs.print("dataInfDuration");
     }
     ecs.print("},Cog,");
-    ecs.print(vars.toStack());
+    if (closestParent(Stmt.class) instanceof ExpressionStmt) {
+        ecs.print("false");     // "o!m()" w/o assignment: do not create a future
+    } else {
+        ecs.print("true");
+    }
     ecs.print(")");
   }
 

@@ -146,48 +146,34 @@ start(ParentCog, DC, Scheduler)->
     gc:register_cog(NewCogRef),
     NewCog.
 
-add_task(#cog{ref=Cog},TaskType,Future,CalleeObj,Args,Info,Stack) ->
-    gen_statem:cast(Cog, {new_task,TaskType,Future,CalleeObj,Args,Info,self(),false,{started, TaskType}}),
-    TaskRef=await_start(Cog, TaskType, [Args | Stack]),
-    TaskRef.
+add_task(#cog{ref=CogRef},TaskType,Future,CalleeObj,Args,Info,Stack) ->
+    gen_statem:call(CogRef, {new_task,TaskType,Future,CalleeObj,Args,Info,self(),false,{started, TaskType}}).
 
-add_main_task(Cog=#cog{ref=CogRef},Args,Info)->
-    gen_statem:cast(CogRef, {new_task,main_task,none,null,Args,Info,self(),true,{started, main_task}}),
-    TaskRef=await_start(CogRef, main_task, Args),
-    TaskRef.
+add_main_task(_Cog=#cog{ref=CogRef},Args,Info)->
+    gen_statem:call(CogRef, {new_task,main_task,none,null,Args,Info,self(),true,{started, main_task}}).
 
 
-create_task(null,_Method,_Params, _Info, _Cog, _Stack) ->
+create_task(null,_Method,_Params, _Info, _CallerCog, _Stack) ->
     throw(dataNullPointerException);
-create_task(Callee,Method,Params, Info, Cog, Stack) ->
+create_task(Callee=#object{oid=Object,cog=Cog=#cog{ref=CogRef}},Method,Params, Info, CallerCog, ReturnFuture) ->
     %% Create the schedule event based on the invocation event; this is because
     %% we don't have access to the caller id from the callee.
-    #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(Cog, Method),
+    #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(CallerCog, Method),
     ScheduleEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=Name},
     NewInfo = Info#task_info{event=ScheduleEvent},
-    {ok, Ref} = gen_statem:start(future,[Callee,Method,Params,NewInfo,true,self()], []),
-    wait_for_future_start(Ref, Cog, Stack),
-    Ref.
+    {ok, FutureRef} = case ReturnFuture of
+                          true -> gen_statem:start(future,[Params,ScheduleEvent,true], []);
+                          _ -> {ok, null}
+                      end,
+    TaskRef=cog:add_task(Cog,async_call_task, FutureRef, Callee, [Method|Params], NewInfo#task_info{this=Callee,destiny=FutureRef}, Params),
+    FutureRef.
 
-create_model_api_task(Callee, Method, Params, Info) ->
+create_model_api_task(Callee=#object{oid=Object,cog=Cog=#cog{ref=CogRef}}, Method, Params, Info) ->
     ScheduleEvent = #event{type=schedule, caller_id=modelapi, local_id={Method, Params}, name=Method},
     NewInfo = Info#task_info{event=ScheduleEvent},
-    {ok, Ref} = gen_statem:start(future,[Callee,Method,Params,NewInfo,false,none], []),
-    Ref.
-
-wait_for_future_start(Ref, Cog, Stack) ->
-    receive
-        {started, _Ref} ->
-            ok;
-        {stop_world, _Sender} ->
-            cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),
-            cog:task_is_runnable(Cog, self()),
-            task:wait_for_token(Cog, [Ref | Stack]),
-            wait_for_future_start(Ref, Cog, Stack);
-        {get_references, Sender} ->
-            cog:submit_references(Sender, gc:extract_references([Ref | Stack])),
-            wait_for_future_start(Ref, Cog, Stack)
-    end.
+    {ok, FutureRef} = gen_statem:start(future,[Params,ScheduleEvent,false], []),
+    TaskRef=cog:add_task(Cog,async_call_task, FutureRef, Callee, [Method|Params], NewInfo#task_info{this=Callee,destiny=FutureRef}, Params),
+    FutureRef.
 
 new_object(Cog=#cog{ref=CogRef}, Class, ObjectState) ->
     Oid=gen_statem:call(CogRef, {new_object_state, ObjectState}),
@@ -753,6 +739,16 @@ cog_starting({call, From}, Event, Data) ->
 cog_starting(info, Event, Data) ->
     handle_event(info, Event, cog_starting, Data).
 
+no_task_schedulable({call, From}, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
+                    Data=#data{dcref=DCRef, dc=DC, new_tasks=Tasks,
+                               task_infos=TaskInfos}) ->
+    dc:cog_active(DCRef, self()),
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    {keep_state,
+     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
+                 task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+     [{reply, From, NewTask},
+      {next_event, cast, {task_runnable, NewTask, none}}]};
 no_task_schedulable({call, From}, Event, Data) ->
     handle_event({call, From}, Event, no_task_schedulable, Data);
 no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
@@ -849,15 +845,6 @@ no_task_schedulable(cast, {future_is_ready, FutureRef},
                        polling_states=NewPollingStates,
                        recorded=NewRecorded, replaying=NewReplaying}}
     end;
-no_task_schedulable(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-                    Data=#data{dcref=DCRef, dc=DC, new_tasks=Tasks,
-                               task_infos=TaskInfos}) ->
-    dc:cog_active(DCRef, self()),
-    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
-    {keep_state,
-     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-                 task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
-     {next_event, cast, {task_runnable, NewTask, none}}};
 no_task_schedulable(cast, stop_world, Data=#data{dc=DC}) ->
     gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
@@ -866,6 +853,15 @@ no_task_schedulable(EventType, Event, Data) ->
 
 
 
+task_running({call, From}, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
+                Data=#data{new_tasks=Tasks,dc=DC,
+                           task_infos=TaskInfos}) ->
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    {keep_state,
+     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+     [{reply, From, NewTask},
+      {next_event, cast, {task_runnable, NewTask, none}}]};
 task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                 Data=#data{gc_waiting_to_start=GCWaitingToStart,
                            running_task=R, runnable_tasks=Run,
@@ -993,14 +989,6 @@ task_running(cast, {task_runnable, TaskRef, ConfirmTask},
      Data#data{runnable_tasks=gb_sets:add_element(TaskRef, Run),
                  waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                  new_tasks=gb_sets:del_element(TaskRef, New)}};
-task_running(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-                Data=#data{new_tasks=Tasks,dc=DC,
-                           task_infos=TaskInfos}) ->
-    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
-    {keep_state,
-     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
-     {next_event, cast, {task_runnable, NewTask, none}}};
 task_running(cast, {task_blocked_for_resource,
                     TaskRef, TaskInfo, ObjectState, Resourcetype, Amount},
              Data=#data{gc_waiting_to_start=GCWaitingToStart,
@@ -1197,6 +1185,15 @@ task_running(EventType, Event, Data) ->
 
 
 
+task_blocked({call, From}, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
+                Data=#data{new_tasks=Tasks,dc=DC,
+                           task_infos=TaskInfos}) ->
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    {keep_state,
+     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+     [{reply, From, NewTask},
+      {next_event, cast, {task_runnable, NewTask, none}}]};
 task_blocked({call, From}, Event, Data) ->
     handle_event({call, From}, Event, task_blocked, Data);
 task_blocked(cast, {task_runnable, TaskRef, ConfirmTask},
@@ -1218,20 +1215,23 @@ task_blocked(cast, {task_runnable, TaskRef, ConfirmTask},
      Data#data{waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                runnable_tasks=gb_sets:add_element(TaskRef, Run),
                new_tasks=gb_sets:del_element(TaskRef, New)}};
-task_blocked(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-                Data=#data{new_tasks=Tasks,dc=DC,
-                           task_infos=TaskInfos}) ->
-    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
-    {keep_state,
-     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
-    {next_event, cast, {task_runnable, NewTask, none}}};
 task_blocked(cast, stop_world, Data=#data{dc=DC}) ->
     gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
     {next_state, in_gc, Data#data{next_state_after_gc=task_blocked}};
 task_blocked(EventType, Event, Data) ->
     handle_event(EventType, Event, task_blocked, Data).
 
+in_gc({call, From}, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
+      Data=#data{new_tasks=Tasks,dc=DC,dcref=DCRef,task_infos=TaskInfos}) ->
+    %% Tell cog_monitor now that we're busy; after gc it might be too late --
+    %% but don't put new task into runnable_tasks yet
+    dc:cog_active(DCRef, self()),
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    {keep_state,
+     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
+     [{reply, From, NewTask},
+      {next_event, cast, {task_runnable, NewTask, none}}]};
 in_gc({call, From}, Event, Data) ->
     handle_event({call, From}, Event, in_gc, Data);
 in_gc(cast, {task_runnable, TaskRef, ConfirmTask},
@@ -1358,6 +1358,20 @@ in_gc(EventType, Event, Data) ->
 
 
 
+waiting_for_references({call, From}, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
+      Data=#data{new_tasks=Tasks, dc=DC, dcref=DCRef, task_infos=TaskInfos,
+                references=ReferenceRecord=#{waiting := Tasks}}) ->
+    %% Tell cog_monitor now that we're busy; after gc it might be too late --
+    %% but don't put new task into runnable_tasks yet
+    dc:cog_active(DCRef, self()),
+    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
+    task:get_references_for_cog(NewTask),
+    {keep_state,
+     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
+               task_infos=maps:put(NewTask, NewInfo, TaskInfos),
+               references=ReferenceRecord#{waiting := [NewTask | Tasks]}},
+     [{reply, From, NewTask},
+      {next_event, cast, {task_runnable, NewTask, none}}]};
 waiting_for_references({call, From}, Event, Data) ->
     handle_event({call, From}, Event, waiting_for_references, Data);
 waiting_for_references(cast, {task_runnable, TaskRef, ConfirmTask},
@@ -1392,19 +1406,6 @@ waiting_for_references(cast, {references, Task, References},
              Data#data{references=ReferenceRecord#{waiting := NewTasks,
                                                    received := ordsets:union(CollectedReferences, References)}}}
     end;
-waiting_for_references(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
-      Data=#data{new_tasks=Tasks, dc=DC, dcref=DCRef, task_infos=TaskInfos,
-                references=ReferenceRecord=#{waiting := Tasks}}) ->
-    %% Tell cog_monitor now that we're busy; after gc it might be too late --
-    %% but don't put new task into runnable_tasks yet
-    dc:cog_active(DCRef, self()),
-    NewInfo=#task_info{pid=NewTask}=start_new_task(DC,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie),
-    task:get_references_for_cog(NewTask),
-    {keep_state,
-     Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
-               task_infos=maps:put(NewTask, NewInfo, TaskInfos),
-               references=ReferenceRecord#{waiting := [NewTask | Tasks]}},
-     {next_event, cast, {task_runnable, NewTask, none}}};
 waiting_for_references(cast, Event, Data) ->
     handle_event(cast, Event, waiting_for_references, Data);
 waiting_for_references(info, {'EXIT',TaskRef,_Reason},

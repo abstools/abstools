@@ -30,7 +30,6 @@
                waiting_tasks=ordsets:new(),
                cookie=none,
                register_in_gc=true,
-               caller=none,
                event=undefined
               }).
 
@@ -159,31 +158,18 @@ notify_completion(Pid) ->
 
 callback_mode() -> state_functions.
 
-init([Callee=#object{oid=Object,cog=Cog=#cog{ref=CogRef}},Method,Params,Info,RegisterInGC,Caller]) ->
-    %%Start task
-    process_flag(trap_exit, true),
-    %% We used to wrap the following line in a
-    %% erlang:monitor(process, CogRef) / erlang:demonitor()
-    %% call, but if Object is alive, so is (presumably)
-    %% CogRef, and Object cannot have been garbage-collected
-    %% in the meantime.
-    TaskRef=cog:add_task(Cog,async_call_task,self(),Callee,[Method|Params], Info#task_info{this=Callee,destiny=self()}, Params),
+init([Params, Event, RegisterInGC]) ->
     case RegisterInGC of
         true -> gc:register_future(self());
         false -> ok
     end,
-    case Caller of
-        none -> ok;
-        _ -> Caller ! {started, self()} % in cooperation with start/3
-    end,
-    {ok, running, #data{calleetask=TaskRef,
-                        calleecog=Cog,
-                        references=gc:extract_references(Params),
-                        value=none,
-                        waiting_tasks=ordsets:new(),
-                        register_in_gc=RegisterInGC,
-                        caller=Caller,
-                        event=Info#task_info.event}}.
+    {ok,
+     running,
+     #data{references=gc:extract_references(Params),
+           value=none,
+           waiting_tasks=ordsets:new(),
+           register_in_gc=RegisterInGC,
+           event=Event}}.
 
 handle_info({'EXIT',_Pid,Reason}, running,
             Data=#data{register_in_gc=RegisterInGC,
@@ -230,10 +216,10 @@ next_state_on_completion(Data=#data{waiting_tasks=WaitingTasks,
                 true -> gc:unroot_future(self());
                 false -> ok
             end,
-            {completed, Data};
+            completed;
         false ->
             lists:map(fun notify_completion/1, ordsets:to_list(WaitingTasks)),
-            {completing, Data}
+            completing
     end.
 
 
@@ -243,14 +229,16 @@ running({call, From}, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) -
     {keep_state,
      Data#data{waiting_tasks=ordsets:add_element(Task, WaitingTasks)},
      {reply, From, unresolved}};
-running(cast, {completed, value, Result, Sender, SenderCog, Cookie},
-        Data=#data{calleetask=Sender,calleecog=SenderCog})->
-    {NextState, Data1} = next_state_on_completion(Data#data{cookie=Cookie}),
-    {next_state, NextState, Data1#data{value={ok,Result}, references=[]}};
-running(cast, {completed, exception, Result, Sender, SenderCog, Cookie},
-        Data=#data{calleetask=Sender,calleecog=SenderCog})->
-    {NextState, Data1} = next_state_on_completion(Data#data{cookie=Cookie}),
-    {next_state, NextState, Data1#data{value={error,Result}, references=[]}};
+running(cast, {completed, value, Result, Sender, SenderCog, Cookie}, Data)->
+    Data1=Data#data{value={ok,Result}, references=[],
+                    cookie=Cookie, calleetask=Sender, calleecog=SenderCog},
+    NextState = next_state_on_completion(Data1),
+    {next_state, NextState, Data1};
+running(cast, {completed, exception, Result, Sender, SenderCog, Cookie}, Data)->
+    Data1=Data#data{value={error,Result}, references=[],
+                    cookie=Cookie, calleetask=Sender, calleecog=SenderCog},
+    NextState = next_state_on_completion(Data1),
+    {next_state, NextState, Data1};
 running({call, From}, Msg, Data) ->
     handle_call(From, Msg, Data);
 running(info, Msg, Data) ->
