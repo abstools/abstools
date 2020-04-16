@@ -13,6 +13,5 @@ init(Cog,_Future,_CalleeObj,[Main,Starter])->
 
 start({Main,Cog})->
     Res=Main:main(Cog),
-    cog:dec_ref_count(Cog),
     Res.
 

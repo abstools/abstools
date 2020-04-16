@@ -24,7 +24,6 @@
          block_current_task_for_future/3]).
 -export([return_token/5]).
 %% Called by cog_monitor
--export([inc_ref_count/1,dec_ref_count/1]).
 -include_lib("../include/abs_types.hrl").
 
 %%Garbage collector callbacks
@@ -63,8 +62,6 @@
          %% functions, which made the code less maintainable than the current
          %% approach.)
          gc_waiting_to_start=false,
-         %% Number of objects on cog
-         referencers=1,
          %% Accumulator for reference collection during gc
          references=#{},
          %% Deployment component object of cog
@@ -394,12 +391,6 @@ get_trace(CogRef) ->
 acknowledged_by_gc(CogRef) ->
     gen_statem:cast(CogRef, acknowledged_by_gc).
 
-inc_ref_count(#cog{ref=Cog})->
-    gen_statem:cast(Cog, inc_ref_count).
-
-dec_ref_count(#cog{ref=Cog})->
-    gen_statem:cast(Cog, dec_ref_count).
-
 get_references(#cog{ref=Ref}) ->
     get_references(Ref);
 get_references(CogRef) ->
@@ -466,11 +457,6 @@ handle_event({call, From}, {new_object_state, ObjectState}, _StateName,
                            fresh_objects=maps:put(Oid, [], FreshObjects),
                            object_counter=Oid},
      {reply, From, Oid}};
-
-handle_event(cast, inc_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
-    {keep_state, Data#data{referencers=Referencers + 1}};
-handle_event(cast, dec_ref_count, _StateName, Data=#data{referencers=Referencers}) ->
-    {keep_state, Data#data{referencers=Referencers - 1}};
 
 handle_event(cast, {future_is_ready, FutureRef}, _StateName, Data) ->
     %% This is the common case (we are not idle, just confirm to the future).
@@ -1255,8 +1241,7 @@ in_gc(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
      Data#data{new_tasks=gb_sets:add_element(NewTask, Tasks),
                task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
      {next_event, cast, {task_runnable, NewTask, none}}};
-in_gc(cast, resume_world, Data=#data{referencers=Referencers,
-                                     running_task=RunningTask,
+in_gc(cast, resume_world, Data=#data{running_task=RunningTask,
                                      runnable_tasks=Run, polling_tasks=Pol,
                                      next_state_after_gc=NextState,
                                      scheduler=Scheduler,
@@ -1265,7 +1250,7 @@ in_gc(cast, resume_world, Data=#data{referencers=Referencers,
                                      dc=DC, dcref=DCRef,
                                      polling_states=PollingStates,
                                      recorded=Recorded,replaying=Replaying}) ->
-    case Referencers > 0 of
+    case maps:size(ObjectStates) > 0 of
         false -> dc:cog_died(DCRef, self(), Recorded),
                  gc:unregister_cog(#cog{ref=self(), dcobj=DC}),
                  {stop, normal, Data};

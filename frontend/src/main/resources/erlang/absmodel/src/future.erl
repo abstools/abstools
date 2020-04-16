@@ -6,7 +6,7 @@
 -export([get_for_rest/1]).
 -export([maybe_register_waiting_task/3,confirm_wait_unblocked/3,
          maybe_register_waiting_cog/2,confirm_wait_unblocked/2]).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 %%Future starts AsyncCallTask
 %%and stores result
 

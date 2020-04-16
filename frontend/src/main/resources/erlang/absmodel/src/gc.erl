@@ -84,11 +84,11 @@ cog_stopped(#cog{ref=CogRef}) ->
 cog_stopped(CogRef) ->
     gen_statem:cast({global, gc}, {cog_stopped, CogRef}).
 
-register_object(Obj) ->
-    gen_statem:cast({global, gc}, {register_object, Obj}).
+register_object(Object=#object{oid=_Oid}) ->
+    gen_statem:cast({global, gc}, {register_object, Object}).
 
-unregister_object(O=#object{oid=_Oid}) ->
-    gen_statem:cast({global, gc}, {unregister_object, O}).
+unregister_object(Object=#object{oid=_Oid}) ->
+    gen_statem:cast({global, gc}, {unregister_object, Object}).
 
 %% gen_statem callback functions
 
@@ -112,10 +112,10 @@ code_change(_OldVsn, State, Data, _Extra) ->
 
 %% idle: collect cogs and futures, possibly switch to stop_world
 
-idle_state_next(Data=#data{verbose=Verbose, cogs=Cogs, n_cycles=NCycles}) ->
+idle_state_next(Data=#data{verbose=Verbose, cogs=Cogs, objects=Objects, n_cycles=NCycles, root_futures=RootFutures}) ->
     case is_collection_needed(Data) of
         true ->
-            gcstats(Verbose, {stop_world, {cogs, gb_sets:size(Cogs)}}),
+            gcstats(Verbose, {stop_world, {cogs, gb_sets:size(Cogs)}, {objects, gb_sets:size(Objects)}, {root_futures, gb_sets:size(RootFutures)}}),
             gb_sets:fold(fun ({cog, Ref}, ok) -> cog:stop_world(Ref) end, ok, Cogs),
             {collecting, Data#data{cogs_waiting_to_stop=Cogs,n_cycles=NCycles+1}};
         false ->
@@ -210,7 +210,6 @@ sweep(Data=#data{cogs=Cogs,objects=Objects,futures=Futures,
     NBlackObjects = gb_sets:size(BlackObjects),
     NWhiteFutures = gb_sets:size(WhiteFutures),
     NBlackFutures = gb_sets:size(BlackFutures),
-    gcstats(Verbose,{sweep, {objects, NWhiteObjects}, {futures, NWhiteFutures}}),
     gb_sets:fold(fun ({object, O}, ok) -> object:die(O, gc), ok end, ok, WhiteObjects),
     gb_sets:fold(fun ({future, Ref}, ok) -> future:die(Ref, gc), ok end, ok, WhiteFutures),
     gcstats(Verbose,{resume_world, {objects, {collected, NWhiteObjects}, {kept, NBlackObjects}},
@@ -249,9 +248,9 @@ get_references({cog, Ref}) ->
         false -> []
     end.
 
-is_collection_needed(Data=#data{objects=Objects,futures=Futures,
-                                  previous=PTime,limit=Lim,proc_factor=PFactor,
-                                  debug=Debug}) ->
+is_collection_needed(Data=#data{futures=Futures,
+                                previous=PTime,limit=Lim,proc_factor=PFactor,
+                                debug=Debug}) ->
     Debug
     %% do not aim for interactivity; we're fine with few but large gc pauses
 
