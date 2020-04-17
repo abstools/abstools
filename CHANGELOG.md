@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- In the erlang backend, remove the check for pending garbage collection at the beginning of each function body -- this cut run time by more than half in a benchmark.  Note that garbage collection happens rarely or (for non-long-running models) never, so the resulting increased waiting time when entering gc is not paid often.
+
 - The import/export combination `import A from OtherModule; export A;` now issues a compile-time warning instead of an error.  This keeps older models running while announcing the upcoming change (the same construct is an error in the xtext branch already).
 
 - In the Erlang backend, wall-clock time for running a model is now reported in milliseconds instead  of microseconds.  (To see the elapsed time, start the model with parameter `-v`.)

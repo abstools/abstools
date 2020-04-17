@@ -94,7 +94,14 @@ aspect GenerateErlang {
       } else {
           ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
           Vars vars = Vars.n(getParams());
-          ErlUtil.stopWorldPrelude(ecs, vars, true);
+          /*
+           * We used to check if we need to stop for gc at the beginning of
+           * every function body -- but now we only run gc when process
+           * pressure is high, not every 100ms, so this check is very unlikely
+           * to trigger; and skipping the test cut the runtime of a
+           * function-heavy benchmark by more than half.
+           */
+          // ErlUtil.stopWorldPrelude(ecs, vars, true);
           getFunctionDef().generateErlangCode(ecs,vars);
           ecs.println(".");
           ecs.decIndent();
