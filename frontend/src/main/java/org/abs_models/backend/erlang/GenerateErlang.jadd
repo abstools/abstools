@@ -94,7 +94,14 @@ aspect GenerateErlang {
       } else {
           ErlUtil.functionHeader(ecs,"f_"+getName(),"Cog=#cog{ref=CogRef}",getParams());
           Vars vars = Vars.n(getParams());
-          ErlUtil.stopWorldPrelude(ecs, vars, true);
+          /*
+           * We used to check if we need to stop for gc at the beginning of
+           * every function body -- but now we only run gc when process
+           * pressure is high, not every 100ms, so this check is very unlikely
+           * to trigger; and skipping the test cut the runtime of a
+           * function-heavy benchmark by more than half.
+           */
+          // ErlUtil.stopWorldPrelude(ecs, vars, true);
           getFunctionDef().generateErlangCode(ecs,vars);
           ecs.println(".");
           ecs.decIndent();
@@ -115,7 +122,7 @@ aspect GenerateErlang {
   }
 
   private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
-      "ABS.StdLib.currentms", "ABS.Meta.getProductLine",
+      "ABS.StdLib.currentms", "ABS.StdLib.ms_since_model_start", "ABS.Meta.getProductLine",
       "ABS.StdLib.lowlevelDeadline", "ABS.StdLib.print", "ABS.StdLib.println",
       "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
       "ABS.DC.thisDC", "ABS.StdLib.toString",

@@ -17,13 +17,13 @@ public class ModuleSystemTests extends SemanticTests {
     }
 
     @Test
-    public void simpleModule() {
+    public void simpleModule() throws Exception {
         assertEvalTrue("module A; export Foo, Bar; data Foo = Bar; module Test; import A.Foo, A.Bar;"
                 + " { A.Foo f = A.Bar; Bool testresult = True; } ");
     }
 
     @Test
-    public void duplicateNameInDifferntModules() {
+    public void duplicateNameInDifferntModules() throws Exception {
         assertEvalTrue("module A; data Foo = Baz; module B; data Foo = Bar; { Foo f = Bar; Bool testresult = True; }");
     }
 

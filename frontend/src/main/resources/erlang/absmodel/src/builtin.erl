@@ -3,7 +3,7 @@
 %%All builtin functions
 %%Must correspond to the set in GenerateErlang.jadd:FnApp.ERLANG_BUILTINS
 -include_lib("abs_types.hrl").
--export([currentms/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
+-export([currentms/1,ms_since_model_start/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
 -export([random/2,truncate/2,numerator/2, denominator/2]).
 -export([float/2, rat/2, floor/2, ceil/2, sqrt/2, log/2, exp/2]).
 
@@ -23,11 +23,10 @@ lowlevelDeadline(_Cog) ->
     end.
 
 currentms(_Cog)->
-    %% %% FIXME: There should be a compile-time option whether to use
-    %% %% simulated or wall-clock time
-    %% {MS,S,MuS}=erlang:now(),
-    %% (MS*1000000 + S)*1000 + MuS div 1000.
     clock:now().
+
+ms_since_model_start(_Cog) ->
+    clock:time_since_model_start().
 
 substr(_Cog, B, Start, Len) ->
     iolist_to_binary(substr_bin(B, Start, Len, [])).

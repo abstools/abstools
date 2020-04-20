@@ -4,7 +4,7 @@
 -behaviour(application).
 -export([start/2, stop/1]).
 
--include_lib("absmodulename.hrl").
+-include_lib("../include/absmodulename.hrl").
 
 start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([{'_',
@@ -17,7 +17,6 @@ start(_StartType, _StartArgs) ->
     {ok, Module} = application:get_env(absmodel, module),
     {ok, Verbose} = application:get_env(absmodel, verbose),
     {ok, Debug} = application:get_env(absmodel, debug),
-    {ok, GCStatistics} = application:get_env(absmodel, gcstatistics),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
     {ok, Trace} = application:get_env(absmodel, replay_trace),
     %% In case we need a random port, see example at bottom of
@@ -26,14 +25,13 @@ start(_StartType, _StartArgs) ->
                             #{env => #{dispatch => Dispatch}}) of
         {ok, _} ->
             case Verbose of
-                true ->
-                    io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [ranch:get_port(http)]);
-                _ -> ok
+                0 -> ok;
+                _ -> io:format(standard_error, "Starting server on port ~w, abort with Ctrl-C~n", [ranch:get_port(http)])
             end;
         _ -> io:format(standard_error, "Failed to start model API on port ~w (is another model already running?)~nAborting~n", [Port]),
              halt(1)
     end,
-    runtime:start_link([Module, Verbose, Debug, GCStatistics, Clocklimit, true, Trace]).
+    runtime:start_link([Module, Verbose, Debug, Clocklimit, true, Trace]).
 
 stop(_State) ->
     ok.

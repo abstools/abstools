@@ -4,7 +4,7 @@ RUN git clone https://github.com/abstools/abs-models.org.git /abs-models.org
 WORKDIR /abs-models.org
 RUN hugo -e collaboratory
 
-FROM erlang:21-alpine AS jdk-erlang
+FROM erlang:22-alpine AS jdk-erlang
 RUN apk --update add \
         bash \
         nss \

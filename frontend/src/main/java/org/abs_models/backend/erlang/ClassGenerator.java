@@ -147,6 +147,7 @@ public class ClassGenerator {
             ecs.print(vars.toStack());
             ecs.println("),");
         }
+        ecs.println("gc:register_object(O),");
         ecs.println("O.");
         ecs.decIndent();
     }

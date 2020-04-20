@@ -6,18 +6,20 @@ ABS Tools
 [![Gitter](https://badges.gitter.im/abstools/general.svg)](https://gitter.im/abstools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Inside this repository we develop the core tools of the ABS modelling
-language.  The current language manual is at http://docs.abs-models.org.
+language.  The current language manual is at <https://abs-models.org/manual/>.
+
+To compile the command-line compiler and manual, run `./gradlew assemble` (See <https://abs-models.org/getting_started/local-install/> for more information).
 
 To run the ABS collaboratory (a browser-based IDE for ABS) locally using
 Docker, execute the following command:
 
     docker run -p 8080:80 --rm abslang/collaboratory:latest
 
-Then connect your browser to http://localhost:8080/.  It is not necessary to
+Then connect your browser to <http://localhost:8080/>.  It is not necessary to
 clone the repository or compile the toolchain to run the ABS collaboratory in this way.
 
 To run the absc compiler locally using docker, create a script such as
-https://github.com/abstools/abstools/blob/master/frontend/src/main/resources/bash/absc-docker
+<https://github.com/abstools/abstools/blob/master/frontend/src/main/resources/bash/absc-docker>
 and put it in your path.
 
 Folders
@@ -28,7 +30,7 @@ Folders
   instructions.
 
 * `abs-docs` - the ABS language manual, available online at
-  http://docs.abs-models.org.  To generate the manual locally,
+  <http://abs-models.org/manual/>.  To generate the manual locally,
   run `make manual`.
 
   * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual,
@@ -39,7 +41,7 @@ Folders
 
 
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
-  continuous integration at https://envisage.ifi.uio.no:8080/jenkins/.
+  continuous integration at <https://envisage.ifi.uio.no:8080/jenkins/>.
 
 * `abs-packages` - demonstration and description of how to use ABS
   packages (with Maven dependencies management)

@@ -938,3 +938,14 @@ The function `fromJust` returns the wrapped value of a `Maybe`.  It is an error 
 ----
 def A fromJust<A>(Maybe<A> m);
 ----
+
+[[stdlib-others]]
+=== Others
+
+This subsection lists definitions of the standard library that do not fit in any other sections.
+
+==== Functions
+
+.ms_since_model_start
+
+The function `ms_since_model_start` returns a non-negative integer containing the number of milliseconds elapsed since the model was started.  It is useful mainly for benchmarking.

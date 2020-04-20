@@ -8,7 +8,7 @@
 %% The object keeps also track of all task that operate on it, and kills them
 %% if it dies itself.
 
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 -export([behaviour_info/1]).
 
 
@@ -34,10 +34,8 @@ behaviour_info(_) ->
 
 
 new_local(Creator, Cog,Class,Args)->
-    cog:inc_ref_count(Cog),
     State=Class:init_internal(),
     O=cog:new_object(Cog, Class, State),
-
     cog:register_new_local_object(Cog, Class),
 
     %% Run the init block in the scope of the new object.  This is safe since
@@ -98,6 +96,10 @@ new(Cog,Class,Args,CreatorCog,Stack)->
     O.
 
 die(O=#object{cog=Cog},Reason)->
+    case Reason of
+        gc -> ok;
+        _ -> gc:unregister_object(O)
+    end,
     cog:object_dead(Cog, O).
 
 get_references(O=#object{cog=Cog=#cog{dcobj=DC}}) ->

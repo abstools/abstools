@@ -137,7 +137,7 @@ VarDeclStmt: Stmt ::= VarDecl:VarDecl;
 
 IfStmt: Stmt ::= Condition:PureExp Then:Block [Else:Block];
 WhileStmt: Stmt ::= Condition:PureExp Body:Block;
-ForeachStmt: Stmt ::= LoopVarDecl ListExp:PureExp Body:Block;
+ForeachStmt: Stmt ::= ValueVar:LoopVarDecl [IndexVar:LoopVarDecl] ListExp:PureExp Body:Block;
 CaseStmt : Stmt ::= Expr:PureExp Branch:CaseBranchStmt* ;
 CaseStmtOld : CaseStmt ;     // old-style syntax, used for deprecation warning
 CaseBranchStmt ::= Left:Pattern Right:Block ;

@@ -1,4 +1,4 @@
-%% Copyright (c) 2013-2016, Loïc Hoguin <essen@ninenines.eu>
+%% Copyright (c) 2013-2018, Loïc Hoguin <essen@ninenines.eu>
 %%
 %% Permission to use, copy, modify, and/or distribute this software for any
 %% purpose with or without fee is hereby granted, provided that the above
@@ -23,7 +23,8 @@
 all(Path) ->
 	case filename:extension(Path) of
 		<<>> -> {<<"application">>, <<"octet-stream">>, []};
-		<< $., Ext/binary >> -> all_ext(Ext)
+		%% @todo Convert to string:lowercase on OTP-20+.
+		<< $., Ext/binary >> -> all_ext(list_to_binary(string:to_lower(binary_to_list(Ext))))
 	end.
 
 %% @doc Return the mimetype for a Web related file by looking at its extension.
@@ -32,7 +33,8 @@ all(Path) ->
 web(Path) ->
 	case filename:extension(Path) of
 		<<>> -> {<<"application">>, <<"octet-stream">>, []};
-		<< $., Ext/binary >> -> web_ext(Ext)
+		%% @todo Convert to string:lowercase on OTP-20+.
+		<< $., Ext/binary >> -> web_ext(list_to_binary(string:to_lower(binary_to_list(Ext))))
 	end.
 
 %% Internal.
@@ -585,7 +587,7 @@ all_ext(<<"org">>) -> {<<"application">>, <<"vnd.lotus-organizer">>, []};
 all_ext(<<"osf">>) -> {<<"application">>, <<"vnd.yamaha.openscoreformat">>, []};
 all_ext(<<"osfpvg">>) -> {<<"application">>, <<"vnd.yamaha.openscoreformat.osfpvg+xml">>, []};
 all_ext(<<"otc">>) -> {<<"application">>, <<"vnd.oasis.opendocument.chart-template">>, []};
-all_ext(<<"otf">>) -> {<<"application">>, <<"x-font-otf">>, []};
+all_ext(<<"otf">>) -> {<<"font">>, <<"otf">>, []};
 all_ext(<<"otg">>) -> {<<"application">>, <<"vnd.oasis.opendocument.graphics-template">>, []};
 all_ext(<<"oth">>) -> {<<"application">>, <<"vnd.oasis.opendocument.text-web">>, []};
 all_ext(<<"oti">>) -> {<<"application">>, <<"vnd.oasis.opendocument.image-template">>, []};
@@ -837,9 +839,9 @@ all_ext(<<"trm">>) -> {<<"application">>, <<"x-msterminal">>, []};
 all_ext(<<"tr">>) -> {<<"text">>, <<"troff">>, []};
 all_ext(<<"tsd">>) -> {<<"application">>, <<"timestamped-data">>, []};
 all_ext(<<"tsv">>) -> {<<"text">>, <<"tab-separated-values">>, []};
-all_ext(<<"ttc">>) -> {<<"application">>, <<"x-font-ttf">>, []};
+all_ext(<<"ttc">>) -> {<<"font">>, <<"collection">>, []};
 all_ext(<<"t">>) -> {<<"text">>, <<"troff">>, []};
-all_ext(<<"ttf">>) -> {<<"application">>, <<"x-font-ttf">>, []};
+all_ext(<<"ttf">>) -> {<<"font">>, <<"ttf">>, []};
 all_ext(<<"ttl">>) -> {<<"text">>, <<"turtle">>, []};
 all_ext(<<"twd">>) -> {<<"application">>, <<"vnd.simtech-mindmapper">>, []};
 all_ext(<<"twds">>) -> {<<"application">>, <<"vnd.simtech-mindmapper">>, []};
@@ -934,7 +936,8 @@ all_ext(<<"wm">>) -> {<<"video">>, <<"x-ms-wm">>, []};
 all_ext(<<"wmv">>) -> {<<"video">>, <<"x-ms-wmv">>, []};
 all_ext(<<"wmx">>) -> {<<"video">>, <<"x-ms-wmx">>, []};
 all_ext(<<"wmz">>) -> {<<"application">>, <<"x-msmetafile">>, []};
-all_ext(<<"woff">>) -> {<<"application">>, <<"font-woff">>, []};
+all_ext(<<"woff2">>) -> {<<"font">>, <<"woff2">>, []};
+all_ext(<<"woff">>) -> {<<"font">>, <<"woff">>, []};
 all_ext(<<"wpd">>) -> {<<"application">>, <<"vnd.wordperfect">>, []};
 all_ext(<<"wpl">>) -> {<<"application">>, <<"vnd.ms-wpl">>, []};
 all_ext(<<"wps">>) -> {<<"application">>, <<"vnd.ms-works">>, []};

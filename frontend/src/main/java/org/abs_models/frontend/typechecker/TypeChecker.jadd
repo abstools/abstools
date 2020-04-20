@@ -129,7 +129,7 @@ aspect TypeChecker {
                     } else {
                         ResolvedName n = m.values().iterator().next();
                         // give a hint on how to re-export
-                        e.add(new TypeError(name, ErrorMessage.NO_IMPLICIT_NAME_REEXPORT, s, s, n.getQualifiedName().getModuleName()));
+                        e.add(new SemanticWarning(name, ErrorMessage.NO_IMPLICIT_NAME_REEXPORT, s, s, n.getQualifiedName().getModuleName()));
                     }
                 }
             } else {
@@ -722,7 +722,7 @@ aspect TypeChecker {
 
     public void ForeachStmt.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
-        
+
         getListExp().typeCheck(e);
         // assertHasType() is too specific -- we need to check that ListExp is
         // a list, not its specific type (List<Int>)
@@ -732,6 +732,9 @@ aspect TypeChecker {
             e.add(new TypeError(getListExp(), ErrorMessage.EXPECTED_TYPE,
                                 getModel().getListType().getDecl().getQualifiedName(),
                                 getListExp().getType().getDecl().getQualifiedName()));
+        }
+        if (hasIndexVar() && getIndexVar().getName().equals(getValueVar().getName())) {
+            e.add(new SemanticError(getIndexVar(), ErrorMessage.LOOP_VARIABLE_ALREADY_IN_USE, getIndexVar().getName()));
         }
         getBody().typeCheck(e);
     }
