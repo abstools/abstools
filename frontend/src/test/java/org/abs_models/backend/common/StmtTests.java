@@ -108,6 +108,11 @@ public class StmtTests extends SemanticTests {
      }
 
     @Test
+    public void foreachIndexedNonempty() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-indexed-nonempty.abs"));
+     }
+
+    @Test
     public void foreachEmpty() throws Exception {
         assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-empty.abs"));
      }

@@ -12,6 +12,7 @@ public enum ErrorMessage {
     UNKOWN_DATACONSTRUCTOR("Unknown datatype constructor: %s."),
     UNKOWN_INTERFACE_OR_DATATYPE("Unknown interface or datatype: %s."),
     VARIABLE_ALREADY_DECLARED("Variable %s is already declared%s."),
+    LOOP_VARIABLE_ALREADY_IN_USE("Index variable name %s is already used for value variable"),
     EXPECTED_TYPE("Expected type %s, but found type %s instead."),
     NO_SUBTYPE("Type %s must be a subtype of type %s."),
     CANNOT_ASSIGN("Cannot assign %s to type %s."),

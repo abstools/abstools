@@ -444,7 +444,11 @@ aspect doPrettyPrinter {
     public void ForeachStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
         stream.print("foreach (");
-        stream.print(getLoopVarDecl().getName());
+        stream.print(getValueVar().getName());
+        if (hasIndexVar()) {
+            stream.print(", ");
+            stream.print(getIndexVar().getName());
+        }
         stream.print(" in ");
         getListExp().doPrettyPrint(stream, formatter);
         stream.print(") ");

@@ -125,14 +125,21 @@ aspect Typing {
 
     eq LoopVarDecl.getType() {
         ForeachStmt fs = (ForeachStmt) getParent();
-        Type lt = fs.getListExp().getType();
-        // Just being a bit defensive here.  We don't bother checking if it's
-        // a list, etc. since this will be caught by the type checker.
-        if (lt.isDataType()) {
-            DataTypeType llt = (DataTypeType)lt;
-            if (llt.numTypeArgs() == 1) return llt.getTypeArg(0);
+        if (fs.hasIndexVar() && this == fs.getIndexVar()) {
+            // We are the value bound to the list index
+            return getModel().getIntType();
+        } else {
+            // We are the variable bound to the list value
+            Type lt = fs.getListExp().getType();
+            // Just being a bit defensive here.  We don't bother checking if
+            // it's a list, etc. since this will be caught by the type
+            // checker.
+            if (lt.isDataType()) {
+                DataTypeType llt = (DataTypeType)lt;
+                if (llt.numTypeArgs() == 1) return llt.getTypeArg(0);
+            }
+            return UnknownType.INSTANCE;
         }
-        return UnknownType.INSTANCE;
     }
     /* Annotations */
     syn lazy Type Annotation.getType() = getValue().getType();

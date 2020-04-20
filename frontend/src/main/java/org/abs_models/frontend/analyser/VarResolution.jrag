@@ -88,8 +88,12 @@ aspect VarResolution {
 
     syn lazy VarOrFieldDecl ForeachStmt.locallookupVarOrFieldName(String name, boolean fieldOnly);
     eq ForeachStmt.locallookupVarOrFieldName(String name, boolean fieldOnly) {
-        if (!fieldOnly && getLoopVarDecl().getName().equals(name)) {
-            return getLoopVarDecl();
+        if (fieldOnly) {
+            return null;
+        } else if (getValueVar().getName().equals(name)) {
+            return getValueVar();
+        } else if(hasIndexVar() && getIndexVar().getName().equals(name)) {
+            return getIndexVar();
         } else {
             return null;
         }

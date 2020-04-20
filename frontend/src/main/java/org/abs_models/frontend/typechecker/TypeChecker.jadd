@@ -722,7 +722,7 @@ aspect TypeChecker {
 
     public void ForeachStmt.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
-        
+
         getListExp().typeCheck(e);
         // assertHasType() is too specific -- we need to check that ListExp is
         // a list, not its specific type (List<Int>)
@@ -732,6 +732,9 @@ aspect TypeChecker {
             e.add(new TypeError(getListExp(), ErrorMessage.EXPECTED_TYPE,
                                 getModel().getListType().getDecl().getQualifiedName(),
                                 getListExp().getType().getDecl().getQualifiedName()));
+        }
+        if (hasIndexVar() && getIndexVar().getName().equals(getValueVar().getName())) {
+            e.add(new SemanticError(getIndexVar(), ErrorMessage.LOOP_VARIABLE_ALREADY_IN_USE, getIndexVar().getName()));
         }
         getBody().typeCheck(e);
     }

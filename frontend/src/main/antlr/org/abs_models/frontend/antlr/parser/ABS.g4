@@ -174,7 +174,7 @@ stmt : annotations type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
     | annotations 'switch' '(' c=pure_exp ')' '{' casestmtbranch* '}'
                                                                    # SwitchStmt
     | annotations 'while' '(' c=pure_exp ')' stmt                  # WhileStmt
-    | annotations 'foreach' '(' i=IDENTIFIER 'in' l=pure_exp ')' stmt
+    | annotations 'foreach' '(' var=IDENTIFIER (',' index=IDENTIFIER)? 'in' l=pure_exp ')' stmt
                                                                    # ForeachStmt
     | annotations 'try' b=stmt
         'catch' (('{' casestmtbranch* '}') | casestmtbranch)

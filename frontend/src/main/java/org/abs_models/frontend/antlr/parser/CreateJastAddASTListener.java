@@ -410,7 +410,10 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         if (!(body instanceof Block)) {
             setV(ctx.stmt(), new Block(new List<>(), new List<>(body)));
         }
-        setV(ctx, new ForeachStmt(v(ctx.annotations()), new LoopVarDecl(ctx.i.getText()), v(ctx.l), v(ctx.stmt())));
+        Opt<LoopVarDecl> indexvar;
+        if (ctx.index == null) indexvar = new Opt<>();
+        else indexvar = new Opt<>(new LoopVarDecl(ctx.index.getText()));
+        setV(ctx, new ForeachStmt(v(ctx.annotations()), new LoopVarDecl(ctx.var.getText()), indexvar, v(ctx.l), v(ctx.stmt())));
     }
     @Override public void exitTryCatchFinallyStmt(ABSParser.TryCatchFinallyStmtContext ctx) {
         Stmt body = v(ctx.b);

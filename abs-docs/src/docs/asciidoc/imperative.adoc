@@ -402,26 +402,34 @@ while (x < 5) {
 [[foreach-loop]]
 === The Foreach Loop
 
-The foreach loop repeatedly executes its body with the loop variable bound to
-each element of the given list, in sequence.  The rules for the loop variable
-follow the rules of local variable declarations in blocks: the loop variable
-cannot shadow an existing variable, but can use the same name as an object
-field.
+The foreach loop repeatedly executes its body with a loop value variable bound
+to each element of the given list, in sequence.  An optional loop index
+variable is bound to the index of the element bound to the value variable,
+starting with 0.
 
-NOTE: Also see the second-order functions like `map` and `filter` in
-Section <<type-list>> for common list processing idioms.
+The rules for the loop variables follow the rules of local variable
+declarations in blocks: the loop variables cannot shadow existing variables,
+but can use the same name as an object field.  Loop variables go out of scope
+after execution leaves the body of their foreach loop.
+
+NOTE: Also see the second-order functions `map`, `filter`, `foldl` and `foldr`
+in Section <<type-list>> for common list processing idioms.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _ForeachStmt_ ::= | `foreach` `(` _Identifier_ `in` _PureExp_ `)` _Stmt_
+| _ForeachStmt_ ::= | `foreach` `(` _Identifier_ [ `,` _identifier_] `in` _PureExp_ `)` _Stmt_
 |====
 
 [source]
 .Example
 ----
-foreach (i in list[1, 2, 3]) {
-  println("i = " + toString(i));
+foreach (v in list["a", "b", "c"]) {
+  println(`v is bound to $v$`);
+}
+
+foreach (v, i in list["a", "b", "c"]) {
+  println(`Element number $i$ has value $v$`);
 }
 ----
 

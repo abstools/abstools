@@ -8,13 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The `foreach` loop now supports an optional second variable of type `Int` that is bound to the index of the current element, starting at zero.  The syntax is `foreach (elem, index in list) { ... }`.
+
 - The new function `ms_since_model_start` returns an integer containing the elapsed time in milliseonds since the model was started.
 
 ### Changed
 
-- In the erlang backend, remove the check for pending garbage collection at the beginning of each function body -- this cut run time by more than half in a benchmark.  Note that garbage collection happens rarely or (for non-long-running models) never, so the resulting increased waiting time when entering gc is not paid often.
+- Function calls in the erlang backend are significantly faster via removal of the check for pending garbage collection at the beginning of each function body.  (Note that garbage collection, i.e., removing unreferenced futures and objects, happens rarely, so the increased waiting time when entering gc caused by this change is not paid often.)
 
-- The import/export combination `import A from OtherModule; export A;` now issues a compile-time warning instead of an error.  This keeps older models running while announcing the upcoming change (the same construct is an error in the xtext branch already).
+- The import/export combination `import A from OtherModule; export A;` now issues a compile-time warning instead of an error.  This keeps older models running while announcing the upcoming change.  (The same construct is an error in the xtext branch already.)
 
 - In the Erlang backend, wall-clock time for running a model is now reported in milliseconds instead  of microseconds.  (To see the elapsed time, start the model with parameter `-v`.)
 
