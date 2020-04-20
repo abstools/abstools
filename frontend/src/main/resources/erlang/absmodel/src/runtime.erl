@@ -166,7 +166,7 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     Status = cog_monitor:waitfor(),
     case Verbose of
         0 -> ok;
-        _ -> io:format("Simulation time: ~p ms with status ~w~n", [erlang:system_time(millisecond) - StartTime, Status])
+        _ -> io:format(standard_error, "Simulation time: ~p ms with status ~w~n", [erlang:system_time(millisecond) - StartTime, Status])
     end,
     case DumpTrace of
         none -> ok;
