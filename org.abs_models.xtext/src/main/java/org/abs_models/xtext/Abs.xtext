@@ -197,7 +197,7 @@ Statement : Annotations
         | {WhileStatement.annotations=current}
             'while' '(' condition=Expression ')' body=Statement
         | {ForeachStatement.annotations=current}
-            'foreach' '(' loopvar=IDENTIFIER 'in' list=Expression ')'
+            'foreach' '(' loopvar=IDENTIFIER (',' indexvar=IDENTIFIER)? 'in' list=Expression ')'
             body=Statement
         | {TryCatchFinallyStatement.annotations=current}
             'try' body=Statement

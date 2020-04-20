@@ -727,10 +727,11 @@ public class XtextToJastAdd {
         else if(stmt instanceof org.abs_models.xtext.abs.ForeachStatement) {
             final org.abs_models.xtext.abs.ForeachStatement value = (org.abs_models.xtext.abs.ForeachStatement) stmt;
             final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
-            final LoopVarDecl var = new LoopVarDecl(value.getLoopvar());
+            final LoopVarDecl loopvar = new LoopVarDecl(value.getLoopvar());
+            final Opt<LoopVarDecl> indexvar = value.getIndexvar() == null ? new Opt<>() : new Opt<>(new LoopVarDecl(value.getIndexvar()));
             final PureExp list = pureExpFromXtext(value.getList());
             final Block body = blockFromXtext(value.getBody());
-            result = new ForeachStmt(annotations, var, list, body);
+            result = new ForeachStmt(annotations, loopvar, indexvar, list, body);
         }
         else if(stmt instanceof org.abs_models.xtext.abs.TryCatchFinallyStatement) {
             final org.abs_models.xtext.abs.TryCatchFinallyStatement value = (org.abs_models.xtext.abs.TryCatchFinallyStatement) stmt;
