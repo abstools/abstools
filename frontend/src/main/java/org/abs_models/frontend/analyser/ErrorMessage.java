@@ -104,6 +104,7 @@ public enum ErrorMessage {
     DEPLOYMENT_COMPONENT_IGNORED("Deployment component annotations are not allowed for local objects."),
     EXPECTED_DC("Expected a Deployment component, but received %s."),
     WRONG_HTTPNAME("Wrong type %s in HTTPName annotation, should be a string."),
+    WRONG_HTTP_OBJECT("Cannot export a value of type %s via HTTPName annotation, must be an object."),
     WRONG_HTTPCALLABLE("Parameter %s: type %s not supported for calling from HTTP."),
     DUPLICATE_HTTPNAME("Warning: Duplicate HTTP name %s in datatype declaration."),
 

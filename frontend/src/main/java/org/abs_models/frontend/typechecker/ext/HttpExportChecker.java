@@ -15,10 +15,33 @@ import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.Type;
 import org.abs_models.frontend.typechecker.DataTypeType;
 
+/**
+ * @author rudi
+ *
+ * Checks for type correctness of `HTTPName' annotations.
+ *
+ * - Parameters of methods annotated with `HTTPCallable' must have supported
+ *   types
+ *
+ * - `HTTPName' annotation must be of type String
+ *
+ * - Variables declared as accessibel via `HTTPName' must be of some interface
+ *   type
+ */
 public class HttpExportChecker extends DefaultTypeSystemExtension {
 
     public HttpExportChecker(Model m) {
         super(m);
+    }
+
+    private void checkHTTPNameCorrect(ASTNode<?> n, Type t, PureExp restname) {
+        if (restname == null) return;
+        if (!restname.getType().isStringType()) {
+            errors.add(new TypeError(n, ErrorMessage.WRONG_HTTPNAME, restname.getType().getQualifiedName()));
+        }
+        if (!t.isInterfaceType()) {
+            errors.add(new TypeError(n, ErrorMessage.WRONG_HTTP_OBJECT, t.getQualifiedName()));
+        }
     }
 
     private boolean isTypeUsableFromHTTP(Type paramtype) {
@@ -38,6 +61,24 @@ public class HttpExportChecker extends DefaultTypeSystemExtension {
             return false;
         }
         return false;
+    }
+
+    @Override
+    public void checkExpressionStmt(ExpressionStmt expressionStmt) {
+        checkHTTPNameCorrect(expressionStmt, expressionStmt.getExp().getType(),
+                             AnnotationHelper.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
+    }
+
+    @Override
+    public void checkAssignStmt(AssignStmt s) {
+        checkHTTPNameCorrect(s, s.getVar().getType(),
+                             AnnotationHelper.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.HTTPName"));
+    }
+
+    @Override
+    public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
+        checkHTTPNameCorrect(varDeclStmt, varDeclStmt.getVarDecl().getType(),
+                             AnnotationHelper.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     @Override
