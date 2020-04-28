@@ -5,4 +5,10 @@ aspect AtomicityAnnotation {
         return AtomicityChecker.isAtomic(this.getAnnotations());
     }
 
+    syn lazy boolean MethodSig.isReadonly() {
+        return AtomicityChecker.isReadonly(this.getAnnotations());
+    }
+    syn lazy boolean MethodImpl.isReadonly() {
+        return AtomicityChecker.isReadonly(this.getMethodSig().getAnnotations());
+    }
 }

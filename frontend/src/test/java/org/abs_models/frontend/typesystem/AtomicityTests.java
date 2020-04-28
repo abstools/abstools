@@ -31,11 +31,23 @@ public class AtomicityTests extends FrontendTest {
     }
     
     @Test
-    public void overriding() {
+    public void overridingAtomic() {
         checkOverride("[Atomic]", "[Atomic]", false);
         checkOverride("[Atomic]", "", true);
-        checkOverride("", "[Atomic]", true);
-        
+        checkOverride("", "[Atomic]", false);
+
+    }
+
+    @Test
+    public void overridingReadonly() {
+        checkOverride("[Readonly]", "[Readonly]", false);
+        checkOverride("[Readonly]", "", true);
+        checkOverride("", "[Readonly]", false);
+    }
+
+    @Test
+    public void checkReadonlyAssign() {
+        assertTypeErrors("class C { Bool b = False; [Readonly] Unit m() { b = True; } }");
     }
 
     public void checkOverride(String a1, String a2, boolean fail) {

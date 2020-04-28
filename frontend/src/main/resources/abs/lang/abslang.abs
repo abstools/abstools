@@ -55,7 +55,7 @@ export Inv, Pre, Post;
 
 // Various annotations
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
-export COG, Plain, Final, Atomic;
+export COG, Plain, Final, Atomic, Readonly;
 export HTTPName, HTTPCallable;
 export Expansion, ExpansionCall;
 
@@ -638,6 +638,12 @@ data FinalAnnotation = Final;
 data AtomicityAnnotation = Atomic;
 
 /**
+ * Declare methods to be read-only, i.e., such methods must not contain
+ * assignments to fields.
+ */
+data ReadonlyAnnotation = Readonly;
+
+/**
  * Declare methods to be callable from the HTTP API.
  */
 data HTTPCallableAnnotation = HTTPCallable;
@@ -778,9 +784,9 @@ def Rat averageDivsN(List<Rat> consumeds, List<Rat> totals, Int length) =
 interface DeploymentComponent {
     // Return the load (0-100) for given resourcetype over the last n periods.
     // If resource is infinite, return 0.
-    [Atomic] Rat load(Resourcetype rtype, Int periods);
+    [Atomic, Readonly] Rat load(Resourcetype rtype, Int periods);
     // Return the total available amount for given resourcetype.
-    [Atomic] InfRat total(Resourcetype rtype);
+    [Atomic, Readonly] InfRat total(Resourcetype rtype);
     // Utility method, implemented in terms of 'decrementResources' /
     // 'incrementResources'.  Returns the amount transferred.
     [Atomic] Rat transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
@@ -793,20 +799,20 @@ interface DeploymentComponent {
     // was increased.
     [Atomic] Rat incrementResources(Rat amount, Resourcetype rtype);
 
-    [Atomic] String getName();
+    [Atomic, Readonly] String getName();
 
-    [Atomic] CloudProvider getProvider();
-    [Atomic] Time getCreationTime();
-    [Atomic] Rat getStartupDuration();
-    [Atomic] Rat getShutdownDuration();
-    [Atomic] Int getPaymentInterval();
-    [Atomic] Rat getCostPerInterval();
-    [Atomic] Rat getAccumulatedCost(); // calculated via creation time + cost + payment interval
-    [Atomic] Rat getNumberOfCores();
+    [Atomic, Readonly] CloudProvider getProvider();
+    [Atomic, Readonly] Time getCreationTime();
+    [Atomic, Readonly] Rat getStartupDuration();
+    [Atomic, Readonly] Rat getShutdownDuration();
+    [Atomic, Readonly] Int getPaymentInterval();
+    [Atomic, Readonly] Rat getCostPerInterval();
+    [Atomic, Readonly] Rat getAccumulatedCost(); // calculated via creation time + cost + payment interval
+    [Atomic, Readonly] Rat getNumberOfCores();
     // Convenience methods for calling CloudProvider acquireInstance,
     // releaseInstance.  If no cloud provider is set, return True.
-    Bool acquire();
-    Bool release();
+    [Readonly] Bool acquire();
+    [Readonly] Bool release();
     // Shut down deployment component.  Semantics of job termination / object
     // invalidation upon shutdown are currently under discussion.
     Bool shutdown();
@@ -1023,7 +1029,7 @@ implements DeploymentComponentForCloudProvider {
 
     // Creation time and shutdown time are used by (at least) the
     // visualization backend.  Do not rename.
-    Time creationTime = now();
+    [Final] Time creationTime = now();
     Maybe<Time> shutdownTime = Nothing;
 
     // Initialized flag read by the backend to avoid premature execution.  Do
@@ -1054,7 +1060,7 @@ implements DeploymentComponentForCloudProvider {
     {
         this.initialized = True;
     }
-    [Atomic] Rat load(Resourcetype rtype, Int periods) {
+    [Atomic, Readonly] Rat load(Resourcetype rtype, Int periods) {
         Rat result = 0;
         switch (rtype) {
             Speed => {
@@ -1075,7 +1081,7 @@ implements DeploymentComponentForCloudProvider {
         }
         return result;
     }
-    [Atomic] InfRat total(Resourcetype rtype) {
+    [Atomic, Readonly] InfRat total(Resourcetype rtype) {
         InfRat result = InfRat;
         switch (rtype) {
             Speed => result = cpu;
@@ -1132,15 +1138,15 @@ implements DeploymentComponentForCloudProvider {
     }
     [Atomic] DeploymentComponent convertToDC() { return this; }
 
-    [Atomic] CloudProvider getProvider() { return cloudprovider; }
-    Bool acquire() {
+    [Atomic, Readonly] CloudProvider getProvider() { return cloudprovider; }
+    [Readonly] Bool acquire() {
         Bool result = True;
         if (cloudprovider != null) {
             result = await cloudprovider!acquireInstance(this);
         }
         return result;
     }
-    Bool release() {
+    [Readonly] Bool release() {
         Bool result = True;
         if (cloudprovider != null) {
             result = await cloudprovider!releaseInstance(this);
@@ -1159,14 +1165,14 @@ implements DeploymentComponentForCloudProvider {
         return True;
     }
 
-    [Atomic] String getName() { return description; }
-    [Atomic] Time getCreationTime() { return creationTime; }
-    [Atomic] Rat getStartupDuration() { return startupDuration; }
-    [Atomic] Rat getShutdownDuration() { return shutdownDuration; }
-    [Atomic] Int getPaymentInterval() { return paymentInterval; }
-    [Atomic] Rat getCostPerInterval() { return costPerInterval; }
+    [Atomic, Readonly] String getName() { return description; }
+    [Atomic, Readonly] Time getCreationTime() { return creationTime; }
+    [Atomic, Readonly] Rat getStartupDuration() { return startupDuration; }
+    [Atomic, Readonly] Rat getShutdownDuration() { return shutdownDuration; }
+    [Atomic, Readonly] Int getPaymentInterval() { return paymentInterval; }
+    [Atomic, Readonly] Rat getCostPerInterval() { return costPerInterval; }
 
-    [Atomic] Rat getAccumulatedCost() {
+    [Atomic, Readonly] Rat getAccumulatedCost() {
         Rat result = 0;
         if (costPerInterval > 0 && paymentInterval > 0) {
             Int nIntervals = truncate(truncate(timeDifference(creationTime, now())) / paymentInterval);
@@ -1175,7 +1181,7 @@ implements DeploymentComponentForCloudProvider {
         return result;
     }
 
-    [Atomic] Rat getNumberOfCores() { return numberOfCores; }
+    [Atomic, Readonly] Rat getNumberOfCores() { return numberOfCores; }
 }
 
 // abbreviation for [DC: foo] annotations
