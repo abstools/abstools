@@ -1,0 +1,49 @@
+import org.abs_models.frontend.typechecker.nullable.StmtSet;
+
+aspect ControlFlow {
+
+	//== Entry / Exit ==
+	
+	syn nta Stmt MethodImpl.entry() = new SkipStmt();
+	syn nta Stmt MethodImpl.exit() = new SkipStmt();
+
+	eq MethodImpl.entry().following() = new StmtSet(getBlock());
+	eq MethodImpl.getBlock().following() = new StmtSet(exit());
+	
+	inh Stmt Stmt.exit();
+	eq MethodImpl.getBlock().exit() = exit();
+
+	//== Predecessors ==
+	
+	coll StmtSet Stmt.pred() with add;
+	Stmt contributes this to Stmt.pred() for each succ();
+
+	//== Successors ==
+	
+	// TODO: Handle exceptions
+
+	/**
+	 * All possible Statements that could follow this one
+	 */
+	syn StmtSet Stmt.succ() = following();
+	/**
+	 * The next statement in the AST
+	 */
+	inh StmtSet Stmt.following();
+
+	eq IfStmt.succ() = hasElse()
+		? StmtSet.empty().union(getThen()).union(getElse())
+		: following().union(getThen());
+	
+	eq WhileStmt.succ() = following().union(getBody());
+	eq WhileStmt.getBody().following() = StmtSet.empty().union(this);
+
+	eq Block.succ() = getNumStmt() != 0
+		? StmtSet.empty().union(getStmt(0)) 
+		: following();
+	eq Block.getStmt(int i).following() = i != getNumStmt() - 1
+		? StmtSet.empty().union(getStmt(i+1))
+		: following();
+
+	// ReturnStmt does not need extra handling. It has to be the last stmt
+}
