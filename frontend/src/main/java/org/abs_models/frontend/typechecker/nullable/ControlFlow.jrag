@@ -9,14 +9,24 @@ aspect ControlFlow {
 
 	eq MethodImpl.entry().following() = new SimpleSet<Stmt>(getBlock());
 	eq MethodImpl.getBlock().following() = new SimpleSet<Stmt>(exit());
+	eq MethodImpl.exit().following() = new SimpleSet<Stmt>();
 	
 	inh Stmt Stmt.exit();
 	eq MethodImpl.getBlock().exit() = exit();
+	eq MethodImpl.entry().exit() = exit();
+	eq MethodImpl.exit().exit() = null;
 
 	//== Predecessors ==
 	
-	coll SimpleSet<Stmt> Stmt.pred() with add;
+	coll SimpleSet<Stmt> Stmt.pred() with add root MethodImpl;
 	Stmt contributes this to Stmt.pred() for each succ();
+
+	// NTAs are not, in general, included in the collection attribute traversal; we have to fudge around this
+    protected void MethodImpl.collect_contributors_Stmt_pred(MethodImpl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+    	entry().collect_contributors_Stmt_pred(_root, _map);
+    	exit().collect_contributors_Stmt_pred(_root, _map);
+    	super.collect_contributors_Stmt_pred(_root, _map);
+    }
 
 	//== Successors ==
 	
