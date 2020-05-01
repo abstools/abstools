@@ -1,0 +1,37 @@
+import org.abs_models.frontend.typechecker.nullable.NullableInfo;
+import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+
+aspect Nullable {
+  // == Nullable in ==
+  /* coll is broken right now
+   * coll SimpleSet<VarOrFieldDecl> Stmt.nullable_in() circular [SimpleSet.<VarOrFieldDecl>empty()] with add;
+   * Stmt contributes nullable_out() to Stmt.nullable_in() for each succ();
+   */
+  syn SimpleSet<VarOrFieldDecl> Stmt.nullable_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+    SimpleSet<VarOrFieldDecl> s = new SimpleSet();
+    for (Stmt stmt : pred()) {
+      s = s.union(stmt.nullable_out());
+    }
+    return s;
+  }
+  
+
+  // == Nullable out ==
+  // For most stmts out = in
+  syn SimpleSet<VarOrFieldDecl> Stmt.nullable_out() = nullable_in();
+
+  eq VarDeclStmt.nullable_out() {
+    VarDecl d = getVarDecl();
+
+    if (!(d.getType() instanceof ReferenceType)) {
+      return nullable_in();
+    }
+
+    if (!d.hasInitExp()) {
+      return nullable_in();
+    }
+
+    // TODO: finish
+    return nullable_in().union(d);
+  }
+}

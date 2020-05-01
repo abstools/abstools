@@ -171,6 +171,7 @@ test {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html
     useJUnitPlatform()
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
+    testLogging.showStandardStreams = true
 
     // Allow dynamic exclusion of tests (based on https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)
     // Usage: gradle test -PexcludeTests='**/ErlangModelApiTests*,**/ErlangExamplesTests*'
