@@ -2,7 +2,7 @@
 -module(cog).
 -export([start/0,start/1,start/2,start/3,add_main_task/3,add_task/7]).
 -export([create_task/6, create_model_api_task/4]).
--export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,sync_task_with_object/3]).
+-export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,get_object_state_for_update/2,sync_task_with_object/3]).
 -export([set_dc/2,get_dc_ref/2]).
 %% function informing cog about future state change
 -export([future_is_ready/2]).
@@ -38,6 +38,7 @@
 -export([cog_starting/3,
          no_task_schedulable/3,
          in_gc/3,
+         in_object_update/3,
          waiting_for_references/3,
          task_running/3,
          task_blocked/3]).
@@ -57,6 +58,11 @@
          new_tasks=gb_sets:empty(),
          %% State to return to after gc
          next_state_after_gc=no_task_schedulable,
+         %% State to return to after "transactional" object update.  (Tasks
+         %% own the object state together with the token; this is for
+         %% deployment components who need to negotiate state updates with
+         %% methods running on the abs-side object)
+         next_state_after_object_update=no_task_schedulable,
          %% true if gc is waiting for us to suspend the current process.
          %% (Waiting for gc to start used to be a separate gen_statem state
          %% but there was lots of code duplication between the two handler
@@ -207,12 +213,21 @@ object_state_changed(Cog, Oid, ObjectState) ->
 %% DCs call with "raw" pids, everyone else with a cog structure
 get_object_state(#cog{ref=Cog}, #object{oid=Oid}) ->
     get_object_state(Cog, Oid);
-get_object_state(Cog, Oid) ->
-    case gen_statem:call(Cog, {get_object_state, Oid}) of
+get_object_state(CogRef, Oid) ->
+    case gen_statem:call(CogRef, {get_object_state, Oid}) of
         dead -> throw(dataObjectDeadException);
         X -> X
     end.
 
+%% This function is only called by the DC, which needs to own the deployment
+%% component state while consuming resources.  WARNING: Can only check out one
+%% object state at a time; all events will be postponed until the following
+%% `update_object_state' event so if that doesn’t come we deadlock.
+get_object_state_for_update(CogRef, Oid) ->
+    case gen_statem:call(CogRef, {get_object_state_for_update, Oid}) of
+        dead -> throw(dataObjectDeadException);
+        X -> X
+    end.
 
 sync_task_with_object(#cog{ref=Cog}, #object{oid=Oid}, TaskRef) ->
     %% either uninitialized or active; if uninitialized, signal
@@ -454,6 +469,14 @@ handle_event({call, From}, {token, R, done, TaskInfo, _ObjectState}, _StateName,
     {keep_state, Data#data{task_infos=NewTaskInfos}, {reply, From, ok}};
 handle_event({call, From}, {get_object_state, Oid}, _StateName, #data{object_states=ObjectStates}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates, dead)}};
+handle_event({call, From}, {get_object_state_for_update, Oid}, StateName, Data=#data{object_states=ObjectStates}) ->
+    case StateName of
+        %% Since deployment components always run on their own cog, there is
+        %% not much contention
+        task_running -> {keep_state_and_data, [postpone]};
+        _ -> {next_state, in_object_update, Data#data{next_state_after_object_update=StateName},
+              {reply, From, maps:get(Oid, ObjectStates, dead)}}
+    end;
 handle_event({call, From}, {sync_task_with_object, Oid, TaskRef}, _StateName,
            Data=#data{fresh_objects=FreshObjects}) ->
     case maps:is_key(Oid, FreshObjects) of
@@ -1356,7 +1379,13 @@ in_gc(EventType, {'EXIT',TaskRef,_Reason},
 in_gc(EventType, Event, Data) ->
     handle_event(EventType, Event, in_gc, Data).
 
-
+%% The DC is in the middle of handling a Cost annotation or time advance --
+%% delay everything until we got the object state back.
+in_object_update(cast, {update_object_state, Oid, ObjectState},
+                 Data=#data{object_states=ObjectStates, next_state_after_object_update=NextState}) ->
+    {next_state, NextState, Data#data{object_states=maps:put(Oid, ObjectState, ObjectStates)}};
+in_object_update(_EventType, _Event, _Data) ->
+    {keep_state_and_data, [postpone]}.
 
 waiting_for_references({call, From}, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
       Data=#data{new_tasks=Tasks, dc=DC, dcref=DCRef, task_infos=TaskInfos,

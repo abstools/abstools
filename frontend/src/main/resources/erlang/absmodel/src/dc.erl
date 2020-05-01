@@ -228,7 +228,7 @@ handle_cast({clock_advance_for_dc, Amount}, State,
     %% signal, a cog might have already waken us up again, so we also accept
     %% it in state `active'.
     Now=clock:now(),
-    OState=cog:get_object_state(Cog, Oid),
+    OState=cog:get_object_state_for_update(Cog, Oid),
     {WakeUpItems1, OState1, NewCpuQueue, NewBwQueue, NewMemoryQueue}
         = update_dc_state_wake_up_cogs(gb_sets:empty(), OState, Amount,
                                        maps:get(cpu, ResourceWaiting, []),
@@ -343,7 +343,7 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
     %% We clamp the value -- do not try to consume a negative amount
     Requested = rationals:max(rationals:to_r(Amount_raw), 0),
     C=class_ABS_DC_DeploymentComponent,
-    OState=cog:get_object_state(MyCog, MyOid),
+    OState=cog:get_object_state_for_update(MyCog, MyOid),
     Initialized=C:get_val_internal(OState, 'initialized'),
     ResourceVarCurrent=var_current_for_resourcetype(Resourcetype),
     ResourceVarMax=var_max_for_resourcetype(Resourcetype),
