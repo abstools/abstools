@@ -33,6 +33,20 @@ public class SimpleSet<E> extends HashSet<E> {
 		return s;
 	}
 
+	public SimpleSet comp(SimpleSet<E> o) {
+		SimpleSet<E> s = empty();
+		s.addAll(this);
+		s.removeAll(o);
+		return s;
+	}
+
+	public SimpleSet comp(E e) {
+		SimpleSet<E> s = empty();
+		s.addAll(this);
+		s.remove(e);
+		return s;
+	}
+
 	public static <E> SimpleSet<E> empty() {
 		return new SimpleSet();
 	}
