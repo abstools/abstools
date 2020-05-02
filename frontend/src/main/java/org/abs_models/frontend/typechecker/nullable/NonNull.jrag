@@ -71,8 +71,8 @@ aspect NonNull {
   // TODO: refine using annotations (Is that even possible?)
   eq OriginalCall.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
 
-  // TODO
   eq Access.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  eq VarOrFieldUse.nonNull(SimpleSet<VarOrFieldDecl> set) = set.contains(getDecl());
 
   eq AsExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
 
