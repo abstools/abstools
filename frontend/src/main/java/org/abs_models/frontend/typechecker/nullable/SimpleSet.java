@@ -33,6 +33,24 @@ public class SimpleSet<E> extends HashSet<E> {
 		return s;
 	}
 
+	public SimpleSet intersection(SimpleSet<E> o) {
+		SimpleSet<E> s = empty();
+		for (E e : this) {
+			if (o.contains(e)) {
+				s.add(e);
+			}
+		}
+		return s;
+	}
+
+	public SimpleSet intersection(E e) {
+		SimpleSet<E> s = empty();
+		if (contains(e)) {
+			s.add(e);
+		}
+		return s;
+	}
+
 	public SimpleSet comp(SimpleSet<E> o) {
 		SimpleSet<E> s = empty();
 		s.addAll(this);
