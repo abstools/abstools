@@ -11,6 +11,7 @@ import org.abs_models.ABSTest;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 import org.junit.Test;
 
 public class NullableTests extends FrontendTest {
@@ -25,6 +26,99 @@ public class NullableTests extends FrontendTest {
         System.out.println(b.getStmt(0).nonNull_out());
         System.out.println(b.getStmt(1).nonNull_out());
         assertTrue(true);
+    }
+
+    @Test
+    public void testMethodDeclNewExp() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); } }");
+
+        Block b = met.getBlock();
+        VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
+        VarDecl d = s.getVarDecl();
+
+        assertTrue(b.getStmt(0).nonNull_out().contains(d));
+    }
+
+    @Test
+    public void testMethodAssignNewExp() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i = new C(); } }");
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        Block b = met.getBlock();
+
+        SimpleSet<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
+        assertTrue(nonNull.contains(p));
+        assertEquals(1, nonNull.size());
+    }
+
+    @Test
+    public void testMethodAssignThis() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i = this; } }");
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        Block b = met.getBlock();
+
+        SimpleSet<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
+        assertTrue(nonNull.contains(p));
+        assertEquals(1, nonNull.size());
+    }
+
+    @Test
+    public void testMethodSecondCall() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i.m(this); } }");
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        Block b = met.getBlock();
+
+        SimpleSet<VarOrFieldDecl> nonNull1 = b.getStmt(0).nonNull_in();
+        SimpleSet<VarOrFieldDecl> nonNull2 = b.getStmt(0).nonNull_out();
+        assertTrue(nonNull1.isEmpty());
+        assertTrue(nonNull2.contains(p));
+    }
+
+    @Test
+    public void testMethodAssert() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { assert i != null; } }");
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        Block b = met.getBlock();
+
+        SimpleSet<VarOrFieldDecl> nonNull1 = b.getStmt(0).nonNull_in();
+        SimpleSet<VarOrFieldDecl> nonNull2 = b.getStmt(0).nonNull_out();
+        assertTrue(nonNull1.isEmpty());
+        assertTrue(nonNull2.contains(p));
+    }
+
+    @Test
+    public void testMethodCondition() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { if (i != null) skip; } }");
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        Block b = met.getBlock();
+
+        IfStmt ifStmt = (IfStmt) b.getStmt(0);
+
+        SimpleSet<VarOrFieldDecl> nonNull = ifStmt.getThen().nonNull_in();
+        assertTrue(nonNull.contains(p));
+    }
+
+    @Test
+    public void testMethodInvertedCondition() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { if (i == null) skip; else skip; } }");
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        Block b = met.getBlock();
+
+        IfStmt ifStmt = (IfStmt) b.getStmt(0);
+
+        SimpleSet<VarOrFieldDecl> nonNull = ifStmt.getElse().nonNull_in();
+        assertTrue(nonNull.contains(p));
+    }
+
+    static private MethodImpl getMethod(String prog) {
+        Model m = assertParse(prog);
+        ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
+        return d.getMethod(0);
     }
 
     static private ModuleDecl getTestModule(Model m) {
