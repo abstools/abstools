@@ -6,19 +6,47 @@ aspect NonNull {
   syn SimpleSet<VarOrFieldDecl> Stmt.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
     SimpleSet<VarOrFieldDecl> s = new SimpleSet();
     for (Stmt stmt : pred()) {
+      s = s.union(stmt.nonNull_out());
+    }
+
+    for (Stmt stmt : pred()) {
+      s = s.intersection(stmt.nonNull_out());
+
       // Handle conditions
       if (stmt instanceof IfStmt) {
         IfStmt ifStmt = (IfStmt) stmt;
         PureExp cond = ifStmt.getCondition();
 
+        boolean assumeTrue = false;
         if (this == ifStmt.getThen()) {
-          // TODO
-        } else {
-          // TODO
+          assumeTrue = true;
+        }
+        // TODO: Expand and put in own method/attribute
+        if (cond instanceof EqualityExpr) {
+          if (cond instanceof NotEqExp) {
+            assumeTrue = !assumeTrue;
+          }
+          EqualityExpr ee = (EqualityExpr) cond;
+          PureExp left = ee.getLeft();
+          PureExp right = ee.getRight();
+          if (left instanceof NullExp) {
+            PureExp e = left;
+            left = right;
+            right = left;
+          }
+          if (left instanceof VarOrFieldUse) {
+            VarOrFieldDecl d = ((VarOrFieldUse) left).getDecl();
+            if (assumeTrue) {
+              // If cond is true, then left must be null
+              // We can safely do this without intersection, because we know we are in an IfStmt
+              s = s.comp(d);
+            } else {
+              s = s.union(d);
+            }
+            continue;
+          }
         }
       }
-
-      s = s.intersection(stmt.nonNull_out());
     }
     return s;
   }
