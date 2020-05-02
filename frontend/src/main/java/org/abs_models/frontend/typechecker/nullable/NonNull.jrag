@@ -35,4 +35,53 @@ aspect NonNull {
     // TODO: finish
     return nonNull_in().union(d);
   }
+
+  // == Exp ==
+  syn boolean Expr.nonNull(SimpleSet<VarOrFieldDecl> set);
+
+  // TODO: refine using annotations
+  eq Call.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  // TODO: refine using annotations
+  eq GetExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  eq NewExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+
+  // TODO: refine using annotations (Is that even possible?)
+  eq OriginalCall.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  // TODO
+  eq Access.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  eq AsExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  // Binary expr can't be a reference
+  eq Binary.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+
+  // TODO
+  eq CaseExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  // Can't be a reference
+  eq DataConstructorExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+
+  // Can't be a reference
+  eq FnApp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+
+  // TODO
+  eq IfExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  eq ImplementsExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+
+  // TODO
+  eq LetExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  eq LiteralExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+
+  eq NullExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+
+  eq ParFnApp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+
+  eq ThisExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+
+  eq Unary.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
 }
