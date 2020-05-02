@@ -20,6 +20,8 @@ aspect NonNull {
   // For most stmts out = in
   syn SimpleSet<VarOrFieldDecl> Stmt.nonNull_out() = nonNull_in();
 
+  // TODO: AssertStmt
+
   eq AssignStmt.nonNull_out() {
     SimpleSet<VarOrFieldDecl> in = nonNull_in();
 
@@ -35,6 +37,8 @@ aspect NonNull {
     }
   }
 
+  eq ExpressionStmt.nonNull_out() = nonNull_in().union(getExp().nonNull_added());
+
   eq VarDeclStmt.nonNull_out() {
     VarDecl d = getVarDecl();
 
@@ -49,15 +53,34 @@ aspect NonNull {
       return in;
     }
 
-    if (d.getInitExp().nonNull(in)) {
-      return in.union(d);
+    Exp init = d.getInitExp();
+    if (init.nonNull(in)) {
+      return in.union(d).union(init.nonNull_added());
     } else {
       // We don't have to remove d, as it has not existed yet
-      return in;
+      return in.union(init.nonNull_added());
     }
   }
 
   // == Exp ==
+
+  // Set of decls that are added to nonNull by this expr
+  syn SimpleSet<VarOrFieldDecl> Exp.nonNull_added();
+
+  eq Exp.nonNull_added() = SimpleSet.<VarOrFieldDecl>empty();
+
+  eq Call.nonNull_added() {
+    PureExp callee = getCallee();
+
+    // TODO: Add more cases? Actually, only Paren would make sense, right?
+    if (callee instanceof VarOrFieldUse) {
+      VarOrFieldUse c = (VarOrFieldUse) callee;
+      return new SimpleSet<VarOrFieldDecl>(c.getDecl());
+    }
+
+    return SimpleSet.<VarOrFieldDecl>empty();
+  }
+
   syn boolean Exp.nonNull(SimpleSet<VarOrFieldDecl> set);
 
   // TODO: refine using annotations
@@ -88,8 +111,7 @@ aspect NonNull {
   // Can't be a reference
   eq FnApp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
 
-  // TODO
-  eq IfExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  eq IfExp.nonNull(SimpleSet<VarOrFieldDecl> set) = getThenExp().nonNull(set) && getElseExp().nonNull(set);
 
   eq ImplementsExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
 

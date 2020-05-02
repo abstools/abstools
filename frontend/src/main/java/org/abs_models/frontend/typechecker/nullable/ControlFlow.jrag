@@ -22,11 +22,11 @@ aspect ControlFlow {
 	Stmt contributes this to Stmt.pred() for each succ();
 
 	// NTAs are not, in general, included in the collection attribute traversal; we have to fudge around this
-    protected void MethodImpl.collect_contributors_Stmt_pred(MethodImpl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
-    	entry().collect_contributors_Stmt_pred(_root, _map);
-    	exit().collect_contributors_Stmt_pred(_root, _map);
-    	super.collect_contributors_Stmt_pred(_root, _map);
-    }
+  protected void MethodImpl.collect_contributors_Stmt_pred(MethodImpl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+  	entry().collect_contributors_Stmt_pred(_root, _map);
+  	exit().collect_contributors_Stmt_pred(_root, _map);
+  	super.collect_contributors_Stmt_pred(_root, _map);
+  }
 
 	//== Successors ==
 	
