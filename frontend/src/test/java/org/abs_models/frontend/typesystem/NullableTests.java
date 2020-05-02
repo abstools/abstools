@@ -16,7 +16,7 @@ import org.junit.Test;
 public class NullableTests extends FrontendTest {
     @Test
     public void test1() {
-        Model m = assertParse("interface I { Unit m(); } class C implements I { Unit m() { Object o = this; o = null; } }");
+        Model m = assertParse("interface I { Unit m(); } class C implements I { Unit m() { Object o; o = this; } }");
         CompilationUnit cu = m.getCompilationUnit(0);
         ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
         MethodImpl met = d.getMethod(0);

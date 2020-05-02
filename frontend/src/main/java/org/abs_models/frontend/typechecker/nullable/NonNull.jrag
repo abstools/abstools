@@ -20,6 +20,21 @@ aspect NonNull {
   // For most stmts out = in
   syn SimpleSet<VarOrFieldDecl> Stmt.nonNull_out() = nonNull_in();
 
+  eq AssignStmt.nonNull_out() {
+    SimpleSet<VarOrFieldDecl> in = nonNull_in();
+
+    Exp e = getValue();
+    VarOrFieldUse var = getVar();
+
+    VarOrFieldDecl d = var.getDecl();
+
+    if (e.nonNull(in)) {
+      return in.union(d);
+    } else {
+      return in.comp(d);
+    }
+  }
+
   eq VarDeclStmt.nonNull_out() {
     VarDecl d = getVarDecl();
 
