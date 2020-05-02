@@ -23,21 +23,27 @@ aspect NonNull {
   eq VarDeclStmt.nonNull_out() {
     VarDecl d = getVarDecl();
 
+    SimpleSet<VarOrFieldDecl> in = nonNull_in();
+
     if (!(d.getType().isReferenceType())) {
-      return nonNull_in();
+      return in;
     }
 
     if (!d.hasInitExp()) {
       // Because we have no init, the value is null
-      return nonNull_in();
+      return in;
     }
 
-    // TODO: finish
-    return nonNull_in().union(d);
+    if (d.getInitExp().nonNull(in)) {
+      return in.union(d);
+    } else {
+      // We don't have to remove d, as it has not existed yet
+      return in;
+    }
   }
 
   // == Exp ==
-  syn boolean Expr.nonNull(SimpleSet<VarOrFieldDecl> set);
+  syn boolean Exp.nonNull(SimpleSet<VarOrFieldDecl> set);
 
   // TODO: refine using annotations
   eq Call.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
