@@ -1,0 +1,38 @@
+import org.abs_models.frontend.typechecker.nullable.NullableInfo;
+import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+
+aspect NonNull {
+  // == NonNull in ==
+  /* coll is broken right now
+   * coll SimpleSet<VarOrFieldDecl> Stmt.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] with add;
+   * Stmt contributes nonNull_out() to Stmt.nonNull_in() for each succ();
+   */
+  syn SimpleSet<VarOrFieldDecl> Stmt.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+    SimpleSet<VarOrFieldDecl> s = new SimpleSet();
+    for (Stmt stmt : pred()) {
+      s = s.union(stmt.nonNull_out());
+    }
+    return s;
+  }
+  
+
+  // == NonNull out ==
+  // For most stmts out = in
+  syn SimpleSet<VarOrFieldDecl> Stmt.nonNull_out() = nonNull_in();
+
+  eq VarDeclStmt.nonNull_out() {
+    VarDecl d = getVarDecl();
+
+    if (!(d.getType().isReferenceType())) {
+      return nonNull_in();
+    }
+
+    if (!d.hasInitExp()) {
+      // Because we have no init, the value is null
+      return nonNull_in();
+    }
+
+    // TODO: finish
+    return nonNull_in().union(d);
+  }
+}
