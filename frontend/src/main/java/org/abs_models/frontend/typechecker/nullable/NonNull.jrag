@@ -32,9 +32,9 @@ aspect NonNull {
           if (left instanceof NullExp) {
             PureExp e = left;
             left = right;
-            right = left;
+            right = e;
           }
-          if (left instanceof VarOrFieldUse) {
+          if (right instanceof NullExp && left instanceof VarOrFieldUse) {
             VarOrFieldDecl d = ((VarOrFieldUse) left).getDecl();
             if (assumeTrue) {
               // If cond is true, then left must be null
@@ -66,14 +66,14 @@ aspect NonNull {
 
     VarOrFieldDecl d = var.getDecl();
 
-    if (e.nonNull(in)) {
+    if (e.nonNull()) {
       return in.union(d);
     } else {
       return in.comp(d);
     }
   }
 
-  eq ExpressionStmt.nonNull_out() = nonNull_in().union(getExp().nonNull_added());
+  eq ExpressionStmt.nonNull_out() = getExp().nonNull_out();
 
   eq VarDeclStmt.nonNull_out() {
     VarDecl d = getVarDecl();
@@ -90,77 +90,113 @@ aspect NonNull {
     }
 
     Exp init = d.getInitExp();
-    if (init.nonNull(in)) {
-      return in.union(d).union(init.nonNull_added());
+    if (init.nonNull()) {
+      return init.nonNull_out().union(d);
     } else {
       // We don't have to remove d, as it has not existed yet
-      return in.union(init.nonNull_added());
+      return init.nonNull_out();
     }
+  }
+
+  eq AssertStmt.nonNull_out() {
+    SimpleSet<VarOrFieldDecl> in = nonNull_in();
+
+    PureExp cond = getCondition();
+
+    boolean assumeTrue = true;
+    // TODO: Expand and put in own method/attribute
+    if (cond instanceof EqualityExpr) {
+      if (cond instanceof NotEqExp) {
+        assumeTrue = !assumeTrue;
+      }
+      EqualityExpr ee = (EqualityExpr) cond;
+      PureExp left = ee.getLeft();
+      PureExp right = ee.getRight();
+      if (left instanceof NullExp) {
+        PureExp e = left;
+        left = right;
+        right = e;
+      }
+      if (right instanceof NullExp && left instanceof VarOrFieldUse) {
+        VarOrFieldDecl d = ((VarOrFieldUse) left).getDecl();
+        if (assumeTrue) {
+          // If cond is true, then left must be null
+          // We can safely do this without intersection, because we know we are in an IfStmt
+          in = in.comp(d);
+        } else {
+          in = in.union(d);
+        }
+      }
+    }
+
+    return in;
   }
 
   // == Exp ==
 
-  // Set of decls that are added to nonNull by this expr
-  syn SimpleSet<VarOrFieldDecl> Exp.nonNull_added();
+  syn SimpleSet<VarOrFieldDecl> Exp.nonNull_in() = parentStmt().nonNull_in();
 
-  eq Exp.nonNull_added() = SimpleSet.<VarOrFieldDecl>empty();
+  syn SimpleSet<VarOrFieldDecl> Exp.nonNull_out();
 
-  eq Call.nonNull_added() {
+  eq Exp.nonNull_out() = nonNull_in();
+
+  eq Call.nonNull_out() {
+    SimpleSet<VarOrFieldDecl> in = nonNull_in();
     PureExp callee = getCallee();
 
     // TODO: Add more cases? Actually, only Paren would make sense, right?
     if (callee instanceof VarOrFieldUse) {
       VarOrFieldUse c = (VarOrFieldUse) callee;
-      return new SimpleSet<VarOrFieldDecl>(c.getDecl());
+      return in.union(c.getDecl());
     }
 
-    return SimpleSet.<VarOrFieldDecl>empty();
+    return in;
   }
-
-  syn boolean Exp.nonNull(SimpleSet<VarOrFieldDecl> set);
-
-  // TODO: refine using annotations
-  eq Call.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  
+  syn boolean Exp.nonNull();
 
   // TODO: refine using annotations
-  eq GetExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  eq Call.nonNull() = false;
 
-  eq NewExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  // TODO: refine using annotations
+  eq GetExp.nonNull() = false;
+
+  eq NewExp.nonNull() = true;
 
   // TODO: refine using annotations (Is that even possible?)
-  eq OriginalCall.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  eq OriginalCall.nonNull() = false;
 
-  eq Access.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
-  eq VarOrFieldUse.nonNull(SimpleSet<VarOrFieldDecl> set) = set.contains(getDecl());
+  eq Access.nonNull() = false;
+  eq VarOrFieldUse.nonNull() = nonNull_in().contains(getDecl());
 
-  eq AsExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  eq AsExp.nonNull() = false;
 
   // Binary expr can't be a reference
-  eq Binary.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  eq Binary.nonNull() = true;
 
   // TODO
-  eq CaseExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  eq CaseExp.nonNull() = false;
 
   // Can't be a reference
-  eq DataConstructorExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  eq DataConstructorExp.nonNull() = true;
 
   // Can't be a reference
-  eq FnApp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  eq FnApp.nonNull() = true;
 
-  eq IfExp.nonNull(SimpleSet<VarOrFieldDecl> set) = getThenExp().nonNull(set) && getElseExp().nonNull(set);
+  eq IfExp.nonNull() = getThenExp().nonNull() && getElseExp().nonNull();
 
-  eq ImplementsExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  eq ImplementsExp.nonNull() = true;
 
   // TODO
-  eq LetExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  eq LetExp.nonNull() = false;
 
-  eq LiteralExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  eq LiteralExp.nonNull() = true;
 
-  eq NullExp.nonNull(SimpleSet<VarOrFieldDecl> set) = false;
+  eq NullExp.nonNull() = false;
 
-  eq ParFnApp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  eq ParFnApp.nonNull() = true;
 
-  eq ThisExp.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  eq ThisExp.nonNull() = true;
 
-  eq Unary.nonNull(SimpleSet<VarOrFieldDecl> set) = true;
+  eq Unary.nonNull() = true;
 }
