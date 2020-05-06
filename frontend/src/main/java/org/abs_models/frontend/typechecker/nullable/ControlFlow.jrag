@@ -56,4 +56,38 @@ aspect ControlFlow {
 		: following();
 
 	// ReturnStmt does not need extra handling. It has to be the last stmt
+
+	inh Stmt Exp.parentStmt();
+
+	eq AssertStmt.getCondition().parentStmt() = this;
+
+	eq AssignStmt.getVar().parentStmt() = this;
+	eq AssignStmt.getValue().parentStmt() = this;
+
+	// TODO: await
+
+	eq CaseStmt.getExpr().parentStmt() = this;
+	// TODO: Handle patterns
+
+	eq DieStmt.getReason().parentStmt() = this;
+
+	eq DurationStmt.getMin().parentStmt() = this;
+	eq DurationStmt.getMax().parentStmt() = this;
+
+	eq ExpressionStmt.getExp().parentStmt() = this;
+
+	eq ForeachStmt.getListExp().parentStmt() = this;
+
+	eq IfStmt.getCondition().parentStmt() = this;
+
+	eq MoveCogToStmt.getTarget().parentStmt() = this;
+
+	eq ReturnStmt.getRetExp().parentStmt() = this;
+
+	eq ThrowStmt.getReason().parentStmt() = this;
+
+	inh Stmt VarDecl.parentStmt();
+	eq VarDeclStmt.getVarDecl().parentStmt() = this;
+
+	eq WhileStmt.getCondition().parentStmt() = this;
 }
