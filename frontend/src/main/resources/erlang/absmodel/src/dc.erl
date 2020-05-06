@@ -357,6 +357,8 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
         null ->
             %% The init block of the DC object has not run yet (should not
             %% happen) - but just record the request and deal with it later.
+            %% Remember put back object state so `MyCog' is unblocked.
+            cog:object_state_changed(MyCog, MyOid, OState),
             {keep_state,
              Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Requested}]},
                        recorded=[RequestEvent | Recorded],
