@@ -41,12 +41,7 @@ aspect ControlFlow {
 	 */
 	inh SimpleSet<Stmt> Stmt.following();
 
-	eq IfStmt.succ() = hasElse()
-		? SimpleSet.<Stmt>empty().union(getThen()).union(getElse())
-		: following().union(getThen());
-	
-	eq WhileStmt.succ() = following().union(getBody());
-	eq WhileStmt.getBody().following() = SimpleSet.<Stmt>empty().union(this);
+	// TODO: AssertStmt
 
 	eq Block.succ() = getNumStmt() != 0
 		? SimpleSet.<Stmt>empty().union(getStmt(0)) 
@@ -55,8 +50,28 @@ aspect ControlFlow {
 		? SimpleSet.<Stmt>empty().union(getStmt(i+1))
 		: following();
 
+	// TODO: CaseStmt
+
+	// TODO: What is a DieStmt?
+
+	// TODO: ForeachStmt
+
+	eq IfStmt.succ() = hasElse()
+		? SimpleSet.<Stmt>empty().union(getThen()).union(getElse())
+		: following().union(getThen());
+
+	// TODO: What is a MoveCogToStmt?
+
 	// ReturnStmt does not need extra handling. It has to be the last stmt
 
+	// TODO: ThrowStmt
+
+	// TODO: TryCatchFinally
+
+	eq WhileStmt.succ() = following().union(getBody());
+	eq WhileStmt.getBody().following() = SimpleSet.<Stmt>empty().union(this);
+
+	
 	inh Stmt Exp.parentStmt();
 
 	eq AssertStmt.getCondition().parentStmt() = this;
