@@ -2,6 +2,14 @@ import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 
 aspect ControlFlow {
 
+	public interface CFGNode {
+   	
+  }
+
+	Stmt implements CFGNode;
+	Exp implements CFGNode;
+	CaseBranchStmt implements CFGNode;
+
 	//== Entry / Exit ==
 	
 	syn nta Stmt MethodImpl.entry() = new SkipStmt();
@@ -54,8 +62,8 @@ aspect ControlFlow {
 	// TODO: A more granular control flow cannot be modelled right now, because we would need a common interface for Stmt/Exp/CaseBranchStmt(/Pattern)
 	// That currently results in an error in the generated code, but maybe I'm doing it wrong?
 	inh CaseStmt CaseBranchStmt.parentCase();
-	CaseStmt.getBranch(i).parentCase() = this;
-	CaseBranchStmt.following() = parentCase().following();
+	eq CaseStmt.getBranch(i).parentCase() = this;
+	eq CaseBranchStmt.following() = parentCase().following();
 
 	// TODO: What is a DieStmt?
 
