@@ -62,8 +62,8 @@ aspect ControlFlow {
 	// TODO: A more granular control flow cannot be modelled right now, because we would need a common interface for Stmt/Exp/CaseBranchStmt(/Pattern)
 	// That currently results in an error in the generated code, but maybe I'm doing it wrong?
 	inh CaseStmt CaseBranchStmt.parentCase();
-	eq CaseStmt.getBranch(i).parentCase() = this;
-	eq CaseBranchStmt.following() = parentCase().following();
+	eq CaseStmt.getBranch(int i).parentCase() = this;
+	eq CaseBranchStmt.getRight().following() = parentCase().following();
 
 	// TODO: What is a DieStmt?
 
@@ -80,10 +80,10 @@ aspect ControlFlow {
 	// TODO: ThrowStmt
 
 	// TODO: TryCatchFinally
-	eq TryCatchFinally.getBody().following = hasFinally()
+	eq TryCatchFinallyStmt.getBody().following() = hasFinally()
 		? new SimpleSet<Stmt>(getFinally())
 		: following();
-	eq TryCatchFinally.getFinally().following() = following();
+	eq TryCatchFinallyStmt.getFinally().following() = following();
 
 	eq WhileStmt.succ() = following().union(getBody());
 	eq WhileStmt.getBody().following() = SimpleSet.<Stmt>empty().union(this);
