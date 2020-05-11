@@ -3,22 +3,23 @@ import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 
 aspect NonNull {
   // == NonNull in ==
-  syn SimpleSet<VarOrFieldDecl> Stmt.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
     SimpleSet<VarOrFieldDecl> s = new SimpleSet();
-    for (Stmt stmt : pred()) {
-      s = s.union(stmt.nonNull_out());
+    for (CFGNode n : pred()) {
+      s = s.union(n.nonNull_out());
     }
 
-    for (Stmt stmt : pred()) {
-      s = s.intersection(stmt.nonNull_out());
+    for (CFGNode n : pred()) {
+      s = s.intersection(n.nonNull_out());
 
       // Handle conditions
-      if (stmt instanceof IfStmt) {
-        IfStmt ifStmt = (IfStmt) stmt;
+      if (n instanceof IfStmt) {
+        IfStmt ifStmt = (IfStmt) n;
         PureExp cond = ifStmt.getCondition();
+        CFGNode self = this;
 
         boolean assumeTrue = false;
-        if (this == ifStmt.getThen()) {
+        if (self == ifStmt.getThen()) {
           assumeTrue = true;
         }
         // TODO: Expand and put in own method/attribute
@@ -54,7 +55,7 @@ aspect NonNull {
 
   // == NonNull out ==
   // For most stmts out = in
-  syn SimpleSet<VarOrFieldDecl> Stmt.nonNull_out() = nonNull_in();
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out() = nonNull_in();
 
   // TODO: AssertStmt
 
