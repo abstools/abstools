@@ -11,8 +11,10 @@ aspect ControlFlow {
 
 	//== Entry / Exit ==
 	
-	syn nta Stmt MethodImpl.entry() = new SkipStmt();
-	syn nta Stmt MethodImpl.exit() = new SkipStmt();
+	syn nta CFGEntry MethodImpl.entry() = new CFGEntry();
+	syn nta CFGExit MethodImpl.exit() = new CFGExit();
+	syn String CFGEntry.toString() = "Entry";
+	syn String CFGExit.toString() = "Exit";
 
 	eq MethodImpl.entry().following() = new SimpleSet<CFGNode>(getBlock());
 	eq MethodImpl.getBlock().following() = new SimpleSet<CFGNode>(exit());
@@ -117,6 +119,7 @@ aspect ControlFlow {
 	 * All possible Statements that could follow this one
 	 */
 	syn SimpleSet<CFGNode> CFGNode.succ() = following();
+	
 	/**
 	 * The next statement in the AST
 	 */
@@ -309,7 +312,7 @@ aspect ControlFlow {
 	eq GetExp.canThrow() = true;
 
 	// TODO: Can this throw?
-	eq NewExp.canThrow() = true;
+	eq NewExp.canThrow() = false;
 
 	// TODO: Can this throw?
 	eq OriginalCall.canThrow() = true;

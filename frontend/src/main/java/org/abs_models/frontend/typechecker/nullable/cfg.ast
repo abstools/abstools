@@ -1,0 +1,2 @@
+CFGEntry : SkipStmt;
+CFGExit : SkipStmt;

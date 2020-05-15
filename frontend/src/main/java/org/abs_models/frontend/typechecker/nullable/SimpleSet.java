@@ -68,4 +68,14 @@ public class SimpleSet<E> extends HashSet<E> {
 	public static <E> SimpleSet<E> empty() {
 		return new SimpleSet();
 	}
+
+	public String toString() {
+		String s = "{";
+
+		for (E e : this) {
+			s += ", " + e.toString();
+		}
+
+		return s + "}";
+	}
 }
