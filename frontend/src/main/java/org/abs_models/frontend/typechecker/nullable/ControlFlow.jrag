@@ -124,7 +124,11 @@ aspect ControlFlow {
 	 */
 	inh SimpleSet<CFGNode> CFGNode.following();
 
-	// TODO: AssertStmt
+	eq AssertStmt.succ() = following().union(throwTarget());
+
+	eq AssignStmt.succ() = getValue().canThrow() ? following().union(throwTarget()) : following();
+
+	// TODO AwaitStmt
 
 	eq Block.succ() = getNumStmt() != 0
 		? SimpleSet.<CFGNode>empty().union(getStmt(0)) 
@@ -134,33 +138,54 @@ aspect ControlFlow {
 		: following();
 
 	
-	// TODO: A more granular control flow cannot be modelled right now, because we would need a common interface for Stmt/Exp/CaseBranchStmt(/Pattern)
-	// That currently results in an error in the generated code, but maybe I'm doing it wrong?
+	// TODO: Redo & Exceptions
 	inh CaseStmt CaseBranchStmt.parentCase();
 	eq CaseStmt.getBranch(int i).parentCase() = this;
 	eq CaseBranchStmt.getRight().following() = parentCase().following();
 
 	// TODO: What is a DieStmt?
 
+	eq DurationStmt.succ() = getMin().canThrow() || getMax().canThrow() ? following().union(throwTarget()) : following();
+
+	eq ExpressionStmt.succ() = getExp().canThrow() ? following().union(throwTarget()) : following();
+
 	// TODO: ForeachStmt
 
-	eq IfStmt.succ() = hasElse()
-		? SimpleSet.<CFGNode>empty().union(getThen()).union(getElse())
-		: following().union(getThen());
+	eq IfStmt.succ() {
+		SimpleSet<CFGNode> normalSucc = hasElse()
+			? SimpleSet.<CFGNode>empty().union(getThen()).union(getElse())
+			: following().union(getThen());
 
-	// TODO: What is a MoveCogToStmt?
+		if (getCondition().canThrow()) {
+			return normalSucc.union(throwTarget());
+		}
+		return normalSucc;
+	}
+
+	eq MoveCogToStmt.succ() = getTarget().canThrow() ? following().union(throwTarget()) : following();
 
 	// ReturnStmt does not need extra handling. It has to be the last stmt
 
-	// TODO: ThrowStmt
+	eq ThrowStmt.succ() = new SimpleSet<CFGNode>(throwTarget());
 
-	// TODO: TryCatchFinally
 	eq TryCatchFinallyStmt.getBody().following() = hasFinally()
 		? new SimpleSet<CFGNode>(getFinally())
 		: following();
 	eq TryCatchFinallyStmt.getFinally().following() = following();
+	// TODO: Check: Try always has at least one catch?
+	eq TryCatchFinallyStmt.getBody().throwTarget() = getCatch(0);
+	eq TryCatchFinallyStmt.getCatch(int i).following() = new SimpleSet<CFGNode>(getCatch(i).getRight())
+		.union(i + 1 < getNumCatch() 
+			// Next catch branch
+			? new SimpleSet<CFGNode>(getCatch(i + 1)) 
+			// Either finally, the next stmt, or throw again
+			: getBody().following().union(throwTarget()));
 
-	eq WhileStmt.succ() = following().union(getBody());
+	eq VarDeclStmt.succ() = getVarDecl().hasInitExp() && getVarDecl().getInitExp().canThrow() 
+		? following().union(throwTarget()) 
+		: following();
+
+	eq WhileStmt.succ() = following().union(getBody()).union(getCondition().canThrow() ? new SimpleSet<>(throwTarget()) : new SimpleSet<>());
 	eq WhileStmt.getBody().following() = SimpleSet.<CFGNode>empty().union(this);
 
 	inh Stmt Exp.parentStmt();
@@ -196,4 +221,89 @@ aspect ControlFlow {
 	eq VarDeclStmt.getVarDecl().parentStmt() = this;
 
 	eq WhileStmt.getCondition().parentStmt() = this;
+
+	//== Exceptions ==
+
+	// The closest surrounding catch or the exit node
+	inh CFGNode CFGNode.throwTarget();
+	eq MethodImpl.getChild(int i).throwTarget() = exit();
+
+	// Some exps can throw (e.g. division, incomplete patterns, etc.)
+	syn boolean Exp.canThrow() = false;
+
+	eq AsExp.canThrow() = getExp().canThrow();
+
+	eq Binary.canThrow() = getLeft().canThrow() || getRight().canThrow();
+
+	eq DivMultExp.canThrow() {
+		PureExp r = getRight();
+		/* TODO: Is this correct?
+		if (r instanceof FloatLiteral) {
+			FloatLiteral l = (FloatLiteral) r;
+			return l.getContent().equals("0.0");
+		}*/
+		if (r instanceof IntLiteral) {
+			FloatLiteral l = (FloatLiteral) r;
+			return l.getContent().equals("0");
+		}
+		return true;
+	}
+
+	eq CaseExp.canThrow() = true;
+
+	eq DataConstructorExp.canThrow() {
+		for (PureExp p : getParams()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// TODO: Can FnApp throw?
+	eq FnApp.canThrow() {
+		for (PureExp p : getParams()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	eq IfExp.canThrow() = getCondExp().canThrow() || getThenExp().canThrow() || getElseExp().canThrow();
+
+	eq ImplementsExp.canThrow() = getExp().canThrow();
+
+	eq LetExp.canThrow() = getVal().canThrow() || getExp().canThrow();
+
+	eq ParFnApp.canThrow() {
+		for (PureExp p : getParams()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+
+		for (ParFnAppParam p : getFuncParams()) {
+			if (p instanceof AnonymousFunctionDecl) {
+				AnonymousFunctionDecl a = (AnonymousFunctionDecl) p;
+				if (a.getPureExp().canThrow()) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	eq Unary.canThrow() = getOperand().canThrow();
+
+	eq Call.canThrow() = true;
+
+	eq GetExp.canThrow() = true;
+
+	// TODO: Can this throw?
+	eq NewExp.canThrow() = true;
+
+	// TODO: Can this throw?
+	eq OriginalCall.canThrow() = true;
 }
