@@ -48,7 +48,63 @@ public class ControlFlowTests extends FrontendTest {
         assertTrue(s2.succ().contains(exit));
     }
 
-    
+    @Test
+    public void testAssert() {}
+
+    @Test
+    public void testAssign() {}
+
+    @Test
+    public void testCase() {}
+
+    @Test
+    public void testDuration() {}
+
+    @Test
+    public void testExpressionStmt() {}
+
+    @Test
+    public void testForEach() {}
+
+    @Test
+    public void testIf() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { if (i == null) skip; else suspend; } }");
+        Block b = met.getBlock();
+
+        IfStmt ifStmt = (IfStmt) b.getStmt(0);
+        Block then = ifStmt.getThen();
+        Block elseStmt = ifStmt.getElse();
+
+        assertEquals(1, ifStmt.pred().size());
+        assertEquals(2, ifStmt.succ().size());
+        assertTrue(ifStmt.succ().contains(then));
+        assertTrue(ifStmt.succ().contains(elseStmt));
+
+        assertEquals(1, then.pred().size());
+        assertTrue(then.pred().contains(ifStmt));
+        assertEquals(1, then.succ().size());
+        assertTrue(then.getStmt(0).succ().contains(met.exit()));
+
+        assertEquals(1, elseStmt.pred().size());
+        assertTrue(elseStmt.pred().contains(ifStmt));
+        assertEquals(1, elseStmt.succ().size());
+        assertTrue(elseStmt.getStmt(0).succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testMoveCogTo() {}
+
+    @Test
+    public void testThrow() {}
+
+    @Test
+    public void testTry() {}
+
+    @Test
+    public void testVarDecl() {}
+
+    @Test
+    public void testWhile() {}
 
     static private MethodImpl getMethod(String prog) {
         Model m = assertParse(prog);
