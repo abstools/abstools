@@ -112,8 +112,6 @@ aspect ControlFlow {
   }
 
 	//== Successors ==
-	
-	// TODO: Handle exceptions
 
 	/**
 	 * All possible Statements that could follow this one
@@ -138,10 +136,19 @@ aspect ControlFlow {
 		: following();
 
 	
-	// TODO: Redo & Exceptions
-	inh CaseStmt CaseBranchStmt.parentCase();
-	eq CaseStmt.getBranch(int i).parentCase() = this;
-	eq CaseBranchStmt.getRight().following() = parentCase().following();
+	eq CaseStmt.succ() {
+		SimpleSet<CFGNode> normalSucc = hasBranch()
+			? new SimpleSet<CFGNode>(getBranch(0))
+			: following();
+		
+		if (getExpr().canThrow()) {
+			return normalSucc.union(throwTarget());
+		}
+		return normalSucc;
+	}
+	eq CaseStmt.getBranch(int i).following() = i + 1 < getNumBranch()
+		? new SimpleSet<CFGNode>(getBranch(i).getRight()).union(getBranch(i + 1))
+		: new SimpleSet<CFGNode>(getBranch(i).getRight()).union(following()).union(throwTarget());
 
 	// TODO: What is a DieStmt?
 
@@ -198,7 +205,7 @@ aspect ControlFlow {
 	// TODO: await
 
 	eq CaseStmt.getExpr().parentStmt() = this;
-	// TODO: Handle patterns
+	eq CaseStmt.getBranch(int i).parentStmt() = this;
 
 	eq DieStmt.getReason().parentStmt() = this;
 
