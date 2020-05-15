@@ -175,8 +175,14 @@ aspect NonNull {
   // Binary expr can't be a reference
   eq Binary.nonNull() = true;
 
-  // TODO
-  eq CaseExp.nonNull() = false;
+  eq CaseExp.nonNull() {
+    for (CaseBranch b : getBranchs()) {
+      if (!b.getRight().nonNull()) {
+        return false;
+      }
+    }
+    return true;
+  };
 
   // Can't be a reference
   eq DataConstructorExp.nonNull() = true;
