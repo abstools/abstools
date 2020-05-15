@@ -182,7 +182,7 @@ aspect NonNull {
       }
     }
     return true;
-  };
+  }
 
   // Can't be a reference
   eq DataConstructorExp.nonNull() = true;
