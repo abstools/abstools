@@ -262,6 +262,7 @@ aspect ControlFlow {
 		return true;
 	}
 
+	// TODO: Refine
 	eq CaseExp.canThrow() = true;
 
 	eq DataConstructorExp.canThrow() {
