@@ -152,6 +152,9 @@ aspect ControlFlow {
 	eq CaseStmt.getBranch(int i).following() = i + 1 < getNumBranch()
 		? new SimpleSet<CFGNode>(getBranch(i).getRight()).union(getBranch(i + 1))
 		: new SimpleSet<CFGNode>(getBranch(i).getRight()).union(following()).union(throwTarget());
+	// Parent CaseStmt or TryCatchFinallyStmt
+	inh Stmt CaseBranchStmt.parentStmt();
+	eq CaseBranchStmt.getRight().following() = parentStmt().following();
 
 	// TODO: What is a DieStmt?
 
@@ -253,7 +256,7 @@ aspect ControlFlow {
 			return l.getContent().equals("0.0");
 		}*/
 		if (r instanceof IntLiteral) {
-			FloatLiteral l = (FloatLiteral) r;
+			IntLiteral l = (IntLiteral) r;
 			return l.getContent().equals("0");
 		}
 		return true;
