@@ -367,7 +367,184 @@ public class ControlFlowTests extends FrontendTest {
     }
 
     @Test
-    public void testForEach() {}
+    public void testExpressionStmt_Implements1() {
+        MethodImpl met = getMethod("interface I { Unit m(I i1, I i2); } class C implements I { Unit m(I i1, I i2) { i1 implements I; skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+    }
+
+    @Test
+    public void testExpressionStmt_Implements2() {
+        MethodImpl met = getMethod("interface I { Unit m(I i1, I i2); } class C implements I { Unit m(I i1, I i2) { case 4 { 0 => i1; 1 => i2; } implements I; skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_Let1() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { let Int x = 2 * n1 in n2 + x; skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+    }
+
+    @Test
+    public void testExpressionStmt_Let2() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { let Int x = case n1 { 0 => n2; 1 => n1;} in n2 + x; skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_Let3() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { let Int x = 2 * n1 in n2 / x; skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_ParFnApp1() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { map(toString)(list[n1, n2]); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+    }
+
+    @Test
+    public void testExpressionStmt_ParFnApp2() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { map(toString)(list[n1, n2 / n1]); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_ParFnApp3() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { map((Int i) => i / n1)(list[n1, n2]); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_Unary1() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { -(n1 * n2); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+    }
+
+    @Test
+    public void testExpressionStmt_Unary2() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { -(n1 / n2); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_Call1() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i.m(this); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_Call2() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i!m(this); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_Get() {
+        MethodImpl met = getMethod("interface I { Unit m(Fut<Int> f); } class C implements I { Unit m(Fut<Int> f) { f.get; skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testExpressionStmt_New() {
+        // TODO
+    }
+
+    @Test
+    public void testExpressionStmt_OriginalCall() {
+        // TODO
+    }
+
+    @Test
+    public void testForEach() {
+        // TODO
+    }
 
     @Test
     public void testIf() {
@@ -395,19 +572,97 @@ public class ControlFlowTests extends FrontendTest {
     }
 
     @Test
-    public void testMoveCogTo() {}
+    public void testMoveCogTo() {
+        // TODO
+    }
 
     @Test
-    public void testThrow() {}
+    public void testThrow() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { throw AssertionFailException; skip; } }");
+        Block b = met.getBlock();
+
+        Stmt s = b.getStmt(0);
+
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(met.exit()));
+    }
 
     @Test
-    public void testTry() {}
+    public void testTry() {
+        // TODO
+    }
 
     @Test
-    public void testVarDecl() {}
+    public void testVarDecl1() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { Int n; skip; } }");
+        Block b = met.getBlock();
+
+        Stmt s = b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+    }
 
     @Test
-    public void testWhile() {}
+    public void testVarDecl2() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { Int n = 4; skip; } }");
+        Block b = met.getBlock();
+
+        Stmt s = b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+    }
+
+    @Test
+    public void testVarDecl3() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { Int n = 4 / 0; skip; } }");
+        Block b = met.getBlock();
+
+        Stmt s = b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
+    }
+
+    @Test
+    public void testWhile1() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n); } class C implements I { Unit m(Int n) { while (n > 0) n = n - 1; skip; } }");
+        Block b = met.getBlock();
+
+        WhileStmt w = (WhileStmt) b.getStmt(0);
+        Block body = w.getBody();
+        Stmt s = body.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, w.succ().size());
+        assertTrue(w.succ().contains(body));
+        assertTrue(w.succ().contains(skip));
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(w));
+    }
+
+    @Test
+    public void testWhile2() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n); } class C implements I { Unit m(Int n) { while (4 / n > 0) n = n - 1; skip; } }");
+        Block b = met.getBlock();
+
+        WhileStmt w = (WhileStmt) b.getStmt(0);
+        Block body = w.getBody();
+        Stmt s = body.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(3, w.succ().size());
+        assertTrue(w.succ().contains(body));
+        assertTrue(w.succ().contains(skip));
+        assertTrue(w.succ().contains(met.exit()));
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(w));
+    }
 
     static private MethodImpl getMethod(String prog) {
         Model m = assertParse(prog);
