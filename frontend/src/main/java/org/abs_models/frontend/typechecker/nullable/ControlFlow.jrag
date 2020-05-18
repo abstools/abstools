@@ -157,7 +157,7 @@ aspect ControlFlow {
 	inh Stmt CaseBranchStmt.parentStmt();
 	eq CaseBranchStmt.getRight().following() = parentStmt().following();
 
-	// TODO: What is a DieStmt?
+	eq DieStmt.succ() = new SimpleSet<>(exit());
 
 	eq DurationStmt.succ() = getMin().canThrow() || getMax().canThrow() ? following().union(throwTarget()) : following();
 
@@ -251,11 +251,7 @@ aspect ControlFlow {
 
 	eq DivMultExp.canThrow() {
 		PureExp r = getRight();
-		/* TODO: Is this correct?
-		if (r instanceof FloatLiteral) {
-			FloatLiteral l = (FloatLiteral) r;
-			return l.getContent().equals("0.0");
-		}*/
+		// TODO: Only throw for /0\.0+/ float lits
 		if (r instanceof IntLiteral) {
 			IntLiteral l = (IntLiteral) r;
 			return l.getContent().equals("0");
@@ -263,15 +259,26 @@ aspect ControlFlow {
 		return true;
 	}
 
-	// TODO: Refine
 	eq CaseExp.canThrow() {
+		boolean underscore = false;
+
 		for (CaseBranch cb : getBranchs()) {
 			if (cb.getLeft() instanceof UnderscorePattern) {
-				return false;
+				underscore = true;
 			}
 		}
 
-		return true;
+		if (!underscore) {
+			return true;
+		}
+
+		for (CaseBranch cb : getBranchs()) {
+			if (cb.getRight().canThrow()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	eq DataConstructorExp.canThrow() {
@@ -283,14 +290,30 @@ aspect ControlFlow {
 		return false;
 	}
 
-	// TODO: Can FnApp throw?
+	// TODO: Check if it can throw
 	eq FnApp.canThrow() {
 		for (PureExp p : getParams()) {
 			if (p.canThrow()) {
 				return true;
 			}
 		}
-		return false;
+
+		if (!(getDecl() instanceof FunctionDecl)) {
+			return true;
+		}
+
+		FunctionDef def = ((FunctionDecl) getDecl()).getFunctionDef();
+
+		if (def instanceof BuiltinFunctionDef) {
+			// TODO: We assume it can't throw, that should be checked;
+			return false;
+		}
+
+		if (def instanceof ExpFunctionDef) {
+			return ((ExpFunctionDef) def).getRhs().canThrow();
+		}
+
+		return true;
 	}
 
 	eq IfExp.canThrow() = getCondExp().canThrow() || getThenExp().canThrow() || getElseExp().canThrow();
@@ -334,9 +357,15 @@ aspect ControlFlow {
 
 	eq GetExp.canThrow() = true;
 
-	// TODO: Can this throw?
-	eq NewExp.canThrow() = false;
+	eq NewExp.canThrow() {
+		for (PureExp p : getParams()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
 
-	// TODO: Can this throw?
+		return false;
+	}
+
 	eq OriginalCall.canThrow() = true;
 }

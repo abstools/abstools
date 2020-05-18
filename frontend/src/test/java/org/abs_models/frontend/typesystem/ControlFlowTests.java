@@ -326,14 +326,17 @@ public class ControlFlowTests extends FrontendTest {
 
     @Test
     public void testExpressionStmt_FnApp1() {
-        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { head(Cons(1, Nil)); skip; } }");
+        MethodImpl met = getMethod("interface I { Unit m(Int n1, Int n2); } class C implements I { Unit m(Int n1, Int n2) { length(Cons(1, Nil)); skip; } }");
         Block b = met.getBlock();
 
         ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
         Stmt skip = b.getStmt(1);
 
-        assertEquals(1, s.succ().size());
+        FnApp f = (FnApp) s.getExp();
+
+        assertEquals(2, s.succ().size());
         assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
     }
 
     @Test
