@@ -129,7 +129,7 @@ aspect ControlFlow {
 
 	eq AssignStmt.succ() = getValue().canThrow() ? following().union(throwTarget()) : following();
 
-	// TODO AwaitStmt
+	eq AwaitStmt.succ() = getGuard().canThrow() ? following().union(throwTarget()) : following();
 
 	eq Block.succ() = getNumStmt() != 0
 		? SimpleSet.<CFGNode>empty().union(getStmt(0)) 
@@ -186,7 +186,6 @@ aspect ControlFlow {
 		? new SimpleSet<CFGNode>(getFinally())
 		: following();
 	eq TryCatchFinallyStmt.getFinally().following() = following();
-	// TODO: Check: Try always has at least one catch?
 	eq TryCatchFinallyStmt.getBody().throwTarget() = getCatch(0);
 	eq TryCatchFinallyStmt.getCatch(int i).following() = new SimpleSet<CFGNode>(getCatch(i).getRight())
 		.union(i + 1 < getNumCatch() 
@@ -209,7 +208,7 @@ aspect ControlFlow {
 	eq AssignStmt.getVar().parentStmt() = this;
 	eq AssignStmt.getValue().parentStmt() = this;
 
-	// TODO: await
+	eq AwaitStmt.getChild(int i).parentStmt() = this;
 
 	eq CaseStmt.getExpr().parentStmt() = this;
 	eq CaseStmt.getBranch(int i).parentStmt() = this;
@@ -290,7 +289,7 @@ aspect ControlFlow {
 		return false;
 	}
 
-	// TODO: Check if it can throw
+
 	eq FnApp.canThrow() {
 		for (PureExp p : getParams()) {
 			if (p.canThrow()) {
@@ -368,4 +367,14 @@ aspect ControlFlow {
 	}
 
 	eq OriginalCall.canThrow() = true;
+
+	syn boolean Guard.canThrow() = true;
+
+	eq AndGuard.canThrow() = getLeft().canThrow() || getRight().canThrow();
+
+	eq ClaimGuard.canThrow() = false;
+
+	eq DurationGuard.canThrow() = getMin().canThrow() || getMax().canThrow();
+
+	eq ExpGuard.canThrow() = getPureExp().canThrow();
 }
