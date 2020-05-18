@@ -163,7 +163,8 @@ aspect ControlFlow {
 
 	eq ExpressionStmt.succ() = getExp().canThrow() ? following().union(throwTarget()) : following();
 
-	// TODO: ForeachStmt
+	eq ForeachStmt.succ() = following().union(getBody()).union(getListExp().canThrow() ? new SimpleSet<>(throwTarget()) : new SimpleSet<>());
+	eq ForeachStmt.getBody().following() = new SimpleSet<>(this);
 
 	eq IfStmt.succ() {
 		SimpleSet<CFGNode> normalSucc = hasElse()
