@@ -290,6 +290,16 @@ aspect ControlFlow {
 
 	eq LetExp.canThrow() = getVal().canThrow() || getExp().canThrow();
 
+	eq ListLiteral.canThrow() {
+		for (PureExp p : getPureExps()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	eq ParFnApp.canThrow() {
 		for (PureExp p : getParams()) {
 			if (p.canThrow()) {
