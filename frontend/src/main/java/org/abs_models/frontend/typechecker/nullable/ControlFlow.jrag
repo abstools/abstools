@@ -151,7 +151,8 @@ aspect ControlFlow {
 	}
 	eq CaseStmt.getBranch(int i).following() = i + 1 < getNumBranch()
 		? new SimpleSet<CFGNode>(getBranch(i).getRight()).union(getBranch(i + 1))
-		: new SimpleSet<CFGNode>(getBranch(i).getRight()).union(following()).union(throwTarget());
+		// We don't need to add the throwTarget, because the compiler generates a pattern for exceptions where needed
+		: new SimpleSet<CFGNode>(getBranch(i).getRight()).union(following());
 	// Parent CaseStmt or TryCatchFinallyStmt
 	inh Stmt CaseBranchStmt.parentStmt();
 	eq CaseBranchStmt.getRight().following() = parentStmt().following();
@@ -263,7 +264,15 @@ aspect ControlFlow {
 	}
 
 	// TODO: Refine
-	eq CaseExp.canThrow() = true;
+	eq CaseExp.canThrow() {
+		for (CaseBranch cb : getBranchs()) {
+			if (cb.getLeft() instanceof UnderscorePattern) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 	eq DataConstructorExp.canThrow() {
 		for (PureExp p : getParams()) {
