@@ -9,14 +9,10 @@ aspect ControlFlow {
 	Stmt implements CFGNode;
 	CaseBranchStmt implements CFGNode;
 
-	public interface CFGRoot {}
-
-	MethodImpl implements CFGRoot;
-
 	//== Entry / Exit ==
 	
-	syn nta CFGEntry CFGRoot.entry() = new CFGEntry();
-	syn nta CFGExit CFGRoot.exit() = new CFGExit();
+	syn nta CFGEntry MethodImpl.entry() = new CFGEntry();
+	syn nta CFGExit MethodImpl.exit() = new CFGExit();
 	syn String CFGEntry.toString() = "Entry";
 	syn String CFGExit.toString() = "Exit";
 
@@ -31,32 +27,32 @@ aspect ControlFlow {
 
 	//== Predecessors ==
 	
-	coll SimpleSet<CFGNode> CFGNode.pred() with add root CFGRoot;
+	coll SimpleSet<CFGNode> CFGNode.pred() with add root MethodImpl;
 	// Stmt contributes this to CFGNode.pred() for each succ();
 
 	// NTAs are not, in general, included in the collection attribute traversal; we have to fudge around this
-  protected void MethodImpl.collect_contributors_CFGNode_pred(CFGRoot _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+  protected void MethodImpl.collect_contributors_CFGNode_pred(MethodImpl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
   	entry().collect_contributors_CFGNode_pred(_root, _map);
   	exit().collect_contributors_CFGNode_pred(_root, _map);
   	super.collect_contributors_CFGNode_pred(_root, _map);
   }
 
 	// Do this manually because of a bug in JastAdd
-	protected void Stmt.collect_contributors_CFGNode_pred(CFGRoot _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+	protected void Stmt.collect_contributors_CFGNode_pred(MethodImpl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
     for (CFGNode target : (Iterable<? extends CFGNode>) (succ())) {
       ASTNode _targetRoot = (ASTNode) target;
       ASTNode _targetParent = (ASTNode) target;
       while (_targetParent != null) {
         _targetParent = _targetParent.getParent();
-        if (_targetParent instanceof CFGRoot) {
+        if (_targetParent instanceof MethodImpl) {
           _targetRoot = _targetParent;
         }
       }
-      ASTNode _sourceRoot = (ASTNode) _root;
-      ASTNode _sourceParent = (ASTNode) _root;
+      ASTNode _sourceRoot = _root;
+      ASTNode _sourceParent = _root;
       while (_sourceParent != null) {
         _sourceParent = _sourceParent.getParent();
-        if (_sourceParent instanceof CFGRoot) {
+        if (_sourceParent instanceof MethodImpl) {
           _sourceRoot = _sourceParent;
         }
       }
@@ -80,21 +76,21 @@ aspect ControlFlow {
   }
 
 	// Do this manually because of a bug in JastAdd
-	protected void CaseBranchStmt.collect_contributors_CFGNode_pred(CFGRoot _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+	protected void CaseBranchStmt.collect_contributors_CFGNode_pred(MethodImpl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
     for (CFGNode target : (Iterable<? extends CFGNode>) (succ())) {
       ASTNode _targetRoot = (ASTNode) target;
       ASTNode _targetParent = (ASTNode) target;
       while (_targetParent != null) {
         _targetParent = _targetParent.getParent();
-        if (_targetParent instanceof CFGRoot) {
+        if (_targetParent instanceof MethodImpl) {
           _targetRoot = _targetParent;
         }
       }
-      ASTNode _sourceRoot = (ASTNode) _root;
-      ASTNode _sourceParent = (ASTNode) _root;
+      ASTNode _sourceRoot = _root;
+      ASTNode _sourceParent = _root;
       while (_sourceParent != null) {
         _sourceParent = _sourceParent.getParent();
-        if (_sourceParent instanceof CFGRoot) {
+        if (_sourceParent instanceof MethodImpl) {
           _sourceRoot = _sourceParent;
         }
       }
