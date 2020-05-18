@@ -80,8 +80,8 @@ public class ControlFlowTests extends FrontendTest {
     }
 
     @Test
-    public void testCase() {
-        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { Pair<Int, Int> p = Pair(2, 3); Int x = 0; case p { Pair(2, y) => { x = y; skip; } Pair(3, y ) => skip; _ => x = -1; }  } }");
+    public void testCase1() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { Pair<Int, Int> p = Pair(2, 3); Int x = 0; case p { Pair(2, y) => { x = y; skip; } Pair(3, y) => skip; _ => x = -1; } skip; } }");
         Block b = met.getBlock();
 
         CaseStmt c = (CaseStmt) b.getStmt(2);
@@ -91,7 +91,7 @@ public class ControlFlowTests extends FrontendTest {
         Block cbr1 = cb1.getRight();
         CaseBranchStmt cb2 = c.getBranch(2);
         Block cbr2 = cb2.getRight();
-        CFGExit exit = met.exit();
+        Stmt skip = b.getStmt(3);
 
         assertEquals(1, c.succ().size());
         assertTrue(c.succ().contains(cb0));
@@ -104,7 +104,7 @@ public class ControlFlowTests extends FrontendTest {
         assertEquals(1, cbr0.getStmt(0).succ().size());
         assertTrue(cbr0.getStmt(0).succ().contains(cbr0.getStmt(1)));
         assertEquals(1, cbr0.getStmt(1).succ().size());
-        assertTrue(cbr0.getStmt(1).succ().contains(exit));
+        assertTrue(cbr0.getStmt(1).succ().contains(skip));
 
         assertEquals(2, cb1.succ().size());
         assertTrue(cb1.succ().contains(cbr1));
@@ -112,15 +112,49 @@ public class ControlFlowTests extends FrontendTest {
         assertEquals(1, cbr1.succ().size());
         assertTrue(cbr1.succ().contains(cbr1.getStmt(0)));
         assertEquals(1, cbr1.getStmt(0).succ().size());
-        assertTrue(cbr1.getStmt(0).succ().contains(exit));
+        assertTrue(cbr1.getStmt(0).succ().contains(skip));
 
         assertEquals(2, cb2.succ().size());
         assertTrue(cb2.succ().contains(cbr2));
-        assertTrue(cb2.succ().contains(exit));
+        assertTrue(cb2.succ().contains(skip));
         assertEquals(1, cbr2.succ().size());
         assertTrue(cbr2.succ().contains(cbr2.getStmt(0)));
         assertEquals(1, cbr2.getStmt(0).succ().size());
-        assertTrue(cbr1.getStmt(0).succ().contains(exit));
+        assertTrue(cbr1.getStmt(0).succ().contains(skip));
+    }
+
+    @Test
+    public void testCase2() {
+        MethodImpl met = getMethod("interface I { Unit m1(I i); } class C implements I { Unit m1(I i) { Pair<Int, Int> p = Pair(2, 3); Int x = 0; case p { Pair(2, y) => { x = y; skip; } Pair(3, y) => skip; } skip; } }");
+        Block b = met.getBlock();
+
+        CaseStmt c = (CaseStmt) b.getStmt(2);
+        CaseBranchStmt cb0 = c.getBranch(0);
+        Block cbr0 = cb0.getRight();
+        CaseBranchStmt cb1 = c.getBranch(1);
+        Block cbr1 = cb1.getRight();
+        Stmt skip = b.getStmt(3);
+
+        assertEquals(1, c.succ().size());
+        assertTrue(c.succ().contains(cb0));
+
+        assertEquals(2, cb0.succ().size());
+        assertTrue(cb0.succ().contains(cbr0));
+        assertTrue(cb0.succ().contains(cb1));
+        assertEquals(1, cbr0.succ().size());
+        assertTrue(cbr0.succ().contains(cbr0.getStmt(0)));
+        assertEquals(1, cbr0.getStmt(0).succ().size());
+        assertTrue(cbr0.getStmt(0).succ().contains(cbr0.getStmt(1)));
+        assertEquals(1, cbr0.getStmt(1).succ().size());
+        assertTrue(cbr0.getStmt(1).succ().contains(skip));
+
+        assertEquals(2, cb1.succ().size());
+        assertTrue(cb1.succ().contains(cbr1));
+        assertTrue(cb1.succ().contains(c.getBranch(2)));
+        assertEquals(1, cbr1.succ().size());
+        assertTrue(cbr1.succ().contains(cbr1.getStmt(0)));
+        assertEquals(1, cbr1.getStmt(0).succ().size());
+        assertTrue(cbr1.getStmt(0).succ().contains(skip));
     }
 
     @Test
