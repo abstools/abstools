@@ -155,7 +155,19 @@ aspect ControlFlow {
 		: new SimpleSet<CFGNode>(getBranch(i).getRight()).union(following());
 	// Parent CaseStmt or TryCatchFinallyStmt
 	inh Stmt CaseBranchStmt.parentStmt();
-	eq CaseBranchStmt.getRight().following() = parentStmt().following();
+	eq CaseBranchStmt.getRight().following() {
+		Stmt parent = parentStmt();
+
+		if (parent instanceof TryCatchFinallyStmt) {
+			TryCatchFinallyStmt t = (TryCatchFinallyStmt) parent;
+
+			if (t.hasFinally()) {
+				return new SimpleSet<>(t.getFinally());
+			}
+		}
+
+		return parent.following();
+	}
 
 	eq DieStmt.succ() = new SimpleSet<>(exit());
 
@@ -183,17 +195,18 @@ aspect ControlFlow {
 
 	eq ThrowStmt.succ() = new SimpleSet<CFGNode>(throwTarget());
 
+	eq TryCatchFinallyStmt.succ() = new SimpleSet<>(getBody());
 	eq TryCatchFinallyStmt.getBody().following() = hasFinally()
 		? new SimpleSet<CFGNode>(getFinally())
 		: following();
-	eq TryCatchFinallyStmt.getFinally().following() = following();
+	eq TryCatchFinallyStmt.getFinally().following() = following().union(throwTarget());
 	eq TryCatchFinallyStmt.getBody().throwTarget() = getCatch(0);
 	eq TryCatchFinallyStmt.getCatch(int i).following() = new SimpleSet<CFGNode>(getCatch(i).getRight())
 		.union(i + 1 < getNumCatch() 
 			// Next catch branch
-			? new SimpleSet<CFGNode>(getCatch(i + 1)) 
-			// Either finally, the next stmt, or throw again
-			: getBody().following().union(throwTarget()));
+			? getCatch(i + 1)
+			// Either finally, or throw again
+			: hasFinally() ? getFinally() : throwTarget());
 
 	eq VarDeclStmt.succ() = getVarDecl().hasInitExp() && getVarDecl().getInitExp().canThrow() 
 		? following().union(throwTarget()) 
@@ -230,6 +243,8 @@ aspect ControlFlow {
 	eq ReturnStmt.getRetExp().parentStmt() = this;
 
 	eq ThrowStmt.getReason().parentStmt() = this;
+
+	eq TryCatchFinallyStmt.getCatch(int i).parentStmt() = this;
 
 	inh Stmt VarDecl.parentStmt();
 	eq VarDeclStmt.getVarDecl().parentStmt() = this;
