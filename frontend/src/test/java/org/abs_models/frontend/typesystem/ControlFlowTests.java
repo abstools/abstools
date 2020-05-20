@@ -669,7 +669,87 @@ public class ControlFlowTests extends FrontendTest {
 
     @Test
     public void testTry() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(Int n); } class C implements I { Unit m(Int n) { try { Rat z = 1/x; } catch { DivisionByZeroException => -n; NullPointerException => n + 1; } skip; } }");
+        Block b = met.getBlock();
+
+        TryCatchFinallyStmt t = (TryCatchFinallyStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+        Block tBlock = t.getBody();
+        Stmt s = tBlock.getStmt(0);
+        CaseBranchStmt c0 = t.getCatch(0);
+        Block cr0 = c0.getRight();
+        CaseBranchStmt c1 = t.getCatch(1);
+        Block cr1 = c1.getRight();
+
+        assertEquals(1, t.succ().size());
+        assertTrue(t.succ().contains(tBlock));
+        assertEquals(1, tBlock.succ().size());
+        assertTrue(tBlock.succ().contains(s));
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(c0));
+
+        assertEquals(2, c0.succ().size());
+        assertTrue(c0.succ().contains(c1));
+        assertTrue(c0.succ().contains(cr0));
+        assertEquals(1, cr0.succ().size());
+        assertTrue(cr0.succ().contains(cr0.getStmt(0)));
+        assertEquals(1, cr0.getStmt(0).succ().size());
+        assertTrue(cr0.getStmt(0).succ().contains(skip));
+
+        assertEquals(2, c1.succ().size());
+        assertTrue(c1.succ().contains(met.exit()));
+        assertTrue(c1.succ().contains(cr1));
+        assertEquals(1, cr1.succ().size());
+        assertTrue(cr1.succ().contains(cr1.getStmt(0)));
+        assertEquals(1, cr1.getStmt(0).succ().size());
+        assertTrue(cr1.getStmt(0).succ().contains(skip));
+    }
+
+    @Test
+    public void testTryFinally() {
+        MethodImpl met = getMethod("interface I { Unit m(Int n); } class C implements I { Unit m(Int n) { try { Rat z = 1/x; } catch { DivisionByZeroException => -n; NullPointerException => n + 1; } finally { 1 + n; } skip; } }");
+        Block b = met.getBlock();
+
+        TryCatchFinallyStmt t = (TryCatchFinallyStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+        Block tBlock = t.getBody();
+        Stmt s = tBlock.getStmt(0);
+        CaseBranchStmt c0 = t.getCatch(0);
+        Block cr0 = c0.getRight();
+        CaseBranchStmt c1 = t.getCatch(1);
+        Block cr1 = c1.getRight();
+        Block f = t.getFinally();
+
+        assertEquals(1, t.succ().size());
+        assertTrue(t.succ().contains(tBlock));
+        assertEquals(1, tBlock.succ().size());
+        assertTrue(tBlock.succ().contains(s));
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(f));
+        assertTrue(s.succ().contains(c0));
+
+        assertEquals(2, c0.succ().size());
+        assertTrue(c0.succ().contains(c1));
+        assertTrue(c0.succ().contains(cr0));
+        assertEquals(1, cr0.succ().size());
+        assertTrue(cr0.succ().contains(cr0.getStmt(0)));
+        assertEquals(1, cr0.getStmt(0).succ().size());
+        assertTrue(cr0.getStmt(0).succ().contains(f));
+
+        assertEquals(2, c1.succ().size());
+        assertTrue(c1.succ().contains(f));
+        assertTrue(c1.succ().contains(cr1));
+        assertEquals(1, cr1.succ().size());
+        assertTrue(cr1.succ().contains(cr1.getStmt(0)));
+        assertEquals(1, cr1.getStmt(0).succ().size());
+        assertTrue(cr1.getStmt(0).succ().contains(f));
+
+        assertEquals(1, f.succ().size());
+        assertTrue(f.succ().contains(f.getStmt(0)));
+        assertEquals(2, f.getStmt(0).succ().size());
+        assertTrue(f.getStmt(0).succ().contains(skip));
+        assertTrue(f.getStmt(0).succ().contains(met.exit()));
     }
 
     @Test
