@@ -332,8 +332,6 @@ public class ControlFlowTests extends FrontendTest {
         ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
         Stmt skip = b.getStmt(1);
 
-        FnApp f = (FnApp) s.getExp();
-
         assertEquals(2, s.succ().size());
         assertTrue(s.succ().contains(skip));
         assertTrue(s.succ().contains(met.exit()));
@@ -569,18 +567,63 @@ public class ControlFlowTests extends FrontendTest {
     }
 
     @Test
-    public void testExpressionStmt_New() {
-        // TODO
+    public void testExpressionStmt_New1() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C(Int n, I i) implements I { Unit m(I i) { new C(1, i); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+    }
+
+    @Test
+    public void testExpressionStmt_New2() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C(Int n, I i) implements I { Unit m(I i) { new C(1 / 0, i); skip; } }");
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
     }
 
     @Test
     public void testExpressionStmt_OriginalCall() {
-        // TODO
+        Model m = assertParse("trait T = { Bool m() { original(); skip; }}");
+        ModuleDecl md = m.lookupModule("UnitTest");
+
+        TraitDecl td = (TraitDecl) md.getDecl(0);
+        TraitSetExpr te = (TraitSetExpr) td.getTraitExpr();
+        MethodImpl met = te.getMethodImpl(0);
+        Block b = met.getBlock();
+
+        ExpressionStmt s = (ExpressionStmt) b.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, s.succ().size());
+        assertTrue(s.succ().contains(skip));
+        assertTrue(s.succ().contains(met.exit()));
     }
 
     @Test
     public void testForEach() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(Int n); } class C implements I { Unit m(Int n) { foreach (i in list[1, n, 3]) { i - 1; } skip; } }");
+        Block b = met.getBlock();
+
+        ForeachStmt fs = (ForeachStmt) b.getStmt(0);
+        Block body = fs.getBody();
+        Stmt s = body.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(2, fs.succ().size());
+        assertTrue(fs.succ().contains(body));
+        assertTrue(fs.succ().contains(skip));
+        assertEquals(1, s.succ().size());
+        assertTrue(s.succ().contains(fs));
     }
 
     @Test
