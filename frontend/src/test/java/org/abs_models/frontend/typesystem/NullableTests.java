@@ -208,7 +208,13 @@ public class NullableTests extends FrontendTest {
 
     @Test
     public void testMethodAnnotatedParam() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m([NonNull] I i) { skip; } }");
+        ParamDecl p = met.getMethodSig().getParam(0);
+        Block b = met.getBlock();
+
+        assertTrue(met.entry().nonNull_out().contains(p));
+        assertEquals(1, met.entry().nonNull_out().size());
+        assertTrue(b.getStmt(0).nonNull_in().contains(p));
     }
 
     @Test

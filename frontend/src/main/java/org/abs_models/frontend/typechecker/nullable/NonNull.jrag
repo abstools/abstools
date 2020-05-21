@@ -77,6 +77,22 @@ aspect NonNull {
   // For most stmts out = in
   syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out() = nonNull_in();
 
+  // Handle params
+  eq CFGEntry.nonNull_out() {
+    SimpleSet<VarOrFieldDecl> s = new SimpleSet<>();
+
+    if (getParent() instanceof MethodImpl) {
+      MethodImpl met = (MethodImpl) getParent();
+      for (ParamDecl p : met.getMethodSig().getParams()) {
+        if (p.nonNull()) {
+          s.add(p);
+        }
+      }
+    }
+
+    return s;
+  }
+
   eq AssertStmt.nonNull_out() = nonNull_in();
 
   eq AssignStmt.nonNull_out() {
@@ -191,4 +207,20 @@ aspect NonNull {
   eq ThisExp.nonNull() = true;
 
   eq Unary.nonNull() = true;
+
+  // == Parameters ==
+  syn boolean ParamDecl.nonNull() {
+    for (Annotation a : getAnnotations()) {
+      PureExp e = a.getValue();
+      if (e instanceof DataConstructorExp) {
+        DataConstructorExp d = (DataConstructorExp) e;
+        String name = d.getConstructor();
+        if (name.equals("NonNull") && !d.hasParam()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
 }
