@@ -257,7 +257,7 @@ aspect ControlFlow {
 	inh CFGNode CFGNode.throwTarget();
 	eq MethodImpl.getChild(int i).throwTarget() = exit();
 
-	// Some exps can throw (e.g. division, incomplete patterns, etc.)
+	// Some exprs can throw (e.g. division, incomplete patterns, etc.)
 	syn boolean Exp.canThrow() = false;
 
 	eq AsExp.canThrow() = getExp().canThrow();
