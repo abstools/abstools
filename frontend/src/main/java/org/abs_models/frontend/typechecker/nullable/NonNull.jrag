@@ -77,8 +77,6 @@ aspect NonNull {
   // For most stmts out = in
   syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out() = nonNull_in();
 
-  // TODO: AssertStmt
-
   eq AssertStmt.nonNull_out() = nonNull_in();
 
   eq AssignStmt.nonNull_out() {
@@ -121,8 +119,6 @@ aspect NonNull {
     }
   }
 
-  
-
   // == Exp ==
 
   syn SimpleSet<VarOrFieldDecl> Exp.nonNull_in() = parentStmt().nonNull_in();
@@ -135,7 +131,6 @@ aspect NonNull {
     SimpleSet<VarOrFieldDecl> in = nonNull_in();
     PureExp callee = getCallee();
 
-    // TODO: Add more cases? Actually, only Paren would make sense, right?
     if (callee instanceof VarOrFieldUse) {
       VarOrFieldUse c = (VarOrFieldUse) callee;
       return in.union(c.getDecl());

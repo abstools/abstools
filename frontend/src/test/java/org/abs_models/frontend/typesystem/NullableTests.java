@@ -30,13 +30,99 @@ public class NullableTests extends FrontendTest {
 
     @Test
     public void testMethodDeclNewExp() {
-        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); } }");
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); i; } }");
 
         Block b = met.getBlock();
         VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
         VarDecl d = s.getVarDecl();
+        ExpressionStmt es = (ExpressionStmt) b.getStmt(1);
+        VarOrFieldUse v = (VarOrFieldUse) es.getExp();
 
+        assertEquals(1, b.getStmt(0).nonNull_out().size());
         assertTrue(b.getStmt(0).nonNull_out().contains(d));
+        assertTrue(v.nonNull());
+    }
+
+    @Test
+    public void testMethodAssignAccess() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignAs() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignBinary() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignCase() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignDataConstructor() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignFn() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignImplements() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignLet() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignLiteral() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignNull() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignParFn() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignThis() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i = this; } }");
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        Block b = met.getBlock();
+
+        SimpleSet<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
+        assertTrue(nonNull.contains(p));
+        assertEquals(1, nonNull.size());
+    }
+
+    @Test
+    public void testMethodAssignUnary() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignCall() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAssignGet() {
+        // TODO
     }
 
     @Test
@@ -52,15 +138,8 @@ public class NullableTests extends FrontendTest {
     }
 
     @Test
-    public void testMethodAssignThis() {
-        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i = this; } }");
-
-        ParamDecl p = met.getMethodSig().getParam(0);
-        Block b = met.getBlock();
-
-        SimpleSet<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
-        assertTrue(nonNull.contains(p));
-        assertEquals(1, nonNull.size());
+    public void testMethodAssignOriginal() {
+        // TODO
     }
 
     @Test
@@ -92,7 +171,12 @@ public class NullableTests extends FrontendTest {
     }
 
     @Test
-    public void testMethodCondition() {
+    public void testMethodAssertCatch() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodIfCondition() {
         MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { if (i != null) skip; } }");
 
         ParamDecl p = met.getMethodSig().getParam(0);
@@ -105,7 +189,7 @@ public class NullableTests extends FrontendTest {
     }
 
     @Test
-    public void testMethodInvertedCondition() {
+    public void testMethodIfInvertedCondition() {
         MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { if (i == null) skip; else skip; } }");
 
         ParamDecl p = met.getMethodSig().getParam(0);
@@ -115,6 +199,21 @@ public class NullableTests extends FrontendTest {
 
         SimpleSet<VarOrFieldDecl> nonNull = ifStmt.getElse().nonNull_in();
         assertTrue(nonNull.contains(p));
+    }
+
+    @Test
+    public void testMethodAnnotatedCall() {
+        // TODO
+    }
+
+    @Test
+    public void testMethodAnnotatedParam() {
+        // TODO
+    }
+
+    @Test
+    public void testComplex() {
+        // TODO
     }
 
     static private MethodImpl getMethod(String prog) {
