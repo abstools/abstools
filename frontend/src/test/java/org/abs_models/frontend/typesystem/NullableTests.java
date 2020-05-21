@@ -78,15 +78,17 @@ public class NullableTests extends FrontendTest {
 
     @Test
     public void testMethodAssert() {
-        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { assert i != null; } }");
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { assert i != null; skip; } }");
 
         ParamDecl p = met.getMethodSig().getParam(0);
         Block b = met.getBlock();
+        Stmt skip = b.getStmt(1);
 
         SimpleSet<VarOrFieldDecl> nonNull1 = b.getStmt(0).nonNull_in();
         SimpleSet<VarOrFieldDecl> nonNull2 = b.getStmt(0).nonNull_out();
         assertTrue(nonNull1.isEmpty());
-        assertTrue(nonNull2.contains(p));
+        assertTrue(nonNull2.isEmpty());
+        assertTrue(skip.nonNull_in().contains(p));
     }
 
     @Test
