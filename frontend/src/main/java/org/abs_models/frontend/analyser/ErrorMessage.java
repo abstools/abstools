@@ -109,6 +109,8 @@ public enum ErrorMessage {
     WRONG_HTTP_OBJECT("Cannot export a value of type %s via HTTPName annotation, must be an object."),
     WRONG_HTTPCALLABLE("Parameter %s: type %s not supported for calling from HTTP."),
     DUPLICATE_HTTPNAME("Warning: Duplicate HTTP name %s in datatype declaration."),
+    METHOD_INCOMPATIBLE_NULLABLE_RETURN("Method %s has not the same return nullable-type as its signature. Expected %s, but found %s."),
+    INCOMPATIBLE_NULLABLE_TYPE("Expected nullable-type %s, but found %s."),
 
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
