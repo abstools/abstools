@@ -824,6 +824,60 @@ public class ControlFlowTests extends FrontendTest {
         assertTrue(s.succ().contains(w));
     }
 
+    @Test
+    public void testInitBlock() {
+        Model m = assertParse("interface I { Unit m(Int n); } class C implements I { { skip; skip; } }");
+        ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
+        InitBlock init = d.getInitBlock();
+
+        Stmt s0 = init.getStmt(0);
+        Stmt s1 = init.getStmt(1);
+
+        assertEquals(1, init.pred().size());
+        assertTrue(init.pred().contains(init.entry()));
+        assertEquals(1, s0.pred().size());
+        assertTrue(s0.pred().contains(init));
+        assertEquals(1, s0.succ().size());
+        assertTrue(s0.succ().contains(s1));
+        assertEquals(1, s1.pred().size());
+        assertTrue(s1.pred().contains(s0));
+        assertEquals(1, s1.succ().size());
+        assertTrue(s1.succ().contains(s1.exit()));
+    }
+
+    @Test
+    public void testRecoverBlock() {
+        Model m = assertParse("interface I { Unit m(Int n); } class C implements I { recover { NullPointerException => skip; DivisionByZeroException => skip; } }");
+        ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
+
+        CaseBranchStmt cs0 = d.getRecoverBranch(0);
+        Block cr0 = cs0.getRight();
+        CaseBranchStmt cs1 = d.getRecoverBranch(1);
+        Block cr1 = cs1.getRight();
+
+        assertEquals(1, cs0.pred().size());
+        assertTrue(cs0.pred().contains(d.recoverEntry()));
+        assertEquals(2, cs0.succ().size());
+        assertTrue(cs0.succ().contains(cs1));
+        assertTrue(cs0.succ().contains(cr0));
+
+        assertEquals(1, cr0.succ().size());
+        assertTrue(cr0.succ().contains(cr0.getStmt(0)));
+        assertEquals(1, cr0.getStmt(0).succ().size());
+        assertTrue(cr0.getStmt(0).succ().contains(cr0.exit()));
+
+        assertEquals(1, cs1.pred().size());
+        assertTrue(cs1.pred().contains(cs0));
+        assertEquals(2, cs1.succ().size());
+        assertTrue(cs1.succ().contains(cr1));
+        assertTrue(cs1.succ().contains(cs1.exit()));
+
+        assertEquals(1, cr1.succ().size());
+        assertTrue(cr1.succ().contains(cr1.getStmt(0)));
+        assertEquals(1, cr1.getStmt(0).succ().size());
+        assertTrue(cr1.getStmt(0).succ().contains(cr1.exit()));
+    }
+
     static private MethodImpl getMethod(String prog) {
         Model m = assertParse(prog);
         ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));

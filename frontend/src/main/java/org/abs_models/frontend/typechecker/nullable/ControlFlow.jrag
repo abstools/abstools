@@ -11,36 +11,38 @@ aspect ControlFlow {
 
 	//== Entry / Exit ==
 	
-	syn nta CFGEntry MethodImpl.entry() = new CFGEntry();
-	syn nta CFGExit MethodImpl.exit() = new CFGExit();
 	syn String CFGEntry.toString() = "Entry";
 	syn String CFGExit.toString() = "Exit";
+	inh Stmt CFGNode.exit();
 
+	syn nta CFGEntry MethodImpl.entry() = new CFGEntry();
+	syn nta CFGExit MethodImpl.exit() = new CFGExit();
 	eq MethodImpl.entry().following() = new SimpleSet<CFGNode>(getBlock());
 	eq MethodImpl.getBlock().following() = new SimpleSet<CFGNode>(exit());
 	eq MethodImpl.exit().following() = new SimpleSet<CFGNode>();
-
-	syn nta InitBlock.entry() = new CFGEntry();
-	syn nta InitBlock.exit() = new CFGExit();
-	eq InitBlock.entry().following() = new SimpleSet<>(this);
-	eq ClassDecl.getInitBlock().following() = getInitBlock().exit();
-	eq InitBlock.exit().following() = new SimpleSet<CFGNode>();
-
-	syn nta ClassDecl.recoverEntry() = new CFGEntry();
-	syn nta ClassDecl.recoverExit() = new CFGExit();
-	eq ClassDecl.recoverEntry().following() = hasRecoverBranch()
-		? new SimpleSet<>(getRecoverBranch(0))
-		: new SimpleSet<>();
-	eq ClassDecl.getRecoverBranch(int i).following() = i + 1 < getNumRecoverBranch()
-		? new SimpleSet<>(getRecoverBranch(i + 1))
-		: new SimpleSet<>(recoverExit());
-	eq ClassDecl.getRecoverBranch(int i).exit() = recoverExit();
-	eq ClassDecl.getRecoverBranch(int i).parentStmt() = null;
-	
-	inh Stmt Stmt.exit();
 	eq MethodImpl.getBlock().exit() = exit();
 	eq MethodImpl.entry().exit() = exit();
 	eq MethodImpl.exit().exit() = null;
+
+	syn nta CFGEntry InitBlock.entry() = new CFGEntry();
+	syn nta CFGExit InitBlock.exit() = new CFGExit();
+	eq InitBlock.entry().following() = new SimpleSet<>(this);
+	eq ClassDecl.getInitBlock().following() = new SimpleSet<>(getInitBlock().exit());
+	eq InitBlock.exit().following() = new SimpleSet<CFGNode>();
+	eq InitBlock.getStmt(int i).exit() = exit();
+
+	syn nta CFGEntry ClassDecl.recoverEntry() = new CFGEntry();
+	syn nta CFGExit ClassDecl.recoverExit() = new CFGExit();
+	eq ClassDecl.recoverEntry().following() = hasRecoverBranch()
+		? new SimpleSet<>(getRecoverBranch(0))
+		: new SimpleSet<>();
+	eq ClassDecl.getRecoverBranch(int i).following() = new SimpleSet<CFGNode>(getRecoverBranch(i).getRight())
+		.union(i + 1 < getNumRecoverBranch()
+			? getRecoverBranch(i + 1)
+			: recoverExit());
+	eq ClassDecl.getRecoverBranch(int i).exit() = recoverExit();
+	eq ClassDecl.recoverExit().following() = new SimpleSet<>();
+	eq ClassDecl.getRecoverBranch(int i).parentStmt() = null;
 
 	//== Predecessors ==
 	
@@ -57,6 +59,12 @@ aspect ControlFlow {
 	protected void InitBlock.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
   	entry().collect_contributors_CFGNode_pred(_root, _map);
   	exit().collect_contributors_CFGNode_pred(_root, _map);
+  	super.collect_contributors_CFGNode_pred(_root, _map);
+  }
+
+	protected void ClassDecl.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+  	recoverEntry().collect_contributors_CFGNode_pred(_root, _map);
+  	recoverExit().collect_contributors_CFGNode_pred(_root, _map);
   	super.collect_contributors_CFGNode_pred(_root, _map);
   }
 
