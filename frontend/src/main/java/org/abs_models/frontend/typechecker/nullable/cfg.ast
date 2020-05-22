@@ -1,2 +1,3 @@
 CFGEntry : SkipStmt;
 CFGExit : SkipStmt;
+VirtualStmt: SkipStmt;

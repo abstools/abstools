@@ -35,7 +35,6 @@ aspect NonNull {
         return in;
       }
 
-      // TODO: Expand and put in own method/attribute
       if (cond instanceof EqualityExpr) {
         if (cond instanceof NotEqExp) {
           assumeTrue = !assumeTrue;
@@ -153,7 +152,6 @@ aspect NonNull {
   
   syn boolean Exp.nonNull();
 
-  // TODO: refine using annotations
   eq Call.nonNull() = getMethodSig().nonNull();
 
   eq GetExp.nonNull() = getPureExp().nonNull();
@@ -183,15 +181,28 @@ aspect NonNull {
   // Can't be a reference
   eq DataConstructorExp.nonNull() = true;
 
-  // Can't be a reference
-  eq FnApp.nonNull() = true;
+  eq FnApp.nonNull() {
+    FunctionDecl d = (FunctionDecl) getDecl();
+
+    return d.nonNull();
+  }
 
   eq IfExp.nonNull() = getThenExp().nonNull() && getElseExp().nonNull();
 
   eq ImplementsExp.nonNull() = true;
 
-  // TODO
-  eq LetExp.nonNull() = false;
+  inh SimpleSet<VarOrFieldDecl> VirtualStmt.nonNull_in();
+  eq LetExp.virtualStmt().nonNull_in() {
+    SimpleSet<VarOrFieldDecl> in = nonNull_in();
+    ParamDecl d = getVar();
+
+    if (getVal().nonNull()) {
+      return in.union(d);
+    }
+
+    return in;
+  }
+  eq LetExp.nonNull() = getExp().nonNull();
 
   eq LiteralExp.nonNull() = true;
 
@@ -221,6 +232,22 @@ aspect NonNull {
 
   // == MethodSig ==
   syn boolean MethodSig.nonNull() {
+    for (Annotation a : getAnnotations()) {
+      PureExp e = a.getValue();
+      if (e instanceof DataConstructorExp) {
+        DataConstructorExp d = (DataConstructorExp) e;
+        String name = d.getConstructor();
+        if (name.equals("NonNull") && !d.hasParam()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // == Function ==
+  syn boolean FunctionDecl.nonNull() {
     for (Annotation a : getAnnotations()) {
       PureExp e = a.getValue();
       if (e instanceof DataConstructorExp) {
