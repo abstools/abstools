@@ -120,6 +120,18 @@ public class NullableTests extends FrontendTest {
     }
 
     @Test
+    public void testMethodAssignFn3() {
+        MethodImpl met = getMethod("def [NonNull] I f(I i1, [NonNull] I i2) = if i1 == null then i2 else i1; interface I { Unit m(); } class C implements I { Unit m() { I i; i = f(this, this); } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(1, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
+    }
+
+    @Test
     public void testMethodAssignImplements() {
         MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); Bool b; b = i implements C; } }");
         Block b = met.getBlock();
@@ -161,17 +173,50 @@ public class NullableTests extends FrontendTest {
 
     @Test
     public void testMethodAssignLiteral() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { Int n; n = 2; } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(1, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
     }
 
     @Test
     public void testMethodAssignNull() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m(I i) { I i = new C(); i = null; } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(1, a.nonNull_in().size());
+        assertTrue(a.nonNull_in().contains(d0));
+        assertEquals(0, a.nonNull_out().size());
     }
 
     @Test
-    public void testMethodAssignParFn() {
-        // TODO
+    public void testMethodAssignParFn1() {
+        MethodImpl met = getMethod("def I p(f)(I i) = i; interface I { Unit m(); } class C implements I { Unit m() { I i; i = p(toString)(this); } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(0, a.nonNull_out().size());
+    }
+
+    @Test
+    public void testMethodAssignParFn2() {
+        MethodImpl met = getMethod("def [NonNull] I p(f)(I i1, [NonNull] I i2) = if i1 == null then i2 else i1; interface I { Unit m(); } class C implements I { Unit m() { I i; i = p(toString)(this, this); } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(1, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
     }
 
     @Test

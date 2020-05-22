@@ -208,22 +208,29 @@ aspect NonNull {
 
   eq NullExp.nonNull() = false;
 
-  eq ParFnApp.nonNull() = true;
+  eq ParFnApp.nonNull() = ((PartialFunctionDecl) getDecl()).nonNull();
 
   eq ThisExp.nonNull() = true;
 
   eq Unary.nonNull() = true;
 
+  syn boolean Annotation.nonNull() {
+    PureExp e = getValue();
+    if (e instanceof DataConstructorExp) {
+      DataConstructorExp d = (DataConstructorExp) e;
+      String name = d.getConstructor();
+      if (name.equals("NonNull") && !d.hasParam()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // == Parameters ==
   syn boolean ParamDecl.nonNull() {
     for (Annotation a : getAnnotations()) {
-      PureExp e = a.getValue();
-      if (e instanceof DataConstructorExp) {
-        DataConstructorExp d = (DataConstructorExp) e;
-        String name = d.getConstructor();
-        if (name.equals("NonNull") && !d.hasParam()) {
-          return true;
-        }
+      if (a.nonNull()) {
+        return true;
       }
     }
 
@@ -233,13 +240,8 @@ aspect NonNull {
   // == MethodSig ==
   syn boolean MethodSig.nonNull() {
     for (Annotation a : getAnnotations()) {
-      PureExp e = a.getValue();
-      if (e instanceof DataConstructorExp) {
-        DataConstructorExp d = (DataConstructorExp) e;
-        String name = d.getConstructor();
-        if (name.equals("NonNull") && !d.hasParam()) {
-          return true;
-        }
+      if (a.nonNull()) {
+        return true;
       }
     }
 
@@ -249,13 +251,31 @@ aspect NonNull {
   // == Function ==
   syn boolean FunctionDecl.nonNull() {
     for (Annotation a : getAnnotations()) {
-      PureExp e = a.getValue();
-      if (e instanceof DataConstructorExp) {
-        DataConstructorExp d = (DataConstructorExp) e;
-        String name = d.getConstructor();
-        if (name.equals("NonNull") && !d.hasParam()) {
-          return true;
-        }
+      if (a.nonNull()) {
+        return true;
+      }
+    }
+
+    for (Annotation a : getTypeUse().getAnnotations()) {
+      if (a.nonNull()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // == Partial Function
+  syn boolean PartialFunctionDecl.nonNull() {
+    for (Annotation a : getAnnotations()) {
+      if (a.nonNull()) {
+        return true;
+      }
+    }
+
+    for (Annotation a : getTypeUse().getAnnotations()) {
+      if (a.nonNull()) {
+        return true;
       }
     }
 
