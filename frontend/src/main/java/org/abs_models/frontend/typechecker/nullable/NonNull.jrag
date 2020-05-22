@@ -4,11 +4,6 @@ import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 aspect NonNull {
   // == NonNull in ==
   syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
-    CFGNode self = this;
-    // If we are in a catch block, we cannot use the previous stmt's information, because it throwTarget
-    // Use nonNull_in instead
-    boolean isCatch = (self instanceof CaseBranchStmt)
-      && (((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt);
 
     // Special case: if we have exactly one pred, we might extract extra info
     if (pred().size() == 1) {
@@ -18,26 +13,19 @@ aspect NonNull {
       }
 
       SimpleSet<VarOrFieldDecl> in = p.nonNull_out();
-
+      CFGNode self = this;
       PureExp cond;
       boolean assumeTrue = false;
 
       if (p instanceof IfStmt) {
         IfStmt i = (IfStmt) p;
         cond = i.getCondition();
-
+        
         if (self == i.getThen()) {
           assumeTrue = true;
         }
-      } else if (p instanceof AssertStmt) {
-        AssertStmt a = (AssertStmt) p;
-        cond = a.getCondition();
-
-        if (self != a.throwTarget()) {
-          assumeTrue = true;
-        }
       } else {
-        return isCatch ? p.nonNull_in() : in;
+        return in;
       }
 
       if (cond instanceof EqualityExpr) {
@@ -67,11 +55,11 @@ aspect NonNull {
 
     SimpleSet<VarOrFieldDecl> s = new SimpleSet();
     for (CFGNode n : pred()) {
-      s.addAll(isCatch ? n.nonNull_in() : n.nonNull_out());
+      s.addAll(n.nonNull_out());
     }
 
     for (CFGNode n : pred()) {
-      s = s.intersection(isCatch ? n.nonNull_in() : n.nonNull_out());
+      s = s.intersection(n.nonNull_out());
     }
     return s;
   }
@@ -80,6 +68,12 @@ aspect NonNull {
   // == NonNull out ==
   // For most stmts out = in
   syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out() = nonNull_in();
+  // What gets propagated when the stmt throws
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_throw() = nonNull_in();
+  // What gets propagated to the `then` successors of a conditional node (if, while)
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_then() = new SimpleSet<>();
+  // What gets propagated to the `else` successors of a conditional node (if, while)
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_else() = new SimpleSet<>();
 
   // Handle params
   eq CFGEntry.nonNull_out() {
@@ -97,7 +91,20 @@ aspect NonNull {
     return s;
   }
 
-  eq AssertStmt.nonNull_out() = nonNull_in();
+  eq AssertStmt.nonNull_out() {
+    VarOrFieldDecl d = getCondition().testsNotNull();
+    if (d != null) {
+      return nonNull_in().union(d);
+    }
+    return nonNull_in();
+  }
+  eq AssertStmt.nonNull_out_throw() {
+    VarOrFieldDecl d = getCondition().testsNull();
+    if (d != null) {
+      return nonNull_in().union(d);
+    }
+    return nonNull_in();
+  }
 
   eq AssignStmt.nonNull_out() {
     SimpleSet<VarOrFieldDecl> in = nonNull_in();
@@ -116,6 +123,21 @@ aspect NonNull {
 
   eq ExpressionStmt.nonNull_out() = getExp().nonNull_out();
 
+  eq IfStmt.nonNull_out_then() {
+    VarOrFieldDecl d = getCondition().testsNotNull();
+    if (d != null) {
+      return nonNull_in().union(d);
+    }
+    return nonNull_in();
+  }
+  eq IfStmt.nonNull_out_else() {
+    VarOrFieldDecl d = getCondition().testsNull();
+    if (d != null) {
+      return nonNull_in().union(d);
+    }
+    return nonNull_in();
+  }
+
   eq VarDeclStmt.nonNull_out() {
     VarDecl d = getVarDecl();
 
@@ -133,6 +155,21 @@ aspect NonNull {
       // We don't have to remove d, as it has not existed yet
       return init.nonNull_out();
     }
+  }
+
+  eq WhileStmt.nonNull_out_then() {
+    VarOrFieldDecl d = getCondition().testsNotNull();
+    if (d != null) {
+      return nonNull_in().union(d);
+    }
+    return nonNull_in();
+  }
+  eq WhileStmt.nonNull_out_else() {
+    VarOrFieldDecl d = getCondition().testsNull();
+    if (d != null) {
+      return nonNull_in().union(d);
+    }
+    return nonNull_in();
   }
 
   // == Exp ==
@@ -218,6 +255,42 @@ aspect NonNull {
   eq ThisExp.nonNull() = true;
 
   eq Unary.nonNull() = true;
+
+  // Wether this expr is `id == null` or `null == id`
+  syn VarOrFieldDecl PureExp.testsNull() = null;
+  eq EqExp.testsNull() {
+    PureExp l = getLeft();
+    PureExp r = getRight();
+
+    if (l instanceof NullExp) {
+      PureExp e = l;
+      l = r;
+      r = e;
+    }
+
+    if (r instanceof NullExp && l instanceof VarOrFieldUse) {
+      return ((VarOrFieldUse) l).getDecl();
+    }
+    return null;
+  }
+
+  // Wether this expr is `id != null` or `null != id`
+  syn VarOrFieldDecl PureExp.testsNotNull() = null;
+  eq NotEqExp.testsNull() {
+    PureExp l = getLeft();
+    PureExp r = getRight();
+
+    if (l instanceof NullExp) {
+      PureExp e = l;
+      l = r;
+      r = e;
+    }
+
+    if (r instanceof NullExp && l instanceof VarOrFieldUse) {
+      return ((VarOrFieldUse) l).getDecl();
+    }
+    return null;
+  }
 
   syn boolean Annotation.nonNull() {
     PureExp e = getValue();
