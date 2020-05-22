@@ -117,10 +117,6 @@ aspect NonNull {
 
     SimpleSet<VarOrFieldDecl> in = nonNull_in();
 
-    if (!(d.getType().isReferenceType())) {
-      return in;
-    }
-
     if (!d.hasInitExp()) {
       // Because we have no init, the value is null
       return in;
@@ -158,10 +154,9 @@ aspect NonNull {
   syn boolean Exp.nonNull();
 
   // TODO: refine using annotations
-  eq Call.nonNull() = false;
+  eq Call.nonNull() = getMethodSig().nonNull();
 
-  // TODO: refine using annotations
-  eq GetExp.nonNull() = false;
+  eq GetExp.nonNull() = getPureExp().nonNull();
 
   eq NewExp.nonNull() = true;
 
@@ -210,6 +205,22 @@ aspect NonNull {
 
   // == Parameters ==
   syn boolean ParamDecl.nonNull() {
+    for (Annotation a : getAnnotations()) {
+      PureExp e = a.getValue();
+      if (e instanceof DataConstructorExp) {
+        DataConstructorExp d = (DataConstructorExp) e;
+        String name = d.getConstructor();
+        if (name.equals("NonNull") && !d.hasParam()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // == MethodSig ==
+  syn boolean MethodSig.nonNull() {
     for (Annotation a : getAnnotations()) {
       PureExp e = a.getValue();
       if (e instanceof DataConstructorExp) {
