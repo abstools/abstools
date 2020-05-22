@@ -29,6 +29,8 @@ aspect ControlFlow {
 	eq InitBlock.entry().following() = new SimpleSet<>(this);
 	eq ClassDecl.getInitBlock().following() = new SimpleSet<>(getInitBlock().exit());
 	eq InitBlock.exit().following() = new SimpleSet<CFGNode>();
+	eq InitBlock.entry().exit() = exit();
+	eq InitBlock.exit().exit() = null;
 	eq InitBlock.getStmt(int i).exit() = exit();
 
 	syn nta CFGEntry ClassDecl.recoverEntry() = new CFGEntry();
@@ -40,9 +42,20 @@ aspect ControlFlow {
 		.union(i + 1 < getNumRecoverBranch()
 			? getRecoverBranch(i + 1)
 			: recoverExit());
+	eq ClassDecl.recoverEntry().exit() = recoverExit();
+	eq ClassDecl.recoverExit().exit() = null;
 	eq ClassDecl.getRecoverBranch(int i).exit() = recoverExit();
 	eq ClassDecl.recoverExit().following() = new SimpleSet<>();
 	eq ClassDecl.getRecoverBranch(int i).parentStmt() = null;
+
+	syn nta CFGEntry MainBlock.entry() = new CFGEntry();
+	syn nta CFGExit MainBlock.exit() = new CFGExit();
+	eq MainBlock.entry().following() = new SimpleSet<>(this);
+	eq ModuleDecl.getBlock().following() = new SimpleSet<>(getBlock().exit());
+	eq MainBlock.exit().following() = new SimpleSet<CFGNode>();
+	eq MainBlock.entry().exit() = exit();
+	eq MainBlock.exit().exit() = null;
+	eq MainBlock.getStmt(int i).exit() = exit();
 
 	//== Predecessors ==
 	
@@ -292,6 +305,11 @@ aspect ControlFlow {
 	// The closest surrounding catch or the exit node
 	inh CFGNode CFGNode.throwTarget();
 	eq MethodImpl.getChild(int i).throwTarget() = exit();
+	eq InitBlock.getChild(int i).throwTarget() = exit();
+	eq ClassDecl.getRecoverBranch(int i).throwTarget() = recoverExit();
+	eq ClassDecl.recoverEntry().throwTarget() = recoverExit();
+	eq ClassDecl.recoverExit().throwTarget() = null;
+	eq MainBlock.getChild(int i).throwTarget() = exit();
 
 	// Some exprs can throw (e.g. division, incomplete patterns, etc.)
 	syn boolean Exp.canThrow() = false;
