@@ -4,6 +4,12 @@ import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 aspect NonNull {
   // == NonNull in ==
   syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+    CFGNode self = this;
+    // If we are in a catch block, we cannot use the previous stmt's information, because it throwTarget
+    // Use nonNull_in instead
+    boolean isCatch = (self instanceof CaseBranchStmt)
+      && (((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt);
+
     // Special case: if we have exactly one pred, we might extract extra info
     if (pred().size() == 1) {
       CFGNode p = null;
@@ -14,7 +20,6 @@ aspect NonNull {
       SimpleSet<VarOrFieldDecl> in = p.nonNull_out();
 
       PureExp cond;
-      CFGNode self = this;
       boolean assumeTrue = false;
 
       if (p instanceof IfStmt) {
@@ -32,7 +37,7 @@ aspect NonNull {
           assumeTrue = true;
         }
       } else {
-        return in;
+        return isCatch ? p.nonNull_in() : in;
       }
 
       if (cond instanceof EqualityExpr) {
@@ -62,11 +67,11 @@ aspect NonNull {
 
     SimpleSet<VarOrFieldDecl> s = new SimpleSet();
     for (CFGNode n : pred()) {
-      s = s.union(n.nonNull_out());
+      s.addAll(isCatch ? n.nonNull_in() : n.nonNull_out());
     }
 
     for (CFGNode n : pred()) {
-      s = s.intersection(n.nonNull_out());
+      s = s.intersection(isCatch ? n.nonNull_in() : n.nonNull_out());
     }
     return s;
   }
