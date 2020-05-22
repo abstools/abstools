@@ -4,6 +4,10 @@ import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 aspect NonNull {
   // == NonNull in ==
   syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+    CFGNode self = this;
+
+    boolean isCatch = self instanceof CaseBranchStmt 
+      && ((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt;
 
     // Special case: if we have exactly one pred, we might extract extra info
     if (pred().size() == 1) {
@@ -11,55 +15,39 @@ aspect NonNull {
       for (CFGNode n : pred()) {
         p = n;
       }
-
-      SimpleSet<VarOrFieldDecl> in = p.nonNull_out();
-      CFGNode self = this;
-      PureExp cond;
-      boolean assumeTrue = false;
-
       if (p instanceof IfStmt) {
         IfStmt i = (IfStmt) p;
-        cond = i.getCondition();
-        
         if (self == i.getThen()) {
-          assumeTrue = true;
+          return p.nonNull_out_then();
+        } else {
+          return p.nonNull_out_else();
+        }
+      } else if(p instanceof WhileStmt) {
+        WhileStmt w = (WhileStmt) p;
+        if (self == w.getBody()) {
+          return p.nonNull_out_then();
+        } else {
+          return p.nonNull_out_else();
+        }
+      } else if(p instanceof AssertStmt) {
+        AssertStmt a = (AssertStmt) p;
+        if (self instanceof CaseBranchStmt) {
+          return p.nonNull_out_else();
+        } else {
+          return p.nonNull_out_then();
         }
       } else {
-        return in;
-      }
-
-      if (cond instanceof EqualityExpr) {
-        if (cond instanceof NotEqExp) {
-          assumeTrue = !assumeTrue;
-        }
-        EqualityExpr ee = (EqualityExpr) cond;
-        PureExp left = ee.getLeft();
-        PureExp right = ee.getRight();
-        if (left instanceof NullExp) {
-          PureExp e = left;
-          left = right;
-          right = e;
-        }
-        if (right instanceof NullExp && left instanceof VarOrFieldUse) {
-          VarOrFieldDecl d = ((VarOrFieldUse) left).getDecl();
-          if (assumeTrue) {
-            // If cond is true, then left must be null
-            // We can safely do this without intersection, because we know we are in an IfStmt
-            return in.comp(d);
-          } else {
-            return in.union(d);
-          }
-        }
+        return isCatch ? p.nonNull_in() : p.nonNull_out();
       }
     }
 
     SimpleSet<VarOrFieldDecl> s = new SimpleSet();
     for (CFGNode n : pred()) {
-      s.addAll(n.nonNull_out());
+      s.addAll(isCatch ? n.nonNull_in() : n.nonNull_out());
     }
 
     for (CFGNode n : pred()) {
-      s = s.intersection(n.nonNull_out());
+      s = s.intersection(isCatch ? n.nonNull_in() : n.nonNull_out());
     }
     return s;
   }
@@ -68,8 +56,6 @@ aspect NonNull {
   // == NonNull out ==
   // For most stmts out = in
   syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out() = nonNull_in();
-  // What gets propagated when the stmt throws
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_throw() = nonNull_in();
   // What gets propagated to the `then` successors of a conditional node (if, while)
   syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_then() = new SimpleSet<>();
   // What gets propagated to the `else` successors of a conditional node (if, while)
@@ -91,14 +77,14 @@ aspect NonNull {
     return s;
   }
 
-  eq AssertStmt.nonNull_out() {
+  eq AssertStmt.nonNull_out_then() {
     VarOrFieldDecl d = getCondition().testsNotNull();
     if (d != null) {
       return nonNull_in().union(d);
     }
     return nonNull_in();
   }
-  eq AssertStmt.nonNull_out_throw() {
+  eq AssertStmt.nonNull_out_else() {
     VarOrFieldDecl d = getCondition().testsNull();
     if (d != null) {
       return nonNull_in().union(d);
@@ -276,7 +262,7 @@ aspect NonNull {
 
   // Wether this expr is `id != null` or `null != id`
   syn VarOrFieldDecl PureExp.testsNotNull() = null;
-  eq NotEqExp.testsNull() {
+  eq NotEqExp.testsNotNull() {
     PureExp l = getLeft();
     PureExp r = getRight();
 
