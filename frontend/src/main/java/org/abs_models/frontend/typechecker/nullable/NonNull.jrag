@@ -1,4 +1,4 @@
-import org.abs_models.frontend.typechecker.nullable.NullableInfo;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 
 aspect NonNull {

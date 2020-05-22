@@ -1,0 +1,224 @@
+import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+
+aspect Null {
+  // == Null in ==
+  syn SimpleSet<VarOrFieldDecl> CFGNode.null_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+    CFGNode self = this;
+
+    boolean isCatch = self instanceof CaseBranchStmt 
+      && ((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt;
+
+    // Special case: if we have exactly one pred, we might extract extra info
+    if (pred().size() == 1) {
+      CFGNode p = null;
+      for (CFGNode n : pred()) {
+        p = n;
+      }
+      if (p instanceof IfStmt) {
+        IfStmt i = (IfStmt) p;
+        if (self == i.getThen()) {
+          return p.null_out_then();
+        } else {
+          return p.null_out_else();
+        }
+      } else if(p instanceof WhileStmt) {
+        WhileStmt w = (WhileStmt) p;
+        if (self == w.getBody()) {
+          return p.null_out_then();
+        } else {
+          return p.null_out_else();
+        }
+      } else if(p instanceof AssertStmt) {
+        AssertStmt a = (AssertStmt) p;
+        if (self instanceof CaseBranchStmt) {
+          return p.null_out_else();
+        } else {
+          return p.null_out_then();
+        }
+      } else {
+        return isCatch ? p.null_in() : p.null_out();
+      }
+    }
+
+    SimpleSet<VarOrFieldDecl> s = new SimpleSet();
+    for (CFGNode n : pred()) {
+      s.addAll(isCatch ? n.null_in() : n.null_out());
+    }
+
+    for (CFGNode n : pred()) {
+      s = s.intersection(isCatch ? n.null_in() : n.null_out());
+    }
+    return s;
+  }
+  
+
+  // == null out ==
+  // For most stmts out = in
+  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out() = null_in();
+  // What gets propagated to the `then` successors of a conditional node (if, while)
+  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_then() = new SimpleSet<>();
+  // What gets propagated to the `else` successors of a conditional node (if, while)
+  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_else() = new SimpleSet<>();
+
+  eq AssertStmt.null_out_then() {
+    VarOrFieldDecl d = getCondition().testsNull();
+    if (d != null) {
+      return null_in().union(d);
+    }
+    return null_in();
+  }
+  eq AssertStmt.null_out_else() {
+    VarOrFieldDecl d = getCondition().testsNotNull();
+    if (d != null) {
+      return null_in().union(d);
+    }
+    return null_in();
+  }
+
+  eq AssignStmt.null_out() {
+    SimpleSet<VarOrFieldDecl> in = null_in();
+
+    Exp e = getValue();
+    VarOrFieldUse var = getVar();
+
+    VarOrFieldDecl d = var.getDecl();
+
+    if (e.isNull()) {
+      return in.union(d);
+    } else {
+      return in.comp(d);
+    }
+  }
+
+  eq ExpressionStmt.null_out() = getExp().null_out();
+
+  eq IfStmt.null_out_then() {
+    VarOrFieldDecl d = getCondition().testsNull();
+    if (d != null) {
+      return null_in().union(d);
+    }
+    return null_in();
+  }
+  eq IfStmt.null_out_else() {
+    VarOrFieldDecl d = getCondition().testsNotNull();
+    if (d != null) {
+      return null_in().union(d);
+    }
+    return null_in();
+  }
+
+  eq VarDeclStmt.null_out() {
+    VarDecl d = getVarDecl();
+
+    SimpleSet<VarOrFieldDecl> in = null_in();
+
+    if (!d.hasInitExp()) {
+      // Because we have no init, the value is null
+      return in.union(d);
+    }
+
+    Exp init = d.getInitExp();
+    if (init.isNull()) {
+      return init.null_out().union(d);
+    } else {
+      // We don't have to remove d, as it has not existed yet
+      return init.null_out();
+    }
+  }
+
+  eq WhileStmt.null_out_then() {
+    VarOrFieldDecl d = getCondition().testsNull();
+    if (d != null) {
+      return null_in().union(d);
+    }
+    return null_in();
+  }
+  eq WhileStmt.null_out_else() {
+    VarOrFieldDecl d = getCondition().testsNotNull();
+    if (d != null) {
+      return null_in().union(d);
+    }
+    return null_in();
+  }
+
+  // == Exp ==
+
+  syn SimpleSet<VarOrFieldDecl> Exp.null_in() = parentStmt().null_in();
+
+  syn SimpleSet<VarOrFieldDecl> Exp.null_out();
+
+  eq Exp.null_out() = null_in();
+
+  eq Call.null_out() {
+    SimpleSet<VarOrFieldDecl> in = null_in();
+    PureExp callee = getCallee();
+
+    if (callee instanceof VarOrFieldUse) {
+      VarOrFieldUse c = (VarOrFieldUse) callee;
+      return in.comp(c.getDecl());
+    }
+
+    return in;
+  }
+  
+  syn boolean Exp.isNull();
+
+  eq Call.isNull() = false;
+
+  eq GetExp.isNull() = getPureExp().isNull();
+
+  eq NewExp.isNull() = false;
+
+  // TODO: refine using annotations (Is that even possible?)
+  eq OriginalCall.isNull() = false;
+
+  eq Access.isNull() = false;
+  eq VarOrFieldUse.isNull() = null_in().contains(getDecl());
+
+  eq AsExp.isNull() = false;
+
+  // Binary expr can't be a reference
+  eq Binary.isNull() = false;
+
+  eq CaseExp.isNull() {
+    for (CaseBranch b : getBranchs()) {
+      if (!b.getRight().isNull()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Can't be a reference
+  eq DataConstructorExp.isNull() = false;
+
+  eq FnApp.isNull() = false;
+
+  eq IfExp.isNull() = getThenExp().isNull() && getElseExp().isNull();
+
+  eq ImplementsExp.isNull() = false;
+
+  inh SimpleSet<VarOrFieldDecl> VirtualStmt.null_in();
+  eq LetExp.virtualStmt().null_in() {
+    SimpleSet<VarOrFieldDecl> in = null_in();
+    ParamDecl d = getVar();
+
+    if (getVal().isNull()) {
+      return in.union(d);
+    }
+
+    return in;
+  }
+  eq LetExp.isNull() = getExp().isNull();
+
+  eq LiteralExp.isNull() = false;
+
+  eq NullExp.isNull() = true;
+
+  eq ParFnApp.isNull() = false;
+
+  eq ThisExp.isNull() = false;
+
+  eq Unary.isNull() = false;
+}

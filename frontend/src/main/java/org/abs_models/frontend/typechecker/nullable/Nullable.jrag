@@ -1,0 +1,19 @@
+aspect Nullable {
+  syn NullableType Exp.nullableType() {
+    Type t = getType();
+
+    if (!t.isReferenceType() || !t.isFutureType()) {
+      return NullableType.None;
+    }
+
+    if (nonNull()) {
+      return NullableType.NonNull;
+    }
+    if (isNull()) {
+      return NullableType.Null;
+    }
+    return NullableType.Nullable;
+  }
+
+  syn boolean Exp.couldBeNull() = nullableType().assignableTo(NullableType.Nullable);
+}
