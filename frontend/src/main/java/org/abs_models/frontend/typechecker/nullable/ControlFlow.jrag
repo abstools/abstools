@@ -25,6 +25,17 @@ aspect ControlFlow {
 	eq InitBlock.entry().following() = new SimpleSet<>(this);
 	eq ClassDecl.getInitBlock().following() = getInitBlock().exit();
 	eq InitBlock.exit().following() = new SimpleSet<CFGNode>();
+
+	syn nta ClassDecl.recoverEntry() = new CFGEntry();
+	syn nta ClassDecl.recoverExit() = new CFGExit();
+	eq ClassDecl.recoverEntry().following() = hasRecoverBranch()
+		? new SimpleSet<>(getRecoverBranch(0))
+		: new SimpleSet<>();
+	eq ClassDecl.getRecoverBranch(int i).following() = i + 1 < getNumRecoverBranch()
+		? new SimpleSet<>(getRecoverBranch(i + 1))
+		: new SimpleSet<>(recoverExit());
+	eq ClassDecl.getRecoverBranch(int i).exit() = recoverExit();
+	eq ClassDecl.getRecoverBranch(int i).parentStmt() = null;
 	
 	inh Stmt Stmt.exit();
 	eq MethodImpl.getBlock().exit() = exit();
@@ -165,10 +176,15 @@ aspect ControlFlow {
 		? new SimpleSet<CFGNode>(getBranch(i).getRight()).union(getBranch(i + 1))
 		// We don't need to add the throwTarget, because the compiler generates a pattern for exceptions where needed
 		: new SimpleSet<CFGNode>(getBranch(i).getRight()).union(following());
-	// Parent CaseStmt or TryCatchFinallyStmt
+	// Parent CaseStmt, TryCatchFinallyStmt, or null when in recover block
 	inh Stmt CaseBranchStmt.parentStmt();
 	eq CaseBranchStmt.getRight().following() {
 		Stmt parent = parentStmt();
+
+		// If parentStmt is null, we are in a recover block
+		if (parent == null) {
+			return new SimpleSet<>(exit());
+		}
 
 		if (parent instanceof TryCatchFinallyStmt) {
 			TryCatchFinallyStmt t = (TryCatchFinallyStmt) parent;
@@ -214,7 +230,7 @@ aspect ControlFlow {
 	eq TryCatchFinallyStmt.getFinally().following() = following().union(throwTarget());
 	eq TryCatchFinallyStmt.getBody().throwTarget() = getCatch(0);
 	eq TryCatchFinallyStmt.getCatch(int i).following() = new SimpleSet<CFGNode>(getCatch(i).getRight())
-		.union(i + 1 < getNumCatch() 
+		.union(i + 1 < getNumCatch()
 			// Next catch branch
 			? getCatch(i + 1)
 			// Either finally, or throw again
