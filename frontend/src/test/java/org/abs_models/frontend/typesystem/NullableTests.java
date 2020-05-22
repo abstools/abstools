@@ -16,19 +16,6 @@ import org.junit.Test;
 
 public class NullableTests extends FrontendTest {
     @Test
-    public void test1() {
-        Model m = assertParse("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i!m(this); skip; } }");
-        CompilationUnit cu = m.getCompilationUnit(0);
-        ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
-        MethodImpl met = d.getMethod(0);
-        Block b = met.getBlock();
-        System.out.println(b.getStmt(0).nonNull_in());
-        System.out.println(b.getStmt(0).nonNull_out());
-        System.out.println(b.getStmt(1).nonNull_out());
-        assertTrue(true);
-    }
-
-    @Test
     public void testMethodDeclNewExp() {
         MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); i; } }");
 
@@ -45,42 +32,131 @@ public class NullableTests extends FrontendTest {
 
     @Test
     public void testMethodAssignAccess() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = i; } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        VarDecl d1 = ((VarDeclStmt) b.getStmt(1)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(2);
+
+        assertEquals(2, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
+        assertTrue(a.nonNull_out().contains(d1));
     }
 
     @Test
     public void testMethodAssignAs() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = i as C; } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(2);
+
+        assertEquals(1, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
     }
 
     @Test
     public void testMethodAssignBinary() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { Int n; n = 1 + 4; } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(1, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
     }
 
     @Test
-    public void testMethodAssignCase() {
-        // TODO
+    public void testMethodAssignCase1() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m([NonNull] I i1, [NonNull] I i2, Int n) { I j; j = case n { 0 => i1; 1 => i2; }; } }");
+        Block b = met.getBlock();
+
+        ParamDecl p0 = met.getMethodSig().getParam(0);
+        ParamDecl p1 = met.getMethodSig().getParam(1);
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(3, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(p0));
+        assertTrue(a.nonNull_out().contains(p1));
+        assertTrue(a.nonNull_out().contains(d0));
     }
 
     @Test
     public void testMethodAssignDataConstructor() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { List<Int> l; l = Cons(1, Nil); } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(1, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
     }
 
     @Test
-    public void testMethodAssignFn() {
-        // TODO
+    public void testMethodAssignFn1() {
+        MethodImpl met = getMethod("def I f(I i) = i; interface I { Unit m(); } class C implements I { Unit m() { I i; i = f(this); } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(0, a.nonNull_out().size());
+    }
+
+    @Test
+    public void testMethodAssignFn2() {
+        MethodImpl met = getMethod("[NonNull] def I f(I i1, [NonNull] I i2) = if i1 == null then i2 else i1; interface I { Unit m(); } class C implements I { Unit m() { I i; i = f(this, this); } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(1, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
     }
 
     @Test
     public void testMethodAssignImplements() {
-        // TODO
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); Bool b; b = i implements C; } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        VarDecl d1 = ((VarDeclStmt) b.getStmt(1)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(2);
+
+        assertEquals(2, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
+        assertTrue(a.nonNull_out().contains(d1));
     }
 
     @Test
-    public void testMethodAssignLet() {
-        // TODO
+    public void testMethodAssignLet1() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = let I v = i in i; } }");
+        Block b = met.getBlock();
+
+        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        VarDecl d1 = ((VarDeclStmt) b.getStmt(1)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(2);
+
+        assertEquals(2, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(d0));
+        assertTrue(a.nonNull_out().contains(d1));
+    }
+
+    @Test
+    public void testMethodAssignLet2() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m(I i) { I j; j = let I v = i in i; } }");
+        Block b = met.getBlock();
+
+        ParamDecl d0 = met.getMethodSig().getParam(0);
+        VarDecl d1 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(0, a.nonNull_out().size());
     }
 
     @Test
