@@ -599,6 +599,9 @@ aspect TypeChecker {
             if (e.getErrorCount() > nerrors) return;
             TypeCheckerHelper.checkAssignmentNullable(e,this,getAccess().getNullableType(),getInitExp());
         } else {
+            if (nonNull()) {
+                e.add(new TypeError(this, ErrorMessage.NON_NULL_VAR_INIT_REQUIRED, new String[0]));
+            }
             if (!t.isReferenceType() && !t.isFutureType()) {
                 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
             }

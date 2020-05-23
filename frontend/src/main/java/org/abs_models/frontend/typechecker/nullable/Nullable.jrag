@@ -116,11 +116,11 @@ aspect Nullable {
 
     Type t = getAccess().getType();
 
-    if (!t.isReferenceType() || !t.isFutureType()) {
+    if (!t.isReferenceType() && !t.isFutureType()) {
       return NullableType.None;
     }
 
-    return NullableType.Null;
+    return NullableType.Nullable;
   }
 
   syn NullableType MethodSig.getNullableType() {
@@ -134,11 +134,11 @@ aspect Nullable {
 
     Type t = getReturnType().getType();
 
-    if (!t.isReferenceType() || !t.isFutureType()) {
+    if (!t.isReferenceType() && !t.isFutureType()) {
       return NullableType.None;
     }
 
-    return NullableType.Null;
+    return NullableType.Nullable;
   }
 
   syn NullableType FunctionDecl.getNullableType() {
@@ -152,11 +152,11 @@ aspect Nullable {
 
     Type t = getType();
 
-    if (!t.isReferenceType() || !t.isFutureType()) {
+    if (!t.isReferenceType() && !t.isFutureType()) {
       return NullableType.None;
     }
 
-    return NullableType.Null;
+    return NullableType.Nullable;
   }
 
   syn NullableType VarOrFieldDecl.getNullableType() {
@@ -170,10 +170,10 @@ aspect Nullable {
 
     Type t = getType();
 
-    if (!t.isReferenceType() || !t.isFutureType()) {
+    if (!t.isReferenceType() && !t.isFutureType()) {
       return NullableType.None;
     }
 
-    return NullableType.Null;
+    return NullableType.Nullable;
   }
 }

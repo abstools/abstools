@@ -114,6 +114,7 @@ public enum ErrorMessage {
     CANNOT_ASSIGN_NULLABLE("Cannot assign %s to nullable type %s."),
     WRONG_RETURN_STMT_NULLABLE_TYPE("Cannot return a value of nullable type %s from %s (expected %s)."),
     INCOMPATIBLE_NULLABLE_TYPE("Expected nullable type %s, but found %s."),
+    NON_NULL_VAR_INIT_REQUIRED("A variable must be initialized if it is declared as NonNull."),
 
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
