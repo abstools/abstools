@@ -1,0 +1,121 @@
+import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+
+aspect Resolved {
+  syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+    CFGNode self = this;
+
+    boolean isCatch = self instanceof CaseBranchStmt 
+      && ((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt;
+
+    SimpleSet<VarOrFieldDecl> s = new SimpleSet();
+    for (CFGNode n : pred()) {
+      s.addAll(isCatch ? n.resolved_in() : n.resolved_out());
+    }
+
+    for (CFGNode n : pred()) {
+      s = s.intersection(isCatch ? n.resolved_in() : n.resolved_out());
+    }
+    return s;
+  }
+
+  // For most stmts out = in
+  syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_out() = resolved_in();
+
+  eq AssignStmt.resolved_out() {
+    SimpleSet<VarOrFieldDecl> in = resolved_in();
+
+    Exp e = getValue();
+    VarOrFieldUse var = getVar();
+
+    VarOrFieldDecl d = var.getDecl();
+
+    if (e.resolved()) {
+      return in.union(d);
+    } else {
+      return in.comp(d);
+    }
+  }
+
+  eq AwaitStmt.resolved_out() = getGuard().resolved_out();
+
+  eq ExpressionStmt.resolved_out() = getExp().resolved_out();
+
+  eq VarDeclStmt.resolved_out() {
+    VarDecl d = getVarDecl();
+
+    SimpleSet<VarOrFieldDecl> in = resolved_in();
+
+    if (!d.hasInitExp()) {
+      // Because we have no init, the value is (kinda) resolved
+      return in.union(d);
+    }
+
+    Exp init = d.getInitExp();
+    if (init.resolved()) {
+      return init.resolved_out().union(d);
+    } else {
+      // We don't have to remove d, as it has not existed yet
+      return init.resolved_out();
+    }
+  }
+
+  // == Exp ==
+
+  syn SimpleSet<VarOrFieldDecl> Exp.resolved_in() = parentStmt().resolved_in();
+
+  syn SimpleSet<VarOrFieldDecl> Exp.resolved_out();
+
+  eq Exp.resolved_out() = resolved_in();
+
+  eq GetExp.resolved_out() {
+    SimpleSet<VarOrFieldDecl> in = resolved_in();
+    PureExp e = getPureExp();
+
+    if (e instanceof VarOrFieldUse) {
+      VarOrFieldUse v = (VarOrFieldUse) e;
+      return in.union(v.getDecl());
+    }
+
+    return in;
+  }
+
+  // Whether a Future is resolved. If the value is not a future, the value will be false;
+  syn boolean Exp.resolved();
+
+  eq Call.resolved() = false;
+
+  eq AwaitAsyncCall.resolved() = true;
+
+  eq GetExp.resolved() = false;
+
+  eq NewExp.resolved() = false;
+
+  eq OriginalCall.resolved() = false;
+
+  eq Access.resolved() = false;
+  eq VarOrFieldUse.resolved() = resolved_in().contains(getDecl());
+
+  eq AsExp.resolved() = false;
+
+  eq Binary.resolved() = false;
+
+  eq DataConstructorExp.resolved() = false;
+
+  eq FnApp.resolved() = false;
+
+  eq IfExp.resolved() = getThenExp().resolved() && getElseExp().resolved();
+
+  eq ImplementsExp.resolved() = false;
+
+  eq LetExp.resolved() = false;
+
+  eq LiteralExp.resolved() = false;
+
+  eq NullExp.resolved() = false;
+
+  eq ParFnApp.resolved() = false;
+
+  eq ThisExp.resolved() = false;
+
+  eq Unary.resolved() = false;
+}
