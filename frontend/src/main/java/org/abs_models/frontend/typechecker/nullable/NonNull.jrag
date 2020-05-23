@@ -345,4 +345,17 @@ aspect NonNull {
 
     return false;
   }
+
+  // == VarOrFieldDecl
+  syn boolean VarOrFieldDecl.nonNull() = false;
+
+  eq TypedVarOrFieldDecl.nonNull() {
+    for (Annotation a : getAnnotations()) {
+      if (a.nonNull()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }

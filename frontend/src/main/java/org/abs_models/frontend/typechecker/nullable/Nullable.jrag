@@ -1,5 +1,12 @@
 aspect Nullable {
-  syn NullableType Exp.nullableType() {
+  public interface HasNullableType {
+        NullableType getNullableType();
+    }
+    
+  ParamDecl implements HasNullableType;
+  Exp implements HasNullableType;
+
+  syn NullableType Exp.getNullableType() {
     Type t = getType();
 
     if (!t.isReferenceType() || !t.isFutureType()) {
@@ -15,5 +22,158 @@ aspect Nullable {
     return NullableType.Nullable;
   }
 
-  syn boolean Exp.couldBeNull() = nullableType().assignableTo(NullableType.Nullable);
+  syn boolean Exp.couldBeNull() = getNullableType() == NullableType.Nullable || getNullableType() == NullableType.Null;
+
+  syn boolean Annotation.nullable() {
+    PureExp e = getValue();
+    if (e instanceof DataConstructorExp) {
+      DataConstructorExp d = (DataConstructorExp) e;
+      String name = d.getConstructor();
+      if (name.equals("Nullable") && !d.hasParam()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // == Parameters ==
+  syn boolean ParamDecl.nullable() {
+    for (Annotation a : getAnnotations()) {
+      if (a.nullable()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // == MethodSig ==
+  syn boolean MethodSig.nullable() {
+    for (Annotation a : getAnnotations()) {
+      if (a.nullable()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // == Function ==
+  syn boolean FunctionDecl.nullable() {
+    for (Annotation a : getAnnotations()) {
+      if (a.nullable()) {
+        return true;
+      }
+    }
+
+    for (Annotation a : getTypeUse().getAnnotations()) {
+      if (a.nullable()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // == Partial Function
+  syn boolean PartialFunctionDecl.nullable() {
+    for (Annotation a : getAnnotations()) {
+      if (a.nullable()) {
+        return true;
+      }
+    }
+
+    for (Annotation a : getTypeUse().getAnnotations()) {
+      if (a.nullable()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // == VarOrFieldDecl
+  syn boolean VarOrFieldDecl.nullable() = false;
+
+  eq TypedVarOrFieldDecl.nullable() {
+    for (Annotation a : getAnnotations()) {
+      if (a.nullable()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  syn NullableType ParamDecl.getNullableType() {
+    if (nonNull()) {
+      return NullableType.NonNull;
+    }
+
+    if (nullable()) {
+      return NullableType.Nullable;
+    }
+
+    Type t = getAccess().getType();
+
+    if (!t.isReferenceType() || !t.isFutureType()) {
+      return NullableType.None;
+    }
+
+    return NullableType.Null;
+  }
+
+  syn NullableType MethodSig.getNullableType() {
+    if (nonNull()) {
+      return NullableType.NonNull;
+    }
+
+    if (nullable()) {
+      return NullableType.Nullable;
+    }
+
+    Type t = getReturnType().getType();
+
+    if (!t.isReferenceType() || !t.isFutureType()) {
+      return NullableType.None;
+    }
+
+    return NullableType.Null;
+  }
+
+  syn NullableType FunctionDecl.getNullableType() {
+    if (nonNull()) {
+      return NullableType.NonNull;
+    }
+
+    if (nullable()) {
+      return NullableType.Nullable;
+    }
+
+    Type t = getType();
+
+    if (!t.isReferenceType() || !t.isFutureType()) {
+      return NullableType.None;
+    }
+
+    return NullableType.Null;
+  }
+
+  syn NullableType VarOrFieldDecl.getNullableType() {
+    if (nonNull()) {
+      return NullableType.NonNull;
+    }
+
+    if (nullable()) {
+      return NullableType.Nullable;
+    }
+
+    Type t = getType();
+
+    if (!t.isReferenceType() || !t.isFutureType()) {
+      return NullableType.None;
+    }
+
+    return NullableType.Null;
+  }
 }

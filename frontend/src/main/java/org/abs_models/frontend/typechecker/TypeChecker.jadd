@@ -304,6 +304,14 @@ aspect TypeChecker {
                                     ms.getParam(i).getName(), name, d.getName(),
                                     texpected.toString(), t.toString()));
                         }
+
+                        NullableType nExpected = s.getParam(i).getNullableType();
+                        NullableType n = ms.getParam(i).getNullableType();
+                        if (!nExpected.assignableTo(n)) {
+                            e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_PARAM_NULLABLE_TYPE,
+                                    ms.getParam(i).getName(), name, d.getName(),
+                                    nExpected.toString(), n.toString()));
+                        }
                     }
                 }
 
@@ -314,6 +322,14 @@ aspect TypeChecker {
                             name, d.getName(),
                             expectedReturnType.toString(), actualReturnType.toString()));
 
+                }
+
+                NullableType expectedNullableRet = s.getNullableType();
+                NullableType actualNullableRet = ms.getNullableType();
+                if (!actualNullableRet.assignableTo(expectedNullableRet)) {
+                    e.add(new TypeError(m, ErrorMessage.METHOD_IMPL_WRONG_NULLABLE_TYPE,
+                            name, d.getName(),
+                            expectedNullableRet.toString(), actualNullableRet.toString()));
                 }
             }
         }
@@ -345,6 +361,7 @@ aspect TypeChecker {
             def.getRhs().typeCheck(e);
             if (nerrors == e.getErrorCount()) {
                 TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), def.getRhs());
+                TypeCheckerHelper.checkAssignmentNullable(e, this, getNullableType(), def.getRhs());
             }
         } else {
             // BuiltinFunctionDef: parser guarantees that all arguments are string literals
@@ -554,6 +571,12 @@ aspect TypeChecker {
             // if UnknownType, ReturnStmt.typeCheck will report an error already
             if (!rht.isUnknownType() && !rht.isAssignableTo(lastType)) {
                 e.add(new TypeError(rs,ErrorMessage.WRONG_RETURN_STMT_TYPE,rht.toString(),sig.getName(),lastType.toString()));
+            } else {
+                NullableType lastNullable = getMethodSig().getNullableType();
+                NullableType rn = rs.getRetExp().getNullableType();
+                if (!rht.isUnknownType() && !rn.assignableTo(lastNullable)) {
+                    e.add(new TypeError(rs,ErrorMessage.WRONG_RETURN_STMT_NULLABLE_TYPE,rn.toString(),sig.getName(),lastNullable.toString()));
+                }
             }
         } else {
             if (!lastType.isUnitType()) {
@@ -573,6 +596,8 @@ aspect TypeChecker {
             getInitExp().typeCheck(e);
             if (e.getErrorCount() > nerrors) return;
             TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
+            if (e.getErrorCount() > nerrors) return;
+            TypeCheckerHelper.checkAssignmentNullable(e,this,getAccess().getNullableType(),getInitExp());
         } else {
             if (!t.isReferenceType() && !t.isFutureType()) {
                 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
@@ -590,6 +615,8 @@ aspect TypeChecker {
             getInitExp().typeCheck(e);
             if (e.getErrorCount() > nerrors) return;
             TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
+            if (e.getErrorCount() > nerrors) return;
+            TypeCheckerHelper.checkAssignmentNullable(e,this,getAccess().getNullableType(),getInitExp());
         } else {
             if (!t.isReferenceType() && !t.isFutureType()) {
                 e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));
@@ -648,6 +675,9 @@ aspect TypeChecker {
         if (e.getErrorCount() > nerrors)
             return;
         TypeCheckerHelper.checkAssignment(e,this,getVar().getType(),getValue());
+        if (e.getErrorCount() > nerrors)
+            return;
+        TypeCheckerHelper.checkAssignmentNullable(e,this,getVar().getDecl().getNullableType(),getValue());
     }
 
     public void MoveCogToStmt.typeCheck(SemanticConditionList e) {
@@ -1082,7 +1112,7 @@ aspect TypeChecker {
             if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
                 TypeCheckerHelper.typeCheckMatchingParams(e,this,c);
             } else {
-                TypeCheckerHelper.typeCheckEqual(e,this,c.getTypes());
+                TypeCheckerHelper.typeCheckEqual(e,this,c.getTypes(), null);
             }
         }
 

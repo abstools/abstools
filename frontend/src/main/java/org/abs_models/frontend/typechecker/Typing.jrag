@@ -462,6 +462,8 @@ aspect Typing {
     
     public java.util.List<Type> HasParams.getTypes()              { return TypeCheckerHelper.getTypes(getParams()); }
     public java.util.List<Type> HasActualParams.getTypesFromExp() { return TypeCheckerHelper.getTypes(getParams()); }
+    public java.util.List<NullableType> HasParams.getNullableTypes()              { return TypeCheckerHelper.getNullableTypes(getParams()); }
+    public java.util.List<NullableType> HasActualParams.getNullableTypesFromExp() { return TypeCheckerHelper.getNullableTypes(getParams()); }
     
     public interface HasType {
       Type getType();
@@ -478,7 +480,7 @@ aspect Typing {
     // Unfortunately must be in same file as the interface. TypeChecker would be a better place:
 
     public void HasActualParams.typeCheckEqualParams(SemanticConditionList l, HasParams params) {
-        TypeCheckerHelper.typeCheckEqual(l, this, params.getTypes());
+        TypeCheckerHelper.typeCheckEqual(l, this, params.getTypes(), params.getNullableTypes());
     }
     public Map<TypeParameter, Type> HasActualParams.getTypeParamBinding(ASTNode<?> node, HasTypes params) {
         return params.getTypeParamBinding(node, getTypesFromExp());
@@ -488,7 +490,7 @@ aspect Typing {
         TypeCheckerHelper.addTypeParamBinding(node, binding, getTypes(), args);
         return binding;
     }
-
+    
 }
 
 // Local Variables:
