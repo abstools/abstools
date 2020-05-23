@@ -37,6 +37,21 @@ aspect Resolved {
   }
 
   eq AwaitStmt.resolved_out() = getGuard().resolved_out();
+  eq AwaitStmt.getGuard().resolved_in() = resolved_in();
+  inh SimpleSet<VarOrFieldDecl> Guard.resolved_in();
+  syn SimpleSet<VarOrFieldDecl> Guard.resolved_out();
+  eq AndGuard.resolved_out() = getLeft().resolved_out().union(getRight().resolved_out());
+  eq ClaimGuard.resolved_out() {
+    SimpleSet<VarOrFieldDecl> in = resolved_in();
+    PureExp e = getVar();
+    if (e instanceof VarOrFieldUse) {
+      VarOrFieldUse v = (VarOrFieldUse) e;
+      return in.union(v.getDecl());
+    }
+    return in;
+  }
+  eq DurationGuard.resolved_out() = resolved_in();
+  eq ExpGuard.resolved_out() = resolved_in();
 
   eq ExpressionStmt.resolved_out() = getExp().resolved_out();
 
