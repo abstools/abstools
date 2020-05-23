@@ -16,7 +16,6 @@ import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.parser.SourcePosition;
 import com.google.common.collect.ImmutableSet;
-import org.abs_models.frontend.typechecker.nullable.NullableType;
 
 public class TypeCheckerHelper {
 
@@ -81,13 +80,6 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void checkAssignmentNullable(SemanticConditionList l, ASTNode<?> n, NullableType lht, Exp rhte) {
-        NullableType te = rhte.getNullableType();
-        if (!te.assignableTo(lht)) {
-            l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN_NULLABLE, te, lht));
-        }
-    }
-
     public static void typeCheckParamList(SemanticConditionList l, HasParams params) {
         Set<String> names = new HashSet<>();
         for (ParamDecl d : params.getParams()) {
@@ -111,7 +103,7 @@ public class TypeCheckerHelper {
     public static void typeCheckMatchingParams(SemanticConditionList l, DataConstructorExp n, DataConstructor c) {
         assert n.getDecl() == c;
         final Map<TypeParameter, Type> binding = n.getTypeParamBinding(n, c);
-        typeCheckEqual(l, n, c.applyBindings(binding), null);
+        typeCheckEqual(l, n, c.applyBindings(binding));
     }
 
     private static void typeCheckMatchingParamsPattern(SemanticConditionList l, ConstructorPattern n, DataConstructor decl) {
@@ -131,10 +123,10 @@ public class TypeCheckerHelper {
     public static void typeCheckMatchingParams(SemanticConditionList l, FnApp n, ParametricFunctionDecl decl) {
         Map<TypeParameter, Type> binding = n.getTypeParamBindingFromParamDecl(decl);
         java.util.List<Type> types = decl.applyBindings(binding);
-        typeCheckEqual(l, n, types, null);
+        typeCheckEqual(l, n, types);
     }
 
-    public static void typeCheckEqual(SemanticConditionList l, ASTNode<?> n, java.util.List<Type> params, java.util.List<NullableType> nTypes) {
+    public static void typeCheckEqual(SemanticConditionList l, ASTNode<?> n, java.util.List<Type> params) {
         org.abs_models.frontend.ast.List<PureExp> args = ((HasActualParams)n).getParams();
         if (params.size() != args.getNumChild()) {
             l.add(new TypeError(n, ErrorMessage.WRONG_NUMBER_OF_ARGS, params.size(), args.getNumChild()));
@@ -148,13 +140,6 @@ public class TypeCheckerHelper {
                     Type expType = exp.getType();
                     if (!expType.isAssignableTo(argType)) {
                         l.add(new TypeError(exp, ErrorMessage.TYPE_MISMATCH, exp.getType(), argType));
-                    }
-                }
-                if (nerrors == l.getErrorCount() && nTypes != null) {
-                    NullableType arg = nTypes.get(i);
-                    NullableType e = exp.getNullableType();
-                    if (!e.assignableTo(arg)) {
-                        l.add(new TypeError(exp, ErrorMessage.INCOMPATIBLE_NULLABLE_TYPE, arg, e));
                     }
                 }
             }
@@ -295,14 +280,6 @@ public class TypeCheckerHelper {
         ArrayList<Type> res = new ArrayList<>();
         for (ASTNode<?> u : params) {
             res.add(((HasType)u).getType());
-        }
-        return res;
-    }
-
-    public static <T extends ASTNode<?>> java.util.List<NullableType> getNullableTypes(org.abs_models.frontend.ast.List<T> params) {
-        ArrayList<NullableType> res = new ArrayList<>();
-        for (ASTNode<?> u : params) {
-            res.add(((HasNullableType) u).getNullableType());
         }
         return res;
     }
