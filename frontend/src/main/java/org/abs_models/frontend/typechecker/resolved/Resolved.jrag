@@ -114,6 +114,15 @@ aspect Resolved {
 
   eq Binary.resolved() = false;
 
+  eq CaseExp.resolved() {
+    for (CaseBranch b : getBranchs()) {
+      if (!b.getRight().resolved()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   eq DataConstructorExp.resolved() = false;
 
   eq FnApp.resolved() = false;
