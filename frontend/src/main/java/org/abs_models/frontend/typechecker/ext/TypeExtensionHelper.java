@@ -15,6 +15,7 @@ import org.abs_models.frontend.typechecker.KindedName;
 import org.abs_models.frontend.typechecker.Type;
 import org.abs_models.frontend.typechecker.TypeParameter;
 import org.abs_models.frontend.typechecker.KindedName.Kind;
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
 public class TypeExtensionHelper implements TypeSystemExtension {
     private java.util.List<TypeSystemExtension> obs = new ArrayList<>();
@@ -30,6 +31,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new SchedulerChecker(m));
         register(new MainBlockChecker(m));
         register(new HttpExportChecker(m));
+        register(new NullCheckerExtension(m));
     }
 
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {

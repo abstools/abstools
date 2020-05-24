@@ -54,7 +54,7 @@ export Deadline, Critical;
 export Inv, Pre, Post;
 
 // Various annotations
-export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
+export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer, NullableType, NonNull, Nullable;
 export COG, Plain, Final, Atomic, Readonly;
 export HTTPName, HTTPCallable;
 export Expansion, ExpansionCall;
@@ -616,6 +616,9 @@ data Annotation = TypeAnnotation;
  
 [TypeAnnotation]
 data LocationType = Far | Near | Somewhere | Infer;
+
+[TypeAnnotation]
+data NullableType = NonNull | Nullable;
  
 /**
  * Can be used to annotated classes and to ensure that

@@ -15,8 +15,7 @@ aspect TypeCheckerExtension {
     public TypeExtensionHelper Model.getTypeExt() {
         return typeCheckerExtension;
     }
-    
-/*    
+
     refine Typing eq FunctionDecl.getType() {
         Type t = Typing.FunctionDecl.getType();
         getModel().getTypeExt().annotateType(t, this, getTypeUse());
@@ -34,7 +33,6 @@ aspect TypeCheckerExtension {
         getModel().getTypeExt().annotateType(t, this, getReturnType());
         return t;
     }
-*/    
     
 //    refine Typing eq ParametricDataTypeUse.getType() {
 //        Type t = Typing.ParametricDataTypeUse.getType().treeCopyNoTransform();        

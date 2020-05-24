@@ -19,4 +19,11 @@ public enum NullableType {
         }
         return true;
     }
+
+    public static NullableType fromName(String name) {
+        if (name.equals("NonNull")) {
+            return NullableType.NonNull;
+        }
+        return NullableType.Nullable;
+    }
 }
