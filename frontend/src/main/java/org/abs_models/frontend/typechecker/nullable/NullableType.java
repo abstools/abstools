@@ -1,21 +1,35 @@
 package org.abs_models.frontend.typechecker.nullable;
 
 public enum NullableType {
-    Null, NonNull, Nullable, None;
+    Null, NonNull, Nullable;
 
     public boolean assignableTo(NullableType n) {
         return NullableType.assignable(n, this);
     }
 
+    public NullableType getMostCommon(NullableType other) {
+        if (this == Nullable || other == Nullable) {
+            return Nullable;
+        }
+
+        if (this == NonNull) {
+            if (other == NonNull) {
+                return NonNull;
+            }
+            return Nullable;
+        }
+
+        if (this == Null) {
+            if (other == Null) {
+                return Null;
+            }
+        }
+        return Nullable;
+    }
+
     public static boolean assignable(NullableType lhs, NullableType rhs) {
         if (lhs == NullableType.NonNull) {
             return rhs == NullableType.NonNull;
-        }
-        if (lhs == NullableType.Nullable) {
-            return rhs != NullableType.None;
-        }
-        if (lhs == NullableType.Null) {
-            return rhs == NullableType.Null;
         }
         return true;
     }
