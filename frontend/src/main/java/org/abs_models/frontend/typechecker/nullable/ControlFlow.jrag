@@ -324,7 +324,9 @@ aspect ControlFlow {
 	eq MainBlock.getChild(int i).throwTarget() = exit();
 
 	// Some exprs can throw (e.g. division, incomplete patterns, etc.)
-	syn boolean Exp.canThrow() = false;
+	syn boolean Exp.canThrow() circular [true];
+
+	eq Exp.canThrow() = false;
 
 	eq AsExp.canThrow() = getExp().canThrow();
 

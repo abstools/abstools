@@ -160,7 +160,7 @@ aspect Null {
     return in;
   }
   
-  syn boolean Exp.isNull();
+  syn boolean Exp.isNull() circular [true];
 
   eq Call.isNull() = false;
 
