@@ -13,13 +13,16 @@ aspect ControlFlow {
 	
 	syn String CFGEntry.toString() = "Entry";
 	syn String CFGExit.toString() = "Exit";
-	inh Stmt CFGNode.exit();
+	inh CFGEntry CFGNode.entry();
+	inh CFGExit CFGNode.exit();
 
 	syn nta CFGEntry MethodImpl.entry() = new CFGEntry();
 	syn nta CFGExit MethodImpl.exit() = new CFGExit();
 	eq MethodImpl.entry().following() = new SimpleSet<CFGNode>(getBlock());
 	eq MethodImpl.getBlock().following() = new SimpleSet<CFGNode>(exit());
 	eq MethodImpl.exit().following() = new SimpleSet<CFGNode>();
+	eq MethodImpl.entry().entry() = entry();
+	eq MethodImpl.getBlock().entry() = entry();
 	eq MethodImpl.getBlock().exit() = exit();
 	eq MethodImpl.entry().exit() = exit();
 	eq MethodImpl.exit().exit() = null;
@@ -29,8 +32,10 @@ aspect ControlFlow {
 	eq InitBlock.entry().following() = new SimpleSet<>(this);
 	eq ClassDecl.getInitBlock().following() = new SimpleSet<>(getInitBlock().exit());
 	eq InitBlock.exit().following() = new SimpleSet<CFGNode>();
+	eq InitBlock.entry().entry() = entry();
 	eq InitBlock.entry().exit() = exit();
 	eq InitBlock.exit().exit() = null;
+	eq InitBlock.getStmt(int i).entry() = entry();
 	eq InitBlock.getStmt(int i).exit() = exit();
 
 	syn nta CFGEntry ClassDecl.recoverEntry() = new CFGEntry();
@@ -42,8 +47,10 @@ aspect ControlFlow {
 		.union(i + 1 < getNumRecoverBranch()
 			? getRecoverBranch(i + 1)
 			: recoverExit());
+	eq ClassDecl.recoverEntry().entry() = recoverEntry();
 	eq ClassDecl.recoverEntry().exit() = recoverExit();
 	eq ClassDecl.recoverExit().exit() = null;
+	eq ClassDecl.getRecoverBranch(int i).entry() = recoverEntry();
 	eq ClassDecl.getRecoverBranch(int i).exit() = recoverExit();
 	eq ClassDecl.recoverExit().following() = new SimpleSet<>();
 	eq ClassDecl.getRecoverBranch(int i).parentStmt() = null;
@@ -53,8 +60,10 @@ aspect ControlFlow {
 	eq MainBlock.entry().following() = new SimpleSet<>(this);
 	eq ModuleDecl.getBlock().following() = new SimpleSet<>(getBlock().exit());
 	eq MainBlock.exit().following() = new SimpleSet<CFGNode>();
+	eq MainBlock.entry().entry() = entry();
 	eq MainBlock.entry().exit() = exit();
 	eq MainBlock.exit().exit() = null;
+	eq MainBlock.getStmt(int i).entry() = entry();
 	eq MainBlock.getStmt(int i).exit() = exit();
 
 	//== Predecessors ==

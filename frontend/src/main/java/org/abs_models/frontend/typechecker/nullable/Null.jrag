@@ -3,7 +3,7 @@ import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 
 aspect Null {
   // == Null in ==
-  syn SimpleSet<VarOrFieldDecl> CFGNode.null_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+  syn SimpleSet<VarOrFieldDecl> CFGNode.null_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
     boolean isCatch = self instanceof CaseBranchStmt 
@@ -41,10 +41,7 @@ aspect Null {
       }
     }
 
-    SimpleSet<VarOrFieldDecl> s = new SimpleSet();
-    for (CFGNode n : pred()) {
-      s.addAll(isCatch ? n.null_in() : n.null_out());
-    }
+    SimpleSet<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
 
     for (CFGNode n : pred()) {
       s = s.intersection(isCatch ? n.null_in() : n.null_out());
@@ -55,11 +52,13 @@ aspect Null {
 
   // == null out ==
   // For most stmts out = in
-  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out() = null_in();
+  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out() circular [entry().getAllVarOrFieldDecls()] = null_in();
   // What gets propagated to the `then` successors of a conditional node (if, while)
-  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_then() = new SimpleSet<>();
+  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_then() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
   // What gets propagated to the `else` successors of a conditional node (if, while)
-  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_else() = new SimpleSet<>();
+  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_else() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
+
+  eq CFGEntry.null_out() = new SimpleSet<>();
 
   eq AssertStmt.null_out_then() {
     VarOrFieldDecl d = getCondition().testsNull();
@@ -122,8 +121,7 @@ aspect Null {
     if (init.isNull()) {
       return init.null_out().union(d);
     } else {
-      // We don't have to remove d, as it has not existed yet
-      return init.null_out();
+      return init.null_out().comp(d);
     }
   }
 

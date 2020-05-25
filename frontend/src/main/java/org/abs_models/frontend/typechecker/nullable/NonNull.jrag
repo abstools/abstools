@@ -2,8 +2,21 @@ import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 
 aspect NonNull {
+
+  syn SimpleSet<VarOrFieldDecl> CFGEntry.getAllVarOrFieldDecls() {
+    SimpleSet<VarOrFieldDecl> decls = new SimpleSet<>();
+
+    if (getParent() instanceof MethodImpl) {
+      MethodImpl met = (MethodImpl) getParent();
+      java.util.List<VarOrFieldDecl> d = met.findChildren(VarOrFieldDecl.class);
+      decls.addAll(d);
+    }
+
+    return decls;
+  }
+
   // == NonNull in ==
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
     boolean isCatch = self instanceof CaseBranchStmt 
@@ -41,11 +54,8 @@ aspect NonNull {
       }
     }
 
-    SimpleSet<VarOrFieldDecl> s = new SimpleSet();
-    for (CFGNode n : pred()) {
-      s.addAll(isCatch ? n.nonNull_in() : n.nonNull_out());
-    }
-
+    SimpleSet<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
+    
     for (CFGNode n : pred()) {
       s = s.intersection(isCatch ? n.nonNull_in() : n.nonNull_out());
     }
@@ -55,11 +65,11 @@ aspect NonNull {
 
   // == NonNull out ==
   // For most stmts out = in
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out() = nonNull_in();
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out() circular [entry().getAllVarOrFieldDecls()] = nonNull_in();
   // What gets propagated to the `then` successors of a conditional node (if, while)
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_then() = new SimpleSet<>();
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_then() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
   // What gets propagated to the `else` successors of a conditional node (if, while)
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_else() = new SimpleSet<>();
+  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_else() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
 
   // Handle params
   eq CFGEntry.nonNull_out() {
@@ -131,15 +141,14 @@ aspect NonNull {
 
     if (!d.hasInitExp()) {
       // Because we have no init, the value is null
-      return in;
+      return in.comp(d);
     }
 
     Exp init = d.getInitExp();
     if (init.nonNull()) {
       return init.nonNull_out().union(d);
     } else {
-      // We don't have to remove d, as it has not existed yet
-      return init.nonNull_out();
+      return init.nonNull_out().comp(d);
     }
   }
 
@@ -195,7 +204,7 @@ aspect NonNull {
   eq AsExp.nonNull() = false;
 
   // Binary expr can't be a reference
-  eq Binary.nonNull() = true;
+  eq Binary.nonNull() = false;
 
   eq CaseExp.nonNull() {
     for (CaseBranch b : getBranchs()) {
@@ -207,7 +216,7 @@ aspect NonNull {
   }
 
   // Can't be a reference
-  eq DataConstructorExp.nonNull() = true;
+  eq DataConstructorExp.nonNull() = false;
 
   eq FnApp.nonNull() {
     FunctionDecl d = (FunctionDecl) getDecl();
@@ -217,7 +226,7 @@ aspect NonNull {
 
   eq IfExp.nonNull() = getThenExp().nonNull() && getElseExp().nonNull();
 
-  eq ImplementsExp.nonNull() = true;
+  eq ImplementsExp.nonNull() = false;
 
   inh SimpleSet<VarOrFieldDecl> VirtualStmt.nonNull_in();
   eq LetExp.virtualStmt().nonNull_in() {
@@ -232,7 +241,7 @@ aspect NonNull {
   }
   eq LetExp.nonNull() = getExp().nonNull();
 
-  eq LiteralExp.nonNull() = true;
+  eq LiteralExp.nonNull() = false;
 
   eq NullExp.nonNull() = false;
 
@@ -240,7 +249,7 @@ aspect NonNull {
 
   eq ThisExp.nonNull() = true;
 
-  eq Unary.nonNull() = true;
+  eq Unary.nonNull() = false;
 
   // Wether this expr is `id == null` or `null == id`
   syn VarOrFieldDecl PureExp.testsNull() = null;

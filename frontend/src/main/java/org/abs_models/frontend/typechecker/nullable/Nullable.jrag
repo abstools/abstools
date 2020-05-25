@@ -9,10 +9,6 @@ aspect Nullable {
   syn NullableType Exp.getNullableType() {
     Type t = getType();
 
-    if (!t.isReferenceType() || !t.isFutureType()) {
-      return NullableType.None;
-    }
-
     if (nonNull()) {
       return NullableType.NonNull;
     }
@@ -116,10 +112,6 @@ aspect Nullable {
 
     Type t = getAccess().getType();
 
-    if (!t.isReferenceType() && !t.isFutureType()) {
-      return NullableType.None;
-    }
-
     return NullableType.Nullable;
   }
 
@@ -133,10 +125,6 @@ aspect Nullable {
     }
 
     Type t = getReturnType().getType();
-
-    if (!t.isReferenceType() && !t.isFutureType()) {
-      return NullableType.None;
-    }
 
     return NullableType.Nullable;
   }
@@ -152,10 +140,6 @@ aspect Nullable {
 
     Type t = getType();
 
-    if (!t.isReferenceType() && !t.isFutureType()) {
-      return NullableType.None;
-    }
-
     return NullableType.Nullable;
   }
 
@@ -169,10 +153,6 @@ aspect Nullable {
     }
 
     Type t = getType();
-
-    if (!t.isReferenceType() && !t.isFutureType()) {
-      return NullableType.None;
-    }
 
     return NullableType.Nullable;
   }
