@@ -57,11 +57,9 @@ public class NullableTests extends FrontendTest {
         MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { Int n; n = 1 + 4; } }");
         Block b = met.getBlock();
 
-        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(1);
 
-        assertEquals(1, a.nonNull_out().size());
-        assertTrue(a.nonNull_out().contains(d0));
+        assertEquals(0, a.nonNull_out().size());
     }
 
     @Test
@@ -85,11 +83,9 @@ public class NullableTests extends FrontendTest {
         MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { List<Int> l; l = Cons(1, Nil); } }");
         Block b = met.getBlock();
 
-        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(1);
 
-        assertEquals(1, a.nonNull_out().size());
-        assertTrue(a.nonNull_out().contains(d0));
+        assertEquals(0, a.nonNull_out().size());
     }
 
     @Test
@@ -132,12 +128,10 @@ public class NullableTests extends FrontendTest {
         Block b = met.getBlock();
 
         VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
-        VarDecl d1 = ((VarDeclStmt) b.getStmt(1)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(2);
 
-        assertEquals(2, a.nonNull_out().size());
+        assertEquals(1, a.nonNull_out().size());
         assertTrue(a.nonNull_out().contains(d0));
-        assertTrue(a.nonNull_out().contains(d1));
     }
 
     @Test
@@ -169,11 +163,9 @@ public class NullableTests extends FrontendTest {
         MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { Int n; n = 2; } }");
         Block b = met.getBlock();
 
-        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(1);
 
-        assertEquals(1, a.nonNull_out().size());
-        assertTrue(a.nonNull_out().contains(d0));
+        assertEquals(0, a.nonNull_out().size());
     }
 
     @Test
@@ -228,11 +220,9 @@ public class NullableTests extends FrontendTest {
         MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { Int n; n = -4; } }");
         Block b = met.getBlock();
 
-        VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(1);
 
-        assertEquals(1, a.nonNull_out().size());
-        assertTrue(a.nonNull_out().contains(d0));
+        assertEquals(0, a.nonNull_out().size());
     }
 
     @Test
@@ -258,7 +248,6 @@ public class NullableTests extends FrontendTest {
     public void testMethodAssignAsyncCall1() {
         MethodImpl met = getMethod("interface I { I m(); } class C implements I { Unit m(I i) { Fut<I> f; f = i!m(); } }");
         Block b = met.getBlock();
-
         assertEquals(0, b.getStmt(1).nonNull_out().size());
     }
 
@@ -428,8 +417,79 @@ public class NullableTests extends FrontendTest {
         assertTrue(skip.nonNull_out().contains(p1));
     }
 
+    @Test
+    public void testWhile1() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m([NonNull] I i, Int n) { while (n > 0) { n = n - 1; } skip;  } }");
+        Block b = met.getBlock();
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        WhileStmt w = (WhileStmt) b.getStmt(0);
+        Block body = w.getBody();
+        Stmt s = body.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.nonNull_out().size());
+        assertTrue(s.nonNull_out().contains(p));
+
+        assertEquals(1, skip.nonNull_out().size());
+        assertTrue(skip.nonNull_out().contains(p));
+    }
+
+    @Test
+    public void testWhile2() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m(I i, Int n) { while (n > 0) { i = new C(); } skip;  } }");
+        Block b = met.getBlock();
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        WhileStmt w = (WhileStmt) b.getStmt(0);
+        Block body = w.getBody();
+        Stmt s = body.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.nonNull_out().size());
+        assertTrue(s.nonNull_out().contains(p));
+
+        assertEquals(0, skip.nonNull_out().size());
+    }
+
+    @Test
+    public void testWhile3() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m(I i, Int n) { while (i == null) { skip; } skip;  } }");
+        Block b = met.getBlock();
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        WhileStmt w = (WhileStmt) b.getStmt(0);
+        Block body = w.getBody();
+        Stmt s = body.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(0, s.nonNull_out().size());
+
+
+        assertEquals(1, skip.nonNull_out().size());
+        assertTrue(skip.nonNull_out().contains(p));
+    }
+
+    @Test
+    public void testWhile4() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m(I i, Int n) { while (i != null) { skip; } skip;  } }");
+        Block b = met.getBlock();
+
+        ParamDecl p = met.getMethodSig().getParam(0);
+        WhileStmt w = (WhileStmt) b.getStmt(0);
+        Block body = w.getBody();
+        Stmt s = body.getStmt(0);
+        Stmt skip = b.getStmt(1);
+
+        assertEquals(1, s.nonNull_out().size());
+        assertTrue(s.nonNull_out().contains(p));
+
+        assertEquals(0, skip.nonNull_out().size());
+    }
+
     static private MethodImpl getMethod(String prog) {
         Model m = assertParse(prog);
+        m.typeCheck();
         ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
         return d.getMethod(0);
     }

@@ -110,6 +110,11 @@ public enum ErrorMessage {
     WRONG_HTTPCALLABLE("Parameter %s: type %s not supported for calling from HTTP."),
     DUPLICATE_HTTPNAME("Warning: Duplicate HTTP name %s in datatype declaration."),
     NULLABLE_TYPE_MULTIPLE("Multiple nullable type annotations defined."),
+    //NULLABLE_TYPE_NON_NULL_INIT("Variables declared as NonNull must have an initial value."),
+    //NULLABLE_TYPE_WRONG_RETURN_STMT_TYPE("Cannot return a value of nullable type %s from %s (expected %s)"),
+    NULLABLE_TYPE_COND_ALWAYS_SAME("Warning: This condition will always be %s."),
+    NULLABLE_TYPE_ONLY_REF_OR_FUT("Type %s cannot be annotated with a nullable type. Expected a future or reference type."),
+    NULLABLE_TYPE_MISMATCH("Nullable type %s does not match declared type %s."),
 
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
