@@ -1,16 +1,13 @@
 import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 
 aspect Resolved {
-  syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_in() circular [SimpleSet.<VarOrFieldDecl>empty()] {
+  syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
     boolean isCatch = self instanceof CaseBranchStmt 
       && ((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt;
 
-    SimpleSet<VarOrFieldDecl> s = new SimpleSet();
-    for (CFGNode n : pred()) {
-      s.addAll(isCatch ? n.resolved_in() : n.resolved_out());
-    }
+    SimpleSet<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
 
     for (CFGNode n : pred()) {
       s = s.intersection(isCatch ? n.resolved_in() : n.resolved_out());
@@ -19,7 +16,7 @@ aspect Resolved {
   }
 
   // For most stmts out = in
-  syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_out() = resolved_in();
+  syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_out() circular [entry().getAllVarOrFieldDecls()] = resolved_in();
 
   eq AssignStmt.resolved_out() {
     SimpleSet<VarOrFieldDecl> in = resolved_in();
@@ -95,7 +92,7 @@ aspect Resolved {
   }
 
   // Whether a Future is resolved. If the value is not a future, the value will be false;
-  syn boolean Exp.resolved();
+  syn boolean Exp.resolved() circular [true];
 
   eq Call.resolved() = false;
 

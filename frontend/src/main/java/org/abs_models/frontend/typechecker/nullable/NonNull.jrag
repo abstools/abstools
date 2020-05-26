@@ -3,7 +3,7 @@ import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 
 aspect NonNull {
 
-  syn SimpleSet<VarOrFieldDecl> CFGEntry.getAllVarOrFieldDecls() {
+  syn lazy SimpleSet<VarOrFieldDecl> CFGEntry.getAllVarOrFieldDecls() {
     SimpleSet<VarOrFieldDecl> decls = new SimpleSet<>();
 
     if (getParent() instanceof MethodImpl) {
