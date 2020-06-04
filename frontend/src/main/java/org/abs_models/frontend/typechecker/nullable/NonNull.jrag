@@ -322,59 +322,31 @@ aspect NonNull {
 
   // == MethodSig ==
   syn boolean MethodSig.nonNull() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nonNull()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNonNull();
   }
 
   // == Function ==
   syn boolean FunctionDecl.nonNull() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nonNull()) {
-        return true;
-      }
-    }
-
-    for (Annotation a : getTypeUse().getAnnotations()) {
-      if (a.nonNull()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNonNull();
   }
 
   // == Partial Function
   syn boolean PartialFunctionDecl.nonNull() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nonNull()) {
-        return true;
-      }
-    }
-
-    for (Annotation a : getTypeUse().getAnnotations()) {
-      if (a.nonNull()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNonNull();
   }
 
   // == VarOrFieldDecl
   syn boolean VarOrFieldDecl.nonNull() = false;
 
   eq TypedVarOrFieldDecl.nonNull() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nonNull()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNonNull();
   }
 }

@@ -100,7 +100,7 @@ public class NullableTests extends FrontendTest {
 
     @Test
     public void testMethodAssignFn2() {
-        MethodImpl met = getMethod("[NonNull] def I f(I i1, [NonNull] I i2) = if i1 == null then i2 else i1; interface I { Unit m(); } class C implements I { Unit m() { I i; i = f(this, this); } }");
+        MethodImpl met = getMethod("def [NonNull] I f(I i1, [NonNull] I i2) = if i1 == null then i2 else i1; interface I { Unit m(); } class C implements I { Unit m() { I i; i = f(this, this); } }");
         Block b = met.getBlock();
 
         VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();

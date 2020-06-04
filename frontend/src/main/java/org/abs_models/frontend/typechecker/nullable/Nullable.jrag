@@ -22,85 +22,41 @@ aspect Nullable {
 
   syn boolean Exp.couldBeNull() = getNullableType() == NullableType.Nullable || getNullableType() == NullableType.Null;
 
-  syn boolean Annotation.nullable() {
-    PureExp e = getValue();
-    if (e instanceof DataConstructorExp) {
-      DataConstructorExp d = (DataConstructorExp) e;
-      String name = d.getConstructor();
-      if (name.equals("Nullable") && !d.hasParam()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   // == Parameters ==
   syn boolean ParamDecl.nullable() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nullable()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
   }
 
   // == MethodSig ==
   syn boolean MethodSig.nullable() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nullable()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
   }
 
   // == Function ==
   syn boolean FunctionDecl.nullable() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nullable()) {
-        return true;
-      }
-    }
-
-    for (Annotation a : getTypeUse().getAnnotations()) {
-      if (a.nullable()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
   }
 
   // == Partial Function
   syn boolean PartialFunctionDecl.nullable() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nullable()) {
-        return true;
-      }
-    }
-
-    for (Annotation a : getTypeUse().getAnnotations()) {
-      if (a.nullable()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
   }
 
   // == VarOrFieldDecl
   syn boolean VarOrFieldDecl.nullable() = false;
 
   eq TypedVarOrFieldDecl.nullable() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nullable()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
   }
 
   syn NullableType ParamDecl.getNullableType() {
@@ -109,44 +65,22 @@ aspect Nullable {
   }
 
   syn NullableType MethodSig.getNullableType() {
-    if (nonNull()) {
-      return NullableType.NonNull;
-    }
-
-    if (nullable()) {
-      return NullableType.Nullable;
-    }
-
-    Type t = getReturnType().getType();
-
-    return NullableType.Nullable;
+    Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
   }
 
   syn NullableType FunctionDecl.getNullableType() {
-    if (nonNull()) {
-      return NullableType.NonNull;
-    }
-
-    if (nullable()) {
-      return NullableType.Nullable;
-    }
-
     Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
+  }
 
-    return NullableType.Nullable;
+  syn NullableType PartialFunctionDecl.getNullableType() {
+    Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
   }
 
   syn NullableType VarOrFieldDecl.getNullableType() {
-    if (nonNull()) {
-      return NullableType.NonNull;
-    }
-
-    if (nullable()) {
-      return NullableType.Nullable;
-    }
-
     Type t = getType();
-
-    return NullableType.Nullable;
+    return NullCheckerExtension.getNullableType(t);
   }
 }
