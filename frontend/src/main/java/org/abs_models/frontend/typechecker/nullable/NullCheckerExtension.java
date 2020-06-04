@@ -112,7 +112,19 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkOverride(MethodSig impl, MethodSig overriden) {
-        // TODO
+        Type expectedReturnType = overriden.getType();
+        Type actualReturnType = impl.getType();
+        NullableType expected = getNullableTypeDefault(expectedReturnType);
+        NullableType actual = getNullableTypeDefault(actualReturnType);
+        checkAssignable(expected, actual, impl);
+
+        for (int i = 0; i < overriden.getNumParam(); i++) {
+            Type tExpected = overriden.getParam(i).getType();
+            Type tActual = impl.getParam(i).getType();
+            NullableType nte = getNullableTypeDefault(tExpected);
+            NullableType nta = getNullableTypeDefault(tActual);
+            checkAssignable(nta, nte, impl);
+        }
     }
 
     @Override
