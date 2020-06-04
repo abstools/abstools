@@ -1,3 +1,5 @@
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
+
 aspect Nullable {
   public interface HasNullableType {
         NullableType getNullableType();
@@ -102,17 +104,8 @@ aspect Nullable {
   }
 
   syn NullableType ParamDecl.getNullableType() {
-    if (nonNull()) {
-      return NullableType.NonNull;
-    }
-
-    if (nullable()) {
-      return NullableType.Nullable;
-    }
-
-    Type t = getAccess().getType();
-
-    return NullableType.Nullable;
+    Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
   }
 
   syn NullableType MethodSig.getNullableType() {

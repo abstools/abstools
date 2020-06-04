@@ -210,6 +210,8 @@ aspect Null {
   }
   eq LetExp.isNull() = getExp().isNull();
 
+  eq ExpFunctionDef.virtualStmt().null_in() = new SimpleSet<>();
+
   eq LiteralExp.isNull() = false;
 
   eq NullExp.isNull() = true;

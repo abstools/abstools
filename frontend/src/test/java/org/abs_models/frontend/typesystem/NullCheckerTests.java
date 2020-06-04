@@ -16,6 +16,11 @@ public class NullCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void varDeclNonNullNull() {
+        assertTypeErrors("interface I {} { [NonNull] I i = null; }", ErrorMessage.NULLABLE_TYPE_MISMATCH);
+    }
+
+    @Test
     public void varDeclNonNullOK() {
         assertTypeOK("interface I { Unit m([NonNull] I i); } class C implements I { Unit m([NonNull] I i) { [NonNull] I j = i; } }");
     }
@@ -66,8 +71,18 @@ public class NullCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void wrongArgTypesFn() {
+        assertTypeErrors("def [NonNull] I orElse(I i1, [NonNull] I i2) = when i1 == null then i2 else i1; interface I { } class C implements I { Unit m(I i) { orElse(this, i); } }", ErrorMessage.NULLABLE_TYPE_MISMATCH);
+    }
+
+    @Test
     public void assignNull() {
         assertTypeErrors("interface I {} class C { Unit m([NonNull] I i) { i = null; } }", ErrorMessage.NULLABLE_TYPE_MISMATCH);
+    }
+
+    @Test
+    public void overridden() {
+        assertTypeOK("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i = new C(); [NonNull] I j = i; i = null; } }");
     }
 
 }

@@ -241,6 +241,20 @@ aspect NonNull {
   }
   eq LetExp.nonNull() = getExp().nonNull();
 
+  eq ExpFunctionDef.virtualStmt().nonNull_in() {
+    FunctionDecl d = (FunctionDecl) getParent();
+
+    SimpleSet<VarOrFieldDecl> in = new SimpleSet<>();
+
+    for (ParamDecl p : d.getParams()) {
+      if (p.nonNull()) {
+        in.add(p);
+      }
+    }
+
+    return in;
+  }
+
   eq LiteralExp.nonNull() = false;
 
   eq NullExp.nonNull() = false;
@@ -301,13 +315,9 @@ aspect NonNull {
 
   // == Parameters ==
   syn boolean ParamDecl.nonNull() {
-    for (Annotation a : getAnnotations()) {
-      if (a.nonNull()) {
-        return true;
-      }
-    }
-
-    return false;
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNonNull();
   }
 
   // == MethodSig ==

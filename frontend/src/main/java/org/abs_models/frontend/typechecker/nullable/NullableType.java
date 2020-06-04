@@ -40,4 +40,16 @@ public enum NullableType {
         }
         return NullableType.Nullable;
     }
+
+    public boolean isNonNull() {
+        return this == NonNull;
+    }
+
+    public boolean isNull() {
+        return this == Null;
+    }
+
+    public boolean isNullable() {
+        return this == Nullable;
+    }
 }

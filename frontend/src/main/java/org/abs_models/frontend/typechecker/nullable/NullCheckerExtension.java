@@ -37,27 +37,19 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     }
 
     @Override
-    public void checkAssignStmt(AssignStmt s) {
-        annotateExp(s.getValue());
+    public void checkAssignable(Type l, Exp r, ASTNode<?> n) {
+        checkAssignable(getNullableTypeDefault(l), r.getNullableType(), n);
     }
 
-    @Override
-    public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {
-        NullableType rnt = getNullableTypeDefault(rht);
-        NullableType lnt = getNullableTypeDefault(lht);
-        if (!rnt.assignableTo(lnt)) {
-            errors.add(new TypeError(n, ErrorMessage.NULLABLE_TYPE_MISMATCH, rnt.toString(), lnt.toString()));
+    public void checkAssignable(NullableType l, NullableType r, ASTNode<?> n) {
+        if (!r.assignableTo(l)) {
+            errors.add(new TypeError(n, ErrorMessage.NULLABLE_TYPE_MISMATCH, r.toString(), l.toString()));
         }
     }
 
     @Override
     public void checkMethodCall(Call call) {
         // TODO
-    }
-
-    @Override
-    public void checkExpressionStmt(ExpressionStmt expressionStmt) {
-        annotateExp(expressionStmt.getExp());
     }
 
     @Override
@@ -104,14 +96,6 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public void checkMethodImpl(MethodImpl method) {
         MethodSig ms = method.getMethodSig();
         checkMethodSig(ms);
-        NullableType nt = getNullableTypeDefault(ms.getType());
-        Type mt = ms.getType();
-
-        if (!method.hasReturnStmt()) return;
-        Stmt last = method.getBlock().getStmt(method.getBlock().getNumStmt() - 1);
-        ReturnStmt rs = (ReturnStmt) last;
-        Exp e = rs.getRetExp();
-        annotateExp(e);
     }
 
     @Override
@@ -124,10 +108,6 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         if (nt == NullableType.NonNull && !d.hasInitExp()) {
             errors.add(new TypeError(varDeclStmt, ErrorMessage.NULLABLE_TYPE_MISMATCH, NullableType.Null.toString(), nt.toString()));
         }
-        if (d.hasInitExp()) {
-            Exp e = d.getInitExp();
-            annotateExp(e);
-        }
     }
 
     @Override
@@ -138,21 +118,6 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     @Override
     public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
         setAnnotatedType(t);
-    }
-
-    public NullableType annotateExp(Exp e) {
-        Type t = e.getType();
-        assert !e.nonNull() || !e.isNull();
-        if (!shouldHaveNullableType(t)) return null;
-        NullableType nt = null;
-        if (e.nonNull()) {
-            nt = NullableType.NonNull;
-        }
-        if (e.isNull()) {
-            nt = NullableType.Null;
-        }
-        setNullableType(t, nt);
-        return nt;
     }
 
     private void setAnnotatedType(Type t) {

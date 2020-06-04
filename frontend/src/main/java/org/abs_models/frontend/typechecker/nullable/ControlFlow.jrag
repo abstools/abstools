@@ -294,6 +294,9 @@ aspect ControlFlow {
 
 	eq ForeachStmt.getListExp().parentStmt() = this;
 
+	syn nta Stmt ExpFunctionDef.virtualStmt() = new VirtualStmt();
+	eq ExpFunctionDef.getRhs().parentStmt() = virtualStmt();
+
 	eq IfStmt.getCondition().parentStmt() = this;
 
 	syn nta Stmt LetExp.virtualStmt() = new VirtualStmt();
