@@ -1,6 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(modelapi_v2).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 
 -behaviour(cowboy_handler).
 -export([init/2, terminate/3]).
@@ -163,7 +163,7 @@ handle_object_call([Objectname, Methodname], Parameters, Req) ->
                     {Method, _ReturnType, ParamDecls}=maps:get(Methodname, Methods),
                     case decode_parameters(Parameters, ParamDecls, Body) of
                         { ok, ParamValues } ->
-                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #task_info{method=Methodname}),
+                            Future=cog:create_model_api_task(Object, Method, ParamValues ++ [[]], #task_info{method=Methodname}),
                             Result=case future:get_for_rest(Future) of
                                 {ok, Value} ->
                                     { 200, <<"application/json">>,

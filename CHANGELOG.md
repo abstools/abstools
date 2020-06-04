@@ -46,6 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Methods can now be annotated `[Readonly]`.  Attempting to assign values to object fields in such a method will lead to a compile-time error.
+
 - The `case` pattern matching expresssion now uses bars (`|`) to separate case branches.  The older syntax (`;` to terminate each branch) is still supported by the parser and will not lead to compile-time warnings.
 
 ### Changed
@@ -57,6 +59,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Future incompatible change: the pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.  Using the old syntax emits a compile-time warning.
 
 - Future incompatible change: The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  Using the old syntax emits a compile-time warning.
+
+- Method implementations can now be annotated `[Atomic]` when the corresponding interface declaration is not annotated atomic.
 
 ### Fixed
 

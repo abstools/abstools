@@ -1,0 +1,43 @@
+module BackendTest;
+import * from ABS.DC;
+
+// Test resource consumption in parallel with method execution on DC objects
+interface Pod { }
+class PodObject() implements Pod {
+    Unit processTask() {
+        // This mutates DC state
+        [Cost: 1] skip;
+    }
+    Unit run() {
+        Int ctr = 50;
+        while (ctr > 0) {
+            this!processTask();
+            ctr = ctr - 1;
+        }
+    }
+}
+
+interface Printer { Rat getLastLoad(); }
+class PrinterObj(DC dc) implements Printer {
+    Rat lastload = 0;
+    Unit run() {
+        // This executes interleaved with state mutation by Cost annotation
+        lastload = await dc!load(Speed,1);
+        await duration(1,1);
+        if(timeValue(now())<6) {
+            this!run();
+        }
+    }
+    Rat getLastLoad() { return lastload; }
+}
+{
+    Bool testresult = False;
+    CloudProvider provider = new CloudProvider("Cloud");
+    DeploymentComponent dc = await provider!launchInstance(map[Pair(Speed, 10)]);
+    [DC: dc] Pod p1 = new PodObject();
+    Printer p = new PrinterObj(dc);
+    await duration(10, 10);
+    Rat lastload = await p!getLastLoad();
+    println(`last load: $lastload$ (should be 100)`);
+    testresult = lastload == 100;
+}

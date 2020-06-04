@@ -162,7 +162,7 @@ aspect Typing {
         return getCallType();
     }
 
-    eq AwaitAsyncCall.getType() {  
+    eq AwaitAsyncCall.getType() {
         return getCallType();
     }
 

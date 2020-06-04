@@ -22,14 +22,12 @@ import org.abs_models.frontend.ast.VarDeclStmt;
  * @author rudi
  *
  * Checks for type correctness of `new' expression annotations.
-
+ *
  * - DC annotation must be of type ABS.DC.DeploymentComponent
  *
  * - DC annotation cannot be on `new local' expression
  *
  * - Deployment components cannot be created with `new local'
- *
- * - `HTTPName' annotation must be of type String
  */
 public class NewExpressionChecker extends DefaultTypeSystemExtension {
 
@@ -40,19 +38,16 @@ public class NewExpressionChecker extends DefaultTypeSystemExtension {
     @Override
     public void checkExpressionStmt(ExpressionStmt expressionStmt) {
         checkDCCorrect(expressionStmt, AnnotationHelper.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(expressionStmt, AnnotationHelper.getAnnotationValueFromName(expressionStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
         checkDCCorrect(s, AnnotationHelper.getAnnotationValueFromName(s.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(s, AnnotationHelper.getAnnotationValueFromName(s.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
         checkDCCorrect(varDeclStmt, AnnotationHelper.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.DC.DC"));
-        checkHTTPNameCorrect(varDeclStmt, AnnotationHelper.getAnnotationValueFromName(varDeclStmt.getAnnotations(), "ABS.StdLib.HTTPName"));
     }
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {
@@ -61,13 +56,6 @@ public class NewExpressionChecker extends DefaultTypeSystemExtension {
         if (dc.getType().isUnknownType()
             || !dc.getType().isDeploymentComponentType()) {
             errors.add(new TypeError(n, ErrorMessage.WRONG_DEPLOYMENT_COMPONENT, dc.getType().getQualifiedName()));
-        }
-    }
-
-    private void checkHTTPNameCorrect(ASTNode<?> n, PureExp restname) {
-        if (restname == null) return;
-        if (!restname.getType().isStringType()) {
-            errors.add(new TypeError(n, ErrorMessage.WRONG_HTTPNAME, restname.getType().getQualifiedName()));
         }
     }
 
