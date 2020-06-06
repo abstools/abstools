@@ -25,6 +25,7 @@ aspect ControlFlow {
 	eq MethodImpl.getBlock().entry() = entry();
 	eq MethodImpl.getBlock().exit() = exit();
 	eq MethodImpl.entry().exit() = exit();
+	eq MethodImpl.exit().entry() = entry();
 	eq MethodImpl.exit().exit() = null;
 
 	syn nta CFGEntry InitBlock.entry() = new CFGEntry();
@@ -34,6 +35,7 @@ aspect ControlFlow {
 	eq InitBlock.exit().following() = new SimpleSet<CFGNode>();
 	eq InitBlock.entry().entry() = entry();
 	eq InitBlock.entry().exit() = exit();
+	eq InitBlock.exit().entry() = entry();
 	eq InitBlock.exit().exit() = null;
 	eq InitBlock.getStmt(int i).entry() = entry();
 	eq InitBlock.getStmt(int i).exit() = exit();
@@ -49,6 +51,7 @@ aspect ControlFlow {
 			: recoverExit());
 	eq ClassDecl.recoverEntry().entry() = recoverEntry();
 	eq ClassDecl.recoverEntry().exit() = recoverExit();
+	eq ClassDecl.recoverExit().entry() = recoverEntry();
 	eq ClassDecl.recoverExit().exit() = null;
 	eq ClassDecl.getRecoverBranch(int i).entry() = recoverEntry();
 	eq ClassDecl.getRecoverBranch(int i).exit() = recoverExit();
@@ -62,6 +65,7 @@ aspect ControlFlow {
 	eq MainBlock.exit().following() = new SimpleSet<CFGNode>();
 	eq MainBlock.entry().entry() = entry();
 	eq MainBlock.entry().exit() = exit();
+	eq MainBlock.exit().entry() = entry();
 	eq MainBlock.exit().exit() = null;
 	eq MainBlock.getStmt(int i).entry() = entry();
 	eq MainBlock.getStmt(int i).exit() = exit();

@@ -114,4 +114,29 @@ public class NullCheckerTests extends FrontendTest {
     public void overrideOKRet2() {
         assertTypeOK("interface I { I m(I i); } class C implements I { [NonNull] I m(I i) { return new C(); } }");
     }
+
+    @Test
+    public void wrongTypeClassParam() {
+        assertTypeErrors("interface I { } class C([NonNull] Int n) implements I { }", ErrorMessage.NULLABLE_TYPE_ONLY_REF_OR_FUT);
+    }
+
+    @Test
+    public void fieldMissingInitBlock() {
+        assertTypeErrors("interface I { } class C implements I { [NonNull] I i; }", ErrorMessage.NULLABLE_TYPE_MISMATCH);
+    }
+
+    @Test
+    public void fieldMissingInit() {
+        assertTypeErrors("interface I { } class C implements I { [NonNull] I i; { i = null; } }", ErrorMessage.NULLABLE_TYPE_MISMATCH);
+    }
+
+    @Test
+    public void fieldWrongInit() {
+        assertTypeErrors("interface I { } class C implements I { [NonNull] I i = null; }", ErrorMessage.NULLABLE_TYPE_MISMATCH);
+    }
+
+    @Test
+    public void fieldCorrectInit() {
+        assertTypeOK("interface I { } class C implements I { [NonNull] I i; { i = new C(); } }");
+    }
 }

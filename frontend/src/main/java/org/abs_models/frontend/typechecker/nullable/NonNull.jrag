@@ -75,11 +75,38 @@ aspect NonNull {
   eq CFGEntry.nonNull_out() {
     SimpleSet<VarOrFieldDecl> s = new SimpleSet<>();
 
-    if (getParent() instanceof MethodImpl) {
+    ASTNode parent = getParent();
+
+    ASTNode n = parent;
+    ClassDecl c = null;
+    while (n != null && !(n instanceof ModuleDecl)) {
+      if (n instanceof ClassDecl) {
+        c = (ClassDecl) n;
+        break;
+      }
+      n = n.getParent();
+    }
+    
+    if (c != null) {
+      for (ParamDecl p : c.getParams()) {
+        if (p.nonNull()) {
+          s.add(p);
+        }
+      }
+    }
+
+    if (parent instanceof MethodImpl) {
       MethodImpl met = (MethodImpl) getParent();
       for (ParamDecl p : met.getMethodSig().getParams()) {
         if (p.nonNull()) {
           s.add(p);
+        }
+      }
+
+      // Fields can only surely be initialized in methods
+      for (FieldDecl f : c.getFields()) {
+        if (f.nonNull()) {
+          s.add(f);
         }
       }
     }

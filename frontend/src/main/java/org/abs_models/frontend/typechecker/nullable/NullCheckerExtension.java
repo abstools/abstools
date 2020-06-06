@@ -9,6 +9,9 @@ import org.abs_models.frontend.typechecker.TypeAnnotation;
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public static String NULLABLE_KEY = "NULLABLE_KEY";
     private NullableType defaultType = NullableType.Nullable;
@@ -20,6 +23,45 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public NullCheckerExtension(Model m, NullableType defaultType) {
         super(m);
         this.defaultType = defaultType;
+    }
+
+    @Override
+    public void checkClassDecl(ClassDecl decl) {
+        for (ParamDecl p : decl.getParams()) {
+            setAnnotatedType(p.getType());
+        }
+
+        List<FieldDecl> nonNullFields = new ArrayList<>();
+        for (FieldDecl f : decl.getFields()) {
+            setAnnotatedType(f.getType());
+            if (f.nonNull() && !f.hasInitExp()) {
+                nonNullFields.add(f);
+            }
+        }
+
+        if (nonNullFields.isEmpty()) return;
+
+        if (!decl.hasInitBlock()) {
+            errors.add(new TypeError(
+                nonNullFields.get(0),
+                ErrorMessage.NULLABLE_TYPE_MISMATCH,
+                NullableType.NonNull.toString(),
+                NullableType.Nullable.toString()));
+            return;
+        }
+        // Get all fields that are nonNull at the end of the init block
+        SimpleSet<VarOrFieldDecl> out = decl.getInitBlock().exit().nonNull_in();
+        for (FieldDecl f : nonNullFields) {
+            if (!out.contains(f)) {
+                errors.add(new TypeError(
+                    f,
+                    ErrorMessage.NULLABLE_TYPE_MISMATCH,
+                    NullableType.NonNull.toString(),
+                    NullableType.Nullable.toString()));
+                // Only report one error
+                return;
+            }
+        }
     }
 
     @Override

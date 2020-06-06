@@ -512,11 +512,83 @@ public class NullableTests extends FrontendTest {
         assertEquals(0, skip.nonNull_out().size());
     }
 
-    static private MethodImpl getMethod(String prog) {
+    @Test
+    public void testClassParamInitB() {
+        ClassDecl c = getClass("interface I {} class C(I i1, [NonNull] I i2, Int n) implements I { { skip; } }");
+
+        InitBlock i = c.getInitBlock();
+        Stmt skip = i.getStmt(0);
+        ParamDecl p0 = c.getParam(0);
+        ParamDecl p1 = c.getParam(1);
+        ParamDecl p2 = c.getParam(2);
+
+        assertEquals(NullableType.Nullable, p0.getNullableType());
+        assertEquals(NullableType.NonNull, p1.getNullableType());
+        assertNull(p2.getNullableType());
+        assertEquals(1, skip.nonNull_in().size());
+        assertTrue(skip.nonNull_in().contains(p1));
+    }
+
+    @Test
+    public void testClassParamMethod() {
+        MethodImpl met = getMethod("interface I {} class C(I i1, [NonNull] I i2, Int n) implements I { Unit m() { skip; } }");
+
+        ClassDecl c = (ClassDecl) met.getParent().getParent();
+
+        ParamDecl p0 = c.getParam(0);
+        ParamDecl p1 = c.getParam(1);
+        ParamDecl p2 = c.getParam(2);
+        Stmt skip = met.getBlock().getStmt(0);
+
+        assertEquals(NullableType.Nullable, p0.getNullableType());
+        assertEquals(NullableType.NonNull, p1.getNullableType());
+        assertNull(p2.getNullableType());
+        assertEquals(1, skip.nonNull_in().size());
+        assertTrue(skip.nonNull_in().contains(p1));
+    }
+
+    @Test
+    public void testClassFieldInitB() {
+        ClassDecl c = getClass("interface I {} class C implements I { I i1; [NonNull] I i2; Int n = 2; { skip; } }");
+
+        InitBlock i = c.getInitBlock();
+        Stmt skip = i.getStmt(0);
+        FieldDecl f0 = c.getField(0);
+        FieldDecl f1 = c.getField(1);
+        FieldDecl f2 = c.getField(2);
+
+        assertEquals(NullableType.Nullable, f0.getNullableType());
+        assertEquals(NullableType.NonNull, f1.getNullableType());
+        assertNull(f2.getNullableType());
+        assertEquals(0, skip.nonNull_in().size());
+    }
+
+    @Test
+    public void testClassFieldMethod() {
+        MethodImpl met = getMethod("interface I {} class C implements I { I i1; [NonNull] I i2; Int n = 2; Unit m() { skip; } }");
+
+        ClassDecl c = (ClassDecl) met.getParent().getParent();
+
+        FieldDecl f0 = c.getField(0);
+        FieldDecl f1 = c.getField(1);
+        FieldDecl f2 = c.getField(2);
+        Stmt skip = met.getBlock().getStmt(0);
+
+        assertEquals(NullableType.Nullable, f0.getNullableType());
+        assertEquals(NullableType.NonNull, f1.getNullableType());
+        assertNull(f2.getNullableType());
+        assertEquals(1, skip.nonNull_in().size());
+        assertTrue(skip.nonNull_in().contains(f1));
+    }
+
+    static private ClassDecl getClass(String prog) {
         Model m = assertParse(prog);
         m.typeCheck();
-        ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
-        return d.getMethod(0);
+        return (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
+    }
+
+    static private MethodImpl getMethod(String prog) {
+        return getClass(prog).getMethod(0);
     }
 
     static private ModuleDecl getTestModule(Model m) {
