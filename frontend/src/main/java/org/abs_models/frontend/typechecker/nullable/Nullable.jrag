@@ -11,6 +11,10 @@ aspect Nullable {
   syn NullableType Exp.getNullableType() {
     Type t = getType();
 
+    if (!NullCheckerExtension.shouldHaveNullableType(t)) {
+      return null;
+    }
+
     if (nonNull()) {
       return NullableType.NonNull;
     }

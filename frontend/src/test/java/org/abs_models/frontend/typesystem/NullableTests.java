@@ -3,10 +3,12 @@ package org.abs_models.frontend.typesystem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 import org.junit.Test;
 
@@ -24,68 +26,85 @@ public class NullableTests extends FrontendTest {
         assertEquals(1, b.getStmt(0).nonNull_out().size());
         assertTrue(b.getStmt(0).nonNull_out().contains(d));
         assertTrue(v.nonNull());
+        assertEquals(NullableType.NonNull, v.getNullableType());
     }
 
     @Test
     public void testMethodAssignAccess() {
-        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = i; } }");
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = i; j; } }");
         Block b = met.getBlock();
 
         VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
         VarDecl d1 = ((VarDeclStmt) b.getStmt(1)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(2);
+        ExpressionStmt es = (ExpressionStmt) b.getStmt(3);
 
         assertEquals(2, a.nonNull_out().size());
         assertTrue(a.nonNull_out().contains(d0));
         assertTrue(a.nonNull_out().contains(d1));
+        assertEquals(NullableType.Nullable, d0.getNullableType());
+        assertEquals(NullableType.NonNull, es.getExp().getNullableType());
     }
 
     @Test
     public void testMethodAssignAs() {
-        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = i as C; } }");
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = i as C; j; } }");
         Block b = met.getBlock();
 
         VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(2);
+        ExpressionStmt es = (ExpressionStmt) b.getStmt(3);
 
         assertEquals(1, a.nonNull_out().size());
         assertTrue(a.nonNull_out().contains(d0));
+        assertEquals(NullableType.Nullable, es.getExp().getNullableType());
     }
 
     @Test
     public void testMethodAssignBinary() {
-        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { Int n; n = 1 + 4; } }");
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { Int n; n = 1 + 4; n; } }");
         Block b = met.getBlock();
 
         AssignStmt a = (AssignStmt) b.getStmt(1);
+        ExpressionStmt es = (ExpressionStmt) b.getStmt(2);
 
         assertEquals(0, a.nonNull_out().size());
+        assertNull(es.getExp().getNullableType());
     }
 
     @Test
     public void testMethodAssignCase1() {
-        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m([NonNull] I i1, [NonNull] I i2, Int n) { I j; j = case n { 0 => i1; 1 => i2; }; } }");
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m([NonNull] I i1, [NonNull] I i2, Int n) { I j; j = case n { 0 => i1; 1 => i2; }; j; } }");
         Block b = met.getBlock();
 
         ParamDecl p0 = met.getMethodSig().getParam(0);
         ParamDecl p1 = met.getMethodSig().getParam(1);
         VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(1);
+        ExpressionStmt es = (ExpressionStmt) b.getStmt(2);
 
         assertEquals(3, a.nonNull_out().size());
         assertTrue(a.nonNull_out().contains(p0));
         assertTrue(a.nonNull_out().contains(p1));
         assertTrue(a.nonNull_out().contains(d0));
+
+        assertEquals(NullableType.NonNull, p0.getNullableType());
+        assertEquals(NullableType.NonNull, p1.getNullableType());
+        assertEquals(NullableType.Nullable, d0.getNullableType());
+        assertEquals(NullableType.NonNull, es.getExp().getNullableType());
     }
 
     @Test
     public void testMethodAssignDataConstructor() {
-        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { List<Int> l; l = Cons(1, Nil); } }");
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { List<Int> l; l = Cons(1, Nil); l; } }");
         Block b = met.getBlock();
 
+        VarDeclStmt ds = (VarDeclStmt) b.getStmt(0);
         AssignStmt a = (AssignStmt) b.getStmt(1);
+        ExpressionStmt es = (ExpressionStmt) b.getStmt(2);
 
         assertEquals(0, a.nonNull_out().size());
+        assertNull(ds.getVarDecl().getNullableType());
     }
 
     @Test
@@ -96,18 +115,22 @@ public class NullableTests extends FrontendTest {
         AssignStmt a = (AssignStmt) b.getStmt(1);
 
         assertEquals(0, a.nonNull_out().size());
+        assertEquals(NullableType.Nullable, ((FunctionDecl) met.getModuleDecl().getDecl(0)).getNullableType());
     }
 
     @Test
     public void testMethodAssignFn2() {
-        MethodImpl met = getMethod("def [NonNull] I f(I i1, [NonNull] I i2) = if i1 == null then i2 else i1; interface I { Unit m(); } class C implements I { Unit m() { I i; i = f(this, this); } }");
+        MethodImpl met = getMethod("def [NonNull] I f(I i1, [NonNull] I i2) = if i1 == null then i2 else i1; interface I { Unit m(); } class C implements I { Unit m() { I i; i = f(this, this); i; } }");
         Block b = met.getBlock();
 
         VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
         AssignStmt a = (AssignStmt) b.getStmt(1);
+        ExpressionStmt es = (ExpressionStmt) b.getStmt(2);
 
         assertEquals(1, a.nonNull_out().size());
         assertTrue(a.nonNull_out().contains(d0));
+        assertEquals(NullableType.NonNull, ((FunctionDecl) met.getModuleDecl().getDecl(0)).getNullableType());
+        assertEquals(NullableType.NonNull, es.getExp().getNullableType());
     }
 
     @Test
@@ -132,11 +155,12 @@ public class NullableTests extends FrontendTest {
 
         assertEquals(1, a.nonNull_out().size());
         assertTrue(a.nonNull_out().contains(d0));
+        assertNull(a.getValue().getNullableType());
     }
 
     @Test
     public void testMethodAssignLet1() {
-        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = let I v = i in i; } }");
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m() { I i = new C(); I j; j = let I v = i in v; } }");
         Block b = met.getBlock();
 
         VarDecl d0 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
@@ -150,7 +174,7 @@ public class NullableTests extends FrontendTest {
 
     @Test
     public void testMethodAssignLet2() {
-        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m(I i) { I j; j = let I v = i in i; } }");
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m(I i) { I j; j = let I v = i in v; } }");
         Block b = met.getBlock();
 
         AssignStmt a = (AssignStmt) b.getStmt(1);
@@ -293,6 +317,7 @@ public class NullableTests extends FrontendTest {
         SimpleSet<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
         assertTrue(nonNull.contains(p));
         assertEquals(1, nonNull.size());
+        assertEquals(NullableType.Nullable, p.getNullableType());
     }
 
     @Test

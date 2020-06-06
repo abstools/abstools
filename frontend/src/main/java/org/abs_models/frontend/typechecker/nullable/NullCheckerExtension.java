@@ -179,7 +179,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         return (NullableType) t.getMetaData(NULLABLE_KEY);
     }
 
-    private static boolean shouldHaveNullableType(Type t) {
+    public static boolean shouldHaveNullableType(Type t) {
         return t.isFutureType() || t.isReferenceType();
     }
 }
