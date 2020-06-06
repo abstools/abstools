@@ -8,6 +8,7 @@ import static org.junit.Assert.assertNull;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 import org.junit.Test;
@@ -583,6 +584,7 @@ public class NullableTests extends FrontendTest {
 
     static private ClassDecl getClass(String prog) {
         Model m = assertParse(prog);
+        m.registerTypeSystemExtension(new NullCheckerExtension(m));
         m.typeCheck();
         return (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
     }

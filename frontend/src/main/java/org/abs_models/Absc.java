@@ -13,6 +13,7 @@ import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 
+import org.abs_models.frontend.typechecker.nullable.NullableType;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -169,6 +170,32 @@ public class Absc implements Callable<Integer> {
     @Option(names = { "--notypecheck" },
             description = "disable typechecking")
     public boolean notypecheck = false;
+
+    @Option(names = { "--nonullablecheck" },
+            description = "disable nullable checking")
+    public boolean nonullcheck = false;
+
+    static class NullableTypeUserTypes extends ArrayList<String> {
+        NullableTypeUserTypes() {
+            super(Arrays.stream(NullableType.USER_TYPES)
+                .map(NullableType::toString)
+                .collect(Collectors.toList()));
+        }
+    }
+
+    static class NullableTypeConverter implements ITypeConverter<NullableType> {
+        @Override
+        public NullableType convert(String s) throws Exception {
+            return NullableType.fromName(s);
+        }
+    }
+
+    @Option(names = { "--nullabledefault" },
+            description = "sets the default nullable type (allowed values: ${COMPLETION-CANDIDATES}) (default: ${DEFAULT-VALUE})",
+            completionCandidates = NullableTypeUserTypes.class,
+            converter = NullableTypeConverter.class,
+            paramLabel = "nullabletype")
+    public NullableType defaultNullableType = NullableType.Nullable;
 
     @Option(names = { "--loctypes" },
             description = "enable location type checking")

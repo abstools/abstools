@@ -31,7 +31,6 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new SchedulerChecker(m));
         register(new MainBlockChecker(m));
         register(new HttpExportChecker(m));
-        register(new NullCheckerExtension(m));
     }
 
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {

@@ -3,6 +3,8 @@ package org.abs_models.frontend.typechecker.nullable;
 public enum NullableType {
     Null, NonNull, Nullable;
 
+    public static final NullableType[] USER_TYPES = { NonNull, Nullable };
+
     public boolean assignableTo(NullableType n) {
         return NullableType.assignable(n, this);
     }

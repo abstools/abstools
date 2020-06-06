@@ -1,11 +1,16 @@
 package org.abs_models.frontend.typesystem;
 
+import static org.abs_models.ABSTest.Config.EXPECT_TYPE_ERROR;
+import static org.abs_models.ABSTest.Config.EXPECT_WARNING;
 import static org.junit.Assert.assertEquals;
 
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticCondition;
+import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.SemanticWarning;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 import org.junit.Test;
 
 public class NullCheckerTests extends FrontendTest {
@@ -138,5 +143,49 @@ public class NullCheckerTests extends FrontendTest {
     @Test
     public void fieldCorrectInit() {
         assertTypeOK("interface I { } class C implements I { [NonNull] I i; { i = new C(); } }");
+    }
+
+    @Test
+    public void fullExample() {
+        assertTypeOK("interface I extends J {\n" +
+            "    [NonNull] J m([NonNull] I i);\n" +
+            "}\n" +
+            "\n" +
+            "interface J {\n" +
+            "    \n" +
+            "}\n" +
+            "\n" +
+            "class D implements J {\n" +
+            "    \n" +
+            "}\n" +
+            "\n" +
+            "class C implements I {\n" +
+            "    [NonNull] J m([Nullable] I i) {\n" +
+            "        J j = i;\n" +
+            "        if (j == null) {\n" +
+            "            j = new D();\n" +
+            "        }\n" +
+            "        return j;\n" +
+            "    }\n" +
+            "}");
+    }
+
+    @Override
+    protected SemanticCondition assertTypeErrors(String absCode, Config... config) {
+        Model m = assertParse(absCode, config);
+        String msg = "";
+        m.registerTypeSystemExtension(new NullCheckerExtension(m));
+        SemanticConditionList l = m.typeCheck();
+        if (l.containsErrors()) {
+            msg = l.getFirstError().getMsgWithHint(absCode);
+        } else if (l.containsWarnings() && isSet(EXPECT_WARNING, config)) {
+            msg = l.getFirstWarning().getMsgWithHint(absCode);
+        }
+
+        assertEquals(msg, isSet(EXPECT_TYPE_ERROR, config), l.containsErrors());
+        if (isSet(EXPECT_WARNING, config)) {
+            assertEquals(msg, isSet(EXPECT_WARNING, config), l.containsWarnings());
+        }
+        return l.containsErrors() ? l.getFirstError() : null;
     }
 }

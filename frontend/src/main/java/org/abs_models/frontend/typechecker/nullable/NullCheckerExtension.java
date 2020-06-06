@@ -25,6 +25,10 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         this.defaultType = defaultType;
     }
 
+    public void setDefaultType(NullableType nt) {
+        defaultType = nt;
+    }
+
     @Override
     public void checkClassDecl(ClassDecl decl) {
         for (ParamDecl p : decl.getParams()) {
