@@ -44,6 +44,12 @@ aspect Null {
     SimpleSet<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
 
     for (CFGNode n : pred()) {
+      if (!isCatch && n instanceof IfStmt && !((IfStmt) n).hasElse()) {
+        // We are in a stmt that follows an if without else and we have > 1 preds
+        // This means that we can use the else information
+        s = s.intersection(n.null_out_else());
+        continue;
+      }
       s = s.intersection(isCatch ? n.null_in() : n.null_out());
     }
     return s;
