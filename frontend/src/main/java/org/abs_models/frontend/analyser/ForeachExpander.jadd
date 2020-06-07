@@ -104,7 +104,12 @@ aspect ForeachExpander {
             result.addStmt(whilestmt);
 
             // (5)
-            VarDeclStmt loopvarstmt = new VarDeclStmt(new List(), new VarDecl(varname, vartype.toUse(), new Opt(new FnApp("head", new List(new VarUse(listvarname))))));
+            List<Annotation> loopvarannotations = new List<>();
+            if (NullCheckerExtension.shouldHaveNullableType(vartype)) {
+                Annotation a = new Annotation(new DataConstructorExp("Nullable", new List<>()));
+                loopvarannotations.add(a);
+            }
+            VarDeclStmt loopvarstmt = new VarDeclStmt(loopvarannotations, new VarDecl(varname, vartype.toUse(), new Opt(new FnApp("head", new List(new VarUse(listvarname))))));
             whilebody.addStmt(loopvarstmt);
 
             // (6)
