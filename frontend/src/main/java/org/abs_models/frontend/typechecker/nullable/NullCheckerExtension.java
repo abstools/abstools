@@ -15,6 +15,7 @@ import java.util.List;
 public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public static String NULLABLE_KEY = "NULLABLE_KEY";
     private NullableType defaultType = NullableType.Nullable;
+    private boolean warnAboutMissingAnnotation = false;
 
     public NullCheckerExtension(Model m) {
         super(m);
@@ -29,15 +30,19 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         defaultType = nt;
     }
 
+    public void setWarnAboutMissingAnnotation(boolean v) {
+        warnAboutMissingAnnotation = v;
+    }
+
     @Override
     public void checkClassDecl(ClassDecl decl) {
         for (ParamDecl p : decl.getParams()) {
-            setAnnotatedType(p.getType());
+            setAnnotatedType(p.getType(), p, p.getAccess());
         }
 
         List<FieldDecl> nonNullFields = new ArrayList<>();
         for (FieldDecl f : decl.getFields()) {
-            setAnnotatedType(f.getType());
+            setAnnotatedType(f.getType(), f, f.getAccess());
             if (f.nonNull() && !f.hasInitExp()) {
                 nonNullFields.add(f);
             }
@@ -76,9 +81,9 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     }
 
     public void checkMethodSig(MethodSig ms) {
-        setAnnotatedType(ms.getType());
+        setAnnotatedType(ms.getType(), ms, ms.getReturnType());
         for (ParamDecl p : ms.getParams()) {
-            setAnnotatedType(p.getType());
+            setAnnotatedType(p.getType(), p, p.getAccess());
         }
     }
 
@@ -148,7 +153,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
         VarDecl d = varDeclStmt.getVarDecl();
         Type t = d.getType();
-        setAnnotatedType(t);
+        setAnnotatedType(t, varDeclStmt, d.getAccess());
         if (!shouldHaveNullableType(t)) return;
         NullableType nt = getNullableTypeDefault(t);
         if (nt == NullableType.NonNull && !d.hasInitExp()) {
@@ -175,16 +180,36 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
-        setAnnotatedType(t);
+        setAnnotatedType(t, originatingNode, typeNode);
     }
 
-    private void setAnnotatedType(Type t) {
+    private void setAnnotatedType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
         try {
             NullableType nt = getNullableTypeFromAnnotation(t);
+            if (shouldWarn(t, nt, originatingNode, typeNode)) {
+                errors.add(new SemanticWarning(originatingNode, ErrorMessage.NULLABLETYPE_MISSING_ANNOTATION, new String[0]));
+            }
             setNullableType(t, nt);
         } catch (NullCheckerException e) {
             errors.add(e.getTypeError());
         }
+    }
+
+    private boolean shouldWarn(Type t, NullableType nt, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
+        if (!warnAboutMissingAnnotation || nt != null || !shouldHaveNullableType(t)) return false;
+
+        if (typeNode != null && typeNode.getParent() instanceof org.abs_models.frontend.ast.List) {
+            return false;
+        }
+
+        return !(originatingNode instanceof NullExp)
+            && !(originatingNode instanceof ThisExp)
+            && !(originatingNode instanceof NewExp)
+            && !(originatingNode instanceof TypeUse)
+            && !(originatingNode instanceof Call)
+            && !(originatingNode instanceof CaseExp)
+            && !(originatingNode instanceof IfExp)
+            && !(originatingNode instanceof VarDeclStmt);
     }
 
     public static NullableType getNullableTypeFromAnnotation(Type t) {

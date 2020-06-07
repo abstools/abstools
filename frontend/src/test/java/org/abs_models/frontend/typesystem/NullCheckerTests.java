@@ -11,6 +11,7 @@ import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.SemanticWarning;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.junit.Test;
 
 public class NullCheckerTests extends FrontendTest {
@@ -161,7 +162,7 @@ public class NullCheckerTests extends FrontendTest {
             "\n" +
             "class C implements I {\n" +
             "    [NonNull] J m([Nullable] I i) {\n" +
-            "        J j = i;\n" +
+            "        [Nullable] J j = i;\n" +
             "        if (j == null) {\n" +
             "            j = new D();\n" +
             "        }\n" +

@@ -368,6 +368,8 @@ public class Main {
             NullCheckerExtension nce = new NullCheckerExtension(m);
             if (arguments.defaultNullableType != null)
                 nce.setDefaultType(arguments.defaultNullableType);
+            if (arguments.verbose)
+                nce.setWarnAboutMissingAnnotation(true);
 
             m.registerTypeSystemExtension(nce);
         }

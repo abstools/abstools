@@ -115,6 +115,7 @@ public enum ErrorMessage {
     NULLABLE_TYPE_COND_ALWAYS_SAME("Warning: This condition will always be %s."),
     NULLABLE_TYPE_ONLY_REF_OR_FUT("Type %s cannot be annotated with a nullable type. Expected a future or reference type."),
     NULLABLE_TYPE_MISMATCH("Nullable type %s does not match declared type %s."),
+    NULLABLETYPE_MISSING_ANNOTATION("Warning: There is no nullable type annotation here. Consider adding one."),
 
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),

@@ -14,7 +14,7 @@ class D implements J {
 
 class C implements I {
     [NonNull] J m([Nullable] I i) {
-        J j = i;
+        [Nullable] J j = i;
         if (j == null) {
             j = new D();
         }
