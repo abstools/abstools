@@ -5,10 +5,39 @@ aspect NonNull {
 
   syn lazy SimpleSet<VarOrFieldDecl> CFGEntry.getAllVarOrFieldDecls() {
     SimpleSet<VarOrFieldDecl> decls = new SimpleSet<>();
+    ASTNode parent = getParent();
 
-    if (getParent() instanceof MethodImpl) {
-      MethodImpl met = (MethodImpl) getParent();
+    if (parent instanceof MethodImpl) {
+      MethodImpl met = (MethodImpl) parent;
       java.util.List<VarOrFieldDecl> d = met.findChildren(VarOrFieldDecl.class);
+      decls.addAll(d);
+      for (ParamDecl p : met.getMethodSig().getParams()) {
+        decls.add(p);
+      }
+    }
+
+    ASTNode n = parent;
+    ClassDecl c = null;
+    while (n != null && !(n instanceof ModuleDecl)) {
+      if (n instanceof ClassDecl) {
+        c = (ClassDecl) n;
+        break;
+      }
+      n = n.getParent();
+    }
+
+    if (c != null) {
+      for (ParamDecl p : c.getParams()) {
+        decls.add(p);
+      }
+      for (FieldDecl f : c.getFields()) {
+        decls.add(f);
+      }
+    }
+
+    if (parent instanceof MainBlock) {
+      MainBlock mb = (MainBlock) parent;
+      java.util.List<VarOrFieldDecl> d = mb.findChildren(VarOrFieldDecl.class);
       decls.addAll(d);
     }
 

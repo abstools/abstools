@@ -18,6 +18,8 @@ aspect Resolved {
   // For most stmts out = in
   syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_out() circular [entry().getAllVarOrFieldDecls()] = resolved_in();
 
+  eq CFGEntry.resolved_out() = new SimpleSet<>();
+
   eq AssignStmt.resolved_out() {
     SimpleSet<VarOrFieldDecl> in = resolved_in();
 
@@ -95,8 +97,6 @@ aspect Resolved {
   syn boolean Exp.resolved() circular [true];
 
   eq Call.resolved() = false;
-
-  eq AwaitAsyncCall.resolved() = true;
 
   eq GetExp.resolved() = false;
 

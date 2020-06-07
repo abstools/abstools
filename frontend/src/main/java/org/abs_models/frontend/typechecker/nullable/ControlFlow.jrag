@@ -94,6 +94,12 @@ aspect ControlFlow {
   	super.collect_contributors_CFGNode_pred(_root, _map);
   }
 
+	protected void MainBlock.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+  	entry().collect_contributors_CFGNode_pred(_root, _map);
+  	exit().collect_contributors_CFGNode_pred(_root, _map);
+  	super.collect_contributors_CFGNode_pred(_root, _map);
+  }
+
 	// Do this manually because of a bug in JastAdd
 	protected void Stmt.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
     for (CFGNode target : (Iterable<? extends CFGNode>) (succ())) {
