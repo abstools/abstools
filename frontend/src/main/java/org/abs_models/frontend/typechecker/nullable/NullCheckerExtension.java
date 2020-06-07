@@ -189,7 +189,8 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
             if (shouldWarn(t, nt, originatingNode, typeNode)) {
                 errors.add(new SemanticWarning(originatingNode, ErrorMessage.NULLABLETYPE_MISSING_ANNOTATION, new String[0]));
             }
-            setNullableType(t, nt);
+            if (shouldHaveNullableType(t))
+                setNullableType(t, nt);
         } catch (NullCheckerException e) {
             errors.add(e.getTypeError());
         }

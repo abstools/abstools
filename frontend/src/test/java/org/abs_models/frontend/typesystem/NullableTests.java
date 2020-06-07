@@ -416,6 +416,18 @@ public class NullableTests extends FrontendTest {
     }
 
     @Test
+    public void testIfNoElse() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { I j = i; if (j == null) { j = new C(); } skip; } }");
+        Block b = met.getBlock();
+
+        VarDecl d = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        Stmt s = b.getStmt(2);
+
+        assertEquals(1, s.nonNull_in().size());
+        assertTrue(s.nonNull_out().contains(d));
+    }
+
+    @Test
     public void testAfterIf() {
         MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { I j; if (i == null) { j = new C(); } else { j = i; } skip; } }");
         Block b = met.getBlock();
