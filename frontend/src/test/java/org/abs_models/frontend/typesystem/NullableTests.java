@@ -380,7 +380,7 @@ public class NullableTests extends FrontendTest {
 
     @Test
     public void testMethodIfCondition() {
-        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { if (i != null) skip; } }");
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { if (i != null) skip; else skip; } }");
 
         ParamDecl p = met.getMethodSig().getParam(0);
         Block b = met.getBlock();
@@ -389,6 +389,7 @@ public class NullableTests extends FrontendTest {
 
         SimpleSet<VarOrFieldDecl> nonNull = ifStmt.getThen().nonNull_in();
         assertTrue(nonNull.contains(p));
+        assertTrue(ifStmt.getElse().null_in().contains(p));
     }
 
     @Test
@@ -402,6 +403,7 @@ public class NullableTests extends FrontendTest {
 
         SimpleSet<VarOrFieldDecl> nonNull = ifStmt.getElse().nonNull_in();
         assertTrue(nonNull.contains(p));
+        assertTrue(ifStmt.getThen().null_in().contains(p));
     }
 
     @Test
@@ -425,6 +427,18 @@ public class NullableTests extends FrontendTest {
 
         assertEquals(1, s.nonNull_in().size());
         assertTrue(s.nonNull_out().contains(d));
+    }
+
+    @Test
+    public void testIfNoElseNull() {
+        MethodImpl met = getMethod("interface I { Unit m(I i); } class C implements I { Unit m(I i) { I j = i; if (j != null) { j = null; } skip; } }");
+        Block b = met.getBlock();
+
+        VarDecl d = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        Stmt s = b.getStmt(2);
+
+        assertEquals(1, s.null_out().size());
+        assertTrue(s.null_out().contains(d));
     }
 
     @Test
@@ -502,10 +516,12 @@ public class NullableTests extends FrontendTest {
         Stmt skip = b.getStmt(1);
 
         assertEquals(0, s.nonNull_out().size());
-
+        assertEquals(1, s.null_out().size());
+        assertTrue(s.null_out().contains(p));
 
         assertEquals(1, skip.nonNull_out().size());
         assertTrue(skip.nonNull_out().contains(p));
+        assertEquals(0, skip.null_out().size());
     }
 
     @Test
@@ -523,6 +539,8 @@ public class NullableTests extends FrontendTest {
         assertTrue(s.nonNull_out().contains(p));
 
         assertEquals(0, skip.nonNull_out().size());
+        assertEquals(1, skip.null_out().size());
+        assertTrue(skip.null_out().contains(p));
     }
 
     @Test
@@ -574,6 +592,9 @@ public class NullableTests extends FrontendTest {
         assertEquals(NullableType.NonNull, f1.getNullableType());
         assertNull(f2.getNullableType());
         assertEquals(0, skip.nonNull_in().size());
+        assertEquals(2, skip.null_in().size());
+        assertTrue(skip.null_in().contains(f0));
+        assertTrue(skip.null_in().contains(f1));
     }
 
     @Test
@@ -594,11 +615,59 @@ public class NullableTests extends FrontendTest {
         assertTrue(skip.nonNull_in().contains(f1));
     }
 
-    static private ClassDecl getClass(String prog) {
+    @Test
+    public void varDeclNoInit() {
+        Model m = getModel("interface I {} class C implements I { } { I i; i; }");
+
+        MainBlock mb = m.getMainBlock();
+        VarDeclStmt s0 = (VarDeclStmt) mb.getStmt(0);
+        ExpressionStmt s1 = (ExpressionStmt) mb.getStmt(1);
+
+        assertEquals(0, s0.null_in().size());
+        assertEquals(1, s0.null_out().size());
+        assertTrue(s0.null_out().contains(s0.getVarDecl()));
+
+        assertEquals(1, s1.null_in().size());
+        assertTrue(s1.null_in().contains(s0.getVarDecl()));
+        assertEquals(1, s1.null_out().size());
+        assertTrue(s1.null_out().contains(s0.getVarDecl()));
+
+        assertEquals(NullableType.Null, s1.getExp().getNullableType());
+    }
+
+    @Test
+    public void varDeclInitNull() {
+        Model m = getModel("interface I {} class C implements I { } { I i = null; i; }");
+
+        MainBlock mb = m.getMainBlock();
+        VarDeclStmt s0 = (VarDeclStmt) mb.getStmt(0);
+        ExpressionStmt s1 = (ExpressionStmt) mb.getStmt(1);
+
+        assertEquals(0, s0.null_in().size());
+        assertEquals(1, s0.null_out().size());
+        assertTrue(s0.null_out().contains(s0.getVarDecl()));
+
+        assertEquals(1, s1.null_in().size());
+        assertTrue(s1.null_in().contains(s0.getVarDecl()));
+        assertEquals(1, s1.null_out().size());
+        assertTrue(s1.null_out().contains(s0.getVarDecl()));
+
+        assertEquals(NullableType.Null, s1.getExp().getNullableType());
+    }
+
+    static private Model getModel(String prog) {
         Model m = assertParse(prog);
         m.registerTypeSystemExtension(new NullCheckerExtension(m));
         m.typeCheck();
-        return (ClassDecl) getTestModule(m).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
+        return m;
+    }
+
+    static private ModuleDecl getModule(String prog) {
+        return getTestModule(getModel(prog));
+    }
+
+    static private ClassDecl getClass(String prog) {
+        return (ClassDecl) getModule(prog).lookup(new KindedName(KindedName.Kind.CLASS, "UnitTest.C"));
     }
 
     static private MethodImpl getMethod(String prog) {

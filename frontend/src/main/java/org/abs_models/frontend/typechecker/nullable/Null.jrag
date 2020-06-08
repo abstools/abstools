@@ -64,7 +64,27 @@ aspect Null {
   // What gets propagated to the `else` successors of a conditional node (if, while)
   syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_else() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
 
-  eq CFGEntry.null_out() = new SimpleSet<>();
+  eq CFGEntry.null_out() {
+    SimpleSet<VarOrFieldDecl> s = new SimpleSet<>();
+
+    /*
+     * This is a special case. Fields without init (or with init `null`) are null at the beginning of the InitBlock
+     * This is the only case in which variables declared as `NonNull` are allowed to be `null`
+     * The checker ensures that these fields are initialized in the InitBlock
+     */
+    if (getParent() instanceof InitBlock) {
+      InitBlock ib = (InitBlock) getParent();
+      ClassDecl d = (ClassDecl) ib.getParent().getParent();
+
+      for (FieldDecl f : d.getFields()) {
+        if (!f.hasInitExp() || f.getInitExp() instanceof NullExp) {
+          s.add(f);
+        }
+      }
+    }
+
+    return s;
+  }
 
   eq AssertStmt.null_out_then() {
     VarOrFieldDecl d = getCondition().testsNull();
