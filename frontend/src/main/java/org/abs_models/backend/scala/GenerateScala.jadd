@@ -1,0 +1,478 @@
+import java.io.*;
+
+
+import java.io.IOException;
+
+import org.abs_models.backend.scala.ScalaVisitor;
+import org.abs_models.backend.scala.ScalaWriter;
+
+import org.abs_models.frontend.ast.Decl;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.ModuleDecl;
+
+
+aspect GenerateScala {
+	
+	
+	
+	
+	abstract public void Decl.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void ModuleDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	
+	
+	/*DELCARATIONS*/
+	
+	public void ClassDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void FunctionDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void InterfaceDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	public void FieldDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	public void ParametricFunctionDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	public void DataTypeDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	
+	public void ParametricDataTypeDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	public void TypeSynDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	public void TypeParameterDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	public void ExceptionDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	public void UnknownDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	public void DataConstructor.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	public void TraitDecl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+
+	public void PartialFunctionDecl.accept(ScalaVisitor v,ScalaWriter w) {
+    		v.visit(this,w);
+    }
+	
+	/*IMPORTS*/
+	
+	abstract public void Import.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void NamedImport.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+			
+	}
+	public void FromImport.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+			
+	}
+	public void StarImport.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+			
+	}
+	
+	/*METHODS*/
+	
+	public void MethodImpl.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);	
+	}
+	
+	public void MethodSig.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+			
+	}
+	
+	/*CONTROL STATEMENTS*/
+	
+	public abstract void Stmt.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void AssignStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void AwaitStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void SkipStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void SuspendStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void DurationStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void ReturnStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void ExpressionStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void AssertStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void VarDeclStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void IfStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	public void WhileStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void ForeachStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	public void CaseStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	public void CaseBranchStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	public void TryCatchFinallyStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	public void Block.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	public void MainBlock.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+
+	@Override
+	public void InitBlock.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	public void ThrowStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	public void DieStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+/*	public void RebindStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+	public void MoveStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+*/
+	public void MoveCogToStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+	
+/*	public void IncompleteStmt.accept(ScalaVisitor v,ScalaWriter w) {
+		v.visit(this,w);
+	}
+*/
+	
+	
+	public abstract void Exp.accept(ScalaVisitor v, ScalaWriter w);
+	
+	/*PURE EXPRESSIONS*/
+	
+	public abstract void PureExp.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void NullExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void ThisExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+
+	public void ImplementsExp.accept(ScalaVisitor v, ScalaWriter w){
+        v.visit(this,w);
+    }
+
+    public void AsExp.accept(ScalaVisitor v, ScalaWriter w){
+        v.visit(this,w);
+    }
+	
+	public void DataConstructorExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void LetExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void FnApp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+
+	public void ParFnApp.accept(ScalaVisitor v, ScalaWriter w){
+    		v.visit(this,w);
+    }
+	
+	public void CaseExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void IfExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void CaseBranch.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+/*	public void GetLocExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+
+	public void GetFatherExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+*/
+	
+	
+	
+	public abstract void LiteralExp.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void StringLiteral.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void IntLiteral.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+
+	public void FloatLiteral.accept(ScalaVisitor v, ScalaWriter w){
+    		v.visit(this,w);
+    	}
+
+
+	public void ListLiteral.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	public abstract void Unary.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void MinusExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void NegExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public abstract void Binary.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public abstract void ArithmeticExp.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public abstract void AddExp.accept(ScalaVisitor v, ScalaWriter w);
+
+	public void AddAddExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void SubAddExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public abstract void MultExp.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void MultMultExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void DivMultExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void ModMultExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public abstract void BoolExp.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void AndBoolExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void OrBoolExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public abstract void RelationalExpr.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void LTExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void GTExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void LTEQExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void GTEQExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public abstract void EqualityExpr.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void EqExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void NotEqExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void InterfaceTypeUse.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	public void DataTypeUse.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void TypeParameterUse.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	public void ParametricDataTypeUse.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	public void VarUse.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void FieldUse.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void UnresolvedTypeUse.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	
+/*	public void IncompleteAsyncAccess.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void IncompleteNewExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void IncompleteSyncAccess.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	*/
+	/*EXPRESSIONS WITH SIDE-EFFECTS*/
+	
+	public abstract void EffExp.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void NewExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public abstract void Call.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void SyncCall.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void AsyncCall.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void AwaitAsyncCall.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void GetExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+/*
+	public void NewLocExp.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+*/
+	public void OriginalCall.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	/*PATTERN MATCHING*/
+	
+		
+	public abstract void Pattern.accept(ScalaVisitor v, ScalaWriter w);
+	
+	public void PatternVarUse.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void PatternVar.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void ConstructorPattern.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void LiteralPattern.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void UnderscorePattern.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	/*GUARDS*/
+	
+	public abstract void Guard.accept(ScalaVisitor v, ScalaWriter w);
+		
+	public void ExpGuard.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void AndGuard.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void ClaimGuard.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+	public void DurationGuard.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+	
+/*	public void ObjectGuard.accept(ScalaVisitor v, ScalaWriter w){
+		v.visit(this,w);
+	}
+*/
+}

@@ -1094,13 +1094,15 @@ implements DeploymentComponentForCloudProvider {
     // Transfer resources between deployment components.
     // FIXME: load calculation will be invalid if resource totals have
     // been changed in the specified interval.
-    [Atomic] Rat transfer(DeploymentComponent target, Rat amount, Resourcetype rtype) {
+    [Atomic] Rat transfer(DeploymentComponent target, Rat amountval, Resourcetype rtype) {
+        Rat amount = amountval;
         amount = this.decrementResources(amount, rtype);
         target!incrementResources(amount, rtype);
         return amount;
     }
 
-    [Atomic] Rat decrementResources(Rat amount, Resourcetype rtype) {
+    [Atomic] Rat decrementResources(Rat amountval, Resourcetype rtype) {
+        Rat amount = amountval;
         switch (rtype) {
             Speed => if (cpunext != InfRat) {
                 amount = min(amount, finvalue(cpunext));

@@ -30,6 +30,7 @@ import org.abs_models.backend.maude.MaudeCompiler;
 import org.abs_models.backend.outline.OutlinePrinterBackEnd;
 import org.abs_models.backend.prettyprint.PrettyPrinterBackEnd;
 import org.abs_models.backend.prolog.PrologBackend;
+import org.abs_models.backend.scala.ScalaBackend;
 import org.abs_models.common.Constants;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.SemanticCondition;
@@ -99,6 +100,10 @@ public class Main {
                 }
                 if (arguments.backend.erlang) {
                     result = Math.max(result, ErlangBackend.doMain(arguments));
+                    done = true;
+                }
+                if (arguments.backend.scala) {
+                    result = Math.max(result, ScalaBackend.doMain(arguments));
                     done = true;
                 }
                 if (arguments.backend.prolog) {

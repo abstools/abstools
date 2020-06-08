@@ -71,6 +71,10 @@ public class Absc implements Callable<Integer> {
                 description = "@|bold Prolog backend:|@ generate Prolog data file")
         public boolean prolog = false;
 
+        @Option(names = { "--scala" }, required = true,
+                description = "@|bold Scala:|@ generate Scala code")
+        public boolean scala = false;
+
         @Option(names = { "--prettyprint" }, required = true,
                 description = "@|bold Pretty-printer:|@ pretty print model and exit")
         public boolean prettyprint = false;
