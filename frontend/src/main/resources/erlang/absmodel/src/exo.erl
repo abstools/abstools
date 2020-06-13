@@ -25,17 +25,17 @@ event_key_to_event([Cog, I], Trace) ->
     LocalTrace = maps:get(Cog, Trace),
     lists:nth(I+1, LocalTrace).
 
-canonicalize_scheduling_event([Cog, I], Trace) ->
-    #event{caller_id=Cid, local_id=Lid, name=Name, time=Time} = event_key_to_event([Cog, I], Trace),
+canonicalize_synchronization_point([Cog, I], Trace) ->
+    #event{type=Type, caller_id=Cid, local_id=Lid, name=Name, time=Time} = event_key_to_event([Cog, I], Trace),
     LocalTrace = lists:sublist(maps:get(Cog, Trace), I),
     Occurences = [E || E <- LocalTrace,
-                       E#event.type == schedule,
+                       E#event.type == Type,
                        E#event.caller_id == Cid,
                        E#event.local_id == Lid],
-    [Cog, Cid, Lid, Name, Time, length(Occurences)].
+    [Type, Cog, Cid, Lid, Name, Time, length(Occurences)].
 
-canonicalized_to_scheduling_event([Cog, Cid, Lid, _Name, Time, _Occurences]) ->
-    {Cog, #event{type=schedule, caller_id=atomize(Cid), local_id=atomize(Lid), time=Time}}.
+canonicalized_to_scheduling_event([Type, Cog, Cid, Lid, _Name, Time, _Occurences]) ->
+    {Cog, #event{type=atomize(Type), caller_id=atomize(Cid), local_id=atomize(Lid), time=Time}}.
 
 event_type(#event{type=T}) ->
     T;
@@ -57,14 +57,15 @@ event_id(#dc_event{caller_id=Cid, local_id=Lid}) ->
 event_ids_match(E1, E2) ->
     event_id(E1) =:= event_id(E2).
 
-event_key_to_last_schedule(Trace, [Cog, I]) ->
+event_key_to_previous_synchronization_point(Trace, [Cog, I]) ->
     case event_type([Cog, I], Trace) of
         schedule -> [Cog, I];
-        _ -> event_key_to_last_schedule(Trace, [Cog, I-1])
+        future_read -> [Cog, I];
+        _ -> event_key_to_previous_synchronization_point(Trace, [Cog, I-1])
     end.
 
-schedule_event_map(Trace, EventKeys) ->
-    Pairs = [{EK, event_key_to_last_schedule(Trace, EK)} || EK <- EventKeys],
+synchronization_point_map(Trace, EventKeys) ->
+    Pairs = [{EK, event_key_to_previous_synchronization_point(Trace, EK)} || EK <- EventKeys],
     maps:from_list(Pairs).
 
 interference([Cog, I]=EK1, [Cog, J]=EK2, Trace) when I < J ->
@@ -86,9 +87,7 @@ causal_dependency(Event1, Event2) ->
         _ -> false
     end.
 
-local_dependency(EK1, EK2, Event1, Event2) ->
-    [Cog1, I] = EK1,
-    [Cog2, J] = EK2,
+local_dependency([Cog1, I], [Cog2, J], Event1, Event2) ->
     Cog1 =:= Cog2
         andalso I < J
         andalso case {Event1, Event2} of
@@ -97,21 +96,25 @@ local_dependency(EK1, EK2, Event1, Event2) ->
                     _ -> false
                 end.
 
+future_read_dependent_on_previous([Cog1, I], [Cog2, J], Event1, Event2) ->
+    I == J-1 andalso Cog1 =:= Cog2 andalso Event2#event.type == future_read.
+
 must_happen_before(EK1, EK2, Trace) ->
     Event1 = event_key_to_event(EK1, Trace),
     Event2 = event_key_to_event(EK2, Trace),
     Causal = event_ids_match(Event1, Event2) andalso causal_dependency(Event1, Event2),
     Local = local_dependency(EK1, EK2, Event1, Event2),
+    FutureRead = future_read_dependent_on_previous(EK1, EK2, Event1, Event2),
     Time = event_time(Event1) < event_time(Event2),
-    Causal orelse Local orelse Time.
+    Causal orelse Local orelse FutureRead orelse Time.
 
 
-lift_to_scheduling_events(R, SMap, Trace) ->
+lift_to_synchronization_points(R, SMap, Trace) ->
     SR = lists:foldl(fun([EK1, EK2], Acc) ->
                              S1 = maps:get(EK1, SMap),
                              S2 = maps:get(EK2, SMap),
-                             E1 = canonicalize_scheduling_event(S1, Trace),
-                             E2 = canonicalize_scheduling_event(S2, Trace),
+                             E1 = canonicalize_synchronization_point(S1, Trace),
+                             E2 = canonicalize_synchronization_point(S2, Trace),
                              case S1 == S2 of
                                  true -> Acc;
                                  false -> [[E1, E2] | Acc]
@@ -133,10 +136,10 @@ gen_interference(Trace, EventKeys) ->
 
 gen_rels(Trace) ->
     EventKeys = trace_to_event_keys(Trace),
-    SMap = schedule_event_map(Trace, EventKeys),
-    MHB = lift_to_scheduling_events(gen_mhb(Trace, EventKeys), SMap, Trace),
-    Interference = lift_to_scheduling_events(gen_interference(Trace, EventKeys), SMap, Trace),
-    Domain = [[I, canonicalize_scheduling_event([Cog, I], Trace)]
+    SMap = synchronization_point_map(Trace, EventKeys),
+    MHB = lift_to_synchronization_points(gen_mhb(Trace, EventKeys), SMap, Trace),
+    Interference = lift_to_synchronization_points(gen_interference(Trace, EventKeys), SMap, Trace),
+    Domain = [[I, canonicalize_synchronization_point([Cog, I], Trace)]
               || [Cog, I] <- ordsets:from_list(maps:values(SMap))],
     {MHB, Interference, Domain}.
 
