@@ -12,7 +12,10 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 
 - Manually compile and run a small model on macOS, Linux, Windows
 
-- Create docker (`make docker ; make run-collaboratory`)
+
+- Create docker
+  - remove current docker images to ensure everything gets rebuilt
+  - run `make docker ; make run-collaboratory`
   - check if all tools are installed in collaboratory (selection box non-empty)
   - check that collaboratory can start the "Hello World" ABS program with Erlang simulator
   - check that the "Hello World" ABS program doesn't crash SACO, CostABS, DSA in collaboratory
