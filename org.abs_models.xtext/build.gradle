@@ -57,6 +57,12 @@ task generateXtextLanguage(type: JavaExec) {
     args += "rootPath=/${projectDir}/.."
 }
 
+clean {
+    // This removes leftover files from previous git revisions
+    delete 'src/main/xtext-gen'
+    delete 'src/test/xtext-gen'
+}
+
 test {
     useJUnitPlatform()
 }
