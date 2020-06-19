@@ -1,16 +1,24 @@
-This is the source code for the abs-models.org website.  It is built using
-[[https://gohugo.io/][Hugo]] and deployed via the ~deploy.sh~ script in this directory.
+* The abs-models.org website source
 
-We recommend ~git config submodule.recurse true~ so that ~git pull~
-automatically updates the ~public/~ submodule; otherwise, run ~git submodule
-update~ after ~git pull~.
+This is the source code for the abs-models.org website.  The site is built
+using [[https://gohugo.io/][Hugo]], and deployed both inside collaboratory docker containers and at https://abs-models.org/.
+
+** Deploying on the website
+
+Running ~hugo~ generates the static website sources below ~public/~.  Copy the
+generated files into a checkout of the
+https://github.com/abstools/abstools.github.io repository and commit there.
+
+** Updating the manual
 
 The ~static/manual/~ subdirectory is updated manually for each release of the
 basic tools.  See https://github.com/abstools/abstools/blob/master/RELEASE.md
 for instructions.
 
+** Linking to files in tutorials
+
 The files in https://github.com/abstools/absexamples/tree/master/collaboratory
-are installed in the collaboratory and can be linked from tutorials in this
+are automatically installed in the collaboratory and can be linked from tutorials in this
 site.
 
 To create a link that opens such a file in the collaboratory, use the
