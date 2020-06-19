@@ -5,9 +5,11 @@ using [[https://gohugo.io/][Hugo]], and deployed both inside collaboratory docke
 
 ** Deploying on the website
 
-Running ~hugo~ generates the static website sources below ~public/~.  Copy the
-generated files into a checkout of the
-https://github.com/abstools/abstools.github.io repository and commit there.
+The website is deployed into the repository https://github.com/abstools/abstools.github.io.  If that repository is checked out in the same directory as this one, the following command will prepare a new version:
+
+: hugo --cleanDestinationDir -d ../abstools.github.io/
+
+To deploy, commit and push the changes in the ~abstools.github.io~ repository.
 
 ** Updating the manual
 
