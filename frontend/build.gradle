@@ -1,15 +1,17 @@
-import org.jastadd.JastAddTask
-
 plugins {
     // Apply the java plugin to add support for Java
     id 'java'
     // Apply the application plugin to add support for building an application
     id 'application'
 
-    // JastAdd plugin documentation at https://github.com/jastadd/jastaddgradle
-    id 'org.jastadd' version '1.13.3'
     id 'antlr'
     id "com.github.spotbugs" version "3.0.0"
+}
+
+configurations {
+    jastadd2 {
+        extendsFrom implementation
+    }
 }
 
 application {
@@ -58,13 +60,20 @@ dependencies {
 }
 
 // JastAdd
-task generateJastAddAST(type: JastAddTask) {
+task generateJastAddAST(type: JavaExec) {
+    // The JastAdd plugin version <= 1.13.3 does not work with gradle > 6.3,
+    // so we use a JavaExec task directly.
     description 'Processes the JastAdd AST.'
-    outputDir = file("$buildDir/generated-src/jastadd/main")
-    sources = fileTree(dir: 'src/main/java',
-                       includes: ['**/*.ast', '**/*.jrag', '**/*.jadd'])
-    options = [ '--rewrite=regular', '--visitCheck=false', '--debug',
-               '--package=org.abs_models.frontend.ast']
+    main = 'org.jastadd.JastAdd'
+    classpath = project.configurations.jastadd2
+    outputs.dir "$buildDir/generated-src/jastadd/main" // this creates the directory if necessary
+    args += "--o=$buildDir/generated-src/jastadd/main"
+    args += '--rewrite=regular'
+    args += '--visitCheck=false'
+    args += '--debug'
+    args += '--package=org.abs_models.frontend.ast'
+    args += fileTree(dir: 'src/main/java',
+                       includes: ['**/*.ast', '**/*.jrag', '**/*.jadd']).files
 }
 sourceSets.main.java.srcDir "$buildDir/generated-src/jastadd/main"
 compileJava.dependsOn 'generateJastAddAST'
