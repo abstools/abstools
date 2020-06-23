@@ -1,7 +1,7 @@
 ---
 title: "The Monty Hall Problem"
 description: "Modeling simple behavior, getting complex results."
-date: 2020-06-24
+date: 2020-06-23
 showDate: false
 weight: 1
 type: post
