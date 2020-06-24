@@ -58,7 +58,7 @@ import org.abs_models.frontend.ast.StarImport;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -363,20 +363,20 @@ public class Main {
         if (arguments.locationTypeInferenceEnabled) {
             if (arguments.verbose)
                 System.out.println("Registering Location Type Checking...");
-            LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+            LocationTypeExtension lte = new LocationTypeExtension(m);
             if (arguments.verbose) {
-                ltie.enableStatistics();
+                // lte.enableStatistics();
             }
             if (arguments.debug) {
-                ltie.enableDebugOutput();
+                // ltie.enableDebugOutput();
             }
             if (arguments.defaultLocationType != null) {
-                ltie.setDefaultType(arguments.defaultLocationType);
+                lte.setDefaultType(arguments.defaultLocationType);
             }
-            if (arguments.locationTypeScope != null) {
+            /*if (arguments.locationTypeScope != null) {
                 ltie.setLocationTypingPrecision(arguments.locationTypeScope);
-            }
-            m.registerTypeSystemExtension(ltie);
+            }*/
+            m.registerTypeSystemExtension(lte);
         }
     }
 
@@ -508,10 +508,10 @@ public class Main {
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
                 + "                 where <loctype> in " + Arrays.toString(LocationType.ALLUSERTYPES) + "\n"
-                + "  -locscope=<scope> \n"
-                + "                 sets the location aliasing scope to <scope>\n"
-                + "                 where <scope> in " + Arrays.toString(
-            LocationTypeInferrerExtension.LocationTypingPrecision.values()) + "\n"
+            //    + "  -locscope=<scope> \n"
+            //    + "                 sets the location aliasing scope to <scope>\n"
+            //    + "                 where <scope> in " + Arrays.toString(
+            // LocationTypeInferrerExtension.LocationTypingPrecision.values()) + "\n"
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature\n"
                 + "                 model and print a solution\n"
                 + "  -solveall      print ALL solutions for the CSP\n"

@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.typechecker.CheckSPLCommand;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
@@ -196,12 +194,12 @@ public class Absc implements Callable<Integer> {
     public LocationType defaultLocationType = LocationType.INFER;
 
 
-    @Option(names = { "--locscope" },
+    /*@Option(names = { "--locscope" },
             description = "sets the location aliasing scope (allowed values: ${COMPLETION-CANDIDATES}) (default: ${DEFAULT-VALUE})",
             paramLabel = "scope")
     // default value taken from declaration of
     // LocationTypeInferrerExtension.precision
-    public LocationTypeInferrerExtension.LocationTypingPrecision locationTypeScope = LocationTypingPrecision.CLASS_LOCAL_FAR;
+    public LocationTypeInferrerExtension.LocationTypingPrecision locationTypeScope = LocationTypingPrecision.CLASS_LOCAL_FAR;*/
 
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {

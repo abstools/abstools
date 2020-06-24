@@ -71,7 +71,6 @@ aspect TypeChecker {
     public abstract void Import.typeCheck(SemanticConditionList e);
 
     public void NamedImport.typeCheck(SemanticConditionList e) {
-
         for (Name name : getNames()) {
             if (name.isSimple()) {
                 e.add(new TypeError(this, ErrorMessage.ONLY_QUALIFIED_NAMES_ALLOWED, name.getName()));

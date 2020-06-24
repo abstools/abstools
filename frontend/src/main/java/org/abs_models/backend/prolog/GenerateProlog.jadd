@@ -11,8 +11,7 @@ import static org.abs_models.backend.prolog.PrologBackend.initialToUpperCase;
 import static org.abs_models.backend.prolog.PrologBackend.varTransform;
 import static org.abs_models.backend.prolog.PrologBackend.strTransform;
 import static org.abs_models.backend.prolog.PrologBackend.quote;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 
 aspect GenerateProlog {
@@ -937,10 +936,9 @@ aspect GenerateProlog {
             if (i != n-1) s.print(",");
         }
         s.print("],[");
-        LocationTypeInferrerExtension locationTypeSystem=(LocationTypeInferrerExtension)this.getModel().getTypeExt().getFirstRegisteredTypeExtension(LocationTypeInferrerExtension.class);
+        LocationTypeExtension locationTypeSystem = (LocationTypeExtension)this.getModel().getTypeExt().getFirstRegisteredTypeExtension(LocationTypeExtension.class);
         if(locationTypeSystem!=null){
-          LocationTypeVariable lv = LocationTypeInferrerExtension.getLV(this.getCallee().getType());
-          LocationType tv=locationTypeSystem.getResults().get(lv);
+          LocationType tv = locationTypeSystem.getLocationType(this.getCallee().getType());
           s.print("'"+tv.toString()+"'");
         }
         s.print("])");
