@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="42c3b770-bc30-42d1-9d99-4c7b4609d0c1" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeStyleSettingsInfer">
+    <option name="done" value="true" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$">
+          <activation />
+        </task>
+        <projects_view>
+          <tree_state>
+            <expand />
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectCodeStyleSettingsMigration">
+    <option name="version" value="1" />
+  </component>
+  <component name="ProjectId" id="1bJLviwK0RZ1bGsFKZSNLid4D8u" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.project.gradle" />
+  </component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="gradle test" />
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="42c3b770-bc30-42d1-9d99-4c7b4609d0c1" name="Default Changelist" comment="" />
+      <created>1588345481780</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1588345481780</updated>
+      <workItem from="1588345484063" duration="112000" />
+      <workItem from="1591278189403" duration="36000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="423" y="219" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1588345390660">
+      <screen x="0" y="36" width="1920" height="1044" />
+    </state>
+    <state x="423" y="219" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1588345390660" />
+    <state x="747" y="319" key="FileChooserDialogImpl" timestamp="1588345594304">
+      <screen x="0" y="36" width="1920" height="1044" />
+    </state>
+    <state x="747" y="319" key="FileChooserDialogImpl/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1588345594304" />
+    <state width="1874" height="277" key="GridCell.Tab.0.bottom" timestamp="1588345472391">
+      <screen x="0" y="36" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="277" key="GridCell.Tab.0.bottom/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1588345472391" />
+    <state width="1874" height="277" key="GridCell.Tab.0.center" timestamp="1588345472391">
+      <screen x="0" y="36" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="277" key="GridCell.Tab.0.center/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1588345472391" />
+    <state width="1874" height="277" key="GridCell.Tab.0.left" timestamp="1588345472391">
+      <screen x="0" y="36" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="277" key="GridCell.Tab.0.left/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1588345472391" />
+    <state width="1874" height="277" key="GridCell.Tab.0.right" timestamp="1588345472391">
+      <screen x="0" y="36" width="1920" height="1044" />
+    </state>
+    <state width="1874" height="277" key="GridCell.Tab.0.right/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1588345472391" />
+    <state x="456" y="193" key="SettingsEditor" timestamp="1588345583077">
+      <screen x="0" y="36" width="1920" height="1044" />
+    </state>
+    <state x="456" y="193" key="SettingsEditor/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1588345583077" />
+    <state x="623" y="258" width="672" height="677" key="run.anything.popup" timestamp="1588345528745">
+      <screen x="0" y="36" width="1920" height="1044" />
+    </state>
+    <state x="623" y="258" width="672" height="677" key="run.anything.popup/0.36.1920.1044/1920.0.1920.1080@0.36.1920.1044" timestamp="1588345528745" />
+  </component>
+</project>
