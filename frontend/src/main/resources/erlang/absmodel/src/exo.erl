@@ -34,7 +34,7 @@ canonicalize_synchronization_point([Cog, I], Trace) ->
                        E#event.local_id == Lid],
     [Type, Cog, Cid, Lid, Name, Time, length(Occurences)].
 
-canonicalized_to_scheduling_event([Type, Cog, Cid, Lid, _Name, Time, _Occurences]) ->
+canonicalized_to_synchronization_event([Type, Cog, Cid, Lid, _Name, Time, _Occurences]) ->
     {Cog, #event{type=atomize(Type), caller_id=atomize(Cid), local_id=atomize(Lid), time=Time}}.
 
 event_type(#event{type=T}) ->
@@ -64,8 +64,18 @@ event_key_to_previous_synchronization_point(Trace, [Cog, I]) ->
         _ -> event_key_to_previous_synchronization_point(Trace, [Cog, I-1])
     end.
 
+event_key_to_previous_scheduling_point(Trace, [Cog, I]) ->
+    case event_type([Cog, I], Trace) of
+        schedule -> [Cog, I];
+        _ -> event_key_to_previous_scheduling_point(Trace, [Cog, I-1])
+    end.
+
 synchronization_point_map(Trace, EventKeys) ->
     Pairs = [{EK, event_key_to_previous_synchronization_point(Trace, EK)} || EK <- EventKeys],
+    maps:from_list(Pairs).
+
+scheduling_point_map(Trace, EventKeys) ->
+    Pairs = [{EK, event_key_to_previous_scheduling_point(Trace, EK)} || EK <- EventKeys],
     maps:from_list(Pairs).
 
 interference([Cog, I]=EK1, [Cog, J]=EK2, Trace) when I < J ->
@@ -109,7 +119,7 @@ must_happen_before(EK1, EK2, Trace) ->
     Causal orelse Local orelse FutureRead orelse Time.
 
 
-lift_to_synchronization_points(R, SMap, Trace) ->
+lift_events(R, SMap, Trace) ->
     SR = lists:foldl(fun([EK1, EK2], Acc) ->
                              S1 = maps:get(EK1, SMap),
                              S2 = maps:get(EK2, SMap),
@@ -136,11 +146,12 @@ gen_interference(Trace, EventKeys) ->
 
 gen_rels(Trace) ->
     EventKeys = trace_to_event_keys(Trace),
-    SMap = synchronization_point_map(Trace, EventKeys),
-    MHB = lift_to_synchronization_points(gen_mhb(Trace, EventKeys), SMap, Trace),
-    Interference = lift_to_synchronization_points(gen_interference(Trace, EventKeys), SMap, Trace),
+    SyncMap = synchronization_point_map(Trace, EventKeys),
+    SchedMap = scheduling_point_map(Trace, EventKeys),
+    MHB = lift_events(gen_mhb(Trace, EventKeys), SyncMap, Trace),
+    Interference = lift_events(gen_interference(Trace, EventKeys), SchedMap, Trace),
     Domain = [[I, canonicalize_synchronization_point([Cog, I], Trace)]
-              || [Cog, I] <- ordsets:from_list(maps:values(SMap))],
+              || [Cog, I] <- ordsets:from_list(maps:values(SyncMap))],
     {MHB, Interference, Domain}.
 
 unpack_json(JSON) ->
@@ -149,7 +160,7 @@ unpack_json(JSON) ->
 json_to_scheduling_trace(JSON) ->
     #{trace := SequentialTrace} = unpack_json(JSON),
     F = fun (CanonEvent, Trace) ->
-                {Cog, E} = canonicalized_to_scheduling_event(CanonEvent),
+                {Cog, E} = canonicalized_to_synchronization_event(CanonEvent),
                 LocalTrace = maps:get(Cog, Trace, []),
                 maps:put(Cog, [E | LocalTrace], Trace)
         end,
