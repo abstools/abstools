@@ -199,10 +199,6 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     private boolean shouldWarn(Type t, NullableType nt, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
         if (!warnAboutMissingAnnotation || nt != null || !shouldHaveNullableType(t)) return false;
 
-        if (typeNode != null && typeNode.getParent() instanceof org.abs_models.frontend.ast.List) {
-            return false;
-        }
-
         return !(originatingNode instanceof NullExp)
             && !(originatingNode instanceof ThisExp)
             && !(originatingNode instanceof NewExp)
@@ -253,5 +249,18 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
     public static boolean shouldHaveNullableType(Type t) {
         return t.isFutureType() || t.isReferenceType();
+    }
+
+    public static org.abs_models.frontend.ast.List<Annotation> getAnnotations(Type t) {
+        org.abs_models.frontend.ast.List<Annotation> as = new org.abs_models.frontend.ast.List<>();
+        NullableType nt = NullCheckerExtension.getNullableTypeFromAnnotation(t);
+        if (nt == null && NullCheckerExtension.shouldHaveNullableType(t)) {
+            nt = NullableType.Nullable;
+        }
+        if (nt != null) {
+            // We may have to add an annotation for nullable types
+            as.add(nt.toAnnotation());
+        }
+        return as;
     }
 }

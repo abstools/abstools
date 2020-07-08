@@ -865,10 +865,10 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     Map<String, Map<Resourcetype, Rat>> instanceDescriptions = map[];
 
     // All launched instances
-    Set<DeploymentComponent> launchedInstances = set[];
+    Set<[NonNull] DeploymentComponent> launchedInstances = set[];
     // Launched instances that are currently acquired
-    Set<DeploymentComponent> acquiredInstances = set[];
-    Set<DeploymentComponent> killedInstances = set[];
+    Set<[NonNull] DeploymentComponent> acquiredInstances = set[];
+    Set<[NonNull] DeploymentComponent> killedInstances = set[];
     Int nextInstanceId = 0;
     Rat accumulatedCostOfKilledDCs = 0;
 

@@ -1,5 +1,8 @@
 package org.abs_models.frontend.typechecker.nullable;
 
+import org.abs_models.frontend.ast.Annotation;
+import org.abs_models.frontend.ast.DataConstructorExp;
+
 public enum NullableType {
     Null, NonNull, Nullable;
 
@@ -53,5 +56,12 @@ public enum NullableType {
 
     public boolean isNullable() {
         return this == Nullable;
+    }
+
+    public Annotation toAnnotation() {
+        if (isNull()) {
+            throw new IllegalArgumentException("Cannot turn Null into annotation.");
+        }
+        return new Annotation(new DataConstructorExp(toString(), new org.abs_models.frontend.ast.List<>()));
     }
 }

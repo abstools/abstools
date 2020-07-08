@@ -655,6 +655,28 @@ public class NullableTests extends FrontendTest {
         assertEquals(NullableType.Null, s1.getExp().getNullableType());
     }
 
+    @Test
+    public void adt() {
+        Model m = getModel("interface I {} class C implements I { } { I i = new C(); List<[NonNull] I> l = list[i, i]; I j = head(l); }");
+
+        MainBlock mb = m.getMainBlock();
+
+        VarDeclStmt vds0 = (VarDeclStmt) mb.getStmt(0);
+        VarDecl vd0 = vds0.getVarDecl();
+
+        VarDeclStmt vds1 = (VarDeclStmt) mb.getStmt(1);
+        VarDecl vd1 = vds1.getVarDecl();
+
+        VarDeclStmt vds2 = (VarDeclStmt) mb.getStmt(2);
+        VarDecl vd2 = vds2.getVarDecl();
+
+        System.out.println(vd2.getInitExp());
+
+        assertEquals(2, vds2.nonNull_out().size());
+        assertTrue(vds2.nonNull_out().contains(vd0));
+        assertTrue(vds2.nonNull_out().contains(vd2));
+    }
+
     static private Model getModel(String prog) {
         Model m = assertParse(prog);
         m.registerTypeSystemExtension(new NullCheckerExtension(m));

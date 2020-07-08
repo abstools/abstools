@@ -1,5 +1,6 @@
 import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
 aspect NonNull {
 
@@ -281,9 +282,11 @@ aspect NonNull {
   eq DataConstructorExp.nonNull() = false;
 
   eq FnApp.nonNull() {
-    FunctionDecl d = (FunctionDecl) getDecl();
-
-    return d.nonNull();
+    // We cannot get the NullableType from the decl, because of generics
+    Type t = getType();
+    NullableType nt = NullCheckerExtension.getNullableType(t);
+    if (nt == null) return false;
+    return nt.isNonNull();
   }
 
   eq IfExp.nonNull() = getThenExp().nonNull() && getElseExp().nonNull();
@@ -321,7 +324,13 @@ aspect NonNull {
 
   eq NullExp.nonNull() = false;
 
-  eq ParFnApp.nonNull() = ((PartialFunctionDecl) getDecl()).nonNull();
+  eq ParFnApp.nonNull() {
+    // We cannot get the NullableType from the decl, because of generics
+    Type t = getType();
+    NullableType nt = NullCheckerExtension.getNullableType(t);
+    if (nt == null) return false;
+    return nt.isNonNull();
+  }
 
   eq ThisExp.nonNull() = true;
 
