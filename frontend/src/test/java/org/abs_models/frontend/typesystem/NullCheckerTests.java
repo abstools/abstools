@@ -147,6 +147,46 @@ public class NullCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void getFromADT() {
+        assertTypeOK("interface I { } class C implements I { Unit m(List<[NonNull] I> l) { [NonNull] I i = head(l); } }");
+    }
+
+    @Test
+    public void getFromADTError() {
+        assertTypeErrors("interface I { } class C implements I { Unit m(List<[Nullable] I> l) { [NonNull] I i = head(l); } }", ErrorMessage.NULLABLE_TYPE_MISMATCH);
+    }
+
+    @Test
+    public void insertList() {
+        assertTypeOK("interface I { } class C implements I { Unit m(List<[NonNull] I> l) { I i = new C(); appendright(l, i); } }");
+    }
+
+    @Test
+    public void insertListError() {
+        assertTypeErrors("interface I { } class C implements I { Unit m(List<[NonNull] I> l) { I i = null; appendright(l, i); } }", ErrorMessage.NULLABLE_TYPE_MISMATCH);
+    }
+
+    @Test
+    public void dataConsNonNull() {
+        assertTypeOK("interface I { } class C implements I { Unit m(List<[NonNull] I> l) { I i = new C(); List<[NonNull] I> l1 = Cons(i, l); } }");
+    }
+
+    @Test
+    public void dataConsNullable() {
+        assertTypeOK("interface I { } class C implements I { Unit m(List<[NonNull] I> l) { I i = new C(); List<[Nullable] I> l1 = Cons(i, l); } }");
+    }
+
+    @Test
+    public void dataConsNullableWithNull() {
+        assertTypeOK("interface I { } class C implements I { Unit m(List<[NonNull] I> l) { I i = null; List<[Nullable] I> l1 = Cons(i, l); } }");
+    }
+
+    @Test
+    public void dataConsError() {
+        assertTypeOK("interface I { } class C implements I { Unit m(List<[NonNull] I> l) { I i = null; List<[NonNull] I> l1 = Cons(i, l); } }");
+    }
+
+    @Test
     public void fullExample() {
         assertTypeOK("interface I extends J {\n" +
             "    [NonNull] J m([NonNull] I i);\n" +
