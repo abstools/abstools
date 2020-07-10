@@ -88,12 +88,8 @@ aspect VarResolution {
 
     syn lazy VarOrFieldDecl ForeachStmt.locallookupVarOrFieldName(String name, boolean fieldOnly);
     eq ForeachStmt.locallookupVarOrFieldName(String name, boolean fieldOnly) {
-        if (fieldOnly) {
-            return null;
-        } else if (getValueVar().getName().equals(name)) {
-            return getValueVar();
-        } else if(hasIndexVar() && getIndexVar().getName().equals(name)) {
-            return getIndexVar();
+        if (!fieldOnly && getLoopVarDecl().getName().equals(name)) {
+            return getLoopVarDecl();
         } else {
             return null;
         }
@@ -212,7 +208,7 @@ aspect VarResolution {
         String targetModule = targetModuleName();
         String targetClass = targetClassName();
         
-        for (DeltaDecl delta : getModel().getDeltaDecls()) {
+        for (DeltaDecl delta : getModel().getAllDeltaDecls()) {
             for (ModuleModifier mmod : delta.getModuleModifiers()) {
                 if (mmod.getModule() != null && mmod.targetModuleName().equals(targetModule)) {
                     
@@ -363,7 +359,7 @@ aspect VarResolution {
         else return null;
     }
 
-    eq HasMethod.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    //eq HasMethod.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
 
     inh VarOrFieldDecl Exp.lookupVarOrFieldName(String name, boolean fieldOnly);
     /* [stolz/georgo]
@@ -384,7 +380,7 @@ aspect VarResolution {
         return lookupVarOrFieldName(name,fieldOnly);
     }
     eq ClassDecl.getField(int i).lookupVarOrFieldName(String name, boolean fieldOnly) = locallookupVarOrFieldName(name,fieldOnly);
-    eq HasField.getFieldDecl().lookupVarOrFieldName(String name, boolean fieldOnly) { assert false : "NYI - what is this?"; return null; }
+    //eq HasField.getFieldDecl().lookupVarOrFieldName(String name, boolean fieldOnly) { assert false : "NYI - what is this?"; return null; }
     /* Can only be typed after resolving deltas: */
     eq AddFieldModifier.getFieldDecl().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
     eq RemoveFieldModifier.getFieldDecl().lookupVarOrFieldName(String name, boolean fieldOnly) = null;

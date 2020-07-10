@@ -61,7 +61,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
             InterfaceDecl ifaceJ = (InterfaceDecl) findDecl(model, "M", "J");
             assertNull(ifaceJ);
 
-            model.applyDelta(delta);
+            delta.apply();
             ifaceJ = (InterfaceDecl) findDecl(model, "M", "J");
             assertNotNull(ifaceJ);
         }
@@ -93,7 +93,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
             ModuleDecl m = iface.getModuleDecl();
             assertEquals(1, m.getDecls().getNumChild());
 
-            model.applyDelta(delta);
+            delta.apply();
             assertEquals(0, m.getDecls().getNumChild());
         }
     }
@@ -120,8 +120,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
             assertEquals("a", iface.getBody(0).getName());
 
             DeltaDecl delta = findDelta(model, "D");
-            model.applyDelta(delta);
-
+            delta.apply();
             assertEquals(2, iface.getBodys().getNumChild());
             assertEquals("a", iface.getBody(0).getName());
             assertEquals("b", iface.getBody(1).getName());
@@ -151,7 +150,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
             assertEquals("b", iface.getBody(1).getName());
 
             DeltaDecl delta = findDelta(model, "D");
-            model.applyDelta(delta);
+            delta.apply();
 
             assertEquals(1, iface.getBodys().getNumChild());
             assertEquals("b", iface.getBody(0).getName());
@@ -173,7 +172,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
         assertEquals(1, cls.getImplementedInterfaceUses().getNumChild());
         assertEquals("I", cls.getImplementedInterfaceUse(0).getName());
 
-        model.applyDelta(delta);
+        delta.apply();
         // make sure the class now also implements interface J
         assertEquals(2, cls.getImplementedInterfaceUses().getNumChild());
         assertEquals("I", cls.getImplementedInterfaceUse(0).getName());
@@ -193,7 +192,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
         assertEquals(1, cls.getImplementedInterfaceUses().getNumChild());
         assertEquals("I", cls.getImplementedInterfaceUse(0).getName());
 
-        model.applyDelta(delta);
+        delta.apply();
         assertEquals(0, cls.getImplementedInterfaceUses().getNumChild());
     }
 
@@ -211,7 +210,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
         assertEquals("I", cls.getImplementedInterfaceUse(0).getName());
 
         try {
-            model.applyDelta(delta);
+            delta.apply();
         } catch (DeltaModellingException e) {
             return; // this is the expected outcome
         }
@@ -233,7 +232,8 @@ public class AddRemoveInterfacesTest extends DeltaTest {
         assertEquals(1, cls.getImplementedInterfaceUses().getNumChild());
         assertEquals("I", cls.getImplementedInterfaceUse(0).getName());
 
-        model.applyDelta(delta);
+        delta.apply();
+
         assertEquals(1, cls.getImplementedInterfaceUses().getNumChild());
         assertEquals("J", cls.getImplementedInterfaceUse(0).getName());
     }
@@ -256,11 +256,9 @@ public class AddRemoveInterfacesTest extends DeltaTest {
         assertEquals("H", cls.getImplementedInterfaceUse(0).getName());
         assertEquals("I", cls.getImplementedInterfaceUse(1).getName());
 
-        model.applyDelta(delta);
+        delta.apply();
         assertEquals(2, cls.getImplementedInterfaceUses().getNumChild());
         assertEquals("J", cls.getImplementedInterfaceUse(0).getName());
         assertEquals("K", cls.getImplementedInterfaceUse(1).getName());
     }
-
-
 }

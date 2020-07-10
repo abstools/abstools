@@ -34,6 +34,7 @@ import org.abs_models.frontend.ast.ModuleDecl;
 import org.abs_models.frontend.ast.ModuleModifier;
 import org.abs_models.frontend.ast.Name;
 import org.abs_models.frontend.ast.NewExp;
+import org.abs_models.frontend.ast.OOModifier;
 import org.abs_models.frontend.ast.Opt;
 import org.abs_models.frontend.ast.ParamDecl;
 import org.abs_models.frontend.ast.ParametricDataTypeUse;
@@ -239,7 +240,9 @@ public final class AbsASTBuilderUtil {
         return new InterfaceDecl(interfaceName,
             new List<>(),
             new List<>(),
-            new List<>());
+            new List<>(),
+            false,
+            false);
     }
 
     public static final MethodImpl createMethodImpl(MethodSig method) {

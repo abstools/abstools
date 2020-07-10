@@ -28,7 +28,7 @@ aspect ProductLineTypeAnalysis {
      * Note that we drop attributes anyway in Model.getProductList() below.
      */
     syn lazy Set<Map<String,Integer>> Model.getFeatureModelConfigurations() {
-        if (! hasMTVL())
+        if (! hasMTVL() && ! hasVL())
             return Collections.emptySet();
 
         // FIXME Once dropped, you cannot get attibutes back

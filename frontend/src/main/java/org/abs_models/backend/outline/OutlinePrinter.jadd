@@ -38,7 +38,9 @@ aspect doOutlinePrinter {
         for (Decl decl : getDecls()) {
             decl.doOutlinePrint(stream, prefix);
         }
-
+        if (hasProductLine()) {
+            getProductLine().doOutlinePrint(stream, prefix);
+        }
         if (hasBlock()) {
 			stream.println("<category text='main' value='main' selectable='true' />");
             stream.println("<category text='main block' value='"+getName()+"' selectable='true' />");
@@ -58,6 +60,12 @@ aspect doOutlinePrinter {
     }
 
     public void ProductLine.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void LocalProductLine.doOutlinePrint(PrintWriter stream, String prefix) {
+        for (DeltaDecl d : getDeltaDecls()) {
+            d.doOutlinePrint(stream, prefix);
+        }
     }
 
     public void DeltaClause.doOutlinePrint(PrintWriter stream, String prefix) {
@@ -251,7 +259,7 @@ aspect doOutlinePrinter {
 
     public void AddClassModifier.doOutlinePrint(PrintWriter stream, String prefix) {
     }
-
+    /*
     public void DeltaFieldParam.doOutlinePrint(PrintWriter stream, String prefix) {
     }
 
@@ -266,7 +274,7 @@ aspect doOutlinePrinter {
 
     public void HasMethod.doOutlinePrint(PrintWriter stream, String prefix) {
     }
-
+	*/
     public void TypeSynDecl.doOutlinePrint(PrintWriter stream, String prefix) {
     }
 

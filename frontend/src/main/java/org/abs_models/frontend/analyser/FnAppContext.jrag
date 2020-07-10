@@ -152,12 +152,12 @@ aspect FnAppContext {
     eq MethodSig.getChild().isParamDeclImperative(ParamDecl p) {
         return true;
     }
-    eq HasField.getFieldDecl().isParamDeclImperative(ParamDecl p) {
+   /* eq HasField.getFieldDecl().isParamDeclImperative(ParamDecl p) {
         return true;
     }
     eq DeltaFieldParam.getChild().isParamDeclImperative(ParamDecl p) {
         return true;
-    }
+    }*/
     eq MethodModifier.getChild().isParamDeclImperative(ParamDecl p) {
         return true;
     }

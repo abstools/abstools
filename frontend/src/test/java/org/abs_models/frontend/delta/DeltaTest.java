@@ -32,17 +32,11 @@ public class DeltaTest extends FrontendTest {
     }
 
     protected void typeCheck(Model m, ProductDecl p, SemanticConditionList e) {
-        Map<String,Feature> featureNames = null;
-        if (m.hasProductLine()) {
-            featureNames = new HashMap<>();
-            for (Feature f : m.getProductLine().getFeatures()) {
-                featureNames.put(f.getName(),f);
-            }
-        }
         HashSet<String> productNames = new HashSet<>();
         for (ProductDecl prod : m.getProductDecls()) {
             productNames.add(prod.getName());
         }
-        TypeCheckerHelper.typeCheckProductDecl(p, featureNames, productNames, m.getDeltaDeclsMap(), e);
+        TypeCheckerHelper.typeCheckProductDecl(p, productNames, e);
+        TypeCheckerHelper.typeCheckProductDeclFromGlobalPL(p, p.featuresFromGlobalPL(), e);
     }
 }

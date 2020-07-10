@@ -37,7 +37,7 @@ aspect ProductFlattener {
      * Refined with MTVL-check in CSP.jadd.
      */
     public void Model.flattenForProduct(ProductDecl decl, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
-	assert decl != null;
+	    assert decl != null;
         if (verbose)
             System.out.println("--- configuring product: " + decl.getName());
         flattenForProduct(decl.getProduct());
@@ -45,12 +45,16 @@ aspect ProductFlattener {
         productName = decl.getName();
     }
 
+    /* GLOBAL PLs */
     public void Model.flattenForProduct(Product product) throws DeltaModellingException {
         // find product line
         ProductLine pl = getProductLine();
         if (pl == null)
             throw new DeltaModellingException("Model is missing a 'productline' definition");
 
+        if (!product.featuresFromGlobalPL(pl)) {
+            throw new DeltaModellingException("Model is missing a 'productline' definition for the product");
+        }
         // find/sort applicable delta IDs
         Set<String> deltaids = pl.findApplicableDeltas(product);
         java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
@@ -76,13 +80,164 @@ aspect ProductFlattener {
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
     }
+    public void Model.flattenModuleForProduct(ProductDecl decl, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+        assert decl != null;
+        if (verbose)
+            System.out.println("--- configuring product: " + decl.getName());
+        if (check && !decl.satisfiesConstraints()) {
+            String msg = "Product [" + (decl.getName().isEmpty() || decl.getName().equals("") ? decl.getProduct().getFeatureSetAsString() : decl.getName() )+ "] does not satisfy the feature model.";
+            throw new WrongProgramArgumentException(msg);
+        }
 
+        String newModule = flattenModuleForProduct(decl.getProduct());
+        if (decl.getModuleDecl() != null) {
+            decl.getModuleDecl().addImportIfNotExists(newModule);
+        }
+    }
+    public String Model.flattenModuleForProduct(Product product) throws DeltaModellingException {
+    	if (getLocalProductLines() == null || getLocalProductLines().isEmpty())
+            throw new DeltaModellingException("Model is missing a local 'productline' definition");
+
+        ModuleDecl modProductLine = findModuleDeclForProduct(product);
+        //applyTraits();
+
+        //Check also for global product line
+        if (modProductLine == null) {
+            throw new DeltaModellingException("Model is missing a productline definition for the product " +
+                product.getFeatureSetAsString());
+        }
+        String newModuleName = modProductLine.flattenForProduct(product);
+
+        //for all new C () with {PE} where PE equals the product
+        updateExpsWithProductDecl(product, newModuleName);
+
+        return newModuleName;
+    }
+
+    public ModuleDecl Model.findModuleDeclForProduct(Product product) {
+        for (ModuleDecl mod : getModuleDecls()){
+            if (mod.hasPLForProduct(product))
+                return mod;
+        }
+        return null;
+    }
+    public boolean ModuleDecl.hasPLForProduct(Product product) {
+        if (hasProductLine()){
+            for (Feature f : product.getFeatures()) {
+                 if (!getProductLine().getDeclaredFeatures().contains(f.getName()))
+                        return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public void Model.updateExpsWithProductDecl(Product product, String moduleName) {
+        java.util.List<NewExp> exps = new ArrayList<>();
+        newExpsWithProductDecl.forEach( e -> {
+            if (e.getProductDecl() != null && product.equals(e.getProductDecl().getProduct()))
+                exps.add(e);
+            });
+
+        java.util.List<InterfaceTypeUse> types = new ArrayList<>();
+        interfaceTypeUseWithProductDecl.forEach( itu -> {
+            if (itu.getProductDecl() != null && product.equals(itu.getProductDecl().getProduct()))
+                types.add(itu);
+            });
+
+        ituNewExpMap.forEach((itu, e) -> {
+            if ( types.contains(itu) && getVariableDecls().contains(e.getClassName()))
+                e.setClassName(moduleName + "." + e.getClassName());
+        });
+        newExpItuMap.forEach((e, setItu) -> {
+            if (exps.contains(e))
+               for (InterfaceTypeUse itu : setItu)
+                   if (getVariableDecls().contains(itu.getName()))
+                       itu.setName(moduleName + "." + itu.getName());
+        });
+
+        ituMap.forEach((vItu, setItu) -> {
+          if ( types.contains(vItu))
+            for (InterfaceTypeUse itu : setItu)
+                if (getVariableDecls().contains(itu.getName()))
+                    itu.setName(moduleName + "." + itu.getName());
+        });
+        for (InterfaceTypeUse type : types){
+           type.getModuleDecl().addImportIfNotExists(moduleName);
+           InterfaceTypeUse t = new InterfaceTypeUse();
+           List<Annotation> ls = type.getAnnotationList().treeCopyNoTransform();
+           t.setAnnotationList(ls);
+           if (getVariableDecls().contains(type.getName())) {
+               t.setName(moduleName + "." + type.getName());
+           } else {
+               t.setName(type.getName());
+           }
+           t.setParent(type.getParent());
+           type.getParent().setChild(t, type.getParent().getIndexOfChild(type));
+           ituNewExpMap.remove(type);
+           ituMap.remove(type);
+        }
+        for (NewExp e : exps) {
+            e.getModuleDecl().addImportIfNotExists(moduleName);
+            e.setProductDeclOpt(new Opt());
+            if (getVariableDecls().contains(e.getClassName()))
+                e.setClassName(moduleName + "." + e.getClassName());
+            else {
+            }
+            newExpItuMap.remove(e);
+        }
+        interfaceTypeUseWithProductDecl.removeAll(types);
+        newExpsWithProductDecl.removeAll(exps);
+    }
+
+    public String ModuleDecl.flattenForProduct(Product product){
+        //create new module for the product as a copy of this
+        String newModuleDeclName = product.shortFeaturesName(getName());
+        ModuleDecl newModule = this.freshCopy();
+        newModule.setName(newModuleDeclName);
+        getParent().addChild(newModule);
+        newModule.setParent(this.getParent());
+
+        //((CompilationUnit) getParent().getParent()).addModuleDeclNoTransform(newModule);
+        getModel().flushAttrCache();
+        // find product line
+        LocalProductLine pl = newModule.getProductLine();
+
+        // find/sort applicable delta IDs
+        Set<String> deltaids = pl.findApplicableDeltas(product);
+        java.util.List<String> sorted_deltaids = pl.sortDeltas(deltaids);
+
+        // find corresponding DeltaDecls
+        ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
+        for (String deltaid : sorted_deltaids)
+            deltas.add(pl.getDeltaDeclsMap().get(deltaid));
+
+         // substitute delta parameters
+         // pl.substituteDeltaParams(deltas, product);
+
+        if (getModel().verbose) {
+            System.out.print("--- applying deltas to core");
+            for (DeltaDecl delta : deltas) {
+                getModel().print(" << " + delta.getName());
+            }
+            getModel().println(" .");
+        }
+
+        // apply the applicable deltas in the given order
+        newModule.applyDeltas(deltas);
+        // remove productlines related elements from the new module
+        newModule.removeProductLine();
+        newModule.setProductDeclList(new List());
+
+        newModule.removeNotVariableDecls(this.getName());
+        return newModule.getName();
+        }
 
     /**************************************************************************
      * Simplifications before product line type checking
      */
     public void Model.collapseTraitModifiers() {
-        for (DeltaDecl delta : getDeltaDecls()) {
+        for (DeltaDecl delta : getAllDeltaDecls()) {
             delta.collapseTraitModifiers();
         }
         flushTreeCache();
@@ -101,7 +256,7 @@ aspect ProductFlattener {
         // TODO/FIXME: The following code is sort of hack-ish and slow. Find a better way
         //             to flush the correct cache at the same time (or avoid flushing at all?)
         for (DeltaDecl delta : deltas) {
-            this.applyDelta(delta);
+            delta.apply();
             for (CompilationUnit unit: this.getCompilationUnits())
                 for (ModuleDecl module: unit.getModuleDecls())
                     module.flushCache();
@@ -116,15 +271,31 @@ aspect ProductFlattener {
             }
         }
     }
+    /**************************************************************************
+     * Apply deltas to module
+     */
+    public void ModuleDecl.applyDeltas(java.util.List<DeltaDecl> deltas) throws DeltaModellingException {
+        // TODO/FIXME: The following code is sort of hack-ish and slow. Find a better way
+        //             to flush the correct cache at the same time (or avoid flushing at all?)
+        for (DeltaDecl delta : deltas) {
+            delta.apply();
+            flushCache();
+        }
+        for (Decl decl : getDecls()) {
+            if (decl instanceof ClassDecl){
+                ((ClassDecl)decl).computeDelete();
+            }
+        }
+    }
 
     /**************************************************************************
-     * apply each FunctionalModifier and ModuleModifier
+     * apply each ModuleModifier
      * to its corresponding class or interface
      *
      * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
      */
-    public void Model.applyDelta(DeltaDecl delta) throws DeltaModellingException {
-        for (ModuleModifier mod : delta.getModuleModifiers()) {
+    public void DeltaDecl.apply() throws DeltaModellingException {
+        for (ModuleModifier mod : getModuleModifiers()) {
             //System.out.println("*** applying ModuleModifier " + mod);
             mod.apply();
         }
@@ -404,6 +575,243 @@ aspect ProductFlattener {
             for (ASTNode<ASTNode> child : traitExpr.astChildrenNoTransform()) {
                 collectInTrait(child, list);
             }
+        }
+    }
+
+    public void Model.flattenforLocalProducts() throws WrongProgramArgumentException,DeltaModellingException {
+        ArrayList<Product> alreadyFlattened = new ArrayList<>();
+        Set<ProductDecl> productDecls =  new HashSet<>(getProductDeclsFromExps());
+
+        evaluateAllProductDeclarations();
+
+        for (ProductDecl prod : productDecls) {
+            Product p = prod.getProduct();
+            if (!p.featuresFromGlobalPL(getProductLine()) && ! alreadyFlattened.contains(p)) {
+               flattenModuleForProduct(prod, true);
+               alreadyFlattened.add(p);
+            }
+        }
+         Set<ProductDecl> globalProductDecls = new HashSet<>(getProductDecls());
+         for (ProductDecl prod : globalProductDecls) {
+            if (!prod.getProduct().featuresFromGlobalPL(getProductLine())) {
+                if (prod.getParent() instanceof List)
+                    ((List<ProductDecl>)prod.getParent()).removeChild(prod);
+            }
+        }
+        for (Product p : alreadyFlattened) {
+           findModuleDeclForProduct(p).removeVariableDecls();
+        }
+
+        for (ModuleDecl mod : getModuleDecls()) {
+            if (mod.hasProductLine()) {
+                mod.removeProductLine();
+                mod.removeRelativeAttr();
+            }
+        }
+        flushTreeCache();
+    }
+
+
+    /**************************************************************************
+     * Helper methods after delta applications
+     */
+
+     public void ModuleDecl.removeProductLine() {
+       setProductLineOpt(new Opt());
+     }
+
+     public void ModuleDecl.removeProducts() {
+        setProductDeclList(new List());
+     }
+
+    public void ModuleDecl.removeVariableDecls() {
+         List<Decl> decls = getDecls().copy();
+         for (Decl decl : decls) {
+            if (getVariableDecls().contains(decl.getName())){
+
+            /* if ((decl instanceof ClassDecl && (((ClassDecl) decl).getisBase() || ((ClassDecl) decl).getisRelative()))  ||
+                (decl instanceof InterfaceDecl && (((InterfaceDecl) decl).getisBase() || ((InterfaceDecl) decl).getisRelative()))) {*/
+                //remove from exports
+               for (Export e : getExports()) {
+                    if (e instanceof NamedExport) {
+                        for (Name name : ((NamedExport)e).getNames()) {
+                            if (name.getName().equals(decl.getName()))
+                                ((NamedExport)e).getNames().removeChild(name);
+                        }
+                    }
+                }
+                getDecls().removeChild(decl);
+           }
+        }
+    }
+
+    public void ModuleDecl.removeNotVariableDecls(String originalModule){
+        List<Decl> decls = getDecls().copy();
+        addImportNoTransform(new StarImport(originalModule));
+        for (Decl decl : decls) {
+            if (! decl.getAddedInLocalDelta() && ! getVariableDecls().contains(decl.getName())) {
+                 //remove from exports
+                 for (Export e : getExports()) {
+                     if (e instanceof NamedExport) {
+                         for (Name name : ((NamedExport)e).getNames()) {
+                             if (name.getName().equals(decl.getName()))
+                                 ((NamedExport)e).getNames().removeChild(name);
+                             }
+                     }
+                 }
+                 if (decl instanceof InterfaceDecl){
+                     for (Decl d : getDecls()) {
+                        if( d instanceof ClassDecl){
+                            for (InterfaceTypeUse itu : ((ClassDecl)d).getImplementedInterfaceUseList()){
+                              /*update the name of the interface with the name of the original module
+                               *  when a class implements a non-base interface
+                               */
+                              if (itu.getName().equals(decl.getName())) {
+                                  itu.setName(originalModule +"."+itu.getName());
+                              }
+                            }
+                            if (((ClassDecl) d).hasInitBlock()) {
+                             ((ClassDecl) d).getInitBlock().appendModuleName(originalModule, decl.getName());
+                            }
+                        for (FieldDecl field : ((ClassDecl)d).getFields()) {
+                          if (field.getAccess() instanceof InterfaceTypeUse &&
+                              ((InterfaceTypeUse) field.getAccess()).getName().equals(decl.getName()))
+                              ((InterfaceTypeUse)field.getAccess()).setName(originalModule+"."+ decl.getName());
+                          }
+                        for (MethodImpl methodImpl : ((ClassDecl)d).getMethods()){
+                          methodImpl.getMethodSig().appendModuleName(originalModule, decl.getName());
+                          methodImpl.getBlock().appendModuleName(originalModule, decl.getName());
+                        }
+                         } else if (d instanceof InterfaceDecl && !d.getName().equals(decl.getName())) {
+                            for (InterfaceTypeUse it : ((InterfaceDecl) d).getExtendedInterfaceUses()) {
+                               if (it.getName().equals(decl.getName())) {
+                                   it.setName(originalModule + "." + decl.getName());
+                               }
+                            }
+                            for (MethodSig mS : ((InterfaceDecl) d).getBodyList()) {
+                                mS.appendModuleName(originalModule, decl.getName());
+                            }
+                        }
+                    }
+                } else if (decl instanceof ClassDecl) {
+                     for (Decl d : getDecls()) {
+                         if (d instanceof ClassDecl && !d.equals(decl)) {
+                             for (MethodImpl mI : ((ClassDecl) d).getMethods()) {
+                                 for (Stmt s : mI.getBlock().getStmts()) {
+                                     if (s instanceof VarDeclStmt) {
+                                         VarDecl var = ((VarDeclStmt) s).getVarDecl();
+                                         if (var.hasInitExp() && var.getInitExp() instanceof NewExp &&
+                                            ((NewExp) var.getInitExp()).getClassName().equals(decl.getName()))
+                                            ((NewExp) var.getInitExp()).setClassName(originalModule + "." + decl.getName());
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                 }
+                 getDecls().removeChild(decl);
+                } else if (getVariableDecls().contains(decl.getName())) {
+                    if (decl instanceof InterfaceDecl) {
+                        ((InterfaceDecl) decl).setisBase(false);
+                        ((InterfaceDecl) decl).setisRelative(false);
+                    } else if (decl instanceof ClassDecl) {
+                        ((ClassDecl) decl).setisBase(false);
+                        ((ClassDecl) decl).setisRelative(false);
+                    }
+                }
+        }
+    }
+
+    public void ModuleDecl.removeRelativeAttr() {
+        for (Decl decl : getDecls()) {
+            if (decl instanceof InterfaceDecl) {
+                ((InterfaceDecl) decl).setisBase(false);
+                ((InterfaceDecl) decl).setisRelative(false);
+
+            } else if (decl instanceof ClassDecl) {
+                ((ClassDecl) decl).setisBase(false);
+                ((ClassDecl) decl).setisRelative(false);
+           }
+        }
+    }
+    public void ModuleDecl.addToExport() {
+        NamedExport export = new NamedExport();
+        for (Decl d : getDecls()){
+            if (d.getAddedInLocalDelta())
+                export.addNameNoTransform(new Name(d.getName()));
+        }
+        if (export.hasName()) {
+            addExportNoTransform(export);
+        }
+    }
+
+    syn lazy java.util.List<String> Model.getVariableDecls() {
+        java.util.List<String> variableDecls = new java.util.ArrayList<>();
+        for (ModuleDecl md : getModuleDecls()) {
+            variableDecls.addAll(md.getVariableDecls());
+        }
+        return variableDecls;
+    }
+
+    java.util.Set<String> ModuleDecl.baseDecls = new java.util.HashSet<>();
+    syn lazy java.util.Set<String> ModuleDecl.getBaseDecls() {
+            return baseDecls;
+    }
+
+    syn lazy java.util.Set<String> ModuleDecl.getVariableDecls() {
+        java.util.Set<String> variableDecls = new java.util.HashSet<>();
+        for (Decl d : getDecls()) {
+            if ( (d instanceof ClassDecl && (((ClassDecl) d).getisBase() || ((ClassDecl) d).getisRelative())) ||
+                 (d instanceof InterfaceDecl && (((InterfaceDecl) d).getisBase() || ((InterfaceDecl) d).getisRelative())))
+                variableDecls.add(d.getName());
+        }
+
+         return variableDecls;
+    }
+    /**************************************************************************
+     * Util methods
+     */
+    syn String Product.shortFeaturesName(String moduleName) {
+        String ftsName = moduleName;
+        String sub = "";
+        boolean shorten = getFeatures().getNumChild() > 2;
+        for (int i = 0; i < getNumFeature(); ++i) {
+            sub = (shorten && getFeature(i).getName().length() > 3) ? getFeature(i).getName().substring(0,3) : getFeature(i).getName();
+            ftsName = ftsName.concat("_" + sub);
+        }
+
+        return ftsName;
+    }
+    void ModuleDecl.addImportIfNotExists(String importModule) {
+        boolean hasImport = false;
+        for (Import imp : getImportList()) {
+            if (imp instanceof StarImport && ((StarImport)imp).getModuleName().equals(importModule)) {
+                hasImport = true;
+                break;
+            }
+        }
+        if (!hasImport)
+            addImportNoTransform(new StarImport(importModule));
+    }
+
+    void Block.appendModuleName(String moduleName, String interfaceName) {
+        for (Stmt s : getStmts()) {
+            if (s instanceof VarDeclStmt && ((VarDeclStmt)s).getVarDecl().getAccess() instanceof InterfaceTypeUse){
+                InterfaceTypeUse itu = (InterfaceTypeUse) ((VarDeclStmt)s).getVarDecl().getAccess();
+                if (itu.getName().equals(interfaceName))
+                    itu.setName(moduleName+"."+ interfaceName);
+            }
+        }
+    }
+
+    void MethodSig.appendModuleName(String moduleName, String interfaceName) {
+        if (getReturnType() instanceof InterfaceTypeUse && ((InterfaceTypeUse) getReturnType()).getName().equals(interfaceName)) {
+            ((InterfaceTypeUse) getReturnType()).setName(moduleName + "." + interfaceName);
+        }
+        for (ParamDecl p : getParamList()) {
+         if (p.getAccess()  instanceof InterfaceTypeUse && ((InterfaceTypeUse) p.getAccess()).getName().equals(interfaceName)){
+             ((InterfaceTypeUse) p.getAccess()).setName(moduleName + "." + interfaceName );
+         }
         }
     }
 

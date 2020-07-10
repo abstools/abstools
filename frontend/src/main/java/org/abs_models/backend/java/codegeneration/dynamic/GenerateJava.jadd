@@ -40,7 +40,7 @@ aspect GenerateJavaDynamic_Core {
         {   /* The Reconfiguration Decision Model (RDM) */
             // first remember all products by name
             HashMap<String, ProductDecl> allProducts = new HashMap<String, ProductDecl>();
-            for (ProductDecl prod : getProductDecls()) {
+            /*for (ProductDecl prod : getProductDecls()) {
                 allProducts.put(prod.getName(), prod);
             }
             JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_RDM_PACKAGE);
@@ -53,6 +53,7 @@ aspect GenerateJavaDynamic_Core {
                     throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
                 }
             }
+            */
         }
 
     }
@@ -63,7 +64,6 @@ aspect GenerateJavaDynamic_Core {
         for (Decl decl : getDecls()) {
             decl.generateJavaCodeDynamic(p);
         }
-
 
         if (hasBlock()) {
             Block block = getBlock();
@@ -106,6 +106,17 @@ aspect GenerateJavaDynamic_Core {
 
         }
 
+        if (hasProductLine()) {
+            for (DeltaDecl decl : ((LocalProductLine) getProductLine()).getDeltaDecls()) {
+                try {
+                    decl.generateJavaCodeDynamic(code);
+                } catch (NotImplementedYetException e) {
+                    throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e);
+                } catch (RuntimeException e) {
+                    throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e);
+                }
+            }
+        }
 
     }
 

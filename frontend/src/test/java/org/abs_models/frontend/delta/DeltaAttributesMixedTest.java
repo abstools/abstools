@@ -54,7 +54,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
             + "    features F;"
             + "    delta D(F.a, F.b) when F;"
             + "product P1( F{a=True, b=False} );");
-        
+
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -172,7 +172,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
             + "productline PL;"
             + "    features F; delta D(F.a) when F;"
             + "product P1( F{a=3} );");
-        
+
         model.evaluateAllProductDeclarations();
         model.flattenForProduct("P1");
         assertTrue(model.hasTypeErrors());

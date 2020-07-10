@@ -200,47 +200,32 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckProductDecl(ProductDecl prod,
-            Map<String,Feature> featureNames,
-            Set<String> prodNames,
-            Map<String,DeltaDecl> deltaNames,
-            SemanticConditionList e) {
-        if (featureNames != null) {
+    public static void typeCheckProductDeclFromGlobalPL(ProductDecl prod,
+                                            boolean fromGlobalPL,
+                                            SemanticConditionList e) {
+        if (fromGlobalPL) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
             Model m = prod.getModel();
             for (Feature f : prod.getProduct().getFeatures()) {
-                if (!featureNames.containsKey(f.getName()))
-                    e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
-                else {
-                    Collection<DeltaClause> dcs = findDeltasForFeature(m,f);
-                    for (int i = 0; i<f.getNumAttrAssignment(); i++) {
-                        AttrAssignment aa = f.getAttrAssignment(i);
-                        for (DeltaClause dc : dcs) {
-                            DeltaDecl dd = m.findDelta(dc.getDeltaspec().getDeltaID());
-                            DeltaParamDecl dp = dd.getParam(i);
-                            // FIXME: we assumed here that delta
-                            // parameters and feature parameters have
-                            // same order, arity.  This is clearly
-                            // wrong, and parameters for the delta are
-                            // named with the feature.  we should find a
-                            // dp with the same name as aa, and ignore
-                            // any superfluous aa (the value is simply
-                            // not used by this delta).
-                            if (dp != null && !dp.accepts(aa.getValue())) {
-                                e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(), dp.getType().getSimpleName()));
-                            }
+                Collection<DeltaClause> dcs = findDeltasForFeature(m, f);
+                for (int i = 0; i < f.getNumAttrAssignment(); i++) {
+                    AttrAssignment aa = f.getAttrAssignment(i);
+                    for (DeltaClause dc : dcs) {
+                        DeltaDecl dd = m.findDelta(dc.getDeltaspec().getDeltaID());
+                        DeltaParamDecl dp = dd.getParam(i);
+                        // FIXME: we assumed here that delta
+                        // parameters and feature parameters have
+                        // same order, arity.  This is clearly
+                        // wrong, and parameters for the delta are
+                        // named with the feature.  we should find a
+                        // dp with the same name as aa, and ignore
+                        // any superfluous aa (the value is simply
+                        // not used by this delta).
+                        if (dp != null && !dp.accepts(aa.getValue())) {
+                            e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(), dp.getType().getSimpleName()));
                         }
                     }
                 }
-            }
-        }
-
-        // Check the right side of product expression that contains in prodNames
-        Set<String> productNames = new HashSet<>();
-        prod.getProductExpr().setRightSideProductNames(productNames);
-        for (String productName : productNames) {
-            if (!prodNames.contains(productName)) {
-                e.add(new TypeError(prod, ErrorMessage.UNDECLARED_PRODUCT, productName));
             }
         }
 
@@ -260,6 +245,35 @@ public class TypeCheckerHelper {
         }
     }
 
+    public static void typeCheckProductDecl(ProductDecl prod,
+                                             Set<String> prodNames,
+                                             SemanticConditionList e) {
+        if (!prod.getModel().hasProductLine() && !prod.getModel().hasLocalProductLines()) {
+            e.add(new SemanticWarning(prod, ErrorMessage.ERROR_IN_PRODUCT, prod.getName(),
+                "Model does not have a product line definiton."));
+        }
+        else if((prod.getModel().hasProductLine() && !prod.featuresFromGlobalPL()) ||
+                (prod.getModel().hasLocalProductLines() && prod.getModuleWithPL() == null )) {
+            e.add(new TypeError(prod, ErrorMessage.ERROR_IN_PRODUCT, prod.getName(),
+                "Set of features " + prod.getProduct().getFeatureSetAsString() +
+                    " cannot be found within a single product line"));
+        } else if (prod.getModuleWithPL() != null && !prod.satisfiesConstraints()){
+            e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT_LOCAL, prod.getName()));
+        }
+
+        if (!prodNames.isEmpty()) {
+            // Check the right side of product expression that contains in prodNames
+            Set<String> productNames = new HashSet<>();
+            prod.getProductExpr().setRightSideProductNames(productNames);
+            for (String productName : productNames) {
+                if (!prodNames.contains(productName)) {
+                    e.add(new TypeError(prod, ErrorMessage.UNDECLARED_PRODUCT, productName));
+                }
+            }
+        }
+    }
+
+
     /**
      * Look for all deltas that have a particular feature in the application condition --
      * up to the boolean madness that lies within AppConds (delta D(F.x) when ~F will
@@ -271,6 +285,16 @@ public class TypeCheckerHelper {
             DeltaClause dc = m.getProductLine().getDeltaClause(i);
             if (dc.refersTo(f)) {
                 dcs.add(dc);
+            }
+        }
+        if (dcs.isEmpty()) {
+            for (ProductLine pl : m.getLocalProductLines()) {
+                for (int i = 0; i < pl.getNumDeltaClause(); i++) {
+                    DeltaClause dc = pl.getDeltaClause(i);
+                    if (dc.refersTo(f)) {
+                        dcs.add(dc);
+                    }
+                }
             }
         }
         return dcs;
@@ -528,9 +552,8 @@ public class TypeCheckerHelper {
     /**
      * check a list of compilation units for duplicate module names, product names, delta names
      */
-    public static void checkForDuplicateModulesAndDeltas(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
+    public static void checkForDuplicateModules(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Map<String, ModuleDecl> seenModules = new HashMap<>();
-        Map<String, DeltaDecl> seenDeltas = new HashMap<>();
         for (CompilationUnit u : compilationUnits) {
             for (ModuleDecl module : u.getModuleDecls()) {
                 if (seenModules.containsKey(module.getName())) {
@@ -545,31 +568,8 @@ public class TypeCheckerHelper {
                     seenModules.put(module.getName(), module);
                 }
             }
-            for (DeltaDecl d : u.getDeltaDecls()) {
-                if (seenModules.containsKey(d.getName())) {
-                    ModuleDecl prev = seenModules.get(d.getName());
-                    String location = "";
-                    if (!prev.getFileName().equals(Main.UNKNOWN_FILENAME)) {
-                        location = " at " + prev.getFileName()
-                            + ":" + prev.getStartLine() + ":" + prev.getStartColumn();
-                    }
-                    errors.add(new TypeError(d, ErrorMessage.DELTA_USES_NAME_OF_MODULE, d.getName(), location));
-                }
-                if (seenDeltas.containsKey(d.getName())) {
-                    DeltaDecl prev = seenDeltas.get(d.getName());
-                    String location = "";
-                    if (!prev.getFileName().equals(Main.UNKNOWN_FILENAME)) {
-                        location = " at " + prev.getFileName()
-                            + ":" + prev.getStartLine() + ":" + prev.getStartColumn();
-                    }
-                    errors.add(new TypeError(d, ErrorMessage.DUPLICATE_DELTA, d.getName(), location));
-                } else {
-                    seenDeltas.put(d.getName(), d);
-                }
-            }
         }
     }
-
     public static void checkForDuplicateProducts(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
         Set<String> seen = new HashSet<>();
         for (CompilationUnit u : compilationUnits) {
@@ -577,6 +577,29 @@ public class TypeCheckerHelper {
                 if (!seen.add(p.getName()))
                     errors.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, p.getName()));
             }
+            for(ModuleDecl m : u.getModuleDecls()) {
+	            for (ProductDecl p : m.getProductDecls()) {
+	                if (!seen.add(p.getName()))
+	                    errors.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, p.getName()));
+	            }
+        	}
+        }
+    }
+    public static void checkForDuplicateDeltas(SemanticConditionList errors, Iterable<CompilationUnit> compilationUnits) {
+        Set<String> seen = new HashSet<>();
+        for (CompilationUnit u : compilationUnits) {
+            for (DeltaDecl d : u.getDeltaDecls()) {
+                if (!seen.add(d.getName()))
+                    errors.add(new TypeError(d, ErrorMessage.DUPLICATE_DELTA, d.getName()));
+            }
+        	for(ModuleDecl m : u.getModuleDecls()) {
+        		if(m.hasProductLine()) {
+        			for (DeltaDecl d : m.getProductLine().getDeltaDecls()) {
+        				if (!seen.add(d.getName()))
+        					errors.add(new TypeError(d, ErrorMessage.DUPLICATE_DELTA, d.getName()));
+        			}
+        		}
+        	}
         }
     }
 

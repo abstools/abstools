@@ -14,25 +14,11 @@ import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.SemanticError;
 import org.abs_models.frontend.analyser.TypeError;
-import org.abs_models.frontend.ast.AddClassModifier;
-import org.abs_models.frontend.ast.AttrAssignment;
-import org.abs_models.frontend.ast.ClassModifier;
-import org.abs_models.frontend.ast.DeltaClause;
-import org.abs_models.frontend.ast.DeltaDecl;
-import org.abs_models.frontend.ast.DeltaID;
-import org.abs_models.frontend.ast.DeltaTraitModifier;
-import org.abs_models.frontend.ast.Feature;
-import org.abs_models.frontend.ast.IntVal;
-import org.abs_models.frontend.ast.Model;
-import org.abs_models.frontend.ast.Modifier;
-import org.abs_models.frontend.ast.ModifyClassModifier;
-import org.abs_models.frontend.ast.ModuleModifier;
-import org.abs_models.frontend.ast.Product;
-import org.abs_models.frontend.ast.ProductLine;
-import org.abs_models.frontend.ast.RemoveClassModifier;
+import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.mtvl.ChocoSolver;
 
 import choco.kernel.model.constraints.Constraint;
+import org.checkerframework.checker.units.qual.C;
 
 public class ProductLineAnalysisHelper {
 
@@ -73,9 +59,11 @@ public class ProductLineAnalysisHelper {
      */
     protected static boolean wellFormedProductLine(ProductLine pl, SemanticConditionList e) {
         boolean wellformed = true;
+        boolean local = pl instanceof LocalProductLine;
 
         // preliminaries
-        final Set<String> declaredDeltas = pl.getModel().getDeltaDeclsMap().keySet();
+        final Set<String> declaredDeltas = local ? ((LocalProductLine) pl).getDeltaDeclsMap().keySet() :
+        pl.getModel().getDeltaDeclsMap().keySet();
         final Set<String> referencedDeltas = new HashSet<>(pl.getDeltaClauses().getNumChild());
         for (DeltaClause clause : pl.getDeltaClauses())
             referencedDeltas.add(clause.getDeltaspec().getDeltaID());
@@ -91,7 +79,8 @@ public class ProductLineAnalysisHelper {
             for (DeltaID id : clause.getAfterDeltaIDs()) {
                 String afterID = id.getName();
                 if (!referencedDeltas.contains(afterID)) {
-                    e.add(new SemanticError(clause, ErrorMessage.MISSING_DELTA_CLAUSE_ERROR, afterID, pl.getName()));
+                    e.add(new SemanticError(clause, ErrorMessage.MISSING_DELTA_CLAUSE_ERROR, afterID,
+                        pl instanceof LocalProductLine ? pl.getModuleDecl().getName() : pl.getName()));
                     wellformed = false;
                 }
             }
@@ -129,7 +118,6 @@ public class ProductLineAnalysisHelper {
 
         boolean result = true;
         Model model = pl.getModel();
-
         /*
         System.out.print("Delta partition: ");
         for (Set<String> set : pl.getDeltaPartition()) {
@@ -151,7 +139,8 @@ public class ProductLineAnalysisHelper {
 
             for (String deltaID : set) {
                 // assumes the DeltaDecl corresponding to deltaID exists (wellFormedProductLine)
-                DeltaDecl delta = model.getDeltaDeclsMap().get(deltaID);
+                DeltaDecl delta = pl instanceof LocalProductLine ? ((LocalProductLine) pl).getDeltaDeclsMap().get(deltaID) :
+                    model.getDeltaDeclsMap().get(deltaID);
 
                 assert delta.getModuleModifiers() != null;
                 for (ModuleModifier moduleModifier : delta.getModuleModifiers()) {
@@ -179,14 +168,14 @@ public class ProductLineAnalysisHelper {
                                             result = false;
                                             String otherDeltaID = cache.get(prefix).get(methodID);
                                             if (! deltaID.equals(otherDeltaID))
-                                                errors.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, otherDeltaID, prefix + ", method " + methodID));
+                                                errors.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl instanceof LocalProductLine? "in " + pl.getModuleDecl().getName() : pl.getName() , deltaID, otherDeltaID, prefix + ", method " + methodID));
                                             else
                                                 ; // FIXME also a kind of ambiguity but needs a different error message
                                         } else if (cache.get(prefix).containsKey("CLASS")) {
                                             result = false;
                                             String otherDeltaID = cache.get(prefix).get("CLASS");
                                             if (! deltaID.equals(otherDeltaID))
-                                                errors.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl.getName(), deltaID, otherDeltaID, prefix));
+                                                errors.add(new TypeError(pl, ErrorMessage.AMBIGUOUS_PRODUCTLINE, pl instanceof LocalProductLine? "in " + pl.getModuleDecl().getName() : pl.getName() , deltaID, otherDeltaID, prefix));
                                             else
                                                 ; // FIXME also a kind of ambiguity but needs a different error message
                                         } else {

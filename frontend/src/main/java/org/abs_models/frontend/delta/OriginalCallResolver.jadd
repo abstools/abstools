@@ -23,7 +23,7 @@ aspect OriginalCallResolver {
         String s = addedInDelta.get(name);
         if( s == null) return "core";
         return s;
-    }    
+    }
     public void ClassDecl.addAddedIn(String name, String nameDelta){
         addedInDelta.put(name, nameDelta);
     }
@@ -89,5 +89,5 @@ aspect OriginalCallResolver {
       call.setParent(parent);
   }
 
-    
+
 }

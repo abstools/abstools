@@ -129,13 +129,7 @@ public class Main {
                     if (m == null || m.hasParserErrors()) {
                         // parse should have already printed errors
                         result = Math.max(result, 1);
-                    } else {
-                        Iterator<ProductDecl> pi = m.getProductDecls().iterator();
-                        while (pi.hasNext()) {
-                            System.out.print(pi.next().getName());
-                            if (pi.hasNext()) System.out.print(' ');
-                        }
-                    }
+                    } 
                     done = true;
                 }
             }
@@ -213,13 +207,13 @@ public class Main {
         // obtain a resourceset from the injector
         XtextResourceSet resourceSet = absinjector.getInstance(XtextResourceSet.class);
 
+        // load the standard library
+        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(ABS_STD_LIB).toString()))
+            .load(null);
         for (File file : fileNames) {
             resourceSet.createResource(org.eclipse.emf.common.util.URI.createFileURI(file.toString()))
                 .load(null);
         }
-        // load the standard library
-        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(ABS_STD_LIB).toString()))
-            .load(null);
         boolean hasErrors = false;
         for (Resource r : resourceSet.getResources()) {
             IResourceValidator validator = ((XtextResource)r).getResourceServiceProvider().getResourceValidator();
@@ -310,13 +304,25 @@ public class Main {
         m.expandAwaitAsyncCalls();
 
         if (arguments.product != null) {
-            // apply deltas that correspond to arguments.productproduct
+            //prod.getModel().hasProductLine() && !prod.featuresFromGlobalPL()
+            //apply deltas that correspond to arguments.productproduct
             if (arguments.notypecheck) {
                 m.flattenForProductUnsafe(arguments.product);
             } else {
                 m.flattenForProduct(arguments.product);
             }
         }
+        SemanticConditionList plErrors = m.getProductLineErrors();
+
+        if (plErrors.containsErrors()) {
+            for (SemanticCondition error : plErrors) {
+                // Print both errors and warnings
+                System.err.println(error.getHelpMessage());
+                System.err.flush();
+            }
+            return;
+        }
+        m.flattenforLocalProducts();
 
         if (arguments.dump) {
             m.dumpMVars();
@@ -333,9 +339,11 @@ public class Main {
             System.err.println(error.getHelpMessage());
             System.err.flush();
         }
+
         if (!semErrs.containsErrors()) {
             typeCheckModel(m);
         }
+
     }
 
     /**
@@ -359,8 +367,7 @@ public class Main {
             throws WrongProgramArgumentException
     {
         // Generate reflective constructors for all features
-        ProductLine pl = m.getProductLine();
-        if (pl != null) {
+        if (m.getAllProductLines() != null && !m.getAllProductLines().isEmpty()) {
             // Let's assume the module and datatype names in abslang.abs did
             // not get changed, and just crash otherwise.  If you're here
             // because of a NPE: Hi!  Make the standard library and this code
@@ -386,11 +393,13 @@ public class Main {
             }
             // Adjust Feature datatype
             featureDecl.setDataConstructorList(new List<>());
-            for (Feature f : pl.getFeatures()) {
-                // TODO: when/if we incorporate feature parameters into the
-                // productline feature declarations (as we should), we need to
-                // adjust the DataConstructor arguments here.
-                featureDecl.addDataConstructorNoTransform(new DataConstructor(f.getName(), new List<>()));
+            for (ProductLine pl : m.getAllProductLines()) {
+                for (Feature f : pl.getFeatures()) {
+                    // TODO: when/if we incorporate feature parameters into the
+                    // productline feature declarations (as we should), we need to
+                    // adjust the DataConstructor arguments here.
+                    featureDecl.addDataConstructorNoTransform(new DataConstructor(f.getName(), new List<>()));
+                }
             }
             // Adjust product_name() function
             productNameFun.setFunctionDef(new ExpFunctionDef(new StringLiteral(productname)));
@@ -416,7 +425,7 @@ public class Main {
         m.flushTreeCache();
     }
 
-    private void typeCheckModel(Model m) {
+    private boolean typeCheckModel(Model m) {
         if (!arguments.notypecheck) {
             if (arguments.verbose)
                 System.out.println("Typechecking Model...");
@@ -426,7 +435,9 @@ public class Main {
             for (SemanticCondition se : typeerrors) {
                 System.err.println(se.getHelpMessage());
             }
+            return typeerrors.containsErrors();
         }
+        return false;
     }
 
     private void registerLocationTypeChecking(Model m) {

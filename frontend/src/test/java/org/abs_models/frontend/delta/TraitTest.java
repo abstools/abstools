@@ -67,7 +67,7 @@ public class TraitTest extends DeltaTest{
         cu.addDeltaDecl(dd);
         dd.setParent(cu);
 
-        model.applyDelta(dd);
+        dd.apply();
 
         assertEquals(2, cls.getMethods().getNumChild());
     }
@@ -106,7 +106,7 @@ public class TraitTest extends DeltaTest{
         cu.addDeltaDecl(dd);
         dd.setParent(cu);
 
-        model.applyDelta(dd);
+        dd.apply();
 
         assertEquals(1, cls.getMethods().getNumChild());
         assertEquals(2,cls.getMethod(0).getBlock().getNumChild());
@@ -143,7 +143,7 @@ public class TraitTest extends DeltaTest{
         cu.addDeltaDecl(dd);
         dd.setParent(cu);
 
-        model.applyDelta(dd);
+        dd.apply();
 
         assertEquals(0, cls.getMethods().getNumChild());
     }
@@ -546,7 +546,7 @@ public class TraitTest extends DeltaTest{
         DeltaDecl delta = findDelta(model, "D3");
         assertNotNull(delta);
         assertThat(delta, instanceOf(DeltaDecl.class));
-        model.applyDelta(delta);
+        delta.apply();
         assertTrue(cls.getMethods().getNumChild() == 5);
         assertTrue(cls2.getMethods().getNumChild() == 5);
     }
@@ -586,7 +586,7 @@ public class TraitTest extends DeltaTest{
         DeltaDecl delta = findDelta(model, "D3");
         assertNotNull(delta);
         assertThat(delta, instanceOf(DeltaDecl.class));
-        model.applyDelta(delta);
+        delta.apply();
         assertTrue(cls.getMethods().getNumChild() == 1);
     }
 

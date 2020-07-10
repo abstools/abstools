@@ -1,13 +1,16 @@
 // Inform node about the name of the Module where it was declared
 aspect ModuleName {
-    syn String Decl.moduleName() = getModuleDecl().getName();
-    
-    syn lazy String ModuleModifier.getModuleName();
-    
+   syn String Decl.moduleName() = getModuleDecl().getName();
+
+   syn lazy String ModuleModifier.getModuleName();
+
     // By default look it up in the delta's 'uses' clause
-    eq ModuleModifier.getModuleName() = (getDelta().hasImportedModule()) ? getDelta().getImportedModule().getModuleName() : null;
-    
-    eq AddClassModifier.getModuleName() {
+    eq ModuleModifier.getModuleName() = (getDelta().hasImportedModule()) ?
+                        getDelta().getImportedModule().getModuleName() :
+                         getDelta().isLocal() ?
+                         getDelta().getModuleDecl().getName() : null;
+
+   eq AddClassModifier.getModuleName() {
         // search in class name
         String prefix = (new Name(getClassDecl().getName())).getModuleName();
         if (prefix != null)
@@ -34,8 +37,35 @@ aspect ModuleName {
             return super.getModuleName();
     }
     
+    eq AddInterfaceModifier.getModuleName() {
+        // search in class name
+        String prefix = (new Name(getInterfaceDecl().getName())).getModuleName();
+        if (prefix != null)
+            return prefix;
+        else
+            return super.getModuleName();
+    }
+
+    eq ModifyInterfaceModifier.getModuleName() {
+        // search in class name
+        String prefix = (new Name(getName())).getModuleName();
+        if (prefix != null)
+            return prefix;
+        else
+            return super.getModuleName();
+    }
+    
+    eq RemoveInterfaceModifier.getModuleName() {
+        // search in interface name
+        String prefix = (new Name(getName())).getModuleName();
+        if (prefix != null)
+            return prefix;
+        else
+            return super.getModuleName();
+    }
+
     /* TODO: define equations for other ModuleModifiers: 
-     * AddTypeSynModifier ModifyTypeSynModifier AddDataTypeModifier ModifyDataTypeModifier AddFunctionModifier AddInterfaceModifier RemoveInterfaceModifier ModifyInterfaceModifier
+     * AddTypeSynModifier ModifyTypeSynModifier AddDataTypeModifier ModifyDataTypeModifier AddFunctionModifier
      * Note: superclass behaviour adequate for: AddImportModifier AddExportModifier
      */
 }

@@ -36,7 +36,7 @@ aspect ForeachExpander {
     // attempt a rewrite without type-checking information
     public boolean ForeachStmt.canBeRewritten() {
         if (!amInCoreAbs()) return false;
-        Type vartype = getValueVar().getType();
+        Type vartype = getLoopVarDecl().getType();
         if (vartype.isUnknownType()) return false;
         return true;
     }
@@ -45,22 +45,20 @@ aspect ForeachExpander {
      * Unfold the foreach loop into a while loop.
      */
     public void ForeachStmt.expand() {
-        // [A] foreach (v, i in l) { ... }
+        // [A] foreach (i in l) { ... }
         // =>
         // [A] {                       (1)
         //   List tmp = l;             (2)
-        //   Int i = 0;                (3)
-        //   while (!isEmpty(tmp) {    (4)
-        //     T v = head(tmp);        (5)
-        //     tmp = tail(tmp);        (6)
-        //     {...}                   (7)
-        //     i = i + 1;              (8)
+        //   while (!isEmpty(tmp) {    (3)
+        //     i = head(tmp);          (4)
+        //     tmp = tail(tmp);        (5)
+        //     {...}                   (6)
         // }
 
         final Type listtype = getListExp().getType();
-        final Type vartype = getValueVar().getType();
+        final Type vartype = getLoopVarDecl().getType();
         final String listvarname = "tmp"+Integer.toString(hashCode());
-        final String varname = getValueVar().getName();
+        final String varname = getLoopVarDecl().getName();
 
         // (1)
         Block result = new Block();
@@ -90,12 +88,6 @@ aspect ForeachExpander {
             result.addStmt(listvarstmt);
 
             // (3)
-            if (hasIndexVar()) {
-                VarDeclStmt indexvarstmt = new VarDeclStmt(new List(), new VarDecl(getIndexVar().getName(), getModel().getIntType().toUse(), new Opt(new IntLiteral("0"))));
-                result.addStmt(indexvarstmt);
-            }
-
-            // (4)
             PureExp whilecondition = new NegExp(new FnApp("isEmpty", new List(new VarUse(listvarname))));
             Block whilebody = new Block();
             WhileStmt whilestmt = new WhileStmt();
@@ -103,15 +95,15 @@ aspect ForeachExpander {
             whilestmt.setBody(whilebody);
             result.addStmt(whilestmt);
 
-            // (5)
+            // (4)
             VarDeclStmt loopvarstmt = new VarDeclStmt(new List(), new VarDecl(varname, vartype.toUse(), new Opt(new FnApp("head", new List(new VarUse(listvarname))))));
             whilebody.addStmt(loopvarstmt);
 
-            // (6)
+            // (5)
             AssignStmt loopvardecrement = new AssignStmt(new List(), new VarUse(listvarname), new FnApp("tail", new List(new VarUse(listvarname))));
             whilebody.addStmt(loopvardecrement);
 
-            // (7)
+            // (6)
 
             // Do not use getBody().treeCopyNoTransform() here, lest we create
             // fresh nodes not included in the loop in
@@ -120,15 +112,6 @@ aspect ForeachExpander {
             Block body = getBody();
             body.setParent(null);
             whilebody.addStmt(body);
-
-            // (8)
-            if (hasIndexVar()) {
-                AssignStmt indexincstmt = new AssignStmt(new List(),
-                                                         new VarUse(getIndexVar().getName()),
-                                                         new AddAddExp(new VarUse(getIndexVar().getName()),
-                                                                       new IntLiteral("1")));
-                whilebody.addStmt(indexincstmt);
-            }
         }
         this.replaceWith(result);
     }

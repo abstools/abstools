@@ -48,7 +48,7 @@ import picocli.CommandLine.RunLast;
          },
          versionProvider = Absc.AbscVersionProvider.class
          )
-public class Absc implements Callable<Integer> {
+public class Absc implements Callable<Void> {
 
     @Parameters(description = "ABS files/directories/packages to handle",
                 arity = "1..*")
@@ -236,12 +236,17 @@ public class Absc implements Callable<Integer> {
      * @param args
      */
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new Absc()).execute(args);
-        if (exitCode != 0) System.exit(exitCode);
+        // https://picocli.info/#_parsing_subcommands
+        CommandLine commandline = new CommandLine(new Absc());
+        // TODO: switch to new picocli API
+        commandline.parseWithHandler(new RunLast(), args);
     }
 
     @Override
-    public Integer call() throws Exception {
-        return new Main().mainMethod(this);
+    public Void call() throws Exception {
+        Main main = new Main();
+        int result = main.mainMethod(this);
+        if (result != 0) System.exit(result);
+        return null;
     }
 }

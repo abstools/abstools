@@ -1,0 +1,35 @@
+aspect Copy {
+    public ModuleDecl ModuleDecl.freshCopy() {
+        ModuleDecl mod = treeCopyNoTransform();
+        for (Decl decl : mod.getDecls()) {
+            if (decl instanceof ClassDecl) {
+                ((ClassDecl) decl).deepCopyAttr();
+            }
+        }
+        return mod;
+    }
+
+    public void ClassDecl.deepCopyAttr() {
+        HashMap<String, Stack<String>> newDeltas = new HashMap<>();
+        HashMap<String, String> newAddedInDelta = (HashMap<String, String>)addedInDelta.clone();
+        HashMap<String, HashMap<String, MethodImpl>> newDeltaMap = new HashMap<>();
+        HashSet<String> newUsedMethods = (HashSet<String>)usedMethods.clone();
+
+        deltas.forEach( (k, v) -> {
+            Stack<String> s = (Stack<String>) v.clone();
+            newDeltas.put(k,s);
+            });
+
+        for(Map.Entry<String, HashMap<String, MethodImpl>> entry : deltaMap.entrySet()) {
+            HashMap<String, MethodImpl> hm = new HashMap<>();
+            ((HashMap<String, MethodImpl>)entry.getValue()).forEach( (s, m) -> hm.put(s, m.treeCopyNoTransform()));
+            newDeltaMap.put(entry.getKey(), hm);
+        }
+
+        this.deltas = newDeltas;
+        addedInDelta = newAddedInDelta;
+        deltaMap = newDeltaMap;
+        usedMethods = newUsedMethods;
+    }
+
+}

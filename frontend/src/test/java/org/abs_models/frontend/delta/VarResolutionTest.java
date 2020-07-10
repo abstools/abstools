@@ -177,7 +177,7 @@ public class VarResolutionTest extends DeltaTest {
     m.collapseTraitModifiers();
     m.evaluateAllProductDeclarations();  
     m.flushCache();
-    m.flattenForProduct("Prod"); 
+    m.flattenForProduct("Prod");
     m.flushCache();
     assertTrue(!m.typeCheck().containsErrors());
     }

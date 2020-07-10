@@ -14,4 +14,12 @@ aspect MyDumpMTVL {
                 return true;
         return false;
     }
+
+    public boolean Model.hasVL() {
+        for (CompilationUnit u: getCompilationUnits())
+            for (ModuleDecl m: u.getModuleDecls())
+                if (m.hasProductLine())
+                    return true;
+            return false;
+        }
 }

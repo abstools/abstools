@@ -44,6 +44,13 @@ aspect Class {
     }
 }
 
+//inform ClassModifiers about the Class to which they apply
+aspect Interface {
+    syn lazy InterfaceDecl InterfaceModifier.getInterfaceDecl() {
+        return this.findInterface();
+    }
+}
+
 // inform Modifier about the ModifyClassModifier where it was declared
 aspect ModifyClassModifier {
     inh ModifyClassModifier Modifier.getModifyClassModifier();
@@ -83,6 +90,10 @@ aspect Deltas {
         return definedFeatures;
     }
 
+    //inform Deltas if they are in a local product line
+    syn boolean DeltaDecl.isLocal();
+     eq DeltaDecl.isLocal() = getParent().getParent() instanceof LocalProductLine;
+
     // Check if we're in core abs or in a delta / trait / something else that
     // will be rewritten.  Used to inhibit some rewrite operations that need
     // type information etc.
@@ -92,6 +103,10 @@ aspect Deltas {
     eq CompilationUnit.getProductDecl().amInCoreAbs() = false;
     eq CompilationUnit.getFeatureDecl().amInCoreAbs() = false;
     eq CompilationUnit.getFExt().amInCoreAbs() = false;
+
+    eq ModuleDecl.getProductLine().amInCoreAbs() = false;
+    eq ModuleDecl.getProductDecl().amInCoreAbs() = false;
+    eq LocalProductLine.getDeltaDecl().amInCoreAbs() = false;
 
     inh boolean Block.amInCoreAbs();
     inh boolean AwaitAsyncCall.amInCoreAbs();

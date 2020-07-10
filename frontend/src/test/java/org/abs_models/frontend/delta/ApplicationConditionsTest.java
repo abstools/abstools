@@ -142,5 +142,4 @@ public class ApplicationConditionsTest extends DeltaTest {
             assertNull(cls);
         }
     }
-
 }

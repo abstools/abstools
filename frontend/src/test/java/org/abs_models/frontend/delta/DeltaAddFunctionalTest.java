@@ -42,7 +42,7 @@ public class DeltaAddFunctionalTest extends DeltaTest {
         Decl funh= findDecl(model, "M", "h");
         assertNull(funh);
 
-        model.applyDelta(delta);
+        delta.apply();
         funj = findDecl(model, "M", "j");
         assertNotNull(funj);
         assertThat(funj, instanceOf(FunctionDecl.class));
@@ -69,7 +69,7 @@ public class DeltaAddFunctionalTest extends DeltaTest {
         Decl dataY= findDecl(model, "M", "Y");
         assertNull(dataY);
 
-        model.applyDelta(delta);
+        delta.apply();
         dataX = findDecl(model, "M", "X");
         assertNotNull(dataX);
         assertThat(dataX, instanceOf(ParametricDataTypeDecl.class));
@@ -93,7 +93,7 @@ public class DeltaAddFunctionalTest extends DeltaTest {
         Decl typeY= findDecl(model, "M", "Y");
         assertNull(typeY);
 
-        model.applyDelta(delta);
+        delta.apply();
         typeY = findDecl(model, "M", "Y");
         assertNotNull(typeY);
         assertThat(typeY, instanceOf(TypeSynDecl.class));

@@ -9,6 +9,8 @@
 Model : CoreModel ::= /Product*/ ;
 CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
 
+ModuleDecl : CoreModuleDecl ::= ProductDecl* [ProductLine:LocalProductLine];
+
 // Deltas
 
 DeltaDecl ::= <Name> Param:DeltaParamDecl* [ImportedModule:DeltaAccess] ModuleModifier* ;
@@ -60,8 +62,15 @@ ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
 
 DeltaTraitModifier : Modifier ::= MethodModifier;
 
+//InterfaceTypeUse with a Product expression
+VariableInterfaceTypeUse : InterfaceTypeUse ::= ProductDecl;
+
 // Feature Configuration and Product Selection Language (CL/PSL)
 ProductLine ::= <Name> Feature* DeltaClause* ;
+
+//AppCondition is the condition od the product line
+LocalProductLine : ProductLine ::= [FeatCond:AppCond] DeltaDecl*;
+
 Feature ::= <Name> AttrAssignment*;
 
 DeltaClause ::= Deltaspec AfterDeltaID:DeltaID* [FromAppCond:AppCond] [AppCond] ;

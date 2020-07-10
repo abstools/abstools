@@ -58,7 +58,7 @@ public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void productIntersect() throws WrongProgramArgumentException {
-        Model model = assertParse("product P1 = {F1, F2, F3} && {F2, F3};");
+        Model model = assertParse("product P1 = {F1, F2, F3} /\\ {F2, F3};");
 
         model.evaluateAllProductDeclarations();
         ProductDecl p = model.findProduct("P1");
@@ -75,7 +75,7 @@ public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void productUnion() throws WrongProgramArgumentException {
-        Model model = assertParse("product P1 = {F1, F2, F3} || {F4};");
+        Model model = assertParse("product P1 = {F1, F2, F3} \\/ {F4};");
 
         model.evaluateAllProductDeclarations();
         ProductDecl p = model.findProduct("P1");
@@ -109,8 +109,8 @@ public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void productName() throws WrongProgramArgumentException {
-        Model model = assertParse("product P1 = {F1, F2, F3};"
-            + "product P2 = P1;");
+        Model model = assertParse("product P1 = {F1,F2,F3} ;"
+           + "product P2 = P1;");
 
         model.evaluateAllProductDeclarations();
         ProductDecl p = model.findProduct("P2");
@@ -147,7 +147,7 @@ public class ProductDeclarationTest extends DeltaTest {
     // @Test(expected=org.abs_models.common.WrongProgramArgumentException.class)
     @Test(expected=java.lang.RuntimeException.class)
     public void undeclaredProduct() throws WrongProgramArgumentException {
-        Model model = assertParse("product P1 = P2 && P3 || P4 || {F1, F2};");
+        Model model = assertParse("product P1 = P2 /\\ P3 \\/ P4 \\/ {F1, F2};");
 
         ProductDecl p = model.findProduct("P1");
 
@@ -193,7 +193,7 @@ public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void complexExpression() throws WrongProgramArgumentException {
-        Model model = assertParse("product P1 = {F1, F2, F3} && {F3, F4} || {F5, F6} - {F6};");
+        Model model = assertParse("product P1 = {F1, F2, F3} /\\ {F3, F4} \\/ {F5, F6} - {F6};");
 
         model.evaluateAllProductDeclarations();
         ProductDecl p = model.findProduct("P1");
@@ -210,7 +210,7 @@ public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void complexExpressionWithParenthesis() throws WrongProgramArgumentException {
-        Model model = assertParse("product P1 = {F1, F2, F3} && ({F3, F4} || {F5}) || {F6} - {F6};");
+        Model model = assertParse("product P1 = {F1, F2, F3} /\\ ({F3, F4} \\/ {F5}) \\/ {F6} - {F6};");
 
         model.evaluateAllProductDeclarations();
         ProductDecl p = model.findProduct("P1");
@@ -227,7 +227,7 @@ public class ProductDeclarationTest extends DeltaTest {
 
     @Test
     public void rightSideProductName() throws WrongProgramArgumentException {
-        Model model = assertParse("product P2(); product P3(); product P4(); product P1 = P2 && P3 || P4 || {F1, F2};");
+        Model model = assertParse("product P2(); product P3(); product P4(); product P1 = P2 /\\ P3 \\/ P4 \\/ {F1, F2};");
 
         ProductDecl p = model.findProduct("P1");
 

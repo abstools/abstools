@@ -13,13 +13,8 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.abs_models.frontend.ast.*;
 import org.junit.Test;
-
-import org.abs_models.frontend.ast.ClassDecl;
-import org.abs_models.frontend.ast.DeltaDecl;
-import org.abs_models.frontend.ast.Model;
-import org.abs_models.frontend.ast.ModifyClassModifier;
-import org.abs_models.frontend.ast.ReturnStmt;
 
 public class OriginalCallTest extends DeltaTest {
     @Test
@@ -76,8 +71,8 @@ public class OriginalCallTest extends DeltaTest {
         assertTrue(((ModifyClassModifier) delta2.getModuleModifier(0)).getNumModifier() == 1);
 
         /*Model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
-        assertTrue(delta1.getNumModuleModifier() == 2);
-        assertTrue(delta2.getNumModuleModifier() == 2);*/
+        assertTrue(delta1.getNumOOModifier() == 2);
+        assertTrue(delta2.getNumOOModifier() == 2);*/
 
         model.applyDeltas(new ArrayList<>(Arrays.asList(delta1, delta2)));
 
@@ -118,7 +113,7 @@ public class OriginalCallTest extends DeltaTest {
         Model model = assertParse("module M;"
             + "interface I {}"
             + "class C implements I { Unit m() {} Unit n() {} Unit p() {} }"
-            + "delta D;uses M;"
+            + "delta D; uses M;"
             + "modifies class C {"
             + "modifies Unit m() { original(); }"
             + "modifies Unit n() { original(); }"
