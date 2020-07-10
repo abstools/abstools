@@ -48,7 +48,9 @@ CompilationUnit
 ModuleDeclaration
     : 'module' name=QualifiedTypeIdentifier ';'
         (exports+=ModuleExport | imports+=ModuleImport)*
+        (productDecls+=ProductDeclaration)*
         (declarations+=Declaration)*
+        (productLineDecl=LocalProductLineDeclaration)?
         ( mainblockAnnotations=Annotations main?='{' (mainblockStatements+=Statement)* '}')?
     ;
 
@@ -136,7 +138,7 @@ TraitOperation
     ;
 
 InterfaceDeclaration
-    : 'interface' name=QualifiedTypeIdentifier
+    : (base?='base')? (relative?='relative')? 'interface' name=QualifiedTypeIdentifier
         ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
         '{' (methods+=MethodSignature ';' )* '}'
     ;
@@ -147,7 +149,7 @@ MethodSignature
     ;
 
 ClassDeclaration
-    : 'class' name=QualifiedTypeIdentifier
+    : (base?='base')? (relative?='relative')?'class' name=QualifiedTypeIdentifier
         ( '(' ( arguments+=Parameter (',' arguments+=Parameter)* )? ')' )?
         ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
         '{'
@@ -358,7 +360,7 @@ UnaryExpression returns Expression
 AwaitExpression returns Expression : {AwaitExpression} 'await' guard=Guard ;
 
 NewExpression returns Expression
-    : {NewExpression} 'new' (local?='local')? class=[ClassDeclaration|QualifiedTypeIdentifier] '('  (arguments+=Expression ( ',' arguments+=Expression)* )? ')'
+    : {NewExpression} 'new' (local?='local')? class=[ClassDeclaration|QualifiedTypeIdentifier] '('  (arguments+=Expression ( ',' arguments+=Expression)* )? ')' ( 'with' productExpr=ProductExpression )?
     ;
 
 OriginalCallExpression returns Expression
@@ -431,6 +433,7 @@ TypeUse : annotations=Annotations type=TypeUseNoAnnotations ;
 TypeUseNoAnnotations
     : typename=QualifiedTypeIdentifier
         ('<' parameters+=TypeUse (',' parameters+=TypeUse)* '>')?
+        ('with' producExpr=ProductExpression)?
     ;
 
 // Terminals
@@ -495,7 +498,11 @@ AnyIdentifier returns ecore::EString
     ;
 
 // ========== end of Core ABS ==========
-
+//TypeUse with ProductExpression
+InterfaceTypeIdentifier
+	: name=QualifiedTypeIdentifier ('with' product=ProductExpression)?
+	;
+	
 // Deltas
 
 DeltaDeclaration
@@ -604,6 +611,14 @@ DeltaClauseParam
 
 DeltaClauseApplicationClause : DeltaClauseApplicationClauseOr ;
 
+DeltaClauseApplicationClauseBiImpl returns DeltaClauseApplicationClause
+    :  DeltaClauseApplicationClauseImpl ({DeltaClauseApplicationClauseBiImpl.left=current} '<->' right=DeltaClauseApplicationClauseImpl)*
+    ;
+
+DeltaClauseApplicationClauseImpl returns DeltaClauseApplicationClause
+    :  DeltaClauseApplicationClauseOr ({DeltaClauseApplicationClauseImpl.left=current} '->' right=DeltaClauseApplicationClauseOr)*
+    ;
+
 DeltaClauseApplicationClauseOr returns DeltaClauseApplicationClause
     : DeltaClauseApplicationClauseAnd ({DeltaClauseApplicationClauseOr.left = current} '||' right=DeltaClauseApplicationClauseAnd)* ;
 
@@ -615,7 +630,43 @@ DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
     | '(' paren=DeltaClauseApplicationClause ')'
     | featureName=TYPE_IDENTIFIER
     ;
+    
+//Local product lines
+LocalProductLineDeclaration
+    : 'features' features+=Feature (',' features+=Feature)* ('with' cond=DeltaClauseApplicationClause )?';'
+      (deltas+=LocalDeltaDeclaration)+
+      (activationConditions+=ActivationCondition)*
+      (applicationOrder+=ApplicationOrder)*
+    ;
 
+Feature
+    : id=TYPE_IDENTIFIER;
+
+LocalDeltaDeclaration
+    : 'delta'
+      name=TYPE_IDENTIFIER ';'
+      (ops+=DeltaModuleModifier)*
+    ;
+
+ConfigKnowledge
+    :  (activationConditions+=ActivationCondition)*
+       (applicationOrder+=ApplicationOrder)*
+    ;
+
+ActivationCondition
+    :  'delta' deltaName=TYPE_IDENTIFIER
+    ('after' afterIds+=TYPE_IDENTIFIER (',' afterIds+=TYPE_IDENTIFIER)*)?
+    ('when' cond=DeltaClauseApplicationClause)? ';'
+    ;
+
+ApplicationOrder
+    : order+=DeltaSet ('<' order+=DeltaSet)+ ';'
+    ;
+
+DeltaSet
+	: elems+=TYPE_IDENTIFIER (',' elems+=TYPE_IDENTIFIER)*
+	;
+	
 // Products
 
 ProductDeclaration
