@@ -237,7 +237,7 @@ aspect ProductFlattener {
      * Simplifications before product line type checking
      */
     public void Model.collapseTraitModifiers() {
-        for (DeltaDecl delta : getDeltaDecls()) {
+        for (DeltaDecl delta : getAllDeltaDecls()) {
             delta.collapseTraitModifiers();
         }
         flushTreeCache();

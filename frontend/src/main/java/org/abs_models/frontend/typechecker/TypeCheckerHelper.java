@@ -273,6 +273,16 @@ public class TypeCheckerHelper {
                 dcs.add(dc);
             }
         }
+        if (dcs.isEmpty()) {
+            for (ProductLine pl : m.getLocalProductLines()) {
+                for (int i = 0; i < pl.getNumDeltaClause(); i++) {
+                    DeltaClause dc = pl.getDeltaClause(i);
+                    if (dc.refersTo(f)) {
+                        dcs.add(dc);
+                    }
+                }
+            }
+        }
         return dcs;
     }
 
