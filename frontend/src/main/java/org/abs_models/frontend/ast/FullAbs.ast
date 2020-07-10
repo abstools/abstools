@@ -8,6 +8,7 @@
 // Hook into CoreAbs.ast definitions
 Model : CoreModel ::= /Product*/ ;
 CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
+ModuleDecl : CoreModuleDecl ::= ProductDecl* [ProductLine:LocalProductLine];
 
 // Deltas
 
@@ -59,6 +60,13 @@ RemoveInterfaceModifier : InterfaceModifier ::= <Name>;
 ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
 
 DeltaTraitModifier : Modifier ::= MethodModifier;
+
+//InterfaceTypeUse with a product expression
+VariableInterfaceTypeUse : InterfaceTypeUse ::= ProductDecl;
+
+//AppCondition is the condition of the product line
+LocalProductLine : ProductLine ::= [FeatCond:AppCond] DeltaDecl*;
+
 
 // Feature Configuration and Product Selection Language (CL/PSL)
 ProductLine ::= <Name> Feature* DeltaClause* ;

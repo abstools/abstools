@@ -15,7 +15,8 @@ abstract CoreModel ::= CompilationUnit* ;
 
 abstract CoreCompilationUnit ::= <Name> ModuleDecl* ;
 
-ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
+abstract CoreModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
+
 
 abstract Import;
 NamedImport : Import ::= Name* ;
@@ -50,12 +51,12 @@ ParametricPartialFunctionDecl : PartialFunctionDecl ::= Annotation* TypeParamete
 
 UnknownDecl: Decl; // Unknown declarations
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
-ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* TraitUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl*;
+ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* TraitUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl* <isBase:boolean> <isRelative:boolean> ;
 FunctionDecl: BehaviorDecl ::= Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 DataConstructor : Decl ::= <Name> ConstructorArg:ConstructorArg* ;
 ExceptionConstructor : DataConstructor ;
 ParametricFunctionDecl : FunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* ;
-InterfaceDecl: TypeDecl ::= Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
+InterfaceDecl: TypeDecl ::= Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig* <isBase:boolean>  <isRelative:boolean> ;
 DataTypeDecl: TypeDecl ::= Annotation* DataConstructor* ;
 
 ExceptionDecl : DataTypeDecl ;
@@ -220,7 +221,7 @@ UnderscorePattern: Pattern;
 Local ; // just the local marker
 
 // Expressions with side effects.
-NewExp: EffExp ::= <ClassName> Param:PureExp* [Local] ;
+NewExp: EffExp ::= <ClassName> Param:PureExp* [Local] [ProductDecl] ;
 abstract Call: EffExp ::= Callee:PureExp <Method> Param:PureExp*;
 SyncCall: Call;
 AsyncCall: Call;
