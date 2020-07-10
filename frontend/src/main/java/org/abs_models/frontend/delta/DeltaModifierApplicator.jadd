@@ -130,6 +130,7 @@ aspect DeltaModifierApplicator {
         ClassDecl cls = getClassDecl().treeCopyNoTransform();
         cls.setFileName(getClassDecl().getFileName());
         cls.setName(getSimpleName());
+        cls.setAddedInDelta(getDelta().isLocal());
         module.getDecls().addChild(cls);
     }
 
@@ -181,6 +182,7 @@ aspect DeltaModifierApplicator {
         InterfaceDecl decl = getInterfaceDecl().treeCopyNoTransform();
         decl.setFileName(getInterfaceDecl().getFileName());
         decl.setName(getSimpleName());
+        decl.setAddedInDelta(getDelta().isLocal());
         module.getDecls().addChild(decl);
     }
     public void ModifyInterfaceModifier.apply() throws DeltaModellingException {
@@ -296,11 +298,13 @@ aspect DeltaModifierApplicator {
      * if qualified {@code =>} easy; if unqualified {@code =>} look in delta's 'uses' list.
      */
     public ModuleDecl ModuleModifier.findModule() throws DeltaModellingException {
-        String moduleid;
+        String moduleid = "";
         Name name = new Name(getName());
         if (name.isSimple()) {
             if (getDelta().hasImportedModule()) {
                 moduleid = getDelta().getImportedModule().getModuleName();
+            } else if (getDelta().isLocal()) {
+               return getDelta().getModuleDecl();
             } else {
                 throw new DeltaModellingException(getDelta(),"Unqualified name of modified entity requires "
                         + "a \'uses\' statement inside the delta, to determine the module to be modified.");
@@ -417,8 +421,24 @@ aspect DeltaModifierApplicator {
                     " wants to remove method signature [" + mysig + "], which was not found in interface [" + iface.getQualifiedName() + "].");
     }
 
+    private boolean Decl.addedInDelta = false;
+    private boolean Decl.addedInLocalDelta = false;
+    public void Decl.setAddedInDelta(boolean localDelta) {
+        addedInDelta = true;
+        addedInLocalDelta = localDelta;
+    }
+    public boolean Decl.getAddedInDelta() {
+         return addedInDelta;
+    }
+    public boolean Decl.getAddedInLocalDelta() {
+        return addedInLocalDelta;
+    }
 
 
-
+    public void DeltaDecl.apply() throws DeltaModellingException {
+        for (ModuleModifier mod : getModuleModifiers()) {
+            mod.apply();
+        }
+    }
 
 }

@@ -152,7 +152,16 @@ public enum ErrorMessage {
     INVALID_PRODUCT("Product %s does not satisfy the feature model. Constraints failed: %s."),
     MATCHING_NOT_ALLOWED_IN_CATCH("Non-free pattern variable %s (not allowed in catch branches)."),
     DUPLICATE_INTERFACE_IMPLEMENTATION("Class %s already implements interface %s."),
-    MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s.")
+    MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s."),
+    MISSING_BASE_IN_CLASS("The class %s modified in delta %s in %s is not declared as base."),
+    MISSING_BASE_IN_INTERFACE("The interface %s modified in delta %s in %s is not declared as base."),
+    MISSING_RELATIVE_IN_CLASS("The class %s references an object modified by a delta. The class should be \"relative\"."),
+    MISSING_RELATIVE_IN_INTERFACE("The interface %s references an object modified by a delta. The interface should be \"relative\"."),
+    NO_PRODUCTLINE_FOR_PRODUCT( "Error within product %s: Set of features cannot be found within a single productline"),
+    INVALID_PRODUCT_LOCAL("Set of features %s does not satisfy the constraint of the productline"),
+    UNNECESSARY_BASE_DECL("%s is declared as base but is not modified by a delta"),
+    UNNECESSARY_RELATIVE_DECL("%s is declared as relative but does not reference an object modified by a delta"),
+
     ;
 
     private String pattern;

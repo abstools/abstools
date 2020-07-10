@@ -83,6 +83,25 @@ aspect TypeResolution {
         return ! getDefinedNames().getAllNames(name).isEmpty();
     }
 
+    syn lazy Collection<DeltaDecl> ModuleDecl.getDeltaDecls() {
+        ArrayList<DeltaDecl> res = new ArrayList<>();
+        if (hasProductLine()) {
+            for (DeltaDecl d : getProductLine().getDeltaDecls()) {
+                res.add(d);
+            }
+        }
+        return res;
+    }
+    syn lazy Map<String,DeltaDecl> LocalProductLine.getDeltaDeclsMap() {
+        Map<String,DeltaDecl> res = new HashMap<String,DeltaDecl>();
+
+        for (DeltaDecl d : getDeltaDecls()) {
+            Object dupe = res.put(d.getName(),d);
+            assert dupe == null : "dupe " + d.getName();
+        }
+        return res;
+    }
+
     syn lazy Collection<ModuleDecl> Model.getModuleDecls() {
         ArrayList<ModuleDecl> res = new ArrayList<ModuleDecl>();
         for (CompilationUnit u : getCompilationUnits()) {
@@ -103,6 +122,15 @@ aspect TypeResolution {
         return res;
     }
 
+    syn lazy Collection<DeltaDecl> Model.getAllDeltaDecls() {
+        ArrayList<DeltaDecl> res = new ArrayList<DeltaDecl>(getDeltaDecls());
+        for (ModuleDecl mod : getModuleDecls()) {
+            for (DeltaDecl d : mod.getDeltaDecls()) {
+                res.add(d);
+            }
+        }
+        return res;
+    }
     syn lazy Collection<DeltaDecl> Model.getDeltaDecls() {
         ArrayList<DeltaDecl> res = new ArrayList<DeltaDecl>();
         for (CompilationUnit u : getCompilationUnits()) {
@@ -128,11 +156,20 @@ aspect TypeResolution {
         return getDeltaDeclsMap().get(name);
     }
 
+    syn DeltaDecl ModuleDecl.findDelta(String name) {
+        return hasProductLine() ? getProductLine().getDeltaDeclsMap().get(name) : null;
+    }
+
     syn lazy Collection<ProductDecl> Model.getProductDecls() {
         ArrayList<ProductDecl> res = new ArrayList<ProductDecl>();
         for (CompilationUnit u : getCompilationUnits()) {
-            for (ProductDecl p : u.getProductDecls()) {
-                res.add(p);
+            for (ProductDecl product : u.getProductDecls()) {
+                res.add(product);
+            }
+            for (ModuleDecl m : u.getModuleDecls()) {
+            	for (ProductDecl p : m.getProductDecls()) {
+            		res.add(p);
+            	}
             }
         }
         return res;
@@ -144,6 +181,24 @@ aspect TypeResolution {
                 return u.getProductLine();
         }
         return null;
+    }
+
+    syn lazy Collection<LocalProductLine> Model.getLocalProductLines() {
+    	ArrayList<LocalProductLine> res = new ArrayList<LocalProductLine>();
+        for (ModuleDecl m : getModuleDecls()) {
+            if (m.hasProductLine())
+                res.add(m.getProductLine());
+        }
+        return res;
+    }
+    syn lazy Collection<ProductLine> Model.getAllProductLines() {
+        ArrayList<ProductLine> res = new ArrayList<ProductLine>();
+        ProductLine pl = getProductLine();
+        if (pl != null) {
+            res.add(pl);
+        }
+        res.addAll(getLocalProductLines());
+        return res;
     }
 
     syn lazy MainBlock Model.getMainBlock() {
@@ -180,6 +235,7 @@ aspect TypeResolution {
     }
 
     syn boolean Model.hasProductLine() = getProductLine() != null;
+    syn boolean Model.hasLocalProductLines() = !getLocalProductLines().isEmpty();
     syn boolean Model.hasMainBlock() = getMainBlock() != null;
     syn lazy boolean Model.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
     syn boolean CompilationUnit.hasMainBlock() = getMainBlock() != null;
@@ -203,6 +259,177 @@ aspect TypeResolution {
         return null;
     }
 
+    private HashMap<VariableInterfaceTypeUse, NewExp> Model.ituNewExpMap = new HashMap<>();
+    private HashMap<NewExp, Set<InterfaceTypeUse>> Model.newExpItuMap = new HashMap<>();
+    private HashMap<VariableInterfaceTypeUse, Set<InterfaceTypeUse>> Model.ituMap = new HashMap<>();
+    public HashMap<VariableInterfaceTypeUse, NewExp> Model.getItuAndNewExpMap() {
+        return ituNewExpMap;
+    }
+    public HashMap<NewExp,  Set<InterfaceTypeUse>> Model.getNewExpItuMap() {
+        return newExpItuMap;
+    }
+    public HashMap<VariableInterfaceTypeUse, Set<InterfaceTypeUse>> Model.getItuMap() {
+        return ituMap;
+    }
+    public void Decl.getInterfaceTypeUseAndExpsWithProductDecl(HashSet<VariableInterfaceTypeUse> typeUses, HashSet<NewExp> exps) { }
+
+    HashSet<VariableInterfaceTypeUse> Model.interfaceTypeUseWithProductDecl = new HashSet<>();
+    HashSet<NewExp> Model.newExpsWithProductDecl  = new HashSet<>();
+
+    private void Model.getInterfaceTypeUseAndExpsWithProductDecl() {
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ModuleDecl m : u.getModuleDecls()) {
+                if (m.hasBlock()) {
+                    m.getBlock().getInterfaceTypeUseAndExpsWithProductDecl(interfaceTypeUseWithProductDecl,
+                                newExpsWithProductDecl, ituNewExpMap, newExpItuMap, ituMap);
+                }
+                for (Decl d : m.getDecls()) {
+                    d.getInterfaceTypeUseAndExpsWithProductDecl(interfaceTypeUseWithProductDecl, newExpsWithProductDecl);
+                }
+            }
+        }
+    }
+
+    //Look for Expr with a product expression in a block
+    void Block.getInterfaceTypeUseAndExpsWithProductDecl(HashSet<VariableInterfaceTypeUse> typeUses, HashSet<NewExp> exps,
+     HashMap<VariableInterfaceTypeUse, NewExp> ituNewExpMap, HashMap<NewExp,  Set<InterfaceTypeUse>> newExpItuMap,
+      HashMap<VariableInterfaceTypeUse,  Set<InterfaceTypeUse>> ituMap) {
+        Exp e = null;
+        Access tu = null;
+
+        for (Stmt stmt : getStmts()) {
+            if (stmt instanceof VarDeclStmt) {
+                VarDecl var = ((VarDeclStmt) stmt).getVarDecl();
+
+                tu = (TypeUse) var.getAccess();
+                if (var != null && var.hasInitExp()) {
+                    e = var.getInitExp();
+                }
+            } else if (stmt instanceof AssignStmt) {
+                VarOrFieldDecl var = ((AssignStmt) stmt).getVar().getDecl();
+                if (var instanceof TypedVarOrFieldDecl) {
+                   tu = ((TypedVarOrFieldDecl) var).getAccess();
+                   e = ((AssignStmt) stmt).getValue();
+                }
+            } else if (stmt instanceof ExpressionStmt) {
+                e = ((ExpressionStmt) stmt).getExp();
+            }  else if (stmt instanceof ReturnStmt) {
+                e = ((ReturnStmt) stmt).getRetExp();
+                tu = e.getContextMethod().getMethodSig().getReturnType();
+            }
+            if (tu instanceof VariableInterfaceTypeUse) {
+                typeUses.add((VariableInterfaceTypeUse) tu);
+                if (e instanceof NewExp && ! ((NewExp) e).hasProductDecl()) {
+                    ituNewExpMap.put((VariableInterfaceTypeUse) tu, (NewExp) e);
+                } else if ( e instanceof VarOrFieldUse) {
+                    VarOrFieldDecl d = ((VarOrFieldUse) e).getDecl();
+                    if (d instanceof TypedVarOrFieldDecl)
+                        if ( ((TypedVarOrFieldDecl) d).getAccess() instanceof InterfaceTypeUse) {
+                            if (!ituMap.containsKey(tu)) {
+                                ituMap.put( (VariableInterfaceTypeUse) tu, new HashSet<InterfaceTypeUse>());
+                            }
+                            ituMap.get(tu).add((InterfaceTypeUse) ((TypedVarOrFieldDecl) d).getAccess());
+                        }
+                }
+            }
+            if (e instanceof NewExp && ((NewExp) e).hasProductDecl()) {
+                exps.add((NewExp)e);
+                if (tu instanceof InterfaceTypeUse && !(tu instanceof VariableInterfaceTypeUse)) {
+                    if (! newExpItuMap.containsKey(e)) {
+                        newExpItuMap.put( (NewExp) e, new HashSet<InterfaceTypeUse>());
+                    }
+                    newExpItuMap.get(e).add( (InterfaceTypeUse) tu);
+                }
+            }
+            if (!(tu instanceof VariableInterfaceTypeUse) && e instanceof VarOrFieldUse) {
+                VarOrFieldDecl d = ((VarOrFieldUse) e).getDecl();
+                if (d instanceof TypedVarOrFieldDecl) {
+                    if ( ((TypedVarOrFieldDecl) d).getAccess() instanceof VariableInterfaceTypeUse) {
+                        if (! ituMap.containsKey(((TypedVarOrFieldDecl) d).getAccess())) {
+                            ituMap.put( (VariableInterfaceTypeUse) ((TypedVarOrFieldDecl) d).getAccess(), new HashSet<InterfaceTypeUse>());
+                        }
+                        ituMap.get(((TypedVarOrFieldDecl) d).getAccess()).add((InterfaceTypeUse) tu);
+                    } else {
+                        for (Map.Entry<VariableInterfaceTypeUse, Set<InterfaceTypeUse>> entry : ituMap.entrySet()) {
+                            if ( entry.getValue().contains(((TypedVarOrFieldDecl) d).getAccess()))
+                                entry.getValue().add((InterfaceTypeUse) tu);
+                        }
+                        for (Map.Entry<NewExp, Set<InterfaceTypeUse>> entry : newExpItuMap.entrySet()) {
+                            if ( entry.getValue().contains(((TypedVarOrFieldDecl) d).getAccess()))
+                                entry.getValue().add((InterfaceTypeUse) tu);
+                        }
+                    }
+                }
+            }
+            tu = null;
+            e = null;
+        }
+    }
+
+    public void InterfaceDecl.getInterfaceTypeUseAndExpsWithProductDecl(HashSet<VariableInterfaceTypeUse> typeUses, HashSet<NewExp> exps) {
+
+        getExtendedInterfaceUses().forEach(itu -> {
+                                    if (itu instanceof VariableInterfaceTypeUse)
+                                        typeUses.add((VariableInterfaceTypeUse) itu); });
+
+        for (MethodSig method : getBodys()) {
+            method.getInterfaceTypeUseAndExpsWithProductDecl(typeUses);
+        }
+    }
+
+
+    public void ClassDecl.getInterfaceTypeUseAndExpsWithProductDecl(HashSet<VariableInterfaceTypeUse> typeUses, HashSet<NewExp> exps){
+        getImplementedInterfaceUseList().forEach(ii -> {
+            if (ii instanceof VariableInterfaceTypeUse)
+                  typeUses.add((VariableInterfaceTypeUse) ii);
+        });
+        getParams().forEach(param -> {
+            if (param.getAccess() instanceof VariableInterfaceTypeUse)
+                typeUses.add((VariableInterfaceTypeUse) param.getAccess());});
+
+        for (FieldDecl field : getFields()) {
+            if (field.getAccess() instanceof VariableInterfaceTypeUse)
+                typeUses.add((VariableInterfaceTypeUse) field.getAccess());
+            else if (field.getAccess() instanceof InterfaceTypeUse && field.getInitExp() instanceof VarOrFieldUse) {
+                VarOrFieldDecl d = ((VarOrFieldUse) field.getInitExp()).getDecl();
+                if (d instanceof TypedVarOrFieldDecl && ((TypedVarOrFieldDecl) d).getAccess() instanceof VariableInterfaceTypeUse) {
+                    if ( ! getModel().getItuMap().containsKey(((TypedVarOrFieldDecl) d).getAccess())) {
+                        getModel().getItuMap().put( (VariableInterfaceTypeUse) ((TypedVarOrFieldDecl) d).getAccess(), new HashSet<InterfaceTypeUse>());
+                    }
+                    getModel().getItuMap().get(((TypedVarOrFieldDecl) d).getAccess()).add((InterfaceTypeUse) (InterfaceTypeUse) field.getAccess());
+                }
+            }
+        }
+
+        for (MethodImpl method : getMethods()) {
+            method.getMethodSig().getInterfaceTypeUseAndExpsWithProductDecl(typeUses);
+            method.getBlock().getInterfaceTypeUseAndExpsWithProductDecl(typeUses, exps, getModel().getItuAndNewExpMap(),
+                                getModel().getNewExpItuMap(), getModel().getItuMap());
+        }
+
+        if (hasInitBlock())
+            getInitBlock().getInterfaceTypeUseAndExpsWithProductDecl(typeUses, exps, getModel().getItuAndNewExpMap(),
+                                getModel().getNewExpItuMap(), getModel().getItuMap());
+    }
+    public void MethodSig.getInterfaceTypeUseAndExpsWithProductDecl(HashSet<VariableInterfaceTypeUse> typeUses) {
+        if(getReturnType() instanceof VariableInterfaceTypeUse)
+            typeUses.add((VariableInterfaceTypeUse) getReturnType());
+
+        getParams().forEach(p -> {
+            if (p.getAccess() instanceof VariableInterfaceTypeUse)
+            typeUses.add((VariableInterfaceTypeUse) p.getAccess());});
+
+    }
+    syn lazy Collection<ProductDecl> Model.getProductDeclsFromExps() {
+        ArrayList<ProductDecl> res = new ArrayList<>();
+        if (interfaceTypeUseWithProductDecl.isEmpty() && newExpsWithProductDecl.isEmpty()) {
+            getInterfaceTypeUseAndExpsWithProductDecl();
+        }
+        interfaceTypeUseWithProductDecl.forEach(itu -> res.add(itu.getProductDecl()));
+        newExpsWithProductDecl.forEach(exp -> res.add(exp.getProductDecl()));
+
+        return res;
+    }
 
     inh ModuleDecl Decl.getModuleDecl();
     eq ModuleDecl.getDecl().getModuleDecl() = this;

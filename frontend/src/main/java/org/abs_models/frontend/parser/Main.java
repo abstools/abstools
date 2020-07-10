@@ -317,6 +317,17 @@ public class Main {
                 m.flattenForProduct(arguments.product);
             }
         }
+        SemanticConditionList plErrors = m.getProductLineErrors();
+
+        if (plErrors.containsErrors()) {
+            for (SemanticCondition error : plErrors) {
+                // Print both errors and warnings
+                System.err.println(error.getHelpMessage());
+                System.err.flush();
+            }
+            return;
+        }
+        m.flattenforLocalProducts();
 
         if (arguments.dump) {
             m.dumpMVars();

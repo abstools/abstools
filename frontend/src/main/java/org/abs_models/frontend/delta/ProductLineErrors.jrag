@@ -1,0 +1,207 @@
+aspect ProductLineErrors {
+   public boolean Model.hasProductLineErrors() {
+       return getProductLineErrors().containsErrors();
+   }
+
+   syn lazy SemanticConditionList Model.getProductLineErrors() {
+       SemanticConditionList res = new SemanticConditionList();
+       getProductLineErrors(res);
+       return res;
+   }
+   public void Model.getProductLineErrors(SemanticConditionList errors) {
+       for (ModuleDecl module : getModuleDecls()) {
+            if (module.hasProductLine()) {
+               module.getProductLineErrors(errors);
+            }
+        }
+   }
+
+    public void ModuleDecl.getProductLineErrors(SemanticConditionList errors) {
+        // objToDeltaMap's keySet will contain the decls that **should** be base and are not added by a delta
+         HashMap<String, Set<String>> objToDeltaMap = new HashMap<>();
+
+         // variables will contain all decl modified in a delta. This is used to check relative attribute of decls modified in a delta
+         Set<String> variables = new HashSet<>();
+        for (DeltaDecl delta : getProductLine().getDeltaDecls()) {
+            for (ModuleModifier mod : delta.getModuleModifiers()) {
+                if (mod instanceof ClassModifier) {
+                    String name  = ((ClassModifier) mod).getClassDecl().getName();
+                    variables.add(name);
+                    if ( ! (mod instanceof AddClassModifier)) {
+                        if (! objToDeltaMap.containsKey(name)) {
+                            objToDeltaMap.put(name, new HashSet<>());
+                       }
+                       objToDeltaMap.get(name).add(delta.getName());
+                    }
+                } else if (mod instanceof InterfaceModifier) {
+                    String name  = ((InterfaceModifier) mod).getInterfaceDecl().getName();
+                    variables.add(name);
+                    if ( !(mod instanceof AddInterfaceModifier)) {
+                        if (! objToDeltaMap.containsKey(name)) {
+                            objToDeltaMap.put(name, new HashSet<>());
+                        }
+                        objToDeltaMap.get(name).add(delta.getName());
+                    }
+
+                }
+            }
+        }
+
+        for (DeltaDecl delta : getProductLine().getDeltaDecls()) {
+            for (ModuleModifier mod : delta.getModuleModifiers()) {
+                Decl decl = null;
+                boolean referencesVariable = false;
+                boolean relative = true;
+                if (mod instanceof ModifyClassModifier) {
+                    decl = ((ClassModifier) mod).getClassDecl();
+                    relative = ((ClassDecl) decl).getisRelative();
+                    referencesVariable = ((ModifyClassModifier) mod).referencesBaseDecl(variables);
+
+                } else if (mod instanceof ModifyInterfaceModifier) {
+                    decl = ((InterfaceModifier) mod).getInterfaceDecl();
+                    relative = ((InterfaceDecl) decl).getisRelative();
+                    referencesVariable = ((ModifyInterfaceModifier) mod).referencesBaseDecl(variables);
+                }
+                if (decl != null && referencesVariable && ! relative) {
+                    errors.add(new SemanticError( decl, decl instanceof ClassDecl ? ErrorMessage.MISSING_RELATIVE_IN_CLASS:
+                                ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, decl.getName()));
+                } else if (decl != null && !referencesVariable && relative) {
+                    errors.add(new SemanticWarning( decl, ErrorMessage.UNNECESSARY_RELATIVE_DECL, decl.getName()));
+                }
+            }
+        }
+
+        for (Decl decl : getDecls()) {
+            decl.getProductLineError(errors, objToDeltaMap);
+        }
+    }
+
+    public void Decl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap){}
+    public void InterfaceDecl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap) {
+        if ( getisBase() && !objToDeltaMap.containsKey(getName())){
+            errors.add(new SemanticWarning( this, ErrorMessage.UNNECESSARY_BASE_DECL, getName()));
+        } else if (! getisBase() && objToDeltaMap.containsKey(getName())) {
+            errors.add( new SemanticError(this, ErrorMessage.MISSING_BASE_IN_INTERFACE, getName(),
+                                            StringUtils.join(",", objToDeltaMap.get(getName())) , getModuleDecl().getName()));
+        }
+        if (!getisRelative()) {
+            for (InterfaceTypeUse itu : getExtendedInterfaceUses()){
+                if (objToDeltaMap.containsKey(itu.getName()))
+                    errors.add( new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, getName(),
+                                                                            getModuleDecl().getName()));
+
+            }
+            for (MethodSig method : getBodys()) {
+                if (method.hasProductLineError(objToDeltaMap.keySet())) {
+                    errors.add( new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, getName(),
+                                                                           getModuleDecl().getName()));
+
+                }
+            }
+        }
+    }
+    public void ClassDecl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap) {
+        if ( getisBase()) {
+            if (!objToDeltaMap.containsKey(getName())){
+                errors.add(new SemanticWarning( this, ErrorMessage.UNNECESSARY_BASE_DECL, getName()));
+            }
+        } else if (! getisBase() && objToDeltaMap.containsKey(getName())) {
+            errors.add( new SemanticError(this, ErrorMessage.MISSING_BASE_IN_CLASS, getName(),
+                                                StringUtils.join(",", objToDeltaMap.get(getName())) , getModuleDecl().getName()));
+        }
+
+        boolean referencesBase = referencesBaseDecl(objToDeltaMap.keySet());
+        if (getisRelative()) {
+            if (!referencesBase) {
+                    errors.add(new SemanticWarning(this, ErrorMessage.UNNECESSARY_RELATIVE_DECL, getName()));
+            }
+        } else if (referencesBase) {
+                errors.add(new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_CLASS,
+                                              getName(), getModuleDecl().getName()));
+        }
+    }
+
+    public boolean ClassDecl.referencesBaseDecl(java.util.Set<String> baseDecls){
+        for (InterfaceTypeUse itu : getImplementedInterfaceUses()){
+         if (baseDecls.contains(itu.getName()))
+            return true;
+        }
+        for (ParamDecl param : getParams()) {
+            if (param.getAccess() instanceof TypeUse &&
+                        baseDecls.contains(((TypeUse) param.getAccess()).getName()))
+                return true;
+        }
+        for (FieldDecl field : getFields()) {
+             if (field.getAccess() instanceof TypeUse &&
+              baseDecls.contains(((TypeUse) field.getAccess()).getName()))
+                return true;
+        }
+        for (MethodImpl method : getMethods()) {
+            if (method.hasProductLineError(baseDecls))
+                return true;
+        }
+        return false;
+    }
+     public boolean MethodSig.hasProductLineError(java.util.Set<String> baseDecls) {
+        if (getReturnType() instanceof TypeUse && baseDecls.contains(((TypeUse) getReturnType()).getName()))
+            return true;
+        for (ParamDecl param : getParams()) {
+            if (param.getAccess() instanceof TypeUse &&
+                baseDecls.contains(((TypeUse) param.getAccess()).getName()))
+                return true;
+        }
+        return false;
+     }
+
+    public boolean MethodImpl.hasProductLineError(java.util.Set<String> baseDecls) {
+        if (getMethodSig().hasProductLineError(baseDecls))
+            return true;
+        Exp e = null;
+        for (Stmt stmt : getBlock().getStmts()) {
+            if (stmt instanceof VarDeclStmt) {
+                VarDecl var = ((VarDeclStmt) stmt).getVarDecl();
+                if (var != null && var.getAccess() instanceof TypeUse &&
+                        baseDecls.contains(((TypeUse)var.getAccess()).getName())) {
+                    return true;
+                 }
+                if (var != null && var.hasInitExp()) {
+                     e = var.getInitExp();
+                }
+            } else if (stmt instanceof ExpressionStmt) {
+                e = ((ExpressionStmt) stmt).getExp();
+            }  else if (stmt instanceof ReturnStmt) {
+                e = ((ReturnStmt) stmt).getRetExp();
+            }
+            if (e != null && e instanceof NewExp && baseDecls.contains(((NewExp)e).getClassName())){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean ModifyClassModifier.referencesBaseDecl(java.util.Set<String> baseDecls) {
+        for (Modifier m : getModifiers()) {
+            if (m instanceof AddFieldModifier) {
+                FieldDecl field = ((AddFieldModifier)m).getFieldDecl();
+                if (field != null && field.getAccess() instanceof TypeUse &&
+                          baseDecls.contains(((TypeUse) field.getAccess()).getName()))
+                return true;
+            } else if (m instanceof DeltaTraitModifier) {
+                MethodModifier mm = ((DeltaTraitModifier)m).getMethodModifier();
+                if ((mm instanceof ModifyMethodModifier &&
+                 ((ModifyMethodModifier)mm).getMethodImpl().hasProductLineError(baseDecls))
+                 || (mm instanceof AddMethodModifier && ((AddMethodModifier) mm).getMethodImpl().hasProductLineError(baseDecls)))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean ModifyInterfaceModifier.referencesBaseDecl(java.util.Set<String> baseDecls) {
+        for ( MethodSigModifier msm : getMethodSigModifiers()) {
+            if (msm instanceof AddMethodSigModifier && ((AddMethodSigModifier) msm).getMethodSig().hasProductLineError(baseDecls))
+                return true;
+        }
+        return false;
+    }
+}
