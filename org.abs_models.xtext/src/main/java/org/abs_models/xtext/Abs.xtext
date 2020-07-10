@@ -690,7 +690,7 @@ ProductExprIntersect returns ProductExpression
     ;
 
 ProductExprPrimary returns ProductExpression
-    : '{' features+=ProductFeature (',' features+=ProductFeature)* '}'
+    : '{' (features+=ProductFeature (',' features+=ProductFeature)*)? '}'
     | prodname=TYPE_IDENTIFIER
     | '(' paren=ProductExpression ')'
     ;

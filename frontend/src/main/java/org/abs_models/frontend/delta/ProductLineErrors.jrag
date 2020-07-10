@@ -54,12 +54,12 @@ aspect ProductLineErrors {
                 boolean relative = true;
                 if (mod instanceof ModifyClassModifier) {
                     decl = ((ClassModifier) mod).getClassDecl();
-                    relative = ((ClassDecl) decl).getisRelative();
+                    relative = ((ClassDecl) decl).getRelative();
                     referencesVariable = ((ModifyClassModifier) mod).referencesBaseDecl(variables);
 
                 } else if (mod instanceof ModifyInterfaceModifier) {
                     decl = ((InterfaceModifier) mod).getInterfaceDecl();
-                    relative = ((InterfaceDecl) decl).getisRelative();
+                    relative = ((InterfaceDecl) decl).getRelative();
                     referencesVariable = ((ModifyInterfaceModifier) mod).referencesBaseDecl(variables);
                 }
                 if (decl != null && referencesVariable && ! relative) {
@@ -78,13 +78,13 @@ aspect ProductLineErrors {
 
     public void Decl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap){}
     public void InterfaceDecl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap) {
-        if ( getisBase() && !objToDeltaMap.containsKey(getName())){
+        if ( getBase() && !objToDeltaMap.containsKey(getName())){
             errors.add(new SemanticWarning( this, ErrorMessage.UNNECESSARY_BASE_DECL, getName()));
-        } else if (! getisBase() && objToDeltaMap.containsKey(getName())) {
+        } else if (! getBase() && objToDeltaMap.containsKey(getName())) {
             errors.add( new SemanticError(this, ErrorMessage.MISSING_BASE_IN_INTERFACE, getName(),
                                             StringUtils.join(",", objToDeltaMap.get(getName())) , getModuleDecl().getName()));
         }
-        if (!getisRelative()) {
+        if (!getRelative()) {
             for (InterfaceTypeUse itu : getExtendedInterfaceUses()){
                 if (objToDeltaMap.containsKey(itu.getName()))
                     errors.add( new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, getName(),
@@ -101,17 +101,17 @@ aspect ProductLineErrors {
         }
     }
     public void ClassDecl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap) {
-        if ( getisBase()) {
+        if ( getBase()) {
             if (!objToDeltaMap.containsKey(getName())){
                 errors.add(new SemanticWarning( this, ErrorMessage.UNNECESSARY_BASE_DECL, getName()));
             }
-        } else if (! getisBase() && objToDeltaMap.containsKey(getName())) {
+        } else if (! getBase() && objToDeltaMap.containsKey(getName())) {
             errors.add( new SemanticError(this, ErrorMessage.MISSING_BASE_IN_CLASS, getName(),
                                                 StringUtils.join(",", objToDeltaMap.get(getName())) , getModuleDecl().getName()));
         }
 
         boolean referencesBase = referencesBaseDecl(objToDeltaMap.keySet());
-        if (getisRelative()) {
+        if (getRelative()) {
             if (!referencesBase) {
                     errors.add(new SemanticWarning(this, ErrorMessage.UNNECESSARY_RELATIVE_DECL, getName()));
             }

@@ -629,8 +629,8 @@ aspect ProductFlattener {
          for (Decl decl : decls) {
             if (getVariableDecls().contains(decl.getName())){
 
-            /* if ((decl instanceof ClassDecl && (((ClassDecl) decl).getisBase() || ((ClassDecl) decl).getisRelative()))  ||
-                (decl instanceof InterfaceDecl && (((InterfaceDecl) decl).getisBase() || ((InterfaceDecl) decl).getisRelative()))) {*/
+            /* if ((decl instanceof ClassDecl && (((ClassDecl) decl).getBase() || ((ClassDecl) decl).getRelative()))  ||
+                (decl instanceof InterfaceDecl && (((InterfaceDecl) decl).getBase() || ((InterfaceDecl) decl).getRelative()))) {*/
                 //remove from exports
                for (Export e : getExports()) {
                     if (e instanceof NamedExport) {
@@ -712,11 +712,11 @@ aspect ProductFlattener {
                  getDecls().removeChild(decl);
                 } else if (getVariableDecls().contains(decl.getName())) {
                     if (decl instanceof InterfaceDecl) {
-                        ((InterfaceDecl) decl).setisBase(false);
-                        ((InterfaceDecl) decl).setisRelative(false);
+                        ((InterfaceDecl) decl).setBase(false);
+                        ((InterfaceDecl) decl).setRelative(false);
                     } else if (decl instanceof ClassDecl) {
-                        ((ClassDecl) decl).setisBase(false);
-                        ((ClassDecl) decl).setisRelative(false);
+                        ((ClassDecl) decl).setBase(false);
+                        ((ClassDecl) decl).setRelative(false);
                     }
                 }
         }
@@ -725,12 +725,12 @@ aspect ProductFlattener {
     public void ModuleDecl.removeRelativeAttr() {
         for (Decl decl : getDecls()) {
             if (decl instanceof InterfaceDecl) {
-                ((InterfaceDecl) decl).setisBase(false);
-                ((InterfaceDecl) decl).setisRelative(false);
+                ((InterfaceDecl) decl).setBase(false);
+                ((InterfaceDecl) decl).setRelative(false);
 
             } else if (decl instanceof ClassDecl) {
-                ((ClassDecl) decl).setisBase(false);
-                ((ClassDecl) decl).setisRelative(false);
+                ((ClassDecl) decl).setBase(false);
+                ((ClassDecl) decl).setRelative(false);
            }
         }
     }
@@ -761,8 +761,8 @@ aspect ProductFlattener {
     syn lazy java.util.Set<String> ModuleDecl.getVariableDecls() {
         java.util.Set<String> variableDecls = new java.util.HashSet<>();
         for (Decl d : getDecls()) {
-            if ( (d instanceof ClassDecl && (((ClassDecl) d).getisBase() || ((ClassDecl) d).getisRelative())) ||
-                 (d instanceof InterfaceDecl && (((InterfaceDecl) d).getisBase() || ((InterfaceDecl) d).getisRelative())))
+            if ( (d instanceof ClassDecl && (((ClassDecl) d).getBase() || ((ClassDecl) d).getRelative())) ||
+                 (d instanceof InterfaceDecl && (((InterfaceDecl) d).getBase() || ((InterfaceDecl) d).getRelative())))
                 variableDecls.add(d.getName());
         }
 

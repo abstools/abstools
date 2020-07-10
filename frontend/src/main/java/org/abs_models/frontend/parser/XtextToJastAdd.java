@@ -526,8 +526,8 @@ public class XtextToJastAdd {
             result.addBodyNoTransform(fromXtext(ms));
         }
         
-        result.setisBase(xtext_decl.isBase());
-        result.setisRelative(xtext_decl.isRelative());
+        result.setBase(xtext_decl.isBase());
+        result.setRelative(xtext_decl.isRelative());
         
         return nodeWithLocation(result, xtext_decl);
     }
@@ -547,8 +547,8 @@ public class XtextToJastAdd {
         final ClassDecl result = new  ClassDecl();
         result.setName(xtext_decl.getName());
 
-        result.setisBase(xtext_decl.isBase());
-        result.setisRelative(xtext_decl.isRelative());
+        result.setBase(xtext_decl.isBase());
+        result.setRelative(xtext_decl.isRelative());
 
         for(org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
             result.addParamNoTransform(fromXtext(arg));

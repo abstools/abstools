@@ -51,12 +51,12 @@ ParametricPartialFunctionDecl : PartialFunctionDecl ::= Annotation* TypeParamete
 
 UnknownDecl: Decl; // Unknown declarations
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
-ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* TraitUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl* <isBase:boolean> <isRelative:boolean> ;
+ClassDecl: BehaviorDecl ::= Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* TraitUse* [InitBlock] RecoverBranch:CaseBranchStmt* Field:FieldDecl* Method:MethodImpl* <Base:boolean> <Relative:boolean> ;
 FunctionDecl: BehaviorDecl ::= Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 DataConstructor : Decl ::= <Name> ConstructorArg:ConstructorArg* ;
 ExceptionConstructor : DataConstructor ;
 ParametricFunctionDecl : FunctionDecl ::= Annotation* TypeParameter:TypeParameterDecl* ;
-InterfaceDecl: TypeDecl ::= Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig* <isBase:boolean>  <isRelative:boolean> ;
+InterfaceDecl: TypeDecl ::= Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig* <Base:boolean>  <Relative:boolean> ;
 DataTypeDecl: TypeDecl ::= Annotation* DataConstructor* ;
 
 ExceptionDecl : DataTypeDecl ;
