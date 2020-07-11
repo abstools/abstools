@@ -1195,6 +1195,20 @@ aspect TypeCheckProductline {
             getProductLine().typeCheck(e);
     }
 
+    refine TypeChecker public void ModuleDecl.typeCheck(SemanticConditionList e) {
+        refined(e);
+
+        for (ProductDecl p : getProductDecls()) {
+            p.typeCheck(e);
+        }
+        if (hasProductLine()) {
+            for (DeltaDecl d : getProductLine().getDeltaDecls()) {
+                d.typeCheck(e);
+            }
+            getProductLine().typeCheck(e);
+        }
+    }
+
     protected void DeltaDecl.typeCheck(SemanticConditionList e) {
         if (hasImportedModule()) {
             getImportedModule().typeCheck(e);
@@ -1291,24 +1305,27 @@ aspect TypeCheckProductline {
         for (ProductDecl prod : m.getProductDecls()) {
             productNames.add(prod.getName());
         }
-        TypeCheckerHelper.typeCheckProductDecl(this, featureNames, productNames, m.getDeltaDeclsMap(), e);
+        TypeCheckerHelper.typeCheckProductDecl(this, productNames, e);
+        TypeCheckerHelper.typeCheckProductDeclFromGlobalPL(this, featuresFromGlobalPL(), e);
     }
 
     protected void ProductLine.typeCheck(SemanticConditionList e) {
         Set<String> definedFeatures = getDeclaredFeatures();
         // TODO: check for undeclared features?
 
+        Map<String,DeltaDecl> deltaDeclsMap = this instanceof LocalProductLine ? ((LocalProductLine) this).getDeltaDeclsMap() :
+                                                    getModel().getDeltaDeclsMap();
         Set<String> seenDeltas = new HashSet<String>();
-        HashSet<String> deadDeltas = new HashSet<String>(getModel().getDeltaDeclsMap().keySet());
+        HashSet<String> deadDeltas = new HashSet<String>(deltaDeclsMap.keySet());
         for (DeltaClause dc : getDeltaClauses()) {
             if (! seenDeltas.add(dc.getDeltaspec().getDeltaID()))
-                e.add(new SemanticError(dc, ErrorMessage.DUPLICATE_DELTA_CLAUSE, dc.getDeltaspec().getDeltaID(), this.getName()));
-            dc.typeCheck(getModel().getDeltaDeclsMap(), definedFeatures, e);
+                e.add(new SemanticError(dc, ErrorMessage.DUPLICATE_DELTA_CLAUSE, dc.getDeltaspec().getDeltaID()));
+            dc.typeCheck(deltaDeclsMap, definedFeatures, e);
             deadDeltas.remove(dc.getDeltaspec().getDeltaID());
         }
         // Warn about DeltaDecls missing a DeltaClause in the ProductLine declaration
         if (! deadDeltas.isEmpty())
-            e.add(new SemanticWarning(this, ErrorMessage.MISSING_DELTA_CLAUSE, getName(), StringUtils.join(",", deadDeltas)));
+            e.add(new SemanticWarning(this, ErrorMessage.MISSING_DELTA_CLAUSE, this instanceof LocalProductLine ? getModuleDecl().getName() : getName(), StringUtils.join(",", deadDeltas)));
 
         Set<String> fs = new HashSet<String>();
         for (Feature f : getFeatures()) {
@@ -1317,19 +1334,24 @@ aspect TypeCheckProductline {
         }
     }
 
-	public abstract boolean Value.isAssignableTo(Type t);
-	public boolean BoolVal.isAssignableTo(Type t) {
-		return t.isBoolType();
-	}
-	public boolean StringVal.isAssignableTo(Type t) {
-            return t.isStringType();
-	}
-	public boolean IntVal.isAssignableTo(Type t) {
-		return t.isNumericType();
-	}
-        public boolean UnknownVal.isAssignableTo(Type t) {
-            return false;
-	}
+    public void LocalProductLine.typeCheck(SemanticConditionList e) {
+        super.typeCheck(e);
+        ProductLineAnalysisHelper.typeCheckPL(this ,e);
+    }
+
+    public abstract boolean Value.isAssignableTo(Type t);
+    public boolean BoolVal.isAssignableTo(Type t) {
+	return t.isBoolType();
+    }
+    public boolean StringVal.isAssignableTo(Type t) {
+           return t.isStringType();
+    }
+    public boolean IntVal.isAssignableTo(Type t) {
+	return t.isNumericType(); 
+    }
+    public boolean UnknownVal.isAssignableTo(Type t) {
+           return false;
+    }
 
 
     protected void DeltaClause.typeCheck(Map<String,DeltaDecl> ds, Set<String> definedFeatures, SemanticConditionList e) {

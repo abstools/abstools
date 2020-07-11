@@ -518,8 +518,7 @@ public class XtextToJastAdd {
         result.setName(xtext_decl.getName());
 
         for (int i = 0; i < xtext_decl.getSuperinterfaces().size(); i++) {
-            final String iname = xtext_decl.getSuperinterfaces().get(i);
-            result.addExtendedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDeclaration_Superinterfaces(), i));
+            result.addExtendedInterfaceUseNoTransform(nodeWithLocation(fromXtext(xtext_decl.getSuperinterfaces().get(i)), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDeclaration_Superinterfaces(), i));
         }
 
         for (final MethodSignature ms : xtext_decl.getMethods()) {
@@ -555,8 +554,9 @@ public class XtextToJastAdd {
         }
 
         for (int i = 0; i < xtext_decl.getInterfaces().size(); i++) {
-            final String iname = xtext_decl.getInterfaces().get(i);
-            result.addImplementedInterfaceUseNoTransform(nodeWithLocation(new InterfaceTypeUse(iname, new List<>()), xtext_decl, AbsPackage.eINSTANCE.getInterfaceDeclaration_Superinterfaces(), i));
+            String iname = xtext_decl.getInterfaces().get(i).getName();
+            InterfaceTypeUse it = fromXtext(xtext_decl.getInterfaces().get(i));
+            result.addImplementedInterfaceUseNoTransform(nodeWithLocation(it, xtext_decl, AbsPackage.eINSTANCE.getClassDeclaration_Interfaces(), i));
         }
 
         for(final org.abs_models.xtext.abs.FieldDeclaration fieldDecl : xtext_decl.getFields()) {

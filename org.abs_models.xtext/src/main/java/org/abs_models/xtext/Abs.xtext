@@ -139,7 +139,7 @@ TraitOperation
 
 InterfaceDeclaration
     : (base?='base')? (relative?='relative')? 'interface' name=QualifiedTypeIdentifier
-        ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
+        ('extends' superinterfaces+=InterfaceTypeIdentifier (',' superinterfaces+=InterfaceTypeIdentifier)* )?
         '{' (methods+=MethodSignature ';' )* '}'
     ;
 
@@ -149,9 +149,9 @@ MethodSignature
     ;
 
 ClassDeclaration
-    : (base?='base')? (relative?='relative')?'class' name=QualifiedTypeIdentifier
+    : (base?='base')? (relative?='relative')? 'class' name=QualifiedTypeIdentifier
         ( '(' ( arguments+=Parameter (',' arguments+=Parameter)* )? ')' )?
-        ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
+        ( 'implements' interfaces+=InterfaceTypeIdentifier (',' interfaces+=InterfaceTypeIdentifier)* )?
         '{'
         (fields+=FieldDeclaration ';')*
         ( '{' initblockStatements+=Statement* '}' )?
@@ -360,7 +360,8 @@ UnaryExpression returns Expression
 AwaitExpression returns Expression : {AwaitExpression} 'await' guard=Guard ;
 
 NewExpression returns Expression
-    : {NewExpression} 'new' (local?='local')? class=[ClassDeclaration|QualifiedTypeIdentifier] '('  (arguments+=Expression ( ',' arguments+=Expression)* )? ')' ( 'with' productExpr=ProductExpression )?
+    : {NewExpression} 'new' (local?='local')? class=[ClassDeclaration|QualifiedTypeIdentifier] '('  (arguments+=Expression ( ',' arguments+=Expression)* )? ')' 
+    ( 'with' productExpr=ProductExpression )?
     ;
 
 OriginalCallExpression returns Expression
@@ -609,7 +610,7 @@ DeltaClauseParam
     | {DeltaClauseParam_Id} idParameter=TYPE_IDENTIFIER ('.' fidaidParameter=IDENTIFIER)?
     ;
 
-DeltaClauseApplicationClause : DeltaClauseApplicationClauseOr ;
+DeltaClauseApplicationClause : DeltaClauseApplicationClauseBiImpl ;
 
 DeltaClauseApplicationClauseBiImpl returns DeltaClauseApplicationClause
     :  DeltaClauseApplicationClauseImpl ({DeltaClauseApplicationClauseBiImpl.left=current} '<->' right=DeltaClauseApplicationClauseImpl)*

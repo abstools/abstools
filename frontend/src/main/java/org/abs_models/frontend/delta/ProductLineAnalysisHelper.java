@@ -32,7 +32,6 @@ public class ProductLineAnalysisHelper {
 
         if (! wellFormedProductLine(pl, errors))
             return;
-
         long time0 = System.currentTimeMillis();
         // Check strong unambiguity
         checkStrongUnambiguity(pl, errors);

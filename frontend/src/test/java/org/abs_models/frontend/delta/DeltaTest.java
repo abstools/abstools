@@ -43,6 +43,7 @@ public class DeltaTest extends FrontendTest {
         for (ProductDecl prod : m.getProductDecls()) {
             productNames.add(prod.getName());
         }
-        TypeCheckerHelper.typeCheckProductDecl(p, featureNames, productNames, m.getDeltaDeclsMap(), e);
+        TypeCheckerHelper.typeCheckProductDecl(p, productNames, e);
+        TypeCheckerHelper.typeCheckProductDeclFromGlobalPL(p, p.featuresFromGlobalPL(), e);
     }
 }

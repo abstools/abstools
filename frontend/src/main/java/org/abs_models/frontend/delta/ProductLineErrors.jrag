@@ -52,17 +52,20 @@ aspect ProductLineErrors {
                 Decl decl = null;
                 boolean referencesVariable = false;
                 boolean relative = true;
+                boolean base = true;
                 if (mod instanceof ModifyClassModifier) {
                     decl = ((ClassModifier) mod).getClassDecl();
                     relative = ((ClassDecl) decl).getRelative();
+                    base = ((ClassDecl) decl).getBase();
                     referencesVariable = ((ModifyClassModifier) mod).referencesBaseDecl(variables);
 
                 } else if (mod instanceof ModifyInterfaceModifier) {
                     decl = ((InterfaceModifier) mod).getInterfaceDecl();
                     relative = ((InterfaceDecl) decl).getRelative();
+                    base = ((InterfaceDecl) decl).getBase();
                     referencesVariable = ((ModifyInterfaceModifier) mod).referencesBaseDecl(variables);
                 }
-                if (decl != null && referencesVariable && ! relative) {
+                if (decl != null && referencesVariable && ! (relative || base)) {
                     errors.add(new SemanticError( decl, decl instanceof ClassDecl ? ErrorMessage.MISSING_RELATIVE_IN_CLASS:
                                 ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, decl.getName()));
                 } else if (decl != null && !referencesVariable && relative) {
@@ -84,7 +87,7 @@ aspect ProductLineErrors {
             errors.add( new SemanticError(this, ErrorMessage.MISSING_BASE_IN_INTERFACE, getName(),
                                             StringUtils.join(",", objToDeltaMap.get(getName())) , getModuleDecl().getName()));
         }
-        if (!getRelative()) {
+        if (!(getRelative() || getBase())) {
             for (InterfaceTypeUse itu : getExtendedInterfaceUses()){
                 if (objToDeltaMap.containsKey(itu.getName()))
                     errors.add( new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, getName(),
@@ -115,7 +118,7 @@ aspect ProductLineErrors {
             if (!referencesBase) {
                     errors.add(new SemanticWarning(this, ErrorMessage.UNNECESSARY_RELATIVE_DECL, getName()));
             }
-        } else if (referencesBase) {
+        } else if (referencesBase && !getBase()) {
                 errors.add(new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_CLASS,
                                               getName(), getModuleDecl().getName()));
         }

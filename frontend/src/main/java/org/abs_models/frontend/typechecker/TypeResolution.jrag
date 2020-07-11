@@ -315,7 +315,8 @@ aspect TypeResolution {
                 e = ((ExpressionStmt) stmt).getExp();
             }  else if (stmt instanceof ReturnStmt) {
                 e = ((ReturnStmt) stmt).getRetExp();
-                tu = e.getContextMethod().getMethodSig().getReturnType();
+		if(e.getContextMethod() != null) //because we run before it is checked that we are indeed in a method
+                	tu = e.getContextMethod().getMethodSig().getReturnType();
             }
             if (tu instanceof VariableInterfaceTypeUse) {
                 typeUses.add((VariableInterfaceTypeUse) tu);
