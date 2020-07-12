@@ -1,0 +1,21 @@
+delta DIncome;
+uses MFinancialReport;
+
+modifies class FinancialReportImpl
+{
+
+    modifies Unit addData(FinancialReport reporta)
+    {
+       println("Income Report");
+       reporta.addRecord(100000);
+       reporta.addRecord(250000);
+       reporta.addRecord(500000);
+       reporta.totalBalances();
+    }
+
+    modifies Unit totalBalances()
+    {
+
+        println("Total incomes: "+toString(balances));
+    }
+}

@@ -258,7 +258,6 @@ public class TypeCheckerHelper {
     public static void typeCheckProductDecl(ProductDecl prod,
                                              Set<String> prodNames,
                                              SemanticConditionList e) {
-System.out.println("hue1");
         if (!prod.getModel().hasProductLine() && !prod.getModel().hasLocalProductLines()) {
             e.add(new SemanticWarning(prod, ErrorMessage.ERROR_IN_PRODUCT, prod.getName(),
                 "Model does not have a product line definiton."));

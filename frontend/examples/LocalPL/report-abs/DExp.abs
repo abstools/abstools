@@ -1,0 +1,26 @@
+delta DExp;
+uses MFinancialReport;
+modifies interface FinancialReport
+{
+    adds Unit totalExpense();
+    adds Unit addExpenseData(FinancialReport expense);
+}
+
+modifies class FinancialReportImpl
+{
+    adds Unit addExpenseData(FinancialReport expense)
+    {
+       println("Expense Report");
+       expense.addRecord(50000);
+       expense.addRecord(100000);
+       expense.addRecord(20000);
+       expense.totalExpense();
+    }
+
+    adds Unit totalExpense()
+    {
+        println("Total expenses: "+toString(balances));
+    }
+
+}
+

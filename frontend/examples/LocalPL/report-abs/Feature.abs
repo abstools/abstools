@@ -1,0 +1,20 @@
+root CharityOrganizationSystem {
+            group allof {
+                Income,
+                opt Expense,
+                opt Exp,
+                opt AutomaticReport {
+                    group [0 .. *] {
+                        ByLevel {
+                            group oneof {
+                                GenericSummary,
+                                PSAK45Summary,
+                                DetailSummary
+                            }
+                        },
+                        AutomaticReportByProgram
+                    }
+                }
+            }
+   }
+
