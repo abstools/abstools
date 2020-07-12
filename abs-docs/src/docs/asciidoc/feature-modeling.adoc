@@ -11,6 +11,12 @@ order to add it. This style of programming is called delta-oriented
 programming. The ABS code modules that encapsulate feature implementations are
 called delta modules (deltas).
 
+ABS has currently experimental support for local product lines, which describe the 
+variability of a single module and allow one to use multiple variants of this module in one model.
+The following sections describe global product lines, 
+local product lines are in active development and are not yet documented here. 
+An example using the latest state is given at `examples/LocalPL/Rails.abs`.
+
 
 === Delta-Oriented Programming
 
@@ -377,4 +383,7 @@ consistency checks. These fall into two categories.
 These checks are performed automatically upon compilation and help ensure that 
 all variants defined by an SPL specified in ABS can be built and are well-typed 
 ABS programs.
+
+
+
 
