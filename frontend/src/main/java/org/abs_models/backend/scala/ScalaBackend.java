@@ -28,7 +28,7 @@ public class ScalaBackend extends Main {
     /**
      * The default relative directory to generate Java files.
      */
-    public static final String DEFAULT_OUTPUT_DIRECTORY_NAME = "generated-sources/jabsc";
+    public static final String DEFAULT_OUTPUT_DIRECTORY_NAME = "gen/jabsc";
 
     private static String FILE_EXTENSION = "scala";
     public static int minVersion = 12;
@@ -206,8 +206,8 @@ public class ScalaBackend extends Main {
         if (outputDirectory != null) {
             return createPath(outputDirectory);
         } else {
-            return isSourceDirectory ? source.getParent().resolve(DEFAULT_OUTPUT_DIRECTORY_NAME).toAbsolutePath()
-                    : source.getParent().getParent().resolve(DEFAULT_OUTPUT_DIRECTORY_NAME).toAbsolutePath();
+            return isSourceDirectory ? source.resolve(DEFAULT_OUTPUT_DIRECTORY_NAME).toAbsolutePath()
+                    : source.getParent().resolve(DEFAULT_OUTPUT_DIRECTORY_NAME).toAbsolutePath();
         }
     }
 
