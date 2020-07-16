@@ -59,6 +59,7 @@ public class ParserTest extends FrontendTest {
                 + "  Unit append(Int i){ skip; return null ; }}";
     }
 
+
     @Test
     public void testNothing() {
         // NO decls no block
@@ -496,5 +497,10 @@ public class ParserTest extends FrontendTest {
 
         if (m.hasParserErrors())
             fail(m.getParserErrors().get(0).toString());
+    }
+
+    @Test
+    public void testNewDuration() {
+        assertParse(" { await duration(1); } ");
     }
 }

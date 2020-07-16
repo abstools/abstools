@@ -754,8 +754,12 @@ public class XtextToJastAdd {
             final org.abs_models.xtext.abs.DurationStatement value = (org.abs_models.xtext.abs.DurationStatement) stmt;
             final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
             final PureExp min = pureExpFromXtext(value.getMin());
-            final PureExp max = pureExpFromXtext(value.getMax());
-            result = new DurationStmt(annotations, min, max);
+            if(value.getMax() != null){
+                final PureExp max = pureExpFromXtext(value.getMax());
+                result = new DurationStmt(annotations, min, max);
+            } else {
+                result = new DurationStmt(annotations, min, min);
+            }
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ThrowStatement) {
             final org.abs_models.xtext.abs.ThrowStatement value = (org.abs_models.xtext.abs.ThrowStatement) stmt;
@@ -812,7 +816,11 @@ public class XtextToJastAdd {
         Guard result = null;
         if (guard instanceof org.abs_models.xtext.abs.DurationGuard) {
             final org.abs_models.xtext.abs.DurationGuard dguard = (org.abs_models.xtext.abs.DurationGuard) guard;
-            result = nodeWithLocation(new org.abs_models.frontend.ast.DurationGuard(pureExpFromXtext(dguard.getMin()), pureExpFromXtext(dguard.getMax())), guard);
+            if(dguard.getMax() != null){
+                result = nodeWithLocation(new org.abs_models.frontend.ast.DurationGuard(pureExpFromXtext(dguard.getMin()), pureExpFromXtext(dguard.getMax())), guard);
+            } else {
+                result = nodeWithLocation(new org.abs_models.frontend.ast.DurationGuard(pureExpFromXtext(dguard.getMin()), pureExpFromXtext(dguard.getMin())), guard);
+            }
         } else if (guard instanceof org.abs_models.xtext.abs.ExpressionGuard) {
             final org.abs_models.xtext.abs.ExpressionGuard eguard = (org.abs_models.xtext.abs.ExpressionGuard) guard;
             if (eguard.isClaim()) {
