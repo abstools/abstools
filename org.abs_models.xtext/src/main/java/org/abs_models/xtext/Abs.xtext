@@ -212,7 +212,7 @@ Statement : Annotations
         | {SuspendStatement.annotations=current}
             'suspend' ';'
         | {DurationStatement.annotations=current}
-            'duration' '(' min=Expression ',' max=Expression ')' ';'
+            'duration' '(' min=Expression (',' max=Expression)? ')' ';'
         | {ThrowStatement.annotations=current}
             'throw' exception=Expression ';'
         | {DieStatement.annotations=current}
@@ -234,7 +234,7 @@ AndGuard returns Guard
 
 SingleGuard returns Guard
     : {ExpressionGuard} expression=Expression claim?='?'?
-    | {DurationGuard} 'duration' '(' min=Expression ',' max=Expression ')'
+    | {DurationGuard} 'duration' '(' min=Expression (',' max=Expression)? ')'
     ;
 
 SwitchStatementBranch : pattern=Pattern '=>' body=Statement ;
