@@ -758,7 +758,7 @@ public class XtextToJastAdd {
                 final PureExp max = pureExpFromXtext(value.getMax());
                 result = new DurationStmt(annotations, min, max);
             } else {
-                result = new DurationStmt(annotations, min, min);
+                result = new DurationStmt(annotations, min, (PureExp)min.copy());
             }
         }
         else if(stmt instanceof org.abs_models.xtext.abs.ThrowStatement) {
