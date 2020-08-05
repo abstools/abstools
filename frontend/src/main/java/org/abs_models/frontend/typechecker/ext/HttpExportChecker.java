@@ -39,7 +39,7 @@ public class HttpExportChecker extends DefaultTypeSystemExtension {
         if (!restname.getType().isStringType()) {
             errors.add(new TypeError(n, ErrorMessage.WRONG_HTTPNAME, restname.getType().getQualifiedName()));
         }
-        if (!t.isInterfaceType()) {
+        if (!t.isReferenceType()) {
             errors.add(new TypeError(n, ErrorMessage.WRONG_HTTP_OBJECT, t.getQualifiedName()));
         }
     }

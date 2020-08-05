@@ -21,11 +21,13 @@ public class TimeTests extends SemanticTests {
     @Test
     public void ticket258() throws Exception {
         assertEvalTrue("{ Bool testresult = True; await duration(1,1); }");
+        assertEvalTrue("{ Bool testresult = True; await duration(1); }");
     }
 
     @Test
     public void duration1() throws Exception {
         assertEvalTrue("{ Bool testresult = True; duration(1,1); }");
+        assertEvalTrue("{ Bool testresult = True; duration(1); }");
     }
 
     @Test
@@ -37,6 +39,13 @@ public class TimeTests extends SemanticTests {
     public void deadline1() throws Exception {
         Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue(new File("abssamples/backend/TimeTests/deadline1.abs"));
+    }
+
+    @Test
+    public void deadline1_1arg() throws Exception {
+        // Same as `deadline1` but with 1-argument `duration`
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
+        assertEvalTrue(new File("abssamples/backend/TimeTests/deadline1_1arg.abs"));
     }
 
     @Test

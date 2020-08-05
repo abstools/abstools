@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The `foreach` loop now supports an optional second variable of type `Int` that is bound to the index of the current element, starting at zero.  The syntax is `foreach (elem, index in list) { ... }`.
 
+- The second argument to the `duration` statement and `await duration` guard is now optional; `duration(x)` has the same behavior as `duration(x, x)`.
+
 - The new function `ms_since_model_start` returns an integer containing the elapsed time in milliseonds since the model was started.
 
 ### Changed
