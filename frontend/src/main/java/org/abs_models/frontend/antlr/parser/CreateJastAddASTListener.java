@@ -436,7 +436,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new ClaimGuard(v(ctx.var_or_field_ref())));
     }
     @Override public void exitDurationGuard(ABSParser.DurationGuardContext ctx) {
-        setV(ctx, new DurationGuard(v(ctx.min), v(ctx.max)));
+        if (ctx.max != null) {
+            setV(ctx, new DurationGuard(v(ctx.min), v(ctx.max)));
+        } else {
+            setV(ctx, new DurationGuard(v(ctx.min), (PureExp)v(ctx.min).copy()));
+        }
     }
     @Override public void exitExpGuard(ABSParser.ExpGuardContext ctx) {
         setV(ctx, new ExpGuard(v(ctx.e)));
@@ -448,8 +452,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new SuspendStmt(v(ctx.annotations())));
     }
     @Override public void exitDurationStmt(ABSParser.DurationStmtContext ctx) {
-        setV(ctx, new DurationStmt(v(ctx.annotations()), v(ctx.f),
-            v(ctx.t)));
+        if (ctx.max != null) {
+            setV(ctx, new DurationStmt(v(ctx.annotations()), v(ctx.min), v(ctx.max)));
+        } else {
+            setV(ctx, new DurationStmt(v(ctx.annotations()), v(ctx.min), (PureExp)v(ctx.min).copy()));
+        }
     }
     @Override public void exitThrowStmt(ABSParser.ThrowStmtContext ctx) {
         setV(ctx, new ThrowStmt(v(ctx.annotations()), v(ctx.pure_exp())));

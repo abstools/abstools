@@ -204,13 +204,16 @@ until at least `min` and at most `max` time units have passed.  The `await
 duration(min, max)` statement (see <<await-stmt>>) suspends the current
 process until at least `min` and at most `max` time units have passed.
 
+The second argument to `duration` can be omitted; `duration(x)` is interpreted
+the same as `duration(x, x)`.
+
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
-| _DurationStmt_ ::= | `duration` `(` _PureExp_ `,` _PureExp_ `)` `;`
+| _DurationStmt_ ::= | `duration` `(` _PureExp_ [ `,` _PureExp_ ] `)` `;`
 | _AwaitStmt_ ::= | `await` _Guard_ `;`
 | _Guard_ ::= | ... {vbar} _DurationGuard_
-| _DurationGuard_ ::= | `duration` `(` _PureExp_ `,` _PureExp_ `)`
+| _DurationGuard_ ::= | `duration` `(` _PureExp_ [ `,` _PureExp_ ] `)`
 |====
 
 
