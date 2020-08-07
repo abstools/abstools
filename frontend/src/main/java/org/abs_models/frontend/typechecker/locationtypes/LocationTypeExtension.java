@@ -14,7 +14,9 @@ import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
 public class LocationTypeExtension extends DefaultTypeSystemExtension {
 
-    private LocationType defaultType = LocationType.SOMEWHERE;
+    private LocationType defaultType = LocationType.INFER;
+
+    private UnificationTable table = new UnificationTable();
 
     public LocationTypeExtension(Model m) {
         super(m);
@@ -26,21 +28,13 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {
-        LocationType rhtl = getLocationType(rht);
-        LocationType lhtl = getLocationType(lht);
+        LocationTypeVar lhv = LocationTypeVar.getVar(lht);
+        LocationTypeVar rhv = LocationTypeVar.getVar(rht);
 
-        if (n instanceof NewExp && !((NewExp) n).hasLocal()) {
-            if (!rhtl.isSubtypeOfFarAdapted(lhtl)) {
-                errors.add(new TypeError(n, ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN, rhtl.toString(), lhtl.toString()));
-            }
-        } else {
-            LocationType adaptedRht = rhtl;
-            if (adaptTo != null) {
-                adaptedRht = rhtl.adaptTo(getLocationType(adaptTo), dir);
-            }
-            if (!adaptedRht.isSubtypeOf(lhtl)) {
-                errors.add(new TypeError(n, ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN, adaptedRht.toString(), lhtl.toString()));
-            }
+        try {
+            table.unifiy(lhv, rhv);
+        } catch (UnificationException e) {
+            e.printStackTrace();
         }
     }
 
@@ -124,7 +118,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
 
     public void adaptTo(Type type, AdaptDirection dir, Type to) {
-        setLocationType(type, getLocationType(type).adaptTo(getLocationType(to), dir));
+
     }
 
 

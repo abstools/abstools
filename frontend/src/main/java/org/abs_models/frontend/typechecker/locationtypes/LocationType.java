@@ -15,12 +15,12 @@ public class LocationType {
     public static final LocationType BOTTOM = new LocationType("Bottom");
     public static final LocationType INFER = new LocationType("Infer");
 
-    public static final LocationType[] ALLTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM, INFER};
-    public static final LocationType[] ALLVISTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM};
-    public static final LocationType[] ALLCONCRETEUSERTYPES = {FAR, NEAR, SOMEWHERE};
-    public static final LocationType[] ALLUSERTYPES = {FAR, NEAR, SOMEWHERE, INFER};
+    public static final LocationType[] ALL_BASIC_TYPES = {FAR, NEAR, SOMEWHERE, BOTTOM, INFER};
+    public static final LocationType[] ALL_CONCRETE_BASIC_TYPES = {FAR, NEAR, SOMEWHERE, BOTTOM};
+    public static final LocationType[] ALL_CONCRETE_USER_TYPES = {FAR, NEAR, SOMEWHERE};
+    public static final LocationType[] ALL_USER_TYPES = {FAR, NEAR, SOMEWHERE, INFER};
 
-    private String name;
+    private final String name;
 
     private LocationType(String name) {
         this.name = name;
@@ -32,20 +32,25 @@ public class LocationType {
     }
 
     public static LocationType createFromName(String name) {
-        for (LocationType t : ALLTYPES) {
+        for (LocationType t : ALL_BASIC_TYPES) {
             if (t.name.equals(name))
                 return t;
         }
         throw new IllegalArgumentException(name + " is not a location type");
     }
 
-    public static LocationType createParametricFar(String s) {
-        return new ParameterizedFarType(s);
+    public static LocationType createParametricFar(Scope scope, int cog) {
+        return new ParameterizedFarType(scope, cog);
     }
 
-    private static class ParameterizedFarType extends LocationType {
-        private ParameterizedFarType(String s) {
-            super("Far(" + s + ")");
+    public static class ParameterizedFarType extends LocationType {
+        private final Scope scope;
+        private final int cog;
+
+        private ParameterizedFarType(Scope scope, int cog) {
+            super("Far(" + scope.prefix() + cog + ")");
+            this.scope = scope;
+            this.cog = cog;
         }
 
         @Override
@@ -107,38 +112,6 @@ public class LocationType {
             || this.isBottom()
             || t.isSomewhere()
             || this.isParametricFar() && t.isFar();
-    }
-
-    public LocationType adaptTo(LocationType to, AdaptDirection dir) {
-        if (isBottom())
-            return this;
-
-        if (to.isFar()) {
-            return this.isNear() ? FAR : SOMEWHERE;
-        }
-
-        if (to.isParametricFar()) {
-            if (this.isNear())
-                return dir.isFrom() ? to : FAR;
-            if (this.isParametricFar() && this != to) {
-                return dir.isFrom() ? SOMEWHERE : this;
-            }
-            return SOMEWHERE;
-        }
-
-        if (to.isNear()) {
-            return this;
-        }
-
-        if (to.isSomewhere()) {
-            return SOMEWHERE;
-        }
-
-        if (to.isBottom()) {
-            return SOMEWHERE;
-        }
-
-        throw new IllegalArgumentException("Cannot use location type " + to + " to adapt to");
     }
 
     public String toAnnotationString() {

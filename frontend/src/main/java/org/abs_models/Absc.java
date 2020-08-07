@@ -18,7 +18,6 @@ import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.RunLast;
 
 /**
  * The main entry point for absc, the abs compiler.
@@ -174,7 +173,7 @@ public class Absc implements Callable<Integer> {
 
     static class LocationTypeUserTypes extends ArrayList<String> {
         LocationTypeUserTypes() {
-            super(Arrays.stream(LocationType.ALLUSERTYPES)
+            super(Arrays.stream(LocationType.ALL_USER_TYPES)
                   .map(LocationType::toString)
                   .collect(Collectors.toList()));
         }

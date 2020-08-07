@@ -35,7 +35,7 @@ public class LocationTypeTests extends FrontendTest {
         assertEquals(LocationType.NEAR, LocationTypeExtension.getLocationTypeFromAnnotations(getTypeOfFirstAssignment(m)));
     }
 
-    private static String INT = "interface I { [Near] I m(); [Far] I n([Near] I i); Unit farM([Far] I i);}" +
+    private static final String INT = "interface I { [Near] I m(); [Far] I n([Near] I i); Unit farM([Far] I i);}" +
         " class C([Somewhere] I f) implements I { " +
         "    [Far] I farField; " +
         "    [Near] I nearField; " +
