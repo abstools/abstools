@@ -16,8 +16,6 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
 
     private LocationType defaultType = LocationType.INFER;
 
-    private UnificationTable table = new UnificationTable();
-
     public LocationTypeExtension(Model m) {
         super(m);
     }
@@ -31,11 +29,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         LocationTypeVar lhv = LocationTypeVar.getVar(lht);
         LocationTypeVar rhv = LocationTypeVar.getVar(rht);
 
-        try {
-            table.unifiy(lhv, rhv);
-        } catch (UnificationException e) {
-            e.printStackTrace();
-        }
+
     }
 
     @Override

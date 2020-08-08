@@ -1,4 +1,4 @@
 package org.abs_models.frontend.typechecker.locationtypes;
 
-public class UnificationException extends Exception {
+public class LocationTypeInferException extends Exception {
 }

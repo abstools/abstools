@@ -16,7 +16,7 @@ public class LocationTypeVar {
 
     private static int counter = 0;
 
-    private int index = counter++;
+    private int id = counter++;
 
     public LocationTypeVar(ASTNode<?> node) {
         this.node = node;
@@ -41,8 +41,14 @@ public class LocationTypeVar {
     }
 
     public LocationType asLocationType() {
-        // TODO
-        return null;
+        if (this == BOTTOM) return LocationType.BOTTOM;
+        if (this == NEAR) return LocationType.NEAR;
+        if (this == FAR) return LocationType.FAR;
+        if (this == SOMEWHERE) return LocationType.SOMEWHERE;
+
+        // TODO: Handle ParFar
+
+        throw new IllegalArgumentException("Cannot convert " + this + " to location type");
     }
 
     public static LocationTypeVar getVar(Type t) {
@@ -51,5 +57,29 @@ public class LocationTypeVar {
 
     public static void setVar(Type t, LocationTypeVar v) {
         t.addMetaData(LOCATION_VAR_KEY, v);
+    }
+
+    public static LocationTypeVar getFromLocationType(LocationType lt) {
+        if (lt.isBottom()) return BOTTOM;
+        if (lt.isNear()) return NEAR;
+        if (lt.isFar()) return FAR;
+        if (lt.isSomewhere()) return SOMEWHERE;
+        throw new IllegalArgumentException();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public String toString() {
+        if (isPrimitive()) {
+            if (this == NEAR) return "NEAR";
+            if (this == FAR) return "FAR";
+            if (this == SOMEWHERE) return "SOMEWHERE";
+            if (this == BOTTOM) return "BOTTOM";
+        }
+        String pos = node == null ? "" : "@" + node.getPositionString();
+        return "v" + id + pos;
     }
 }
