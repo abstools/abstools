@@ -23,8 +23,16 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         super(m);
     }
 
+    private LocationTypeVar byId(int id) {
+        for (LocationTypeVar v : constraints.getMap().keySet()) {
+            if (id == v.getId()) return v;
+        }
+        return null;
+    }
+
     public static void main(String[] args) {
-        String INT = "module UnitTest; export *; import * from ABS.StdLib; interface I { [Near] I m(); [Far] I n([Near] I i); Unit farM([Far] I i);}" +
+        String pre = "module UnitTest; export *; import * from ABS.StdLib;";
+        String INT = pre + " interface I { [Near] I m(); [Far] I n([Near] I i); Unit farM([Far] I i);}" +
             " class C([Somewhere] I f) implements I { " +
             "    [Far] I farField; " +
             "    [Near] I nearField; " +
@@ -33,14 +41,14 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
             "    Unit farM([Far] I i) { }}" +
             " interface J { } class E implements J { }";
         String s = INT + "{ I i; I f; i = new local C(f); }";
-        s = "interface I { I getI(); } class C implements I { I i; { i = new local C(); } I getI() { return i; } } " +
-            "{ I i; I j; j = new local C(); i = j.getI(); }";
+        s = pre + "interface I { } class C implements I {} { I i; [Near] I j; i = j; }";
         try {
             Model m = Main.parse(null, new StringReader(s));
             LocationTypeInferenceExtension ltie = new LocationTypeInferenceExtension(m);
             m.registerTypeSystemExtension(ltie);
             m.typeCheck();
-            System.out.println(m.getTypeErrors());
+
+            System.out.println("\n" + m.getTypeErrors());
         } catch (IOException | InternalBackendException e) {
             e.printStackTrace();
         }

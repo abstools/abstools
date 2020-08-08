@@ -19,6 +19,15 @@ public class Constraints {
         }
     }
 
+    public void remove(Constraint c) {
+        constraints.remove(c);
+        for (LocationTypeVar v : c.vars()) {
+            List<Constraint> cs = map.get(v);
+
+            cs.remove(c);
+        }
+    }
+
     public List<Constraint> get(LocationTypeVar lv) {
         return map.getOrDefault(lv, new ArrayList<>());
     }

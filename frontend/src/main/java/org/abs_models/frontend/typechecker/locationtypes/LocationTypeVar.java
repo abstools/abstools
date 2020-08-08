@@ -3,6 +3,9 @@ package org.abs_models.frontend.typechecker.locationtypes;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.typechecker.Type;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class LocationTypeVar {
     public static final String LOCATION_VAR_KEY = "LOCATION_VAR_KEY";
 
@@ -82,4 +85,5 @@ public class LocationTypeVar {
         String pos = node == null ? "" : "@" + node.getPositionString();
         return "v" + id + pos;
     }
+
 }

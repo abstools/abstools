@@ -186,6 +186,7 @@ public class LocationTypeTests extends FrontendTest {
 
     @Test
     public void newObjectInfer2() {
+        // TODO
         assertInferOk("interface I { I getI(); } class C implements I { I i; { i = new local C(); } I getI() { return i; } } " +
             "{ I i; I j; j = new local C(); i = j.getI(); }", LocationType.NEAR);
     }
