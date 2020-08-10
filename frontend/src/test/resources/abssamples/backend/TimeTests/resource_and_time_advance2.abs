@@ -1,0 +1,55 @@
+module BackendTest;
+import * from ABS.DC;
+
+// This test case was provided by Mario Bravetti et al. (Jul 31, 2020, private
+// communication), and uncovered two bugs in the erlang backend:
+//
+// - When calculating the overall MTE, the `cog_monitor' used `lists:min'
+//   instead of `rationals:min', so 3/2 was seen as greater than 2
+//   (concretely, {3, 2} > {2, 1}) (commit
+//   8fdeaa9816279691291cec84d7c9c5b622291f82)
+//
+// - The calculation of how many resource boundaries were crossed during a
+//   given time advance was simply wrong (this commit).
+
+interface Service {
+    Bool receive(String input);
+}
+
+class ServiceImpl() implements Service {
+    Bool receive(String input) {
+        println(`Time in service.receive start: $now()$`);
+        [Cost: 45] skip;
+        println(`Time in service.receive end: $now()$`);
+        return timeValue(now()) == 2;
+    }
+}
+
+interface Monitor{
+    Bool execute(Service service);
+}
+
+class MonitorImpl() implements Monitor {
+    Bool execute(Service service) {
+        println(`Time in monitor.execute start: $now()$`);
+        Fut<Bool> s = service!receive("hello world");
+        await duration(3/2, 3/2);
+        println(`Time in monitor.execute end: $now()$`);
+        Bool my_result = timeValue(now()) == 3/2;
+        await s?;
+        Bool service_result = s.get;
+        return my_result && service_result;
+    }
+}
+
+{
+    Bool testresult = False;
+    CloudProvider cp = new CloudProvider("CloudProvider");
+    cp.addInstanceDescription(Pair("c4_xlarge", map[Pair(Memory,750),Pair(Cores,4),Pair(Speed,20)]));
+    DeploymentComponent vm = cp.launchInstanceNamed("c4_xlarge");
+    DeploymentComponent vm1 = cp.launchInstanceNamed("c4_xlarge");
+    [DC: vm] Monitor m = new MonitorImpl();
+    [DC: vm1] Service service = new ServiceImpl();
+    testresult = await m!execute(service);
+    println(`testresult: $testresult$`);
+}
