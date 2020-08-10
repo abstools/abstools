@@ -8,6 +8,7 @@ import org.abs_models.frontend.typechecker.Type;
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import org.abs_models.frontend.typechecker.ext.TypeSystemExtension;
+import org.sat4j.minisat.learning.ClauseOnlyLearning;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -21,13 +22,6 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
 
     protected LocationTypeInferenceExtension(Model m) {
         super(m);
-    }
-
-    private LocationTypeVar byId(int id) {
-        for (LocationTypeVar v : constraints.getMap().keySet()) {
-            if (id == v.getId()) return v;
-        }
-        return null;
     }
 
     public static void main(String[] args) {

@@ -1,44 +1,39 @@
 package org.abs_models.frontend.typechecker.locationtypes;
 
 import org.abs_models.frontend.ast.Const;
+import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.abs_models.frontend.typechecker.locationtypes.LocationTypeVar.*;
+
+
 public class ConstraintSolver {
-    private final Constraints cs;
+    private final Constraints constraints;
     private final List<LocationTypeInferException> errors = new ArrayList<>();
     private final Map<LocationTypeVar, LocationTypeVar> rewritten = new HashMap<>();
 
-    private boolean changed = true;
+    private final List<Update> updates = new ArrayList<>();
 
     private ConstraintSolver(Constraints cs) {
-        this.cs = cs;
-    }
-
-    private Map<LocationTypeVar, List<Constraint>> map() {
-        return cs.getMap();
-    }
-
-    private List<LocationTypeVar> vars() {
-        return new ArrayList<>(map().keySet());
-    }
-
-    private Set<Constraint> constraints() {
-        return cs.getConstraints();
+        this.constraints = cs;
     }
 
     private Map<LocationTypeVar, LocationType> computeResults() {
         Map<LocationTypeVar, LocationType> resolved = new HashMap<>();
-        resolved.put(LocationTypeVar.BOTTOM, LocationType.BOTTOM);
-        resolved.put(LocationTypeVar.NEAR, LocationType.NEAR);
-        resolved.put(LocationTypeVar.FAR, LocationType.FAR);
-        resolved.put(LocationTypeVar.SOMEWHERE, LocationType.SOMEWHERE);
+        resolved.put(BOTTOM, LocationType.BOTTOM);
+        resolved.put(NEAR, LocationType.NEAR);
+        resolved.put(FAR, LocationType.FAR);
+        resolved.put(SOMEWHERE, LocationType.SOMEWHERE);
 
-        while (changed) {
-            changed = false;
-            resolve(resolved);
-        }
+        boolean changed;
+        do {
+            while (constraints.hasNext()) {
+                resolve(resolved, constraints.next());
+            }
+            changed = applyUpdates();
+        } while (changed);
 
         for (Map.Entry<LocationTypeVar, LocationTypeVar> e : rewritten.entrySet()) {
             if (resolved.containsKey(e.getValue())) {
@@ -49,164 +44,157 @@ public class ConstraintSolver {
         return resolved;
     }
 
-    private void resolve(Map<LocationTypeVar, LocationType> resolved) {
+    private void resolve(Map<LocationTypeVar, LocationType> resolved, Constraint c) {
         // Resolve equals
-        resolveEqs(resolved);
-
-        // Resolve <: Near, <: Far
-        resolveSubConsts(resolved);
+        if (c.isEq()) resolveEq(resolved, (Constraint.Eq) c);
+            // Resolve <: Near, <: Far
+        else if (c.isSub()) resolveSub(resolved, (Constraint.Sub) c);
+        else if (c.isAdapt()) resolveAdapt(resolved, (Constraint.Adapt) c);
     }
 
-    private void resolveEqs(Map<LocationTypeVar, LocationType> resolved) {
-        List<Constraint> eqs = constraints().stream().filter(Constraint::isEq).collect(Collectors.toList());
-        for (Constraint c : eqs) {
-            Constraint.Eq e = (Constraint.Eq) c;
-            LocationTypeVar expected = rewritten.getOrDefault(e.expected, e.expected);
-            LocationTypeVar actual = rewritten.getOrDefault(e.actual, e.actual);
+    private void resolveEq(Map<LocationTypeVar, LocationType> resolved, Constraint.Eq eq) {
+        LocationTypeVar expected = eq.expected;
+        LocationTypeVar actual = eq.actual;
+        if (expected == actual) return;
 
-            if (expected == actual) {
-                cs.remove(c);
-                continue;
-            }
+        if (expected.isLocationType() && actual.isLocationType()) {
+            errors.add(new LocationTypeInferException());
+            return;
+        }
 
-            if (resolved.containsKey(expected) && resolved.containsKey(actual)) {
-                LocationType et = resolved.get(expected);
-                LocationType at = resolved.get(actual);
+        if (expected.isLocationType()) {
+            rewrite(actual, expected);
+            resolved.put(actual, expected.asLocationType());
+            return;
+        }
 
-                if (!et.equals(at)) {
-                    errors.add(new LocationTypeInferException());
-                    continue;
-                }
-            } else if (resolved.containsKey(expected)) {
-                LocationType t = resolved.get(expected);
-                resolved.put(actual, t);
-            } else if (resolved.containsKey(actual)) {
-                LocationType t = resolved.get(actual);
-                resolved.put(expected, t);
-            }
-
-            // Propagate equation
+        if (actual.isLocationType()) {
             rewrite(expected, actual);
-
-            cs.remove(c);
-            changed = true;
+            resolved.put(expected, actual.asLocationType());
+            return;
         }
+
+        rewrite(expected, actual);
     }
 
-    private void resolveSubConsts(Map<LocationTypeVar, LocationType> resolved) {
-        List<Constraint.Sub> subs = constraints()
-            .stream()
-            .filter(Constraint::isSub)
-            .map(c -> (Constraint.Sub) c)
-            .collect(Collectors.toList());
-        for (Constraint.Sub s : subs) {
-            LocationTypeVar expected = s.expected;
-            LocationTypeVar actual = s.actual;
+    private void resolveSub(Map<LocationTypeVar, LocationType> resolved, Constraint.Sub sub) {
+        LocationTypeVar expected = sub.expected;
+        LocationTypeVar actual = sub.actual;
 
-            if (expected.isLocationType() && actual.isLocationType()) {
-                if (!expected.asLocationType().isSubtypeOf(actual.asLocationType())) {
-                    errors.add(new LocationTypeInferException());
-                }
-                cs.remove(s);
-                changed = true;
-                continue;
-            }
-
-            if (actual == LocationTypeVar.BOTTOM) {
-                // This should never happen
-                throw new IllegalArgumentException(/*TODO*/);
-            }
-
-            // Try to get a reverse sub
-            Optional<Constraint.Sub> rev = subs
-                .stream()
-                .filter(sub -> sub.expected == actual && sub.actual == expected)
-                .findFirst();
-            if (rev.isPresent()) {
-                cs.remove(s);
-                cs.remove(rev.get());
-                cs.add(Constraint.eq(expected, actual), null);
-                changed = true;
-                continue;
-            }
-
-            // if NEAR <: v && FAR <: v => v == SOMEWHERE
-            if (expected == LocationTypeVar.NEAR || expected == LocationTypeVar.FAR) {
-                boolean near = expected == LocationTypeVar.NEAR;
-                Optional<Constraint.Sub> o = subs
-                    .stream()
-                    .filter(sub -> sub.expected == (near ? LocationTypeVar.FAR : LocationTypeVar.NEAR) && sub.actual == actual)
-                    .findFirst();
-                if (o.isPresent()) {
-                    cs.remove(s);
-                    cs.remove(o.get());
-                    cs.add(Constraint.eq(LocationTypeVar.SOMEWHERE, actual), null);
-                    changed = true;
-                }
-                continue;
-            }
+        if (expected == actual) {
+            return;
         }
-        for (LocationTypeVar v : vars()) {
-            if (resolved.containsKey(v)) continue;
-            List<Constraint> constraints = map().get(v);
-            if (constraints.size() == 1) {
-                // Only one usage. Use it
-                Constraint c = constraints.get(0);
-                if (c.isSub()) {
-                    Constraint.Sub s = (Constraint.Sub) c;
-                    cs.remove(c);
-                    if (s.expected.isLocationType()) {
-                        resolved.put(s.actual, s.expected.asLocationType());
-                        changed = true;
-                    } else if (s.actual.isLocationType()) {
-                        resolved.put(s.expected, s.actual.asLocationType());
-                        changed = true;
-                    } else {
-                        cs.add(Constraint.eq(s.expected, s.actual), null);
-                        changed = true;
-                    }
-                } else if (c.isEq()) {
-                    // Should already be resolved
-                    assert false;
-                } else {
-                    // TODO
 
-                }
+        if (expected.isLocationType() && actual.isLocationType()) {
+            if (!expected.asLocationType().isSubtypeOf(actual.asLocationType())) {
+                errors.add(new LocationTypeInferException());
+            }
+            return;
+        }
+
+        if (actual == BOTTOM) {
+            errors.add(new LocationTypeInferException());
+            return;
+        }
+
+        if (actual == NEAR) {
+            add(Constraint.eq(expected, NEAR));
+            return;
+        }
+
+        if (actual == FAR) {
+            // TODO par far
+            add(Constraint.eq(expected, FAR));
+            return;
+        }
+
+        if (actual == SOMEWHERE) {
+            // Useless
+            return;
+        }
+
+        if (expected == SOMEWHERE) {
+            add(Constraint.eq(actual, SOMEWHERE));
+            return;
+        }
+
+        if (expected == BOTTOM) {
+            // Useless
+            return;
+        }
+
+        List<Constraint> expectedCs = constraints.get(expected);
+        List<Constraint> actualCs = constraints.get(actual);
+
+        if (expectedCs.size() == 1 || actualCs.size() == 1) {
+            add(Constraint.eq(expected, actual));
+            return;
+        }
+
+        if (actualCs.stream().noneMatch(c -> c.isSub() && ((Constraint.Sub) c).actual == actual)) {
+            add(Constraint.eq(expected, actual));
+            return;
+        }
+
+        if (expected == NEAR
+            && actualCs.stream().anyMatch(c -> c.isSub() && ((Constraint.Sub) c).expected == FAR)) {
+            add(Constraint.eq(actual, SOMEWHERE));
+            return;
+        }
+
+        keep(sub);
+    }
+
+    private void resolveAdapt(Map<LocationTypeVar, LocationType> resolved, Constraint.Adapt adapt) {
+        LocationTypeVar expected = adapt.expected;
+        LocationTypeVar actual = adapt.actual;
+        AdaptDirection dir = adapt.dir;
+        LocationTypeVar adaptTo = adapt.adaptTo;
+
+        if (!resolved.containsKey(adaptTo)) {
+            keep(adapt);
+            return;
+        }
+
+        if (adaptTo == NEAR) {
+            add(Constraint.eq(expected, actual));
+            return;
+        }
+
+        if (adaptTo == SOMEWHERE) {
+            add(Constraint.eq(expected, SOMEWHERE));
+            return;
+        }
+
+        if (adaptTo == FAR) {
+            LocationTypeVar res;
+            if (actual == NEAR) {
+                res = FAR;
+            } else if (actual == SOMEWHERE) {
+                res = SOMEWHERE;
+            } else if (actual == BOTTOM) {
+                errors.add(new LocationTypeInferException());
+                return;
+            } else if (actual == FAR) {
+                res = SOMEWHERE;
             } else {
-                List<Constraint.Sub> sc = constraints
-                    .stream()
-                    .filter(Constraint::isSub)
-                    .map(c -> (Constraint.Sub) c)
-                    .filter(s -> s.expected == v)
-                    .collect(Collectors.toList());
-                if (sc.size() == 1) {
-                    Constraint.Sub c = sc.get(0);
-                    cs.remove(c);
-                    cs.add(Constraint.eq(v, c.actual), null);
-                    changed = true;
-                }
+                keep(adapt);
+                return;
             }
+            add(Constraint.eq(expected, res));
         }
+
+        keep(adapt);
     }
 
     private void rewrite(LocationTypeVar from, LocationTypeVar to) {
         System.out.println((char) 27 + "[34m" + "Rewriting " + from + " => " + to + (char) 27 + "[0m");
 
-        Set<Constraint> toAdd = new HashSet<>();
-        Set<Constraint> toRemove = new HashSet<>();
-        for (Constraint c : constraints()) {
-            if (c.contains(from)) {
-                toRemove.add(c);
-                Constraint nc = c.replace(from, to);
-                toAdd.add(nc);
-            }
+        for (Constraint c : constraints.get(from)) {
+            add(c.replace(from, to));
+            remove(c);
         }
-        for (Constraint c : toAdd) {
-            cs.add(c, null);
-        }
-        for (Constraint c : toRemove) {
-            cs.remove(c);
-        }
+
         if (rewritten.containsValue(from)) {
             for (Map.Entry<LocationTypeVar, LocationTypeVar> e : rewritten.entrySet()) {
                 if (e.getValue().equals(from)) {
@@ -217,7 +205,53 @@ public class ConstraintSolver {
         rewritten.put(from, to);
     }
 
+    private boolean applyUpdates() {
+        boolean changed = false;
+        for (Update u : updates) {
+            switch (u.kind) {
+                case ADD:
+                    changed = true;
+                    constraints.add(u.constraint, null);
+                    break;
+                case REMOVE:
+                    changed = true;
+                    constraints.remove(u.constraint);
+                    break;
+                case KEEP:
+                    constraints.add(u.constraint, null);
+            }
+        }
+        updates.clear();
+        return changed;
+    }
+
+    private void add(Constraint c) {
+        updates.add(new Update(UpdateKind.ADD, c));
+    }
+
+    private void remove(Constraint c) {
+        updates.add(new Update(UpdateKind.REMOVE, c));
+    }
+
+    private void keep(Constraint c) {
+        updates.add(new Update(UpdateKind.KEEP, c));
+    }
+
     public static Map<LocationTypeVar, LocationType> solve(Constraints cs) {
         return new ConstraintSolver(cs).computeResults();
+    }
+
+    private enum UpdateKind {
+        ADD, REMOVE, KEEP
+    }
+
+    private static class Update {
+        public UpdateKind kind;
+        public Constraint constraint;
+
+        public Update(UpdateKind kind, Constraint c) {
+            this.kind = kind;
+            this.constraint = c;
+        }
     }
 }
