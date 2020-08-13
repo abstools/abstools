@@ -44,7 +44,7 @@ public class Constraints {
     }
 
     public Constraint next() {
-        Constraint c = constraints.get(0);
+        Constraint c = constraints.remove(0);
         if (c == null) return null;
 
         for (LocationTypeVar v : c.vars()) {

@@ -142,6 +142,16 @@ public class ConstraintSolver {
             return;
         }
 
+        // Search for reverse (actual <: expected)
+        // Search in smaller list
+        List<Constraint> toSearch = expectedCs.size() < actualCs.size() ? expectedCs : actualCs;
+        if (toSearch.stream().anyMatch(c -> c.isSub()
+            && ((Constraint.Sub) c).expected == actual
+            && ((Constraint.Sub) c).actual == expected)) {
+            add(Constraint.eq(expected, actual));
+            return;
+        }
+
         keep(sub);
     }
 
