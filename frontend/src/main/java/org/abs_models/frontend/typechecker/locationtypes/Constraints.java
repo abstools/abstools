@@ -14,10 +14,10 @@ public class Constraints {
     private final Map<LocationTypeVar, List<Constraint>> map = new HashMap<>();
     private final Set<Constraint> seen = new HashSet<>();
 
-    public void add(Constraint c, ASTNode<?> origin) {
+    public void add(Constraint c) {
         if (seen.contains(c)) return;
         seen.add(c);
-        logConstraint(c, origin);
+        logConstraint(c);
         constraints.add(c);
         for (LocationTypeVar v : c.vars()) {
             List<Constraint> cs = map.computeIfAbsent(v, k -> new ArrayList<>());
@@ -54,18 +54,22 @@ public class Constraints {
         return c;
     }
 
+    public Set<LocationTypeVar> getVars() {
+        return map.keySet();
+    }
+
     public int size() {
         return constraints.size();
     }
 
-    private void logConstraint(Constraint c, ASTNode<?> origin) {
+    private void logConstraint(Constraint c) {
         boolean show = false;
         for (LocationTypeVar v : c.vars())
             if (v.getId() > 51 || v.isLocationType()) {
                 show = true;
                 break;
             }
-        String at = origin == null ? "" : " @" + origin.getPositionString();
+        String at = c.node == null ? "" : " @" + c.node.getPositionString();
         if (show)
             System.out.println("Add constraint " + c + at);
     }

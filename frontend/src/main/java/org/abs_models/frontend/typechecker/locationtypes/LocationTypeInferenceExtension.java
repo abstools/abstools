@@ -50,7 +50,7 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
 
     private LocationTypeVar adaptTo(LocationTypeVar expLocType, AdaptDirection dir, LocationTypeVar adaptTo, ASTNode<?> typeNode, ASTNode<?> originatingNode) {
         LocationTypeVar tv = new LocationTypeVar(typeNode);
-        constraints.add(Constraint.adapt(tv, expLocType, dir, adaptTo), originatingNode);
+        constraints.add(Constraint.adapt(tv, expLocType, dir, adaptTo, originatingNode));
         return tv;
     }
 
@@ -58,8 +58,8 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
     public void checkEq(Type lt, Type t, ASTNode<?> origin) {
         LocationTypeVar lv1 = getVar(lt);
         LocationTypeVar lv2 = getVar(t);
-        Constraint c = Constraint.sub(lv1, lv2);
-        constraints.add(c, origin);
+        Constraint c = Constraint.sub(lv1, lv2, origin);
+        constraints.add(c);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         if (adaptTo != null && getVar(adaptTo) != LocationTypeVar.NEAR) {
             rhv = adaptTo(rhv, dir, lhv, null, n);
         }
-        constraints.add(Constraint.sub(rhv, lhv), n);
+        constraints.add(Constraint.sub(rhv, lhv, n));
     }
 
     private LocationTypeVar addNewVar(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
@@ -128,9 +128,9 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         LocationTypeVar lv = getVar(call.getCallee().getType());
         assert lv != null;
         if (call instanceof SyncCall) {
-            constraints.add(Constraint.eq(lv, LocationTypeVar.NEAR), call);
+            constraints.add(Constraint.eq(lv, LocationTypeVar.NEAR, call));
         } else {
-            constraints.add(Constraint.sub(lv, LocationTypeVar.FAR), call);
+            constraints.add(Constraint.sub(lv, LocationTypeVar.FAR, call));
         }
     }
 
@@ -148,7 +148,9 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void finished() {
-        Map<LocationTypeVar, LocationType> results = ConstraintSolver.solve(constraints);
+        ConstraintSolver solver = new ConstraintSolver(constraints);
+        Map<LocationTypeVar, LocationType> results = solver.solve();
+
         for (Map.Entry<LocationTypeVar, LocationType> e : results.entrySet()) {
             System.out.println("" + e.getKey() + " := " + e.getValue());
         }

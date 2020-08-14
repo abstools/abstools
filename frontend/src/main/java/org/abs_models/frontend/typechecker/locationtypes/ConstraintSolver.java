@@ -1,5 +1,9 @@
 package org.abs_models.frontend.typechecker.locationtypes;
 
+import org.abs_models.frontend.analyser.ErrorMessage;
+import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.analyser.TypeError;
+import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.Const;
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
@@ -11,16 +15,16 @@ import static org.abs_models.frontend.typechecker.locationtypes.LocationTypeVar.
 
 public class ConstraintSolver {
     private final Constraints constraints;
-    private final List<LocationTypeInferException> errors = new ArrayList<>();
+    private final SemanticConditionList errors = new SemanticConditionList();
     private final Map<LocationTypeVar, LocationTypeVar> rewritten = new HashMap<>();
 
     private final List<Update> updates = new ArrayList<>();
 
-    private ConstraintSolver(Constraints cs) {
+    public ConstraintSolver(Constraints cs) {
         this.constraints = cs;
     }
 
-    private Map<LocationTypeVar, LocationType> computeResults() {
+    public Map<LocationTypeVar, LocationType> solve() {
         Map<LocationTypeVar, LocationType> resolved = new HashMap<>();
         resolved.put(BOTTOM, LocationType.BOTTOM);
         resolved.put(NEAR, LocationType.NEAR);
@@ -41,6 +45,13 @@ public class ConstraintSolver {
             }
         }
 
+        for (LocationTypeVar v : constraints.getVars()) {
+            if (!resolved.containsKey(v)) {
+                // Fallback to `SOMEWHERE`
+                resolved.put(v, LocationType.SOMEWHERE);
+            }
+        }
+
         return resolved;
     }
 
@@ -55,10 +66,15 @@ public class ConstraintSolver {
     private void resolveEq(Map<LocationTypeVar, LocationType> resolved, Constraint.Eq eq) {
         LocationTypeVar expected = eq.expected;
         LocationTypeVar actual = eq.actual;
+        ASTNode node = eq.node;
+
         if (expected == actual) return;
 
         if (expected.isLocationType() && actual.isLocationType()) {
-            errors.add(new LocationTypeInferException());
+            errors.add(
+                new LocationTypeInferException(
+                    new TypeError(node,
+                        ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN, expected.toString(), actual.toString())));
             return;
         }
 
@@ -80,6 +96,7 @@ public class ConstraintSolver {
     private void resolveSub(Map<LocationTypeVar, LocationType> resolved, Constraint.Sub sub) {
         LocationTypeVar expected = sub.expected;
         LocationTypeVar actual = sub.actual;
+        ASTNode<?> node = sub.node;
 
         if (expected == actual) {
             return;
@@ -87,24 +104,26 @@ public class ConstraintSolver {
 
         if (expected.isLocationType() && actual.isLocationType()) {
             if (!expected.asLocationType().isSubtypeOf(actual.asLocationType())) {
-                errors.add(new LocationTypeInferException());
+                errors.add(
+                    new LocationTypeInferException(
+                        new TypeError(node, ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN, expected.toString(), actual.toString())
+                    ));
             }
             return;
         }
 
         if (actual == BOTTOM) {
-            errors.add(new LocationTypeInferException());
-            return;
+            throw new IllegalArgumentException("Cannot resolve constraint " + expected + " <: BOTTOM");
         }
 
         if (actual == NEAR) {
-            add(Constraint.eq(expected, NEAR));
+            add(Constraint.eq(expected, NEAR, node));
             return;
         }
 
         if (actual == FAR) {
             // TODO par far
-            add(Constraint.eq(expected, FAR));
+            add(Constraint.eq(expected, FAR, node));
             return;
         }
 
@@ -114,7 +133,7 @@ public class ConstraintSolver {
         }
 
         if (expected == SOMEWHERE) {
-            add(Constraint.eq(actual, SOMEWHERE));
+            add(Constraint.eq(actual, SOMEWHERE, node));
             return;
         }
 
@@ -127,18 +146,18 @@ public class ConstraintSolver {
         List<Constraint> actualCs = constraints.get(actual);
 
         if (expectedCs.size() == 1 || actualCs.size() == 1) {
-            add(Constraint.eq(expected, actual));
+            add(Constraint.eq(expected, actual, node));
             return;
         }
 
         if (actualCs.stream().noneMatch(c -> c.isSub() && ((Constraint.Sub) c).actual == actual)) {
-            add(Constraint.eq(expected, actual));
+            add(Constraint.eq(expected, actual, node));
             return;
         }
 
         if (expected == NEAR
             && actualCs.stream().anyMatch(c -> c.isSub() && ((Constraint.Sub) c).expected == FAR)) {
-            add(Constraint.eq(actual, SOMEWHERE));
+            add(Constraint.eq(actual, SOMEWHERE, node));
             return;
         }
 
@@ -148,7 +167,7 @@ public class ConstraintSolver {
         if (toSearch.stream().anyMatch(c -> c.isSub()
             && ((Constraint.Sub) c).expected == actual
             && ((Constraint.Sub) c).actual == expected)) {
-            add(Constraint.eq(expected, actual));
+            add(Constraint.eq(expected, actual, node));
             return;
         }
 
@@ -160,6 +179,7 @@ public class ConstraintSolver {
         LocationTypeVar actual = adapt.actual;
         AdaptDirection dir = adapt.dir;
         LocationTypeVar adaptTo = adapt.adaptTo;
+        ASTNode<?> node = adapt.node;
 
         if (!resolved.containsKey(adaptTo)) {
             keep(adapt);
@@ -167,12 +187,12 @@ public class ConstraintSolver {
         }
 
         if (adaptTo == NEAR) {
-            add(Constraint.eq(expected, actual));
+            add(Constraint.eq(expected, actual, node));
             return;
         }
 
         if (adaptTo == SOMEWHERE) {
-            add(Constraint.eq(expected, SOMEWHERE));
+            add(Constraint.eq(expected, SOMEWHERE, node));
             return;
         }
 
@@ -183,7 +203,9 @@ public class ConstraintSolver {
             } else if (actual == SOMEWHERE) {
                 res = SOMEWHERE;
             } else if (actual == BOTTOM) {
-                errors.add(new LocationTypeInferException());
+                errors.add(new LocationTypeInferException(
+                    new TypeError(node, ErrorMessage.LOCATION_TYPE_CALL_ON_BOTTOM, new String[0])
+                ));
                 return;
             } else if (actual == FAR) {
                 res = SOMEWHERE;
@@ -191,7 +213,7 @@ public class ConstraintSolver {
                 keep(adapt);
                 return;
             }
-            add(Constraint.eq(expected, res));
+            add(Constraint.eq(expected, res, node));
         }
 
         keep(adapt);
@@ -221,14 +243,14 @@ public class ConstraintSolver {
             switch (u.kind) {
                 case ADD:
                     changed = true;
-                    constraints.add(u.constraint, null);
+                    constraints.add(u.constraint);
                     break;
                 case REMOVE:
                     changed = true;
                     constraints.remove(u.constraint);
                     break;
                 case KEEP:
-                    constraints.add(u.constraint, null);
+                    constraints.add(u.constraint);
             }
         }
         updates.clear();
@@ -245,10 +267,6 @@ public class ConstraintSolver {
 
     private void keep(Constraint c) {
         updates.add(new Update(UpdateKind.KEEP, c));
-    }
-
-    public static Map<LocationTypeVar, LocationType> solve(Constraints cs) {
-        return new ConstraintSolver(cs).computeResults();
     }
 
     private enum UpdateKind {

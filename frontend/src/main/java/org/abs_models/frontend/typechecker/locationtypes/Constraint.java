@@ -1,10 +1,16 @@
 package org.abs_models.frontend.typechecker.locationtypes;
 
+import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
 import java.util.Objects;
 
 public abstract class Constraint {
+    public final ASTNode<?> node;
+
+    protected Constraint(ASTNode<?> node) {
+        this.node = node;
+    }
 
     abstract boolean contains(LocationTypeVar lv);
 
@@ -24,16 +30,16 @@ public abstract class Constraint {
 
     public abstract Constraint replace(LocationTypeVar from, LocationTypeVar to);
 
-    public static Constraint sub(LocationTypeVar expected, LocationTypeVar actual) {
-        return new Sub(expected, actual);
+    public static Constraint sub(LocationTypeVar expected, LocationTypeVar actual, ASTNode<?> node) {
+        return new Sub(expected, actual, node);
     }
 
-    public static Constraint eq(LocationTypeVar expected, LocationTypeVar actual) {
-        return new Eq(expected, actual);
+    public static Constraint eq(LocationTypeVar expected, LocationTypeVar actual, ASTNode<?> node) {
+        return new Eq(expected, actual, node);
     }
 
-    public static Constraint adapt(LocationTypeVar expected, LocationTypeVar actual, AdaptDirection dir, LocationTypeVar adaptTo) {
-        return new Adapt(expected, actual, dir, adaptTo);
+    public static Constraint adapt(LocationTypeVar expected, LocationTypeVar actual, AdaptDirection dir, LocationTypeVar adaptTo, ASTNode<?> node) {
+        return new Adapt(expected, actual, dir, adaptTo, node);
     }
 
     // expected <: actual
@@ -41,7 +47,8 @@ public abstract class Constraint {
         public final LocationTypeVar expected;
         public final LocationTypeVar actual;
 
-        public Sub(LocationTypeVar expected, LocationTypeVar actual) {
+        public Sub(LocationTypeVar expected, LocationTypeVar actual, ASTNode<?> node) {
+            super(node);
             this.expected = expected;
             this.actual = actual;
         }
@@ -55,7 +62,7 @@ public abstract class Constraint {
         public Constraint replace(LocationTypeVar from, LocationTypeVar to) {
             LocationTypeVar expected = this.expected == from ? to : this.expected;
             LocationTypeVar actual = this.actual == from ? to : this.actual;
-            return sub(expected, actual);
+            return sub(expected, actual, node);
         }
 
         @Override
@@ -93,7 +100,8 @@ public abstract class Constraint {
         public final LocationTypeVar expected;
         public final LocationTypeVar actual;
 
-        public Eq(LocationTypeVar expected, LocationTypeVar actual) {
+        public Eq(LocationTypeVar expected, LocationTypeVar actual, ASTNode<?> node) {
+            super(node);
             this.expected = expected;
             this.actual = actual;
         }
@@ -107,7 +115,7 @@ public abstract class Constraint {
         public Constraint replace(LocationTypeVar from, LocationTypeVar to) {
             LocationTypeVar expected = this.expected == from ? to : this.expected;
             LocationTypeVar actual = this.actual == from ? to : this.actual;
-            return eq(expected, actual);
+            return eq(expected, actual, node);
         }
 
         @Override
@@ -146,7 +154,8 @@ public abstract class Constraint {
         public final LocationTypeVar adaptTo;
         public final AdaptDirection dir;
 
-        public Adapt(LocationTypeVar expected, LocationTypeVar actual, AdaptDirection dir, LocationTypeVar adaptTo) {
+        public Adapt(LocationTypeVar expected, LocationTypeVar actual, AdaptDirection dir, LocationTypeVar adaptTo, ASTNode<?> node) {
+            super(node);
             this.expected = expected;
             this.actual = actual;
             this.adaptTo = adaptTo;
@@ -163,7 +172,7 @@ public abstract class Constraint {
             LocationTypeVar expected = this.expected == from ? to : this.expected;
             LocationTypeVar actual = this.actual == from ? to : this.actual;
             LocationTypeVar adaptTo = this.adaptTo == from ? to : this.adaptTo;
-            return adapt(expected, actual, dir, adaptTo);
+            return adapt(expected, actual, dir, adaptTo, node);
         }
 
         @Override
