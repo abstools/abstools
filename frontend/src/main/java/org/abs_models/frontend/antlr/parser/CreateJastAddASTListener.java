@@ -487,7 +487,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     // Annotations
     @Override public void exitAnnotation(ABSParser.AnnotationContext ctx) {
         if (ctx.l == null) setV(ctx, new Annotation(v(ctx.r)));
-        else setV(ctx, new TypedAnnotation(v(ctx.r), v(ctx.l)));
+        else setV(ctx, new TypedAnnotation(v(ctx.r), new UnresolvedTypeUse(ctx.l.getText(), new List<>())));
     }
 
     @Override public void exitAnnotations(ABSParser.AnnotationsContext ctx) {

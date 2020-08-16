@@ -40,7 +40,7 @@ public final class AnnotationHelper {
         for (Annotation a : annotations) {
             if (a instanceof TypedAnnotation) {
                 TypedAnnotation ta = (TypedAnnotation)a;
-                if (((TypeUse)ta.getAccess()).getName().equals(annotationName))
+                if (((TypeUse)ta.getIdUse()).getName().equals(annotationName))
                     return ta.getValue();
             }
         }
@@ -59,7 +59,7 @@ public final class AnnotationHelper {
         for (Annotation a : annotations) {
             if (a instanceof TypedAnnotation) {
                 TypedAnnotation ta = (TypedAnnotation)a;
-                if (((TypeUse)ta.getAccess()).getDecl().getQualifiedName().equals(qualifiedAnnotationName))
+                if (((TypeUse)ta.getIdUse()).getDecl().getQualifiedName().equals(qualifiedAnnotationName))
                     return ta.getValue();
             }
         }

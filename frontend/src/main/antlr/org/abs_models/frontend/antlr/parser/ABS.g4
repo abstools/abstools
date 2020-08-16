@@ -158,7 +158,7 @@ pure_exp_list : (pure_exp (',' pure_exp)*)? ;
 list_literal : '[' pure_exp (',' pure_exp)* ']' ;
 
 // Annotations
-annotation : (l=type_use ':')? r=pure_exp ;
+annotation : (l=TYPE_IDENTIFIER ':')? r=pure_exp ;
 
 annotations: ('[' al+=annotation (',' al+=annotation)* ']')* ;
 

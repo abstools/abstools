@@ -120,7 +120,7 @@ Constructors occur as
 */
 
 Annotation ::= Value:PureExp;
-TypedAnnotation : Annotation ::= Access;
+TypedAnnotation : Annotation ::= IdUse;
 
 abstract Stmt ::= Annotation* ;
 
