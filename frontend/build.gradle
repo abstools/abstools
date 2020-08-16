@@ -65,6 +65,8 @@ task generateJastAddAST(type: JavaExec) {
     // so we use a JavaExec task directly.
     description 'Processes the JastAdd AST.'
     main = 'org.jastadd.JastAdd'
+    inputs.files fileTree(dir: 'src/main/java',
+                          includes: ['**/*.ast', '**/*.jrag', '**/*.jadd']).files
     classpath = project.configurations.jastadd2
     outputs.dir "$buildDir/generated-src/jastadd/main" // this creates the directory if necessary
     args += "--o=$buildDir/generated-src/jastadd/main"
@@ -73,7 +75,7 @@ task generateJastAddAST(type: JavaExec) {
     args += '--debug'
     args += '--package=org.abs_models.frontend.ast'
     args += fileTree(dir: 'src/main/java',
-                       includes: ['**/*.ast', '**/*.jrag', '**/*.jadd']).files
+                     includes: ['**/*.ast', '**/*.jrag', '**/*.jadd']).files
 }
 sourceSets.main.java.srcDir "$buildDir/generated-src/jastadd/main"
 compileJava.dependsOn 'generateJastAddAST'
