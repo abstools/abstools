@@ -7,7 +7,6 @@ package org.abs_models.backend.tests;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.abs_models.frontend.ast.Access;
 import org.abs_models.frontend.ast.AssignStmt;
 import org.abs_models.frontend.ast.AsyncCall;
 import org.abs_models.frontend.ast.Block;
