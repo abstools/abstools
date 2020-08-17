@@ -618,6 +618,8 @@ aspect GenerateJavaDynamic_Core {
         throw new NotImplementedYetException(this);
     }
 
+    public abstract void TypeUse.generateJavaDynamic(PrintStream stream);
+
     public void DataTypeUse.generateJavaDynamic(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));
     }

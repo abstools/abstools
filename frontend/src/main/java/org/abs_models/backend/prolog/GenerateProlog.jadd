@@ -1149,7 +1149,7 @@ aspect GenerateProlog {
 
     public void TypedAnnotation.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("typedAnnotation( ");
-        getIdUse().generateProlog(s,reachInfo);
+        getTypeIdUse().generateProlog(s,reachInfo);
         s.print(",");
         getValue().generateProlog(s,reachInfo);
         s.print(")");

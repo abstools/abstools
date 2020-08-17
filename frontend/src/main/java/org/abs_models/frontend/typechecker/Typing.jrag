@@ -46,6 +46,7 @@ aspect Typing {
     
     inh Model Stmt.getModel();
     inh Model Exp.getModel();
+    inh Model TypeIdUse.getModel();
     inh Model ExpGuard.getModel();
     inh Model DurationGuard.getModel();
     inh Model MethodImpl.getModel();
@@ -143,13 +144,21 @@ aspect Typing {
     }
     /* Annotations */
     syn lazy Type Annotation.getType() = getValue().getType();
-    
+
     /* STMTS */
     syn Type Stmt.getType() = getModel().getUnitType();
     eq ReturnStmt.getType() = getRetExp().getType();
-    
-    
-    
+
+    /* Type expressions */
+    syn lazy Type TypeIdUse.getType() = getDecl().getType();
+    eq TypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
+    eq ParametricDataTypeUse.getType() {
+        Decl d = getDecl();
+        if (d == null || !(d instanceof ParametricDataTypeDecl))
+            return UnknownType.INSTANCE;
+        return new DataTypeType((ParametricDataTypeDecl)d,this).withAnnotations(getAnnotations());
+    }
+
     /* EXPRESSIONS */
     
     syn lazy Type Exp.getType();
@@ -223,18 +232,10 @@ aspect Typing {
     // TODO: This looks really more like an 'inh'.
     syn lazy List<Annotation> TypeUse.findAnnotations() = calcAnnotations();
 
-	syn lazy Type VarOrFieldUse.getType() {
+    syn lazy Type VarOrFieldUse.getType() {
         VarOrFieldDecl d = getDecl();
         if (d == null) return UnknownType.INSTANCE;
         return d.getType();
-    }
-    eq TypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
-    eq ParametricDataTypeUse.getType() {
-        Decl d = getDecl();
-        if (d == null || !(d instanceof ParametricDataTypeDecl))
-            return UnknownType.INSTANCE;
-        
-        return new DataTypeType((ParametricDataTypeDecl)d,this).withAnnotations(getAnnotations());
     }
     eq Unary.getType() = getOperand().getType();
     eq ArithmeticExp.getType() {
@@ -466,8 +467,8 @@ aspect Typing {
     public interface HasType {
       Type getType();
     }
-    
-    DataTypeUse implements HasType;
+
+    TypeIdUse implements HasType;
     ParamDecl implements HasType;
     Decl implements HasType;
     Exp implements HasType;

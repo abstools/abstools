@@ -764,6 +764,8 @@ aspect GenerateJava {
         throw new NotImplementedYetException(this);
     }
 
+    public abstract void TypeUse.generateJava(PrintStream stream);
+
     public void DataTypeUse.generateJava(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));
     }

@@ -1,10 +1,10 @@
 aspect CompareNodes {
 
     /*
-     * lexically compare two Accesses; return true if they match
+     * lexically compare two type uses; return true if they match
      * crude, but it seems to be all we need...
      */
-    public boolean Access.matches(Access other) {
+    public boolean TypeIdUse.matches(TypeIdUse other) {
         //System.out.println(this + " ?? " + other);
         return this.toString().equals(other.toString());
     }

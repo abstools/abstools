@@ -94,18 +94,17 @@ MethodSig ::= <Name> Annotation* ReturnType:TypeUse Param:ParamDecl*;
 MethodImpl ::= MethodSig Block ;
 
 
-// Uses of various identifiers
-abstract Access: PureExp;
-abstract IdUse: Access ::= <Name>;
-abstract TypeUse: IdUse ::= Annotation*;
-InterfaceTypeUse: TypeUse; // TODO: reconsider hierarchy of expressions?
+// Type expressions
+abstract TypeIdUse ::= <Name>; // a bare type name (only used for annotation naming)
+abstract TypeUse: TypeIdUse ::= Annotation*;
+InterfaceTypeUse: TypeUse;
 DataTypeUse: TypeUse;
 ParametricDataTypeUse: DataTypeUse ::= Param:TypeUse* ;
 ExceptionTypeUse: DataTypeUse;
 TypeParameterUse: TypeUse;
-UnresolvedTypeUse: TypeUse; // A type expression whose type cannot be resolved at parse time.
-                            // Will be resolved by rewriting. TODO: needed?
-
+// A type expression whose class cannot be resolved at parse time.  Will be
+// resolved by rewriting.
+UnresolvedTypeUse: TypeUse;
 
 /*
 Constructors occur as
@@ -116,7 +115,7 @@ Constructors occur as
 */
 
 Annotation ::= Value:PureExp;
-TypedAnnotation : Annotation ::= IdUse;
+TypedAnnotation : Annotation ::= TypeIdUse;
 
 abstract Stmt ::= Annotation* ;
 

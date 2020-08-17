@@ -3,7 +3,7 @@ package org.abs_models.frontend.pardef;
 import org.abs_models.frontend.ast.Annotation;
 import org.abs_models.frontend.ast.FnApp;
 import org.abs_models.frontend.ast.FunctionDecl;
-import org.abs_models.frontend.ast.IdUse;
+import org.abs_models.frontend.ast.TypeIdUse;
 import org.abs_models.frontend.ast.IntLiteral;
 import org.abs_models.frontend.ast.List;
 import org.abs_models.frontend.ast.ListLiteral;
@@ -88,11 +88,11 @@ public final class AnnotationUtil {
         }
     }
 
-    private static Annotation getAnnotation(List<Annotation> annotations, IdUse annotationType) {
+    private static Annotation getAnnotation(List<Annotation> annotations, TypeIdUse annotationType) {
         for (Annotation annotation : annotations) {
             if (annotation instanceof TypedAnnotation) {
                 TypedAnnotation typedAnnotation = (TypedAnnotation) annotation;
-                if (typedAnnotation.getIdUse().matches(annotationType)) {
+                if (typedAnnotation.getTypeIdUse().matches(annotationType)) {
                     return annotation;
                 }
             }
@@ -110,7 +110,7 @@ public final class AnnotationUtil {
      * @param expansionId An integer to add to the list.
      */
     private static void addToAnnotations(List<Annotation> annotations,
-                                         IdUse annotationType,
+                                         TypeIdUse annotationType,
                                          int expansionId)
     {
         IntLiteral indexLiteral = new IntLiteral(Integer.toString(expansionId));

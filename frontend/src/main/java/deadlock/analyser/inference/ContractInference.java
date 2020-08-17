@@ -244,7 +244,7 @@ public class ContractInference {
         List<Term> l = new LinkedList();
         for (ParamDecl pd : decl.getParamList()) {
             TypeUse a = pd.getTypeUse(); // get the type of the parameter
-            l.add(expandArgs((TypeUse) a, typeParameterMap));
+            l.add(expandArgs(a, typeParameterMap));
         }
         _env.putFunction(moduleName, name, new FunctionInterface(l, expandArgs(decl.getTypeUse(), typeParameterMap)));
     }

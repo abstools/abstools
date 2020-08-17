@@ -130,11 +130,11 @@ aspect GenerateMaude {
     abstract public void Exp.generateMaude(PrintStream stream);
     abstract public int Exp.numberOfRandom(Set<String> visitedFunctions);
 
-    public void Access.generateMaude(PrintStream stream) {
+    public void TypeIdUse.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
         throw new NotImplementedYetException(this); // TODO
     }
-    public int Access.numberOfRandom(Set<String> visitedFunctions) {
+    public int TypeIdUse.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
     public int VarOrFieldUse.numberOfRandom(Set<String> visitedFunctions) {

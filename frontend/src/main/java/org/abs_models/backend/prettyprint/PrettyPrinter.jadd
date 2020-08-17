@@ -1046,7 +1046,7 @@ aspect doPrettyPrinter {
 
     public void TypedAnnotation.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("[");
-        getIdUse().doPrettyPrint(stream, formatter);
+        getTypeIdUse().doPrettyPrint(stream, formatter);
         stream.print(" : ");
         getValue().doPrettyPrint(stream, formatter);
         stream.print("]");

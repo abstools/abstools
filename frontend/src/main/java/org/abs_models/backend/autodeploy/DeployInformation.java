@@ -57,9 +57,9 @@ public class DeployInformation {
         for(Annotation ann: ((ClassDecl) decl).getAnnotationListNoTransform()) {
           if(ann instanceof TypedAnnotation) {
             System.out.println(i++ + ": \"" + ann.getType().getSimpleName()
-                    + "\" vs \"" + ((TypedAnnotation)ann).getIdUse().getType().getSimpleName()
-                    + "\" vs \"" + ((TypeUse)((TypedAnnotation)ann).getIdUse()).getName() + "\"");
-            if(((TypeUse)((TypedAnnotation)ann).getIdUse()).getName().equals("Deploy")) {
+                    + "\" vs \"" + ((TypedAnnotation)ann).getTypeIdUse().getType().getSimpleName()
+                    + "\" vs \"" + ((TypedAnnotation)ann).getTypeIdUse().getName() + "\"");
+            if(((TypedAnnotation)ann).getTypeIdUse().getName().equals("Deploy")) {
               dic.addAnn(ann.getValue());
             }
           }

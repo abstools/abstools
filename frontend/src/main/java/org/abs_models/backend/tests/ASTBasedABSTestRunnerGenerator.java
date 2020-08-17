@@ -19,7 +19,6 @@ import java.util.Set;
 
 import org.abs_models.backend.prettyprint.ABSFormatter;
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
-import org.abs_models.frontend.ast.Access;
 import org.abs_models.frontend.ast.AsyncCall;
 import org.abs_models.frontend.ast.Block;
 import org.abs_models.frontend.ast.ClassDecl;
@@ -41,6 +40,7 @@ import org.abs_models.frontend.ast.ParametricDataTypeUse;
 import org.abs_models.frontend.ast.PureExp;
 import org.abs_models.frontend.ast.StarImport;
 import org.abs_models.frontend.ast.SyncCall;
+import org.abs_models.frontend.ast.TypeIdUse;
 import org.abs_models.frontend.ast.TypeUse;
 import org.abs_models.frontend.ast.VarDeclStmt;
 import org.abs_models.frontend.ast.VarUse;
@@ -209,7 +209,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
             return null;
         }
 
-        Access rt = dataPoint.getReturnType();
+        TypeIdUse rt = dataPoint.getReturnType();
         if (!(rt instanceof ParametricDataTypeUse)) {
             return null;
         }
