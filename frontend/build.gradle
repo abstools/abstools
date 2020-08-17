@@ -64,10 +64,16 @@ task generateJastAddAST(type: JavaExec) {
     // The JastAdd plugin version <= 1.13.3 does not work with gradle > 6.3,
     // so we use a JavaExec task directly.
     description 'Processes the JastAdd AST.'
+    classpath = project.configurations.jastadd2
     main = 'org.jastadd.JastAdd'
+    doFirst {
+        // Avoid left-over Java files when modifying the AST.  Re-running
+        // JastAdd regenerates all files, so deleting everything beforehand
+        // doesn’t hurt.
+        delete "$buildDir/generated-src/jastadd/main/**";
+    }
     inputs.files fileTree(dir: 'src/main/java',
                           includes: ['**/*.ast', '**/*.jrag', '**/*.jadd']).files
-    classpath = project.configurations.jastadd2
     outputs.dir "$buildDir/generated-src/jastadd/main" // this creates the directory if necessary
     args += "--o=$buildDir/generated-src/jastadd/main"
     args += '--rewrite=regular'
