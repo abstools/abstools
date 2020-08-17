@@ -137,6 +137,9 @@ aspect GenerateMaude {
     public int Access.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
+    public int VarOrFieldUse.numberOfRandom(Set<String> visitedFunctions) {
+        return 0;
+    }
 
     abstract public void Exp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations);
     
