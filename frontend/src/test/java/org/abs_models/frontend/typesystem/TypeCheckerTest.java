@@ -163,7 +163,7 @@ public class TypeCheckerTest extends FrontendTest {
         Block b = m.getMainBlock();
         assertNotNull(b);
         VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
-        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
+        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getTypeUse();
         // Have:
         TypeUse tu = u.getParam(0);
         assertEquals("I",tu.getName());
@@ -179,7 +179,7 @@ public class TypeCheckerTest extends FrontendTest {
         Block b = m.getMainBlock();
         assertNotNull(b);
         VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
-        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
+        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getTypeUse();
         // Have:
         TypeUse tu = u.getParam(0);
         assertEquals("I",tu.getName());
@@ -474,7 +474,7 @@ public class TypeCheckerTest extends FrontendTest {
         assertEquals(list.toString(),3,list.size());
 
         VarDeclStmt stmt = (VarDeclStmt) module.getBlock().getStmt(0);
-        Collection<MethodSig> sigs = stmt.getVarDecl().getAccess().getType().getAllMethodSigs();
+        Collection<MethodSig> sigs = stmt.getVarDecl().getTypeUse().getType().getAllMethodSigs();
         assertArrayEquals(sigs.toArray(),d.getAllMethodSigs().toArray());
     }
 

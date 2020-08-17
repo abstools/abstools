@@ -584,7 +584,7 @@ public class XtextToJastAdd {
         if (xtext_decl.getInit() != null) {
             result.setInitExp(pureExpFromXtext(xtext_decl.getInit()));
         }
-        result.setAccess(fromXtext(xtext_decl.getType()));
+        result.setTypeUse(fromXtext(xtext_decl.getType()));
         return nodeWithLocation(result, xtext_decl);
     }
 
@@ -620,7 +620,7 @@ public class XtextToJastAdd {
         final ParamDecl result = new ParamDecl();
         result.setName(xtext_decl.getName());
         result.setAnnotationList(annotationsfromXtext(xtext_decl.getAnnotations()));
-        result.setAccess(fromXtext(xtext_decl.getType()));
+        result.setTypeUse(fromXtext(xtext_decl.getType()));
         return nodeWithLocation(result, xtext_decl);
     }
 
@@ -650,7 +650,7 @@ public class XtextToJastAdd {
             final List<Annotation> annotations = annotationsfromXtext(value.getAnnotations());
             final VarDecl varDecl = new VarDecl();
             varDecl.setName(value.getVariablename());
-            varDecl.setAccess(fromXtext(value.getType()));
+            varDecl.setTypeUse(fromXtext(value.getType()));
             if (value.getInit() != null) {
                 varDecl.setInitExp(fromXtext(value.getInit()));
             }

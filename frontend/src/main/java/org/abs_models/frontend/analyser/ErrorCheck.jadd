@@ -55,7 +55,7 @@ aspect ErrorCheck {
   }
 
   // add error for undeclared interfaces
-  // TODO: generalise to check other IdUse's too.
+  // TODO: generalise to check other TypeUse subclasses too.
   public void DataTypeUse.collectErrors(SemanticConditionList c) {
     super.collectErrors(c);
     if(getDecl().isUnknown())

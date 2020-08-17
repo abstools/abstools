@@ -187,7 +187,7 @@ aspect TypeResolution {
 
     // *decl* refers to the appropriate declaration of the TypeUse or to
     // UnknownDecl if the declaration is missing
-    syn lazy Decl TypeUse.getDecl() = lookup(new KindedName(Kind.TYPE_DECL,getName()));
+    syn lazy Decl TypeIdUse.getDecl() = lookup(new KindedName(Kind.TYPE_DECL,getName()));
 
 
     syn lazy ModuleDecl Model.lookupModule(String name) {
@@ -250,12 +250,13 @@ aspect TypeResolution {
 
     // Expose *lookup* at various places in the AST
     inh Decl Exp.lookup(KindedName name);
+    inh Decl TypeIdUse.lookup(KindedName name);
     inh Decl Pattern.lookup(KindedName name);
     inh Decl Annotation.lookup(KindedName name);
     inh Decl DataTypeUse.lookup(KindedName name);
     inh Decl TypedVarOrFieldDecl.lookup(KindedName name);
     eq ParametricDataTypeUse.getParam().lookup(KindedName name) = lookup(name);
-    eq TypedVarOrFieldDecl.getAccess().lookup(KindedName name) = lookup(name);
+    eq TypedVarOrFieldDecl.getTypeUse().lookup(KindedName name) = lookup(name);
 
     inh Decl ParametricDataTypeDecl.lookup(KindedName name);
     inh Decl ParametricFunctionDecl.lookup(KindedName name);

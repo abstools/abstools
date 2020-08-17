@@ -14,7 +14,7 @@ aspect VarResolution {
         when (getParent().getParent() instanceof ClassDecl
               && !(this instanceof ClassParamDecl))
         to ClassParamDecl {
-            ClassParamDecl p = new ClassParamDecl(getName(), getAccessNoTransform(), getAnnotationListNoTransform());
+            ClassParamDecl p = new ClassParamDecl(getName(), getTypeUseNoTransform(), getAnnotationListNoTransform());
             p.setPositionFromNode(this);
             return p;
         }
