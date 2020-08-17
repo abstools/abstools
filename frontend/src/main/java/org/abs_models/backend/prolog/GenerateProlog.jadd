@@ -173,7 +173,7 @@ aspect GenerateProlog {
 
     public void ParamDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.print("(");
-        getAccess().generateProlog(s,reachInfo);
+        getTypeUse().generateProlog(s,reachInfo);
         s.print("," + varTransform(getName()) + ")");
     }
 
@@ -518,7 +518,7 @@ aspect GenerateProlog {
     public void FieldDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates field(name,type,opt(initializer)).
         s.print("field(" + quote(getName()) + ",");
-        getAccess().generateProlog(s,reachInfo);
+        getTypeUse().generateProlog(s,reachInfo);
         s.print(",");
         getInitExpOpt().generateProlog(s,reachInfo);
         s.print(")");
@@ -541,7 +541,7 @@ aspect GenerateProlog {
 
     public void ParamDecl.generatePrologField(PrintStream s,ReachabilityInformation reachInfo){
         s.print("field(" + quote(getName()) + ",");
-        getAccess().generateProlog(s,reachInfo);
+        getTypeUse().generateProlog(s,reachInfo);
         s.print(",none)");
     }
 
@@ -764,7 +764,7 @@ aspect GenerateProlog {
     public void VarDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates varDecl(name,type,initialization)"
         s.print("varDecl("+varTransform(getName())+",");
-        this.getAccess().generateProlog(s,reachInfo);
+        this.getTypeUse().generateProlog(s,reachInfo);
         s.print(",");
         this.getInitExpOpt().generateProlog(s,reachInfo);
         s.print(")");

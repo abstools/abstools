@@ -424,7 +424,7 @@ aspect doPrettyPrinter {
     }
 
     public void VarDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        getAccess().doPrettyPrint(stream, formatter);
+        getTypeUse().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());
         if (hasInitExp()) {
@@ -932,7 +932,7 @@ aspect doPrettyPrinter {
             stream.println();
             formatter.afterStmt();
         }
-        getAccess().doPrettyPrint(stream, formatter);
+        getTypeUse().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());
         if (hasInitExp()) {
@@ -1241,7 +1241,7 @@ aspect doPrettyPrinter {
 
     public void ParamDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-        getAccess().doPrettyPrint(stream, formatter);
+        getTypeUse().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());
     }

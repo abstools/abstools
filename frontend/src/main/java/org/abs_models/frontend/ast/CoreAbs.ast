@@ -78,7 +78,7 @@ RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
 
 abstract VarOrFieldDecl ::= <Name>;
 FunctionParamDecl : VarOrFieldDecl ;
-abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
+abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= TypeUse ;
 VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
 FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* ;
 ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
@@ -90,7 +90,7 @@ abstract FunctionDef;
 BuiltinFunctionDef: FunctionDef ::= StringArg:PureExp* ;
 ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
 
-MethodSig ::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
+MethodSig ::= <Name> Annotation* ReturnType:TypeUse Param:ParamDecl*;
 MethodImpl ::= MethodSig Block ;
 
 

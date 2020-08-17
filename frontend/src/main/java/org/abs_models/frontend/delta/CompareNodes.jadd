@@ -30,7 +30,7 @@ aspect CompareNodes {
     }
     
     public boolean FieldDecl.matches(FieldDecl other) {
-        if (! this.getAccess().matches(other.getAccess()))
+        if (! this.getTypeUse().matches(other.getTypeUse()))
             return false;
         if (! this.getName().equals(other.getName()))
             return false;
@@ -38,3 +38,7 @@ aspect CompareNodes {
         return true;
     }
 }
+
+// Local Variables:
+// mode: java
+// End:

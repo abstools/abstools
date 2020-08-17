@@ -243,14 +243,8 @@ public class ContractInference {
         // Interface in the typing environment
         List<Term> l = new LinkedList();
         for (ParamDecl pd : decl.getParamList()) {
-            Access a = pd.getAccess(); // get the type of the parameter
-            if (a instanceof TypeUse) {
-                l.add(expandArgs((TypeUse) a, typeParameterMap));
-            } else {
-                _log.logError("unable to retrieve the type of the parameter \"" + pd.getName() + "\" of Function \""
-                        + moduleName + "." + name + "\"");
-                return;
-            } // should never occur
+            TypeUse a = pd.getTypeUse(); // get the type of the parameter
+            l.add(expandArgs((TypeUse) a, typeParameterMap));
         }
         _env.putFunction(moduleName, name, new FunctionInterface(l, expandArgs(decl.getTypeUse(), typeParameterMap)));
     }

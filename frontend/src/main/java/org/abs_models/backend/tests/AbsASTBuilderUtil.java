@@ -249,7 +249,7 @@ public final class AbsASTBuilderUtil {
 
 
     public static final MethodSig createMethodSig(String methodName,
-            Access returnType,
+            TypeUse returnType,
             ParamDecl... decls) {
 
         List<ParamDecl> dl =
@@ -308,7 +308,7 @@ public final class AbsASTBuilderUtil {
 
     }
 
-    public static final VarDeclStmt getVarDecl(String name, Access a, Exp exp) {
+    public static final VarDeclStmt getVarDecl(String name, TypeUse a, Exp exp) {
         Opt<Exp> opt = new Opt<>();
         if (exp != null) {
             opt.setChild(exp, 0);
@@ -316,10 +316,10 @@ public final class AbsASTBuilderUtil {
         return new VarDeclStmt(new List<>(), new VarDecl(name, a, opt));
     }
 
-    public static final FieldDecl makeFieldDecl(Access access, String name) {
+    public static final FieldDecl makeFieldDecl(TypeUse access, String name) {
         FieldDecl fd = new FieldDecl();
         fd.setName(name);
-        fd.setAccess(access);
+        fd.setTypeUse(access);
         return fd;
     }
 

@@ -565,10 +565,10 @@ aspect TypeChecker {
 
     public void VarDecl.typeCheck(SemanticConditionList e) {
         int nerrors = e.getErrorCount();
-        getAccess().typeCheck(e);
+        getTypeUse().typeCheck(e);
         if (e.getErrorCount() > nerrors) return;
 
-        Type t = getAccess().getType();
+        Type t = getTypeUse().getType();
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
             if (e.getErrorCount() > nerrors) return;
@@ -582,10 +582,10 @@ aspect TypeChecker {
 
     public void FieldDecl.typeCheck(SemanticConditionList e) {
         int nerrors = e.getErrorCount();
-        getAccess().typeCheck(e);
+        getTypeUse().typeCheck(e);
         if (e.getErrorCount() > nerrors) return;
 
-        Type t = getAccess().getType();
+        Type t = getTypeUse().getType();
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
             if (e.getErrorCount() > nerrors) return;
@@ -598,7 +598,7 @@ aspect TypeChecker {
     }
 
     public void ParamDecl.typeCheck(SemanticConditionList e) {
-        getAccess().typeCheck(e);
+        getTypeUse().typeCheck(e);
     }
 
     /**
@@ -1093,7 +1093,7 @@ aspect TypeChecker {
         getVal().typeCheck(e);
         getExp().typeCheck(e);
         if (nerrors == e.getErrorCount()) {
-            TypeCheckerHelper.checkAssignment(e,this,getVar().getAccess().getType(),getVal());
+            TypeCheckerHelper.checkAssignment(e,this,getVar().getTypeUse().getType(),getVal());
         }
     }
 
