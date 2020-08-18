@@ -115,6 +115,7 @@ public class ErlApp {
             "absmodel/_build/default/lib/cowlib/*",
             "absmodel/_build/default/lib/jsx/*",
             "absmodel/_build/default/lib/ranch/*",
+            "absmodel/_build/default/lib/esqlite/*",
 
             // do not copy everything since absmodulename.hrl is generated
             // later -- precompiled runtime.erl and main_app.erl use the wrong

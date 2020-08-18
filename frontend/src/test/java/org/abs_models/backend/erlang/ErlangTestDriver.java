@@ -403,6 +403,30 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     @Override
+    public void assertEvalTrueWithTestfiles(Model m, File... f) throws Exception {
+        File dir = null;
+        try {
+            dir = Files.createTempDir();
+            dir.deleteOnExit();
+            // implementation-specific location for static files; the erlang
+            // backend expects e.g. index.html, database files there
+            File auxdir = new File(dir, "absmodel/_build/default/lib/absmodel/priv");
+            String mainModule = genCode(m, dir, true);
+            for (File auxFile : f) {
+                File rf = new File(resolveFileName(auxFile.toString()));
+                FileUtils.copyFileToDirectory(rf, auxdir);
+            }
+            assertEquals("True",runAndCheck(dir, mainModule));
+        } finally {
+            try {
+                FileUtils.deleteDirectory(dir);
+            } catch (IOException e) {
+                // Ignore Ex, File should be deleted anyway
+            }
+        }
+    }
+
+    @Override
     public BackendName getBackendName() {
         return BackendName.ERLANG;
     }
@@ -418,6 +442,9 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
     @Override
     public boolean supportsDowncasting() { return true; }
+
+    @Override
+    public boolean supportsSQLite() { return true; }
 }
 
 class TimeoutThread implements Runnable {

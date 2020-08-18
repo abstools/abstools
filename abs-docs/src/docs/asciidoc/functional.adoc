@@ -753,16 +753,6 @@ def A head<A>(List<A> list) = <3>
 <2> This parametric function takes lists with arbitrary values and returns an Integer.
 <3> This parametric function returns the same type that is contained in the list.  (Note that `head` is a partial function which is not defined for empty lists.)
 
-NOTE: The ABS standard library contains some special functions that cannot be
-defined with pure expressions, for example the function `println`.  The
-definition of such functions is done via a special function body of the form
-`builtin`, with optional pure expression arguments `builtin(a, "b", 3)`.  Such
-builtin functions have to be defined separately in the code generator for each
-backend where the model is compiled; details of this are
-implementation-specific and outside the scope of this manual.
-
-
-
 [[sec:partially-defined-functions]]
 === Partial Function Definitions
 
@@ -887,3 +877,106 @@ expansion during the type checking of core ABS, but the expanded function
 definition has an annotation referring to the statement that caused the
 expansion, hence error reporting will be accurate wrt. the original source
 code.
+
+=== Built-In Functions
+
+Some special "functions" cannot be defined with pure expressions, for example
+the function `println`.  The definition of such functions is done via a
+special function body written as `builtin`, with optional pure expression
+arguments `builtin(a, "b", 3)`.  Such builtin functions have to be defined
+separately in the code generator for each backend where the model is compiled.
+
+Built-in functions in the standard library include:
+
+- The functions `sqrt`, `log`, `exp` that work on floating-point numbers
+- Functions that convert between different numerical types: `truncate`, `float`, `rat`, `floor`, `ceil`, `numerator`, `denominator`
+- String functions: `substr`, `strlen`, `toString`, `println`
+- Clock access: `currentms`, `ms_since_model_start`
+- Functions that return process attributes (see Section <<sec:process-attributes>>)
+- The `random` function
+
+=== Embedded SQLite Database Queries
+
+The Erlang backend can read from a relational database and convert the
+result into ABS lists.  Currently only SQLite databases are supported.
+
+A SQLite database is queried by writing a function with a `builtin`
+body with three arguments: a literal `sqlite3`, the name of the
+database file, and the query as a SQL string.  The return value is a
+list of ABS values.  The return type of such a function can be:
+
+- `Int`, when the query returns rows with a single SQLite `INTEGER`
+  value;
+- `Float`, when the query returns rows with a single SQLite `INTEGER`
+  or `REAL` value;
+- `Rat`, when the query returns rows with a single SQLite `INTEGER` or
+  `REAL` value;
+- `Bool`, when the query returns rows with a single SQLite `INTEGER`
+  value, where `0` corresponds to ABS `False`;
+- `String`, when the query returns rows with a single SQLite `TEXT`
+  value;
+- An algebraic datatype, with a single constructor taking only the
+  above datatypes, such that the constructor can be invoked for each
+  row returned by the query.
+
+[source]
+.Example: creating a database
+----
+$ sqlite3 /tmp/test.sqlite3
+CREATE TABLE IF NOT EXISTS test_table (
+  int_value INTEGER,
+  float_value REAL,
+  string_value TEXT,
+  bool_value BOOLEAN
+);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(15, 13.53, "hello", 0);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(30, 42.5, "world", 1);
+.quit
+----
+
+With the above database, the following ABS model can be run:
+
+[source]
+.Example: reading from the database
+----
+module Test;
+
+def List<String> fstring() = builtin(sqlite3, <1>
+    "/tmp/test.sqlite3",
+    "SELECT string_value FROM test_table");
+
+def List<Rat> frat() = builtin(sqlite3, <2>
+    "/tmp/test.sqlite3",
+    "SELECT float_value FROM test_table");
+
+data RowResult = RowResult(Int, Bool, Float, Rat, String);
+
+def List<RowResult> ftuple() = builtin(sqlite3, <3>
+    "/tmp/test.sqlite3",
+    `SELECT int_value, bool_value, float_value, float_value, string_value
+     FROM test_table`);
+
+{
+    foreach (v, i in frat()) {
+        println(`$i$'th rational value is $v$`);
+    }
+    foreach (v, i in fstring()) {
+        println(`$i$'th string value is $v$`);
+    }
+    foreach (v, i in ftuple()) {
+        println(`$i$'th tuple is $v$`);
+    }
+}
+----
+<1> A `builtin` function with first argument `sqlite3` takes two more arguments: the name of the database, and a SQL query string.
+<2> SQL float values are converted to ABS rational values
+<3> Rows of SQL relations with more than one column are converted into ABS user-defined datatypes. The data constructor of the result datatype has to take the same number of arguments as the `SELECT` returns, and the datatypes must be compatible.
+
+NOTE: When the database file (the second argument to the `builtin` expression)
+does not contain a path, the model will look for it in the `priv` directory of
+the compiled model.  That directory is the value of the erlang function
+`code:priv_dir(absmodel)`, typically
+`gen/erl/absmodel/_build/default/lib/absmodel/priv/`.
+
+NOTE: The SQL query currently cannot contain parameters; this will be
+implemented in a future release.
