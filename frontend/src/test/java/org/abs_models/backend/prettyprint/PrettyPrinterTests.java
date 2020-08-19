@@ -104,12 +104,6 @@ public class PrettyPrinterTests extends ABSTest {
         assertParse(prettyPrint(m), Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING_AFTER_TYPECHECK);
     }
 
-    private static String readFile(String filename) throws IOException
-    {
-        byte[] encoded = Files.readAllBytes(Paths.get(resolveFileName(filename)));
-        return new String(encoded, StandardCharsets.UTF_8);
-    }
-
     private static String prettyPrint(ASTNode<?> d) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);

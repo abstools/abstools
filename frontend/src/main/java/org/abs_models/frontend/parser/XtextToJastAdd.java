@@ -1583,9 +1583,6 @@ public class XtextToJastAdd {
 
     private static ProductExpr fromXtext(final org.abs_models.xtext.abs.ProductExpression xtext_exp) {
         ProductExpr result = null;
-        if (xtext_exp == null) {
-            result = new ProductFeatureSet();
-        }
         if (xtext_exp instanceof org.abs_models.xtext.abs.ProductExprDifference) {
             result = new ProductDifference(fromXtext(xtext_exp.getLeft()),
                                            fromXtext(xtext_exp.getRight()));

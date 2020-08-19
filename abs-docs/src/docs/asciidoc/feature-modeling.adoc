@@ -13,9 +13,7 @@ called delta modules (deltas).
 
 ABS has currently experimental support for local product lines, which describe the 
 variability of a single module and allow one to use multiple variants of this module in one model.
-The following sections describe global product lines, 
-local product lines are in active development and are not yet documented here. 
-An example using the latest state is given at `examples/LocalPL/Rails.abs`.
+The following sections describe global product lines, local product lines are described in the very last section of this chapter.
 
 
 === Delta-Oriented Programming
@@ -386,4 +384,86 @@ ABS programs.
 
 
 
+
+
+
+
+=== Local Product Lines
+Local product lines are an experimental feature.
+
+Local product lines describe the variability of a single module. When a variable class or interface of this module is referenced, then a variant of this module is generated.
+For this generation, local deltas are used. A local delta is a special delta which modifies only classes and interfaces within its module. 
+Similarly, there are local features, but instead of the feature modeling language for global variability, local product lines use simple boolean expressions.
+To reference variable classes and interfaces, the type reference or `new` expression must contain a product of the module.
+
+[source]
+----
+module M;
+export I,C;
+features f,g with (f || g) && !(f && g); //local features
+
+interface I { Unit m(); }
+base class C implements I { }
+
+//local deltas
+delta D1; modifies C { adds Unit m() {println("1");} }
+delta D2; modifies C { adds Unit m() {println("2");} }
+
+delta D1 when f; delta D2 when g;
+
+module N;
+import * from M;
+{
+    I i = new C() with {f}; //references a variant of C
+    i!m(); //prints "1"
+}
+----
+
+In modules, it is distinguished between unique, `base` and `relative` classes (and interfaces). 
+Only `base` classes may be modified by local deltas.
+A `relative` class may reference a `base` class, but may not be modified by local deltas.
+A unique class has no modifier. It may neither be modified by local deltas, nor reference `base` or `relative` classes.
+
+Local variability is based on a syntactic operations, the above example results in the following model after rewriting but before type checking:
+[source]
+----
+module M;
+export *;
+interface I { Unit m(); }
+
+module M_f;
+import * from M;
+export I,C;
+
+class C implements I { Unit m() {println("1");} }
+module N;
+import * from M;
+import * from M_f;
+{
+    M.I i = new M_f.D();
+    i!m();
+}
+----
+
+If both global and local product lines are used, then first the global product line is flattened and then the local ones. 
+Local and global features are disjoint sets, global feature selection can, thus, not influence local feature selection.
+
+==== Syntax
+The syntax of modules is extended as follows.
+
+ - Modules can define products using product declarations `product _TypeId_ = { _Features_ }`. 
+
+ - Modules can declare local features and a feature model using `features _Features_ with _BF_`, where `_BF_` is a boolean formula over the introduced features using the operators `||, &&, !`.
+
+ - Modules can contain local deltas and local delta clauses.
+
+ - Local deltas are identical to global deltas, except that (1) no `uses` module access clause can be used and (2) class and interfaces in module modifiers are not prefixed with the module. Local deltas must follow class and interface declarations.
+
+ - Local delta clauses are identical to global delta clauses. Local delta clauses must follow local deltas.
+
+The syntax of expressions, type references, class and interface declarations is extended as follows:
+
+ - The `new` expression and type references can have a `with _PE_` clause, where `_PE_` is either a product name or a set of features.
+
+- Class and interface declarations may be prefixed with `base`, `relative` or both.
 

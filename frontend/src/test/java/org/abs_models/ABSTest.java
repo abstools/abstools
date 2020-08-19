@@ -10,6 +10,7 @@ import static org.abs_models.ABSTest.Config.TYPE_CHECK;
 import static org.abs_models.ABSTest.Config.WITHOUT_DESUGARING_AFTER_TYPECHECK;
 import static org.abs_models.ABSTest.Config.WITHOUT_MODULE_NAME;
 import static org.abs_models.ABSTest.Config.WITH_LOC_INF;
+import static org.abs_models.ABSTest.Config.USES_LOCAL_PL;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -20,6 +21,11 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import com.google.inject.Injector;
 
@@ -51,7 +57,8 @@ public class ABSTest {
         EXPECT_TYPE_ERROR,
         EXPECT_WARNING,
         TYPE_CHECK,
-        WITHOUT_DESUGARING_AFTER_TYPECHECK
+        WITHOUT_DESUGARING_AFTER_TYPECHECK,
+        USES_LOCAL_PL
     }
 
     public static class ABSFileNameFilter implements FilenameFilter {
@@ -154,6 +161,11 @@ public class ABSTest {
                 p.evaluateAllProductDeclarations();
                 if (isSet(TYPE_CHECK, config)) {
                     // copy other choice parts of Main.analyzeFlattenAndRewriteModel
+                    
+          			// this is needed as some tests for global PL do checks on the AST that do not hold for local product lines 
+          			if (isSet(USES_LOCAL_PL, config)) { 
+                    	p.flattenforLocalProducts();
+                    }
                     p.flattenTraitOnly();
                     p.collapseTraitModifiers();
                     p.expandPartialFunctions();
@@ -247,6 +259,14 @@ public class ABSTest {
             }
         }
         return m;
+    }
+    
+    
+
+    protected static String readFile(String filename) throws IOException
+    {
+        byte[] encoded = Files.readAllBytes(Paths.get(resolveFileName(filename)));
+        return new String(encoded, StandardCharsets.UTF_8);
     }
 
 }

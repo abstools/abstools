@@ -1,3 +1,4 @@
+//Copies but keeps the attributes needed for local product lines intact
 aspect Copy {
     public ModuleDecl ModuleDecl.freshCopy() {
         ModuleDecl mod = treeCopyNoTransform();

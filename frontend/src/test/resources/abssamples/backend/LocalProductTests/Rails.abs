@@ -1,0 +1,132 @@
+/*
+A switch has either a mechanic of electric mechanism to move. 
+*/
+module Switches;
+export ISwitch, ITrack, CSwitch, CTrack;
+
+//unique interface
+interface ISwitch{
+ Int switch1();
+}
+interface ITrack {
+    ISwitch appendSwitch();
+}
+
+//Will be modified accoring to the movement mechanism
+base class CSwitch implements ISwitch{
+ Int switch1(){
+    return 3;
+}
+}
+
+//This is a before the point of a switch. It is *not* modified but dependens on the Switch class.
+relative class CTrack (ISwitch sw) implements ITrack {
+    ISwitch appendSwitch(){
+	ISwitch newSwitch;
+        return new CSwitch();
+    }
+}
+
+//PL parts
+features Electric, Mechanic with (Electric && !Mechanic) || (!Electric && Mechanic);
+
+delta EDelta;
+modifies class CSwitch {
+   adds Int returnValue = 4;
+}
+
+
+delta MDelta;
+modifies class CSwitch {
+   adds Bool isMechanic(){
+	return True;
+   }
+}
+
+delta EDelta when Electric;
+delta MDelta when Mechanic;
+
+
+
+
+
+/*
+A signal shows its state either with a Light bulb or by a Form signal.
+If you have a Light signal, you also need a bulb internally.
+*/
+module Signals;
+export CSig, ISig;
+
+//unique interface
+interface ISig{
+ Int signal();
+}
+
+//will be modified
+base class CSig implements ISig {
+  Int signal(){
+    return 0;
+  }
+}
+
+
+
+features Light, Form with (Light && !Form) || (!Light && Form);
+
+delta LDelta;
+adds interface IBulb { 
+  Unit off();
+  Unit on();
+}
+adds class Bulb{
+ Bool pwr = False;
+ Unit off(){
+    pwr = False;
+ }
+ Unit on(){
+    pwr = True;
+ }
+}
+modifies class CSig {
+  adds IBulb b;
+}
+
+delta FDelta;
+modifies class CSig {
+ adds Int bulbPwr = 2;
+}
+
+delta LDelta when Light;
+delta FDelta when Form;
+
+
+
+
+
+/*
+Building the model together. 
+This does not show how the "with" clause can be used at all places where you can use interfaces.
+*/
+module MainModule;
+import * from Signals;
+import * from Switches;
+product ESwitch = {Electric};
+product LSig = {Light};
+class Test() {
+    ISwitch testME(){
+        return new CSwitch() with {Mechanic};
+    }
+}
+
+
+{
+   ISwitch swNormal = new CSwitch () with {Electric};//object creation
+   ISwitch swMechanic;
+   swMechanic = new CSwitch () with {Mechanic}; //object creation
+   ISig with LSig signalL;
+   signalL = new CSig();
+   ISig with {Form} signalF; //variable declaration
+   signalF = new CSig();
+
+}
+

@@ -635,7 +635,7 @@ DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
 //Local product lines
 LocalProductLineDeclaration
     : 'features' features+=Feature (',' features+=Feature)* ('with' cond=DeltaClauseApplicationClause )?';'
-      (deltas+=LocalDeltaDeclaration)+
+      (deltas+=LocalDeltaDeclaration)*
       (activationConditions+=ActivationCondition)*
       (applicationOrder+=ApplicationOrder)*
     ;
