@@ -372,7 +372,7 @@ For a description of the pattern syntax, see <<case-expression>>.
 ----
 Pair<Int, Int> p = Pair(2, 3);
 Int x = 0;
-switch p {
+switch (p) {
   Pair(2, y) => { x = y; skip; }
   _ => x = -1;
 }
