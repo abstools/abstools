@@ -66,7 +66,7 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         LocationTypeVar rhv = getVar(rht);
 
         if (adaptTo != null && getVar(adaptTo) != LocationTypeVar.NEAR) {
-            rhv = adaptTo(rhv, dir, lhv, null, n);
+            rhv = adaptTo(rhv, dir, getVar(adaptTo), null, n);
         }
         constraints.add(Constraint.sub(rhv, lhv, n));
     }
@@ -136,8 +136,6 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         assert lv != null;
         if (call instanceof SyncCall) {
             constraints.add(Constraint.eq(lv, LocationTypeVar.NEAR, call));
-        } else {
-            constraints.add(Constraint.sub(lv, LocationTypeVar.FAR, call));
         }
     }
 

@@ -114,6 +114,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     public LocationType getLocationType(Type type) {
         if (inferred != null) {
             LocationTypeVar lv = LocationTypeVar.getVar(type);
+            LocationType lt = inferred.get(lv);
             if (lv != null)
                 return defaultIfNull(inferred.get(lv));
         }

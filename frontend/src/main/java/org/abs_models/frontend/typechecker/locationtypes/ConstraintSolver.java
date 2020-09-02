@@ -15,6 +15,7 @@ public class ConstraintSolver {
     private final Constraints constraints;
     private final SemanticConditionList errors = new SemanticConditionList();
     private final Map<LocationTypeVar, LocationTypeVar> rewritten = new HashMap<>();
+    private final Set<LocationTypeVar> allVars;
 
     private final List<Update> updates = new ArrayList<>();
 
@@ -22,6 +23,7 @@ public class ConstraintSolver {
 
     public ConstraintSolver(Constraints cs, boolean debug) {
         this.constraints = cs;
+        this.allVars = new HashSet<>(cs.getVars());
         this.debug = debug;
     }
 
@@ -47,7 +49,7 @@ public class ConstraintSolver {
             }
         }
 
-        for (LocationTypeVar v : constraints.getVars()) {
+        for (LocationTypeVar v : allVars) {
             if (!resolved.containsKey(v)) {
                 // Fallback to `SOMEWHERE`
                 resolved.put(v, LocationType.SOMEWHERE);
