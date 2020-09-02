@@ -18,34 +18,32 @@ import java.util.Map;
 
 public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
     private final Constraints constraints = new Constraints();
+
     private LocationType defaultType = LocationType.INFER;
 
-    protected LocationTypeInferenceExtension(Model m) {
-        super(m);
+    private boolean debug = false;
+
+    public Map<LocationTypeVar, LocationType> getResults() {
+        return results;
     }
 
-    public static void main(String[] args) {
-        String pre = "module UnitTest; export *; import * from ABS.StdLib;";
-        String INT = pre + " interface I { [Near] I m(); [Far] I n([Near] I i); Unit farM([Far] I i);}" +
-            " class C([Somewhere] I f) implements I { " +
-            "    [Far] I farField; " +
-            "    [Near] I nearField; " +
-            "    [Near] I m() { [Near] I i; i = this; return nearField; }  " +
-            "    [Far] I n([Near] I i) { return farField; }" +
-            "    Unit farM([Far] I i) { }}" +
-            " interface J { } class E implements J { }";
-        String s = INT + "{ I i; I f; i = new local C(f); }";
-        s = pre + "interface I { } class C implements I {} { I i; [Near] I j; i = j; }";
-        try {
-            Model m = Main.parse(null, new StringReader(s));
-            LocationTypeInferenceExtension ltie = new LocationTypeInferenceExtension(m);
-            m.registerTypeSystemExtension(ltie);
-            m.typeCheck();
+    private Map<LocationTypeVar, LocationType> results;
 
-            System.out.println("\n" + m.getTypeErrors());
-        } catch (IOException | InternalBackendException e) {
-            e.printStackTrace();
-        }
+    public LocationType getDefaultType() {
+        return defaultType;
+    }
+
+    public void setDefaultType(LocationType defaultType) {
+        this.defaultType = defaultType;
+    }
+
+    public void enableDebug() {
+        this.debug = true;
+        constraints.enableDebug();
+    }
+
+    public LocationTypeInferenceExtension(Model m) {
+        super(m);
     }
 
     private LocationTypeVar adaptTo(LocationTypeVar expLocType, AdaptDirection dir, LocationTypeVar adaptTo, ASTNode<?> typeNode, ASTNode<?> originatingNode) {
@@ -58,7 +56,7 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
     public void checkEq(Type lt, Type t, ASTNode<?> origin) {
         LocationTypeVar lv1 = getVar(lt);
         LocationTypeVar lv2 = getVar(t);
-        Constraint c = Constraint.sub(lv1, lv2, origin);
+        Constraint c = Constraint.eq(lv1, lv2, origin);
         constraints.add(c);
     }
 
@@ -148,18 +146,22 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void finished() {
-        ConstraintSolver solver = new ConstraintSolver(constraints);
-        Map<LocationTypeVar, LocationType> results = solver.solve();
+        ConstraintSolver solver = new ConstraintSolver(constraints, debug);
+        results = solver.solve();
 
-        for (Map.Entry<LocationTypeVar, LocationType> e : results.entrySet()) {
-            System.out.println("" + e.getKey() + " := " + e.getValue());
+        if (debug || true) {
+            for (Map.Entry<LocationTypeVar, LocationType> e : results.entrySet()) {
+                System.out.println("" + e.getKey() + " := " + e.getValue());
+            }
         }
 
         if (!errors.containsErrors()) {
             SemanticConditionList sel = new SemanticConditionList();
             List<TypeSystemExtension> exts = model.getTypeExt().getTypeSystemExtensionList();
             model.getTypeExt().clearTypeSystemExtensions();
-            model.getTypeExt().register(new LocationTypeExtension(model));
+            LocationTypeExtension lte = new LocationTypeExtension(model, results);
+            lte.setDefaultType(defaultType);
+            model.getTypeExt().register(lte);
             model.typeCheck(sel);
             errors.addAll(sel);
             model.getTypeExt().clearTypeSystemExtensions();

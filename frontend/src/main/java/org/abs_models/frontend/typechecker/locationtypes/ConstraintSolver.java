@@ -4,11 +4,9 @@ import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.ASTNode;
-import org.abs_models.frontend.ast.Const;
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.abs_models.frontend.typechecker.locationtypes.LocationTypeVar.*;
 
@@ -20,8 +18,11 @@ public class ConstraintSolver {
 
     private final List<Update> updates = new ArrayList<>();
 
-    public ConstraintSolver(Constraints cs) {
+    private boolean debug;
+
+    public ConstraintSolver(Constraints cs, boolean debug) {
         this.constraints = cs;
+        this.debug = debug;
     }
 
     public Map<LocationTypeVar, LocationType> solve() {
@@ -66,7 +67,7 @@ public class ConstraintSolver {
     private void resolveEq(Map<LocationTypeVar, LocationType> resolved, Constraint.Eq eq) {
         LocationTypeVar expected = eq.expected;
         LocationTypeVar actual = eq.actual;
-        ASTNode node = eq.node;
+        ASTNode<?> node = eq.node;
 
         if (expected == actual) return;
 
@@ -220,7 +221,8 @@ public class ConstraintSolver {
     }
 
     private void rewrite(LocationTypeVar from, LocationTypeVar to) {
-        System.out.println((char) 27 + "[34m" + "Rewriting " + from + " => " + to + (char) 27 + "[0m");
+        if (debug)
+            System.out.println((char) 27 + "[34m" + "Rewriting " + from + " => " + to + (char) 27 + "[0m");
 
         for (Constraint c : constraints.get(from)) {
             add(c.replace(from, to));
@@ -240,17 +242,23 @@ public class ConstraintSolver {
     private boolean applyUpdates() {
         boolean changed = false;
         for (Update u : updates) {
+            Constraint c = u.constraint;
+
+            for (LocationTypeVar v : u.constraint.vars())
+                if (rewritten.containsKey(v))
+                    c = c.replace(v, rewritten.get(v));
+
             switch (u.kind) {
                 case ADD:
                     changed = true;
-                    constraints.add(u.constraint);
+                    constraints.add(c);
                     break;
                 case REMOVE:
                     changed = true;
-                    constraints.remove(u.constraint);
+                    constraints.remove(c);
                     break;
                 case KEEP:
-                    constraints.add(u.constraint);
+                    constraints.add(c);
             }
         }
         updates.clear();

@@ -53,6 +53,7 @@ import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeInferenceExtension;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -357,7 +358,8 @@ public class Main {
         if (arguments.locationTypeInferenceEnabled) {
             if (arguments.verbose)
                 System.out.println("Registering Location Type Checking...");
-            LocationTypeExtension lte = new LocationTypeExtension(m);
+            LocationTypeInferenceExtension ltie = new LocationTypeInferenceExtension(m);
+
             if (arguments.verbose) {
                 // lte.enableStatistics();
             }
@@ -365,12 +367,12 @@ public class Main {
                 // ltie.enableDebugOutput();
             }
             if (arguments.defaultLocationType != null) {
-                lte.setDefaultType(arguments.defaultLocationType);
+                ltie.setDefaultType(arguments.defaultLocationType);
             }
             /*if (arguments.locationTypeScope != null) {
                 ltie.setLocationTypingPrecision(arguments.locationTypeScope);
             }*/
-            m.registerTypeSystemExtension(lte);
+            m.registerTypeSystemExtension(ltie);
         }
     }
 

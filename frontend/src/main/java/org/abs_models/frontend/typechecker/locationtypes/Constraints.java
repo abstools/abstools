@@ -13,11 +13,17 @@ public class Constraints {
     private final List<Constraint> constraints = new ArrayList<>();
     private final Map<LocationTypeVar, List<Constraint>> map = new HashMap<>();
     private final Set<Constraint> seen = new HashSet<>();
+    private boolean debug = false;
+
+    public void enableDebug() {
+        this.debug = true;
+    }
 
     public void add(Constraint c) {
         if (seen.contains(c)) return;
         seen.add(c);
-        logConstraint(c);
+        if (debug)
+            logConstraint(c);
         constraints.add(c);
         for (LocationTypeVar v : c.vars()) {
             List<Constraint> cs = map.computeIfAbsent(v, k -> new ArrayList<>());
@@ -27,6 +33,7 @@ public class Constraints {
     }
 
     public void remove(Constraint c) {
+        seen.remove(c);
         constraints.remove(c);
         for (LocationTypeVar v : c.vars()) {
             List<Constraint> cs = map.computeIfAbsent(v, k -> new ArrayList<>());
@@ -63,15 +70,8 @@ public class Constraints {
     }
 
     private void logConstraint(Constraint c) {
-        boolean show = false;
-        for (LocationTypeVar v : c.vars())
-            if (v.getId() > 51 || v.isLocationType()) {
-                show = true;
-                break;
-            }
         String at = c.node == null ? "" : " @" + c.node.getPositionString();
-        if (show)
-            System.out.println("Add constraint " + c + at);
+        System.out.println("Add constraint " + c + at);
     }
 
     public void print() {

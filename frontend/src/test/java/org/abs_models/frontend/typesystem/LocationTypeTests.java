@@ -13,9 +13,7 @@ import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.VarDeclStmt;
-import org.abs_models.frontend.typechecker.locationtypes.LocationType;
-import org.abs_models.frontend.typechecker.locationtypes.LocationTypeCheckerException;
-import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
+import org.abs_models.frontend.typechecker.locationtypes.*;
 import org.junit.Test;
 
 public class LocationTypeTests extends FrontendTest {
@@ -375,17 +373,18 @@ public class LocationTypeTests extends FrontendTest {
     private Model assertInfer(String code, LocationType expected, boolean fails) {
         Model m = assertParse(code);
         //m.setLocationTypingEnabled(true);
-        LocationTypeExtension lte = new LocationTypeExtension(m);
-        m.registerTypeSystemExtension(lte);
+        LocationTypeInferenceExtension ltie = new LocationTypeInferenceExtension(m);
+        m.registerTypeSystemExtension(ltie);
         SemanticConditionList e = m.typeCheck();
         //System.out.println(ltie.getConstraints());
-        assertEquals(!e.containsErrors() ? "" : "Found error: " + e.getFirstError().getMessage(), fails, e.containsErrors());
+        assertEquals(!e.containsErrors() ? "" : "Found error: " + e.getFirstError().getMessage() + e.getFirstError().getNode().getPositionString(), fails, e.containsErrors());
 
         //assertTrue("Inference failed", generated != null);
         //assertEquals(fails, generated == null);
         if (expected != null) {
             VarDeclStmt vds = ((VarDeclStmt) m.getMainBlock().getStmt(0));
-            LocationType t = lte.getLocationType(vds.getVarDecl().getType());
+            LocationTypeVar lv = LocationTypeInferenceExtension.getVar(vds.getVarDecl().getType());
+            LocationType t = ltie.getResults().get(lv);
             assertTrue(t.toString(), expected == LocationType.FAR ? t == LocationType.FAR || t.isParametricFar() : expected == t);
         }
         return m;

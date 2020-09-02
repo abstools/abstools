@@ -114,6 +114,37 @@ public class LocationType {
             || this.isParametricFar() && t.isFar();
     }
 
+    public LocationType adaptTo(LocationType to, AdaptDirection dir) {
+        // Bottom stays the same
+        if (isBottom()) return this;
+
+        // If we adapt to FAR and we are NEAR, we are on a different COG than the caller (=> FAR)
+        // else we are somewhere
+        if (to.isFar()) return isNear() ? FAR : SOMEWHERE;
+
+        // If we have more concrete information about where we are adapted, use it
+        if (to.isParametricFar()) {
+            // If we are NEAR, and we are a return type, simply use the callee's type
+            // else we are a param and we simply are FAR (because we don't know our COG)
+            if (isNear())
+                return dir.isFrom() ? to : FAR;
+            // We we are a parametric FAR and a different one from `to`:
+            // If we are a return type, we are SOMEWHERE
+            // else we stay the same
+            if (isParametricFar() && this != to)
+                return dir.isFrom() ? SOMEWHERE : this;
+            return SOMEWHERE;
+        }
+
+        if (to.isNear()) return this;
+
+        if (to.isSomewhere()) return SOMEWHERE;
+
+        if (to.isBottom()) return SOMEWHERE;
+
+        throw new IllegalArgumentException("Cannot use location type " + to + " to adapt to");
+    }
+
     public String toAnnotationString() {
         return "[" + toString() + "] ";
     }

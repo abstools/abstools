@@ -12,12 +12,21 @@ import org.abs_models.frontend.typechecker.TypeAnnotation;
 import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
+import java.util.Map;
+
 public class LocationTypeExtension extends DefaultTypeSystemExtension {
 
-    private LocationType defaultType = LocationType.INFER;
+    private LocationType defaultType = LocationType.SOMEWHERE;
+
+    private Map<LocationTypeVar, LocationType> inferred;
 
     public LocationTypeExtension(Model m) {
         super(m);
+    }
+
+    public LocationTypeExtension(Model m, Map<LocationTypeVar, LocationType> inferred) {
+        super(m);
+        this.inferred = inferred;
     }
 
     public void setDefaultType(LocationType defaultType) {
@@ -26,10 +35,16 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {
-        LocationTypeVar lhv = LocationTypeVar.getVar(lht);
-        LocationTypeVar rhv = LocationTypeVar.getVar(rht);
+        LocationType lhlt = getLocationType(lht);
+        LocationType rhlt = getLocationType(rht);
 
-
+        LocationType adaptedRhlt = rhlt;
+        if (adaptTo != null) {
+            adaptedRhlt = rhlt.adaptTo(getLocationType(adaptTo), dir);
+        }
+        if (!adaptedRhlt.isSubtypeOf(lhlt)) {
+            errors.add(new TypeError(n, ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN, adaptedRhlt.toString(), lhlt.toString()));
+        }
     }
 
     @Override
@@ -97,6 +112,11 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
 
     public LocationType getLocationType(Type type) {
+        if (inferred != null) {
+            LocationTypeVar lv = LocationTypeVar.getVar(type);
+            if (lv != null)
+                return defaultIfNull(inferred.get(lv));
+        }
         return defaultIfNull((LocationType) type.getMetaData(LocationType.LOCATION_KEY));
     }
 
