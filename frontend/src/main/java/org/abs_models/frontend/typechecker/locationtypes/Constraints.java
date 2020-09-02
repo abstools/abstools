@@ -42,6 +42,10 @@ public class Constraints {
         }
     }
 
+    public List<Constraint> asList() {
+        return constraints;
+    }
+
     public List<Constraint> get(LocationTypeVar lv) {
         return map.getOrDefault(lv, new ArrayList<>());
     }
@@ -67,6 +71,12 @@ public class Constraints {
 
     public int size() {
         return constraints.size();
+    }
+
+    public void clear() {
+        constraints.clear();
+        seen.clear();
+        map.clear();
     }
 
     private void logConstraint(Constraint c) {

@@ -87,6 +87,14 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         return tv;
     }
 
+    private void adaptAndSet(Type rht, AdaptDirection dir, LocationTypeVar adaptTo, ASTNode<?> origin) {
+        if (adaptTo != LocationTypeVar.NEAR) {
+            LocationTypeVar rlv = getVar(rht);
+            LocationTypeVar adapted = adaptTo(rlv, dir, adaptTo, null, origin);
+            annotateVar(rht, adapted);
+        }
+    }
+
     private void annotateVar(Type t, LocationTypeVar lv) {
         LocationTypeVar.setVar(t, lv);
     }
@@ -96,10 +104,10 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         if (on instanceof SyncCall) {
         } else if (on instanceof AsyncCall) {
             AsyncCall ac = (AsyncCall) on;
-            // TODO
+            adaptAndSet(t, AdaptDirection.FROM, getVar(ac.getCallee().getType()), on);
         } else if (on instanceof AwaitAsyncCall) {
             AwaitAsyncCall ac = (AwaitAsyncCall) on;
-            // TODO
+            adaptAndSet(t, AdaptDirection.FROM, getVar(ac.getCallee().getType()), on);
         } else if (on instanceof ThisExp) {
             annotateVar(t, LocationTypeVar.NEAR);
         } else if (on instanceof NewExp) {
@@ -109,6 +117,7 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
                 lv = LocationTypeVar.NEAR;
             } else {
                 lv = LocationTypeVar.FAR;
+                // TODO
             }
             annotateVar(t, lv);
         } else {

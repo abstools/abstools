@@ -132,7 +132,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
 
     public void adaptTo(Type type, AdaptDirection dir, Type to) {
-
+        setLocationType(type, getLocationType(type).adaptTo(getLocationType(to), dir));
     }
 
 

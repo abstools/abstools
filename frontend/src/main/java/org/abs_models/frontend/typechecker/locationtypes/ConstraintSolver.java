@@ -34,9 +34,10 @@ public class ConstraintSolver {
 
         boolean changed;
         do {
-            while (constraints.hasNext()) {
-                resolve(resolved, constraints.next());
-            }
+            List<Constraint> workingSet = constraints.asList();
+            for (Constraint c : workingSet)
+                resolve(resolved, c);
+            constraints.clear();
             changed = applyUpdates();
         } while (changed);
 
@@ -146,12 +147,12 @@ public class ConstraintSolver {
         List<Constraint> expectedCs = constraints.get(expected);
         List<Constraint> actualCs = constraints.get(actual);
 
-        if (expectedCs.size() == 1 || actualCs.size() == 1) {
+        if (expectedCs.size() <= 1 && actualCs.size() <= 1) {
             add(Constraint.eq(expected, actual, node));
             return;
         }
 
-        if (actualCs.stream().noneMatch(c -> c.isSub() && ((Constraint.Sub) c).actual == actual)) {
+        if (actualCs.stream().filter(c -> c.isSub() && ((Constraint.Sub) c).actual == actual).count() == 1) {
             add(Constraint.eq(expected, actual, node));
             return;
         }
@@ -215,6 +216,7 @@ public class ConstraintSolver {
                 return;
             }
             add(Constraint.eq(expected, res, node));
+            return;
         }
 
         keep(adapt);
