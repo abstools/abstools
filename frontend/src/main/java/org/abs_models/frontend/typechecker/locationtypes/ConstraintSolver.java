@@ -68,8 +68,8 @@ public class ConstraintSolver {
     }
 
     private void resolveEq(Map<LocationTypeVar, LocationType> resolved, Constraint.Eq eq) {
-        LocationTypeVar expected = eq.expected;
-        LocationTypeVar actual = eq.actual;
+        LocationTypeVar expected = getRewritten(eq.expected);
+        LocationTypeVar actual = getRewritten(eq.actual);
         ASTNode<?> node = eq.node;
 
         if (expected == actual) return;
@@ -98,8 +98,8 @@ public class ConstraintSolver {
     }
 
     private void resolveSub(Map<LocationTypeVar, LocationType> resolved, Constraint.Sub sub) {
-        LocationTypeVar expected = sub.expected;
-        LocationTypeVar actual = sub.actual;
+        LocationTypeVar expected = getRewritten(sub.expected);
+        LocationTypeVar actual = getRewritten(sub.actual);
         ASTNode<?> node = sub.node;
 
         if (expected == actual) {
@@ -179,10 +179,10 @@ public class ConstraintSolver {
     }
 
     private void resolveAdapt(Map<LocationTypeVar, LocationType> resolved, Constraint.Adapt adapt) {
-        LocationTypeVar expected = adapt.expected;
-        LocationTypeVar actual = adapt.actual;
+        LocationTypeVar expected = getRewritten(adapt.expected);
+        LocationTypeVar actual = getRewritten(adapt.actual);
         AdaptDirection dir = adapt.dir;
-        LocationTypeVar adaptTo = adapt.adaptTo;
+        LocationTypeVar adaptTo = getRewritten(adapt.adaptTo);
         ASTNode<?> node = adapt.node;
 
         if (!resolved.containsKey(adaptTo)) {
@@ -224,14 +224,16 @@ public class ConstraintSolver {
         keep(adapt);
     }
 
+    private LocationTypeVar getRewritten(LocationTypeVar lv) {
+        return rewritten.getOrDefault(lv, lv);
+    }
+
     private void rewrite(LocationTypeVar from, LocationTypeVar to) {
         if (debug)
             System.out.println((char) 27 + "[34m" + "Rewriting " + from + " => " + to + (char) 27 + "[0m");
 
-        for (Constraint c : constraints.get(from)) {
-            add(c.replace(from, to));
-            remove(c);
-        }
+        if (rewritten.containsKey(from))
+            throw new IllegalArgumentException("LocationVar " + from + " cannot be rewritten to " + to + "! Already rewritten to " + rewritten.get(from));
 
         if (rewritten.containsValue(from)) {
             for (Map.Entry<LocationTypeVar, LocationTypeVar> e : rewritten.entrySet()) {
