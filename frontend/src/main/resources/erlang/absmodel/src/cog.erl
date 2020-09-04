@@ -590,16 +590,6 @@ handle_event(info, _Info, _StateName, Data) ->
     {stop, not_supported, Data}.
 
 
-await_start(Cog, TaskType, Args) ->
-    receive
-        {get_references, Sender} ->
-            submit_references(Sender, gc:extract_references(Args)),
-            await_start(Cog, TaskType, Args);
-        {{started,TaskType},Ref}->
-            Ref
-    end.
-
-
 callback_mode() -> state_functions.
 
 update_object_state_map(Obj, State, OldObjectStates) ->
