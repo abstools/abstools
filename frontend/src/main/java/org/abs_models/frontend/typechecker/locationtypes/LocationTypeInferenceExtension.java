@@ -1,6 +1,7 @@
 package org.abs_models.frontend.typechecker.locationtypes;
 
 import org.abs_models.backend.common.InternalBackendException;
+import org.abs_models.frontend.analyser.HasCogs;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.Main;
@@ -12,12 +13,16 @@ import org.sat4j.minisat.learning.ClauseOnlyLearning;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 
 public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
     private final Constraints constraints = new Constraints();
+    private final Scope farTypeScope = Scope.CLASS_LOCAL_FAR;
+    private Map<HasCogs, List<LocationType>> farTypes = new HashMap<>();
 
     private LocationType defaultType = LocationType.INFER;
 
@@ -128,6 +133,50 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
                 annotateVar(t, LocationTypeVar.BOTTOM);
             }
         }
+    }
+
+    private List<LocationType> getFarTypes(ASTNode<?> origin) {
+        HasCogs node=null;
+        Scope s = farTypeScope;
+        switch (s) {
+            case GLOBAL_FAR:
+                node = origin.getCompilationUnit().getModel();
+                break;
+            case COMPILATION_UNIT_LOCAL_FAR:
+                node = origin.getCompilationUnit();
+                break;
+            case MODULE_LOCAL_FAR:
+                node = origin.getModuleDecl();
+                break;
+            case CLASS_LOCAL_FAR: {
+                Decl d = origin.getContextDecl();
+                if (d instanceof ClassDecl)
+                    node = d;
+                Block b = origin.getContextBlock();
+                if (b instanceof MainBlock)
+                    node = b;
+                break;
+            }
+            case METHOD_LOCAL_FAR: {
+                Block b = origin.getContextBlock();
+                if (b != null)
+                    node = b;
+                break;
+            }
+        }
+        if (node == null)
+            return new ArrayList<>();
+        List<LocationType> e = farTypes.get(node);
+        if (e != null) {
+            return e;
+        }
+        List<LocationType> result = new ArrayList<>();
+        int numOfNewCogs = node.getNumberOfNewCogExpr();
+        for (int i = 0; i < numOfNewCogs; i++) {
+            result.add(LocationType.createParametricFar(s, i));
+        }
+        farTypes.put(node, result);
+        return result;
     }
 
     @Override

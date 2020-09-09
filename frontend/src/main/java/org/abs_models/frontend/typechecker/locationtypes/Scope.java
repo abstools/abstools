@@ -15,6 +15,6 @@ public enum Scope {
             case MODULE_LOCAL_FAR: return "MOD";
             case GLOBAL_FAR: return "G";
         }
-        throw new IllegalArgumentException("Invalid location type: " + this);
+        throw new IllegalArgumentException("Invalid location type scope: " + this);
     }
 }
