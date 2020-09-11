@@ -318,31 +318,6 @@ public class LocationTypeTests extends FrontendTest {
         m.typeCheck(new SemanticConditionList());
     }
 
-    @Test
-    public void testAwaitFail() {
-        LocationType lt = LocationType.INFER;
-        Model m = assertParse("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
-        assertFalse(m.hasErrors()); // This line is essential to trigger the NPE!
-        LocationTypeExtension lte = new LocationTypeExtension(m);
-        lte.setDefaultType(lt);
-        m.registerTypeSystemExtension(lte);
-        m.getErrors();
-        SemanticConditionList e = m.typeCheck();
-    }
-
-    @Test
-    public void testAwaitFailRewriteOff() {
-        LocationType lt = LocationType.INFER;
-        Model m = assertParse("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
-        m.doAACrewrite = false;
-        assertFalse(m.hasErrors()); // This line is essential to trigger the NPE!
-        LocationTypeExtension lte = new LocationTypeExtension(m);
-        lte.setDefaultType(lt);
-        m.registerTypeSystemExtension(lte);
-        m.getErrors();
-        SemanticConditionList e = m.typeCheck();
-    }
-
     private void assertLocationTypeError(String code) {
         assertLocationTypeErrorOnly(INT + code);
     }
