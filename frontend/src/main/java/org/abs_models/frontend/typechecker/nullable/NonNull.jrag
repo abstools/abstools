@@ -166,17 +166,17 @@ aspect NonNull {
   }
 
   eq AssignStmt.nonNull_out() {
-    SimpleSet<VarOrFieldDecl> in = nonNull_in();
-
     Exp e = getValue();
+    SimpleSet<VarOrFieldDecl> out = e.nonNull_out();
+
     VarOrFieldUse var = getVar();
 
     VarOrFieldDecl d = var.getDecl();
 
     if (e.nonNull()) {
-      return in.union(d);
+      return out.union(d);
     } else {
-      return in.comp(d);
+      return out.comp(d);
     }
   }
 
@@ -200,11 +200,11 @@ aspect NonNull {
   eq VarDeclStmt.nonNull_out() {
     VarDecl d = getVarDecl();
 
-    SimpleSet<VarOrFieldDecl> in = nonNull_in();
+    SimpleSet<VarOrFieldDecl> out = nonNull_in();
 
     if (!d.hasInitExp()) {
       // Because we have no init, the value is null
-      return in.comp(d);
+      return out.comp(d);
     }
 
     Exp init = d.getInitExp();
