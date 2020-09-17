@@ -48,7 +48,7 @@ CompilationUnit
 ModuleDeclaration
     : 'module' name=QualifiedTypeIdentifier ';'
         (exports+=ModuleExport | imports+=ModuleImport)*
-        (productDecls+=ProductDeclaration)*
+        (localProductDecls+=LocalProductDeclaration)*
         (declarations+=Declaration)*
         (productLineDecl=LocalProductLineDeclaration)?
         ( mainblockAnnotations=Annotations main?='{' (mainblockStatements+=Statement)* '}')?
@@ -138,7 +138,7 @@ TraitOperation
     ;
 
 InterfaceDeclaration
-    : (base?='base')? (relative?='relative')? 'interface' name=QualifiedTypeIdentifier
+    : (unique?='unique')? 'interface' name=QualifiedTypeIdentifier
         ('extends' superinterfaces+=InterfaceTypeIdentifier (',' superinterfaces+=InterfaceTypeIdentifier)* )?
         '{' (methods+=MethodSignature ';' )* '}'
     ;
@@ -149,7 +149,7 @@ MethodSignature
     ;
 
 ClassDeclaration
-    : (base?='base')? (relative?='relative')? 'class' name=QualifiedTypeIdentifier
+    : (unique?='unique')? 'class' name=QualifiedTypeIdentifier
         ( '(' ( arguments+=Parameter (',' arguments+=Parameter)* )? ')' )?
         ( 'implements' interfaces+=InterfaceTypeIdentifier (',' interfaces+=InterfaceTypeIdentifier)* )?
         '{'
@@ -667,6 +667,12 @@ ApplicationOrder
 DeltaSet
 	: elems+=TYPE_IDENTIFIER (',' elems+=TYPE_IDENTIFIER)*
 	;
+
+//Local products
+LocalProductDeclaration
+    : 'preproduct' name=TYPE_IDENTIFIER
+         '=' expression=ProductExpression ';' 
+    ;
 	
 // Products
 

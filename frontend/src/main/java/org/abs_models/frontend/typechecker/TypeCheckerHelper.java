@@ -255,6 +255,11 @@ public class TypeCheckerHelper {
         }
     }
 
+    public static void typeCheckPreProductDecl(ProductDecl prod,
+                                               Set<Feature> features,
+                                               SemanticConditionList e) {
+    }
+
     public static void typeCheckProductDecl(ProductDecl prod,
                                              Set<String> prodNames,
                                              SemanticConditionList e) {

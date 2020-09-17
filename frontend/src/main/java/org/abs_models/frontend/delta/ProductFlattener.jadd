@@ -227,7 +227,6 @@ aspect ProductFlattener {
         newModule.applyDeltas(deltas);
         // remove productlines related elements from the new module
         newModule.removeProductLine();
-        newModule.setProductDeclList(new List());
 
         newModule.removeNotVariableDecls(this.getName());
         return newModule.getName();
@@ -621,7 +620,7 @@ aspect ProductFlattener {
      }
 
      public void ModuleDecl.removeProducts() {
-        setProductDeclList(new List());
+        setLocalProductDeclList(new List());
      }
 
     public void ModuleDecl.removeVariableDecls() {
@@ -712,11 +711,9 @@ aspect ProductFlattener {
                  getDecls().removeChild(decl);
                 } else if (getVariableDecls().contains(decl.getName())) {
                     if (decl instanceof InterfaceDecl) {
-                        ((InterfaceDecl) decl).setBase(false);
-                        ((InterfaceDecl) decl).setRelative(false);
+                        ((InterfaceDecl) decl).setUnique(true);
                     } else if (decl instanceof ClassDecl) {
-                        ((ClassDecl) decl).setBase(false);
-                        ((ClassDecl) decl).setRelative(false);
+                        ((ClassDecl) decl).setUnique(true);
                     }
                 }
         }
@@ -725,12 +722,10 @@ aspect ProductFlattener {
     public void ModuleDecl.removeRelativeAttr() {
         for (Decl decl : getDecls()) {
             if (decl instanceof InterfaceDecl) {
-                ((InterfaceDecl) decl).setBase(false);
-                ((InterfaceDecl) decl).setRelative(false);
+                ((InterfaceDecl) decl).setUnique(true);
 
             } else if (decl instanceof ClassDecl) {
-                ((ClassDecl) decl).setBase(false);
-                ((ClassDecl) decl).setRelative(false);
+                ((ClassDecl) decl).setUnique(true);
            }
         }
     }
@@ -761,8 +756,8 @@ aspect ProductFlattener {
     syn lazy java.util.Set<String> ModuleDecl.getVariableDecls() {
         java.util.Set<String> variableDecls = new java.util.HashSet<>();
         for (Decl d : getDecls()) {
-            if ( (d instanceof ClassDecl && (((ClassDecl) d).getBase() || ((ClassDecl) d).getRelative())) ||
-                 (d instanceof InterfaceDecl && (((InterfaceDecl) d).getBase() || ((InterfaceDecl) d).getRelative())))
+            if ( (d instanceof ClassDecl && !((ClassDecl) d).getUnique()) ||
+                 (d instanceof InterfaceDecl && !((InterfaceDecl) d).getUnique()))
                 variableDecls.add(d.getName());
         }
 

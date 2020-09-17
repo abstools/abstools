@@ -202,8 +202,8 @@ public class XtextToJastAdd {
              result.setProductLine(fromXtext(xtext_module.getProductLineDecl()));
         }
 
-         for(org.abs_models.xtext.abs.ProductDeclaration product : xtext_module.getProductDecls()) {
-        	result.addProductDeclNoTransform(fromXtext(product));
+         for(org.abs_models.xtext.abs.LocalProductDeclaration product : xtext_module.getLocalProductDecls()) {
+        	result.addLocalProductDeclNoTransform(fromXtext(product));
         }
 
         if(xtext_module.isMain()) {
@@ -525,8 +525,7 @@ public class XtextToJastAdd {
             result.addBodyNoTransform(fromXtext(ms));
         }
         
-        result.setBase(xtext_decl.isBase());
-        result.setRelative(xtext_decl.isRelative());
+        result.setUnique(xtext_decl.isUnique());
         
         return nodeWithLocation(result, xtext_decl);
     }
@@ -546,8 +545,7 @@ public class XtextToJastAdd {
         final ClassDecl result = new  ClassDecl();
         result.setName(xtext_decl.getName());
 
-        result.setBase(xtext_decl.isBase());
-        result.setRelative(xtext_decl.isRelative());
+        result.setUnique(xtext_decl.isUnique());
 
         for(org.abs_models.xtext.abs.Parameter arg : xtext_decl.getArguments()) {
             result.addParamNoTransform(fromXtext(arg));
@@ -1561,6 +1559,13 @@ public class XtextToJastAdd {
             i = 0;
         }
         return afterDeltas;
+    }
+
+    private static LocalProductDecl fromXtext(org.abs_models.xtext.abs.LocalProductDeclaration xtext_decl) {
+        final LocalProductDecl result = new LocalProductDecl();
+        result.setName(xtext_decl.getName());
+        result.setProductExpr(fromXtext(xtext_decl.getExpression()));
+        return nodeWithLocation(result, xtext_decl);
     }
 
     // Products

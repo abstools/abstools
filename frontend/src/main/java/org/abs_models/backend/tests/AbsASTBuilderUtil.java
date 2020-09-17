@@ -240,8 +240,7 @@ public final class AbsASTBuilderUtil {
             new List<>(),
             new List<>(),
             new List<>(),
-            false,
-            false);
+            true);
     }
 
     public static final MethodImpl createMethodImpl(MethodSig method) {

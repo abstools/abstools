@@ -12,12 +12,27 @@ aspect ProductLineErrors {
        for (ModuleDecl module : getModuleDecls()) {
             if (module.hasProductLine()) {
                module.getProductLineErrors(errors);
+            } else if(module.hasLocalProductDecl()){
+                errors.add(new SemanticError(module, ErrorMessage.PREPRODUCT_NOT_IN_VARIABLE, module.getName()));
             }
         }
    }
 
+    public void LocalProductDecl.getProductLineErrors(SemanticConditionList errors) {
+        ModuleDecl mDecl = getModuleDecl();
+        if(!getProductExpr().usesFeatures(mDecl.getProductLine().getFeatures())){
+            System.out.println(mDecl.getProductLine().getFeatures());
+            errors.add(new SemanticError(this, ErrorMessage.PREPRODUCT_NOT_LOCAL, getName()));
+        }
+    }
+
+
     public void ModuleDecl.getProductLineErrors(SemanticConditionList errors) {
-        // objToDeltaMap's keySet will contain the decls that **should** be base and are not added by a delta
+        for(LocalProductDecl lPDecl: getLocalProductDecls()) 
+            lPDecl.getProductLineErrors(errors);
+        
+
+        // objToDeltaMap's keySet will contain the decls are modified by a delta 
          HashMap<String, Set<String>> objToDeltaMap = new HashMap<>();
 
          // variables will contain all decl modified in a delta. This is used to check relative attribute of decls modified in a delta
@@ -48,28 +63,27 @@ aspect ProductLineErrors {
         }
 
         for (DeltaDecl delta : getProductLine().getDeltaDecls()) {
+        }
+
+        for (DeltaDecl delta : getProductLine().getDeltaDecls()) {
             for (ModuleModifier mod : delta.getModuleModifiers()) {
                 Decl decl = null;
                 boolean referencesVariable = false;
-                boolean relative = true;
+                boolean unique = true;
                 boolean base = true;
                 if (mod instanceof ModifyClassModifier) {
                     decl = ((ClassModifier) mod).getClassDecl();
-                    relative = ((ClassDecl) decl).getRelative();
-                    base = ((ClassDecl) decl).getBase();
+                    unique = ((ClassDecl) decl).getUnique();
                     referencesVariable = ((ModifyClassModifier) mod).referencesBaseDecl(variables);
 
                 } else if (mod instanceof ModifyInterfaceModifier) {
                     decl = ((InterfaceModifier) mod).getInterfaceDecl();
-                    relative = ((InterfaceDecl) decl).getRelative();
-                    base = ((InterfaceDecl) decl).getBase();
+                    unique = ((InterfaceDecl) decl).getUnique();
                     referencesVariable = ((ModifyInterfaceModifier) mod).referencesBaseDecl(variables);
                 }
-                if (decl != null && referencesVariable && ! (relative || base)) {
-                    errors.add(new SemanticError( decl, decl instanceof ClassDecl ? ErrorMessage.MISSING_RELATIVE_IN_CLASS:
-                                ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, decl.getName()));
-                } else if (decl != null && !referencesVariable && relative) {
-                    errors.add(new SemanticWarning( decl, ErrorMessage.UNNECESSARY_RELATIVE_DECL, decl.getName()));
+                if (decl != null && unique) {
+                    errors.add(new SemanticError( decl, decl instanceof ClassDecl ? ErrorMessage.INVALID_UNIQUE_IN_CLASS:
+                                ErrorMessage.INVALID_UNIQUE_IN_INTERFACE, decl.getName()));
                 }
             }
         }
@@ -81,45 +95,35 @@ aspect ProductLineErrors {
 
     public void Decl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap){}
     public void InterfaceDecl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap) {
-        if ( getBase() && !objToDeltaMap.containsKey(getName())){
-            errors.add(new SemanticWarning( this, ErrorMessage.UNNECESSARY_BASE_DECL, getName()));
-        } else if (! getBase() && objToDeltaMap.containsKey(getName())) {
-            errors.add( new SemanticError(this, ErrorMessage.MISSING_BASE_IN_INTERFACE, getName(),
-                                            StringUtils.join(",", objToDeltaMap.get(getName())) , getModuleDecl().getName()));
+        if( getUnique() && objToDeltaMap.containsKey(getName())){
+                errors.add(new SemanticError( this, ErrorMessage.INVALID_UNIQUE_IN_INTERFACE, getName(),getModuleDecl().getName()));
+        } else if( !getUnique() && !objToDeltaMap.containsKey(getName())){
+                errors.add(new SemanticWarning( this, ErrorMessage.COULDBE_UNIQUE_DECL, getName()));
         }
-        if (!(getRelative() || getBase())) {
+        if (getUnique() ){ 
             for (InterfaceTypeUse itu : getExtendedInterfaceUses()){
-                if (objToDeltaMap.containsKey(itu.getName()))
-                    errors.add( new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, getName(),
-                                                                            getModuleDecl().getName()));
-
+                InterfaceDecl other = (InterfaceDecl) itu.getDecl();
+                if (other.getModuleDecl() == getModuleDecl() && !other.getUnique()) //references a non-unique interface
+                    errors.add(new SemanticError( this, ErrorMessage.INVALID_UNIQUE_IN_INTERFACE, getName(),getModuleDecl().getName()));
             }
             for (MethodSig method : getBodys()) {
-                if (method.hasProductLineError(objToDeltaMap.keySet())) {
-                    errors.add( new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, getName(),
-                                                                           getModuleDecl().getName()));
-
-                }
+                if (method.hasProductLineError(objToDeltaMap.keySet())) 
+                    errors.add(new SemanticError( this, ErrorMessage.INVALID_UNIQUE_IN_INTERFACE, getName(),getModuleDecl().getName()));
             }
         }
     }
     public void ClassDecl.getProductLineError(SemanticConditionList errors, HashMap<String, Set<String>> objToDeltaMap) {
-        if ( getBase()) {
-            if (!objToDeltaMap.containsKey(getName())){
-                errors.add(new SemanticWarning( this, ErrorMessage.UNNECESSARY_BASE_DECL, getName()));
-            }
-        } else if (! getBase() && objToDeltaMap.containsKey(getName())) {
-            errors.add( new SemanticError(this, ErrorMessage.MISSING_BASE_IN_CLASS, getName(),
-                                                StringUtils.join(",", objToDeltaMap.get(getName())) , getModuleDecl().getName()));
+        if( getUnique() && objToDeltaMap.containsKey(getName())){
+                errors.add(new SemanticError( this, ErrorMessage.INVALID_UNIQUE_IN_CLASS, getName(), getModuleDecl().getName()));
+        } else if( !getUnique() && !objToDeltaMap.containsKey(getName())){
+                errors.add(new SemanticWarning( this, ErrorMessage.COULDBE_UNIQUE_DECL, getName()));
         }
 
         boolean referencesBase = referencesBaseDecl(objToDeltaMap.keySet());
-        if (getRelative()) {
-            if (!referencesBase) {
-                    errors.add(new SemanticWarning(this, ErrorMessage.UNNECESSARY_RELATIVE_DECL, getName()));
-            }
-        } else if (referencesBase && !getBase()) {
-                errors.add(new SemanticError(this, ErrorMessage.MISSING_RELATIVE_IN_CLASS,
+        if (!getUnique() && !referencesBase && !objToDeltaMap.containsKey(getName())) {
+                    errors.add(new SemanticWarning(this, ErrorMessage.COULDBE_UNIQUE_DECL, getName()));
+        } else if (getUnique() && referencesBase) {
+                errors.add(new SemanticError(this, ErrorMessage.INVALID_UNIQUE_IN_CLASS,
                                               getName(), getModuleDecl().getName()));
         }
     }

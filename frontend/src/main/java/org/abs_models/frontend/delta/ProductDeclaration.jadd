@@ -72,6 +72,30 @@ aspect ProductDeclaration {
     /*
      * Set all of product name recursively by given object of ProductExpr
      */
+    public abstract boolean ProductExpr.usesFeatures(List<Feature> features);
+
+    public boolean ProductFeatureSet.usesFeatures(List<Feature> features) {
+        Set<Feature> sF = new HashSet<>();
+        for(Feature f: features){ sF.add(f); }
+        for(Feature f: getFeatureList()){ if( !sF.contains(f) ) { return false; }}
+        return true;
+    }
+    public boolean ProductIntersect.usesFeatures(List<Feature> features) {
+        return getLeft().usesFeatures(features) && getRight().usesFeatures(features);
+    }
+    public boolean ProductUnion.usesFeatures(List<Feature> features) {
+        return getLeft().usesFeatures(features) && getRight().usesFeatures(features);
+    }
+    public boolean ProductDifference.usesFeatures(List<Feature> features) {
+        return getLeft().usesFeatures(features) && getRight().usesFeatures(features);
+    }
+    public boolean ProductName.usesFeatures(List<Feature> features) {
+        return true;
+    }
+
+    /*
+     * Set all of product name recursively by given object of ProductExpr
+     */
     public abstract void ProductExpr.setRightSideProductNames(Set<String> productNames);
 
     public void ProductFeatureSet.setRightSideProductNames(Set<String> productNames) {

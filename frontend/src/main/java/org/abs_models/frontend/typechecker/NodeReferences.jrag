@@ -105,7 +105,7 @@ aspect Deltas {
     eq CompilationUnit.getFExt().amInCoreAbs() = false;
 
     eq ModuleDecl.getProductLine().amInCoreAbs() = false;
-    eq ModuleDecl.getProductDecl().amInCoreAbs() = false;
+    eq ModuleDecl.getLocalProductDecl().amInCoreAbs() = false;
     eq LocalProductLine.getDeltaDecl().amInCoreAbs() = false;
 
     inh boolean Block.amInCoreAbs();

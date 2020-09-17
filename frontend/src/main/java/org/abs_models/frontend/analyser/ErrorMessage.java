@@ -153,14 +153,13 @@ public enum ErrorMessage {
     MATCHING_NOT_ALLOWED_IN_CATCH("Non-free pattern variable %s (not allowed in catch branches)."),
     DUPLICATE_INTERFACE_IMPLEMENTATION("Class %s already implements interface %s."),
     MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s."),
-    MISSING_BASE_IN_CLASS("The class %s modified in delta %s in %s is not declared as base."),
-    MISSING_BASE_IN_INTERFACE("The interface %s modified in delta %s in %s is not declared as base."),
-    MISSING_RELATIVE_IN_CLASS("The class %s references an object modified by a delta. The class should be \"relative\"."),
-    MISSING_RELATIVE_IN_INTERFACE("The interface %s references an object modified by a delta. The interface should be \"relative\"."),
+    INVALID_UNIQUE_IN_CLASS("The class %s is specified as \"unique\" but modified by a delta or references a class or interface modified by a delta."),
+    INVALID_UNIQUE_IN_INTERFACE("The interface %s is specified as \"unique\" but modified by a delta or references an interface modified by a delta."),
+    COULDBE_UNIQUE_DECL("%s is not declared as \"unique\" but is not modified by a delta."),
     NO_PRODUCTLINE_FOR_PRODUCT( "Error within product %s: Set of features cannot be found within a single productline"),
     INVALID_PRODUCT_LOCAL("Set of features %s does not satisfy the constraint of the productline"),
-    UNNECESSARY_BASE_DECL("%s is declared as base but is not modified by a delta"),
-    UNNECESSARY_RELATIVE_DECL("%s is declared as relative but does not reference an object modified by a delta"),
+    PREPRODUCT_NOT_IN_VARIABLE("Preproduct %s is not declared in a variable module."),
+    PREPRODUCT_NOT_LOCAL("Preproduct %s uses features that are not declared in its variable module."),
 
     ;
 
