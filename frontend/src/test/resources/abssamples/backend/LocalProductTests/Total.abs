@@ -1,7 +1,10 @@
 module MFinancialReport;
 export *;
+preproduct IncomeReport = {Income};
+preproduct IncExpConflict = {Income, Expense};
+preproduct IncExpReport = {Income, Exp};
 
-base interface FinancialReport {
+interface FinancialReport {
     Int getId();
     Unit setId(Int id);
     String getDatestamp();
@@ -12,7 +15,7 @@ base interface FinancialReport {
 }
 
 
-base class FinancialReportImpl (Int id, String datestamp) implements FinancialReport {
+class FinancialReportImpl (Int id, String datestamp) implements FinancialReport {
     Int balances = 0;
     Int getId() { return this.id; }
     Unit setId(Int id) { this.id = id; }
@@ -39,7 +42,7 @@ base class FinancialReportImpl (Int id, String datestamp) implements FinancialRe
 
 }
 
-base class Test()
+class Test()
 {
     FinancialReport report;
     Unit run(){
@@ -149,9 +152,6 @@ delta DAddExpense after DAddExp when Expense;
 
 module Main;
 import * from MFinancialReport;
-product IncomeReport = {Income};
-product IncExpConflict = {Income, Expense};
-product IncExpReport = {Income, Exp};
 
 {
 FinancialReport fr = new FinancialReportImpl(12, "24-01-2020") with IncomeReport;

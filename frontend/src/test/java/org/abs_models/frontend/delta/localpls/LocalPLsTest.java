@@ -35,16 +35,15 @@ public class LocalPLsTest extends DeltaTest {
     @Test
     public void invalidProductFromPL(){
         Model model = assertParse(
-            "module M; export *; product P1 = {C};"
-                + "base class C {}"
+            "module M; export *; preproduct P1 = {B};"
+                + "class C {}"
                 + "features A, B with A && !B;"
                 + "delta D1;"
                 + "modifies class C {"
                 + " adds Unit method1() { }"
                 + "}"
-                + "module N; import * from M; { new C() with P1;}", Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
-
-//        assertEquals(ErrorMessage.ERROR_IN_PRODUCT,model.getTypeErrors().getFirstError().msg);
+                + "module N; import * from M; { new C() with P1;}");
+        assertThrows(WrongProgramArgumentException.class, () -> {model.flattenforLocalProducts();});
     }
 
     @Test
@@ -63,23 +62,23 @@ public class LocalPLsTest extends DeltaTest {
         Model model = assertParse(
             "module M;"
                 + "export *;"
-                + "base interface I{}"
+                + "preproduct LocalProduct = {A};"
+                + "interface I{}"
                 + "features A;"
                 + "delta D1;"
                 + "modifies interface I {"
-                + " adds Unit me1(); }"
+                + "adds Unit me1(); }"
                 + "delta D1 when A;"
-                +  "module M1;"
-                + "base interface I{}"
+                + "module M1;"
+                + "interface I{}"
                 + "features B;"
                 + "delta D2;"
                 + "modifies interface I {"
                 + "adds Int retMethod();"
-                +  "}"
+                + "}"
                 + "module TestMain;"
                 + "import * from M;"
                 + " { I with LocalProduct m; }"
-                +"product LocalProduct = {A};"
         );
         assertTrue(model.hasLocalProductLines());
         DeltaDecl delta = findDelta(model, "M", "D1");
@@ -101,7 +100,7 @@ public class LocalPLsTest extends DeltaTest {
     public void applicationOrderTest() throws WrongProgramArgumentException {
         Model model = assertParse(
             "module M;"
-                + " base class C () {"
+                + " class C () {"
                 + "   Unit method1(){"
                 + "       Int x = 3;"
                 + "   }"

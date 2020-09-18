@@ -160,6 +160,7 @@ public enum ErrorMessage {
     INVALID_PRODUCT_LOCAL("Set of features %s does not satisfy the constraint of the productline"),
     PREPRODUCT_NOT_IN_VARIABLE("Preproduct %s is not declared in a variable module."),
     PREPRODUCT_NOT_LOCAL("Preproduct %s uses features that are not declared in its variable module."),
+    LOCAL_ARGUMENT_FAILURE("An error occurred while evaluating local feature models: %s."),
 
     ;
 

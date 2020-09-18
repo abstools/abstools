@@ -13,11 +13,11 @@ import static org.junit.Assert.assertTrue;
 
 public class ProductLineErrorsTest extends DeltaTest {
     @Test
-    public void notBaseeDecls(){
+    public void notUniqueDecls1(){
         Model model = assertParse(
             "module M;"
-                + "interface I {}"
-                + "class C implements I {}"
+                + "unique interface I {}"
+                + "unique class C implements I {}"
                 + "features A, B with A && !B;"
                 + "delta D1;"
                 + "modifies class C {"
@@ -26,16 +26,15 @@ public class ProductLineErrorsTest extends DeltaTest {
 
         assertTrue(model.hasLocalProductLines());
         SemanticConditionList plErrors = model.getProductLineErrors();
-        assertEquals(1, plErrors.getErrorCount());
-        assertEquals(ErrorMessage.MISSING_BASE_IN_CLASS, plErrors.getFirstError().msg);
-
+        assertEquals(2, plErrors.getErrorCount());
+        assertEquals(ErrorMessage.INVALID_UNIQUE_IN_CLASS, plErrors.getFirstError().msg);
     }
 
-    @Test
-    public void notBaseInterfaceDecl(){
+    public void notUniqueDecls2(){
         Model model = assertParse(
             "module M;"
-                + "interface I { }"
+                + "interface I {}"
+                + "unique class C implements I {}"
                 + "features A, B with A && !B;"
                 + "delta D1;"
                 + "modifies interface I {"
@@ -45,164 +44,37 @@ public class ProductLineErrorsTest extends DeltaTest {
         assertTrue(model.hasLocalProductLines());
         SemanticConditionList plErrors = model.getProductLineErrors();
         assertEquals(1, plErrors.getErrorCount());
-        assertEquals(ErrorMessage.MISSING_BASE_IN_INTERFACE, plErrors.getFirstError().msg);
+        assertEquals(ErrorMessage.INVALID_UNIQUE_IN_INTERFACE, plErrors.getFirstError().msg);
+
     }
 
-    @Test
-    public void notRelativeDecls1() {
+
+    public void preproductMissplaced(){
         Model model = assertParse(
             "module M;"
-                + "base interface I {}"
-                + "class C implements I {}"
-                + "features A, B with A && !B;"
-                + "delta D1;"
-                + "modifies interface I {"
-                + " adds Unit method1();"
-                + "}");
-
-        assertTrue(model.hasLocalProductLines());
-        SemanticConditionList plErrors = model.getProductLineErrors();
-        assertEquals(1, plErrors.getErrorCount());
-        assertEquals(ErrorMessage.MISSING_RELATIVE_IN_CLASS, plErrors.getFirstError().msg);
-    }
-
-    @Test
-    public void notRelativeDecls2() throws WrongProgramArgumentException {
-        Model model = assertParse(
-            "module M;"
+                + "preproduct A = {F};"
                 + "interface I {}"
-                + "base class C (){ }"
-                + "features A, B with A && !B;"
-                + "delta D1;"
-                + "adds class C2 () implements I {}"
-                + "modifies class C {"
-                + " adds Unit method1() {"
-                + "  I field = new C2();"
-                + " }"
-                + "}"
-                + "delta D1 when A;"
-                + "product P2 = {A};");
-
-        assertTrue(model.hasLocalProductLines());
-        SemanticConditionList plErrors = model.getProductLineErrors();
-        assertEquals(0, plErrors.getErrorCount());
-    }
-
-
-    @Test
-    public void notRelativeDecls3() {
-        Model model = assertParse(
-            "module M;"
-                + "interface I {}"
-                + "base class C (){"
-                + " Unit method1() {}"
-                + "}"
-                + "features A, B with A && !B;"
-                + "delta D1;"
-                + "adds class C2 () implements I {}"
-                + "modifies class C {"
-                + " modifies Unit method1() {"
-                + "  I field = new C2();"
-                + " }"
-                + "}");
-
-        assertTrue(model.hasLocalProductLines());
-        model.collapseTraitModifiers();
-        SemanticConditionList plErrors = model.getProductLineErrors();
-        System.out.println(plErrors.getErrorCount());
-        assertEquals(0, plErrors.getErrorCount());
-    }
-
-
-    @Test
-    public void notRelativeDecls4() {
-        Model model = assertParse(
-            "module M;"
-                + "base class C () {"
-                + " Unit method1() {}"
-                + "}"
-                + "features A, B with A && !B;"
-                + "delta D1;"
-                + "adds interface I { }"
-                + "modifies class C { "
-                + "  adds I f;"
-                + " }");
-
-        assertTrue(model.hasLocalProductLines());
-        SemanticConditionList plErrors = model.getProductLineErrors();
-        assertEquals(0, plErrors.getErrorCount());
-    }
-
-    @Test
-    public void notRelativeDecls5() {
-        Model model = assertParse(
-            "module M;"
-                + "base interface I {}"
-                + "features A, B with A && !B;"
-                + "delta D1;"
-                + "adds interface I2 {}"
-                + "modifies interface I { "
-                + "  adds I2 method();"
-                + " }");
-    
-        assertTrue(model.hasLocalProductLines());
-        SemanticConditionList plErrors = model.getProductLineErrors();
-        assertEquals(0, plErrors.getErrorCount());
-    }
-
-    @Test
-    public void notRelativeDecls6() {
-        Model model = assertParse(
-            "module M;"
-                + "base class C {}"
-                + "features A, B with A && !B;"
-                + "delta D1;"
-                + "adds interface I2 {}"
-                + "modifies class C { "
-                + "  adds I2 method() {}"
-                + " }");
-
-        assertTrue(model.hasLocalProductLines());
-        SemanticConditionList plErrors = model.getProductLineErrors();
-        assertEquals(0, plErrors.getErrorCount());
-    }
-    @Test
-    public void notRelativeDecls7() {
-        Model model = assertParse(
-            "module M;"
-                + "interface I {"
-                + "   C m1();"
-                + "}"
-                + "base class C () {}"
-                + "features A, B with A && !B;"
-                + "delta D1;"
-                + "modifies class C { "
-                + "  adds Int c;"
-                + " }");
+                + "");
 
         assertTrue(model.hasLocalProductLines());
         SemanticConditionList plErrors = model.getProductLineErrors();
         assertEquals(1, plErrors.getErrorCount());
-        assertEquals(ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, plErrors.getFirstError().msg);
+        assertEquals(ErrorMessage.PREPRODUCT_NOT_IN_VARIABLE, plErrors.getFirstError().msg);
     }
 
-    @Test
-    public void notRelativeDecls8() {
+    public void preproductMissreference(){
         Model model = assertParse(
             "module M;"
-                + "interface I {"
-                + "   C m1(C c);"
-                + "}"
-                + "base class C () {}"
-                + "features A, B with A && !B;"
-                + "delta D1;"
-                + "modifies class C { "
-                + "  adds Int c;"
-                + " }");
+                + "features F with F;"
+                + "module N;"
+                + "preproduct A = {F}"
+                + "features G with G;"
+                + "");
 
         assertTrue(model.hasLocalProductLines());
         SemanticConditionList plErrors = model.getProductLineErrors();
         assertEquals(1, plErrors.getErrorCount());
-        assertEquals(ErrorMessage.MISSING_RELATIVE_IN_INTERFACE, plErrors.getFirstError().msg);
+        assertEquals(ErrorMessage.PREPRODUCT_NOT_LOCAL, plErrors.getFirstError().msg);
     }
+
 }

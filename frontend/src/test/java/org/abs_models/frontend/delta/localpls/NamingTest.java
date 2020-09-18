@@ -15,7 +15,7 @@ public class NamingTest  extends DeltaTest {
         + "export *;"
         + "interface IService {"
         + "}"
-        + "base class CService() implements IService {}"
+        + "class CService() implements IService {}"
         + "features Insurance, CarRental, Media, Travel;"
         + "delta DIns;"
         + "adds interface I2{}"

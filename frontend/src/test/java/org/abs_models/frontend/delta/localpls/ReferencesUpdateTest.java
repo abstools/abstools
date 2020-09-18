@@ -15,18 +15,20 @@ public class ReferencesUpdateTest extends DeltaTest {
 
     String vm = "module M;"
         + "export *;"
-        + "base interface I{}"
-        + "interface I2 {"
+        + "preproduct P1 = {A};"
+        + "preproduct P2 = {B};"
+        + "interface I{}"
+        + "unique interface I2 {"
         + " Bool m2();"
         + "}"
-        + "base relative class C () implements I { "
+        + "class C () implements I { "
         + "}"
-        + "base class C2 () implements I2 {"
+        + "class C2 () implements I2 {"
         + "Bool m2() {"
         + "  return True;"
         + "}"
         + "} "
-        + "class C3 () implements I2 { "
+        + "unique class C3 () implements I2 { "
         + "Bool m2() {"
         + "  return False;"
         + "}"
@@ -53,8 +55,6 @@ public class ReferencesUpdateTest extends DeltaTest {
         + "delta DA when A;"
         + "delta DB when B;";
 
-    String products = "product P1 = {A};"
-        + "product P2 = {B};";
 
     @Test
     public void ituMainBlockBase() throws WrongProgramArgumentException {
@@ -63,7 +63,6 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "module TestMain;"
                 + "import * from M;"
                 + " { I with P1 m; }"
-                + products
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -86,7 +85,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "module TestMain;"
                 + "import * from M;"
                 + " { I with P1 m = new C(); }"
-                + products
+                
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -115,7 +114,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "module TestMain;"
                 + "import * from M;"
                 + " { I2 with P2 m = new C2(); }"
-                + products
+                
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -144,7 +143,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "module TestMain;"
                 + "import * from M;"
                 + " { I2 with P2 m = new C2(); }"
-                + products
+                
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -193,7 +192,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "interface I3 extends I with {B} {}"
                 + "interface I4 extends I with {A} {}"
                 + "interface I5 extends I2 with P1 {}"
-            + products
+            
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -240,7 +239,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "  return True;"
                 + "}"
                 + " }"
-                + products
+                
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -275,7 +274,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "class C5 (I2 with P2 p) { "
                 + "I2 p2 = p;"
                 + " }"
-                + products
+                
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -322,7 +321,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "    v1 = new C2 ();"
                 + "  }"
                 + " }"
-                + products
+                
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -373,7 +372,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "  I2 with P2 v4 = new C3 ();"
                 + "  }"
                 + "}"
-                + products
+                
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -440,7 +439,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "    p4  = new C3 ();"
                 + "  }"
                 + "}"
-                + products
+                
         );
         model.flattenforLocalProducts();
         SemanticConditionList errors = model.getTypeErrors();
@@ -512,7 +511,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "    return p1;"
                 + "  }"
                 + "}"
-                + products
+                
         );
         model.flattenforLocalProducts();
         SemanticConditionList errors = model.getTypeErrors();
@@ -543,7 +542,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "    return p1;"
                 + "  }"
                 + "}"
-                + products
+                
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -583,7 +582,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "    return p1;"
                 + "  }"
                 + "}"
-                + products
+                
         );
         model.flattenforLocalProducts();
         ClassDecl class4 = (ClassDecl) findDecl(model, "TestMain", "C4");
@@ -621,7 +620,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "    return p1;"
                 + "  }"
                 + "}"
-                + products
+                
         );
         model.flattenforLocalProducts();
         SemanticConditionList errors = model.getTypeErrors();
@@ -637,7 +636,7 @@ public class ReferencesUpdateTest extends DeltaTest {
                 + "class C4 (I with P1 p1) { "
                 + "  I with {B} v1 = p1;"
                 + "}"
-                + products
+                
         );
         model.flattenforLocalProducts();
         SemanticConditionList errors = model.getTypeErrors();

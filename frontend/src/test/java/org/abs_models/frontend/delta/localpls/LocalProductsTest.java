@@ -15,8 +15,9 @@ public class LocalProductsTest extends DeltaTest {
 
     String vmAllBase = "module M;"
         + "export *;"
-        + "base interface I{}"
-        + "base relative class C implements I {}"
+        + "preproduct LocalProduct = {A};"
+        + "interface I{}"
+        + "class C implements I {}"
         + "features A;"
         + "delta D1;"
         + "modifies interface I {"
@@ -29,8 +30,9 @@ public class LocalProductsTest extends DeltaTest {
 
     String vm = "module M;"
         + "export *;"
-        + "interface I{}"
-        + "base class C implements I {}"
+        + "preproduct LocalProduct = {A};"
+        + "unique interface I{}"
+        + "class C implements I {}"
         + "features A;"
         + "delta D1;"
         + "modifies class C {"
@@ -45,7 +47,6 @@ public class LocalProductsTest extends DeltaTest {
                 + "module TestMain;"
                 + "import * from M;"
                 + " { I with LocalProduct m; }"
-                +"product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -82,7 +83,6 @@ public class LocalProductsTest extends DeltaTest {
                 + "module TestMain;"
                 + "import * from M;"
                 + "interface ITest extends I with LocalProduct{ }"
-                +"product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -101,7 +101,6 @@ public class LocalProductsTest extends DeltaTest {
                 + "module TestMain;"
                 + "import * from M;"
                 + "interface ITest extends I with {A} { }"
-                +"product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -120,7 +119,6 @@ public class LocalProductsTest extends DeltaTest {
                 + "module TestMain;"
                 + "import * from M;"
                 + "class Test () implements I with LocalProduct{ }"
-                + "product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
 
@@ -163,7 +161,6 @@ public class LocalProductsTest extends DeltaTest {
                 + "    return new C();"
                 + "}"
                 + "}"
-                + "product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -211,7 +208,6 @@ public class LocalProductsTest extends DeltaTest {
                 " Unit method1(I with LocalProduct p){"
                 + "    println(\"Local\"); }"
                 + "}"
-                +"product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -251,7 +247,6 @@ public class LocalProductsTest extends DeltaTest {
                 + "import * from M;"
                 + "class Test ( I with LocalProduct p){"
                 + "}"
-                +"product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -287,7 +282,6 @@ public class LocalProductsTest extends DeltaTest {
                 + " I  p = new C () with LocalProduct;"
                 + " }"
                 + "}"
-                +"product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
         assertEquals(0, model.getTypeErrors().getErrorCount());
@@ -410,7 +404,6 @@ public class LocalProductsTest extends DeltaTest {
                 + " I  p = new C () with LocalProduct;"
                 + " }"
                 + "}"
-                + "product LocalProduct = {A};"
         );
         model.flattenforLocalProducts();
 

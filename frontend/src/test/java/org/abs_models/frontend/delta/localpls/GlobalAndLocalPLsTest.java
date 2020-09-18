@@ -12,9 +12,10 @@ import static org.junit.Assert.*;
 public class GlobalAndLocalPLsTest extends DeltaTest {
     String localPLString = "module M;"
         + "export *;"
-        + "interface I1 {"
+        + "preproduct LocalProduct = {A};"
+        + "unique interface I1 {"
         + "}"
-        + "base class C1() implements I1 {}"
+        + "class C1() implements I1 {}"
         + "features A, B;"
         + "delta LocalDeltaA;"
         + "adds interface I2{}"
@@ -27,6 +28,7 @@ public class GlobalAndLocalPLsTest extends DeltaTest {
         + "delta LocalDeltaB;"
         + "modifies class C1 {"
         + " removes String s;"
+        + " removes Unit printS();"
         + " adds Unit print1() {"
         + "   println(\"1\");"
         + " }"
@@ -44,20 +46,19 @@ public class GlobalAndLocalPLsTest extends DeltaTest {
 
         + "productline GlobalPL;"
         + "features C, D;"
-        + "delta GlobalDelta when C;";
+        + "delta GlobalDelta when C;"
+            + "product GlobalProduct = {C};";
 
     String mainModule = "module MainModule;"
         + "import * from M;"
         + "{"
-        + "  I object1 = new C1() with LocalProduct;"
+        + "  I1 object1 = new C1() with LocalProduct;"
         + "}";
 
 
     @Test
     public void parseTest() throws WrongProgramArgumentException {
         Model model = assertParse( localPLString + mainModule + globalPLString
-            + "product GlobalProduct = {C};"
-            + "product LocalProduct = {A};"
 
         );
         assertNotNull(model);
@@ -133,7 +134,7 @@ public class GlobalAndLocalPLsTest extends DeltaTest {
     public void globalPLwithLocalProducts() throws WrongProgramArgumentException {
         String globalPLString2 = "delta GlobalDelta2; "
             + "uses M;"
-            + "adds class C2 () {"
+            + "adds unique class C2 () {"
             + " I1 with {A, B} obj;"
             + " }"
 
@@ -141,7 +142,7 @@ public class GlobalAndLocalPLsTest extends DeltaTest {
             + "features C, D;"
             + "delta GlobalDelta2 when C;";
 
-        Model model = assertParse( localPLString + "{}"+ globalPLString2
+        Model model = assertParse( localPLString + mainModule + globalPLString2
             + "product GlobalProduct = {C};"
 
         );
@@ -149,8 +150,6 @@ public class GlobalAndLocalPLsTest extends DeltaTest {
         model.flattenforLocalProducts();
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C2");
         assertNotNull(cls);
-
-
     }
 
 

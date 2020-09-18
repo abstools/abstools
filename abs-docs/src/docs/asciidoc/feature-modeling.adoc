@@ -467,6 +467,7 @@ import * from M_g;
 ----
 
 If both global and local product lines are used, then first the global product line is flattened and then the local ones. 
+This may require to annotate classes added my global product lines with `unique`.
 Local and global features are disjoint sets, global feature selection can, thus, not influence local feature selection.
 
 ==== Syntax

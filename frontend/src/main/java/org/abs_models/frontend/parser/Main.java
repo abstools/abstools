@@ -34,8 +34,7 @@ import org.abs_models.backend.prettyprint.PrettyPrinterBackEnd;
 import org.abs_models.backend.prolog.PrologBackend;
 import org.abs_models.common.Constants;
 import org.abs_models.common.WrongProgramArgumentException;
-import org.abs_models.frontend.analyser.SemanticCondition;
-import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.analyser.*;
 import org.abs_models.frontend.ast.CompilationUnit;
 import org.abs_models.frontend.ast.DataConstructor;
 import org.abs_models.frontend.ast.DataConstructorExp;
@@ -327,7 +326,22 @@ public class Main {
             }
             return;
         }
-        m.flattenforLocalProducts();
+
+        SemanticConditionList localErrors = new SemanticConditionList();
+        try{
+            m.flattenforLocalProducts();
+        } catch (WrongProgramArgumentException e){
+            localErrors.add(new SemanticError(m, ErrorMessage.LOCAL_ARGUMENT_FAILURE, e.getMessage()));
+        }
+
+        if (localErrors.containsErrors()) {
+            for (SemanticCondition error : localErrors) {
+                // Print both errors and warnings
+                System.err.println(error.getHelpMessage());
+                System.err.flush();
+            }
+            return;
+        }
 
         if (arguments.dump) {
             m.dumpMVars();
