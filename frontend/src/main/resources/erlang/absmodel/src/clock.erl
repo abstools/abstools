@@ -7,13 +7,13 @@
 
 -module(clock).
 -behaviour(gen_server).
--export([start_link/1,stop/0,advance/1,advance_limit/1,is_at_limit/0,now/0,next_boundary/0,distance_to_next_boundary/0]).
+-export([start_link/2,stop/0,advance/1,advance_limit/1,is_at_limit/0,now/0,time_since_model_start/0,next_boundary/0,distance_to_next_boundary/0]).
 -export([code_change/3,handle_call/3,handle_cast/2,handle_info/2,init/1,terminate/2]).
--record(state,{now, limit}).
+-record(state,{now, limit, start_real_time}).
 
 %% Interface
-start_link(Clocklimit) ->
-    gen_server:start_link({global, clock}, ?MODULE, [Clocklimit], []).
+start_link(Clocklimit, StartTime) ->
+    gen_server:start_link({global, clock}, ?MODULE, [Clocklimit, StartTime], []).
 
 stop() ->
     gen_server:stop({global, clock}).
@@ -32,6 +32,9 @@ is_at_limit() ->
 now() ->
     gen_server:call({global, clock}, now, infinity).
 
+time_since_model_start() ->
+    gen_server:call({global, clock}, time_since_model_start, infinity).
+
 distance_to_next_boundary() ->
     %% Returns relative time until the next resource refresh timepoint.
     gen_server:call({global, clock}, next_int, infinity).
@@ -42,8 +45,8 @@ next_boundary() ->
 
 %% gen_server functions
 
-init([Clocklimit]) ->
-    {ok, #state{now=rationals:to_r(0), limit=Clocklimit}}.
+init([Clocklimit, StartTime]) ->
+    {ok, #state{now=rationals:to_r(0), limit=Clocklimit, start_real_time=StartTime}}.
 
 handle_call({advance, Amount},_From,State=#state{now=Time,limit=Limit}) ->
     Newtime = rationals:add(Time, Amount),
@@ -68,10 +71,12 @@ handle_call({advance_limit, Amount},_From,State=#state{limit=Limit}) ->
         false ->
             {reply, {error, <<"Need positive integer increment">>}, State}
     end;
-handle_call(is_at_limit,From,State=#state{now=Now,limit=Limit}) ->
+handle_call(is_at_limit,_From,State=#state{now=Now,limit=Limit}) ->
     {reply, cmp:eq(Now, Limit), State};
 handle_call(now, _From, State=#state{now=Time}) ->
     {reply, Time, State};
+handle_call(time_since_model_start, _From, State=#state{start_real_time=StartTime}) ->
+    {reply, erlang:system_time(millisecond) - StartTime, State};
 handle_call(next_int, _From, State=#state{now=Time}) ->
     Distance = rationals:sub(Time, rationals:trunc(Time)),
     case rationals:is_zero(Distance) of

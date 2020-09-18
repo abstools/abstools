@@ -1,0 +1,13 @@
+module BackendTest;
+
+{
+    Bool testresult = False;
+    Int sum = 0;
+    Int length = 0;
+    List<Int> l = list[1, 2, 3];
+    foreach (elem, index in l) {
+        sum = sum + elem;
+        length = index;
+    }
+    testresult = sum == 6 && length == 2;
+}

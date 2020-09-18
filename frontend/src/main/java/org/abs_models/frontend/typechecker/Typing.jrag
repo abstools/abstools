@@ -46,6 +46,7 @@ aspect Typing {
     
     inh Model Stmt.getModel();
     inh Model Exp.getModel();
+    inh Model TypeIdUse.getModel();
     inh Model ExpGuard.getModel();
     inh Model DurationGuard.getModel();
     inh Model MethodImpl.getModel();
@@ -117,7 +118,7 @@ aspect Typing {
     
     syn Type VarOrFieldDecl.getType();
     eq FunctionParamDecl.getType() = getModel().getUnitType();
-    eq TypedVarOrFieldDecl.getType() = getAccess().getType();
+    eq TypedVarOrFieldDecl.getType() = getTypeUse().getType();
     eq PatternVarDecl.getType() {
    	 PatternVar v = (PatternVar) getParent(); 
    	 return v.getType();
@@ -125,24 +126,39 @@ aspect Typing {
 
     eq LoopVarDecl.getType() {
         ForeachStmt fs = (ForeachStmt) getParent();
-        Type lt = fs.getListExp().getType();
-        // Just being a bit defensive here.  We don't bother checking if it's
-        // a list, etc. since this will be caught by the type checker.
-        if (lt.isDataType()) {
-            DataTypeType llt = (DataTypeType)lt;
-            if (llt.numTypeArgs() == 1) return llt.getTypeArg(0);
+        if (fs.hasIndexVar() && this == fs.getIndexVar()) {
+            // We are the value bound to the list index
+            return getModel().getIntType();
+        } else {
+            // We are the variable bound to the list value
+            Type lt = fs.getListExp().getType();
+            // Just being a bit defensive here.  We don't bother checking if
+            // it's a list, etc. since this will be caught by the type
+            // checker.
+            if (lt.isDataType()) {
+                DataTypeType llt = (DataTypeType)lt;
+                if (llt.numTypeArgs() == 1) return llt.getTypeArg(0);
+            }
+            return UnknownType.INSTANCE;
         }
-        return UnknownType.INSTANCE;
     }
     /* Annotations */
     syn lazy Type Annotation.getType() = getValue().getType();
-    
+
     /* STMTS */
     syn Type Stmt.getType() = getModel().getUnitType();
     eq ReturnStmt.getType() = getRetExp().getType();
-    
-    
-    
+
+    /* Type expressions */
+    syn lazy Type TypeIdUse.getType() = getDecl().getType();
+    eq TypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
+    eq ParametricDataTypeUse.getType() {
+        Decl d = getDecl();
+        if (d == null || !(d instanceof ParametricDataTypeDecl))
+            return UnknownType.INSTANCE;
+        return new DataTypeType((ParametricDataTypeDecl)d,this).withAnnotations(getAnnotations());
+    }
+
     /* EXPRESSIONS */
     
     syn lazy Type Exp.getType();
@@ -155,7 +171,7 @@ aspect Typing {
         return getCallType();
     }
 
-    eq AwaitAsyncCall.getType() {  
+    eq AwaitAsyncCall.getType() {
         return getCallType();
     }
 
@@ -216,18 +232,10 @@ aspect Typing {
     // TODO: This looks really more like an 'inh'.
     syn lazy List<Annotation> TypeUse.findAnnotations() = calcAnnotations();
 
-	syn lazy Type VarOrFieldUse.getType() {
+    syn lazy Type VarOrFieldUse.getType() {
         VarOrFieldDecl d = getDecl();
         if (d == null) return UnknownType.INSTANCE;
         return d.getType();
-    }
-    eq TypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
-    eq ParametricDataTypeUse.getType() {
-        Decl d = getDecl();
-        if (d == null || !(d instanceof ParametricDataTypeDecl))
-            return UnknownType.INSTANCE;
-        
-        return new DataTypeType((ParametricDataTypeDecl)d,this).withAnnotations(getAnnotations());
     }
     eq Unary.getType() = getOperand().getType();
     eq ArithmeticExp.getType() {
@@ -459,8 +467,8 @@ aspect Typing {
     public interface HasType {
       Type getType();
     }
-    
-    DataTypeUse implements HasType;
+
+    TypeIdUse implements HasType;
     ParamDecl implements HasType;
     Decl implements HasType;
     Exp implements HasType;

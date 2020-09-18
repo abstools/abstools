@@ -23,49 +23,49 @@ public class StmtTests extends SemanticTests {
     }
 
     @Test
-    public void ifThen() {
+    public void ifThen() throws Exception {
         assertEvalTrue("{ Bool testresult = False; if (True) testresult = True;  }");
     }
 
     @Test
-    public void ifFalse() {
+    public void ifFalse() throws Exception {
         assertEvalTrue("{ Bool testresult = False; if (False) skip; else testresult = True;  }");
     }
 
     @Test
-    public void whileFalse() {
+    public void whileFalse() throws Exception {
         assertEvalTrue("{ Bool testresult = False; while (False) { } testresult = True;  }");
     }
 
     @Test
-    public void whileStmt() {
+    public void whileStmt() throws Exception {
         assertEvalTrue("{ Bool testresult = False; List<Bool> l = list[False, True]; while (!isEmpty(l)) { l = tail(l); } testresult = True;  }");
     }
 
     @Test
-    public void assignStmt() {
+    public void assignStmt() throws Exception {
         assertEvalTrue("{ Bool testresult = False; Bool x = True; testresult = x; }");
     }
     
     @Test
-    public void declWhenExpStmt() {
+    public void declWhenExpStmt() throws Exception {
         // dynamic Java backend generated invalid code for this case
         assertEvalTrue("{Bool x = True; Int i = when x then 1 else 2; Bool testresult = (i == 1); }");
     }
 
     @Test
-    public void assignWhenExpStmt() {
+    public void assignWhenExpStmt() throws Exception {
         // dynamic Java backend generated invalid code for this case
         assertEvalTrue("{Bool x = True; Int i = 0; i = when x then 1 else 2; Bool testresult = (i == 1); }");
     }
 
     @Test
-    public void useOfVariablesInsideExpr() {
+    public void useOfVariablesInsideExpr() throws Exception {
         assertEvalTrue("{ Bool testresult = False; Bool b = True; testresult = case b { _ => b; }; }");
     }
 
     @Test
-    public void caseStatementTest() {
+    public void caseStatementTest() throws Exception {
         assertEvalTrue("{ Int x = 0; switch (Pair(2, 3)) { Pair(2, y) => x = y; _ => skip; } Bool testresult = x == 3; }");
     }
     
@@ -90,7 +90,7 @@ public class StmtTests extends SemanticTests {
     }
 
     @Test
-    public void caseStmtEmbeddedVarDecl() {
+    public void caseStmtEmbeddedVarDecl() throws Exception {
         // bug 164
         assertEvalTrue("{ switch (Just(5)) { Just(y) => { Rat z = abs(y); } } Bool testresult = True; }");
     }
@@ -105,6 +105,11 @@ public class StmtTests extends SemanticTests {
     @Test
     public void foreachNonempty() throws Exception {
         assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-nonempty.abs"));
+     }
+
+    @Test
+    public void foreachIndexedNonempty() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/StmtTests/foreach-indexed-nonempty.abs"));
      }
 
     @Test

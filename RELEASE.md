@@ -8,19 +8,20 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
-- Run unit tests for erlang backend with pessimal gc (replace body of `gc:is_collection_needed/1` with `true`)
+- Run unit tests for erlang backend with pessimal gc (in file `frontend/src/main/resources/erlang/absmodel/src/gc.erl`, replace the body of `gc:is_collection_needed/1` with `true`)
 
 - Manually compile and run a small model on macOS, Linux, Windows
 
-- Create docker (`make docker ; make run-collaboratory`)
+
+- Create docker
+  - remove current docker images to ensure everything gets rebuilt
+  - run `make docker ; make run-collaboratory`
   - check if all tools are installed in collaboratory (selection box non-empty)
-  - check that collaboratory can start "Hello World" ABS program with Erlang simulator
-  - check that "Hello World" ABS program doesn't crash SACO / CostABS in collaboratory
+  - check that collaboratory can start the "Hello World" ABS program with Erlang simulator
+  - check that the "Hello World" ABS program doesn't crash SACO, CostABS, DSA in collaboratory
   - check that absc container works / was created: `docker run --rm abslang/absc:latest -h` should produce the same output as `absc -h` on the local machine
 
-- Check that the manual looks ok
-
-  - `open abs-docs/build/asciidoc/html5/index.html`
+- Check that the manual looks ok -- open `abs-docs/build/docs/asciidoc/index.html` in a browser.
 
 ## Release steps
 
@@ -46,12 +47,12 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 
 - Prepare release commit
 
-  - The release commit should include only the updated `CHANGELOG.md`.
+  - The release commit should contain only changes in `CHANGELOG.md` and possibly `RELEASE.md` (this file).
 
-  - The first line of the commit message should be `Release version
+  - The first line of the commit message is `Release version
    x.y.z`, followed by the contents of the change log for the current version,
     with the headline markers `#` replaced by stars `*` (since the
-    # symbol denotes comments in a github commit message).
+    `#` symbol denotes comments in a git commit message).
 
 - Add release tag `vx.y.z` with the same message as the commit message.
 
@@ -75,9 +76,7 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 - finalize release on github (automating these steps would involve handling
   github API keys, so we keep it manual.)
 
-  - push release tag (`git push --tags`) -- this will start the CircleCI
-    docker build, which will download the new version of the website created
-    in the previous step
+  - push release tag (`git push --tags`)
 
   - upload `absfrontend.jar`: go to
     [https://github.com/abstools/abstools/releases/tag/vx.y.z].  Click "Edit

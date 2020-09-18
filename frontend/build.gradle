@@ -1,15 +1,17 @@
-import org.jastadd.JastAddTask
-
 plugins {
     // Apply the java plugin to add support for Java
     id 'java'
     // Apply the application plugin to add support for building an application
     id 'application'
 
-    // JastAdd plugin documentation at https://github.com/jastadd/jastaddgradle
-    id 'org.jastadd' version '1.13.3'
     id 'antlr'
-    id "com.github.spotbugs" version "3.0.0"
+    id "com.github.spotbugs" version "4.4.1"
+}
+
+configurations {
+    jastadd2 {
+        extendsFrom implementation
+    }
 }
 
 application {
@@ -27,10 +29,10 @@ distributions {
 
 dependencies {
     // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
-    implementation 'commons-io:commons-io:2.6'
-    implementation 'com.google.guava:guava:28.2-jre'
+    implementation 'commons-io:commons-io:2.7'
+    implementation 'com.google.guava:guava:29.0-jre'
     implementation files('lib/choco-solver-2.1.1.jar')
-    implementation 'org.eclipse.jdt:ecj:3.20.0'
+    implementation 'org.eclipse.jdt:ecj:3.22.0'
     implementation 'org.apfloat:apfloat:1.9.1'
     // our code fails to compile with newer versions of sat4j; leaving this at
     // version 2.3.0 for now.
@@ -39,32 +41,47 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.0'
     implementation files('lib/semisolver.jar')
 
-    implementation 'info.picocli:picocli:4.1.4'
+    implementation 'info.picocli:picocli:4.3.2'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.5.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
     // Executes JUnit4 tests
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.5.2")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.6.2")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
     testImplementation 'junit:junit:4.13'
-    testImplementation 'org.easymock:easymock:4.1'
+    testImplementation 'org.easymock:easymock:4.2'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest-core:2.2'
 
     jastadd2 'org.jastadd:jastadd:2.3.4'
-    antlr 'org.antlr:antlr4:4.7.2'
+    antlr 'org.antlr:antlr4:4.8-1'
 }
 
 // JastAdd
-task generateJastAddAST(type: JastAddTask) {
+task generateJastAddAST(type: JavaExec) {
+    // The JastAdd plugin version <= 1.13.3 does not work with gradle > 6.3,
+    // so we use a JavaExec task directly.
     description 'Processes the JastAdd AST.'
-    outputDir = file("$buildDir/generated-src/jastadd/main")
-    sources = fileTree(dir: 'src/main/java',
-                       includes: ['**/*.ast', '**/*.jrag', '**/*.jadd'])
-    options = [ '--rewrite=regular', '--visitCheck=false', '--debug',
-               '--package=org.abs_models.frontend.ast']
+    classpath = project.configurations.jastadd2
+    main = 'org.jastadd.JastAdd'
+    doFirst {
+        // Avoid left-over Java files when modifying the AST.  Re-running
+        // JastAdd regenerates all files, so deleting everything beforehand
+        // doesn’t hurt.
+        delete "$buildDir/generated-src/jastadd/main/**";
+    }
+    inputs.files fileTree(dir: 'src/main/java',
+                          includes: ['**/*.ast', '**/*.jrag', '**/*.jadd']).files
+    outputs.dir "$buildDir/generated-src/jastadd/main" // this creates the directory if necessary
+    args += "--o=$buildDir/generated-src/jastadd/main"
+    args += '--rewrite=regular'
+    args += '--visitCheck=false'
+    args += '--debug'
+    args += '--package=org.abs_models.frontend.ast'
+    args += fileTree(dir: 'src/main/java',
+                     includes: ['**/*.ast', '**/*.jrag', '**/*.jadd']).files
 }
 sourceSets.main.java.srcDir "$buildDir/generated-src/jastadd/main"
 compileJava.dependsOn 'generateJastAddAST'
@@ -93,7 +110,16 @@ compileJava.dependsOn 'generateGrammarSource'
 task compileErlangBackend(type: Exec, dependsOn: processResources) {
     description 'Compiles Erlang backend support files.'
     workingDir 'build/resources/main/erlang/absmodel'
-    commandLine 'escript', '../bin/rebar', 'compile'
+    commandLine 'escript', '../bin/rebar3', 'compile'
+}
+clean {
+    // This removes beam files left over after updating from old versions
+    // (e.g. v1.8.1), when we precompiled the erlang backend in `src/` instead
+    // of in `build/`.
+    delete fileTree('src/main/resources/erlang') {
+        include '**/*.beam'
+        include '**/.rebar/'
+    }
 }
 jar.dependsOn 'compileErlangBackend'
 
@@ -171,20 +197,14 @@ test {
         }
     }
 }
+// See JavaBackendTest.runJava
+test.dependsOn plainJar
 
 spotbugs {
-    // https://docs.gradle.org/current/dsl/org.gradle.api.plugins.quality.FindBugsExtension.html
+    // https://github.com/spotbugs/spotbugs-gradle-plugin
     ignoreFailures = true
     showProgress = true
     excludeFilter = file('config/findbugs/findbugs-jastadd-filter.xml')
-}
-tasks.withType(com.github.spotbugs.SpotBugsTask) {
-    reports {
-        // can only have one report type :(
-        xml.enabled = false
-        html.enabled = true
-        emacs.enabled = false
-    }
 }
 
 javadoc {

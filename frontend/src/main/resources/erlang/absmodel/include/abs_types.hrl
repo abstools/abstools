@@ -32,6 +32,8 @@
         %% or `{waiting_on_future, Future}'.  Set and used internally by the
         %% cog; always `none' in `task_info' structures obtained via
         %% `get(task_info)'.
+        %% TODO: the cog should store this info elsewhere since this has led
+        %% to problems already.
         wait_reason=none
        }).
 

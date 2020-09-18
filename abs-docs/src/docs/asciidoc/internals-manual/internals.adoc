@@ -48,12 +48,37 @@ this guide are very welcome!
 
 === The command-line parser and dispatcher
 
+The main entry point of the compiler is the class `org.abs_models.Absc`.  This class parses command-line arguments, parses the files given on the command line and dispatches to the desired backend.  There is also a possibility to register _sub-commands_ for distinct functionality; for example, software product line type checking is done by invoking the `checkspl` subcommand.  Subcommands have their own command-line options and help output.
+
+The `Absc` class uses https://picocli.info[the picocli library] for command-line parsing.
+
 === Lexing and parsing
+
+We currently use antlr4 for parsing ABS source code.  The grammar is at `frontend/src/main/antlr/org/abs_models/frontend/antlr/parser/ABS.g4`.
 
 === Abstract syntax tree rewriting
 
+We use http://jastadd.org/web/[JastAdd] for the AST.  The AST node definitions for Core ABS are in `frontend/src/main/java/org/abs_models/frontend/ast/CoreAbs.ast`; AST node definitions for Full ABS are in `frontend/src/main/java/org/abs_models/frontend/ast/FullAbs.ast`.
+
+The antlr parse tree is converted into JastAdd by the class `org.abs_models.frontend.antlr.parser.CreateJastAddASTListener`.
+
+Tree attributes and aspects (for type checking, code generation etc.) are added via `.jadd` and `.jrag` files; these files can be added in any directory below `frontend/src/main/java`.
+
 === Typechecking
+
+Code below `frontend/src/main/java/org/abs_models/frontend/typechecker/`.
+
+Note the possibility to write type checker extensions; see the `ext/` subdirectory.  The mechanism for type checker extensions needs to be documented.
 
 === Backends and code generation
 
+== The Erlang backend
+
+=== Code Generation
+
+The main entry point of the Erlang code generation system is the method `org.abs_models.backend.erlang.ErlangBackend.doMain`, which will be invoked by the `Absc` class.  Given a type-checked and preprocessed AST, the Erlang backend generates code in a subdirectory (by default `gen/erl/`) and then invokes the Erlang compiler.
+
+The `gen/erl/` directory is pre-populated with the contents of `frontend/src/main/resources/erlang`, which includes both ABS runtime files in the subdirectory `absmodel/src/` and third-party support libraries below `absmodel/deps/`.
+
+=== The Runtime System
 

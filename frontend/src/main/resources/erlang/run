@@ -8,6 +8,7 @@ tmpfile=$(mktemp)
 
 (
     echo "#!/usr/bin/env escript"
+    echo "% use this to increase process limit: %%! +P 134217727"
     echo "main(Arg)->"
     echo "code:add_paths([\"$codepaths\"]),"
     echo "runtime:run(Arg)."

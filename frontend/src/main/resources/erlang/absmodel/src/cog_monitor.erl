@@ -3,7 +3,7 @@
 
 -module(cog_monitor).
 -behaviour(gen_statem).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 
 -export([start_link/3, stop/0, waitfor/0]).
 
@@ -346,7 +346,14 @@ advance_clock_or_terminate(Data=#data{main=M, dcrefs=DCs, dc_mtes=MTEs,
             end,
             Data#data{active_before_next_clock=gb_sets:from_list(DCs)};
         true ->
-            MTE=lists:min(maps:values(MTEs)), %TODO make this faster via maps:fold
+            %% MTE cannot be infinity since MTEs isn’t empty
+            MTE=maps:fold(fun(_K, V, Acc) ->
+                                  case Acc of
+                                      infinity -> V;
+                                      _ -> rationals:min(Acc, V)
+                                  end
+                          end,
+                          infinity, MTEs),
             OldTime=clock:now(),
             %% TODO: check that Delta > 0
             Delta=rationals:sub(MTE, OldTime),

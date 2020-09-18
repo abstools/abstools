@@ -59,6 +59,8 @@ public class AnnotationTests extends FrontendTest {
         assertEquals("LocationType",a.getType().getSimpleName());
         assertEquals(s, ((DataConstructorExp)a.getValue()).getDecl().getName());
     }
-    
 
+    private void testHTTPNameAnnotation() {
+        assertTypeOK("interface P {} class P implements P {} { [HTTPName: \"P\"] new P(); }");
+    }
 }

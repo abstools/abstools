@@ -424,7 +424,7 @@ aspect doPrettyPrinter {
     }
 
     public void VarDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        getAccess().doPrettyPrint(stream, formatter);
+        getTypeUse().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());
         if (hasInitExp()) {
@@ -444,7 +444,11 @@ aspect doPrettyPrinter {
     public void ForeachStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
         stream.print("foreach (");
-        stream.print(getLoopVarDecl().getName());
+        stream.print(getValueVar().getName());
+        if (hasIndexVar()) {
+            stream.print(", ");
+            stream.print(getIndexVar().getName());
+        }
         stream.print(" in ");
         getListExp().doPrettyPrint(stream, formatter);
         stream.print(") ");
@@ -928,7 +932,7 @@ aspect doPrettyPrinter {
             stream.println();
             formatter.afterStmt();
         }
-        getAccess().doPrettyPrint(stream, formatter);
+        getTypeUse().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());
         if (hasInitExp()) {
@@ -1042,7 +1046,7 @@ aspect doPrettyPrinter {
 
     public void TypedAnnotation.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("[");
-        getAccess().doPrettyPrint(stream, formatter);
+        getTypeIdUse().doPrettyPrint(stream, formatter);
         stream.print(" : ");
         getValue().doPrettyPrint(stream, formatter);
         stream.print("]");
@@ -1237,7 +1241,7 @@ aspect doPrettyPrinter {
 
     public void ParamDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-        getAccess().doPrettyPrint(stream, formatter);
+        getTypeUse().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());
     }

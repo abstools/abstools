@@ -286,6 +286,10 @@ public class ParserTest extends FrontendTest {
         assertParse("{ if (x) if (y) skip ; else skip ; else skip ; }");
         assertParse("{ while (x) skip ;  }");
         assertParse("{ while (x) { x = y ; skip ; } }");
+        assertParse("{ foreach (v in list[1, 2]) skip; }");
+        assertParse("{ foreach (v, i in list[1, 2]) skip; }");
+        assertParse("{ foreach (v in list[]) skip; }");
+        assertParse("{ foreach (v, i in list[]) skip; }");
         assertParse("{ if (x) y = True ; else y = False  ; }");
         assertParse("{ if (x) { y = True ; z = False; }  else y = False  ; }");
 

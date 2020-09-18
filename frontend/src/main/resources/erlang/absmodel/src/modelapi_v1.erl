@@ -3,7 +3,7 @@
 %% V1 of the model API.  Current until February 2017; use for models / tools
 %% that cannot be adapted otherwise.
 -module(modelapi_v1).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 
 -behaviour(cowboy_handler).
 -export([init/2, terminate/3]).
@@ -104,7 +104,7 @@ handle_object_call([Objectname, Methodname], Parameters) ->
                     {Success, ParamValues} = decode_parameters(Parameters, ParamDecls),
                     case Success of
                         ok ->
-                            Future=future:start_for_rest(Object, Method, ParamValues ++ [[]], #task_info{method=Methodname}),
+                            Future=cog:create_model_api_task(Object, Method, ParamValues ++ [[]], #task_info{method=Methodname}),
                             Result=case future:get_for_rest(Future) of
                                 {ok, Value} ->
                                     { 200, <<"application/json">>,

@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.abs_models.frontend.typechecker.ext;
@@ -11,9 +11,11 @@ import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.Annotation;
-import org.abs_models.frontend.ast.AwaitStmt;
+import org.abs_models.frontend.ast.AssignStmt;
 import org.abs_models.frontend.ast.AwaitAsyncCall;
+import org.abs_models.frontend.ast.AwaitStmt;
 import org.abs_models.frontend.ast.Call;
+import org.abs_models.frontend.ast.FieldDecl;
 import org.abs_models.frontend.ast.GetExp;
 import org.abs_models.frontend.ast.MethodImpl;
 import org.abs_models.frontend.ast.MethodSig;
@@ -27,12 +29,15 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
     }
 
     @Override
-    public void checkOverride(MethodSig impl, MethodSig overriden) {
-        if (impl.isAtomic() != overriden.isAtomic()) {
-            errors.add(new TypeError(impl, ErrorMessage.ATOMIC_METHOD_WRONG_OVERRIDE,impl.getName(),impl.getName(),overriden.getContextDecl().getName()));
+    public void checkOverride(MethodSig impl, MethodSig overridden) {
+        if (!impl.isAtomic() && overridden.isAtomic()) {
+            errors.add(new TypeError(impl, ErrorMessage.ATOMIC_METHOD_WRONG_OVERRIDE,impl.getName(),impl.getName(),overridden.getContextDecl().getName()));
+        }
+        if (!impl.isReadonly() && overridden.isReadonly()) {
+            errors.add(new TypeError(impl, ErrorMessage.READONLY_METHOD_WRONG_OVERRIDE,impl.getName(),impl.getName(),overridden.getContextDecl().getName()));
         }
     }
-    
+
     @Override
     public void checkAwaitStmt(AwaitStmt s) {
         ensureNonAtomic(s,s.getContextMethod(),"an await statement");
@@ -47,7 +52,7 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
     public void checkGetExp(GetExp e) {
         ensureNonAtomic(e,e.getContextMethod(),"a blocking get expression");
     }
-    
+
     @Override
     public void checkMethodCall(Call call) {
         if (!call.isAsync()) {
@@ -62,7 +67,7 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
             ensureNonAtomic(call, call.getContextMethod(), "an await expression");
         }
     }
-    
+
     private void ensureNonAtomic(ASTNode<?> n, MethodImpl impl, String descr) {
         if (impl == null)
             return;
@@ -71,11 +76,27 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
             errors.add(new TypeError(n, ErrorMessage.ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE,descr,sig.getName()));
         }
     }
-    
+
     public static boolean isAtomic(org.abs_models.frontend.ast.List<Annotation> list) {
         List<Annotation> anns = AnnotationHelper.getAnnotationsOfType(list, "ABS.StdLib.AtomicityAnnotation");
         return !anns.isEmpty();
-        
     }
-    
+
+
+
+    @Override
+    public void checkAssignStmt(AssignStmt s) {
+        MethodImpl m = s.getContextMethod();
+        if (m != null && m.isReadonly()) {
+            if (s.getVar().getDecl() instanceof FieldDecl) {
+                errors.add(new TypeError(s, ErrorMessage.READONLY_METHOD_HAS_FIELD_ASSIGNMENT, s.getVar().getName()));
+            }
+        }
+    }
+
+    public static boolean isReadonly(org.abs_models.frontend.ast.List<Annotation> list) {
+        List<Annotation> anns = AnnotationHelper.getAnnotationsOfType(list, "ABS.StdLib.ReadonlyAnnotation");
+        return !anns.isEmpty();
+    }
+
 }

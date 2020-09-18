@@ -1,10 +1,10 @@
 aspect CompareNodes {
 
     /*
-     * lexically compare two Accesses; return true if they match
+     * lexically compare two type uses; return true if they match
      * crude, but it seems to be all we need...
      */
-    public boolean Access.matches(Access other) {
+    public boolean TypeIdUse.matches(TypeIdUse other) {
         //System.out.println(this + " ?? " + other);
         return this.toString().equals(other.toString());
     }
@@ -30,7 +30,7 @@ aspect CompareNodes {
     }
     
     public boolean FieldDecl.matches(FieldDecl other) {
-        if (! this.getAccess().matches(other.getAccess()))
+        if (! this.getTypeUse().matches(other.getTypeUse()))
             return false;
         if (! this.getName().equals(other.getName()))
             return false;
@@ -38,3 +38,7 @@ aspect CompareNodes {
         return true;
     }
 }
+
+// Local Variables:
+// mode: java
+// End:

@@ -24,32 +24,32 @@ public class ConcurrencyTests extends SemanticTests {
     static String COG_CALL_M_ASYNC = "{ Bool testresult = True; Fut<Bool> f; I i; i = new C(); f = i!m(); testresult = f.get; }";
 
     @Test
-    public void asyncCall() {
+    public void asyncCall() throws Exception {
         assertEvalTrue(INTERFACE_I + CLASS_C + CALL_M_ASYNC);
     }
 
     static String CALL_M_ASYNC_GET = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
 
     @Test
-    public void futGet() {
+    public void futGet() throws Exception {
         assertEvalTrue(INTERFACE_I + CLASS_C + CALL_M_ASYNC_GET);
     }
 
     static String CALL_M_ASYNC_AWAIT_GET = "{ Bool testresult = False; I i; i = new local C(); Fut<Bool> fut; fut = i!m(); await fut?; testresult = fut.get; }";
 
     @Test
-    public void futAwaitAndGet() {
+    public void futAwaitAndGet() throws Exception {
         assertEvalTrue(INTERFACE_I + CLASS_C + CALL_M_ASYNC_AWAIT_GET);
     }
 
     @Test
-    public void twoFutureGuard() {
+    public void twoFutureGuard() throws Exception {
         assertEvalTrue(INTERFACE_I + CLASS_C + "{ Bool testresult = True; I i; i = new local C(); "
                 + "  Fut<Bool> f1; Fut<Bool> f2;" + "  f1 = i!m(); f2 = i!m();" + "  await f1? & f2?; }");
     }
 
     @Test
-    public void booleanGuard() {
+    public void booleanGuard() throws Exception {
         assertEvalTrue(INTERFACE_I
                 + "class C implements I { Bool b = False; Unit n() { b = True; } Bool m() { await b; return b; } }"
                 + "{ I i; i = new C(); Fut<Bool> f; f = i!m(); i!n(); Bool testresult = False; testresult = f.get; } ");
@@ -63,52 +63,52 @@ public class ConcurrencyTests extends SemanticTests {
     static String CALL_M_FUTURE = "{Bool testresult = False; I i; i = new local C(); Fut<Bool> p; p = i.m(); await p?; testresult = p.get;}";
 
     @Test
-    public void futureReturnValue() {
+    public void futureReturnValue() throws Exception {
         // Return a future variable
         assertEvalTrue(INTERFACE_IF + CLASS_CF + CALL_M_FUTURE);
     }
 
     @Test
-    public void futureReturnCallResult() {
+    public void futureReturnCallResult() throws Exception {
         // Return the result of an asynchronous call
         assertEvalTrue(INTERFACE_IF + CLASS_CF2 + CALL_M_FUTURE);
     }
 
     @Test
-    public void futureAsParameter() {
+    public void futureAsParameter() throws Exception {
         // Use a future after variable bindings at the call's location have gone
         // out of scope
         assertEvalTrue(INTERFACE_IF + CLASS_CF3 + CALL_M_FUTURE);
     }
 
     @Test
-    public void await_field_future() {
+    public void await_field_future() throws Exception {
         assertEvalTrue(new File("abssamples/backend/ConcurrencyTests/await_field_future.abs"));
     }
 
     @Test
-    public void initBlockCOG() {
+    public void initBlockCOG() throws Exception {
         assertEvalTrue(INTERFACE_I
                 + "class C implements I { Bool b = False; { b = True; } Unit n() { } Bool m() { return b; }} "
                 + COG_CALL_M_ASYNC);
     }
 
     @Test
-    public void initBlockCOG2() {
+    public void initBlockCOG2() throws Exception {
         assertEvalTrue(INTERFACE_I+CLASS_D
                 + "class C implements I { Bool b = False; { b = True; DI i = new local D(); } Unit n() { } Bool m() { return b; }} "
                 + COG_CALL_M_ASYNC);
     }
     
     @Test
-    public void runMethodCOG() {
+    public void runMethodCOG() throws Exception {
         assertEvalTrue(INTERFACE_I
                 + "class C implements I { Bool b = False; Unit run() { b = True; } Unit n() { } Bool m() { await b == True; return b; }} "
                 + COG_CALL_M_ASYNC);
     }
     
     @Test
-    public void initBlockCOG3() {
+    public void initBlockCOG3() throws Exception {
         assertEvalTrue(INTERFACE_I+CLASS_C
                 +"{ Bool testresult = False; List<Fut<Unit>> fs = Nil; Fut<Unit> f; I a = new C(); f = a!n(); fs = Cons(f,fs); f = a!n(); f = head(fs); f.get; testresult = True;}");
     }
@@ -140,7 +140,7 @@ public class ConcurrencyTests extends SemanticTests {
     // }
 
     @Test
-    public void ticket407_concise_await() {
+    public void ticket407_concise_await() throws Exception {
         assertEvalTrue(INTERFACE_I+CLASS_C+
                 "{ I o = new local C(); Bool testresult = await o!m(); }");
     }

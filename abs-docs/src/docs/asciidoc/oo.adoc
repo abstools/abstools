@@ -24,6 +24,10 @@ compiler will statically check that any definitions for this method contain no
 suspension points (`suspend` and `await` statements), i.e., that running that
 method will complete without scheduling.
 
+If a method declarations in an interface has a `[Readonly]` annotation, the
+compiler will statically check that any definitions for this method contain no
+assignments to fields.
+
 NOTE: For ease of reasoning and analysis, ABS methods differ only by name.  It
 is an error for an interface to declare two methods with the same name, either
 explicitly or via extending another interface.
@@ -165,35 +169,6 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 
 ----
 
-=== Atomic Methods
-
-Definitions for atomic method declarations have to be annotated with
-`[Atomic]` as well.  The compiler will statically check that the definition
-does not contain suspension points (`suspend` and `await` statements) and
-blocking `get` expressions.  Such methods can be called inside init blocks and
-in `finally` clauses; all other methods cannot be called in these places.
-
-The following example shows a call to an atomic method from an init block.
-Removing the `Atomic` annotation from method `m` would lead to a compile-time
-error.
-
-[source]
-.Example
-----
-class Sample {
-    Int field = 12;
-
-    {
-        field = this.m();
-    }
-
-    [Atomic] Int m() {
-        return 24;
-    }
-}
-----
-
-
 === Constant Fields
 
 Similar to variable declarations, field declarations and class parameters can
@@ -217,6 +192,62 @@ class Sample ([Final] Int constant_i) {
 
 In addition to fields, method parameters and variables can also be declared
 `Final`.
+
+=== Read-only Methods
+
+For any method definition annotated with `[Readonly]`, the compiler will
+statically check that its body does not contain assignments to fields.
+
+If an interface declares a method to be read-only, its definition has to be
+annotated with `[Readonly]` as well.
+
+The following example shows a class declaration with an atomic method that
+will lead to a compile error.
+
+[source]
+.Example
+----
+class Wrong {
+    Int field = 12;
+
+    // This will not compile
+    [Readonly] Unit fails() {
+        field = field + 1;
+    }
+}
+----
+
+=== Atomic Methods
+
+For any method definition annotated with `[Atomic]`, the compiler will
+statically check that its body does not contain suspension points
+(`suspend` and `await` statements) and blocking `get` expressions.  Such
+methods can be called inside init blocks and in `finally` clauses; all other
+methods cannot be called in these places.
+
+If an interface declares a method to be atomic, its definition has to be
+annotated with `[Atomic]` as well.
+
+The following example shows a call to an atomic method from an init block.
+Removing the `Atomic` annotation from method `m` would lead to a compile-time
+error.
+
+[source]
+.Example
+----
+class Sample {
+    Int field = 12;
+
+    {
+        field = this.m();
+    }
+
+    [Atomic] Int m() {
+        return 24;
+    }
+}
+----
+
 
 [[sec:active-classes]]
 === Active Classes

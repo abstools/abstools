@@ -4,6 +4,14 @@ PROGNAME="$(readlink $0)"
 if [[ -z $PROGNAME ]] ; then
     PROGNAME="$0"
 fi
-BASEDIR="$(dirname $PROGNAME)/../.."
+if [ -f "$(dirname $PROGNAME)/../../dist/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$(dirname $PROGNAME)/../../dist/absfrontend.jar"
+elif [ -f "$(dirname $PROGNAME)/../lib/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$(dirname $PROGNAME)/../lib/absfrontend.jar"
+else
+    echo "Error: could not find absfrontend.jar"
+    echo "(expected in $(dirname $PROGNAME)/../../dist/ or $(dirname $PROGNAME)/../lib/)"
+    exit 1
+fi
 
-java -Xmx512m -cp $BASEDIR/bin:$BASEDIR/lib/* deadlock.analyser.Tester "$@"
+java -Xmx512m -cp $ABSFRONTENDJAR deadlock.analyser.Tester "$@"

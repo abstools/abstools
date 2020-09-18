@@ -4,7 +4,7 @@ RUN git clone https://github.com/abstools/abs-models.org.git /abs-models.org
 WORKDIR /abs-models.org
 RUN hugo -e collaboratory
 
-FROM erlang:21-alpine AS jdk-erlang
+FROM erlang:23-alpine AS jdk-erlang
 RUN apk --update add \
         bash \
         nss \
@@ -16,7 +16,7 @@ FROM jdk-erlang AS builder
 COPY ./ /appSrc/
 WORKDIR /appSrc
 RUN chmod +x gradlew \
-    && ./gradlew --no-daemon frontend:plainJar
+    && ./gradlew --no-daemon frontend:assemble
 
 FROM php:7.3-apache-stretch
 # docker build -t abslang/collaboratory -f docker/collaboratory.Dockerfile ..

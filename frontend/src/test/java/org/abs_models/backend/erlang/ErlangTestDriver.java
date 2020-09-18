@@ -84,7 +84,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * @param absCode
      * @return either the Result, or null if an execution error occurred
      */
-    private String runAndCheck(String absCode) {
+    private String runAndCheck(String absCode) throws Exception {
         File f = null;
         try {
             f = Files.createTempDir();
@@ -92,8 +92,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             Model model = assertParse(absCode, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);
             return runAndCheck(f, mainModule);
-        } catch (Exception e) {
-            return null;
         } finally {
             try {
                 FileUtils.deleteDirectory(f);
@@ -300,13 +298,14 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      * Executes a model and returns its output as a list of strings, one per
      * line.
      *
-     * To detect faults, we have a Timeout process which will kill the
-     * runtime system after 10 seconds
+     * To detect faults, we have a Timeout process which will kill the runtime
+     * system after a timeout.  We always return the accumulated output, no
+     * matter how the process was terminated.
      *
      * @param workDir a temporary directory containing a compiled model.
      * @param mainModule the module whose main block should be executed.
      * @param arguments additional arguments to pass to the model
-     * @return the remainder of an output line starting with "RES=" or null if none found.
+     * @return the lines output by the process until finished or killed by timeout
      */
     public java.util.List<String> runCompiledModel(File workDir, String mainModule, String... arguments) throws Exception {
         ArrayList<String> val = new ArrayList<String>();
@@ -349,10 +348,8 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
             }
         }
 
-        int res = p.waitFor();
+        p.waitFor();
         t.interrupt();
-        if (res != 0)
-            return null;
         return val;
     }
 
@@ -430,7 +427,7 @@ class TimeoutThread implements Runnable {
     @Override
     public void run() {
         try {
-            Thread.sleep(10000); // 10 second timeout before aborting the test (which for example can happen in the case of a deadlock test)
+            Thread.sleep(60000); // timeout before aborting the test (which for example can happen in the case of a deadlock test)
 
             if (p.isAlive()) { // If the test is still running by now, terminate it
                 p.destroyForcibly();

@@ -20,7 +20,7 @@ import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.RunLast;
+import picocli.CommandLine.ScopeType;
 
 /**
  * The main entry point for absc, the abs compiler.
@@ -48,7 +48,7 @@ import picocli.CommandLine.RunLast;
          },
          versionProvider = Absc.AbscVersionProvider.class
          )
-public class Absc implements Callable<Void> {
+public class Absc implements Callable<Integer> {
 
     @Parameters(description = "ABS files/directories/packages to handle",
                 arity = "1..*")
@@ -95,9 +95,11 @@ public class Absc implements Callable<Void> {
 
 
     @Option(names = { "-v", "--verbose" },
+            scope = ScopeType.INHERIT,
             description = "verbose output")
     public boolean verbose = false;
     @Option(names = { "--debug"},
+            scope = ScopeType.INHERIT,
             description = "print diagnostic information (e.g., stacktraces) for internal compiler problems")
     public boolean debug = false;
     @Option(names = { "--dump"},
@@ -236,17 +238,12 @@ public class Absc implements Callable<Void> {
      * @param args
      */
     public static void main(String[] args) {
-        // https://picocli.info/#_parsing_subcommands
-        CommandLine commandline = new CommandLine(new Absc());
-        // TODO: switch to new picocli API
-        commandline.parseWithHandler(new RunLast(), args);
+        int exitCode = new CommandLine(new Absc()).execute(args);
+        if (exitCode != 0) System.exit(exitCode);
     }
 
     @Override
-    public Void call() throws Exception {
-        Main main = new Main();
-        int result = main.mainMethod(this);
-        if (result != 0) System.exit(result);
-        return null;
+    public Integer call() throws Exception {
+        return new Main().mainMethod(this);
     }
 }

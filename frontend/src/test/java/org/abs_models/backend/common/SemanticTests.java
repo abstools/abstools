@@ -15,8 +15,8 @@ import java.util.LinkedList;
 import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.erlang.ErlangTestDriver;
+import org.abs_models.backend.java.JavaTestDriver;
 import org.abs_models.backend.maude.MaudeCompiler;
-// import JavaDynamicTestDriver;
 import org.abs_models.backend.maude.MaudeTestDriver;
 import org.abs_models.frontend.ast.Model;
 import org.junit.runner.RunWith;
@@ -60,12 +60,8 @@ public abstract class SemanticTests {
          * not code-gen options. So we could actually just compile the code to
          * Java once, and then run it with the different options.
          */
-
-        // rudi Temporarily disabled due to gradle crash, and the Java backend
-        // being mostly unsupported in general
-
-        // data.add(new Object[] { new JavaTestDriver() });
-        // data.add(new Object[] { new JavaTestDriver(1) });
+        data.add(new Object[] { new JavaTestDriver() });
+        data.add(new Object[] { new JavaTestDriver(1) });
         /* XXX [stolz] Disabled due to non-deterministic test-runs.
          * Switch back on when Radu comes back.
          */
@@ -82,42 +78,20 @@ public abstract class SemanticTests {
         return data;
     }
 
-    public void assertEvalTrue(String absCode) {
-        try {
-            driver.assertEvalTrue("module BackendTest; " + absCode);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e); // TODO: remove; too many too handle
-                                           // for now.
-        }
+    public void assertEvalTrue(String absCode) throws Exception {
+        driver.assertEvalTrue("module BackendTest; " + absCode);
     }
 
-    public void assertEvalTrue(Model m) {
-        try {
-            assertNotNull(m.lookupModule("BackendTest"));
-            driver.assertEvalTrue(m);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e); // TODO: remove; too many too handle
-                                           // for now.
-        }
+    public void assertEvalTrue(Model m) throws Exception {
+        assertNotNull(m.lookupModule("BackendTest"));
+        driver.assertEvalTrue(m);
     }
 
-    public void assertEvalTrue(File f) {
-        Model m;
-        try {
-            m = ABSTest.assertParseFileOk(f.getPath());
-            assertFalse(m.hasParserErrors());
-            assertFalse(m.hasTypeErrors());
-            assertEvalTrue(m);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e); // TODO: remove; too many too handle
-                                           // for now.
-        }
+    public void assertEvalTrue(File f) throws Exception {
+        Model m = ABSTest.assertParseFileOk(f.getPath());
+        assertFalse(m.hasParserErrors());
+        assertFalse(m.hasTypeErrors());
+        assertEvalTrue(m);
     }
 
     public void assertEvalFails(String absCode) throws Exception {

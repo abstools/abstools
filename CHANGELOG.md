@@ -8,21 +8,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- The `case` pattern matching expresssion now uses bars (`|`) to separate case branches.  The older syntax (`;` to terminate each branch) is still supported by the parser and will not lead to compile-time warnings.
+- The `foreach` loop now supports an optional second variable of type `Int` that is bound to the index of the current element, starting at zero.  The syntax is `foreach (elem, index in list) { ... }`.
+
+- The second argument to the `duration` statement and `await duration` guard is now optional; `duration(x)` has the same behavior as `duration(x, x)`.
+
+- The new function `ms_since_model_start` returns an integer containing the elapsed time in milliseonds since the model was started.
 
 ### Changed
 
-- The pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.  Using the old syntax emits a compile-time warning for now.
+- Function calls in the erlang backend are significantly faster via removal of the check for pending garbage collection at the beginning of each function body.  (Note that garbage collection, i.e., removing unreferenced futures and objects, happens rarely, so the increased waiting time when entering gc caused by this change is not paid often.)
 
-- The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  Using the old syntax emits a compile-time warning for now.  (We still do not use the C-style `?:` ternary operator.)
+- The import/export combination `import A from OtherModule; export A;` now issues a compile-time warning instead of an error.  This keeps older models running while announcing the upcoming change.  (The same construct is an error in the xtext branch already.)
 
-- Minor incompatible change: the plain export clause `export Name;` will only export `Name` if `Name` is defined in the current module; use `export Name from OtherModule;` to re-export `Name` imported from `OtherModule`.  This mirrors the behavior of `export *;` vs. `export * from OtherModule;`.
+- In the Erlang backend, wall-clock time for running a model is now reported in milliseconds instead  of microseconds.  (To see the elapsed time, start the model with parameter `-v`.)
 
 ### Removed
 
 ### Fixed
 
-- Multiple `uses` clauses in a delta now cause a compilation failure.  (The parser used to accept deltas with more than one `uses` clause, but all clauses except the first were silently ignored.)
+- Fixed a potential hang in the erlang backend.
+
+## [1.9.0] - 2020-03-25
+
+### Added
+
+- Methods can now be annotated `[Readonly]`.  Attempting to assign values to object fields in such a method will lead to a compile-time error.
+
+- The `case` pattern matching expresssion now uses bars (`|`) to separate case branches.  The older syntax (`;` to terminate each branch) is still supported by the parser and will not lead to compile-time warnings.
+
+### Changed
+
+- Incompatible change: deltas now share a namespace with modules.  Defining a delta with the same name as a module results in a compile-time error.
+
+- Incompatible change: the plain export clause `export Name;` will only export `Name` if `Name` is defined in the current module; use `export Name from OtherModule;` to re-export `Name` imported from `OtherModule`.  This mirrors the behavior of `export *;` vs. `export * from OtherModule;`.
+
+- Future incompatible change: the pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.  Using the old syntax emits a compile-time warning.
+
+- Future incompatible change: The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  Using the old syntax emits a compile-time warning.
+
+- Method implementations can now be annotated `[Atomic]` when the corresponding interface declaration is not annotated atomic.
+
+### Fixed
+
+- Multiple `uses` clauses in a delta now cause a compilation failure.  The parser used to accept deltas with more than one `uses` clause, but all clauses except the first were silently ignored.
 
 - It is now possible to use qualified names in `adds` module modifier clauses in deltas.
 
@@ -361,7 +389,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.8.2...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/abstools/abstools/compare/v1.8.2...v1.9.0
 [1.8.2]: https://github.com/abstools/abstools/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/abstools/abstools/compare/v_1.8.0...v1.8.1
 [1.8.0]: https://github.com/abstools/abstools/compare/v_1.7.0...v1.8.0

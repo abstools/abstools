@@ -18,7 +18,7 @@
 
 -export([new/2,get_description/1]).
 -export([get_resource_history/2]).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 
 -export([new_cog/3, cog_died/3]).
 -export([cog_active/2, cog_idle/2, cog_blocked/2, cog_blocked_for_clock/5, cog_unblocked/2]).
@@ -69,7 +69,12 @@ cog_unblocked(DCRef, CogRef) ->
 
 cog_idle(DCRef, CogRef) ->
     %% active -> idle
-    gen_statem:call(DCRef, {cog_idle, CogRef}).
+    case DCRef of
+        %% pathological case: we start gc before scheduling the first main
+        %% task (happens during debugging only)
+        none -> ok;
+        _ -> gen_statem:call(DCRef, {cog_idle, CogRef})
+    end.
 
 cog_blocked_for_clock(DCRef, CogRef, TaskRef, Min, Max) ->
     %% active -> blocked + send cog_monitor:dc_mte
@@ -222,10 +227,13 @@ handle_cast({clock_advance_for_dc, Amount}, State,
     %% idle -- but by the time we get to process the `clock_advance_for_dc'
     %% signal, a cog might have already waken us up again, so we also accept
     %% it in state `active'.
+    OState=cog:get_object_state_for_update(Cog, Oid),
     Now=clock:now(),
-    OState=cog:get_object_state(Cog, Oid),
+    Then=rationals:sub(Now, Amount),
+    %% How many times did we refill resources?  Update history this many times
+    N_boundaries = rationals:trunc(Now) - rationals:trunc(Then),
     {WakeUpItems1, OState1, NewCpuQueue, NewBwQueue, NewMemoryQueue}
-        = update_dc_state_wake_up_cogs(gb_sets:empty(), OState, Amount,
+        = update_dc_state_wake_up_cogs(gb_sets:empty(), OState, N_boundaries,
                                        maps:get(cpu, ResourceWaiting, []),
                                        maps:get(bw, ResourceWaiting, []),
                                        maps:get(memory, ResourceWaiting, [])),
@@ -338,7 +346,7 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
     %% We clamp the value -- do not try to consume a negative amount
     Requested = rationals:max(rationals:to_r(Amount_raw), 0),
     C=class_ABS_DC_DeploymentComponent,
-    OState=cog:get_object_state(MyCog, MyOid),
+    OState=cog:get_object_state_for_update(MyCog, MyOid),
     Initialized=C:get_val_internal(OState, 'initialized'),
     ResourceVarCurrent=var_current_for_resourcetype(Resourcetype),
     ResourceVarMax=var_max_for_resourcetype(Resourcetype),
@@ -352,6 +360,8 @@ active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
         null ->
             %% The init block of the DC object has not run yet (should not
             %% happen) - but just record the request and deal with it later.
+            %% Remember put back object state so `MyCog' is unblocked.
+            cog:object_state_changed(MyCog, MyOid, OState),
             {keep_state,
              Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Requested}]},
                        recorded=[RequestEvent | Recorded],
@@ -419,19 +429,16 @@ idle(cast, Event, Data) ->
     handle_cast(Event, idle, Data).
 
 
-%% Handle clock advancement.  Consider arbitrary clock advancement amounts
-%% (within one interval, arriving at clock boundary, jumping multiple
-%% boundaries), consume resources on the way, and wake up cogs whose resource
-%% needs have been filled.
-update_dc_state_wake_up_cogs(WakeUpItems, S, Amount, CpuQueue, BwQueue, MemoryQueue) ->
-    Boundary=clock:distance_to_next_boundary(),
-    Amount1=rationals:sub(Amount, Boundary),
-    case rationals:is_negative(Amount1) of
-        false -> {WakeUpItems1, S1, NewCpuQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems, S, cpu, CpuQueue),
-                 {WakeUpItems2, S2, NewBwQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems1, S1, bw, BwQueue),
-                 {WakeUpItems3, S3, NewMemoryQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems2, S2, memory, MemoryQueue),
-                 update_dc_state_wake_up_cogs(WakeUpItems3, S3, Amount1, NewCpuQueue, NewBwQueue, NewMemoryQueue);
-        true -> {WakeUpItems, S, CpuQueue, BwQueue, MemoryQueue}
+%% Refill resources and calculate which cogs need to be waken up.  `N_updates'
+%% is the number of times we update resources (this is important only for the
+%% resource history kept in `S').
+update_dc_state_wake_up_cogs(WakeUpItems, S, N_updates, CpuQueue, BwQueue, MemoryQueue) ->
+    case (N_updates > 0) of
+        true -> {WakeUpItems1, S1, NewCpuQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems, S, cpu, CpuQueue),
+                {WakeUpItems2, S2, NewBwQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems1, S1, bw, BwQueue),
+                {WakeUpItems3, S3, NewMemoryQueue}=update_dc_state_wake_up_cogs_for_resource(WakeUpItems2, S2, memory, MemoryQueue),
+                update_dc_state_wake_up_cogs(WakeUpItems3, S3, N_updates - 1, NewCpuQueue, NewBwQueue, NewMemoryQueue);
+        false -> {WakeUpItems, S, CpuQueue, BwQueue, MemoryQueue}
     end.
 
 update_dc_state_wake_up_cogs_for_resource(WakeUpItems0, S0, Resourcetype, Queue) ->
