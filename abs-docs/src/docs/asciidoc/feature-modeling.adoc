@@ -400,10 +400,14 @@ To reference variable classes and interfaces, the type reference or `new` expres
 ----
 module M;
 export I,C;
-features f,g with (f || g) && !(f && g); //local features
 
-interface I { Unit m(); }
-base class C implements I { }
+preproduct P = {g};
+
+unique interface I { Unit m(); } //may not be modified
+class C implements I { }
+
+
+features f,g with (f || g) && !(f && g); //local features
 
 //local deltas
 delta D1; modifies C { adds Unit m() {println("1");} }
@@ -415,14 +419,21 @@ module N;
 import * from M;
 {
     I i = new C() with {f}; //references a variant of C
+    I j = new C() with P; //references another variant of C
     i!m(); //prints "1"
+    j!m(); //prints "2"
 }
 ----
 
-In modules, it is distinguished between unique, `base` and `relative` classes (and interfaces). 
-Only `base` classes may be modified by local deltas.
-A `relative` class may reference a `base` class, but may not be modified by local deltas.
-A unique class has no modifier. It may neither be modified by local deltas, nor reference `base` or `relative` classes.
+In variable modules, i.e., modules with local features, it is distinguished between `unique` and non-`unique`  classes (and interfaces). 
+Only non-`unique` classes may be modified by local deltas.
+A `unique` class may not reference on non-`unique` elements from any module without a `with` clause that specifies the product to use.
+A non-`unique` class may not reference non-`unique` elements from other modules without a `with` clause that specifies the product to use.
+It may reference non-`unique` classes within its own module.
+
+In non-variable modules, all elements are implicitly `unique`.
+
+One can use `preproduct` to give a name to a set of features from its own module.
 
 Local variability is based on a syntactic operations, the above example results in the following model after rewriting but before type checking:
 [source]
@@ -433,15 +444,25 @@ interface I { Unit m(); }
 
 module M_f;
 import * from M;
-export I,C;
+export C;
 
 class C implements I { Unit m() {println("1");} }
+
+module M_g;
+import * from M;
+export C;
+
+class C implements I { Unit m() {println("2");} }
+
 module N;
 import * from M;
 import * from M_f;
+import * from M_g;
 {
     M.I i = new M_f.D();
+    M.I i = new M_g.D();
     i!m();
+    j!m();
 }
 ----
 
@@ -451,7 +472,7 @@ Local and global features are disjoint sets, global feature selection can, thus,
 ==== Syntax
 The syntax of modules is extended as follows.
 
- - Modules can define products using product declarations `product _TypeId_ = { _Features_ }`. 
+ - Modules can define products using product declarations `preproduct _TypeId_ = { _Features_ }`. 
 
  - Modules can declare local features and a feature model using `features _Features_ with _BF_`, where `_BF_` is a boolean formula over the introduced features using the operators `||, &&, !`.
 
@@ -465,5 +486,5 @@ The syntax of expressions, type references, class and interface declarations is 
 
  - The `new` expression and type references can have a `with _PE_` clause, where `_PE_` is either a product name or a set of features.
 
-- Class and interface declarations may be prefixed with `base`, `relative` or both.
+- Class and interface declarations may be prefixed with `unique`.
 
