@@ -3,19 +3,6 @@ import java.util.Set;
 
 aspect FieldUsage {
 
-     /**
-     * Guard must observe something. "True" and "False" or implemented as a
-     * hack for now for those people that like to use it.
-     * @see PureExp#getFields(FieldUseInfo)
-     */
-     public void ExpGuard.hasFieldAccess(SemanticConditionList e) {
-        final PureExp pe = getPureExp();
-        final FieldUseInfo info = getPureExp().getFields();
-        if ((!(pe instanceof DataConstructorExp && ("True".equals(((DataConstructorExp)pe).getConstructor()) || "False".equals(((DataConstructorExp)pe).getConstructor()))))
-                    && (info.fields.isEmpty() && !info.usesBuiltin))
-            e.add(new SemanticWarning(this,ErrorMessage.AWAIT_TOO_PURE, ""));
-    }
-
     /**
      * Helper-datastructure for {@link PureExp#getFields()}.
      */
@@ -43,6 +30,10 @@ aspect FieldUsage {
          return merge(e.getFields(this));
        }
 
+       FieldUseInfo merge(Guard g) {
+         return merge(g.getFields(this));
+       }
+
        FieldUseInfo merge(List<PureExp> es) {
          for (PureExp e : es) {
            merge(e);
@@ -57,45 +48,56 @@ aspect FieldUsage {
        }
     }
 
-   /**
-    * Collect all fields used in a pure expression and reference to builtins.
-    * TODO: I guess we shouldn't be collecting USES but their DECLs instead,
-             but you can easily get those later.
-    * @see PureExp#getFields()
-    */
+    /**
+     * Collect all fields used in a pure expression and check whether it calls
+     * a builtin function.
+     * @see PureExp#getFields()
+     */
+    // TODO: reduce amount of `FieldUseInfo' objects created in these
+    // equations; accumulate results in a single object instead (rudi)
     syn lazy FieldUseInfo PureExp.getFields() = getFields(new FieldUseInfo());
-   /**
-    * Collect all fields used in a pure expression and reference to builtins.
-    * Uses an accumulator (defSeen) to avoid recursing into functiondefs when
-    *   looking for builtins.
-    * TODO: I guess we shouldn't be collecting USES but their DECLs instead,
-             but you can easily get those later.
-    * @see getFields()
-    */
-	syn lazy FieldUseInfo PureExp.getFields(FieldUseInfo fui);
+    syn lazy FieldUseInfo PureExp.getFields(FieldUseInfo fui);
 
-	eq PureExp.getFields(FieldUseInfo fui) = fui;
-	eq FieldUse.getFields(FieldUseInfo fui) = new FieldUseInfo(this);
+    eq PureExp.getFields(FieldUseInfo fui) = fui;
+    eq FieldUse.getFields(FieldUseInfo fui) = new FieldUseInfo(this);
 
-	eq Binary.getFields(FieldUseInfo fui) {
-		fui.merge(getLeft());
-		return new FieldUseInfo(fui.merge(getRight()));
-	}
+    eq Binary.getFields(FieldUseInfo fui) {
+        fui.merge(getLeft());
+        return new FieldUseInfo(fui.merge(getRight()));
+    }
 
-	eq Unary.getFields(FieldUseInfo fui) {
-	    return new FieldUseInfo(fui.merge(getOperand()));
-	}
+    eq Unary.getFields(FieldUseInfo fui) {
+        return new FieldUseInfo(fui.merge(getOperand()));
+    }
 
-	eq LetExp.getFields(FieldUseInfo fui) {
-		fui.merge(getExp());
-		return new FieldUseInfo(fui.merge(getVal()));
-	}
+    eq LetExp.getFields(FieldUseInfo fui) {
+        fui.merge(getExp());
+        return new FieldUseInfo(fui.merge(getVal()));
+    }
 
-	eq IfExp.getFields(FieldUseInfo fui) {
-		fui.merge(getCondExp());
-		fui.merge(getThenExp());
-		return new FieldUseInfo(fui.merge(getElseExp()));
-	}
+    eq IfExp.getFields(FieldUseInfo fui) {
+        fui.merge(getCondExp());
+        fui.merge(getThenExp());
+        return new FieldUseInfo(fui.merge(getElseExp()));
+    }
+
+    syn lazy FieldUseInfo Guard.getFields() = getFields(new FieldUseInfo());
+    syn lazy FieldUseInfo Guard.getFields(FieldUseInfo fui);
+    eq ClaimGuard.getFields(FieldUseInfo fui) {
+        return new FieldUseInfo(fui.merge(getVar()));
+    }
+    eq AndGuard.getFields(FieldUseInfo fui) {
+        fui.merge(getLeft());
+        return new FieldUseInfo(fui.merge(getRight()));
+    }
+    eq ExpGuard.getFields(FieldUseInfo fui) {
+        return new FieldUseInfo(fui.merge(getPureExp()));
+    }
+    eq DurationGuard.getFields(FieldUseInfo fui) {
+        fui.merge(getMin());
+        return new FieldUseInfo(fui.merge(getMax()));
+    }
+
 
    /**
     * Check for reference to builtins (transitively).
