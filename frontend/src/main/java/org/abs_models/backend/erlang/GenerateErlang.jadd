@@ -1108,6 +1108,7 @@ aspect GenerateErlang {
       ecs.pf("Poll(%s)", vars.toParamList());
       ecs.decIndent().println("end end)");
       ecs.decIndent().format("(%s)",vars.toParamList());
+      ecs.decIndent();
     }
     else {
         getGuard().generateErlangCode(ecs,after,vars);
