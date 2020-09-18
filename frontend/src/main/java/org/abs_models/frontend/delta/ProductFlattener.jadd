@@ -80,6 +80,7 @@ aspect ProductFlattener {
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
     }
+
     public void Model.flattenModuleForProduct(ProductDecl decl, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         assert decl != null;
         if (verbose)
@@ -94,6 +95,7 @@ aspect ProductFlattener {
             decl.getModuleDecl().addImportIfNotExists(newModule);
         }
     }
+
     public String Model.flattenModuleForProduct(Product product) throws DeltaModellingException {
     	if (getLocalProductLines() == null || getLocalProductLines().isEmpty())
             throw new DeltaModellingException("Model is missing a local 'productline' definition");
@@ -202,6 +204,7 @@ aspect ProductFlattener {
         getModel().flushAttrCache();
         // find product line
         LocalProductLine pl = newModule.getProductLine();
+        
 
         // find/sort applicable delta IDs
         Set<String> deltaids = pl.findApplicableDeltas(product);
@@ -222,6 +225,7 @@ aspect ProductFlattener {
             }
             getModel().println(" .");
         }
+
 
         // apply the applicable deltas in the given order
         newModule.applyDeltas(deltas);
@@ -640,7 +644,12 @@ aspect ProductFlattener {
                     }
                 }
                 getDecls().removeChild(decl);
+           } else {
+               NamedExport export = new NamedExport();
+               export.addNameNoTransform(new Name(decl.getName()));
+               addExportNoTransform(export);
            }
+
         }
     }
 
@@ -757,8 +766,9 @@ aspect ProductFlattener {
         java.util.Set<String> variableDecls = new java.util.HashSet<>();
         for (Decl d : getDecls()) {
             if ( (d instanceof ClassDecl && !((ClassDecl) d).getUnique()) ||
-                 (d instanceof InterfaceDecl && !((InterfaceDecl) d).getUnique()))
+                 (d instanceof InterfaceDecl && !((InterfaceDecl) d).getUnique())){
                 variableDecls.add(d.getName());
+            }
         }
 
          return variableDecls;

@@ -98,7 +98,7 @@ Const: Deltaparam ::= Value ;
 
 // Extended Product Selection Language
 ProductDecl ::= <Name> ProductExpr ;
-LocalProductDecl ::= <Name> ProductExpr ;
+LocalProductDecl : ProductDecl; //::= <Name> ProductExpr ;
 
 abstract ProductExpr ;
 ProductFeatureSet : ProductExpr ::= Feature* ;

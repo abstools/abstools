@@ -167,6 +167,11 @@ aspect TypeResolution {
                 res.add(product);
             }
         }
+        for (ModuleDecl moduleDecl : getModuleDecls()){
+            for (LocalProductDecl product: moduleDecl.getLocalProductDecls()) {
+                res.add(product);
+            }
+        }
         return res;
     }
 
