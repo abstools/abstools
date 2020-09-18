@@ -1087,6 +1087,10 @@ aspect GenerateErlang {
     if(getGuard().hasPoll()){
       getGuard().generateErlangCode(ecs,after,vars);
       after.close();
+      for (FieldUse gf : getGuard().getFields().fields) {
+          ecs.format("object:register_read('%s'),", gf.getName());
+          ecs.println();
+      }
       ecs.println("cog:return_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       ecs.incIndent().println("receive {check, OState} -> ");
