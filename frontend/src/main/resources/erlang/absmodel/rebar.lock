@@ -1,16 +1,17 @@
-[{<<"cowboy">>,
-  {git,"git://github.com/ninenines/cowboy.git",
-       {ref,"63b17e4edf666d995ec86cdcda17a62ba5ebc423"}},
-  0},
- {<<"cowlib">>,
-  {git,"https://github.com/ninenines/cowlib",
-       {ref,"c6553f8308a2ca5dcd69d845f0a7d098c40c3363"}},
-  0},
- {<<"jsx">>,
-  {git,"git://github.com/talentdeficit/jsx.git",
-       {ref,"d4b6d3dc5fd9e759ff7a0c476654ea5124f5bae9"}},
-  0},
- {<<"ranch">>,
-  {git,"https://github.com/ninenines/ranch",
-       {ref,"3190aef88aea04d6dce8545fe9b4574288903f44"}},
-  0}].
+{"1.2.0",
+[{<<"cowboy">>,{pkg,<<"cowboy">>,<<"2.8.0">>},0},
+ {<<"cowlib">>,{pkg,<<"cowlib">>,<<"2.9.1">>},1},
+ {<<"jsx">>,{pkg,<<"jsx">>,<<"2.10.0">>},0},
+ {<<"ranch">>,{pkg,<<"ranch">>,<<"1.7.1">>},1}]}.
+[
+{pkg_hash,[
+ {<<"cowboy">>, <<"F3DC62E35797ECD9AC1B50DB74611193C29815401E53BAC9A5C0577BD7BC667D">>},
+ {<<"cowlib">>, <<"61A6C7C50CF07FDD24B2F45B89500BB93B6686579B069A89F88CB211E1125C78">>},
+ {<<"jsx">>, <<"77760560D6AC2B8C51FD4C980E9E19B784016AA70BE354CE746472C33BEB0B1C">>},
+ {<<"ranch">>, <<"6B1FAB51B49196860B733A49C07604465A47BDB78AA10C1C16A3D199F7F8C881">>}]},
+{pkg_hash_ext,[
+ {<<"cowboy">>, <<"4643E4FBA74AC96D4D152C75803DE6FAD0B3FA5DF354C71AFDD6CBEEB15FAC8A">>},
+ {<<"cowlib">>, <<"E4175DC240A70D996156160891E1C62238EDE1729E45740BDD38064DAD476170">>},
+ {<<"jsx">>, <<"9A83E3704807298016968DB506F9FAD0F027DE37546EB838B3AE1064C3A0AD62">>},
+ {<<"ranch">>, <<"451D8527787DF716D99DC36162FCA05934915DB0B6141BBDAC2EA8D3C7AFC7D7">>}]}
+].
