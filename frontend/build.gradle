@@ -206,6 +206,19 @@ spotbugs {
     excludeFilter = file('config/findbugs/findbugs-jastadd-filter.xml')
 }
 
+spotbugsMain {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+spotbugsTest {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
 javadoc {
     failOnError = false
     options.addStringOption('Xdoclint:none', '-quiet')
