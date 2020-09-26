@@ -936,18 +936,27 @@ aspect GenerateErlang {
     getExpr().generateErlangCode(ecs, vars);
     ecs.println(" of");
     ecs.incIndent();
+    String separator = "";
     for (CaseBranch b : getBranchs()) {
         Vars v = vars.pass();
+        ecs.println(separator); separator = ";";
         b.getLeft().generateErlangCode(external, ecs, v);
         ecs.print("->");
         b.getRight().generateErlangCode(ecs, v);
-        ecs.println(";");
         vars.hideIntroduced(v);
     }
-    ecs.println("_ -> io:format(\"No match for "
-              + getExpr() + " at " + getFileName()
-              + ":" + getStartLine() + "~n\"), ");
-    ecs.println("exit(dataPatternMatchFailException)");
+    if (getNumBranch() == 0 ||  // shouldn't happen
+        !(getBranch(getNumBranch() - 1).getLeft() instanceof UnderscorePattern)) {
+        // eliminate an impossible branch - note that this is not an
+        // exhaustive test but reduces some warnings.
+        ecs.println(separator);
+        ecs.println("_ -> io:format(\"No match for "
+                    + getExpr() + " at " + getFileName()
+                    + ":" + getStartLine() + "~n\"), ");
+        ecs.println("exit(dataPatternMatchFailException)");
+    } else {
+        ecs.println();
+    }
     ecs.decIndent();
     ecs.print("end");
     ecs.close();
@@ -1099,6 +1108,7 @@ aspect GenerateErlang {
       ecs.pf("Poll(%s)", vars.toParamList());
       ecs.decIndent().println("end end)");
       ecs.decIndent().format("(%s)",vars.toParamList());
+      ecs.decIndent();
     }
     else {
         getGuard().generateErlangCode(ecs,after,vars);

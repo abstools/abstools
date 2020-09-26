@@ -452,9 +452,8 @@ public class XtextToJastAdd {
 
             if (xtext_decl.isBuiltin()) {
                 final BuiltinFunctionDef bd = new BuiltinFunctionDef();
-                for (int i = 0; i < xtext_decl.getBuiltinArguments().size(); i++) {
-                    final String barg = xtext_decl.getBuiltinArguments().get(i);
-                    bd.addStringArgNoTransform(nodeWithLocation(new StringLiteral(ASTPreProcessor.preprocessStringLiteral(barg)), xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_BuiltinArguments(), i));
+                for (final org.abs_models.xtext.abs.Expression arg : xtext_decl.getBuiltinArguments()) {
+                    bd.addArgumentNoTransform(pureExpFromXtext(arg));
                 }
                 result.setFunctionDef(nodeWithLocation(bd, xtext_decl, AbsPackage.eINSTANCE.getFunctionDeclaration_Builtin()));
             } else {

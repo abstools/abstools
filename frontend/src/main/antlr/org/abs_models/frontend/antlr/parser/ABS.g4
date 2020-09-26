@@ -231,7 +231,7 @@ function_decl : annotations
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         paramlist
         '='
-        ('builtin' ('[' (builtin_args+=STRINGLITERAL (',' builtin_args+=STRINGLITERAL)* )? ']')?
+        ('builtin' ('(' pure_exp_list ')')?
         | e=pure_exp )
         ';'
     ;

@@ -10,7 +10,6 @@
 -export([behaviour_info/1]).
 -include_lib("../include/abs_types.hrl").
 
--behaviour(gc).
 -export([send_stop_for_gc/1, get_references_for_cog/1]).
 
 %%Task behaviours have to implemented:
@@ -31,9 +30,11 @@ start(Cog,TaskType,Future,CalleeObj,Args,Info)->
 init(TaskType,Cog,Future,CalleeObj,Args,Info)->
     put(task_info, Info#task_info{pid=self(),this=CalleeObj,destiny=Future}),
     InnerState=TaskType:init(Cog,Future,CalleeObj,Args),
-    %% init RNG, recipe recommended by the Erlang documentation.
-    %% TODO: if we want reproducible runs, make seed a command-line parameter
-    random:seed(erlang:phash2([node()]), erlang:monotonic_time(), erlang:unique_integer()),
+    %% init RNG -- not necessary according to
+    %% https://erlang.org/doc/man/rand.html#description.  Needs to be done
+    %% here if we want reproducible runs; see rand:export_seed/0 and
+    %% rand:seed/1 on how to save and restore RNG state
+    rand:seed(exsss),
     wait_for_token(Cog, InnerState),
     Val=TaskType:start(InnerState),
     cog:return_token(Cog,self(),done,get(task_info),get(this)),

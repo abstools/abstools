@@ -812,8 +812,21 @@ aspect TypeChecker {
         int size = e.getErrorCount();
         exp.typeCheck(e);
         getPureExp().assertHasType(e,getModel().getBoolType());
-        if (e.getErrorCount() == size)
-            hasFieldAccess(e); // check for visible change/builtin
+        if (e.getErrorCount() == size) {
+            // A guard expression must contain at least one field, or it can
+            // never change.  "await True" and "await False" are explicit
+            // special cases.
+            final PureExp pe = getPureExp();
+            final FieldUseInfo info = getFields();
+            if (info.fields.isEmpty()
+                && !info.usesBuiltin
+                && (!(pe instanceof DataConstructorExp
+                      && ("True".equals(((DataConstructorExp)pe).getConstructor())
+                          || "False".equals(((DataConstructorExp)pe).getConstructor())))))
+            {
+                e.add(new SemanticWarning(this,ErrorMessage.AWAIT_TOO_PURE, ""));
+            }
+        }
     }
     public void DurationGuard.typeCheck(SemanticConditionList e) {
         getMin().typeCheck(e);

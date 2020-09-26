@@ -54,7 +54,6 @@ dependencies {
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.6.2")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
     testImplementation 'junit:junit:4.13'
-    testImplementation 'org.easymock:easymock:4.2'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest-core:2.2'
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.5.2"
@@ -109,7 +108,7 @@ compileJava.dependsOn 'generateJastAddAST'
 task compileErlangBackend(type: Exec, dependsOn: processResources) {
     description 'Compiles Erlang backend support files.'
     workingDir 'build/resources/main/erlang/absmodel'
-    commandLine 'escript', '../bin/rebar', 'compile'
+    commandLine 'escript', '../bin/rebar3', 'compile'
 }
 clean {
     // This removes beam files left over after updating from old versions
@@ -205,6 +204,19 @@ spotbugs {
     ignoreFailures = true
     showProgress = true
     excludeFilter = file('config/findbugs/findbugs-jastadd-filter.xml')
+}
+
+spotbugsMain {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+spotbugsTest {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
 }
 
 javadoc {

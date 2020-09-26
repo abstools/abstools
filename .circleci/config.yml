@@ -13,7 +13,7 @@ version: 2
 jobs:
   build_frontend:
     docker:
-      - image: bjoernpetersen/erlang-openjdk:erl21-jdk8-slim
+      - image: bjoernpetersen/erlang-openjdk:erl22-jdk8-slim
     working_directory: ~/repo/frontend
     environment:
       # Disabling the Gradle daemon is recommended in CI environments

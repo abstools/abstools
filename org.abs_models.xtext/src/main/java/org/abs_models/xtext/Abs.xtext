@@ -112,7 +112,7 @@ FunctionDeclaration
         ( '(' (functionArguments+=IDENTIFIER (',' functionArguments+=IDENTIFIER)*)? ')')?
         '(' (arguments+=Parameter (',' arguments+=Parameter)* )? ')'
         '='
-        (builtin?='builtin' ('[' (builtinArguments+=STRINGLITERAL (',' builtinArguments+=STRINGLITERAL)* )? ']')?
+        ( builtin?='builtin' ('(' (builtinArguments+=Expression ( ',' builtinArguments+=Expression)* )? ')' )?
         | body=Expression)
         ';'
     ;

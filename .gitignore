@@ -14,9 +14,9 @@ xtend-gen/
 bin/
 out/
 /log/
+/frontend/bin/
 /frontend/dist/
-/frontend/**/gen/
-/frontend/**/*.beam
+/frontend/src/main/resources/erlang/absmodel/_build/
 /abs-docs/**/*.aux
 /abs-docs/**/*.bbl
 /abs-docs/**/*.blg
@@ -39,3 +39,4 @@ out/
 /abs-docs/ReferenceManual/gitRevision.tex
 /org.abs_models.xtext/model/generated/
 /org.abs_models.xtext.ide/dist/
+/abs-foreign-interface/java/abs-java-util/bin/

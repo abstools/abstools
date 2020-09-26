@@ -191,9 +191,9 @@ public class ParserTest extends FrontendTest {
     @Test
     public void testBuiltinFunctionDecl() {
         assertParse("def Int f() = builtin;");
-        assertParse("def Int f() = builtin[];");
-        assertParse("def Int f() = builtin[\"a\"];");
-        assertParse("def Int f() = builtin[\"a\", \"b\", \"c\"];");
+        assertParse("def Int f() = builtin();");
+        assertParse("def Int f() = builtin(\"a\");");
+        assertParse("def Int f() = builtin(\"a\", 2, 3.0);");
     }
 
     @Test
