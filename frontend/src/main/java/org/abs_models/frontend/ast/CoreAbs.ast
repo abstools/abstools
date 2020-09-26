@@ -87,7 +87,7 @@ PatternVarDecl: VarOrFieldDecl;
 LoopVarDecl: VarOrFieldDecl;    // for ForeachStmt
 
 abstract FunctionDef;
-BuiltinFunctionDef: FunctionDef ::= StringArg:PureExp* ;
+BuiltinFunctionDef: FunctionDef ::= Argument:PureExp* ;
 ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
 
 MethodSig ::= <Name> Annotation* ReturnType:TypeUse Param:ParamDecl*;

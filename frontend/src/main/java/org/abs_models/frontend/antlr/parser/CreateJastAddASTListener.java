@@ -238,8 +238,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         FunctionDef d;
         if (ctx.e == null) {
             BuiltinFunctionDef bd = new BuiltinFunctionDef();
-            for (Token t : ctx.builtin_args) {
-                bd.addStringArg(makeStringLiteral(t.getText()));
+            if (ctx.pure_exp_list() != null) {
+                bd.setArgumentList(v(ctx.pure_exp_list()));
             }
             d = bd;
         } else {
