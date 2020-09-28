@@ -1,4 +1,4 @@
-import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+import org.abs_models.frontend.typechecker.nullable.BitVec;
 
 aspect ControlFlow {
 
@@ -18,9 +18,9 @@ aspect ControlFlow {
 
 	syn nta CFGEntry MethodImpl.entry() = new CFGEntry();
 	syn nta CFGExit MethodImpl.exit() = new CFGExit();
-	eq MethodImpl.entry().following() = new SimpleSet<CFGNode>(getBlock());
-	eq MethodImpl.getBlock().following() = new SimpleSet<CFGNode>(exit());
-	eq MethodImpl.exit().following() = new SimpleSet<CFGNode>();
+	eq MethodImpl.entry().following() = new BitVec<CFGNode>(getBlock());
+	eq MethodImpl.getBlock().following() = new BitVec<CFGNode>(exit());
+	eq MethodImpl.exit().following() = new BitVec<CFGNode>();
 	eq MethodImpl.entry().entry() = entry();
 	eq MethodImpl.getBlock().entry() = entry();
 	eq MethodImpl.getBlock().exit() = exit();
@@ -30,9 +30,9 @@ aspect ControlFlow {
 
 	syn nta CFGEntry InitBlock.entry() = new CFGEntry();
 	syn nta CFGExit InitBlock.exit() = new CFGExit();
-	eq InitBlock.entry().following() = new SimpleSet<>(this);
-	eq ClassDecl.getInitBlock().following() = new SimpleSet<>(getInitBlock().exit());
-	eq InitBlock.exit().following() = new SimpleSet<CFGNode>();
+	eq InitBlock.entry().following() = new BitVec<>(this);
+	eq ClassDecl.getInitBlock().following() = new BitVec<>(getInitBlock().exit());
+	eq InitBlock.exit().following() = new BitVec<CFGNode>();
 	eq InitBlock.entry().entry() = entry();
 	eq InitBlock.entry().exit() = exit();
 	eq InitBlock.exit().entry() = entry();
@@ -43,9 +43,9 @@ aspect ControlFlow {
 	syn nta CFGEntry ClassDecl.recoverEntry() = new CFGEntry();
 	syn nta CFGExit ClassDecl.recoverExit() = new CFGExit();
 	eq ClassDecl.recoverEntry().following() = hasRecoverBranch()
-		? new SimpleSet<>(getRecoverBranch(0))
-		: new SimpleSet<>();
-	eq ClassDecl.getRecoverBranch(int i).following() = new SimpleSet<CFGNode>(getRecoverBranch(i).getRight())
+		? new BitVec<>(getRecoverBranch(0))
+		: new BitVec<>();
+	eq ClassDecl.getRecoverBranch(int i).following() = new BitVec<CFGNode>(getRecoverBranch(i).getRight())
 		.union(i + 1 < getNumRecoverBranch()
 			? getRecoverBranch(i + 1)
 			: recoverExit());
@@ -55,14 +55,14 @@ aspect ControlFlow {
 	eq ClassDecl.recoverExit().exit() = null;
 	eq ClassDecl.getRecoverBranch(int i).entry() = recoverEntry();
 	eq ClassDecl.getRecoverBranch(int i).exit() = recoverExit();
-	eq ClassDecl.recoverExit().following() = new SimpleSet<>();
+	eq ClassDecl.recoverExit().following() = new BitVec<>();
 	eq ClassDecl.getRecoverBranch(int i).parentStmt() = null;
 
 	syn nta CFGEntry MainBlock.entry() = new CFGEntry();
 	syn nta CFGExit MainBlock.exit() = new CFGExit();
-	eq MainBlock.entry().following() = new SimpleSet<>(this);
-	eq ModuleDecl.getBlock().following() = new SimpleSet<>(getBlock().exit());
-	eq MainBlock.exit().following() = new SimpleSet<CFGNode>();
+	eq MainBlock.entry().following() = new BitVec<>(this);
+	eq ModuleDecl.getBlock().following() = new BitVec<>(getBlock().exit());
+	eq MainBlock.exit().following() = new BitVec<CFGNode>();
 	eq MainBlock.entry().entry() = entry();
 	eq MainBlock.entry().exit() = exit();
 	eq MainBlock.exit().entry() = entry();
@@ -72,7 +72,7 @@ aspect ControlFlow {
 
 	//== Predecessors ==
 	
-	coll SimpleSet<CFGNode> CFGNode.pred() with add root ModuleDecl;
+	coll BitVec<CFGNode> CFGNode.pred() with add root ModuleDecl;
 	// Stmt contributes this to CFGNode.pred() for each succ();
 
 	// NTAs are not, in general, included in the collection attribute traversal; we have to fudge around this
@@ -133,7 +133,7 @@ aspect ControlFlow {
     super.collect_contributors_CFGNode_pred(_root, _map);
   }
 
-	protected void Stmt.contributeTo_CFGNode_pred(SimpleSet<CFGNode> collection) {
+	protected void Stmt.contributeTo_CFGNode_pred(BitVec<CFGNode> collection) {
     super.contributeTo_CFGNode_pred(collection);
     collection.add(this);
   }
@@ -171,7 +171,7 @@ aspect ControlFlow {
     super.collect_contributors_CFGNode_pred(_root, _map);
   }
 
-	protected void CaseBranchStmt.contributeTo_CFGNode_pred(SimpleSet<CFGNode> collection) {
+	protected void CaseBranchStmt.contributeTo_CFGNode_pred(BitVec<CFGNode> collection) {
     super.contributeTo_CFGNode_pred(collection);
     collection.add(this);
   }
@@ -181,12 +181,12 @@ aspect ControlFlow {
 	/**
 	 * All possible Statements that could follow this one
 	 */
-	syn SimpleSet<CFGNode> CFGNode.succ() = following();
+	syn BitVec<CFGNode> CFGNode.succ() = following();
 	
 	/**
 	 * The next statement in the AST
 	 */
-	inh SimpleSet<CFGNode> CFGNode.following();
+	inh BitVec<CFGNode> CFGNode.following();
 
 	eq AssertStmt.succ() = following().union(throwTarget());
 
@@ -195,16 +195,16 @@ aspect ControlFlow {
 	eq AwaitStmt.succ() = getGuard().canThrow() ? following().union(throwTarget()) : following();
 
 	eq Block.succ() = getNumStmt() != 0
-		? SimpleSet.<CFGNode>empty().union(getStmt(0)) 
+		? new BitVec<CFGNode>(getStmt(0)) 
 		: following();
 	eq Block.getStmt(int i).following() = i != getNumStmt() - 1
-		? SimpleSet.<CFGNode>empty().union(getStmt(i+1))
+		? new BitVec<CFGNode>(getStmt(i+1))
 		: following();
 
 	
 	eq CaseStmt.succ() {
-		SimpleSet<CFGNode> normalSucc = hasBranch()
-			? new SimpleSet<CFGNode>(getBranch(0))
+		BitVec<CFGNode> normalSucc = hasBranch()
+			? new BitVec<CFGNode>(getBranch(0))
 			: following();
 		
 		if (getExpr().canThrow()) {
@@ -213,9 +213,9 @@ aspect ControlFlow {
 		return normalSucc;
 	}
 	eq CaseStmt.getBranch(int i).following() = i + 1 < getNumBranch()
-		? new SimpleSet<CFGNode>(getBranch(i).getRight()).union(getBranch(i + 1))
+		? new BitVec<CFGNode>(getBranch(i).getRight()).union(getBranch(i + 1))
 		// We don't need to add the throwTarget, because the compiler generates a pattern for exceptions where needed
-		: new SimpleSet<CFGNode>(getBranch(i).getRight()).union(following());
+		: new BitVec<CFGNode>(getBranch(i).getRight()).union(following());
 	// Parent CaseStmt, TryCatchFinallyStmt, or null when in recover block
 	inh Stmt CaseBranchStmt.parentStmt();
 	eq CaseBranchStmt.getRight().following() {
@@ -223,32 +223,32 @@ aspect ControlFlow {
 
 		// If parentStmt is null, we are in a recover block
 		if (parent == null) {
-			return new SimpleSet<>(exit());
+			return new BitVec<>(exit());
 		}
 
 		if (parent instanceof TryCatchFinallyStmt) {
 			TryCatchFinallyStmt t = (TryCatchFinallyStmt) parent;
 
 			if (t.hasFinally()) {
-				return new SimpleSet<>(t.getFinally());
+				return new BitVec<>(t.getFinally());
 			}
 		}
 
 		return parent.following();
 	}
 
-	eq DieStmt.succ() = new SimpleSet<>(exit());
+	eq DieStmt.succ() = new BitVec<>(exit());
 
 	eq DurationStmt.succ() = getMin().canThrow() || getMax().canThrow() ? following().union(throwTarget()) : following();
 
 	eq ExpressionStmt.succ() = getExp().canThrow() ? following().union(throwTarget()) : following();
 
-	eq ForeachStmt.succ() = following().union(getBody()).union(getListExp().canThrow() ? new SimpleSet<>(throwTarget()) : new SimpleSet<>());
-	eq ForeachStmt.getBody().following() = new SimpleSet<>(this);
+	eq ForeachStmt.succ() = following().union(getBody()).union(getListExp().canThrow() ? new BitVec<>(throwTarget()) : new BitVec<>());
+	eq ForeachStmt.getBody().following() = new BitVec<>(this);
 
 	eq IfStmt.succ() {
-		SimpleSet<CFGNode> normalSucc = hasElse()
-			? SimpleSet.<CFGNode>empty().union(getThen()).union(getElse())
+		BitVec<CFGNode> normalSucc = hasElse()
+			? new BitVec<CFGNode>(getThen()).union(getElse())
 			: following().union(getThen());
 
 		if (getCondition().canThrow()) {
@@ -261,15 +261,15 @@ aspect ControlFlow {
 
 	// ReturnStmt does not need extra handling. It has to be the last stmt
 
-	eq ThrowStmt.succ() = new SimpleSet<CFGNode>(throwTarget());
+	eq ThrowStmt.succ() = new BitVec<CFGNode>(throwTarget());
 
-	eq TryCatchFinallyStmt.succ() = new SimpleSet<>(getBody());
+	eq TryCatchFinallyStmt.succ() = new BitVec<>(getBody());
 	eq TryCatchFinallyStmt.getBody().following() = hasFinally()
-		? new SimpleSet<CFGNode>(getFinally())
+		? new BitVec<CFGNode>(getFinally())
 		: following();
 	eq TryCatchFinallyStmt.getFinally().following() = following().union(throwTarget());
 	eq TryCatchFinallyStmt.getBody().throwTarget() = getCatch(0);
-	eq TryCatchFinallyStmt.getCatch(int i).following() = new SimpleSet<CFGNode>(getCatch(i).getRight())
+	eq TryCatchFinallyStmt.getCatch(int i).following() = new BitVec<CFGNode>(getCatch(i).getRight())
 		.union(i + 1 < getNumCatch()
 			// Next catch branch
 			? getCatch(i + 1)
@@ -280,8 +280,8 @@ aspect ControlFlow {
 		? following().union(throwTarget()) 
 		: following();
 
-	eq WhileStmt.succ() = following().union(getBody()).union(getCondition().canThrow() ? new SimpleSet<>(throwTarget()) : new SimpleSet<>());
-	eq WhileStmt.getBody().following() = SimpleSet.<CFGNode>empty().union(this);
+	eq WhileStmt.succ() = following().union(getBody()).union(getCondition().canThrow() ? new BitVec<>(throwTarget()) : new BitVec<>());
+	eq WhileStmt.getBody().following() = new BitVec<CFGNode>(this);
 
 	inh Stmt Exp.parentStmt();
 

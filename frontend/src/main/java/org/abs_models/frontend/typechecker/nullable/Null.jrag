@@ -1,9 +1,9 @@
 import org.abs_models.frontend.typechecker.nullable.NullableType;
-import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+import org.abs_models.frontend.typechecker.nullable.BitVec;
 
 aspect Null {
   // == Null in ==
-  syn SimpleSet<VarOrFieldDecl> CFGNode.null_in() circular [entry().getAllVarOrFieldDecls()] {
+  syn BitVec<VarOrFieldDecl> CFGNode.null_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
     boolean isCatch = self instanceof CaseBranchStmt 
@@ -41,16 +41,16 @@ aspect Null {
       }
     }
 
-    SimpleSet<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
+    BitVec<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
 
     for (CFGNode n : pred()) {
       if (!isCatch && n instanceof IfStmt && !((IfStmt) n).hasElse()) {
         // We are in a stmt that follows an if without else and we have > 1 preds
         // This means that we can use the else information
-        s = s.intersection(n.null_out_else());
+        s = s.intersect(n.null_out_else());
         continue;
       }
-      s = s.intersection(isCatch ? n.null_in() : n.null_out());
+      s = s.intersect(isCatch ? n.null_in() : n.null_out());
     }
     return s;
   }
@@ -58,14 +58,14 @@ aspect Null {
 
   // == null out ==
   // For most stmts out = in
-  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out() circular [entry().getAllVarOrFieldDecls()] = null_in();
+  syn BitVec<VarOrFieldDecl> CFGNode.null_out() circular [entry().getAllVarOrFieldDecls()] = null_in();
   // What gets propagated to the `then` successors of a conditional node (if, while)
-  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_then() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
+  syn BitVec<VarOrFieldDecl> CFGNode.null_out_then() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
   // What gets propagated to the `else` successors of a conditional node (if, while)
-  syn SimpleSet<VarOrFieldDecl> CFGNode.null_out_else() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
+  syn BitVec<VarOrFieldDecl> CFGNode.null_out_else() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
 
   eq CFGEntry.null_out() {
-    SimpleSet<VarOrFieldDecl> s = new SimpleSet<>();
+    BitVec<VarOrFieldDecl> s = new BitVec<>();
 
     /*
      * This is a special case. Fields without init (or with init `null`) are null at the beginning of the InitBlock
@@ -102,7 +102,7 @@ aspect Null {
   }
 
   eq AssignStmt.null_out() {
-    SimpleSet<VarOrFieldDecl> in = null_in();
+    BitVec<VarOrFieldDecl> in = null_in();
 
     Exp e = getValue();
     VarOrFieldUse var = getVar();
@@ -112,7 +112,7 @@ aspect Null {
     if (e.isNull()) {
       return in.union(d);
     } else {
-      return in.comp(d);
+      return in.compl(d);
     }
   }
 
@@ -136,7 +136,7 @@ aspect Null {
   eq VarDeclStmt.null_out() {
     VarDecl d = getVarDecl();
 
-    SimpleSet<VarOrFieldDecl> in = null_in();
+    BitVec<VarOrFieldDecl> in = null_in();
 
     if (!d.hasInitExp()) {
       // Because we have no init, the value is null
@@ -147,7 +147,7 @@ aspect Null {
     if (init.isNull()) {
       return init.null_out().union(d);
     } else {
-      return init.null_out().comp(d);
+      return init.null_out().compl(d);
     }
   }
 
@@ -168,19 +168,19 @@ aspect Null {
 
   // == Exp ==
 
-  syn SimpleSet<VarOrFieldDecl> Exp.null_in() = parentStmt().null_in();
+  syn BitVec<VarOrFieldDecl> Exp.null_in() = parentStmt().null_in();
 
-  syn SimpleSet<VarOrFieldDecl> Exp.null_out();
+  syn BitVec<VarOrFieldDecl> Exp.null_out();
 
   eq Exp.null_out() = null_in();
 
   eq Call.null_out() {
-    SimpleSet<VarOrFieldDecl> in = null_in();
+    BitVec<VarOrFieldDecl> in = null_in();
     PureExp callee = getCallee();
 
     if (callee instanceof VarOrFieldUse) {
       VarOrFieldUse c = (VarOrFieldUse) callee;
-      return in.comp(c.getDecl());
+      return in.compl(c.getDecl());
     }
 
     return in;
@@ -223,9 +223,9 @@ aspect Null {
 
   eq ImplementsExp.isNull() = false;
 
-  inh SimpleSet<VarOrFieldDecl> VirtualStmt.null_in();
+  inh BitVec<VarOrFieldDecl> VirtualStmt.null_in();
   eq LetExp.virtualStmt().null_in() {
-    SimpleSet<VarOrFieldDecl> in = null_in();
+    BitVec<VarOrFieldDecl> in = null_in();
     ParamDecl d = getVar();
 
     if (getVal().isNull()) {
@@ -236,7 +236,7 @@ aspect Null {
   }
   eq LetExp.isNull() = getExp().isNull();
 
-  eq ExpFunctionDef.virtualStmt().null_in() = new SimpleSet<>();
+  eq ExpFunctionDef.virtualStmt().null_in() = new BitVec<>();
 
   eq LiteralExp.isNull() = false;
 

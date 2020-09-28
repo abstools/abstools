@@ -1,11 +1,11 @@
 import org.abs_models.frontend.typechecker.nullable.NullableType;
-import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+import org.abs_models.frontend.typechecker.nullable.BitVec;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
 aspect NonNull {
 
-  syn lazy SimpleSet<VarOrFieldDecl> CFGEntry.getAllVarOrFieldDecls() {
-    SimpleSet<VarOrFieldDecl> decls = new SimpleSet<>();
+  syn lazy BitVec<VarOrFieldDecl> CFGEntry.getAllVarOrFieldDecls() {
+    BitVec<VarOrFieldDecl> decls = new BitVec<>();
     ASTNode parent = getParent();
 
     if (parent instanceof MethodImpl) {
@@ -46,7 +46,7 @@ aspect NonNull {
   }
 
   // == NonNull in ==
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_in() circular [entry().getAllVarOrFieldDecls()] {
+  syn BitVec<VarOrFieldDecl> CFGNode.nonNull_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
     boolean isCatch = self instanceof CaseBranchStmt 
@@ -84,16 +84,16 @@ aspect NonNull {
       }
     }
 
-    SimpleSet<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
+    BitVec<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
     
     for (CFGNode n : pred()) {
       if (!isCatch && n instanceof IfStmt && !((IfStmt) n).hasElse()) {
         // We are in a stmt that follows an if without else and we have > 1 preds
         // This means that we can use the else information
-        s = s.intersection(n.nonNull_out_else());
+        s = s.intersect(n.nonNull_out_else());
         continue;
       }
-      s = s.intersection(isCatch ? n.nonNull_in() : n.nonNull_out());
+      s = s.intersect(isCatch ? n.nonNull_in() : n.nonNull_out());
     }
     return s;
   }
@@ -101,15 +101,15 @@ aspect NonNull {
 
   // == NonNull out ==
   // For most stmts out = in
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out() circular [entry().getAllVarOrFieldDecls()] = nonNull_in();
+  syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out() circular [entry().getAllVarOrFieldDecls()] = nonNull_in();
   // What gets propagated to the `then` successors of a conditional node (if, while)
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_then() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
+  syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out_then() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
   // What gets propagated to the `else` successors of a conditional node (if, while)
-  syn SimpleSet<VarOrFieldDecl> CFGNode.nonNull_out_else() circular [entry().getAllVarOrFieldDecls()] = new SimpleSet<>();
+  syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out_else() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
 
   // Handle params
   eq CFGEntry.nonNull_out() {
-    SimpleSet<VarOrFieldDecl> s = new SimpleSet<>();
+    BitVec<VarOrFieldDecl> s = new BitVec<>();
 
     ASTNode parent = getParent();
 
@@ -167,7 +167,7 @@ aspect NonNull {
 
   eq AssignStmt.nonNull_out() {
     Exp e = getValue();
-    SimpleSet<VarOrFieldDecl> out = e.nonNull_out();
+    BitVec<VarOrFieldDecl> out = e.nonNull_out();
 
     VarOrFieldUse var = getVar();
 
@@ -176,7 +176,7 @@ aspect NonNull {
     if (e.nonNull()) {
       return out.union(d);
     } else {
-      return out.comp(d);
+      return out.compl(d);
     }
   }
 
@@ -200,18 +200,18 @@ aspect NonNull {
   eq VarDeclStmt.nonNull_out() {
     VarDecl d = getVarDecl();
 
-    SimpleSet<VarOrFieldDecl> out = nonNull_in();
+    BitVec<VarOrFieldDecl> out = nonNull_in();
 
     if (!d.hasInitExp()) {
       // Because we have no init, the value is null
-      return out.comp(d);
+      return out.compl(d);
     }
 
     Exp init = d.getInitExp();
     if (init.nonNull()) {
       return init.nonNull_out().union(d);
     } else {
-      return init.nonNull_out().comp(d);
+      return init.nonNull_out().compl(d);
     }
   }
 
@@ -232,14 +232,14 @@ aspect NonNull {
 
   // == Exp ==
 
-  syn SimpleSet<VarOrFieldDecl> Exp.nonNull_in() = parentStmt().nonNull_in();
+  syn BitVec<VarOrFieldDecl> Exp.nonNull_in() = parentStmt().nonNull_in();
 
-  syn SimpleSet<VarOrFieldDecl> Exp.nonNull_out();
+  syn BitVec<VarOrFieldDecl> Exp.nonNull_out();
 
   eq Exp.nonNull_out() = nonNull_in();
 
   eq Call.nonNull_out() {
-    SimpleSet<VarOrFieldDecl> in = nonNull_in();
+    BitVec<VarOrFieldDecl> in = nonNull_in();
     PureExp callee = getCallee();
 
     if (callee instanceof VarOrFieldUse) {
@@ -293,9 +293,9 @@ aspect NonNull {
 
   eq ImplementsExp.nonNull() = false;
 
-  inh SimpleSet<VarOrFieldDecl> VirtualStmt.nonNull_in();
+  inh BitVec<VarOrFieldDecl> VirtualStmt.nonNull_in();
   eq LetExp.virtualStmt().nonNull_in() {
-    SimpleSet<VarOrFieldDecl> in = nonNull_in();
+    BitVec<VarOrFieldDecl> in = nonNull_in();
     ParamDecl d = getVar();
 
     if (getVal().nonNull()) {
@@ -309,7 +309,7 @@ aspect NonNull {
   eq ExpFunctionDef.virtualStmt().nonNull_in() {
     FunctionDecl d = (FunctionDecl) getParent();
 
-    SimpleSet<VarOrFieldDecl> in = new SimpleSet<>();
+    BitVec<VarOrFieldDecl> in = new BitVec<>();
 
     for (ParamDecl p : d.getParams()) {
       if (p.nonNull()) {

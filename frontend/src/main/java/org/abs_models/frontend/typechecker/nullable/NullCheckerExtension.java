@@ -59,7 +59,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
             return;
         }
         // Get all fields that are nonNull at the end of the init block
-        SimpleSet<VarOrFieldDecl> out = decl.getInitBlock().exit().nonNull_in();
+        BitVec<VarOrFieldDecl> out = decl.getInitBlock().exit().nonNull_in();
         for (FieldDecl f : nonNullFields) {
             if (!out.contains(f)) {
                 errors.add(new TypeError(

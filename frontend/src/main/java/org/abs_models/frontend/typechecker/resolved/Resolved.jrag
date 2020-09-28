@@ -1,27 +1,27 @@
-import org.abs_models.frontend.typechecker.nullable.SimpleSet;
+import org.abs_models.frontend.typechecker.nullable.BitVec;
 
 aspect Resolved {
-  syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_in() circular [entry().getAllVarOrFieldDecls()] {
+  syn BitVec<VarOrFieldDecl> CFGNode.resolved_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
     boolean isCatch = self instanceof CaseBranchStmt 
       && ((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt;
 
-    SimpleSet<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
+    BitVec<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
 
     for (CFGNode n : pred()) {
-      s = s.intersection(isCatch ? n.resolved_in() : n.resolved_out());
+      s = s.intersect(isCatch ? n.resolved_in() : n.resolved_out());
     }
     return s;
   }
 
   // For most stmts out = in
-  syn SimpleSet<VarOrFieldDecl> CFGNode.resolved_out() circular [entry().getAllVarOrFieldDecls()] = resolved_in();
+  syn BitVec<VarOrFieldDecl> CFGNode.resolved_out() circular [entry().getAllVarOrFieldDecls()] = resolved_in();
 
-  eq CFGEntry.resolved_out() = new SimpleSet<>();
+  eq CFGEntry.resolved_out() = new BitVec<>();
 
   eq AssignStmt.resolved_out() {
-    SimpleSet<VarOrFieldDecl> in = resolved_in();
+    BitVec<VarOrFieldDecl> in = resolved_in();
 
     Exp e = getValue();
     VarOrFieldUse var = getVar();
@@ -31,17 +31,17 @@ aspect Resolved {
     if (e.resolved()) {
       return in.union(d);
     } else {
-      return in.comp(d);
+      return in.compl(d);
     }
   }
 
   eq AwaitStmt.resolved_out() = getGuard().resolved_out();
   eq AwaitStmt.getGuard().resolved_in() = resolved_in();
-  inh SimpleSet<VarOrFieldDecl> Guard.resolved_in();
-  syn SimpleSet<VarOrFieldDecl> Guard.resolved_out();
+  inh BitVec<VarOrFieldDecl> Guard.resolved_in();
+  syn BitVec<VarOrFieldDecl> Guard.resolved_out();
   eq AndGuard.resolved_out() = getLeft().resolved_out().union(getRight().resolved_out());
   eq ClaimGuard.resolved_out() {
-    SimpleSet<VarOrFieldDecl> in = resolved_in();
+    BitVec<VarOrFieldDecl> in = resolved_in();
     PureExp e = getVar();
     if (e instanceof VarOrFieldUse) {
       VarOrFieldUse v = (VarOrFieldUse) e;
@@ -57,7 +57,7 @@ aspect Resolved {
   eq VarDeclStmt.resolved_out() {
     VarDecl d = getVarDecl();
 
-    SimpleSet<VarOrFieldDecl> in = resolved_in();
+    BitVec<VarOrFieldDecl> in = resolved_in();
 
     if (!d.hasInitExp()) {
       // Because we have no init, the value is (kinda) resolved
@@ -75,14 +75,14 @@ aspect Resolved {
 
   // == Exp ==
 
-  syn SimpleSet<VarOrFieldDecl> Exp.resolved_in() = parentStmt().resolved_in();
+  syn BitVec<VarOrFieldDecl> Exp.resolved_in() = parentStmt().resolved_in();
 
-  syn SimpleSet<VarOrFieldDecl> Exp.resolved_out();
+  syn BitVec<VarOrFieldDecl> Exp.resolved_out();
 
   eq Exp.resolved_out() = resolved_in();
 
   eq GetExp.resolved_out() {
-    SimpleSet<VarOrFieldDecl> in = resolved_in();
+    BitVec<VarOrFieldDecl> in = resolved_in();
     PureExp e = getPureExp();
 
     if (e instanceof VarOrFieldUse) {

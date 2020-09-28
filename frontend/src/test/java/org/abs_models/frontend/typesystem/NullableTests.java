@@ -8,10 +8,13 @@ import static org.junit.Assert.assertNull;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.nullable.BitVec;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 import org.junit.Test;
+
+import java.util.BitSet;
 
 public class NullableTests extends FrontendTest {
     @Test
@@ -244,7 +247,7 @@ public class NullableTests extends FrontendTest {
         ParamDecl p = met.getMethodSig().getParam(0);
         Block b = met.getBlock();
 
-        SimpleSet<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
+        BitVec<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
         assertTrue(nonNull.contains(p));
         assertEquals(1, nonNull.size());
     }
@@ -330,7 +333,7 @@ public class NullableTests extends FrontendTest {
         ParamDecl p = met.getMethodSig().getParam(0);
         Block b = met.getBlock();
 
-        SimpleSet<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
+        BitVec<VarOrFieldDecl> nonNull = b.getStmt(0).nonNull_out();
         assertTrue(nonNull.contains(p));
         assertEquals(1, nonNull.size());
         assertEquals(NullableType.Nullable, p.getNullableType());
@@ -348,8 +351,8 @@ public class NullableTests extends FrontendTest {
         ParamDecl p = met.getMethodSig().getParam(0);
         Block b = met.getBlock();
 
-        SimpleSet<VarOrFieldDecl> nonNull1 = b.getStmt(0).nonNull_in();
-        SimpleSet<VarOrFieldDecl> nonNull2 = b.getStmt(0).nonNull_out();
+        BitVec<VarOrFieldDecl> nonNull1 = b.getStmt(0).nonNull_in();
+        BitVec<VarOrFieldDecl> nonNull2 = b.getStmt(0).nonNull_out();
         assertTrue(nonNull1.isEmpty());
         assertTrue(nonNull2.contains(p));
     }
@@ -362,8 +365,8 @@ public class NullableTests extends FrontendTest {
         Block b = met.getBlock();
         Stmt skip = b.getStmt(1);
 
-        SimpleSet<VarOrFieldDecl> nonNull1 = b.getStmt(0).nonNull_in();
-        SimpleSet<VarOrFieldDecl> nonNull2 = b.getStmt(0).nonNull_out();
+        BitVec<VarOrFieldDecl> nonNull1 = b.getStmt(0).nonNull_in();
+        BitVec<VarOrFieldDecl> nonNull2 = b.getStmt(0).nonNull_out();
         assertTrue(nonNull1.isEmpty());
         assertTrue(nonNull2.isEmpty());
         assertTrue(skip.nonNull_in().contains(p));
@@ -402,7 +405,7 @@ public class NullableTests extends FrontendTest {
 
         IfStmt ifStmt = (IfStmt) b.getStmt(0);
 
-        SimpleSet<VarOrFieldDecl> nonNull = ifStmt.getThen().nonNull_in();
+        BitVec<VarOrFieldDecl> nonNull = ifStmt.getThen().nonNull_in();
         assertTrue(nonNull.contains(p));
         assertTrue(ifStmt.getElse().null_in().contains(p));
     }
@@ -416,7 +419,7 @@ public class NullableTests extends FrontendTest {
 
         IfStmt ifStmt = (IfStmt) b.getStmt(0);
 
-        SimpleSet<VarOrFieldDecl> nonNull = ifStmt.getElse().nonNull_in();
+        BitVec<VarOrFieldDecl> nonNull = ifStmt.getElse().nonNull_in();
         assertTrue(nonNull.contains(p));
         assertTrue(ifStmt.getThen().null_in().contains(p));
     }
