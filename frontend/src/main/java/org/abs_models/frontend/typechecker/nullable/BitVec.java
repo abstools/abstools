@@ -248,8 +248,8 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
     public boolean equals(Object o) {
         if (o == null) return false;
         if (this == o) return true;
-        if (o instanceof BitSet) {
-            BitVec<E> vec = (BitVec) o;
+        if (o instanceof BitVec) {
+            BitVec<E> vec = convert((BitVec<E>) o);
             if (elementMap != vec.elementMap)
                 return false;
             int length = Math.min(vec.bits.length, bits.length);
