@@ -94,8 +94,7 @@ The following is a complete HTML file that uses the [Highcharts](https://www.hig
     <h1>Date and Time in ABS</h1>
     <div id="chart-container">
     </div>
-  </body>
-  <script type="text/javascript">
+    <script type="text/javascript">
     'use strict';
     function absolute_date(startdate, offset) {
         let days = Math.floor(offset);
@@ -129,7 +128,8 @@ The following is a complete HTML file that uses the [Highcharts](https://www.hig
         drawChart();
     });
     
-  </script>
+    </script>
+  </body>
 </html>
 ```
 
