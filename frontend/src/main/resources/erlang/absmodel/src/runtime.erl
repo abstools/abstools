@@ -8,7 +8,7 @@
 
 -include_lib("../include/absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/6,run_dpor_slave/3]).
+-export([start/0,start/1,run/1,start_link/1,run_dpor_slave/3]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -50,9 +50,6 @@ start(Args) ->
 run(Args) ->
     parse(Args,"run").
 
-start_http() ->
-    {ok, _} = application:ensure_all_started(absmodel).
-
 start_http(Port, Module, Verbose, Debug, Clocklimit, Trace) ->
     ok = application:load(absmodel),
     ok = application:set_env(absmodel, port, Port),
@@ -61,8 +58,7 @@ start_http(Port, Module, Verbose, Debug, Clocklimit, Trace) ->
     ok = application:set_env(absmodel, verbose, Verbose),
     ok = application:set_env(absmodel, clocklimit, Clocklimit),
     ok = application:set_env(absmodel, replay_trace, Trace),
-    start_http().
-
+    {ok, _} = application:ensure_all_started(absmodel).
 
 parse(Args,Exec)->
     case getopt:parse_and_check(?CMDLINE_SPEC,Args) of
