@@ -315,6 +315,7 @@ active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
     NewData=Data#data{clock_waiting=NewW,
                       active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
+    %% TODO: check whether we should call dc_mte here as well
     gen_statem:reply(From, ok),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
