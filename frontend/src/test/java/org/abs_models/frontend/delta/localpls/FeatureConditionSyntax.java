@@ -9,13 +9,12 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 
-//NOTE: we no not check preproducts against their feature model anymore (hence PREproduct)
 public class FeatureConditionSyntax extends DeltaTest {
     @Test
     public void invalidProduct() throws WrongProgramArgumentException {
         Model model = assertParse(
             "module M; export *;"
-                + "preproduct P1 = {A,B};" 
+                + "configuration P1 = {A,B};" 
                 + "class C {}"
                 + "features A, B with A && !B;"
                 + "delta D1;"
@@ -36,9 +35,9 @@ public class FeatureConditionSyntax extends DeltaTest {
     public void biImplFeatureCondition() throws WrongProgramArgumentException {
         Model model = assertParse(
             "module M;"
-                + "preproduct P1 = {A, C};"
-                + "preproduct P2 = {B, D};"
-                + "preproduct P3 = {A, B};"
+                + "configuration P1 = {A, C};"
+                + "configuration P2 = {B, D};"
+                + "configuration P3 = {A, B};"
                 + "class C {}"
                 + "features A, B, C, D with A <-> B;"
                 + "delta D1;"
@@ -62,9 +61,9 @@ public class FeatureConditionSyntax extends DeltaTest {
     public void implFeatureCondition() throws WrongProgramArgumentException {
         Model model = assertParse(
             "module M;"
-                + "preproduct P1 = {A, C};"
-                + "preproduct P2 = {B, D};"
-                + "preproduct P3 = {A, B};"
+                + "configuration P1 = {A, C};"
+                + "configuration P2 = {B, D};"
+                + "configuration P3 = {A, B};"
                 + "class C {}"
                 + "features A, B, C with A -> B;"
                 + "delta D1;"
@@ -93,10 +92,10 @@ public class FeatureConditionSyntax extends DeltaTest {
     public void andOrFeatureCondition() throws WrongProgramArgumentException {
         Model model = assertParse(
             "module M;"
-                + "preproduct P1 = {A, C};"
-                + "preproduct P2 = {B, D};"
-                + "preproduct P3 = {A, B};"
-                + "preproduct P4 = {D};"
+                + "configuration P1 = {A, C};"
+                + "configuration P2 = {B, D};"
+                + "configuration P3 = {A, B};"
+                + "configuration P4 = {D};"
                 + "class C {}"
                 + "features A, B, C, D with A && B || C;"
                 + "delta D1;"
@@ -126,10 +125,10 @@ public class FeatureConditionSyntax extends DeltaTest {
     public void andOrFeatureConditionParenthesis() throws WrongProgramArgumentException {
         Model model = assertParse(
             "module M;"
-                + "preproduct P1 = {A, C};"
-                + "preproduct P2 = {B, D};"
-                + "preproduct P3 = {A, B};"
-                + "preproduct P4 = {D};"
+                + "configuration P1 = {A, C};"
+                + "configuration P2 = {B, D};"
+                + "configuration P3 = {A, B};"
+                + "configuration P4 = {D};"
                 + "class C {}"
                 + "features A, B, C, D with A && (B || C);"
                 + "delta D1;"

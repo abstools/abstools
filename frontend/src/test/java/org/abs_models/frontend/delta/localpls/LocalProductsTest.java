@@ -15,7 +15,7 @@ public class LocalProductsTest extends DeltaTest {
 
     String vmAllBase = "module M;"
         + "export *;"
-        + "preproduct LocalProduct = {A};"
+        + "configuration LocalProduct = {A};"
         + "interface I{}"
         + "class C implements I {}"
         + "features A;"
@@ -30,7 +30,7 @@ public class LocalProductsTest extends DeltaTest {
 
     String vm = "module M;"
         + "export *;"
-        + "preproduct LocalProduct = {A};"
+        + "configuration LocalProduct = {A};"
         + "unique interface I{}"
         + "class C implements I {}"
         + "features A;"

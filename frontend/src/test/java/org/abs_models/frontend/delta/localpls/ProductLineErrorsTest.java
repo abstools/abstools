@@ -49,10 +49,10 @@ public class ProductLineErrorsTest extends DeltaTest {
     }
 
 
-    public void preproductMissplaced(){
+    public void configurationMissplaced(){
         Model model = assertParse(
             "module M;"
-                + "preproduct A = {F};"
+                + "configuration A = {F};"
                 + "interface I {}"
                 + "");
 
@@ -62,12 +62,12 @@ public class ProductLineErrorsTest extends DeltaTest {
         assertEquals(ErrorMessage.PREPRODUCT_NOT_IN_VARIABLE, plErrors.getFirstError().msg);
     }
 
-    public void preproductMissreference(){
+    public void configurationMissreference(){
         Model model = assertParse(
             "module M;"
                 + "features F with F;"
                 + "module N;"
-                + "preproduct A = {F}"
+                + "configuration A = {F}"
                 + "features G with G;"
                 + "");
 

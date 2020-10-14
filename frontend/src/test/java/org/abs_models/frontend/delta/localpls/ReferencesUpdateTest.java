@@ -15,8 +15,8 @@ public class ReferencesUpdateTest extends DeltaTest {
 
     String vm = "module M;"
         + "export *;"
-        + "preproduct P1 = {A};"
-        + "preproduct P2 = {B};"
+        + "configuration P1 = {A};"
+        + "configuration P2 = {B};"
         + "interface I{}"
         + "unique interface I2 {"
         + " Bool m2();"

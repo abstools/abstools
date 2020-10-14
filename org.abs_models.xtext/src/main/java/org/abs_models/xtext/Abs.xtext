@@ -670,7 +670,7 @@ DeltaSet
 
 //Local products
 LocalProductDeclaration
-    : 'preproduct' name=TYPE_IDENTIFIER
+    : 'configuration' name=TYPE_IDENTIFIER
          '=' expression=ProductExpression ';' 
     ;
 	

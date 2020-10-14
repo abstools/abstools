@@ -35,7 +35,7 @@ public class LocalPLsTest extends DeltaTest {
     @Test
     public void invalidProductFromPL(){
         Model model = assertParse(
-            "module M; export *; preproduct P1 = {B};"
+            "module M; export *; configuration P1 = {B};"
                 + "class C {}"
                 + "features A, B with A && !B;"
                 + "delta D1;"
@@ -62,7 +62,7 @@ public class LocalPLsTest extends DeltaTest {
         Model model = assertParse(
             "module M;"
                 + "export *;"
-                + "preproduct LocalProduct = {A};"
+                + "configuration LocalProduct = {A};"
                 + "interface I{}"
                 + "features A;"
                 + "delta D1;"

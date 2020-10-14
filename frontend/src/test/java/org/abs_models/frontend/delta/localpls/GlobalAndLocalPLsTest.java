@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 public class GlobalAndLocalPLsTest extends DeltaTest {
     String localPLString = "module M;"
         + "export *;"
-        + "preproduct LocalProduct = {A};"
+        + "configuration LocalProduct = {A};"
         + "unique interface I1 {"
         + "}"
         + "class C1() implements I1 {}"
@@ -47,7 +47,7 @@ public class GlobalAndLocalPLsTest extends DeltaTest {
         + "productline GlobalPL;"
         + "features C, D;"
         + "delta GlobalDelta when C;"
-            + "product GlobalProduct = {C};";
+        + "product GlobalProduct = {C};";
 
     String mainModule = "module MainModule;"
         + "import * from M;"
