@@ -676,8 +676,9 @@ aspect GenerateJava {
             JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
         } else {
             LocationTypeExtension locationTypeSystem = (LocationTypeExtension)this.getModel().getTypeExt().getFirstRegisteredTypeExtension(LocationTypeExtension.class);
+            LocationType tv = null;
             if (locationTypeSystem != null) {
-                LocationType tv = locationTypeSystem.getLocationType(callee.getType());
+                tv = locationTypeSystem.getLocationType(callee.getType());
             }
             if (tv == null || tv.isSomewhere()) {
                 if (closestParent(Stmt.class) instanceof ExpressionStmt) {

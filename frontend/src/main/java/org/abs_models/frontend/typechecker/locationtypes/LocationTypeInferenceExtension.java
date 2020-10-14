@@ -205,7 +205,7 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         ConstraintSolver solver = new ConstraintSolver(constraints, debug);
         results = solver.solve();
 
-        if (debug || true) {
+        if (debug) {
             for (Map.Entry<LocationTypeVar, LocationType> e : results.entrySet()) {
                 System.out.println("" + e.getKey() + " := " + e.getValue());
             }

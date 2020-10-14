@@ -13,7 +13,7 @@ public class Constraints {
     private final List<Constraint> constraints = new ArrayList<>();
     private final Map<LocationTypeVar, List<Constraint>> map = new HashMap<>();
     private final Set<Constraint> seen = new HashSet<>();
-    private boolean debug = true;
+    private boolean debug = false;
 
     public void enableDebug() {
         this.debug = true;
