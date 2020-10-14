@@ -8,6 +8,8 @@ import org.abs_models.backend.java.lib.runtime.*;
 import org.abs_models.backend.java.lib.expr.*;
 import org.abs_models.backend.java.lib.types.*;
 import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
+import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 
 aspect GenerateJava {
 
@@ -673,35 +675,56 @@ aspect GenerateJava {
             stream.print(JavaBackend.getMethodName(getMethod()));
             JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
         } else {
-            if (closestParent(Stmt.class) instanceof ExpressionStmt) {
-                // we're a stand-alone o!m()
-                stream.print("if (" + ABSRuntime.class.getName() + ".checkForNull(");
-                callee.generateJava(stream);
-                stream.print(").__ABS_isSameCOG()) ");
-                callee.generateJava(stream);
-                stream.print("." + JavaBackend.getMethodName(getMethod()));
-                JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
-                stream.print("; else ");
-                callee.generateJava(stream);
-                stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
-                JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
-                stream.print(".get()");
-                // last semicolon comes from ExpressionStmt.generateJava()
+            LocationTypeExtension locationTypeSystem = (LocationTypeExtension)this.getModel().getTypeExt().getFirstRegisteredTypeExtension(LocationTypeExtension.class);
+            if (locationTypeSystem != null) {
+                LocationType tv = locationTypeSystem.getLocationType(callee.getType());
+            }
+            if (tv == null || tv.isSomewhere()) {
+                if (closestParent(Stmt.class) instanceof ExpressionStmt) {
+                    // we're a stand-alone o!m()
+                    stream.print("if (" + ABSRuntime.class.getName() + ".checkForNull(");
+                    callee.generateJava(stream);
+                    stream.print(").__ABS_isSameCOG()) ");
+                    callee.generateJava(stream);
+                    stream.print("." + JavaBackend.getMethodName(getMethod()));
+                    JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+                    stream.print("; else ");
+                    callee.generateJava(stream);
+                    stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
+                    JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+                    stream.print(".get()");
+                    // last semicolon comes from ExpressionStmt.generateJava()
+                } else {
+                    // we're the right-hand side of an assignment or similar
+                    stream.print(ABSRuntime.class.getName() + ".checkForNull(");
+                    callee.generateJava(stream);
+                    stream.print(").__ABS_isSameCOG() ? ");
+                    // synchronous method call
+                    callee.generateJava(stream);
+                    stream.print("." + JavaBackend.getMethodName(getMethod()));
+                    JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+                    stream.print(" : ");
+                    // asynchronous method call + get
+                    callee.generateJava(stream);
+                    stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
+                    JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+                    stream.print(".get()");
+                }
             } else {
-                // we're the right-hand side of an assignment or similar
-                stream.print(ABSRuntime.class.getName() + ".checkForNull(");
-                callee.generateJava(stream);
-                stream.print(").__ABS_isSameCOG() ? ");
-                // synchronous method call
-                callee.generateJava(stream);
-                stream.print("." + JavaBackend.getMethodName(getMethod()));
-                JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
-                stream.print(" : ");
-                // asynchronous method call + get
-                callee.generateJava(stream);
-                stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
-                JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
-                stream.print(".get()");
+                if (tv.isNear()) {
+                    stream.print(ABSRuntime.class.getName() + ".checkForNull(");
+                    callee.generateJava(stream);
+                    stream.print(")");
+                    stream.print("." + JavaBackend.getMethodName(getMethod()));
+                    JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+                } else if(tv.isFar()) {
+                    stream.print(ABSRuntime.class.getName() + ".checkForNull(");
+                    callee.generateJava(stream);
+                    stream.print(")");
+                    stream.print(".async_" + JavaBackend.getMethodName(getMethod()));
+                    JavaGeneratorHelper.generateArgs(stream,params,getMethodSig().getTypes());
+                    stream.print(".get()");
+                }
             }
         }
 
