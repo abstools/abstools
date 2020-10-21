@@ -197,6 +197,10 @@ public class Absc implements Callable<Integer> {
             paramLabel = "nullabletype")
     public NullableType defaultNullableType = NullableType.Nullable;
 
+    @Option(names = { "--check-null-call" },
+            description = "checks whether a call exists with the callee being null")
+    public boolean checkNullCall = false;
+
     @Option(names = { "--loctypes" },
             description = "enable location type checking")
     public boolean locationTypeInferenceEnabled = false;

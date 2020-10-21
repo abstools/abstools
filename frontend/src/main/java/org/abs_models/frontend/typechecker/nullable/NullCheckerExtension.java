@@ -16,6 +16,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public static String NULLABLE_KEY = "NULLABLE_KEY";
     private NullableType defaultType = NullableType.Nullable;
     private boolean warnAboutMissingAnnotation = false;
+    private boolean checkNullCall = false;
 
     public NullCheckerExtension(Model m) {
         super(m);
@@ -32,6 +33,10 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
     public void setWarnAboutMissingAnnotation(boolean v) {
         warnAboutMissingAnnotation = v;
+    }
+
+    public void checkNullCall() {
+        this.checkNullCall = true;
     }
 
     @Override
@@ -100,7 +105,10 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkMethodCall(Call call) {
-        // TODO
+        PureExp callee = call.getCallee();
+        if (checkNullCall && callee.isNull()) {
+            errors.add(new TypeError(call, ErrorMessage.NULLABLETYPE_NULLCALL, callee.toString()));
+        }
     }
 
     @Override
