@@ -59,16 +59,20 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkEq(Type lt, Type t, ASTNode<?> origin) {
-        LocationTypeVar lv1 = getVar(lt);
-        LocationTypeVar lv2 = getVar(t);
+        LocationTypeVar lv1 = getVarSafe(lt, origin);
+        LocationTypeVar lv2 = getVarSafe(t, origin);
         Constraint c = Constraint.eq(lv1, lv2, origin);
         constraints.add(c);
     }
 
     @Override
     public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {
-        LocationTypeVar lhv = getVar(lht);
-        LocationTypeVar rhv = getVar(rht);
+        LocationTypeVar lhv = getVarSafe(lht, n);
+        LocationTypeVar rhv = getVarSafe(rht, n);
+
+        if (rhv == null) {
+            rhv = addNewVar(rht, n, null);
+        }
 
         if (adaptTo != null && getVar(adaptTo) != LocationTypeVar.NEAR) {
             rhv = adaptTo(rhv, dir, getVar(adaptTo), null, n);
@@ -94,7 +98,7 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
 
     private void adaptAndSet(Type rht, AdaptDirection dir, LocationTypeVar adaptTo, ASTNode<?> origin) {
         if (adaptTo != LocationTypeVar.NEAR) {
-            LocationTypeVar rlv = getVar(rht);
+            LocationTypeVar rlv = getVarSafe(rht, origin);
             LocationTypeVar adapted = adaptTo(rlv, dir, adaptTo, null, origin);
             annotateVar(rht, adapted);
         }
@@ -109,10 +113,10 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         if (on instanceof SyncCall) {
         } else if (on instanceof AsyncCall) {
             AsyncCall ac = (AsyncCall) on;
-            adaptAndSet(t, AdaptDirection.FROM, getVar(ac.getCallee().getType()), on);
+            adaptAndSet(t, AdaptDirection.FROM, getVarSafe(ac.getCallee().getType(), on), on);
         } else if (on instanceof AwaitAsyncCall) {
             AwaitAsyncCall ac = (AwaitAsyncCall) on;
-            adaptAndSet(t, AdaptDirection.FROM, getVar(ac.getCallee().getType()), on);
+            adaptAndSet(t, AdaptDirection.FROM, getVarSafe(ac.getCallee().getType(), on), on);
         } else if (on instanceof ThisExp) {
             annotateVar(t, LocationTypeVar.NEAR);
         } else if (on instanceof NewExp) {
@@ -136,7 +140,7 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
     }
 
     private List<LocationType> getFarTypes(ASTNode<?> origin) {
-        HasCogs node=null;
+        HasCogs node = null;
         Scope s = farTypeScope;
         switch (s) {
             case GLOBAL_FAR:
@@ -181,11 +185,21 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkMethodCall(Call call) {
-        LocationTypeVar lv = getVar(call.getCallee().getType());
+        LocationTypeVar lv = getVarSafe(call.getCallee().getType(), call);
         assert lv != null;
         if (call instanceof SyncCall) {
             constraints.add(Constraint.eq(lv, LocationTypeVar.NEAR, call));
         }
+    }
+
+    public LocationTypeVar getVarSafe(Type t, ASTNode<?> n) {
+        LocationTypeVar v = getVar(t);
+
+        if (v == null) {
+            return addNewVar(t, n, null);
+        }
+
+        return v;
     }
 
     public static LocationTypeVar getVar(Type t) {

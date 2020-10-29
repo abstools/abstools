@@ -31,6 +31,10 @@ public abstract class Constraint {
     public abstract Constraint replace(LocationTypeVar from, LocationTypeVar to);
 
     public static Constraint sub(LocationTypeVar expected, LocationTypeVar actual, ASTNode<?> node) {
+        if (expected == null) {
+            System.out.println("Expected is null in " + node);
+            throw new RuntimeException();
+        }
         return new Sub(expected, actual, node);
     }
 
