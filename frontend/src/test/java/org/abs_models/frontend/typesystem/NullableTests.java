@@ -263,6 +263,22 @@ public class NullableTests extends FrontendTest {
     }
 
     @Test
+    public void assignWhen() {
+        MethodImpl met = getMethod("interface I { Unit m(); } class C implements I { Unit m(I i1, [NonNull] I i2) { I res; res = when i1 == null then i2 else i1; } }");
+        Block b = met.getBlock();
+
+        ParamDecl vd2 = met.getMethodSig().getParam(1);
+        VarDecl vd3 = ((VarDeclStmt) b.getStmt(0)).getVarDecl();
+        AssignStmt a = (AssignStmt) b.getStmt(1);
+
+        assertEquals(1, a.nonNull_in().size());
+        assertTrue(a.nonNull_in().contains(vd2));
+        assertEquals(2, a.nonNull_out().size());
+        assertTrue(a.nonNull_out().contains(vd2));
+        assertTrue(a.nonNull_out().contains(vd3));
+    }
+
+    @Test
     public void testMethodAssignCall1() {
         MethodImpl met = getMethod("interface I { I m(); } class C implements I { Unit m(I i) { I j; j = i.m(); } }");
         Block b = met.getBlock();

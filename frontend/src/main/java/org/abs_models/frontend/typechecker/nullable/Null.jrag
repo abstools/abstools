@@ -219,6 +219,22 @@ aspect Null {
 
   eq FnApp.isNull() = false;
 
+  eq IfExp.virtualThenStmt().null_in() {
+    VarOrFieldDecl d = getCondExp().testsNull();
+    if (d != null) {
+      return null_in().union(d);
+    }
+    return null_in();
+  }
+
+  eq IfExp.virtualElseStmt().null_in() {
+    VarOrFieldDecl d = getCondExp().testsNotNull();
+    if (d != null) {
+      return null_in().union(d);
+    }
+    return null_in();
+  }
+
   eq IfExp.isNull() = getThenExp().isNull() && getElseExp().isNull();
 
   eq ImplementsExp.isNull() = false;

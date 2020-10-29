@@ -309,6 +309,11 @@ aspect ControlFlow {
 
 	eq IfStmt.getCondition().parentStmt() = this;
 
+	syn nta Stmt IfExp.virtualThenStmt() = new VirtualStmt();
+	syn nta Stmt IfExp.virtualElseStmt() = new VirtualStmt();
+	eq IfExp.getThenExp().parentStmt() = virtualThenStmt();
+	eq IfExp.getElseExp().parentStmt() = virtualElseStmt();
+
 	syn nta Stmt LetExp.virtualStmt() = new VirtualStmt();
 	eq LetExp.getExp().parentStmt() = virtualStmt();
 

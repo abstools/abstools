@@ -258,7 +258,6 @@ aspect NonNull {
 
   eq NewExp.nonNull() = true;
 
-  // TODO: refine using annotations (Is that even possible?)
   eq OriginalCall.nonNull() = false;
 
   eq Access.nonNull() = false;
@@ -287,6 +286,22 @@ aspect NonNull {
     NullableType nt = NullCheckerExtension.getNullableType(t);
     if (nt == null) return false;
     return nt.isNonNull();
+  }
+
+  eq IfExp.virtualThenStmt().nonNull_in() {
+    VarOrFieldDecl d = getCondExp().testsNotNull();
+    if (d != null) {
+      return nonNull_in().union(d);
+    }
+    return nonNull_in();
+  }
+
+  eq IfExp.virtualElseStmt().nonNull_in() {
+    VarOrFieldDecl d = getCondExp().testsNull();
+    if (d != null) {
+      return nonNull_in().union(d);
+    }
+    return nonNull_in();
   }
 
   eq IfExp.nonNull() = getThenExp().nonNull() && getElseExp().nonNull();
