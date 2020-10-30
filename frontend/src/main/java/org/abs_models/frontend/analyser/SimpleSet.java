@@ -1,4 +1,4 @@
-package org.abs_models.frontend.typechecker.nullable;
+package org.abs_models.frontend.analyser;
 
 import java.util.Set;
 import java.util.HashSet;

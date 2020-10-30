@@ -1,4 +1,4 @@
-import org.abs_models.frontend.typechecker.nullable.BitVec;
+import org.abs_models.frontend.analyser.BitVec;
 
 aspect Resolved {
   syn BitVec<VarOrFieldDecl> CFGNode.resolved_in() circular [entry().getAllVarOrFieldDecls()] {

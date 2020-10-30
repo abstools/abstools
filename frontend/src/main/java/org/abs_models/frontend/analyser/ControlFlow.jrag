@@ -1,4 +1,4 @@
-import org.abs_models.frontend.typechecker.nullable.BitVec;
+import org.abs_models.frontend.analyser.BitVec;
 
 aspect ControlFlow {
 

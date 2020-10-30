@@ -6,12 +6,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
 
 import org.abs_models.frontend.FrontendTest;
+import org.abs_models.frontend.analyser.BitVec;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.KindedName;
-import org.abs_models.frontend.typechecker.nullable.BitVec;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 import org.abs_models.frontend.typechecker.nullable.NullableType;
-import org.abs_models.frontend.typechecker.nullable.SimpleSet;
 import org.junit.Test;
 
 import java.util.BitSet;

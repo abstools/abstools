@@ -834,7 +834,7 @@ interface CloudProvider {
     // acquireInstance, releaseInstance are called from deployment components.
     // launchInstance does the equivalent of acquireInstance.
     Bool acquireInstance([Nullable] DeploymentComponent instance);
-    Bool releaseInstance([Nullable] DeploymentComponent instance);
+    Bool releaseInstance([NonNull] DeploymentComponent instance);
     Bool shutdownInstance([Nullable] DeploymentComponent instance);
 
     Rat getAccumulatedCost();
@@ -854,7 +854,7 @@ interface CloudProvider {
 }
 
 interface CloudProviderForDeploymentComponent extends CloudProvider {
-    Unit internalShutdownInstance([Nullable] DeploymentComponentForCloudProvider instance);
+    Unit internalShutdownInstance([NonNull] DeploymentComponentForCloudProvider instance);
 }
 
 
@@ -918,7 +918,8 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     [Nullable] DeploymentComponent launchInstanceNamed(String instancename) {
         [Nullable] DeploymentComponent result = this.prelaunchInstanceNamed(instancename);
         if (result != null) {
-            acquiredInstances = insertElement(acquiredInstances, result);
+            [NonNull] DeploymentComponent nullableWorkAround = result;
+            acquiredInstances = insertElement(acquiredInstances, nullableWorkAround);
         }
         return result;
     }
@@ -926,18 +927,19 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     Bool acquireInstance([Nullable] DeploymentComponent instance) {
         Bool result = True;
         [Nullable] CloudProvider cp = await instance!getProvider();
+        [NonNull] DeploymentComponent nullableWorkAround = instance;
         if (cp != this) {
             // it's not one of "our" deployment components
             result = False;
-        } else if (contains(acquiredInstances, instance)
-            || contains(killedInstances, instance)) {
+        } else if (contains(acquiredInstances, nullableWorkAround)
+            || contains(killedInstances, nullableWorkAround)) {
             result = False;
         } else {
-            acquiredInstances = insertElement(acquiredInstances, instance);
+            acquiredInstances = insertElement(acquiredInstances, nullableWorkAround);
         }
         return result;
     }
-    Bool releaseInstance([Nullable] DeploymentComponent instance) {
+    Bool releaseInstance([NonNull] DeploymentComponent instance) {
         // FIXME: Currently we do not protect against double-release and always
         // return True.  Once we have means of testing whether there is still
         // activity on a deployment component, we could refuse to release it in
@@ -953,8 +955,8 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         return True;
     }
 
-    Unit internalShutdownInstance([Nullable] DeploymentComponentForCloudProvider instance) {
-        [Nullable] DeploymentComponent stupidTypeSystem = instance;
+    Unit internalShutdownInstance([NonNull] DeploymentComponentForCloudProvider instance) {
+        [NonNull] DeploymentComponent stupidTypeSystem = instance;
         // Also kill an instance that is acquired.  FIXME: is this the right
         // thing, or should we refuse to shutdown?
         acquiredInstances = remove(acquiredInstances, stupidTypeSystem);

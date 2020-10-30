@@ -1,5 +1,5 @@
 import org.abs_models.frontend.typechecker.nullable.NullableType;
-import org.abs_models.frontend.typechecker.nullable.BitVec;
+import org.abs_models.frontend.analyser.BitVec;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
 aspect NonNull {

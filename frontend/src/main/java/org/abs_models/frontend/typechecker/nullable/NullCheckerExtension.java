@@ -1,5 +1,6 @@
 package org.abs_models.frontend.typechecker.nullable;
 
+import org.abs_models.frontend.analyser.BitVec;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticWarning;
 import org.abs_models.frontend.analyser.TypeError;
@@ -90,6 +91,18 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         for (ParamDecl p : ms.getParams()) {
             setAnnotatedType(p.getType(), p, p.getAccess());
         }
+    }
+
+    @Override
+    public void checkEq(Type lt, Type t, ASTNode<?> origin) {
+        System.out.println(origin);
+        // Ideally, we would use the behavioral nullable types for the parameter
+        // but we can't because the type we are checking may be a type parameter,
+        // where we don't have a corresponding expression
+        NullableType lnt = getNullableTypeDefault(lt);
+        NullableType rnt = getNullableTypeDefault(t);
+        checkAssignable(lnt, rnt, origin);
+        checkAssignable(rnt, lnt, origin);
     }
 
     @Override
