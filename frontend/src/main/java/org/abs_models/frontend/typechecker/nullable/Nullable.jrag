@@ -8,6 +8,9 @@ aspect Nullable {
   ParamDecl implements HasNullableType;
   Exp implements HasNullableType;
 
+  /**
+    * The nullable type of the expression. Returns null when the type is not a reference or future type
+    */
   syn NullableType Exp.getNullableType() {
     Type t = getType();
 
@@ -24,6 +27,9 @@ aspect Nullable {
     return NullableType.Nullable;
   }
 
+  /**
+    * True iff the expression is either Nullable or Null
+    */
   syn boolean Exp.couldBeNull() = getNullableType() == NullableType.Nullable || getNullableType() == NullableType.Null;
 
   // == Parameters ==

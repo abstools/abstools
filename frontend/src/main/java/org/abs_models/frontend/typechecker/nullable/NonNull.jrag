@@ -4,6 +4,13 @@ import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
 aspect NonNull {
 
+  /**
+   *  Gathers all declarations relevant to the nullable type analysis
+   *  These differ depending on the node this entry belongs to:
+   *    - MethodImpl: All parameters and all declarations in the body
+   *    - If the node is in a ClassDecl: All parameters and fields
+   *    - MainBlock: All declarations in the block
+   */
   syn lazy BitVec<VarOrFieldDecl> CFGEntry.getAllVarOrFieldDecls() {
     BitVec<VarOrFieldDecl> decls = new BitVec<>();
     ASTNode parent = getParent();
@@ -107,7 +114,7 @@ aspect NonNull {
   // What gets propagated to the `else` successors of a conditional node (if, while)
   syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out_else() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
 
-  // Handle params
+  // Add all declarations to the entry that we know are NonNull (i.e., relevant params and fields)
   eq CFGEntry.nonNull_out() {
     BitVec<VarOrFieldDecl> s = new BitVec<>();
 
@@ -150,6 +157,7 @@ aspect NonNull {
     return s;
   }
 
+  // AssertStmt can propagate conditional information
   eq AssertStmt.nonNull_out_then() {
     VarOrFieldDecl d = getCondition().testsNotNull();
     if (d != null) {
@@ -165,6 +173,7 @@ aspect NonNull {
     return nonNull_in();
   }
 
+  // Add or remove the corresponding decl depending on the assigned value
   eq AssignStmt.nonNull_out() {
     Exp e = getValue();
     BitVec<VarOrFieldDecl> out = e.nonNull_out();
@@ -180,8 +189,10 @@ aspect NonNull {
     }
   }
 
+  // Get information from the expression an propagate it
   eq ExpressionStmt.nonNull_out() = getExp().nonNull_out();
 
+  // Give conditional information if applicable
   eq IfStmt.nonNull_out_then() {
     VarOrFieldDecl d = getCondition().testsNotNull();
     if (d != null) {
@@ -197,6 +208,7 @@ aspect NonNull {
     return nonNull_in();
   }
 
+  // Add decl if the value is NonNull
   eq VarDeclStmt.nonNull_out() {
     VarDecl d = getVarDecl();
 
@@ -215,6 +227,7 @@ aspect NonNull {
     }
   }
 
+  // Give conditional information if applicable
   eq WhileStmt.nonNull_out_then() {
     VarOrFieldDecl d = getCondition().testsNotNull();
     if (d != null) {
@@ -232,12 +245,19 @@ aspect NonNull {
 
   // == Exp ==
 
+  // Expressions can alter nullability, but most don't
+
+  // We get the current nullability from the parent stmt.
+  // We could just make expressions nodes, but that would complicate the analysis
+  // We also could just pass the current nonNull-set to the `nonNull` attribute, but we that would make the API more difficult to use
   syn BitVec<VarOrFieldDecl> Exp.nonNull_in() = parentStmt().nonNull_in();
 
   syn BitVec<VarOrFieldDecl> Exp.nonNull_out();
 
+  // Most expressions don't change the set
   eq Exp.nonNull_out() = nonNull_in();
 
+  // Calls make the callee NonNull
   eq Call.nonNull_out() {
     BitVec<VarOrFieldDecl> in = nonNull_in();
     PureExp callee = getCallee();
@@ -250,6 +270,9 @@ aspect NonNull {
     return in;
   }
   
+  /**
+    * True iff the expression is ensured to be NonNull
+    */
   syn boolean Exp.nonNull() circular [true];
 
   eq Call.nonNull() = getMethodSig().nonNull();

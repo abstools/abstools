@@ -1,6 +1,8 @@
 import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.abs_models.frontend.analyser.BitVec;
 
+// For explanation, see NonNull.jrag
+
 aspect Null {
   // == Null in ==
   syn BitVec<VarOrFieldDecl> CFGNode.null_in() circular [entry().getAllVarOrFieldDecls()] {
@@ -186,6 +188,9 @@ aspect Null {
     return in;
   }
   
+  /**
+    * True iff the expression is ensured to be null
+    */
   syn boolean Exp.isNull() circular [true];
 
   eq Call.isNull() = false;
