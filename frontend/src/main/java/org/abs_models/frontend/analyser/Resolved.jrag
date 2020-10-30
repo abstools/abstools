@@ -93,7 +93,9 @@ aspect Resolved {
     return in;
   }
 
-  // Whether a Future is resolved. If the value is not a future, the value will be false;
+  /**
+    * Whether a Future is resolved. If the value is not a future, the value will be false
+    */
   syn boolean Exp.resolved() circular [true];
 
   eq Call.resolved() = false;
