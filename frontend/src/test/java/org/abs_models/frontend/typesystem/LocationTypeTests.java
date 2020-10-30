@@ -235,19 +235,6 @@ public class LocationTypeTests extends FrontendTest {
         assertInferOk("interface I {} type I2 = [Somewhere] I; { I2 i; i = null; }", LocationType.SOMEWHERE);
     }
 
-    @Test
-    public void typeImprovedInfer() {
-        assertInferOk("interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new C(); i2 = new C(); i1!m(i2); }");
-    }
-
-    @Test
-    public void fieldTypeImprovedInfer() {
-        assertInferOk("interface I { Unit m([Far] I i); } " +
-            "class C implements I { " +
-            "    I i1; I i2; " +
-            "    Unit m([Far] I i) { i1 = new C(); i2 = new C(); i1!m(i2); } } { }");
-    }
-
     // negative tests:
 
     @Test
