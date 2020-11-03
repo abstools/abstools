@@ -3,8 +3,8 @@ aspect ConstantFolding {
 
     rewrite MinusExp {
         when (getOperand().isConstant()
-               && getOperand().getType().isIntType()
-               && ((IntLiteral) getOperand()).getContent().startsWith("-"))
+              && getOperand().getType().isIntType()
+              && ((IntLiteral) getOperand()).getContent().startsWith("-"))
         to IntLiteral new IntLiteral(((IntLiteral)getOperand()).getContent().substring(1));
         when (getOperand().isConstant()
               && getOperand().getType().isIntType())

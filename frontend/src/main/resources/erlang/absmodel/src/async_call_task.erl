@@ -4,7 +4,7 @@
 -behaviour(task).
 -export([init/4,start/1]).
 
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 %% Async Call
 %% Links itself to its future
 
@@ -12,7 +12,10 @@
 -record(state,{obj,meth,params,fut}).
 
 init(_Cog,Future,CalleeObj,[Method|Params])->
-    link(Future),
+    case Future of
+        null -> ok;
+        _ -> link(Future)
+    end,
     #state{fut=Future,obj=CalleeObj,meth=Method,params=Params}.
 
 
@@ -21,19 +24,17 @@ start(#state{fut=Future,obj=O=#object{cog=Cog=#cog{ref=CogRef,dcobj=DC}},meth=M,
     %% things are properly wrong
     C=object:get_class_from_ref(O),
     try
-        receive
-            {stop_world, CogRef} ->
-                cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),
-                cog:task_is_runnable(Cog, self()),
-                task:wait_for_token(Cog, [O,DC|P])
-        after 0 -> ok end,
         Res=apply(C, M,[O|P]),
-        complete_future(Future, value, Res, Cog, [O|P])
+        complete_future(Future, value, Res, Cog, [O|P]),
+        Res
     catch
         _:Reason ->
             complete_future(Future, exception, error_transform:transform(Reason), Cog, [O|P])
     end.
 
+complete_future(null, _Status, _Value, _Cog, _Stack) ->
+    %% no future: we were called without storing the future
+    ok;
 complete_future(Future, Status, Value, Cog, Stack) ->
     future:value_available(Future, Status, Value, self(), Cog, value_accepted),
     (fun Loop() ->

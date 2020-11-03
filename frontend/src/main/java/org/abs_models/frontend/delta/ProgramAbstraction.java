@@ -296,13 +296,13 @@ public class ProgramAbstraction {
         java.util.List<String> types = new ArrayList<>();
         types.add(sig.getReturnType().toString());
         for (ParamDecl par : sig.getParams()) {
-            types.add(par.getAccess().toString());
+            types.add(par.getTypeUse().toString());
         }
         return ImmutableList.copyOf(types);
     }
 
     public static String getVarType(TypedVarOrFieldDecl var) {
-        return var.getAccess().toString();
+        return var.getTypeUse().toString();
     }
 
 }

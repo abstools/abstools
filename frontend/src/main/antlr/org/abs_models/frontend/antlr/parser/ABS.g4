@@ -158,43 +158,43 @@ pure_exp_list : (pure_exp (',' pure_exp)*)? ;
 list_literal : '[' pure_exp (',' pure_exp)* ']' ;
 
 // Annotations
-annotation : (l=type_use ':')? r=pure_exp ;
+annotation : (l=TYPE_IDENTIFIER ':')? r=pure_exp ;
 
 annotations: ('[' al+=annotation (',' al+=annotation)* ']')* ;
 
 // Statements
 
-stmt : annotations type_exp IDENTIFIER ('=' exp)? ';'              # VardeclStmt
-    | annotations var_or_field_ref '=' exp ';'                     # AssignStmt
-    | annotations 'skip' ';'                                       # SkipStmt
-    | annotations 'return' exp ';'                                 # ReturnStmt
-    | annotations 'assert' exp ';'                                 # AssertStmt
-    | annotations '{' stmt* '}'                                    # BlockStmt
-    | annotations 'if' '(' c=pure_exp ')' l=stmt ('else' r=stmt)?  # IfStmt
+stmt : annotations type_exp IDENTIFIER ('=' exp)? ';'                  # VardeclStmt
+    | annotations var_or_field_ref '=' exp ';'                         # AssignStmt
+    | annotations 'skip' ';'                                           # SkipStmt
+    | annotations 'return' exp ';'                                     # ReturnStmt
+    | annotations 'assert' exp ';'                                     # AssertStmt
+    | annotations '{' stmt* '}'                                        # BlockStmt
+    | annotations 'if' '(' c=pure_exp ')' l=stmt ('else' r=stmt)?      # IfStmt
     | annotations 'switch' '(' c=pure_exp ')' '{' casestmtbranch* '}'
-                                                                   # SwitchStmt
-    | annotations 'while' '(' c=pure_exp ')' stmt                  # WhileStmt
+                                                                       # SwitchStmt
+    | annotations 'while' '(' c=pure_exp ')' stmt                      # WhileStmt
     | annotations 'foreach' '(' var=IDENTIFIER (',' index=IDENTIFIER)? 'in' l=pure_exp ')' stmt
-                                                                   # ForeachStmt
+                                                                       # ForeachStmt
     | annotations 'try' b=stmt
         'catch' (('{' casestmtbranch* '}') | casestmtbranch)
-        ('finally' f=stmt)?                                        # TryCatchFinallyStmt
-    | annotations 'await' guard ';'                                # AwaitStmt
-    | annotations 'suspend' ';'                                    # SuspendStmt
-    | annotations 'duration' '(' f=pure_exp ',' t=pure_exp ')' ';' # DurationStmt
-    | annotations 'throw' pure_exp ';'                             # ThrowStmt
-    | annotations 'die' pure_exp ';'                               # DieStmt
-    | annotations 'movecogto' pure_exp ';'                         # MoveCogToStmt
-    | annotations exp ';'                                          # ExpStmt
+        ('finally' f=stmt)?                                            # TryCatchFinallyStmt
+    | annotations 'await' guard ';'                                    # AwaitStmt
+    | annotations 'suspend' ';'                                        # SuspendStmt
+    | annotations 'duration' '(' min=pure_exp (',' max=pure_exp)? ')' ';'  # DurationStmt
+    | annotations 'throw' pure_exp ';'                                 # ThrowStmt
+    | annotations 'die' pure_exp ';'                                   # DieStmt
+    | annotations 'movecogto' pure_exp ';'                             # MoveCogToStmt
+    | annotations exp ';'                                              # ExpStmt
         // Prefer case expression to old-style case statement, so case
         // statement comes later
-    | annotations 'case' c=pure_exp '{' casestmtbranch* '}'        # CaseStmtOld
+    | annotations 'case' c=pure_exp '{' casestmtbranch* '}'            # CaseStmtOld
     ;
 
-guard : var_or_field_ref '?'                           # ClaimGuard
-    | 'duration' '(' min=pure_exp ',' max=pure_exp ')' # DurationGuard
-    | e=pure_exp                                       # ExpGuard
-    | l=guard '&' r=guard                              # AndGuard
+guard : var_or_field_ref '?'                              # ClaimGuard
+    | 'duration' '(' min=pure_exp (',' max=pure_exp)? ')' # DurationGuard
+    | e=pure_exp                                          # ExpGuard
+    | l=guard '&' r=guard                                 # AndGuard
     ;
 
 casestmtbranch : pattern '=>' stmt ;
@@ -231,7 +231,7 @@ function_decl : annotations
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         paramlist
         '='
-        ('builtin' ('[' (builtin_args+=STRINGLITERAL (',' builtin_args+=STRINGLITERAL)* )? ']')?
+        ('builtin' ('(' pure_exp_list ')')?
         | e=pure_exp )
         ';'
     ;

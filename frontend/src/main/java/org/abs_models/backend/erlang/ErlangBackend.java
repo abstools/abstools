@@ -124,6 +124,7 @@ public class ErlangBackend extends Main {
             String message = "ABS requires at least erlang version " + Integer.toString(minErlangVersion) + ", installed version is " + Integer.toString(version);
             throw new InternalBackendException(message);
         }
+        String ebin_dir = "/absmodel/_build/default/lib/absmodel/ebin/";
         ErlApp erlApp = new ErlApp(destDir, arguments.http_index_file, arguments.http_static_dir);
         m.generateErlangCode(erlApp, options);
         erlApp.close();
@@ -138,23 +139,26 @@ public class ErlangBackend extends Main {
         compile_command.add("-I");
         compile_command.add(destDir + "/absmodel/include");
         compile_command.add("-o");
-        compile_command.add(destDir + "/absmodel/ebin");
-        Set<String> compiled_basenames =
-            Arrays.stream(new File(destDir, "absmodel/ebin/").listFiles())
-            .map((File f) -> FilenameUtils.removeExtension(f.getName()))
-            .collect(Collectors.toSet());
+        compile_command.add(destDir + ebin_dir);
+        // Set<String> compiled_basenames =
+        //     Arrays.stream(new File(destDir, ebin_dir).listFiles())
+        //     .map((File f) -> FilenameUtils.removeExtension(f.getName()))
+        //     .collect(Collectors.toSet());
         Arrays.stream(new File(destDir, "absmodel/src/")
                       .listFiles(new FilenameFilter() {
                               public boolean accept(File dir, String name) {
                                   return name.endsWith(".erl")
-                                      && !compiled_basenames.contains(FilenameUtils.removeExtension(name));
+                                      // && !compiled_basenames.contains(FilenameUtils.removeExtension(name))
+                                      ;
                               }
                           }))
             .forEach((File f) -> compile_command.add(f.toString()));
+
         if (options.contains(CompileOptions.VERBOSE)) {
             System.out.println("Compiling erlang files with command: "
                                + String.join(" ", compile_command));
         }
+
         Process p = Runtime.getRuntime().exec(compile_command.toArray(new String[0]));
         if (options.contains(CompileOptions.VERBOSE)) IOUtils.copy(p.getInputStream(), System.out);
         else IOUtils.copy(p.getInputStream(), new NullOutputStream());

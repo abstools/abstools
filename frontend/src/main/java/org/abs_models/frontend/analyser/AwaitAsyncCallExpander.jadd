@@ -43,7 +43,7 @@ aspect AwaitAsyncCallExpander {
         if (calleetype.isUnknownType()) return false;
         MethodSig m = calleetype.lookupMethod(getMethod());
         if (m == null) return false;
-        Access a = (Access)m.getReturnType();
+        TypeUse a = m.getReturnType();
         if (a.getType().isUnknownType()) return false;
         return true;
     }
@@ -63,7 +63,7 @@ aspect AwaitAsyncCallExpander {
         List<Stmt> stmtlist = block.getStmtListNoTransform();
 
         Type calleetype = aac.getCallee().getType();
-        Access a = (Access)calleetype.lookupMethod(aac.getMethod()).getReturnType();
+        TypeUse a = calleetype.lookupMethod(aac.getMethod()).getReturnType();
         final String varName = "tmp"+Integer.toString(aac.hashCode());
         // The annotations on an "await o!m();"-containing statement need to
         // end up on the fresh "o!m()"; move them there

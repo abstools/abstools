@@ -61,7 +61,7 @@ public class ErlApp {
         destDir.mkdirs();
         FileUtils.cleanDirectory(destDir);
         destDir.mkdirs();
-        new File(destDir, "absmodel/ebin").mkdir();
+        // new File(destDir, "absmodel/ebin").mkdir();
         index_file = http_index_file;
         static_dir = http_static_dir;
         if (static_dir != null && !static_dir.isDirectory()) {
@@ -107,40 +107,45 @@ public class ErlApp {
     private static final Set<String> RUNTIME_FILES = ImmutableSet.of(
             "absmodel/src/*",
             "absmodel/include/*",
-            "absmodel/deps/*",
-            "absmodel/priv/*",
-            "absmodel/priv/static/*",
+            "absmodel/_build/default/lib/absmodel/priv/*",
+            "absmodel/_build/default/lib/absmodel/priv/static/*",
+            "absmodel/_build/default/lib/absmodel/*",
+            "absmodel/_build/default/lib/cowboy/*",
+            "absmodel/_build/default/lib/cowlib/*",
+            "absmodel/_build/default/lib/jsx/*",
+            "absmodel/_build/default/lib/ranch/*",
+
             // do not copy everything since absmodulename.hrl is generated
             // later -- precompiled runtime.erl and main_app.erl use the wrong
             // constant
 
             // "absmodel/ebin/*",
-            "absmodel/ebin/absmodel.app",
-            "absmodel/ebin/active_object_task.beam",
-            "absmodel/ebin/async_call_task.beam",
-            "absmodel/ebin/builtin.beam",
-            "absmodel/ebin/clock.beam",
-            "absmodel/ebin/cmp.beam",
-            "absmodel/ebin/cog.beam",
-            "absmodel/ebin/cog_monitor.beam",
-            "absmodel/ebin/coverage.beam",
-            "absmodel/ebin/dc.beam",
-            "absmodel/ebin/dpor.beam",
-            "absmodel/ebin/error_transform.beam",
-            "absmodel/ebin/future.beam",
-            "absmodel/ebin/gc.beam",
-            "absmodel/ebin/getopt.beam",
-            "absmodel/ebin/init_task.beam",
-            "absmodel/ebin/intar.beam",
-            //"absmodel/ebin/main_app.beam",
-            "absmodel/ebin/main_task.beam",
-            "absmodel/ebin/mochinum.beam",
-            "absmodel/ebin/modelapi_v1.beam",
-            "absmodel/ebin/modelapi_v2.beam",
-            "absmodel/ebin/object.beam",
-            "absmodel/ebin/rationals.beam",
-            //"absmodel/ebin/runtime.beam",
-            "absmodel/ebin/task.beam",
+            //"absmodel/_build/default/lib/absmodel/ebin/main_app.beam",
+            //"absmodel/_build/default/lib/absmodel/ebin/runtime.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/absmodel.app",
+            "absmodel/_build/default/lib/absmodel/ebin/active_object_task.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/async_call_task.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/builtin.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/clock.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/cmp.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/cog.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/cog_monitor.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/coverage.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/dc.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/dpor.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/error_transform.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/future.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/gc.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/getopt.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/init_task.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/intar.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/main_task.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/mochinum.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/modelapi_v1.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/modelapi_v2.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/object.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/rationals.beam",
+            "absmodel/_build/default/lib/absmodel/ebin/task.beam",
             "absmodel/Emakefile",
             "Dockerfile",
             "start_console",
@@ -148,11 +153,12 @@ public class ErlApp {
             "run.bat",
             "run.escript",
             "absmodel/rebar.config",
+            "absmodel/rebar.lock",
             "bin/*",
             "link_sources"
             );
     private static final Set<String> EXEC_FILES = ImmutableSet.of(
-            "bin/rebar",
+            "bin/rebar3",
             "run",
             "start_console",
             "link_sources"
@@ -167,7 +173,7 @@ public class ErlApp {
         // how to handle the other case.
         URLConnection resource = getClass().getResource("").openConnection();
         try {
-            new File(destDir + "/absmodel/ebin").mkdirs();
+            // new File(destDir + "/absmodel/ebin").mkdirs();
             if (resource instanceof JarURLConnection) {
                 for (String f : RUNTIME_FILES) {
                     if (f.endsWith("/*")) {
@@ -197,12 +203,12 @@ public class ErlApp {
                 throw new UnsupportedOperationException("File type: "+resource);
             }
             if (index_file != null) {
-                File http_out_file = new File(destDir + "/absmodel/priv/index.html");
+                File http_out_file = new File(destDir, "absmodel/_build/default/lib/absmodel/priv/index.html");
                 http_out_file.getParentFile().mkdirs();
                 FileUtils.copyFile(index_file, http_out_file);
             }
             if (static_dir != null) {
-                File static_out_dir = new File(destDir + "/absmodel/priv/static");
+                File static_out_dir = new File(destDir, "absmodel/_build/default/lib/absmodel/priv/static/");
                 static_out_dir.mkdirs();
                 FileUtils.copyDirectory(static_dir, static_out_dir);
             }

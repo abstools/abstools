@@ -116,6 +116,13 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void intDoubleMinusFolding() throws Exception {
+        // Test that constant folding does not result in literals like `--1`, which are invalid.
+        // See https://github.com/abstools/abstools/issues/283
+        assertEvalTrue("{ Int i =  -(0 - 1) + 1; Bool testresult = i == 2; }");
+    }
+
+    @Test
     public void ratMinus() throws Exception {
         assertEvalTrue("{ Rat x = -1/2; x = -x; Bool testresult = x == 1/2; }");
     }

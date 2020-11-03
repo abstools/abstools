@@ -99,17 +99,17 @@ public class LocationTypeVariable {
 
         if (node instanceof FieldDecl) {
             FieldDecl fd = (FieldDecl) node;
-            return fd.getAccess();
+            return fd.getTypeUse();
         }
 
         if (node instanceof ParamDecl) {
             ParamDecl pd = (ParamDecl) node;
-            return pd.getAccess();
+            return pd.getTypeUse();
         }
 
         if (node instanceof VarDecl) {
             VarDecl vd = (VarDecl) node;
-            return vd.getAccess();
+            return vd.getTypeUse();
         }
 
 

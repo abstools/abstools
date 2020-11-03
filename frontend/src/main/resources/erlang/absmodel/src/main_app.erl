@@ -6,19 +6,32 @@
 
 -include_lib("../include/absmodulename.hrl").
 
+normalize_url_prefix(none) ->
+    "/";
+normalize_url_prefix(Urlprefix) ->
+    case string:equal(Urlprefix, "/") of
+        true -> "/";
+        false ->
+            %% Ensure that the prefix starts and ends with a slash.
+            Prefix1 = [ "/" | string:trim(Urlprefix, leading, "/")],
+            lists:append([string:trim(Prefix1, trailing, "/"), "/"])
+    end.
+
 start(_StartType, _StartArgs) ->
-    Dispatch = cowboy_router:compile([{'_',
-                                       [{"/", cowboy_static, {priv_file, absmodel, "index.html"}},
-                                        {"/static/[...]", cowboy_static, {priv_dir, absmodel, "static"}},
-                                        {"/v1/:request/[...]", modelapi_v1, []},
-                                        {"/v2/:request/[...]", modelapi_v2, []},
-                                        {"/:request/[...]", modelapi_v2, []}]}]),
     {ok, Port} = application:get_env(absmodel, port),
+    {ok, RawPrefix} = application:get_env(absmodel, url_prefix),
+    Urlprefix=normalize_url_prefix(RawPrefix),
     {ok, Module} = application:get_env(absmodel, module),
     {ok, Verbose} = application:get_env(absmodel, verbose),
     {ok, Debug} = application:get_env(absmodel, debug),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
     {ok, Trace} = application:get_env(absmodel, replay_trace),
+    Dispatch = cowboy_router:compile([{'_',
+                                       [{Urlprefix, cowboy_static, {priv_file, absmodel, "index.html"}},
+                                        {[Urlprefix, "static/[...]"], cowboy_static, {priv_dir, absmodel, "static"}},
+                                        {[Urlprefix, "v1/:request/[...]"], modelapi_v1, []},
+                                        {[Urlprefix, "v2/:request/[...]"], modelapi_v2, []},
+                                        {[Urlprefix, ":request/[...]"], modelapi_v2, []}]}]),
     %% In case we need a random port, see example at bottom of
     %% https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy.start_clear/
     case cowboy:start_clear(http, [{port, Port}, {ip, loopback}],

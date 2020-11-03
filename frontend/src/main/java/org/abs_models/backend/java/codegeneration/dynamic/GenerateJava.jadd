@@ -245,10 +245,10 @@ aspect GenerateJavaDynamic_Core {
     }
 
     public void ParamDecl.generateJavaDynamic(PrintStream stream) {
-        if (getAccess().getType().isReferenceType()) {
+        if (getTypeUse().getType().isReferenceType()) {
             stream.print(ABSValue.class.getName());
         } else {
-            getAccess().generateJavaDynamic(stream);
+            getTypeUse().generateJavaDynamic(stream);
         }
         stream.print(" " + JavaBackend.getVariableName(getName()));
     }
@@ -398,19 +398,19 @@ aspect GenerateJavaDynamic_Core {
     }
 
     public void VarDecl.generateJavaDynamic(PrintStream stream) {
-        boolean castNeeded = !getAccess().getType().isReferenceType();
-        if (getAccess().getType().isReferenceType()) {
+        boolean castNeeded = !getTypeUse().getType().isReferenceType();
+        if (getTypeUse().getType().isReferenceType()) {
             stream.print(ABSValue.class.getName());
 //            stream.print(JavaBackend.getQualifiedString(getAccess().getType()));
         } else {
-            getAccess().generateJavaDynamic(stream);
+            getTypeUse().generateJavaDynamic(stream);
         }
         String name = JavaBackend.getVariableName(getName());
         stream.print(" " + name + " = ");
 
         if (castNeeded) {
             stream.print("(");
-            getAccess().generateJavaDynamic(stream);
+            getTypeUse().generateJavaDynamic(stream);
             stream.print(")(");
         }
         if (hasInitExp()) {
@@ -617,6 +617,8 @@ aspect GenerateJavaDynamic_Core {
     public void AsExp.generateJavaDynamic(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
+
+    public abstract void TypeUse.generateJavaDynamic(PrintStream stream);
 
     public void DataTypeUse.generateJavaDynamic(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));

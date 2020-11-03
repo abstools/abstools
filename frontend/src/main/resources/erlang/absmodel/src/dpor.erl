@@ -5,7 +5,7 @@
 -export([new_traces/1]).
 -export([start_link/2, stop/0]).
 -export([start_simulation/4]).
--export([terminate/3, code_change/4, init/1, callback_mode/0]).
+-export([terminate/3, code_change/4, init/1, callback_mode/0, handle_event/4]).
 -export([ready/3]).
 
 -export([get_traces_from_db/0]).
@@ -395,6 +395,6 @@ code_change(_Vsn, State, Data, _Extra) ->
 terminate(_Reason, _State, _Data) ->
     ok.
 
-handle_event(_, _, Data) ->
+handle_event(_EventType, _EventContent, _State, Data) ->
     %% Undefined behaviour
     {keep_state, Data}.

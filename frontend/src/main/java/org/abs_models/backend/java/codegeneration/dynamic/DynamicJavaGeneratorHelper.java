@@ -308,9 +308,9 @@ public class DynamicJavaGeneratorHelper {
             ParamDecl d = m.getMethodSig().getParam(i);
             d.generateJavaDynamic(stream);
             stream.print(" = ");
-            if (!d.getAccess().getType().isReferenceType()) {
+            if (!d.getTypeUse().getType().isReferenceType()) {
                 stream.print("(");
-                d.getAccess().generateJavaDynamic(stream);
+                d.getTypeUse().generateJavaDynamic(stream);
                 stream.print(")");
             }
             stream.println("args[" + i + "];");
@@ -476,7 +476,7 @@ public class DynamicJavaGeneratorHelper {
         tempCounter = Math.max(tempCounter + 1, 0);
         // copy value of variable to temporary, final variable
         beforeAwaitStream.print("final ");
-        vDecl.getAccess().generateJavaDynamic(beforeAwaitStream);
+        vDecl.getTypeUse().generateJavaDynamic(beforeAwaitStream);
         beforeAwaitStream.print(" " + tempName + " = " + name + ";");
         // replace variable name with name of temporary variable
         v.setName(tempName);

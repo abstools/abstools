@@ -257,7 +257,7 @@ aspect GenerateErlang {
   }
 
   public void VarDecl.generateErlangCode(CodeStream ecs,Vars vars, List<Annotation> annotations) {
-    if(getAccess() instanceof TypeParameterUse || getAccess() instanceof InterfaceTypeUse|| getAccess() instanceof DataTypeUse){
+    if(getTypeUse() instanceof TypeParameterUse || getTypeUse() instanceof InterfaceTypeUse|| getTypeUse() instanceof DataTypeUse){
       StringWriter sw = new StringWriter();
       CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
       if(hasInitExp()){
@@ -476,12 +476,10 @@ aspect GenerateErlang {
     ecs.decIndent().println("Callee ->");
     ecs.incIndent();
     ecs.println("%% remote call");
-    ecs.format("TempFuture = future:start(Callee,'m_%s',",getMethod());
+    ecs.format("TempFuture = cog:create_task(Callee,'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
     ecs.format(",#task_info{method= <<\"%s\"/utf8>>},", getMethod());
-    ecs.print("Cog,");
-    ecs.print(vars.toStack());
-    ecs.println("),");
+    ecs.println("Cog, true),");
     ecs.print("future:get_blocking(TempFuture, Cog, ");
     ecs.print(vars.toStack());
     ecs.println(")");
@@ -492,7 +490,7 @@ aspect GenerateErlang {
   public void AsyncCall.generateErlangCode(CodeStream ecs,Vars vars){
     Stmt stmt = CompilerUtils.findStmtForExpression(this);
     PureExp deadline = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.StdLib.Deadline");
-    ecs.print("future:start(");
+    ecs.print("cog:create_task(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",'m_%s',",getMethod());
     ErlUtil.buildParams(ecs,getParams(),vars,true);
@@ -503,7 +501,11 @@ aspect GenerateErlang {
         ecs.print("dataInfDuration");
     }
     ecs.print("},Cog,");
-    ecs.print(vars.toStack());
+    if (closestParent(Stmt.class) instanceof ExpressionStmt) {
+        ecs.print("false");     // "o!m()" w/o assignment: do not create a future
+    } else {
+        ecs.print("true");
+    }
     ecs.print(")");
   }
 
@@ -934,18 +936,27 @@ aspect GenerateErlang {
     getExpr().generateErlangCode(ecs, vars);
     ecs.println(" of");
     ecs.incIndent();
+    String separator = "";
     for (CaseBranch b : getBranchs()) {
         Vars v = vars.pass();
+        ecs.println(separator); separator = ";";
         b.getLeft().generateErlangCode(external, ecs, v);
         ecs.print("->");
         b.getRight().generateErlangCode(ecs, v);
-        ecs.println(";");
         vars.hideIntroduced(v);
     }
-    ecs.println("_ -> io:format(\"No match for "
-              + getExpr() + " at " + getFileName()
-              + ":" + getStartLine() + "~n\"), ");
-    ecs.println("exit(dataPatternMatchFailException)");
+    if (getNumBranch() == 0 ||  // shouldn't happen
+        !(getBranch(getNumBranch() - 1).getLeft() instanceof UnderscorePattern)) {
+        // eliminate an impossible branch - note that this is not an
+        // exhaustive test but reduces some warnings.
+        ecs.println(separator);
+        ecs.println("_ -> io:format(\"No match for "
+                    + getExpr() + " at " + getFileName()
+                    + ":" + getStartLine() + "~n\"), ");
+        ecs.println("exit(dataPatternMatchFailException)");
+    } else {
+        ecs.println();
+    }
     ecs.decIndent();
     ecs.print("end");
     ecs.close();
@@ -1097,6 +1108,7 @@ aspect GenerateErlang {
       ecs.pf("Poll(%s)", vars.toParamList());
       ecs.decIndent().println("end end)");
       ecs.decIndent().format("(%s)",vars.toParamList());
+      ecs.decIndent();
     }
     else {
         getGuard().generateErlangCode(ecs,after,vars);
