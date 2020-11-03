@@ -2,9 +2,25 @@ package org.abs_models.frontend.analyser;
 
 import java.util.*;
 
+/**
+ * A bit vec specialized for data flow analysis. Instead of mutating the vector, operations create a new
+ * vector. This ensures correct analysis.
+ * Adapted from https://bitbucket.org/jastadd/jastaddj-intraflow/src/master/src/jastadd/Sets.jrag
+ *
+ * @param <E> - The type of the elements in the vector
+ */
 public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
+    /**
+     * Maps elements to the position in `elements`
+     */
     protected HashMap<E, Integer> elementMap;
+    /**
+     * Keeps all elements in the vec
+     */
     protected ArrayList<E> elements;
+    /**
+     * The collection of bits
+     */
     int[] bits;
 
     public BitVec() {
@@ -45,6 +61,10 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return elements.get(idx);
     }
 
+    /**
+     * Adds all elements from `vec` to this
+     * @param vec - The vector to add
+     */
     public void add(BitVec<E> vec) {
         vec = convert(vec);
         if (vec.bits.length > bits.length) {
@@ -115,6 +135,10 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return changed;
     }
 
+    /**
+     *
+     * @return The number of elements in this vector
+     */
     public int size() {
         int size = 0;
         for (int bit : bits) {
@@ -153,6 +177,12 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         };
     }
 
+    /**
+     * Creates a new vector that uses the same map and list as `this`
+     * Allows further operations
+     * @param vec - The vector to convert
+     * @return - A new vector with converted elementMap and elements
+     */
     private BitVec<E> convert(BitVec<E> vec) {
         if (vec.elementMap == elementMap) return vec;
         BitVec<E> newVec = new BitVec<>(elementMap, elements, new int[bits.length + 1]);
@@ -160,6 +190,11 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return newVec;
     }
 
+    /**
+     * Creates a new vector that is the union of `this` and `vec`
+     * @param vec - The other vector
+     * @return - A union vector
+     */
     public BitVec<E> union(BitVec<E> vec) {
         vec = convert(vec);
         if (vec.isEmpty() || this.equals(vec)) return this;
@@ -185,6 +220,11 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return max;
     }
 
+    /**
+     * Creates a new vector with `e` added
+     * @param e - The element to add
+     * @return - A union vector
+     */
     public BitVec<E> union(E e) {
         int idx = addIndex(e);
         int offset = idx >> 5;
@@ -195,6 +235,11 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return vec;
     }
 
+    /**
+     * Creates a new vector that has all elements of `vec` removed
+     * @param vec - The other vector
+     * @return - A complement vector
+     */
     public BitVec<E> compl(BitVec<E> vec) {
         vec = convert(vec);
         if (vec.isEmpty()) return this;
@@ -211,6 +256,11 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return res;
     }
 
+    /**
+     * Creates a new vector with `e` removed
+     * @param e - The element to remove
+     * @return - A complement vector
+     */
     public BitVec<E> compl(E e) {
         int idx = addIndex(e);
         int offset = idx >> 5;
@@ -222,6 +272,11 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return vec;
     }
 
+    /**
+     * Creates a new vector that only has elements both in `this` and `vec`
+     * @param vec - The other vector
+     * @return - An intersection vector
+     */
     public BitVec<E> intersect(BitVec<E> vec) {
         vec = convert(vec);
         if (this.equals(vec) || vec.isFullVec()) return this;
@@ -233,6 +288,11 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return res;
     }
 
+    /**
+     * Checks whether `o` is in this vector
+     * @param o - The object to test
+     * @return whether `o` is in this vector
+     */
     public boolean contains(Object o) {
         if (o == null) {
             return false;
@@ -275,6 +335,10 @@ public class BitVec<E> extends AbstractSet<E> implements Iterable<E> {
         return result;
     }
 
+    /**
+     *
+     * @return Whether the current vector is empty
+     */
     public boolean isEmpty() {
         for (int bit : bits)
             if (bit != 0)

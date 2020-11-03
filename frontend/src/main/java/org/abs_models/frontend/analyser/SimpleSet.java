@@ -3,6 +3,10 @@ package org.abs_models.frontend.analyser;
 import java.util.Set;
 import java.util.HashSet;
 
+/**
+ * A simple set for data flow analysis
+ * @param <E> The elements type
+ */
 public class SimpleSet<E> extends HashSet<E> {
 
 	/**
@@ -19,21 +23,36 @@ public class SimpleSet<E> extends HashSet<E> {
 		add(e);
 	}
 
-	public SimpleSet union(SimpleSet<E> o) {
+    /**
+     * Creates a union with `o`
+     * @param o - The other set
+     * @return A new union set
+     */
+	public SimpleSet<E> union(SimpleSet<E> o) {
 		SimpleSet<E> s = empty();
 		s.addAll(this);
 		s.addAll(o);
 		return s;
 	}
 
-	public SimpleSet union(E e) {
+    /**
+     * Creates a new set with `e` added
+     * @param e - The element to add
+     * @return A new union set
+     */
+	public SimpleSet<E> union(E e) {
 		SimpleSet<E> s = empty();
 		s.addAll(this);
 		s.add(e);
 		return s;
 	}
 
-	public SimpleSet intersection(SimpleSet<E> o) {
+    /**
+     * Creates an intersection with `o`
+     * @param o - The other set
+     * @return A new intersection set
+     */
+	public SimpleSet<E> intersection(SimpleSet<E> o) {
 		SimpleSet<E> s = empty();
 		for (E e : this) {
 			if (o.contains(e)) {
@@ -43,7 +62,12 @@ public class SimpleSet<E> extends HashSet<E> {
 		return s;
 	}
 
-	public SimpleSet intersection(E e) {
+    /**
+     * Creates a new set only containing `e` if it is in this set
+     * @param e - The element to intersect with
+     * @return A new intersection set
+     */
+	public SimpleSet<E> intersection(E e) {
 		SimpleSet<E> s = empty();
 		if (contains(e)) {
 			s.add(e);
@@ -51,29 +75,44 @@ public class SimpleSet<E> extends HashSet<E> {
 		return s;
 	}
 
-	public SimpleSet comp(SimpleSet<E> o) {
+    /**
+     * Creates a complement set with `o`
+     * @param o - The other set
+     * @return A new complement set
+     */
+	public SimpleSet<E> comp(SimpleSet<E> o) {
 		SimpleSet<E> s = empty();
 		s.addAll(this);
 		s.removeAll(o);
 		return s;
 	}
 
-	public SimpleSet comp(E e) {
+    /**
+     * Creates a new set with `e` removed
+     * @param e - The element to remove
+     * @return A new complement set
+     */
+	public SimpleSet<E> comp(E e) {
 		SimpleSet<E> s = empty();
 		s.addAll(this);
 		s.remove(e);
 		return s;
 	}
 
+    /**
+     * A new empty set
+     * @param <E> - The element type
+     * @return An empty set
+     */
 	public static <E> SimpleSet<E> empty() {
-		return new SimpleSet();
+		return new SimpleSet<>();
 	}
 
 	public String toString() {
-		String s = "{";
+		StringBuilder s = new StringBuilder("{");
 
 		for (E e : this) {
-			s += ", " + e.toString();
+			s.append(", ").append(e.toString());
 		}
 
 		return s + "}";
