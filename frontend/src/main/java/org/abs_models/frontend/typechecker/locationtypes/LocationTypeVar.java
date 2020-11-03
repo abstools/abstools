@@ -15,7 +15,6 @@ public class LocationTypeVar {
     public static final LocationTypeVar BOTTOM = new LocationTypeVar(null);
 
     private ASTNode<?> node;
-    private LocationType.ParameterizedFarType farType;
 
     private static int counter = 0;
 
@@ -25,22 +24,12 @@ public class LocationTypeVar {
         this.node = node;
     }
 
-    public LocationTypeVar(ASTNode<?> node, LocationType.ParameterizedFarType farType) {
-        this.node = node;
-        this.farType = farType;
-    }
-
     public boolean isPrimitive() {
         return this == NEAR || this == FAR || this == SOMEWHERE || this == BOTTOM;
     }
 
-    public boolean isParametricFar() {
-        // TODO
-        return false;
-    }
-
     public boolean isLocationType() {
-        return isPrimitive() || isParametricFar();
+        return isPrimitive();
     }
 
     public LocationType asLocationType() {
@@ -48,8 +37,6 @@ public class LocationTypeVar {
         if (this == NEAR) return LocationType.NEAR;
         if (this == FAR) return LocationType.FAR;
         if (this == SOMEWHERE) return LocationType.SOMEWHERE;
-
-        // TODO: Handle ParFar
 
         throw new IllegalArgumentException("Cannot convert " + this + " to location type");
     }

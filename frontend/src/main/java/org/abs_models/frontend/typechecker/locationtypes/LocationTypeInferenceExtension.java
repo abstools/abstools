@@ -139,50 +139,6 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         }
     }
 
-    private List<LocationType> getFarTypes(ASTNode<?> origin) {
-        HasCogs node = null;
-        Scope s = farTypeScope;
-        switch (s) {
-            case GLOBAL_FAR:
-                node = origin.getCompilationUnit().getModel();
-                break;
-            case COMPILATION_UNIT_LOCAL_FAR:
-                node = origin.getCompilationUnit();
-                break;
-            case MODULE_LOCAL_FAR:
-                node = origin.getModuleDecl();
-                break;
-            case CLASS_LOCAL_FAR: {
-                Decl d = origin.getContextDecl();
-                if (d instanceof ClassDecl)
-                    node = d;
-                Block b = origin.getContextBlock();
-                if (b instanceof MainBlock)
-                    node = b;
-                break;
-            }
-            case METHOD_LOCAL_FAR: {
-                Block b = origin.getContextBlock();
-                if (b != null)
-                    node = b;
-                break;
-            }
-        }
-        if (node == null)
-            return new ArrayList<>();
-        List<LocationType> e = farTypes.get(node);
-        if (e != null) {
-            return e;
-        }
-        List<LocationType> result = new ArrayList<>();
-        int numOfNewCogs = node.getNumberOfNewCogExpr();
-        for (int i = 0; i < numOfNewCogs; i++) {
-            result.add(LocationType.createParametricFar(s, i));
-        }
-        farTypes.put(node, result);
-        return result;
-    }
-
     @Override
     public void checkMethodCall(Call call) {
         LocationTypeVar lv = getVarSafe(call.getCallee().getType(), call);

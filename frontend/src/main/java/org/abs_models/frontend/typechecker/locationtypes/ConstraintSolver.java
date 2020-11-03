@@ -221,24 +221,6 @@ public class ConstraintSolver {
             return;
         }
 
-        if (adaptTo.isParametricFar()) {
-            LocationTypeVar res;
-            if (actual == NEAR) {
-                res = dir.isFrom() ? adaptTo : FAR;
-            } else if (actual == SOMEWHERE) {
-                res = SOMEWHERE;
-            } else if (actual == BOTTOM) {
-                errors.add(new LocationTypeInferException(
-                    new TypeError(node, ErrorMessage.LOCATION_TYPE_CALL_ON_BOTTOM, new String[0])
-                ));
-                return;
-            } else if (actual == FAR) {
-                res = SOMEWHERE;
-            } else if (actual.isParametricFar()) {
-                
-            }
-        }
-
         keep(adapt);
     }
 
