@@ -192,14 +192,6 @@ public class Absc implements Callable<Integer> {
     // LocationTypeInferrerExtension.defaultType
     public LocationType defaultLocationType = LocationType.INFER;
 
-
-    /*@Option(names = { "--locscope" },
-            description = "sets the location aliasing scope (allowed values: ${COMPLETION-CANDIDATES}) (default: ${DEFAULT-VALUE})",
-            paramLabel = "scope")
-    // default value taken from declaration of
-    // LocationTypeInferrerExtension.precision
-    public LocationTypeInferrerExtension.LocationTypingPrecision locationTypeScope = LocationTypingPrecision.CLASS_LOCAL_FAR;*/
-
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {
             String version = Absc.class.getPackage().getImplementationVersion();
