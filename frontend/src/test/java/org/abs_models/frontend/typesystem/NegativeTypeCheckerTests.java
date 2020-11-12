@@ -725,4 +725,9 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         // Cannot use qualified names for declarations outside deltas
         assertTypeErrors("module M; interface M.I {}");
     }
+
+    @Test
+    public void foreachWithNoList() {
+	assertTypeErrors("{ foreach(v, i in 5) { println(`$i$'th int value is $v$`);} }");
+    }
 }
