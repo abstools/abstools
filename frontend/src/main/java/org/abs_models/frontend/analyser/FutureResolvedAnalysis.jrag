@@ -1,6 +1,12 @@
 import org.abs_models.frontend.analyser.BitVec;
 
-aspect Resolved {
+/**
+ * Computes whether futures are already resolved using data flow analysis.
+ */
+aspect FutureResolvedAnalysis {
+  /**
+   * Used to compute resolved, do not use directly
+   */
   syn BitVec<VarOrFieldDecl> CFGNode.resolved_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
@@ -16,6 +22,9 @@ aspect Resolved {
   }
 
   // For most stmts out = in
+  /**
+   * Used to compute resolved, do not use directly
+   */
   syn BitVec<VarOrFieldDecl> CFGNode.resolved_out() circular [entry().getAllVarOrFieldDecls()] = resolved_in();
 
   eq CFGEntry.resolved_out() = new BitVec<>();
@@ -75,8 +84,14 @@ aspect Resolved {
 
   // == Exp ==
 
+  /**
+   * Used to compute resolved, do not use directly
+   */
   syn BitVec<VarOrFieldDecl> Exp.resolved_in() = parentStmt().resolved_in();
 
+  /**
+   * Used to compute resolved, do not use directly
+   */
   syn BitVec<VarOrFieldDecl> Exp.resolved_out();
 
   eq Exp.resolved_out() = resolved_in();

@@ -1,5 +1,9 @@
 import org.abs_models.frontend.analyser.BitVec;
 
+/**
+ * Control flow analysis for ABS.
+ * Computes a control flow graph with statements as the nodes. Results are usable via the `pred`/`succ` attributes.
+ */
 aspect ControlFlow {
 
 	public interface CFGNode {
@@ -13,7 +17,13 @@ aspect ControlFlow {
 	
 	syn String CFGEntry.toString() = "Entry";
 	syn String CFGExit.toString() = "Exit";
+	/**
+	 * The entry node to the CFG
+	 */
 	inh CFGEntry CFGNode.entry();
+	/**
+     * The exit node to the CFG
+     */
 	inh CFGExit CFGNode.exit();
 
 	syn nta CFGEntry MethodImpl.entry() = new CFGEntry();
@@ -71,7 +81,9 @@ aspect ControlFlow {
 	eq MainBlock.getStmt(int i).exit() = exit();
 
 	//== Predecessors ==
-	
+	/**
+	 * The predecessor nodes of the current one
+	 */
 	coll BitVec<CFGNode> CFGNode.pred() with add root ModuleDecl;
 	// Stmt contributes this to CFGNode.pred() for each succ();
 
@@ -283,6 +295,9 @@ aspect ControlFlow {
 	eq WhileStmt.succ() = following().union(getBody()).union(getCondition().canThrow() ? new BitVec<>(throwTarget()) : new BitVec<>());
 	eq WhileStmt.getBody().following() = new BitVec<CFGNode>(this);
 
+    /**
+     * The closest stmt. May be a virtual statement used to model complex expressions such as Let
+     */
 	inh Stmt Exp.parentStmt();
 
 	eq AssertStmt.getCondition().parentStmt() = this;
@@ -332,7 +347,9 @@ aspect ControlFlow {
 
 	//== Exceptions ==
 
-	// The closest surrounding catch or the exit node
+	/**
+	 * The closest surrounding catch or the exit node
+	 */
 	inh CFGNode CFGNode.throwTarget();
 	eq MethodImpl.getChild(int i).throwTarget() = exit();
 	eq InitBlock.getChild(int i).throwTarget() = exit();

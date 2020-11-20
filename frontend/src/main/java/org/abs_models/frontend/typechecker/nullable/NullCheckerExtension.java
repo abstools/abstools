@@ -13,6 +13,9 @@ import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Checks whether all assignments, calls, etc. adhere to the declared nullable types
+ */
 public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public static String NULLABLE_KEY = "NULLABLE_KEY";
     private NullableType defaultType = NullableType.Nullable;

@@ -2,6 +2,9 @@ import org.abs_models.frontend.typechecker.nullable.NullableType;
 import org.abs_models.frontend.analyser.BitVec;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
+/**
+ * Computes whether references (or futures) are NonNull using data flow analysis
+ */
 aspect NonNull {
 
   /**
@@ -53,6 +56,9 @@ aspect NonNull {
   }
 
   // == NonNull in ==
+  /**
+   * Used to compute nonNull, do not use directly
+   */
   syn BitVec<VarOrFieldDecl> CFGNode.nonNull_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
@@ -107,11 +113,20 @@ aspect NonNull {
   
 
   // == NonNull out ==
-  // For most stmts out = in
+  /**
+   * Used to compute nonNull, do not use directly
+   * For most stmts out = in
+   */
   syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out() circular [entry().getAllVarOrFieldDecls()] = nonNull_in();
-  // What gets propagated to the `then` successors of a conditional node (if, while)
+  /**
+   * Used to compute nonNull, do not use directly
+   * What gets propagated to the `then` successors of a conditional node (if, while)
+   */
   syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out_then() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
-  // What gets propagated to the `else` successors of a conditional node (if, while)
+  /**
+   * Used to compute nonNull, do not use directly
+   * What gets propagated to the `else` successors of a conditional node (if, while)
+   */
   syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out_else() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
 
   // Add all declarations to the entry that we know are NonNull (i.e., relevant params and fields)
@@ -247,11 +262,18 @@ aspect NonNull {
 
   // Expressions can alter nullability, but most don't
 
-  // We get the current nullability from the parent stmt.
-  // We could just make expressions nodes, but that would complicate the analysis
-  // We also could just pass the current nonNull-set to the `nonNull` attribute, but we that would make the API more difficult to use
+  /**
+   * Used to compute nonNull, do not use directly
+   *
+   * We get the current nullability from the parent stmt.
+   * We could just make expressions nodes, but that would complicate the analysis
+   * We also could just pass the current nonNull-set to the `nonNull` attribute, but we that would make the API more difficult to use
+   */
   syn BitVec<VarOrFieldDecl> Exp.nonNull_in() = parentStmt().nonNull_in();
 
+  /**
+   * Used to compute nonNull, do not use directly
+   */
   syn BitVec<VarOrFieldDecl> Exp.nonNull_out();
 
   // Most expressions don't change the set
@@ -374,7 +396,9 @@ aspect NonNull {
 
   eq Unary.nonNull() = false;
 
-  // Wether this expr is `id == null` or `null == id`
+  /**
+   * Whether this expr is `id == null` or `null == id`
+   */
   syn VarOrFieldDecl PureExp.testsNull() = null;
   eq EqExp.testsNull() {
     PureExp l = getLeft();
@@ -392,7 +416,9 @@ aspect NonNull {
     return null;
   }
 
-  // Wether this expr is `id != null` or `null != id`
+  /**
+   * Whether this expr is `id != null` or `null != id`
+   */
   syn VarOrFieldDecl PureExp.testsNotNull() = null;
   eq NotEqExp.testsNotNull() {
     PureExp l = getLeft();
@@ -410,6 +436,9 @@ aspect NonNull {
     return null;
   }
 
+  /**
+   * Whether the annotation is the NonNull annotation
+   */
   syn boolean Annotation.nonNull() {
     PureExp e = getValue();
     if (e instanceof DataConstructorExp) {
@@ -423,6 +452,9 @@ aspect NonNull {
   }
 
   // == Parameters ==
+  /**
+   * Whether the param is declared as NonNull
+   */
   syn boolean ParamDecl.nonNull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
@@ -430,6 +462,9 @@ aspect NonNull {
   }
 
   // == MethodSig ==
+  /**
+   * Whether the method return type is declared as NonNull
+   */
   syn boolean MethodSig.nonNull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
@@ -437,6 +472,9 @@ aspect NonNull {
   }
 
   // == Function ==
+  /**
+   * Whether the function is declared as NonNull
+   */
   syn boolean FunctionDecl.nonNull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
@@ -444,6 +482,9 @@ aspect NonNull {
   }
 
   // == Partial Function
+  /**
+   * Whether the function is declared as NonNull
+   */
   syn boolean PartialFunctionDecl.nonNull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
@@ -451,6 +492,9 @@ aspect NonNull {
   }
 
   // == VarOrFieldDecl
+  /**
+   * Whether the variable or field is declared as NonNull
+   */
   syn boolean VarOrFieldDecl.nonNull() = false;
 
   eq TypedVarOrFieldDecl.nonNull() {

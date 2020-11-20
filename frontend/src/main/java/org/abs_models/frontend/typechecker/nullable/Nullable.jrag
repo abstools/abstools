@@ -1,5 +1,8 @@
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
+/**
+ * Gives access to the nullable type of expressions
+ */
 aspect Nullable {
   public interface HasNullableType {
         NullableType getNullableType();
@@ -40,6 +43,9 @@ aspect Nullable {
   }
 
   // == MethodSig ==
+  /**
+   * Whether the return type is declared as Nullable
+   */
   syn boolean MethodSig.nullable() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
@@ -47,6 +53,9 @@ aspect Nullable {
   }
 
   // == Function ==
+  /**
+   * Whether the return type is declared as Nullable
+   */
   syn boolean FunctionDecl.nullable() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
@@ -54,6 +63,9 @@ aspect Nullable {
   }
 
   // == Partial Function
+  /**
+   * Whether the return type is declared as Nullable
+   */
   syn boolean PartialFunctionDecl.nullable() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
@@ -61,6 +73,9 @@ aspect Nullable {
   }
 
   // == VarOrFieldDecl
+  /**
+   * Whether the variable or field type is declared as Nullable
+   */
   syn boolean VarOrFieldDecl.nullable() = false;
 
   eq TypedVarOrFieldDecl.nullable() {
@@ -69,26 +84,41 @@ aspect Nullable {
     return nt.isNullable();
   }
 
+  /**
+   * The nullable type of this parameter
+   */
   syn NullableType ParamDecl.getNullableType() {
     Type t = getType();
     return NullCheckerExtension.getNullableType(t);
   }
 
+  /**
+   * The nullable type of the return type
+   */
   syn NullableType MethodSig.getNullableType() {
     Type t = getType();
     return NullCheckerExtension.getNullableType(t);
   }
 
+  /**
+   * The nullable type of the return type
+   */
   syn NullableType FunctionDecl.getNullableType() {
     Type t = getType();
     return NullCheckerExtension.getNullableType(t);
   }
 
+  /**
+   * The nullable type of the return type
+   */
   syn NullableType PartialFunctionDecl.getNullableType() {
     Type t = getType();
     return NullCheckerExtension.getNullableType(t);
   }
 
+  /**
+   * The nullable type of the this variable or field
+   */
   syn NullableType VarOrFieldDecl.getNullableType() {
     Type t = getType();
     return NullCheckerExtension.getNullableType(t);
