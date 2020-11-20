@@ -6,6 +6,9 @@ package org.abs_models.frontend.typechecker.locationtypes;
 
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
+/**
+ * The location type of objects
+ */
 public class LocationType {
     public static final String LOCATION_KEY = "LOCATION_KEY";
 
@@ -75,6 +78,12 @@ public class LocationType {
             || t.isSomewhere();
     }
 
+    /**
+     * Tries to find the adapted constrained, i.e., to make a type relative to another type
+     * @param to - The type to adapt relative to
+     * @param dir - The direction
+     * @return - The adapted type
+     */
     public LocationType adaptTo(LocationType to, AdaptDirection dir) {
         // Bottom stays the same
         if (isBottom()) return this;

@@ -1,28 +1,18 @@
 package org.abs_models.frontend.typechecker.locationtypes;
 
-import org.abs_models.backend.common.InternalBackendException;
-import org.abs_models.frontend.analyser.HasCogs;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.*;
-import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.typechecker.Type;
 import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import org.abs_models.frontend.typechecker.ext.TypeSystemExtension;
-import org.sat4j.minisat.learning.ClauseOnlyLearning;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 
 public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
-    private final Constraints constraints = new Constraints();
-    private final Scope farTypeScope = Scope.CLASS_LOCAL_FAR;
-    private Map<HasCogs, List<LocationType>> farTypes = new HashMap<>();
+    private final ConstraintCollection constraints = new ConstraintCollection();
 
     private LocationType defaultType = LocationType.INFER;
 

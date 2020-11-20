@@ -14,6 +14,10 @@ import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
 import java.util.Map;
 
+/**
+ * Checks that all given location types are correct and all assignments/calls/.. adhere to them.
+ * Does no type inference
+ */
 public class LocationTypeExtension extends DefaultTypeSystemExtension {
 
     private LocationType defaultType = LocationType.SOMEWHERE;
@@ -134,6 +138,4 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     public void adaptTo(Type type, AdaptDirection dir, Type to) {
         setLocationType(type, getLocationType(type).adaptTo(getLocationType(to), dir));
     }
-
-
 }

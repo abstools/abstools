@@ -5,6 +5,9 @@ import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 
 import java.util.Objects;
 
+/**
+ * Represents a relationship of location type variables
+ */
 public abstract class Constraint {
     public final ASTNode<?> node;
 
@@ -12,24 +15,55 @@ public abstract class Constraint {
         this.node = node;
     }
 
+    /**
+     * Determines whether the constraint contains `lv`
+     * @param lv - The variable to test for
+     * @return - Whether `lv` is in the constraint
+     */
     abstract boolean contains(LocationTypeVar lv);
 
+    /**
+     *
+     * @return - All variables in the constraint
+     */
     abstract LocationTypeVar[] vars();
 
+    /**
+     *
+     * @return Whether the constraint is a sub-constraint
+     */
     public boolean isSub() {
         return false;
     }
 
+    /**
+     *
+     * @return Whether the constraint is an eq-constraint
+     */
     public boolean isEq() {
         return false;
     }
 
+    /**
+     *
+     * @return Whether the constraint is an adapt-constraint
+     */
     public boolean isAdapt() {
         return false;
     }
 
+    /**
+     * Replaces all occurrences of `from` with `to`
+     */
     public abstract Constraint replace(LocationTypeVar from, LocationTypeVar to);
 
+    /**
+     * Creates a new constraint: `expected` <: `actual`
+     * @param expected - The lhs of the constraint
+     * @param actual - The rhs of the constraint
+     * @param node - The corresponding node
+     * @return - The new sub constraint
+     */
     public static Constraint sub(LocationTypeVar expected, LocationTypeVar actual, ASTNode<?> node) {
         if (expected == null) {
             System.out.println("Expected is null in " + node);
@@ -38,10 +72,26 @@ public abstract class Constraint {
         return new Sub(expected, actual, node);
     }
 
+    /**
+     * Creates a new constraint: `expected` = `actual`
+     * @param expected - The lhs of the constraint
+     * @param actual - The rhs of the constraint
+     * @param node - The corresponding node
+     * @return - The new eq constraint
+     */
     public static Constraint eq(LocationTypeVar expected, LocationTypeVar actual, ASTNode<?> node) {
         return new Eq(expected, actual, node);
     }
 
+    /**
+     * Creates a new constraint: `expected` = `actual` |> `adaptTo`
+     * @param expected - The lhs of the constraint
+     * @param actual - The rhs of the constraint
+     * @param dir - The adaption direction
+     * @param adaptTo - The variable to adapt to
+     * @param node - The corresponding node
+     * @return - The new adapt constraint
+     */
     public static Constraint adapt(LocationTypeVar expected, LocationTypeVar actual, AdaptDirection dir, LocationTypeVar adaptTo, ASTNode<?> node) {
         return new Adapt(expected, actual, dir, adaptTo, node);
     }
@@ -152,6 +202,7 @@ public abstract class Constraint {
         }
     }
 
+    // expected = actual |> adaptTo, used for calls
     public static class Adapt extends Constraint {
         public final LocationTypeVar expected;
         public final LocationTypeVar actual;

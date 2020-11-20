@@ -6,6 +6,9 @@ import org.abs_models.frontend.typechecker.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Used to abstract location types for inference
+ */
 public class LocationTypeVar {
     public static final String LOCATION_VAR_KEY = "LOCATION_VAR_KEY";
 

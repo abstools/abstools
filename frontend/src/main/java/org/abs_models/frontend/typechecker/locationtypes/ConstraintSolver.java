@@ -10,9 +10,11 @@ import java.util.*;
 
 import static org.abs_models.frontend.typechecker.locationtypes.LocationTypeVar.*;
 
-
+/**
+ * Tries to find an optimal mapping from variables to location types in order to satisfy all constraints
+ */
 public class ConstraintSolver {
-    private final Constraints constraints;
+    private final ConstraintCollection constraints;
     private final SemanticConditionList errors = new SemanticConditionList();
     private final Map<LocationTypeVar, LocationTypeVar> rewritten = new HashMap<>();
     private final Set<LocationTypeVar> allVars;
@@ -21,12 +23,16 @@ public class ConstraintSolver {
 
     private boolean debug;
 
-    public ConstraintSolver(Constraints cs, boolean debug) {
+    public ConstraintSolver(ConstraintCollection cs, boolean debug) {
         this.constraints = cs;
         this.allVars = new HashSet<>(cs.getVars());
         this.debug = debug;
     }
 
+    /**
+     * Tries to find an optimal mapping from variables to location types in order to satisfy all constraints
+     * @return - The found mapping
+     */
     public Map<LocationTypeVar, LocationType> solve() {
         Map<LocationTypeVar, LocationType> resolved = new HashMap<>();
         resolved.put(BOTTOM, LocationType.BOTTOM);
@@ -59,6 +65,11 @@ public class ConstraintSolver {
         return resolved;
     }
 
+    /**
+     * Resolve one constrained
+     * @param resolved - Already resolved vars and their type
+     * @param c - The constraint to resolve
+     */
     private void resolve(Map<LocationTypeVar, LocationType> resolved, Constraint c) {
         // Resolve equals
         if (c.isEq()) resolveEq(resolved, (Constraint.Eq) c);
@@ -67,6 +78,11 @@ public class ConstraintSolver {
         else if (c.isAdapt()) resolveAdapt(resolved, (Constraint.Adapt) c);
     }
 
+    /**
+     * Resolve one eq constrained
+     * @param resolved - Already resolved vars and their type
+     * @param eq - The constraint to resolve
+     */
     private void resolveEq(Map<LocationTypeVar, LocationType> resolved, Constraint.Eq eq) {
         LocationTypeVar expected = getRewritten(eq.expected);
         LocationTypeVar actual = getRewritten(eq.actual);
@@ -97,6 +113,11 @@ public class ConstraintSolver {
         rewrite(expected, actual);
     }
 
+    /**
+     * Resolve one sub constrained
+     * @param resolved - Already resolved vars and their type
+     * @param sub - The constraint to resolve
+     */
     private void resolveSub(Map<LocationTypeVar, LocationType> resolved, Constraint.Sub sub) {
         LocationTypeVar expected = getRewritten(sub.expected);
         LocationTypeVar actual = getRewritten(sub.actual);
@@ -126,7 +147,6 @@ public class ConstraintSolver {
         }
 
         if (actual == FAR) {
-            // TODO par far
             add(Constraint.eq(expected, FAR, node));
             return;
         }
@@ -178,6 +198,11 @@ public class ConstraintSolver {
         keep(sub);
     }
 
+    /**
+     * Resolve one adapt constrained
+     * @param resolved - Already resolved vars and their type
+     * @param adapt - The constraint to resolve
+     */
     private void resolveAdapt(Map<LocationTypeVar, LocationType> resolved, Constraint.Adapt adapt) {
         LocationTypeVar expected = getRewritten(adapt.expected);
         LocationTypeVar actual = getRewritten(adapt.actual);
@@ -224,10 +249,20 @@ public class ConstraintSolver {
         keep(adapt);
     }
 
+    /**
+     * Get the variable we should use for `lv` as it may have been rewritten
+     * @param lv - The var to look up
+     * @return - The variable to use in `lv`s place
+     */
     private LocationTypeVar getRewritten(LocationTypeVar lv) {
         return rewritten.getOrDefault(lv, lv);
     }
 
+    /**
+     * Rewrite all constraints to use `to` rather than `from`. Store this information
+     * @param from - The old var
+     * @param to - The var to use
+     */
     private void rewrite(LocationTypeVar from, LocationTypeVar to) {
         if (debug)
             System.out.println((char) 27 + "[34m" + "Rewriting " + from + " => " + to + (char) 27 + "[0m");
@@ -245,6 +280,10 @@ public class ConstraintSolver {
         rewritten.put(from, to);
     }
 
+    /**
+     * Apply all updates we have collected this iteration
+     * @return - Whether any changes have occurred
+     */
     private boolean applyUpdates() {
         boolean changed = false;
         for (Update u : updates) {
@@ -287,6 +326,9 @@ public class ConstraintSolver {
         ADD, REMOVE, KEEP
     }
 
+    /**
+     * Used to track changes
+     */
     private static class Update {
         public UpdateKind kind;
         public Constraint constraint;
