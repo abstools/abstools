@@ -43,6 +43,9 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         return "Erlang";
     }
 
+    // Terminate tests after 2 minutes to deal with deadlocks
+    public static long test_timeout = 120000;
+
     public static boolean checkErlang() {
         /* TODO: Should be checked earlier instead, before configuring the JUnit suites. */
         String doAbs = System.getProperty("abs.junit.erlang");
@@ -320,7 +323,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         pb.redirectErrorStream(true);
         Process p = pb.start();
 
-        final TimeoutThread tt = new TimeoutThread(p);
+        final TimeoutThread tt = new TimeoutThread(p, test_timeout);
         final Thread t = new Thread(tt);
 
         try ( // try-with-resources statement, which will ensure, that the declared resources are closed
@@ -345,6 +348,9 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
                 else if (p.isAlive()) {
                     Thread.sleep(100);
                 }
+            }
+            if (tt.hasBeenAborted()) {
+                throw new java.util.concurrent.TimeoutException("Test did not complete within timeout.");
             }
         }
 
@@ -417,17 +423,19 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 class TimeoutThread implements Runnable {
 
     private final Process p;
+    private final long timeout;
     private boolean aborted = false;
 
-    public TimeoutThread(Process p) {
+    public TimeoutThread(Process p, long timeout) {
         super();
         this.p = p;
+        this.timeout = timeout;
     }
 
     @Override
     public void run() {
         try {
-            Thread.sleep(60000); // timeout before aborting the test (which for example can happen in the case of a deadlock test)
+            Thread.sleep(timeout);
 
             if (p.isAlive()) { // If the test is still running by now, terminate it
                 p.destroyForcibly();

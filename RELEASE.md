@@ -8,7 +8,7 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
-- Run unit tests for erlang backend with pessimal gc (in file `frontend/src/main/resources/erlang/absmodel/src/gc.erl`, replace the body of `gc:is_collection_needed/1` with `true`)
+- Run unit tests for erlang backend with pessimal gc (in file `frontend/src/main/resources/erlang/absmodel/src/gc.erl`, replace the body of `gc:is_collection_needed/1` with `true`).  In case of suspicious test timeout failures, raise the value of `ErlangTestDriver.test_timeout` -- but note that timeouts are a symptom of gc deadlocks as well.
 
 - Manually compile and run a small model on macOS, Linux, Windows
 
