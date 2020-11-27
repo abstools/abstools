@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.8">
+<meta name="generator" content="Asciidoctor 2.0.10">
 <meta name="keywords" content="ABS, manual, modeling languages, programming languages">
 <meta name="author" content="ABS Development Team">
 <meta name="copyright" content="CC-BY-SA 3.0">
@@ -746,7 +746,7 @@ p { margin-bottom: 1.25rem; }
 <h1>ABS Documentation</h1>
 <div class="details">
 <span id="author" class="author">ABS Development Team</span><br>
-<span id="revnumber">version v1.9.0</span>
+<span id="revnumber">version v1.9.1</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -811,9 +811,10 @@ p { margin-bottom: 1.25rem; }
 <li><a href="#sec:interfaces">7. Interfaces</a></li>
 <li><a href="#sec:classes">8. Classes</a>
 <ul class="sectlevel2">
-<li><a href="#-atomic-methods">8.1. Atomic Methods</a></li>
-<li><a href="#-constant-fields">8.2. Constant Fields</a></li>
-<li><a href="#sec:active-classes">8.3. Active Classes</a></li>
+<li><a href="#-constant-fields">8.1. Constant Fields</a></li>
+<li><a href="#-read-only-methods">8.2. Read-only Methods</a></li>
+<li><a href="#-atomic-methods">8.3. Atomic Methods</a></li>
+<li><a href="#sec:active-classes">8.4. Active Classes</a></li>
 </ul>
 </li>
 <li><a href="#sec:traits">9. Traits</a></li>
@@ -839,6 +840,7 @@ p { margin-bottom: 1.25rem; }
 <li><a href="#type-pair">11.11. Pairs</a></li>
 <li><a href="#type-triple">11.12. Triples</a></li>
 <li><a href="#type-optionals">11.13. Optionals</a></li>
+<li><a href="#stdlib-others">11.14. Others</a></li>
 </ul>
 </li>
 <li><a href="#-the-model-api">12. The Model API</a>
@@ -852,12 +854,13 @@ p { margin-bottom: 1.25rem; }
 <li><a href="#-invoking-methods">12.7. Invoking methods</a></li>
 <li><a href="#-the-model-api-and-timed-abs">12.8. The Model API and Timed ABS</a></li>
 <li><a href="#-customizing-the-browser-based-visualization">12.9. Customizing the Browser-Based Visualization</a></li>
+<li><a href="#customizing-url-prefixes">12.10. Customizing the Model API URL</a></li>
 </ul>
 </li>
 <li><a href="#sec:timed-abs">13. Timed ABS</a>
 <ul class="sectlevel2">
 <li><a href="#-datatypes-and-constructors-11">13.1. Datatypes and Constructors</a></li>
-<li><a href="#-functions-9">13.2. Functions</a></li>
+<li><a href="#-functions-10">13.2. Functions</a></li>
 <li><a href="#-statements-2">13.3. Statements</a></li>
 <li><a href="#-semantics-of-time-advancement">13.4. Semantics of Time Advancement</a></li>
 <li><a href="#timed-abs-and-model-api">13.5. Timed ABS and the Model API</a></li>
@@ -3189,7 +3192,7 @@ def A head&lt;A&gt;(List&lt;A&gt; list) = <i class="conum" data-value="3"></i><b
 The ABS standard library contains some special functions that cannot be
 defined with pure expressions, for example the function <code>println</code>.  The
 definition of such functions is done via a special function body of the form
-<code>builtin</code>, with optional string argument notation <code>builtin["a", "b"]</code>.  Such
+<code>builtin</code>, with optional pure expression arguments <code>builtin(a, "b", 3)</code>.  Such
 builtin functions have to be defined separately in the code generator for each
 backend where the model is compiled; details of this are
 implementation-specific and outside the scope of this manual.
@@ -3941,7 +3944,7 @@ executing that statement.</p>
 <div class="content">
 <pre class="highlight"><code>Pair&lt;Int, Int&gt; p = Pair(2, 3);
 Int x = 0;
-switch p {
+switch (p) {
   Pair(2, y) =&gt; { x = y; skip; }
   _ =&gt; x = -1;
 }</code></pre>
@@ -3979,11 +3982,16 @@ condition is re-evaluated after each iteration of the loop.</p>
 <div class="sect2">
 <h3 id="foreach-loop">6.14. The Foreach Loop</h3>
 <div class="paragraph">
-<p>The foreach loop repeatedly executes its body with the loop variable bound to
-each element of the given list, in sequence.  The rules for the loop variable
-follow the rules of local variable declarations in blocks: the loop variable
-cannot shadow an existing variable, but can use the same name as an object
-field.</p>
+<p>The foreach loop repeatedly executes its body with a loop value variable bound
+to each element of the given list, in sequence.  An optional loop index
+variable is bound to the index of the element bound to the value variable,
+starting with 0.</p>
+</div>
+<div class="paragraph">
+<p>The rules for the loop variables follow the rules of local variable
+declarations in blocks: the loop variables cannot shadow existing variables,
+but can use the same name as an object field.  Loop variables go out of scope
+after execution leaves the body of their foreach loop.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -3992,8 +4000,8 @@ field.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Also see the second-order functions like <code>map</code> and <code>filter</code> in
-Section <a href="#type-list">Lists</a> for common list processing idioms.
+Also see the second-order functions <code>map</code>, <code>filter</code>, <code>foldl</code> and <code>foldr</code>
+in Section <a href="#type-list">Lists</a> for common list processing idioms.
 </td>
 </tr>
 </table>
@@ -4007,15 +4015,19 @@ Section <a href="#type-list">Lists</a> for common list processing idioms.
 <tbody>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>ForeachStmt</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>foreach</code> <code>(</code> <em>Identifier</em> <code>in</code> <em>PureExp</em> <code>)</code> <em>Stmt</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>foreach</code> <code>(</code> <em>Identifier</em> [ <code>,</code> <em>identifier</em>] <code>in</code> <em>PureExp</em> <code>)</code> <em>Stmt</em></p></td>
 </tr>
 </tbody>
 </table>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>foreach (i in list[1, 2, 3]) {
-  println("i = " + toString(i));
+<pre class="highlight"><code>foreach (v in list["a", "b", "c"]) {
+  println(`v is bound to $v$`);
+}
+
+foreach (v, i in list["a", "b", "c"]) {
+  println(`Element number $i$ has value $v$`);
 }</code></pre>
 </div>
 </div>
@@ -4173,6 +4185,11 @@ Method names start with a lowercase letter.</p>
 compiler will statically check that any definitions for this method contain no
 suspension points (<code>suspend</code> and <code>await</code> statements), i.e., that running that
 method will complete without scheduling.</p>
+</div>
+<div class="paragraph">
+<p>If a method declarations in an interface has a <code>[Readonly]</code> annotation, the
+compiler will statically check that any definitions for this method contain no
+assignments to fields.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -4394,38 +4411,7 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 </div>
 </div>
 <div class="sect2">
-<h3 id="-atomic-methods">8.1. Atomic Methods</h3>
-<div class="paragraph">
-<p>Definitions for atomic method declarations have to be annotated with
-<code>[Atomic]</code> as well.  The compiler will statically check that the definition
-does not contain suspension points (<code>suspend</code> and <code>await</code> statements) and
-blocking <code>get</code> expressions.  Such methods can be called inside init blocks and
-in <code>finally</code> clauses; all other methods cannot be called in these places.</p>
-</div>
-<div class="paragraph">
-<p>The following example shows a call to an atomic method from an init block.
-Removing the <code>Atomic</code> annotation from method <code>m</code> would lead to a compile-time
-error.</p>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="highlight"><code>class Sample {
-    Int field = 12;
-
-    {
-        field = this.m();
-    }
-
-    [Atomic] Int m() {
-        return 24;
-    }
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="-constant-fields">8.2. Constant Fields</h3>
+<h3 id="-constant-fields">8.1. Constant Fields</h3>
 <div class="paragraph">
 <p>Similar to variable declarations, field declarations and class parameters can
 carry a <code>Final</code> annotation.  the effect of such an annotation is to forbid
@@ -4453,7 +4439,70 @@ assign new values to two fields declared as <code>Final</code>:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="sec:active-classes">8.3. Active Classes</h3>
+<h3 id="-read-only-methods">8.2. Read-only Methods</h3>
+<div class="paragraph">
+<p>For any method definition annotated with <code>[Readonly]</code>, the compiler will
+statically check that its body does not contain assignments to fields.</p>
+</div>
+<div class="paragraph">
+<p>If an interface declares a method to be read-only, its definition has to be
+annotated with <code>[Readonly]</code> as well.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows a class declaration with an atomic method that
+will lead to a compile error.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>class Wrong {
+    Int field = 12;
+
+    // This will not compile
+    [Readonly] Unit fails() {
+        field = field + 1;
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="-atomic-methods">8.3. Atomic Methods</h3>
+<div class="paragraph">
+<p>For any method definition annotated with <code>[Atomic]</code>, the compiler will
+statically check that its body does not contain suspension points
+(<code>suspend</code> and <code>await</code> statements) and blocking <code>get</code> expressions.  Such
+methods can be called inside init blocks and in <code>finally</code> clauses; all other
+methods cannot be called in these places.</p>
+</div>
+<div class="paragraph">
+<p>If an interface declares a method to be atomic, its definition has to be
+annotated with <code>[Atomic]</code> as well.</p>
+</div>
+<div class="paragraph">
+<p>The following example shows a call to an atomic method from an init block.
+Removing the <code>Atomic</code> annotation from method <code>m</code> would lead to a compile-time
+error.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>class Sample {
+    Int field = 12;
+
+    {
+        field = this.m();
+    }
+
+    [Atomic] Int m() {
+        return 24;
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="sec:active-classes">8.4. Active Classes</h3>
 <div class="paragraph">
 <p>A class can be active or passive. Active classes start an activity on their own upon creation. Passive classes only react to incoming method calls. A class is active if and only if it has a run method:</p>
 </div>
@@ -6044,7 +6093,7 @@ respectively.  The constructor is called <code>Pair</code> as well.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Triple&lt;Int, String, Bool&gt; triple = Pair(15, "Hello World", False);</code></pre>
+<pre class="highlight"><code>Triple&lt;Int, String, Bool&gt; triple = Triple(15, "Hello World", False);</code></pre>
 </div>
 </div>
 </div>
@@ -6099,6 +6148,19 @@ Maybe&lt;String&gt; question = Nothing;</code></pre>
 <div class="content">
 <pre class="highlight"><code>def A fromJust&lt;A&gt;(Maybe&lt;A&gt; m);</code></pre>
 </div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="stdlib-others">11.14. Others</h3>
+<div class="paragraph">
+<p>This subsection lists definitions of the standard library that do not fit in any other sections.</p>
+</div>
+<div class="sect3">
+<h4 id="-functions-9">Functions</h4>
+<div class="paragraph">
+<div class="title">ms_since_model_start</div>
+<p>The function <code>ms_since_model_start</code> returns a non-negative integer containing the number of milliseconds elapsed since the model was started.  It is useful mainly for benchmarking.</p>
 </div>
 </div>
 </div>
@@ -6498,6 +6560,20 @@ $ curl -d "{ 'param1': 'value', 'param2': 50 }" http://localhost:8080/call/C1/me
 });</code></pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Note the missing solidus (<code>/</code>) at the beginning of the query url&#8201;&#8212;&#8201;this
+makes the request robust against custom url prefixes (see
+<a href="#customizing-url-prefixes">Customizing the Model API URL</a>).
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>Care must be taken to disable timeouts on the HTTP client when querying for
 long-running methods in this way.</p>
@@ -6562,7 +6638,7 @@ the call was received by the Model API.</p>
 web browser.  The <code>--modelapi-index-file</code> command-line switch is used
 to supply an <code>index.html</code> file at compile-time:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
 <pre>$ absc --erlang --modelapi-index-file ./index.html *.abs</pre>
 </div>
@@ -6578,7 +6654,7 @@ e.g., CSS files, images or JavaScript libraries.  The contents of one
 directory can be added to the model via the <code>--modelapi-static-dir</code>
 command-line switch:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
 <pre>$ absc --erlang --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs</pre>
 </div>
@@ -6587,7 +6663,43 @@ command-line switch:</p>
 <p>The contents of the given directory are copied at compile-time.  The
 files within that directory are available within the Model API below
 the <code>static/</code> path.  For example, a file <code>./support-files/js/d3.js</code>
-will be accessible as <code><a href="http://localhost:8080/static/js/d3.js" class="bare">http://localhost:8080/static/js/d3.js</a></code>.</p>
+will be accessible as <code><a href="http://localhost:8080/static/js/d3.js" class="bare">http://localhost:8080/static/js/d3.js</a></code>, and can be referred within the <code>index.html</code> file like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>&lt;script type="text/javascript" src="static/js/d3.js"&gt;&lt;/script&gt;</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="customizing-url-prefixes">12.10. Customizing the Model API URL</h3>
+<div class="paragraph">
+<p>It is sometimes necessary to change the url under which the model publishes
+the given <code>index.html</code> file and static files.  When starting a model, the
+parameter <code>--url-prefix</code> can be used to insert a prefix to these paths, and
+to the <code>/call</code> and <code>/o</code> URLs described above.</p>
+</div>
+<div class="paragraph">
+<p>As an example, the following command will make the index file given at compile-time available at <a href="http://localhost:8080/abcd/5080/index.html" class="bare">http://localhost:8080/abcd/5080/index.html</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ gen/erl/run -p 8080 --url-prefix /abcd/5080</pre>
+</div>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+In the <code>index.html</code> file, do not use an initial solidus (<code>/</code>) to
+refer to static files and method calls, since such http requests will not work
+when the model is run with an url prefix. Instead of <code>&lt;script src="/static/js/d3.js"&gt;&lt;/script&gt;</code>, write <code>&lt;script src="static/js/d3.js"&gt;&lt;/script&gt;</code>.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -6671,7 +6783,7 @@ data Duration = Duration(Rat durationValue) | InfDuration;</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="-functions-9">13.2. Functions</h3>
+<h3 id="-functions-10">13.2. Functions</h3>
 <div class="paragraph">
 <div class="title">now</div>
 <p>The function <code>now</code> always returns the current time.</p>
@@ -6846,6 +6958,10 @@ until at least <code>min</code> and at most <code>max</code> time units have pas
 duration(min, max)</code> statement (see <a href="#await-stmt">Await Statement</a>) suspends the current
 process until at least <code>min</code> and at most <code>max</code> time units have passed.</p>
 </div>
+<div class="paragraph">
+<p>The second argument to <code>duration</code> can be omitted; <code>duration(x)</code> is interpreted
+the same as <code>duration(x, x)</code>.</p>
+</div>
 <table class="tableblock frame-topbot grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
@@ -6855,7 +6971,7 @@ process until at least <code>min</code> and at most <code>max</code> time units 
 <tbody>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>DurationStmt</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>duration</code> <code>(</code> <em>PureExp</em> <code>,</code> <em>PureExp</em> <code>)</code> <code>;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>duration</code> <code>(</code> <em>PureExp</em> [ <code>,</code> <em>PureExp</em> ] <code>)</code> <code>;</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>AwaitStmt</em> ::=</p></td>
@@ -6867,7 +6983,7 @@ process until at least <code>min</code> and at most <code>max</code> time units 
 </tr>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>DurationGuard</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>duration</code> <code>(</code> <em>PureExp</em> <code>,</code> <em>PureExp</em> <code>)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>duration</code> <code>(</code> <em>PureExp</em> [ <code>,</code> <em>PureExp</em> ] <code>)</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -8927,8 +9043,8 @@ No other runtime system libraries and dependencies will be generated.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version v1.9.0<br>
-Last updated 2020-03-19 17:59:24 +0100
+Version v1.9.1<br>
+Last updated 2020-09-21 14:44:57 +0200
 </div>
 </div>
 </body>
