@@ -69,7 +69,7 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 - push release commit (`git push`)
 
 - update [https://abs-models.org/manual/]: copy the content of
-    `abs-docs/build/asciidoc/html5/` into the `static/manual/` subdirectory of
+    `abs-docs/build/docs/asciidoc/html5/` into the `static/manual/` subdirectory of
     the repository at [https://github.com/abstools/abs-models.org], then
     redeploy the website
 
@@ -97,6 +97,13 @@ versions (e.g., Java 11) cannot be used with earlier versions.
   - `docker push abslang/collaboratory:latest`
   - `docker push abslang/absc:x.y.z`
   - `docker push abslang/absc:latest`
+
+- Update the collaboratory
+
+  - `docker stop easyinterface`
+  - `docker rm easyinterface`
+  - `docker pull abslang/collaboratory:latest`
+  - `docker run -d -p 8080:80 --restart unless-stopped --name easyinterface abslang/collaboratory:latest`
 
 # Version numbering
 
