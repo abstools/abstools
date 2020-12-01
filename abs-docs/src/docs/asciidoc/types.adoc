@@ -280,3 +280,38 @@ type Packet = String;
 type File = List<Packet>;
 type Catalog = List<Pair<Servername,Filenames>>;
 ----
+
+=== Location Types
+
+A _Location Type_ is an interface type annotated with a location.  The
+location is seen relative to the current context, and can be one of
+the following:
+
+.ABS built-in types
+[options="header"]
+|=====
+| Name | Description
+| `Far` | The object is on a different cog
+| `Near` | The object is on the same cog
+| `Somewhere` | The object is either `Near` or `Far`
+| `Infer` | Have the type-checker infer the location
+|=====
+
+When location type checking is active, the following example is
+erroneous, and will result in a type error:
+
+.Example
+[source]
+----
+interface I { }
+class C {
+    [Far] I m([Near] I o) {
+        return o; <1>
+    }
+    [Somewhere] I m2([Near] I o) {
+        return o; <2>
+    }
+}
+----
+<1> Here, `o` is of type `[Near] I`, which cannot be converted to the return type `[Far] I`.
+<2> Here, `o`’s type `[Near] I` can be converted to `[Somewhere] I`.
