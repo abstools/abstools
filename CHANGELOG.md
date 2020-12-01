@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- A fixed version of location type checking has been implemented, use the parameter `--loctypecheck` to enable location type checking.  Location types express whether a given object resides on the same cog as the current object.
+
 ### Changed
 
 ### Removed

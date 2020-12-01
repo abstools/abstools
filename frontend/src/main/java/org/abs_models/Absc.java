@@ -170,7 +170,7 @@ public class Absc implements Callable<Integer> {
             description = "disable typechecking")
     public boolean notypecheck = false;
 
-    @Option(names = { "--loctypes" },
+    @Option(names = { "--loctypecheck" },
             description = "enable location type checking")
     public boolean locationTypeInferenceEnabled = false;
 
