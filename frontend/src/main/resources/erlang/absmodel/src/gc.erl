@@ -226,7 +226,7 @@ sweep(Data=#data{cogs=Cogs,objects=Objects,futures=Futures,
                     true -> PFactor
                  end,
     Data#data{objects=BlackObjects, futures=BlackFutures, previous=erlang:monotonic_time(milli_seconds),
-                     limit=NewLim, proc_factor=PFactor}.
+                     limit=NewLim, proc_factor=NewPFactor}.
 
 get_references({_Module, null}) ->
     [];

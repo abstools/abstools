@@ -284,7 +284,7 @@ aspect PartialFunctionExpander {
 
         // apply type bindings to parameters
         for (ParamDecl param : decl.getParams()) {
-            applyBindings(typeBindings, param.getAccessNoTransform());
+            applyBindings(typeBindings, param.getTypeUseNoTransform());
         }
 
         // apply type bindings to body
@@ -295,7 +295,7 @@ aspect PartialFunctionExpander {
 
         // we need to find VarOrField declarations that have a changed type now and flush their cache
         for (TypedVarOrFieldDecl varDecl : decl.findChildren(TypedVarOrFieldDecl.class)) {
-            varDecl.getAccess().flushCache();
+            varDecl.getTypeUse().flushCache();
         }
 
         if (decl.getNumTypeParameter() == 0) {

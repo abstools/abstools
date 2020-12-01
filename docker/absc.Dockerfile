@@ -1,4 +1,4 @@
-FROM erlang:22-alpine AS jdk-erlang
+FROM erlang:23-alpine AS jdk-erlang
 RUN apk --update add \
         bash \
         nss \
@@ -10,7 +10,7 @@ FROM jdk-erlang AS builder
 COPY ./ /appSrc/
 WORKDIR /appSrc
 RUN chmod +x gradlew \
-    && ./gradlew --no-daemon frontend:plainJar
+    && ./gradlew --no-daemon frontend:assemble
 
 # A dockerfile for running the `absc` command-line compiler and the analysis
 # tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`.

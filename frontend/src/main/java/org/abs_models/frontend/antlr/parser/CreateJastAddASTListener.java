@@ -238,8 +238,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         FunctionDef d;
         if (ctx.e == null) {
             BuiltinFunctionDef bd = new BuiltinFunctionDef();
-            for (Token t : ctx.builtin_args) {
-                bd.addStringArg(makeStringLiteral(t.getText()));
+            if (ctx.pure_exp_list() != null) {
+                bd.setArgumentList(v(ctx.pure_exp_list()));
             }
             d = bd;
         } else {
@@ -436,7 +436,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new ClaimGuard(v(ctx.var_or_field_ref())));
     }
     @Override public void exitDurationGuard(ABSParser.DurationGuardContext ctx) {
-        setV(ctx, new DurationGuard(v(ctx.min), v(ctx.max)));
+        if (ctx.max != null) {
+            setV(ctx, new DurationGuard(v(ctx.min), v(ctx.max)));
+        } else {
+            setV(ctx, new DurationGuard(v(ctx.min), (PureExp)v(ctx.min).copy()));
+        }
     }
     @Override public void exitExpGuard(ABSParser.ExpGuardContext ctx) {
         setV(ctx, new ExpGuard(v(ctx.e)));
@@ -448,8 +452,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         setV(ctx, new SuspendStmt(v(ctx.annotations())));
     }
     @Override public void exitDurationStmt(ABSParser.DurationStmtContext ctx) {
-        setV(ctx, new DurationStmt(v(ctx.annotations()), v(ctx.f),
-            v(ctx.t)));
+        if (ctx.max != null) {
+            setV(ctx, new DurationStmt(v(ctx.annotations()), v(ctx.min), v(ctx.max)));
+        } else {
+            setV(ctx, new DurationStmt(v(ctx.annotations()), v(ctx.min), (PureExp)v(ctx.min).copy()));
+        }
     }
     @Override public void exitThrowStmt(ABSParser.ThrowStmtContext ctx) {
         setV(ctx, new ThrowStmt(v(ctx.annotations()), v(ctx.pure_exp())));
@@ -480,7 +487,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     // Annotations
     @Override public void exitAnnotation(ABSParser.AnnotationContext ctx) {
         if (ctx.l == null) setV(ctx, new Annotation(v(ctx.r)));
-        else setV(ctx, new TypedAnnotation(v(ctx.r), v(ctx.l)));
+        else setV(ctx, new TypedAnnotation(v(ctx.r), new UnresolvedTypeUse(ctx.l.getText(), new List<>())));
     }
 
     @Override public void exitAnnotations(ABSParser.AnnotationsContext ctx) {

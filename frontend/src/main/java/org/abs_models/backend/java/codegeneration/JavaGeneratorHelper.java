@@ -530,7 +530,7 @@ public class JavaGeneratorHelper {
         tempCounter = Math.max(tempCounter+1, 0);
         // copy value of variable to temporary, final variable
         beforeAwaitStream.print("final ");
-        vDecl.getAccess().generateJava(beforeAwaitStream);
+        vDecl.getTypeUse().generateJava(beforeAwaitStream);
         beforeAwaitStream.print(" " + tempName + " = " + name + ";");
         // replace variable name with name of temporary variable
         v.setName(tempName);

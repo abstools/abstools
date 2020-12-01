@@ -887,7 +887,7 @@ The `Triple<A, B, C>` datatype holds a triple of values of types `A`, `B` and
 
 [source]
 ----
-Triple<Int, String, Bool> triple = Pair(15, "Hello World", False);
+Triple<Int, String, Bool> triple = Triple(15, "Hello World", False);
 ----
 
 ==== Functions

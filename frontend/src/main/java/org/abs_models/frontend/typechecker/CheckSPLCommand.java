@@ -37,14 +37,6 @@ public class CheckSPLCommand implements Callable<Void> {
                 arity = "1..*")
     public List<File> files;
 
-    @Option(names = { "-v", "--verbose" },
-            description = "verbose output")
-    public boolean verbose = false;
-    @Option(names = { "--debug"},
-            description = "print diagnostic information (e.g., stacktraces) for internal compiler problems")
-    public boolean debug = false;
-
-
     // mTVL options
     @Option(names = { "--solve" },
             description = "solve constraint satisfaction problem (CSP) for the feature model and print a solution")
@@ -89,7 +81,7 @@ public class CheckSPLCommand implements Callable<Void> {
         if (n == 0)
             return;
 
-        if (verbose) {
+        if (parent.verbose) {
             System.out.println("Typechecking Software Product Line (" + n + " products)...");
         }
         SemanticConditionList errors = m.typeCheckPL();
@@ -101,19 +93,19 @@ public class CheckSPLCommand implements Callable<Void> {
     private void analyzeMTVL(Model m) {
         if (m.hasMTVL()) {
             if (solve) {
-                if (verbose)
+                if (parent.verbose)
                     System.out.println("Searching for solutions for the feature model...");
                 ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.getSolutionsAsString());
             }
             if (minimise != null) {
-                if (verbose)
+                if (parent.verbose)
                     System.out.println("Searching for minimum solutions of "+minimise+" for the feature model...");
                 ChocoSolver s = m.instantiateCSModel();
                 System.out.print(s.minimiseToString(minimise));
             }
             if (maximise != null) {
-                if (verbose)
+                if (parent.verbose)
                     System.out.println("Searching for maximum solutions of "+maximise+" for the feature model...");
                 ChocoSolver s = m.instantiateCSModel();
                 //System.out.print(s.maximiseToInt(product));
@@ -126,7 +118,7 @@ public class CheckSPLCommand implements Callable<Void> {
                 }
             }
             if (solveall) {
-                if (verbose)
+                if (parent.verbose)
                     System.out.println("Searching for all solutions for the feature model...");
                 ChocoSolver solver = m.instantiateCSModel();
                 System.out.print(solver.getSolutionsAsString());
@@ -139,7 +131,7 @@ public class CheckSPLCommand implements Callable<Void> {
                     // nothing to do
                 }
                 if (solveWithDecl != null) {
-                    if (verbose)
+                    if (parent.verbose)
                         System.out.println("Searching for solution that includes " + solveWithProduct + "...");
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<>();
@@ -159,7 +151,7 @@ public class CheckSPLCommand implements Callable<Void> {
                     // nothing to do
                 }
                 if (minWithDecl != null) {
-                    if (verbose)
+                    if (parent.verbose)
                         System.out.println("Searching for solution that includes " + minWith + "...");
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<>();
@@ -173,7 +165,7 @@ public class CheckSPLCommand implements Callable<Void> {
 
             }
             if (maxProduct) {
-                if (verbose)
+                if (parent.verbose)
                     System.out.println("Searching for solution with maximum number of features ...");
                 ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<>();
@@ -217,14 +209,14 @@ public class CheckSPLCommand implements Callable<Void> {
 
 
     void analyzeModel(Model m) {
-        m.verbose = verbose;
-        m.debug = debug;
+        m.verbose = parent.verbose;
+        m.debug = parent.debug;
 
         // drop attributes before calculating any attribute
         if (ignoreattr)
             m.dropAttributes();
 
-        if (verbose) {
+        if (parent.verbose) {
             System.out.println("Analyzing Software Product Line...");
         }
 
@@ -234,7 +226,7 @@ public class CheckSPLCommand implements Callable<Void> {
         // flatten before checking error, to avoid calculating *wrong* attributes
         if (solveall) {
             // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
-            if (verbose)
+            if (parent.verbose)
                 System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
             ProductLineAnalysisHelper.buildAndPrintAllConfigurations(m);
         }
@@ -244,7 +236,7 @@ public class CheckSPLCommand implements Callable<Void> {
 
     @Override
     public Void call() throws Exception {
-        if (verbose) System.out.println("Starting software product line checking ...");
+        if (parent.verbose) System.out.println("Starting software product line checking ...");
         Main main = new Main();
         main.arguments = this.parent; // FIXME: fill in parent's verbose, debug
         Model m = main.parse(files);

@@ -69,19 +69,19 @@ aspect ToString {
     }
 
     public void FieldDecl.doToString(PrintWriter w) {
-        w.print(getAccess());
+        w.print(getTypeUse());
         w.print(' ');
         w.print(getName());
         if (hasInitExp()) w.print(" = "+getInitExp());
     }
     public void VarDecl.doToString(PrintWriter w) {
-        w.print(getAccess());
+        w.print(getTypeUse());
         w.print(' ');
         w.print(getName());
         if (hasInitExp()) w.print(" = "+getInitExp());
     }
     public void ParamDecl.doToString(PrintWriter w) {
-        w.print(getAccess());
+        w.print(getTypeUse());
         w.print(' ');
         w.print(getName());
     }

@@ -184,7 +184,7 @@ miller_rabin(N, S) -> miller_rabin(N, S, 1).
 
 miller_rabin(_, S, I) when I > S -> true;
 miller_rabin(N, S, I) ->
-    case witness(random:uniform(N - 1), N) of
+    case witness(rand:uniform(N - 1), N) of
         true -> false;
         false -> miller_rabin(N, S, I + 1)
     end.

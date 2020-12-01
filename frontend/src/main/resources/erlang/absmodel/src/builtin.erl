@@ -46,7 +46,7 @@ strlen_bin(<<>>, K) -> K;
 strlen_bin(<<_/utf8, Rest/binary>>, K) -> strlen_bin(Rest, K+1).
 
 random(_Cog,N)->
-    random:uniform(N)-1.
+    rand:uniform(N)-1.
 
 
 constructorname_to_string(A) ->

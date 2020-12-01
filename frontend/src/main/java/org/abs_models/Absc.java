@@ -18,6 +18,7 @@ import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.ScopeType;
 
 /**
  * The main entry point for absc, the abs compiler.
@@ -92,9 +93,11 @@ public class Absc implements Callable<Integer> {
 
 
     @Option(names = { "-v", "--verbose" },
+            scope = ScopeType.INHERIT,
             description = "verbose output")
     public boolean verbose = false;
     @Option(names = { "--debug"},
+            scope = ScopeType.INHERIT,
             description = "print diagnostic information (e.g., stacktraces) for internal compiler problems")
     public boolean debug = false;
     @Option(names = { "--dump"},

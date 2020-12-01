@@ -109,7 +109,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
         model.applyDeltas(new ArrayList<>(Arrays.asList(d1, d2)));
         assertTrue(cls.getFields().getNumChild() == 1);
         assertTrue(cls.getField(0).getName().equals("f"));
-        assertTrue(cls.getField(0).getAccess().toString().equals("Int"));
+        assertTrue(cls.getField(0).getTypeUse().toString().equals("Int"));
     }
 
     @Test

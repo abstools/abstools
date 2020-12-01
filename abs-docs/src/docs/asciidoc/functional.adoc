@@ -774,7 +774,7 @@ def A head<A>(List<A> list) = <3>
 NOTE: The ABS standard library contains some special functions that cannot be
 defined with pure expressions, for example the function `println`.  The
 definition of such functions is done via a special function body of the form
-`builtin`, with optional string argument notation `builtin["a", "b"]`.  Such
+`builtin`, with optional pure expression arguments `builtin(a, "b", 3)`.  Such
 builtin functions have to be defined separately in the code generator for each
 backend where the model is compiled; details of this are
 implementation-specific and outside the scope of this manual.

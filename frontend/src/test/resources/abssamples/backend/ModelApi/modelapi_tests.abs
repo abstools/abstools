@@ -45,5 +45,5 @@ class C implements I {
 }
 
 // Local Variables:
-// abs-local-port: 0
+// abs-local-port: 8080
 // End:

@@ -77,10 +77,10 @@ aspect DumpTree
 
     protected void TypedVarOrFieldDecl.printInfo(PrintStream stream)
     {
-        stream.print(this.getName() + " : " + (this.getAccess()));
+        stream.print(this.getName() + " : " + (this.getTypeUse()));
     }
 
-    protected void IdUse.printInfo(PrintStream stream)
+    protected void TypeIdUse.printInfo(PrintStream stream)
     {
         stream.print(this.getName());
     }

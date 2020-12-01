@@ -120,7 +120,11 @@ public class ConcurrencyTests extends SemanticTests {
     @Test
     public void futGetDeadlock() throws Exception {
         // Fails because a deadlock occurs
-        assertEvalFails(INTERFACE_I + CLASS_C + CALL_M_ASYNC_GET_DEADLOCK);
+        try {
+            assertEvalFails(INTERFACE_I + CLASS_C + CALL_M_ASYNC_GET_DEADLOCK);
+        } catch (java.util.concurrent.TimeoutException e) {
+            // timeout is expected, do not fail
+        }
     }
 
     static String CLASS_C_ASSERT_FAILS = "class C implements I { Unit n() { } Bool m() { assert False; return True; } } ";

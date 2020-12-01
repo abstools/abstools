@@ -302,7 +302,7 @@ aspect GenerateJava {
     }
 
     public void ParamDecl.generateJava(PrintStream stream) {
-        getAccess().generateJava(stream);
+        getTypeUse().generateJava(stream);
         stream.print(" " + JavaBackend.getVariableName(getName()));
     }
 
@@ -321,7 +321,7 @@ aspect GenerateJava {
     public void FieldDecl.generateJava(PrintStream stream) {
         JavaGeneratorHelper.generateHelpLine(this,stream);
         stream.print("private ");
-        getAccess().generateJava(stream);
+        getTypeUse().generateJava(stream);
         stream.print(" ");
         stream.print(JavaBackend.getVariableName(getName()));
         stream.println(";");
@@ -448,7 +448,7 @@ aspect GenerateJava {
     }
 
     public void VarDecl.generateJava(PrintStream stream) {
-        getAccess().generateJava(stream);
+        getTypeUse().generateJava(stream);
         String name = JavaBackend.getVariableName(getName());
         stream.print(" " + name + " = ");
 
@@ -787,6 +787,8 @@ aspect GenerateJava {
     public void AsExp.generateJava(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
+
+    public abstract void TypeUse.generateJava(PrintStream stream);
 
     public void DataTypeUse.generateJava(PrintStream stream) {
         stream.print(JavaBackend.getJavaType(this));

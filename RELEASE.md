@@ -8,11 +8,14 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 - Run unit tests, check for fresh failing tests (compared to last
   version)
 
-- Run unit tests for erlang backend with pessimal gc (in file `frontend/src/main/resources/erlang/absmodel/src/gc.erl`, replace the body of `gc:is_collection_needed/1` with `true`)
+- Run unit tests for erlang backend with pessimal gc (in file `frontend/src/main/resources/erlang/absmodel/src/gc.erl`, replace the body of `gc:is_collection_needed/1` with `true`).  In case of suspicious test timeout failures, raise the value of `ErlangTestDriver.test_timeout` -- but note that timeouts are a symptom of gc deadlocks as well.
 
 - Manually compile and run a small model on macOS, Linux, Windows
 
-- Create docker (`make docker ; make run-collaboratory`)
+
+- Create docker
+  - remove current docker images to ensure everything gets rebuilt
+  - run `make docker ; make run-collaboratory`
   - check if all tools are installed in collaboratory (selection box non-empty)
   - check that collaboratory can start the "Hello World" ABS program with Erlang simulator
   - check that the "Hello World" ABS program doesn't crash SACO, CostABS, DSA in collaboratory
@@ -66,7 +69,7 @@ versions (e.g., Java 11) cannot be used with earlier versions.
 - push release commit (`git push`)
 
 - update [https://abs-models.org/manual/]: copy the content of
-    `abs-docs/build/asciidoc/html5/` into the `static/manual/` subdirectory of
+    `abs-docs/build/docs/asciidoc/html5/` into the `static/manual/` subdirectory of
     the repository at [https://github.com/abstools/abs-models.org], then
     redeploy the website
 
@@ -94,6 +97,13 @@ versions (e.g., Java 11) cannot be used with earlier versions.
   - `docker push abslang/collaboratory:latest`
   - `docker push abslang/absc:x.y.z`
   - `docker push abslang/absc:latest`
+
+- Update the collaboratory
+
+  - `docker stop easyinterface`
+  - `docker rm easyinterface`
+  - `docker pull abslang/collaboratory:latest`
+  - `docker run -d -p 8080:80 --restart unless-stopped --name easyinterface abslang/collaboratory:latest`
 
 # Version numbering
 

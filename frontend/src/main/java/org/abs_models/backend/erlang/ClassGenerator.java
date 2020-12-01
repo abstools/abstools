@@ -89,7 +89,7 @@ public class ClassGenerator {
             ecs.println();
             ecs.decIndent().println("catch");
             ecs.incIndent();
-            ecs.println("_:Exception ->");
+            ecs.println("_:Exception:Stacktrace ->");
             if (classDecl.hasRecoverBranch()) {
                 ecs.incIndent();
                 ecs.println("Recovered = try 'recover'(O, Exception) catch _:RecoverError -> io:format(standard_error, \"Recovery block for ~s in class " + classDecl.getQualifiedName() + " failed with exception ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, RecoverError)]), false end,");
@@ -98,14 +98,14 @@ public class ClassGenerator {
                 ecs.println("false ->");
                 ecs.incIndent();
                 ecs.println("io:format(standard_error, \"Uncaught ~s in method " + ms.getName() + " not handled successfully by recovery block, killing object ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, O)]),");
-                ecs.println("io:format(standard_error, \"stacktrace: ~tp~n\", [erlang:get_stacktrace()]),");
+                ecs.println("io:format(standard_error, \"stacktrace: ~tp~n\", [Stacktrace]),");
                 ecs.println("object:die(O, Exception), exit(Exception)");
                 ecs.decIndent().println("end");
                 ecs.decIndent();
             } else {
                 ecs.incIndent();
                 ecs.println("io:format(standard_error, \"Uncaught ~s in method " + ms.getName() + " and no recovery block in class definition, killing object ~s~n\", [builtin:toString(Cog, Exception), builtin:toString(Cog, O)]),");
-                ecs.println("io:format(standard_error, \"stacktrace: ~tp~n\", [erlang:get_stacktrace()]),");
+                ecs.println("io:format(standard_error, \"stacktrace: ~tp~n\", [Stacktrace]),");
                 ecs.println("object:die(O, Exception), exit(Exception)");
                 ecs.decIndent();
             }

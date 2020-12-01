@@ -78,7 +78,7 @@ RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
 
 abstract VarOrFieldDecl ::= <Name>;
 FunctionParamDecl : VarOrFieldDecl ;
-abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
+abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= TypeUse ;
 VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
 FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* ;
 ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
@@ -87,29 +87,24 @@ PatternVarDecl: VarOrFieldDecl;
 LoopVarDecl: VarOrFieldDecl;    // for ForeachStmt
 
 abstract FunctionDef;
-BuiltinFunctionDef: FunctionDef ::= StringArg:PureExp* ;
+BuiltinFunctionDef: FunctionDef ::= Argument:PureExp* ;
 ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
 
-MethodSig ::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
+MethodSig ::= <Name> Annotation* ReturnType:TypeUse Param:ParamDecl*;
 MethodImpl ::= MethodSig Block ;
 
 
-// Uses of various identifiers
-abstract Access: PureExp;
-abstract IdUse: Access ::= <Name>;
-abstract TypeUse: IdUse ::= Annotation*;
-InterfaceTypeUse: TypeUse; // TODO: reconsider hierarchy of expressions?
+// Type expressions
+abstract TypeIdUse ::= <Name>; // a bare type name (only used for annotation naming)
+abstract TypeUse: TypeIdUse ::= Annotation*;
+InterfaceTypeUse: TypeUse;
 DataTypeUse: TypeUse;
 ParametricDataTypeUse: DataTypeUse ::= Param:TypeUse* ;
 ExceptionTypeUse: DataTypeUse;
 TypeParameterUse: TypeUse;
-abstract VarOrFieldUse: Access ::= <Name>;
-VarUse: VarOrFieldUse;
-FieldUse: VarOrFieldUse; // this.f
-
-UnresolvedTypeUse: TypeUse; // A type expression whose type cannot be resolved at parse time.
-                            // Will be resolved by rewriting. TODO: needed?
-
+// A type expression whose class cannot be resolved at parse time.  Will be
+// resolved by rewriting.
+UnresolvedTypeUse: TypeUse;
 
 /*
 Constructors occur as
@@ -120,7 +115,7 @@ Constructors occur as
 */
 
 Annotation ::= Value:PureExp;
-TypedAnnotation : Annotation ::= Access;
+TypedAnnotation : Annotation ::= TypeIdUse;
 
 abstract Stmt ::= Annotation* ;
 
@@ -182,6 +177,10 @@ FloatLiteral: LiteralExp ::= <Content>;
 // We have to treat lists specially since various parts of the toolchain crash
 // when recursing through 10000-deep DataConstructorExps
 ListLiteral: LiteralExp ::= PureExp*;
+
+abstract VarOrFieldUse: PureExp ::= <Name>;
+VarUse: VarOrFieldUse;
+FieldUse: VarOrFieldUse; // this.f
 
 DataConstructorExp : PureExp ::= <Constructor> Param:PureExp* ;
 ExceptionConstructorExp : DataConstructorExp ;
