@@ -108,11 +108,17 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         LocationType lt = getLocationType(call.getCallee().getType());
         if (lt.isBottom()) {
             errors.add(new TypeError(call, ErrorMessage.LOCATION_TYPE_CALL_ON_BOTTOM, new String[0]));
-        } else if (call instanceof SyncCall) {
-            if (!lt.isNear()) {
-                errors.add(new TypeError(call, ErrorMessage.LOCATION_TYPE_SYNC_CALL_ON_NON_NEAR, new String[0]));
-            }
         }
+        // See https://github.com/abstools/abstools/issues/290
+        // Re-activate this check if/when we decide to restrict
+        // synccalls to near objects.  Turning this into a warning
+        // would be annoying, since too many existing models use this.
+
+        //  else if (call instanceof SyncCall) {
+        //     if (!lt.isNear()) {
+        //         errors.add(new TypeError(call, ErrorMessage.LOCATION_TYPE_SYNC_CALL_ON_NON_NEAR, new String[0]));
+        //     }
+        // }
     }
 
     public LocationType getLocationType(Type type) {

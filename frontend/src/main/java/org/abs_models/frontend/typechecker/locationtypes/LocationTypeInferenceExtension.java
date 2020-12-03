@@ -129,14 +129,17 @@ public class LocationTypeInferenceExtension extends DefaultTypeSystemExtension {
         }
     }
 
-    @Override
-    public void checkMethodCall(Call call) {
-        LocationTypeVar lv = getVarSafe(call.getCallee().getType(), call);
-        assert lv != null;
-        if (call instanceof SyncCall) {
-            constraints.add(Constraint.eq(lv, LocationTypeVar.NEAR, call));
-        }
-    }
+    // Fix bug #290: synccalls can be on non-near objects (see
+    // https://github.com/abstools/abstools/issues/290)
+
+    // @Override
+    // public void checkMethodCall(Call call) {
+    //     LocationTypeVar lv = getVarSafe(call.getCallee().getType(), call);
+    //     assert lv != null;
+    //     if (call instanceof SyncCall) {
+    //         constraints.add(Constraint.eq(lv, LocationTypeVar.NEAR, call));
+    //     }
+    // }
 
     public LocationTypeVar getVarSafe(Type t, ASTNode<?> n) {
         LocationTypeVar v = getVar(t);

@@ -14,6 +14,7 @@ import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.VarDeclStmt;
 import org.abs_models.frontend.typechecker.locationtypes.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LocationTypeTests extends FrontendTest {
@@ -114,7 +115,7 @@ public class LocationTypeTests extends FrontendTest {
         assertLocationTypeOk("{ I i; [Far] I f; Fut<I> fut; i = new local C(f); fut = i!m(); }");
     }
 
-
+    @Ignore("https://github.com/abstools/abstools/issues/290")
     @Test
     public void syncCallInfer() {
         assertInferOk("interface I { Unit m(); } { I i; i.m(); }", LocationType.NEAR);
@@ -263,6 +264,7 @@ public class LocationTypeTests extends FrontendTest {
         assertLocationTypeError("{ [Far] I i; [Near] I j; i = j; }");
     }
 
+    @Ignore("https://github.com/abstools/abstools/issues/290")
     @Test
     public void illegalSyncCall() {
         assertLocationTypeError("{ [Far] I i; i.m(); }");
