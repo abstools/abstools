@@ -14,6 +14,7 @@ import java.util.LinkedList;
 
 import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
+import org.abs_models.backend.c.CTestDriver;
 import org.abs_models.backend.erlang.ErlangTestDriver;
 import org.abs_models.backend.java.JavaTestDriver;
 import org.abs_models.backend.maude.MaudeCompiler;
@@ -37,6 +38,10 @@ public abstract class SemanticTests {
 
     public static boolean checkErlang() {
         return checkProg("erl");
+    }
+
+    public static boolean checkC() {
+        return checkProg("cc", "--version") && System.getenv("ABSC_TESTS_ENABLE") != null;
     }
 
     public static boolean checkProg(String... prog) {
@@ -72,6 +77,9 @@ public abstract class SemanticTests {
         // }
         if (checkErlang()) {
             data.add(new Object[] { new ErlangTestDriver() });
+        }
+        if (checkC()) {
+            data.add(new Object[] { new CTestDriver()} );
         }
         // FIXME: enable after #302 is done, {new
         // JavaTestDriver(){{absArgs.add("-taskScheduler=simple");}} }

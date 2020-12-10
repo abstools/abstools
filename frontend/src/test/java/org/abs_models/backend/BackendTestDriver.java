@@ -9,7 +9,7 @@ import org.abs_models.frontend.ast.Model;
 public interface BackendTestDriver {
 
     public static enum BackendName {
-        JAVA, ERLANG, MAUDE
+        JAVA, ERLANG, MAUDE, C
     }
 
     public abstract BackendName getBackendName();
