@@ -1,9 +1,18 @@
 package org.abs_models.backend.c;
 
+import com.google.common.io.Files;
 import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
+import org.abs_models.backend.c.codegen.CProject;
 import org.abs_models.frontend.ast.Model;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assume;
+
+import java.io.File;
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class CTestDriver extends ABSTest implements BackendTestDriver {
     @Override
@@ -30,7 +39,18 @@ public class CTestDriver extends ABSTest implements BackendTestDriver {
 
     @Override
     public void assertEvalTrue(Model m) throws Exception {
-        Assume.assumeTrue("not implemented yet", false);
+        File f = null;
+        try {
+            f = Files.createTempDir();
+            f.deleteOnExit();
+            CBackend backend = new CBackend();
+            CProject project = backend.compile(m, f);
+            assertTrue("expected program to succeed", project.run());
+        } finally {
+            try {
+                FileUtils.deleteDirectory(f);
+            } catch (IOException e) { }
+        }
     }
 
     @Override

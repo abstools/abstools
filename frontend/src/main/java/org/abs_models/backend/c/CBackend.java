@@ -1,6 +1,7 @@
 package org.abs_models.backend.c;
 
 import org.abs_models.Absc;
+import org.abs_models.backend.c.codegen.CProject;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.common.NotImplementedYetException;
@@ -8,6 +9,7 @@ import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
 
+import java.io.File;
 import java.io.IOException;
 
 public class CBackend extends Main {
@@ -38,7 +40,25 @@ public class CBackend extends Main {
             return 1;
         }
 
-        throw new NotImplementedYetException(model);
+        File outdir = arguments.destDir;
+        if (outdir.getPath().equals("gen")) {
+            // KLUDGE: "gen/" is the default path for java and erlang;
+            // keep old erlang behavior of defaulting to "gen/erl/".
+            // Note that we can't generate directly into "gen/" since
+            // we don't know if the user explicitly specified "gen/"
+            // or didn't say anything about the output directory
+            outdir = new File("gen/c/");
+        }
+
+        compile(model, outdir);
+        return 0;
+    }
+
+    public CProject compile(Model model, File outdir) throws IOException {
+        CProject project = new CProject(outdir);
+        project.copyFromResources("/c");
+        project.writeMain();
+        return project;
     }
 }
 
