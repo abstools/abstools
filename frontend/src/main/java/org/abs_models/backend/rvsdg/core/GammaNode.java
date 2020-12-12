@@ -34,7 +34,7 @@ public class GammaNode extends Node {
 
     public GammaOutput createOutput(Type type, List<? extends Output> branchOutputs) {
         assert branchOutputs.size() == branchRegions.size();
-        GammaOutput output = new GammaOutput(type, branchOutputs);
+        GammaOutput output = new GammaOutput(type, this, outputs.size(), branchOutputs);
         outputs.add(output);
         return output;
     }
@@ -44,7 +44,7 @@ public class GammaNode extends Node {
     }
 
     public GammaInput transfer(Output output) {
-        GammaInput input = new GammaInput(this, output);
+        GammaInput input = new GammaInput(this, output, this.inputs.size());
         this.inputs.add(input);
         return input;
     }

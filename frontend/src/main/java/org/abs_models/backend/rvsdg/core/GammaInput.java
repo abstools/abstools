@@ -9,13 +9,17 @@ import java.util.List;
  * @see GammaNode#transfer(Output)
  * */
 public class GammaInput extends SimpleInput {
-    public final List<Output> arguments = new ArrayList<>();
+    public final List<GammaArgument> arguments = new ArrayList<>();
+    public final GammaNode gammaNode;
+    public final int inputIdx;
 
-    public GammaInput(GammaNode gammaNode, Output source) {
+    public GammaInput(GammaNode gammaNode, Output source, int inputIdx) {
         super(source);
+        this.gammaNode = gammaNode;
+        this.inputIdx = inputIdx;
 
-        for (Region region : gammaNode.branchRegions) {
-            arguments.add(new GammaArgument(source.type, this));
+        for (int i = 0; i < gammaNode.getBranchCount(); i++) {
+            arguments.add(new GammaArgument(source.type, this, i));
         }
     }
 
@@ -24,7 +28,7 @@ public class GammaInput extends SimpleInput {
      *
      * @param i index of the branch region.
      */
-    public Output get(int i) {
+    public GammaArgument get(int i) {
         return arguments.get(i);
     }
 }

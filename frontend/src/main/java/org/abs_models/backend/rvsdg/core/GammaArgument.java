@@ -7,9 +7,11 @@ import org.abs_models.frontend.typechecker.Type;
  */
 public class GammaArgument extends Output {
     public final GammaInput input;
+    public final int regionIdx;
 
-    public GammaArgument(Type type, GammaInput input) {
+    public GammaArgument(Type type, GammaInput input, int regionIdx) {
         super(type);
         this.input = input;
+        this.regionIdx = regionIdx;
     }
 }

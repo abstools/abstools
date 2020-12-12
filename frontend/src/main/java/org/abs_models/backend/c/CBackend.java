@@ -5,12 +5,15 @@ import org.abs_models.backend.c.codegen.CProject;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.rvsdg.builder.ModelBuilder;
+import org.abs_models.backend.rvsdg.printer.dot.DotPrinter;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class CBackend extends Main {
@@ -57,6 +60,14 @@ public class CBackend extends Main {
 
     public CProject compile(Model model, File outdir) throws IOException {
         ModelBuilder mb = ModelBuilder.build(model);
+
+        String dotFile = System.getenv("ABSC_DOT_FILE");
+        if (dotFile != null) {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(dotFile));
+            DotPrinter.
+                print(writer, mb.region);
+            writer.close();
+        }
 
         CProject project = new CProject(outdir);
         project.copyFromResources("/c");

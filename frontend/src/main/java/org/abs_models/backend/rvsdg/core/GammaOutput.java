@@ -9,9 +9,13 @@ import java.util.List;
  */
 public class GammaOutput extends Output {
     final public List<? extends Output> branchOutputs;
+    final public GammaNode gammaNode;
+    final public int idx;
 
-    public GammaOutput(Type type, List<? extends Output> branchOutputs) {
+    public GammaOutput(Type type, GammaNode gammaNode, int idx, List<? extends Output> branchOutputs) {
         super(type);
+        this.gammaNode = gammaNode;
+        this.idx = idx;
 
         for (Output branchOutput : branchOutputs) {
             assert branchOutput.type.equals(type);

@@ -10,10 +10,13 @@ import org.abs_models.frontend.ast.Model;
  * ModelBuilder is the entry point for building a complete Model.
  */
 public class ModelBuilder {
-    final Model model;
+    final public Model model;
+    final public Region region;
+    public Output finalState;
 
     private ModelBuilder(Model model) {
         this.model = model;
+        this.region = new Region();
     }
 
     static public ModelBuilder build(Model model) {
@@ -25,9 +28,8 @@ public class ModelBuilder {
     private void build() {
         MainBlock mainBlock = model.getMainBlock();
         Scope scope = new Scope();
-        Region region = new Region();
         Builder builder = new Builder(region, scope);
         StateOutput state = new StateOutput(model.getUnitType());
-        builder.process(state, mainBlock);
+        this.finalState = builder.process(state, mainBlock);
     }
 }

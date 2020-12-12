@@ -12,6 +12,7 @@ public class Node {
 
     public Node(Region region) {
         this.region = region;
+        region.addNode(this);
     }
 
     public SimpleInput addSimpleInput(Output value) {
