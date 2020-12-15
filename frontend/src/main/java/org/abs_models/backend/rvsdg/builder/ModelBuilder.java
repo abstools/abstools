@@ -11,12 +11,10 @@ import org.abs_models.frontend.ast.Model;
  */
 public class ModelBuilder {
     final public Model model;
-    final public Region region;
-    public Output finalState;
+    public Function mainFunction;
 
     private ModelBuilder(Model model) {
         this.model = model;
-        this.region = new Region();
     }
 
     static public ModelBuilder build(Model model) {
@@ -26,10 +24,7 @@ public class ModelBuilder {
     }
 
     private void build() {
-        MainBlock mainBlock = model.getMainBlock();
-        Scope scope = new Scope();
-        Builder builder = new Builder(region, scope);
-        StateOutput state = new StateOutput(model.getUnitType());
-        this.finalState = builder.process(state, mainBlock);
+        mainFunction = new Function(model);
+        mainFunction.compile(model.getMainBlock());
     }
 }

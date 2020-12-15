@@ -2,13 +2,11 @@ package org.abs_models.backend.c.codegen;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharSink;
+import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
+import java.io.*;
 import java.net.JarURLConnection;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -65,15 +63,11 @@ public class CProject {
     }
 
     /**
-     * Writes a dummy main file. Only used for testing.
-     *
-     * @throws IOException
+     * Creates a new CFile.
      */
-    public void writeMain() throws IOException {
-        CharSink sink = Files.asCharSink(new File(target.getAbsolutePath(), "main.c"), StandardCharsets.UTF_8);
-        Writer writer = sink.openBufferedStream();
-        writer.write("int main(int argc, char *argv[]) { return 0; }");
-        writer.close();
+    public CFile openFile(String name) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(new File(target.getAbsolutePath(), name)));
+        return new CFile(this, writer);
     }
 
     /**
@@ -86,6 +80,7 @@ public class CProject {
     public boolean run() throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder()
             .command("make", "run")
+            .inheritIO()
             .directory(target);
 
         Process p = pb.start();

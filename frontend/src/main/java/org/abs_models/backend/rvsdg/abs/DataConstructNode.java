@@ -6,7 +6,7 @@ import org.abs_models.backend.rvsdg.core.Region;
 import org.abs_models.frontend.ast.DataConstructor;
 
 public class DataConstructNode extends Node {
-    DataConstructor dataConstructor;
+    public DataConstructor dataConstructor;
 
     public DataConstructNode(Region region, DataConstructor dataConstructor) {
         super(region);

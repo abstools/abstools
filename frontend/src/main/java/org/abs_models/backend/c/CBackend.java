@@ -2,6 +2,7 @@ package org.abs_models.backend.c;
 
 import org.abs_models.Absc;
 import org.abs_models.backend.c.codegen.CProject;
+import org.abs_models.backend.c.compiler.ModelCompiler;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.rvsdg.builder.ModelBuilder;
@@ -65,14 +66,11 @@ public class CBackend extends Main {
         if (dotFile != null) {
             BufferedWriter writer = new BufferedWriter(new FileWriter(dotFile));
             DotPrinter.
-                print(writer, mb.region);
+                print(writer, mb.mainFunction.region);
             writer.close();
         }
 
-        CProject project = new CProject(outdir);
-        project.copyFromResources("/c");
-        project.writeMain();
-        return project;
+        return ModelCompiler.compile(outdir, mb);
     }
 }
 
