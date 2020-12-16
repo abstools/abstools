@@ -148,6 +148,28 @@ public class FrontendTest extends ABSTest {
         }
         return null;
     }
+
+    protected Type getTypeOfFirstVariableDeclaration(Model m) {
+        return getTypeOfNthVariableDeclaration(m, 1);
+    }
+
+    protected Type getTypeOfNthVariableDeclaration(Model m, int n) {
+        int count = 0;
+        for (Stmt s : m.getMainBlock().getStmts()) {
+            Type t = null;
+            if (s instanceof VarDeclStmt) {
+                VarDeclStmt vd = (VarDeclStmt) s;
+                t = vd.getVarDecl().getType();
+            }
+            if (t != null) {
+                count++;
+                if (count == n) {
+                    return t;
+                }
+            }
+        }
+        return null;
+    }
     
     protected void assertTypeOK(String absCode) {
         assertTypeErrors(absCode, new Config[0]);

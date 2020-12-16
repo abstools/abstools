@@ -230,7 +230,7 @@ public abstract class Type {
         if (t == null)
             throw new IllegalArgumentException("t is null");
 
-        if (t.isAnyType())
+        if (t.isAnyType()) // every type is a subtype of Any
             return true;
 
         if (this.equals(t))
