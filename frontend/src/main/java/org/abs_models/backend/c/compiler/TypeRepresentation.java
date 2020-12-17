@@ -36,4 +36,9 @@ public interface TypeRepresentation {
     default void setValue(CFile cFile, String ident, String value) throws IOException {
         cFile.writeLine(ident + " = " + value + ";");
     }
+
+    /**
+     * Converts the `value` into a string stored inside `builder`.
+     */
+    void writeToString(CFile cFile, String builder, String value) throws IOException;
 }

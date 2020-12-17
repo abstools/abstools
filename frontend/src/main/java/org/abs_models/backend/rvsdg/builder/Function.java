@@ -27,7 +27,7 @@ public class Function {
 
     public void compile(Block block) {
         Scope scope = new Scope(this);
-        Builder builder = new Builder(region, scope);
+        Builder builder = new Builder(region, scope, model);
         state = builder.process(state, block);
     }
 }

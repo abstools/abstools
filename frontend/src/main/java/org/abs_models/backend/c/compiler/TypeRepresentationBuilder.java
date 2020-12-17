@@ -24,7 +24,9 @@ public class TypeRepresentationBuilder {
         TypeRepresentation repr = data.get(type);
         if (repr != null) return repr;
 
-        if (type.isDataType()) {
+        if (type.isStringType()) {
+            repr = new NativeTypeRepresentation(type, "absstr");
+        } else if (type.isDataType()) {
             repr = buildDataType((DataTypeType) type);
         }
 

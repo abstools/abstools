@@ -13,7 +13,7 @@ public class SimpleInput extends Input {
     }
 
     @Override
-    Type getType() {
+    public Type getType() {
         return this.output.type;
     }
 }

@@ -28,4 +28,21 @@ public class CFile {
     public void stopFunction() throws IOException {
         writeLine("}");
     }
+
+    public String encodeCString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('"');
+        for (byte b : bytes) {
+            if (b == '\"' || b == '\\' || b == '\n') {
+                sb.append('\\');
+                sb.append(b);
+            } else if (b > 0) {
+                sb.append((char) b);
+            } else {
+                throw new RuntimeException("todo");
+            }
+        }
+        sb.append('"');
+        return sb.toString();
+    }
 }

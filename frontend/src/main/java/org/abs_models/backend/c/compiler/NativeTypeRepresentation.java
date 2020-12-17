@@ -18,4 +18,9 @@ public class NativeTypeRepresentation implements TypeRepresentation {
     public String getCType() {
         return cname;
     }
+
+    @Override
+    public void writeToString(CFile cFile, String builder, String value) throws IOException {
+        cFile.writeLine(cname + "_tostring(" + builder + "," + value + ");");
+    }
 }

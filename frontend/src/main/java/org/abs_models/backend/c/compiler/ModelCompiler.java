@@ -1,12 +1,11 @@
 package org.abs_models.backend.c.compiler;
 
+import com.google.common.base.Utf8;
 import org.abs_models.backend.c.codegen.CFile;
 import org.abs_models.backend.c.codegen.CFunctionDecl;
 import org.abs_models.backend.c.codegen.CProject;
-import org.abs_models.backend.rvsdg.abs.DataConstructNode;
-import org.abs_models.backend.rvsdg.abs.SetVarNode;
-import org.abs_models.backend.rvsdg.abs.StateOutput;
-import org.abs_models.backend.rvsdg.abs.Variable;
+import org.abs_models.backend.java.utils.ToString;
+import org.abs_models.backend.rvsdg.abs.*;
 import org.abs_models.backend.rvsdg.builder.Function;
 import org.abs_models.backend.rvsdg.builder.ModelBuilder;
 import org.abs_models.backend.rvsdg.core.*;
@@ -14,6 +13,7 @@ import org.abs_models.frontend.typechecker.Type;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -37,6 +37,7 @@ public class ModelCompiler {
         project.copyFromResources("/c");
 
         CFile cFile = project.openFile("main.c");
+        cFile.writeLine("#include \"abslib.h\"");
         ModelCompiler compiler = new ModelCompiler(cFile);
         compiler.compile(modelBuilder);
         cFile.close();
@@ -122,6 +123,16 @@ public class ModelCompiler {
             return;
         }
 
+        if (node instanceof GetVarNode) {
+            GetVarNode getVarNode = (GetVarNode) node;
+            compileInput(getVarNode.getState());
+            String resultIdent = useValue(getVarNode.getResult());
+            String varIdent = useValue(getVarNode.var);
+            TypeRepresentation repr = types.get(getVarNode.var.type);
+            repr.setValue(cFile, resultIdent, varIdent);
+            return;
+        }
+
         if (node instanceof SetVarNode) {
             SetVarNode setVarNode = (SetVarNode) node;
             compileInput(setVarNode.getState());
@@ -144,11 +155,48 @@ public class ModelCompiler {
                 }
             }
 
-            cFile.writeLine("if (" + predicate + ".tag == 0) {");
+            cFile.writeLine("if (" + predicate + ".tag == 1) {");
             compileGammaBranch(gammaNode, 0);
             cFile.writeLine("} else {");
             compileGammaBranch(gammaNode, 1);
             cFile.writeLine("}");
+            return;
+        }
+
+        if (node instanceof PrintNode) {
+            PrintNode printNode = (PrintNode) node;
+            compileInput(printNode.getState());
+            String value = compileInput(printNode.getValue());
+            String funcName = printNode.withNewline ? "absstr_println" : "absstr_print";
+            cFile.writeLine(funcName + "("  + value + ");");
+            return;
+        }
+
+        if (node instanceof StringConcatNode) {
+            StringConcatNode stringConcatNode = (StringConcatNode)node;
+            String leftIdent = compileInput(stringConcatNode.getLeft());
+            String rightIdent = compileInput(stringConcatNode.getRight());
+            String resultIdent = useValue(stringConcatNode.getResult());
+            cFile.writeLine("absstr_concat(&" + resultIdent + "," + leftIdent + "," + rightIdent + ");");
+            return;
+        }
+
+        if (node instanceof StringLiteralNode) {
+            StringLiteralNode stringLiteralNode = (StringLiteralNode)node;
+            String resultIdent = useValue(stringLiteralNode.getResult());
+            byte[] bytes = stringLiteralNode.content.getBytes(StandardCharsets.UTF_8);
+            String cString = cFile.encodeCString(bytes);
+            cFile.writeLine("absstr_literal(&" + resultIdent + "," + cString + "," + bytes.length + ");");
+            return;
+        }
+
+        if (node instanceof ToStringNode) {
+            ToStringNode toStringNode = (ToStringNode)node;
+            Input value = toStringNode.getValue();
+            String valueIdent = compileInput(value);
+            TypeRepresentation repr = types.get(value.getType());
+            String resultIdent = useValue(toStringNode.getResult());
+            repr.writeToString(cFile, "&" + resultIdent, valueIdent);
             return;
         }
 

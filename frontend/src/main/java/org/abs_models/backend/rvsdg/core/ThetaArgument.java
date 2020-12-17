@@ -31,7 +31,7 @@ public class ThetaArgument extends Input {
     }
 
     @Override
-    Type getType() {
+    public Type getType() {
         return initialValue.type;
     }
 }

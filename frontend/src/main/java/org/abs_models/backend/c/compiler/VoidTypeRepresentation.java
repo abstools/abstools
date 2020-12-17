@@ -19,4 +19,9 @@ public class VoidTypeRepresentation implements TypeRepresentation {
     public void setValue(CFile cFile, String ident, String value) throws IOException {
         throw new Error("not representable");
     }
+
+    @Override
+    public void writeToString(CFile cFile, String builder, String value) throws IOException {
+        throw new Error("not representable");
+    }
 }

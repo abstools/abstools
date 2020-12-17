@@ -5,6 +5,7 @@ import org.abs_models.frontend.ast.DataConstructor;
 import org.abs_models.frontend.typechecker.DataTypeType;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class DataTypeRepresentation implements TypeRepresentation {
@@ -42,7 +43,25 @@ public class DataTypeRepresentation implements TypeRepresentation {
         }
         cFile.writeLine("} data;");
         cFile.writeLine("};");
+
+        cFile.writeLine("static void " + cname + "_tostring(absstr *result, struct " + cname + " data) {");
+        cFile.writeLine("switch (data.tag) {");
+        for (Variant variant : variants) {
+            cFile.writeLine("case " + variant.tag + ":");
+            byte[] bytes = variant.dataConstructor.getName().getBytes(StandardCharsets.UTF_8);
+            String cString = cFile.encodeCString(bytes);
+            cFile.writeLine("absstr_literal(result," + cString + "," + bytes.length + ");");
+            cFile.writeLine("break;");
+        }
+        cFile.writeLine("}");
+        cFile.writeLine("}");
+
         isDeclared = true;
+    }
+
+    @Override
+    public void writeToString(CFile cFile, String builder, String value) throws IOException {
+        cFile.writeLine(cname + "_tostring(" + builder + "," + value + ");");
     }
 
     public Variant findVariant(DataConstructor dataConstructor) {
