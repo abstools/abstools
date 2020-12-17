@@ -4,7 +4,7 @@ import com.google.common.io.Files;
 import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.c.codegen.CProject;
-import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.*;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assume;
 
@@ -39,17 +39,33 @@ public class CTestDriver extends ABSTest implements BackendTestDriver {
 
     @Override
     public void assertEvalTrue(Model m) throws Exception {
+        appendResultPrinter(m);
+
         File f = null;
         try {
             f = Files.createTempDir();
             f.deleteOnExit();
             CBackend backend = new CBackend();
             CProject project = backend.compile(m, f);
-            assertTrue("expected program to succeed", project.run());
+            assertTrue(project.compile("main.release"));
+            String output = project.runOutput("main.release");
+            assertEquals("RES=True\n", output);
         } finally {
             try {
                 FileUtils.deleteDirectory(f);
             } catch (IOException e) { }
+        }
+    }
+
+    void appendResultPrinter(Model model) {
+        MainBlock mb = model.getMainBlock();
+        if (mb != null) {
+            mb.addStmt(new ExpressionStmt(
+                new List<>(),
+                new FnApp("ABS.StdLib.println",
+                    new List<>(new AddAddExp(new StringLiteral("RES="),
+                        new FnApp("ABS.StdLib.toString",
+                            new List<>(new VarUse("testresult"))))))));
         }
     }
 

@@ -1,9 +1,6 @@
 package org.abs_models.backend.c.codegen;
 
-import com.google.common.io.ByteStreams;
-import com.google.common.io.CharSink;
-import com.google.common.io.FileWriteMode;
-import com.google.common.io.Files;
+import com.google.common.io.*;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
@@ -86,5 +83,37 @@ public class CProject {
         Process p = pb.start();
         int returnValue = p.waitFor();
         return returnValue == 0;
+    }
+
+    public boolean compile(String name) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder()
+            .command("make", "build/" + name)
+            .inheritIO()
+            .directory(target);
+
+        Process p = pb.start();
+        int returnValue = p.waitFor();
+        return returnValue == 0;
+    }
+
+    /**
+     * Runs the main program in release mode and returns stdout.
+     *
+     * @return stdout of the program
+     */
+    public String runOutput(String name) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder()
+            .command("./build/" + name)
+            .redirectError(ProcessBuilder.Redirect.INHERIT)
+            .directory(target);
+
+        Process p = pb.start();
+
+        String result = CharStreams.toString(new InputStreamReader(p.getInputStream()));
+
+        int returnValue = p.waitFor();
+        if (returnValue != 0) throw new RuntimeException("");
+
+        return result;
     }
 }
