@@ -23,80 +23,82 @@ public class Builder {
         this.model = model;
     }
 
-    static class BuildResult {
-        final Output result;
-        final Output newState;
+    public Output process(Output currentState, Block block) {
+        CurrentState state = new CurrentState(currentState);
+        process(state, block);
+        return state.current;
+    }
 
-        public BuildResult(Output result, Output newState) {
-            this.result = result;
-            this.newState = newState;
+    /**
+     * Represents the current state. This is threaded through out the building and is modified.
+     */
+    static class CurrentState {
+        public Output current;
+
+        public CurrentState(Output initial) {
+            this.current = initial;
         }
     }
 
-    public Output process(Output currentState, Block block) {
+    public void process(CurrentState state, Block block) {
         for (Stmt stmt : block.getStmts()) {
             if (stmt instanceof VarDeclStmt) {
                 VarDecl varDecl = ((VarDeclStmt) stmt).getVarDecl();
                 String name = varDecl.getName();
                 Exp initExp = varDecl.getInitExp();
                 Variable var = scope.declareVar(name, initExp.getType());
-                BuildResult initialResult = process(currentState, initExp);
-                SetVarNode node = new SetVarNode(region, initialResult.newState, var, initialResult.result);
-                currentState = node.getNewState();
+                Output initialResult = process(state, initExp);
+                SetVarNode node = new SetVarNode(region, state.current, var, initialResult);
+                state.current = node.getNewState();
             } else if (stmt instanceof AssignStmt) {
                 AssignStmt assignStmt = (AssignStmt)stmt;
                 Variable var = scope.lookupVar(assignStmt.getVar().getName());
-                BuildResult valueResult = process(currentState, assignStmt.getValue());
-                SetVarNode node = new SetVarNode(region, valueResult.newState, var, valueResult.result);
-                currentState = node.getNewState();
+                Output valueResult = process(state, assignStmt.getValue());
+                SetVarNode node = new SetVarNode(region, state.current, var, valueResult);
+                state.current = node.getNewState();
             } else if (stmt instanceof IfStmt) {
                 IfStmt ifStmt = (IfStmt) stmt;
-                BuildResult predicateResult = process(currentState, ifStmt.getCondition());
-                currentState = predicateResult.newState;
-                Output predicate = predicateResult.result;
+                Output predicate = process(state, ifStmt.getCondition());
                 GammaNode gamma = new GammaNode(region, 2, predicate);
 
                 // Transfer the state variable through the regions:
-                GammaInput innerState = gamma.transfer(currentState);
-                Output elseState = innerState.get(0);
-                Output thenState = innerState.get(1);
+                GammaInput innerState = gamma.transfer(state.current);
+                CurrentState elseState = new CurrentState(innerState.get(0));
+                CurrentState thenState = new CurrentState(innerState.get(1));
 
                 // Process child blocks:
                 Block elseBlock = ifStmt.getElse();
                 if (elseBlock != null) {
                     Builder elseBuilder = new Builder(gamma.branchRegions.get(0), scope.createChild(), model);
-                    elseState = elseBuilder.process(elseState, elseBlock);
+                    elseBuilder.process(elseState, elseBlock);
                 }
 
                 Block thenBlock = ifStmt.getThen();
                 Builder thenBuilder = new Builder(gamma.branchRegions.get(1), scope.createChild(), model);
-                thenState = thenBuilder.process(thenState, thenBlock);
+                thenBuilder.process(thenState, thenBlock);
 
-                currentState = gamma.createOutput(currentState.type, elseState, thenState);
+                state.current = gamma.createOutput(state.current.type, elseState.current, thenState.current);
             } else if (stmt instanceof ExpressionStmt) {
                 ExpressionStmt exprStmp = (ExpressionStmt) stmt;
-                currentState = process(currentState, exprStmp.getExp()).newState;
+                process(state, exprStmp.getExp());
             } else {
                 throw new NotImplementedYetException(stmt);
             }
         }
-
-        return currentState;
     }
 
-    BuildResult process(Output currentState, Exp exp) {
+    Output process(CurrentState state, Exp exp) {
         if (exp instanceof FnApp) {
             FnApp fnApp = (FnApp) exp;
             FunctionDecl decl = (FunctionDecl) fnApp.getDecl();
             List<Output> args = new ArrayList<>();
             for (PureExp param : fnApp.getParams()) {
-                BuildResult result = process(currentState, param);
-                currentState = result.newState;
-                args.add(result.result);
+                Output result = process(state, param);
+                args.add(result);
             }
 
             if (decl.getFunctionDef() instanceof BuiltinFunctionDef) {
-                return callBuiltin(currentState, decl, args);
+                return callBuiltin(state, decl, args);
             }
 
             throw new NotImplementedYetException(exp);
@@ -105,52 +107,52 @@ public class Builder {
             DataConstructNode node = new DataConstructNode(region, cexp.getDataConstructor());
 
             for (PureExp param : cexp.getParams()) {
-                BuildResult result = process(currentState, param);
-                currentState = result.newState;
-                node.addParam(result.result);
+                Output result = process(state, param);
+                node.addParam(result);
             }
 
-            return new BuildResult(node.getResult(), currentState);
+            return node.getResult();
         } else if (exp instanceof AddExp) {
             AddExp addExp = (AddExp) exp;
-            BuildResult leftBR = process(currentState, addExp.getLeft());
-            currentState = leftBR.newState;
-            BuildResult rightBR = process(currentState, addExp.getRight());
-            currentState = rightBR.newState;
+            Output leftResult = process(state, addExp.getLeft());
+            Output rightResult = process(state, addExp.getRight());
 
-            if (leftBR.result.type.isStringType()) {
-                StringConcatNode node = new StringConcatNode(region, leftBR.result, rightBR.result);
-                return new BuildResult(node.getResult(), currentState);
+            if (leftResult.type.isStringType()) {
+                StringConcatNode node = new StringConcatNode(region, leftResult, rightResult);
+                return node.getResult();
             }
 
             throw new NotImplementedYetException(exp);
         } else if (exp instanceof StringLiteral) {
             String content = ((StringLiteral) exp).getContent();
             StringLiteralNode node = new StringLiteralNode(region, exp.getType(), content);
-            return new BuildResult(node.getResult(), currentState);
+            return node.getResult();
         } else if (exp instanceof VarUse) {
             VarUse varUse = (VarUse)exp;
             Variable var = scope.lookupVar(varUse.getName());
-            GetVarNode node = new GetVarNode(region, currentState, var);
-            return new BuildResult(node.getResult(), node.getNewState());
+            GetVarNode node = new GetVarNode(region, state.current, var);
+            state.current = node.getNewState();
+            return node.getResult();
         } else {
             throw new NotImplementedYetException(exp);
         }
     }
 
-    BuildResult callBuiltin(Output currentState, FunctionDecl decl, List<Output> args) {
+    Output callBuiltin(CurrentState state, FunctionDecl decl, List<Output> args) {
         switch (decl.getName()) {
             case "print": {
-                PrintNode node = new PrintNode(region, currentState, args.get(0), false);
-                return new BuildResult(null, node.getNewState());
+                PrintNode node = new PrintNode(region, state.current, args.get(0), false);
+                state.current = node.getNewState();
+                return null;
             }
             case "println": {
-                PrintNode node = new PrintNode(region, currentState, args.get(0), true);
-                return new BuildResult(null, node.getNewState());
+                PrintNode node = new PrintNode(region, state.current, args.get(0), true);
+                state.current = node.getNewState();
+                return null;
             }
             case "toString": {
                 ToStringNode node = new ToStringNode(region, model.getStringType(), args.get(0));
-                return new BuildResult(node.getResult(), currentState);
+                return node.getResult();
             }
             default:
                 throw new NotImplementedYetException(decl);
