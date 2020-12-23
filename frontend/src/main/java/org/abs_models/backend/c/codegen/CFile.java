@@ -1,5 +1,7 @@
 package org.abs_models.backend.c.codegen;
 
+import org.abs_models.backend.rvsdg.abs.ComparisonNode;
+
 import java.io.IOException;
 import java.io.Writer;
 
@@ -44,5 +46,30 @@ public class CFile {
         }
         sb.append('"');
         return sb.toString();
+    }
+
+    /**
+     * Encodes an a comparison operator (`ComparisonNode.Operator`) into an expression
+     * which can be used on the result from a comparison function as used by e.g. qsort.
+     *
+     * Example: `Eq` is turned into ` == 0`
+     */
+    public String encodeComparisonOperator(ComparisonNode.Operator op) {
+        switch (op) {
+            case Eq:
+                return " == 0";
+            case NotEq:
+                return " != 0";
+            case Lt:
+                return " < 0";
+            case Lte:
+                return " <= 0";
+            case Gt:
+                return " > 0";
+            case Gte:
+                return " >= 0";
+            default:
+                throw new RuntimeException("Unknown operator: " + op);
+        }
     }
 }

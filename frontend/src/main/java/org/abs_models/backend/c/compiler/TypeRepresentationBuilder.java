@@ -26,6 +26,8 @@ public class TypeRepresentationBuilder {
 
         if (type.isStringType()) {
             repr = new NativeTypeRepresentation(type, "absstr");
+        } else if (type.isIntType()) {
+            repr = new NativeTypeRepresentation(type, "absint");
         } else if (type.isDataType()) {
             repr = buildDataType((DataTypeType) type);
         }

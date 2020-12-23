@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <gmp.h>
 
 // String representation
 
@@ -43,4 +44,17 @@ void absstr_concat(absstr *result, absstr left, absstr right) {
     absstr_alloc(result, left.size + right.size);
     memcpy(result->data, left.data, left.size);
     memcpy(&result->data[left.size], right.data, right.size);
+}
+
+// Integer representation
+typedef struct absint {
+    mpz_t value;
+} absint;
+
+void absint_literal(absint *val, char *data, size_t size) {
+    mpz_init_set_str(val->value, data, 10);
+}
+
+int absint_compare(absint a, absint b) {
+    return mpz_cmp(a.value, b.value);
 }

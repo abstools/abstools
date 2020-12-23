@@ -127,11 +127,21 @@ public class Builder {
             String content = ((StringLiteral) exp).getContent();
             StringLiteralNode node = new StringLiteralNode(region, exp.getType(), content);
             return node.getResult();
+        } else if (exp instanceof IntLiteral) {
+            String content = ((IntLiteral) exp).getContent();
+            IntLiteralNode node = new IntLiteralNode(region, exp.getType(), content);
+            return node.getResult();
         } else if (exp instanceof VarUse) {
-            VarUse varUse = (VarUse)exp;
+            VarUse varUse = (VarUse) exp;
             Variable var = scope.lookupVar(varUse.getName());
             GetVarNode node = new GetVarNode(region, state.current, var);
             state.current = node.getNewState();
+            return node.getResult();
+        } else if (exp instanceof EqExp) {
+            EqExp eqExp = (EqExp) exp;
+            Output left = process(state, eqExp.getLeft());
+            Output right = process(state, eqExp.getRight());
+            ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Eq, left, right, eqExp.getType());
             return node.getResult();
         } else {
             throw new NotImplementedYetException(exp);

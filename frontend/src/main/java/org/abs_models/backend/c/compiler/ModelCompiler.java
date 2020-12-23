@@ -190,6 +190,15 @@ public class ModelCompiler {
             return;
         }
 
+        if (node instanceof IntLiteralNode) {
+            IntLiteralNode intLiteralNode = (IntLiteralNode)node;
+            String resultIdent = useValue(intLiteralNode.getResult());
+            byte[] bytes = intLiteralNode.content.getBytes(StandardCharsets.UTF_8);
+            String cString = cFile.encodeCString(bytes);
+            cFile.writeLine("absint_literal(&" + resultIdent + "," + cString + "," + bytes.length + ");");
+            return;
+        }
+
         if (node instanceof ToStringNode) {
             ToStringNode toStringNode = (ToStringNode)node;
             Input value = toStringNode.getValue();
@@ -197,6 +206,16 @@ public class ModelCompiler {
             TypeRepresentation repr = types.get(value.getType());
             String resultIdent = useValue(toStringNode.getResult());
             repr.writeToString(cFile, "&" + resultIdent, valueIdent);
+            return;
+        }
+
+        if (node instanceof ComparisonNode) {
+            ComparisonNode comparisonNode = (ComparisonNode)node;
+            String leftIdent = compileInput(comparisonNode.getLeft());
+            String rightIdent = compileInput(comparisonNode.getRight());
+            TypeRepresentation repr = types.get(comparisonNode.getLeft().getType());
+            String resultIdent = useValue(comparisonNode.getResult());
+            repr.writeCompare(cFile, "&" + resultIdent + ".tag", comparisonNode.operator, leftIdent, rightIdent);
             return;
         }
 

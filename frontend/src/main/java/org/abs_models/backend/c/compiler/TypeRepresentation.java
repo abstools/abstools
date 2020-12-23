@@ -1,6 +1,7 @@
 package org.abs_models.backend.c.compiler;
 
 import org.abs_models.backend.c.codegen.CFile;
+import org.abs_models.backend.rvsdg.abs.ComparisonNode;
 
 import java.io.IOException;
 
@@ -41,4 +42,9 @@ public interface TypeRepresentation {
      * Converts the `value` into a string stored inside `builder`.
      */
     void writeToString(CFile cFile, String builder, String value) throws IOException;
+
+    /**
+     * Compares `left` and `right` and stores the result in `result`.
+     */
+    void writeCompare(CFile cFile, String result, ComparisonNode.Operator operator, String left, String right) throws IOException;
 }
