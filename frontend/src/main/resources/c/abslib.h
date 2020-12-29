@@ -181,3 +181,48 @@ void absrat_div(absrat *val, absrat left, absrat right) {
     mpq_init(val->mprat);
     mpq_div(val->mprat, left.mprat, right.mprat);
 }
+
+// Float implementation
+
+typedef struct absflo {
+    double data;
+} absflo;
+
+void absflo_initzero(absflo *val) { }
+void absflo_deinit(absflo *val) { }
+
+void absflo_initcopy(absflo *val, absflo other) {
+    val->data = other.data;
+}
+
+void absflo_literal(absflo *val, double content) {
+    val->data = content;
+}
+
+void absflo_tostring(absstr *result, absflo val) {
+    int size = snprintf(0, 0, "%f", val.data);
+    absstr_alloc(result, size);
+    snprintf(result->data, size + 1, "%f", val.data);
+}
+
+int absflo_compare(absflo left, absflo right) {
+    if (left.data < right.data) return -1;
+    if (left.data > right.data) return 1;
+    return 0;
+}
+
+void absflo_add(absflo *val, absflo left, absflo right) {
+    val->data = left.data + right.data;
+}
+
+void absflo_sub(absflo *val, absflo left, absflo right) {
+    val->data = left.data - right.data;
+}
+
+void absflo_mul(absflo *val, absflo left, absflo right) {
+    val->data = left.data * right.data;
+}
+
+void absflo_div(absflo *val, absflo left, absflo right) {
+    val->data = left.data / right.data;
+}

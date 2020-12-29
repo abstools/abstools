@@ -7,6 +7,7 @@ import org.abs_models.backend.rvsdg.abs.*;
 import org.abs_models.backend.rvsdg.builder.Function;
 import org.abs_models.backend.rvsdg.builder.ModelBuilder;
 import org.abs_models.backend.rvsdg.core.*;
+import org.abs_models.frontend.ast.FloatLiteral;
 import org.abs_models.frontend.typechecker.Type;
 
 import java.io.File;
@@ -226,6 +227,13 @@ public class ModelCompiler {
             byte[] bytes = intLiteralNode.content.getBytes(StandardCharsets.UTF_8);
             String cString = cFile.encodeCString(bytes);
             cFile.writeLine("absint_literal(&" + resultIdent + "," + cString + "," + bytes.length + ");");
+            return;
+        }
+
+        if (node instanceof FloatLiteralNode) {
+            FloatLiteralNode floatLiteralNode = (FloatLiteralNode) node;
+            String resultIdent = useValue(region, floatLiteralNode.getResult());
+            cFile.writeLine("absflo_literal(&" + resultIdent + ", " + floatLiteralNode.content + ");");
             return;
         }
 

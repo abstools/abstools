@@ -168,6 +168,10 @@ public class Builder {
             String content = ((IntLiteral) exp).getContent();
             IntLiteralNode node = new IntLiteralNode(region, exp.getType(), content);
             return node.getResult();
+        } else if (exp instanceof FloatLiteral) {
+            double content = Double.parseDouble(((FloatLiteral) exp).getContent());
+            FloatLiteralNode node = new FloatLiteralNode(region, exp.getType(), content);
+            return node.getResult();
         } else if (exp instanceof VarUse) {
             VarUse varUse = (VarUse) exp;
             Variable var = scope.lookupVar(varUse.getName());
