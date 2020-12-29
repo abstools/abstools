@@ -1,5 +1,6 @@
 package org.abs_models.backend.c.codegen;
 
+import org.abs_models.backend.rvsdg.abs.BinaryArithmeticNode;
 import org.abs_models.backend.rvsdg.abs.ComparisonNode;
 
 import java.io.IOException;
@@ -68,6 +69,23 @@ public class CFile {
                 return " > 0";
             case Gte:
                 return " >= 0";
+            default:
+                throw new RuntimeException("Unknown operator: " + op);
+        }
+    }
+
+    public String encodeBinaryArithmeticOperator(BinaryArithmeticNode.Operator op) {
+        switch (op) {
+            case Add:
+                return "add";
+            case Sub:
+                return "sub";
+            case Mul:
+                return "mul";
+            case Div:
+                return "div";
+            case Mod:
+                return "mod";
             default:
                 throw new RuntimeException("Unknown operator: " + op);
         }

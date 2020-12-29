@@ -122,6 +122,11 @@ public class Builder {
                 return node.getResult();
             }
 
+            if (leftResult.type.isIntType() && rightResult.type.isIntType()) {
+                BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Add, leftResult, rightResult);
+                return node.getResult();
+            }
+
             throw new NotImplementedYetException(exp);
         } else if (exp instanceof StringLiteral) {
             String content = ((StringLiteral) exp).getContent();

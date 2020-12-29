@@ -48,17 +48,50 @@ void absstr_concat(absstr *result, absstr left, absstr right) {
 
 // Integer representation
 typedef struct absint {
-    mpz_t value;
+    mpz_t mpint;
 } absint;
 
+void absint_initzero(absint *val) {
+    mpz_init(val->mpint);
+}
+
+void absint_initcopy(absint *val, absint other) {
+    mpz_init_set(val->mpint, other.mpint);
+}
+
 void absint_deinit(absint *val) {
-    mpz_clear(val->value);
+    mpz_clear(val->mpint);
 }
 
 void absint_literal(absint *val, char *data, size_t size) {
-    mpz_init_set_str(val->value, data, 10);
+    mpz_init_set_str(val->mpint, data, 10);
 }
 
-int absint_compare(absint a, absint b) {
-    return mpz_cmp(a.value, b.value);
+int absint_compare(absint left, absint right) {
+    return mpz_cmp(left.mpint, left.mpint);
+}
+
+void absint_add(absint *val, absint left, absint right) {
+    mpz_init(val->mpint);
+    mpz_add(val->mpint, left.mpint, right.mpint);
+}
+
+void absint_sub(absint *val, absint left, absint right) {
+    mpz_init(val->mpint);
+    mpz_sub(val->mpint, left.mpint, right.mpint);
+}
+
+void absint_mul(absint *val, absint left, absint right) {
+    mpz_init(val->mpint);
+    mpz_mul(val->mpint, left.mpint, right.mpint);
+}
+
+void absint_div(absint *val, absint left, absint right) {
+    mpz_init(val->mpint);
+    mpz_div(val->mpint, left.mpint, right.mpint);
+}
+
+void absint_mod(absint *val, absint left, absint right) {
+    mpz_init(val->mpint);
+    mpz_mod(val->mpint, left.mpint, right.mpint);
 }

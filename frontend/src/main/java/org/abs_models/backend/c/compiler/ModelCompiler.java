@@ -249,6 +249,17 @@ public class ModelCompiler {
             return;
         }
 
+        if (node instanceof BinaryArithmeticNode) {
+            BinaryArithmeticNode binNode = (BinaryArithmeticNode) node;
+            String leftIdent = compileInput(region, binNode.getLeft());
+            String rightIdent = compileInput(region, binNode.getRight());
+            String resultIdent = useValue(region, binNode.getResult());
+            TypeRepresentation repr = types.get(binNode.getLeft().getType());
+            String postfix = cFile.encodeBinaryArithmeticOperator(binNode.operator);
+            cFile.writeLine(repr.getCType() + "_" + postfix + "(&" + resultIdent + ", " + leftIdent + ", " + rightIdent + ");");
+            return;
+        }
+
         throw new RuntimeException("Unhandled node: " + node);
     }
 
