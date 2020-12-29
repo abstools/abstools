@@ -32,19 +32,44 @@ public interface TypeRepresentation {
     }
 
     /**
-     * Updates `ident` to have the same content as `value` (assuming equal representation).
+     * Initializes lvalue to a zero value.
+     *
+     * @throws IOException
      */
-    default void setValue(CFile cFile, String ident, String value) throws IOException {
-        cFile.writeLine(ident + " = " + value + ";");
+    default void initZero(CFile cFile, String lvalue) throws IOException {
+        cFile.writeLine(getCType() + "_initzero(&(" + lvalue + "));");
+    }
+
+    /**
+     * Initializes lvalue by coping from rvalue.
+     *
+     * @throws IOException
+     */
+    default void initCopy(CFile cFile, String lvalue, String rvalue) throws IOException {
+        cFile.writeLine(getCType() + "_initcopy(&(" + lvalue + "), " + rvalue + ");");
+    }
+
+    /**
+     * Deinitializes lvalue.
+     *
+     * @throws IOException
+     */
+    default void deinit(CFile cFile, String lvalue) throws IOException {
+        cFile.writeLine(getCType() + "_deinit(&(" + lvalue + "));");
     }
 
     /**
      * Converts the `value` into a string stored inside `builder`.
      */
-    void writeToString(CFile cFile, String builder, String value) throws IOException;
+    default void convertToString(CFile cFile, String builder, String value) throws IOException {
+        cFile.writeLine(getCType() + "_tostring(" + builder + "," + value + ");");
+    }
 
     /**
      * Compares `left` and `right` and stores the result in `result`.
      */
-    void writeCompare(CFile cFile, String result, ComparisonNode.Operator operator, String left, String right) throws IOException;
+    default void writeCompare(CFile cFile, String result, ComparisonNode.Operator operator, String left, String right) throws IOException {
+        String cmp = getCType() + "_compare(" + left + "," + right + ") " + cFile.encodeComparisonOperator(operator);
+        cFile.writeLine(result + " = (" + cmp + ") ? 0 : 1;");
+    }
 }

@@ -1,7 +1,8 @@
 package org.abs_models.backend.c.compiler;
 
 import org.abs_models.backend.c.codegen.CFile;
-import org.abs_models.backend.rvsdg.abs.ComparisonNode;
+import org.abs_models.backend.c.codegen.CFunctionDecl;
+import org.abs_models.backend.c.codegen.CFunctionParam;
 import org.abs_models.frontend.ast.DataConstructor;
 import org.abs_models.frontend.typechecker.DataTypeType;
 
@@ -24,12 +25,12 @@ public class DataTypeRepresentation implements TypeRepresentation {
     @Override
     public String getCType() {
         if (!isDeclared) throw new RuntimeException("Using type before it is declared");
-        return "struct " + cname;
+        return cname;
     }
 
     @Override
     public void declare(CFile cFile) throws IOException {
-        cFile.writeLine("struct " + cname + "{");
+        cFile.writeLine("typedef struct " + cname + "{");
         cFile.writeLine("int tag;");
         cFile.writeLine("union {");
         for (Variant variant : variants) {
@@ -43,9 +44,59 @@ public class DataTypeRepresentation implements TypeRepresentation {
             cFile.writeLine("} " + variant.cname);
         }
         cFile.writeLine("} data;");
-        cFile.writeLine("};");
+        cFile.writeLine("} " + cname + ";");
 
-        cFile.writeLine("static void " + cname + "_tostring(absstr *result, struct " + cname + " data) {");
+        CFunctionDecl initzero = new CFunctionDecl(cname + "_initzero", "static void", List.of(
+            new CFunctionParam("val", cname + "*")
+        ));
+        cFile.startFunction(initzero);
+        Variant var = variants.get(0);
+        if (var != null) {
+            cFile.writeLine("val->tag = " + var.tag + ";");
+            for (Field field : var.fields) {
+                field.repr.initZero(cFile, "val->" + field.cname);
+            }
+        }
+        cFile.stopFunction();
+
+        CFunctionDecl deinit = new CFunctionDecl(cname + "_deinit", "static void", List.of(
+            new CFunctionParam("val", cname + "*")
+        ));
+        cFile.startFunction(deinit);
+        cFile.writeLine("switch (val->tag) {");
+        for (Variant variant : variants) {
+            cFile.writeLine("case " + variant.tag + ":");
+            for (Field field : variant.fields) {
+                field.repr.deinit(cFile, "val->data." + field.cname);
+            }
+            cFile.writeLine("break;");
+        }
+        cFile.writeLine("}");
+        cFile.stopFunction();
+
+        CFunctionDecl initcopy = new CFunctionDecl(cname + "_initcopy", "static void", List.of(
+            new CFunctionParam("val", cname + "*"),
+            new CFunctionParam("other", cname)
+        ));
+
+        cFile.startFunction(initcopy);
+        cFile.writeLine("val->tag = other.tag;");
+        cFile.writeLine("switch (other.tag) {");
+        for (Variant variant : variants) {
+            cFile.writeLine("case " + variant.tag + ":");
+            for (Field field : variant.fields) {
+                field.repr.initCopy(cFile, "val->data." + field.cname, "other.data." + field.cname);
+            }
+            cFile.writeLine("break;");
+        }
+        cFile.writeLine("}");
+        cFile.stopFunction();
+
+        CFunctionDecl tostring = new CFunctionDecl(cname + "_tostring", "static void", List.of(
+            new CFunctionParam("result", "absstr*"),
+            new CFunctionParam("data", cname)
+        ));
+        cFile.startFunction(tostring);
         cFile.writeLine("switch (data.tag) {");
         for (Variant variant : variants) {
             cFile.writeLine("case " + variant.tag + ":");
@@ -55,19 +106,9 @@ public class DataTypeRepresentation implements TypeRepresentation {
             cFile.writeLine("break;");
         }
         cFile.writeLine("}");
-        cFile.writeLine("}");
+        cFile.stopFunction();
 
         isDeclared = true;
-    }
-
-    @Override
-    public void writeToString(CFile cFile, String builder, String value) throws IOException {
-        cFile.writeLine(cname + "_tostring(" + builder + "," + value + ");");
-    }
-
-    @Override
-    public void writeCompare(CFile cFile, String result, ComparisonNode.Operator operator, String left, String right) throws IOException {
-        cFile.writeLine(cname + "_compare(" + result + "," + left + "," + right + ") " + cFile.encodeComparisonOperator(operator) + ";");
     }
 
     public Variant findVariant(DataConstructor dataConstructor) {
@@ -84,7 +125,7 @@ public class DataTypeRepresentation implements TypeRepresentation {
     public void setVariantField(CFile cFile, String ident, Variant variant, int fieldIdx, String value) throws IOException {
         Field field = variant.fields.get(fieldIdx);
         String fieldIdent = "(" + ident + ").data." + variant.cname + "." + field.cname;
-        field.repr.setValue(cFile, fieldIdent, value);
+        field.repr.initCopy(cFile, fieldIdent, value);
     }
 
     static class Variant {

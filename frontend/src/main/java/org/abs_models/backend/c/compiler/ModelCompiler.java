@@ -1,10 +1,8 @@
 package org.abs_models.backend.c.compiler;
 
-import com.google.common.base.Utf8;
 import org.abs_models.backend.c.codegen.CFile;
 import org.abs_models.backend.c.codegen.CFunctionDecl;
 import org.abs_models.backend.c.codegen.CProject;
-import org.abs_models.backend.java.utils.ToString;
 import org.abs_models.backend.rvsdg.abs.*;
 import org.abs_models.backend.rvsdg.builder.Function;
 import org.abs_models.backend.rvsdg.builder.ModelBuilder;
@@ -22,8 +20,22 @@ import java.util.*;
 public class ModelCompiler {
     private final CFile cFile;
     private final TypeRepresentationBuilder types = new TypeRepresentationBuilder();
-    private final HashMap<Object, String> values = new HashMap<>();
+    private final Region mainRegion = new Region();
     private int idGenerator = 0;
+
+    static private class Register {
+        TypeRepresentation repr;
+        String ident;
+
+        public Register(TypeRepresentation repr, String ident) {
+            this.repr = repr;
+            this.ident = ident;
+        }
+    }
+
+    static private class Region {
+        final HashMap<Object, Register> registers = new HashMap<>();
+    }
 
     private ModelCompiler(CFile cFile) {
         this.cFile = cFile;
@@ -58,12 +70,22 @@ public class ModelCompiler {
         CFunctionDecl mainFuncDecl = new CFunctionDecl("main", "int", List.of());
         cFile.startFunction(mainFuncDecl);
         for (Variable variable : func.variables) {
-            declareVariabel(variable);
+            Register reg = declareVariabel(mainRegion, variable);
+            reg.repr.initZero(cFile, reg.ident);
         }
-        compileOutput(func.state);
+        compileOutput(mainRegion, func.state);
+        deinitValues(mainRegion);
         cFile.writeLine("return 0;");
         cFile.stopFunction();
         cFile.close();
+    }
+
+    private void deinitValues(Region region) throws IOException {
+        for (Register reg : region.registers.values()) {
+            if (reg.repr.isRepresentable()) {
+                reg.repr.deinit(cFile, reg.ident);
+            }
+        }
     }
 
     private void buildTypes(Function func) {
@@ -78,11 +100,11 @@ public class ModelCompiler {
         }
     }
 
-    private String compileOutput(Output output) throws IOException {
+    private String compileOutput(Region region, Output output) throws IOException {
         if (output instanceof SimpleOutput) {
-            compileNode(((SimpleOutput) output).node);
+            compileNode(region, ((SimpleOutput) output).node);
         } else if (output instanceof GammaOutput) {
-            compileNode(((GammaOutput) output).gammaNode);
+            compileNode(region, ((GammaOutput) output).gammaNode);
         } else if (output instanceof GammaArgument) {
             // Nothing to do.
         } else if (output instanceof StateOutput) {
@@ -91,15 +113,15 @@ public class ModelCompiler {
             throw new RuntimeException("Unhandled output: " + output);
         }
 
-        return useValue(output);
+        return useValue(region, output);
     }
 
-    private void compileNode(Node node) throws IOException {
+    private void compileNode(Region region, Node node) throws IOException {
         if (compiled.contains(node)) return;
         compiled.add(node);
 
         for (Output output : node.outputs) {
-            declareOutput(output);
+            declareOutput(region, output);
         }
 
         if (node instanceof DataConstructNode) {
@@ -107,11 +129,11 @@ public class ModelCompiler {
 
             ArrayList<String> params = new ArrayList<>();
             for (Input input : node.inputs) {
-                params.add(compileInput(input));
+                params.add(compileInput(region, input));
             }
 
             Output result = dataConstructNode.getResult();
-            String resultIdent = useValue(result);
+            String resultIdent = useValue(region, result);
             DataTypeRepresentation repr = (DataTypeRepresentation) types.get(result.type);
             DataTypeRepresentation.Variant variant = repr.findVariant(dataConstructNode.dataConstructor);
             repr.setVariant(cFile, resultIdent, variant);
@@ -125,65 +147,73 @@ public class ModelCompiler {
 
         if (node instanceof GetVarNode) {
             GetVarNode getVarNode = (GetVarNode) node;
-            compileInput(getVarNode.getState());
-            String resultIdent = useValue(getVarNode.getResult());
-            String varIdent = useValue(getVarNode.var);
+            compileInput(region, getVarNode.getState());
+            String resultIdent = useValue(region, getVarNode.getResult());
+            String varIdent = useValue(mainRegion, getVarNode.var);
             TypeRepresentation repr = types.get(getVarNode.var.type);
-            repr.setValue(cFile, resultIdent, varIdent);
+            repr.initCopy(cFile, resultIdent, varIdent);
             return;
         }
 
         if (node instanceof SetVarNode) {
             SetVarNode setVarNode = (SetVarNode) node;
-            compileInput(setVarNode.getState());
-            String value = compileInput(setVarNode.getValue());
-            String ident = useValue(setVarNode.var);
+            compileInput(region, setVarNode.getState());
+            String value = compileInput(region, setVarNode.getValue());
+            String ident = useValue(mainRegion, setVarNode.var);
             TypeRepresentation repr = types.get(setVarNode.var.type);
-            repr.setValue(cFile, ident, value);
+            repr.deinit(cFile, ident);
+            repr.initCopy(cFile, ident, value);
             return;
         }
 
         if (node instanceof GammaNode) {
             GammaNode gammaNode = ((GammaNode) node);
-            String predicate = compileInput(gammaNode.getPredicate());
+            String predicate = compileInput(region, gammaNode.getPredicate());
+
+            List<Region> regions = List.of(new Region(), new Region());
 
             for (int i = 1; i < node.inputs.size(); i++) {
                 GammaInput input = (GammaInput) node.inputs.get(i);
-                String value = compileInput(input);
+                String value = compileInput(region, input);
                 for (GammaArgument argument : input.arguments) {
-                    values.put(argument, value);
+                    Register reg = declareOutput(regions.get(argument.regionIdx), argument);
+                    if (reg.repr.isRepresentable()) {
+                        reg.repr.initCopy(cFile, reg.ident, value);
+                    }
                 }
             }
 
             cFile.writeLine("if (" + predicate + ".tag == 1) {");
-            compileGammaBranch(gammaNode, 0);
+            compileGammaBranch(regions.get(0), gammaNode, 0);
+            deinitValues(regions.get(0));
             cFile.writeLine("} else {");
-            compileGammaBranch(gammaNode, 1);
+            compileGammaBranch(regions.get(1), gammaNode, 1);
+            deinitValues(regions.get(1));
             cFile.writeLine("}");
             return;
         }
 
         if (node instanceof PrintNode) {
             PrintNode printNode = (PrintNode) node;
-            compileInput(printNode.getState());
-            String value = compileInput(printNode.getValue());
+            compileInput(region, printNode.getState());
+            String value = compileInput(region, printNode.getValue());
             String funcName = printNode.withNewline ? "absstr_println" : "absstr_print";
-            cFile.writeLine(funcName + "("  + value + ");");
+            cFile.writeLine(funcName + "(" + value + ");");
             return;
         }
 
         if (node instanceof StringConcatNode) {
-            StringConcatNode stringConcatNode = (StringConcatNode)node;
-            String leftIdent = compileInput(stringConcatNode.getLeft());
-            String rightIdent = compileInput(stringConcatNode.getRight());
-            String resultIdent = useValue(stringConcatNode.getResult());
+            StringConcatNode stringConcatNode = (StringConcatNode) node;
+            String leftIdent = compileInput(region, stringConcatNode.getLeft());
+            String rightIdent = compileInput(region, stringConcatNode.getRight());
+            String resultIdent = useValue(region, stringConcatNode.getResult());
             cFile.writeLine("absstr_concat(&" + resultIdent + "," + leftIdent + "," + rightIdent + ");");
             return;
         }
 
         if (node instanceof StringLiteralNode) {
-            StringLiteralNode stringLiteralNode = (StringLiteralNode)node;
-            String resultIdent = useValue(stringLiteralNode.getResult());
+            StringLiteralNode stringLiteralNode = (StringLiteralNode) node;
+            String resultIdent = useValue(region, stringLiteralNode.getResult());
             byte[] bytes = stringLiteralNode.content.getBytes(StandardCharsets.UTF_8);
             String cString = cFile.encodeCString(bytes);
             cFile.writeLine("absstr_literal(&" + resultIdent + "," + cString + "," + bytes.length + ");");
@@ -191,8 +221,8 @@ public class ModelCompiler {
         }
 
         if (node instanceof IntLiteralNode) {
-            IntLiteralNode intLiteralNode = (IntLiteralNode)node;
-            String resultIdent = useValue(intLiteralNode.getResult());
+            IntLiteralNode intLiteralNode = (IntLiteralNode) node;
+            String resultIdent = useValue(region, intLiteralNode.getResult());
             byte[] bytes = intLiteralNode.content.getBytes(StandardCharsets.UTF_8);
             String cString = cFile.encodeCString(bytes);
             cFile.writeLine("absint_literal(&" + resultIdent + "," + cString + "," + bytes.length + ");");
@@ -200,66 +230,68 @@ public class ModelCompiler {
         }
 
         if (node instanceof ToStringNode) {
-            ToStringNode toStringNode = (ToStringNode)node;
+            ToStringNode toStringNode = (ToStringNode) node;
             Input value = toStringNode.getValue();
-            String valueIdent = compileInput(value);
+            String valueIdent = compileInput(region, value);
             TypeRepresentation repr = types.get(value.getType());
-            String resultIdent = useValue(toStringNode.getResult());
-            repr.writeToString(cFile, "&" + resultIdent, valueIdent);
+            String resultIdent = useValue(region, toStringNode.getResult());
+            repr.convertToString(cFile, "&" + resultIdent, valueIdent);
             return;
         }
 
         if (node instanceof ComparisonNode) {
-            ComparisonNode comparisonNode = (ComparisonNode)node;
-            String leftIdent = compileInput(comparisonNode.getLeft());
-            String rightIdent = compileInput(comparisonNode.getRight());
+            ComparisonNode comparisonNode = (ComparisonNode) node;
+            String leftIdent = compileInput(region, comparisonNode.getLeft());
+            String rightIdent = compileInput(region, comparisonNode.getRight());
             TypeRepresentation repr = types.get(comparisonNode.getLeft().getType());
-            String resultIdent = useValue(comparisonNode.getResult());
-            repr.writeCompare(cFile, "&" + resultIdent + ".tag", comparisonNode.operator, leftIdent, rightIdent);
+            String resultIdent = useValue(region, comparisonNode.getResult());
+            repr.writeCompare(cFile, resultIdent + ".tag", comparisonNode.operator, leftIdent, rightIdent);
             return;
         }
 
         throw new RuntimeException("Unhandled node: " + node);
     }
 
-    private void compileGammaBranch(GammaNode gammaNode, int idx) throws IOException {
+    private void compileGammaBranch(Region region, GammaNode gammaNode, int idx) throws IOException {
         for (Output output : gammaNode.outputs) {
             GammaOutput gammaOutput = (GammaOutput) output;
-            String result = compileOutput(gammaOutput.branchOutputs.get(idx));
+            String result = compileOutput(region, gammaOutput.branchOutputs.get(idx));
             TypeRepresentation repr = types.get(output.type);
 
             if (repr.isRepresentable()) {
-                repr.setValue(cFile, useValue(output), result);
+                repr.initCopy(cFile, useValue(region, output), result);
             }
         }
     }
 
-    private void declareOutput(Output output) throws IOException {
-        declareValue(output.type, output);
+    private Register declareOutput(Region region, Output output) throws IOException {
+        return declareValue(region, output.type, output);
     }
 
-    private void declareVariabel(Variable var) throws IOException {
-        declareValue(var.type, var);
+    private Register declareVariabel(Region region, Variable var) throws IOException {
+        return declareValue(region, var.type, var);
     }
 
-    private void declareValue(Type type, Object val) throws IOException {
+    private Register declareValue(Region region, Type type, Object val) throws IOException {
         String ident = "val" + idGenerator++;
         TypeRepresentation repr = types.get(type);
+        Register reg = new Register(repr, ident);
         if (repr.isRepresentable()) {
             cFile.writeLine(repr.getCType() + " " + ident + ";");
         }
-        values.put(val, ident);
+        region.registers.put(val, reg);
+        return reg;
     }
 
-    private String useValue(Object val) {
-        String ident = values.get(val);
-        if (ident == null) throw new RuntimeException("Could not find value: " + val);
-        return ident;
+    private String useValue(Region region, Object val) {
+        Register reg = region.registers.get(val);
+        if (reg == null) throw new RuntimeException("Could not find value: " + val);
+        return reg.ident;
     }
 
-    private String compileInput(Input input) throws IOException {
+    private String compileInput(Region region, Input input) throws IOException {
         if (input instanceof SimpleInput) {
-            return compileOutput(((SimpleInput) input).output);
+            return compileOutput(region, ((SimpleInput) input).output);
         }
 
         throw new RuntimeException("Unhandled input: " + input);

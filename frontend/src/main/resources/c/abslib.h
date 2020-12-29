@@ -18,7 +18,7 @@ int absstr_alloc(absstr *str, size_t size) {
     return 0;
 }
 
-int absstr_free(absstr *str) {
+int absstr_deinit(absstr *str) {
     free(str->data);
     str->data = 0;
     str->size = 0;
@@ -36,8 +36,8 @@ void absstr_println(absstr str) {
 }
 
 void absstr_literal(absstr *str, char *data, size_t size) {
-    str->data = data;
-    str->size = size;
+    absstr_alloc(str, size);
+    memcpy(str->data, data, size);
 }
 
 void absstr_concat(absstr *result, absstr left, absstr right) {
@@ -50,6 +50,10 @@ void absstr_concat(absstr *result, absstr left, absstr right) {
 typedef struct absint {
     mpz_t value;
 } absint;
+
+void absint_deinit(absint *val) {
+    mpz_clear(val->value);
+}
 
 void absint_literal(absint *val, char *data, size_t size) {
     mpz_init_set_str(val->value, data, 10);
