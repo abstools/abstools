@@ -28,6 +28,8 @@ public class TypeRepresentationBuilder {
             repr = new NativeTypeRepresentation(type, "absstr");
         } else if (type.isIntType()) {
             repr = new NativeTypeRepresentation(type, "absint");
+        } else if (type.isRatType()) {
+            repr = new NativeTypeRepresentation(type, "absrat");
         } else if (type.isDataType()) {
             repr = buildDataType((DataTypeType) type);
         }

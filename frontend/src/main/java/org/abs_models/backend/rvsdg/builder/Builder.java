@@ -5,6 +5,7 @@ import org.abs_models.backend.rvsdg.abs.Variable;
 import org.abs_models.backend.rvsdg.core.*;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.typechecker.Type;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,22 +123,24 @@ public class Builder {
                 return node.getResult();
             }
 
-            if (leftResult.type.isIntType() && rightResult.type.isIntType()) {
-                BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Add, leftResult, rightResult);
-                return node.getResult();
-            }
+            Type type = typeOfBinaryOperands(addExp);
+            leftResult = coerce(leftResult, type);
+            rightResult = coerce(rightResult, type);
 
-            throw new NotImplementedYetException(exp);
+            BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Add, leftResult, rightResult);
+            return node.getResult();
         } else if (exp instanceof SubAddExp) {
             SubAddExp subExp = (SubAddExp) exp;
-            Output leftResult = process(state, subExp.getLeft());
-            Output rightResult = process(state, subExp.getRight());
+            Type type = typeOfBinaryOperands(subExp);
+            Output leftResult = coerce(process(state, subExp.getLeft()), type);
+            Output rightResult = coerce(process(state, subExp.getRight()), type);
             BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Sub, leftResult, rightResult);
             return node.getResult();
         } else if (exp instanceof MultMultExp) {
             MultMultExp multExp = (MultMultExp) exp;
-            Output leftResult = process(state, multExp.getLeft());
-            Output rightResult = process(state, multExp.getRight());
+            Type type = typeOfBinaryOperands(multExp);
+            Output leftResult = coerce(process(state, multExp.getLeft()), type);
+            Output rightResult = coerce(process(state, multExp.getRight()), type);
             BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Mul, leftResult, rightResult);
             return node.getResult();
         }  else if (exp instanceof ModMultExp) {
@@ -146,6 +149,17 @@ public class Builder {
             Output rightResult = process(state, modExp.getRight());
             BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Mod, leftResult, rightResult);
             return node.getResult();
+        } else if (exp instanceof DivMultExp) {
+            DivMultExp divExp = (DivMultExp) exp;
+            Output leftResult = process(state, divExp.getLeft());
+            Output rightResult = process(state, divExp.getRight());
+
+            if (leftResult.type.isIntType() && rightResult.type.isIntType()) {
+                ToRationalNode node = new ToRationalNode(region, leftResult, rightResult, divExp.getType());
+                return node.getResult();
+            }
+
+            throw new NotImplementedYetException(exp);
         } else if (exp instanceof StringLiteral) {
             String content = ((StringLiteral) exp).getContent();
             StringLiteralNode node = new StringLiteralNode(region, exp.getType(), content);
@@ -162,43 +176,73 @@ public class Builder {
             return node.getResult();
         } else if (exp instanceof EqExp) {
             EqExp eqExp = (EqExp) exp;
-            Output left = process(state, eqExp.getLeft());
-            Output right = process(state, eqExp.getRight());
+            Type type = typeOfBinaryOperands(eqExp);
+            Output left = coerce(process(state, eqExp.getLeft()), type);
+            Output right = coerce(process(state, eqExp.getRight()), type);
             ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Eq, left, right, eqExp.getType());
             return node.getResult();
         }  else if (exp instanceof NotEqExp) {
             NotEqExp cmpExp = (NotEqExp) exp;
-            Output left = process(state, cmpExp.getLeft());
-            Output right = process(state, cmpExp.getRight());
+            Type type = typeOfBinaryOperands(cmpExp);
+            Output left = coerce(process(state, cmpExp.getLeft()), type);
+            Output right = coerce(process(state, cmpExp.getRight()), type);
             ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.NotEq, left, right, cmpExp.getType());
             return node.getResult();
         } else if (exp instanceof GTExp) {
             GTExp cmpExp = (GTExp) exp;
-            Output left = process(state, cmpExp.getLeft());
-            Output right = process(state, cmpExp.getRight());
+            Type type = typeOfBinaryOperands(cmpExp);
+            Output left = coerce(process(state, cmpExp.getLeft()), type);
+            Output right = coerce(process(state, cmpExp.getRight()), type);
             ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Gt, left, right, cmpExp.getType());
             return node.getResult();
         } else if (exp instanceof GTEQExp) {
             GTEQExp cmpExp = (GTEQExp) exp;
-            Output left = process(state, cmpExp.getLeft());
-            Output right = process(state, cmpExp.getRight());
+            Type type = typeOfBinaryOperands(cmpExp);
+            Output left = coerce(process(state, cmpExp.getLeft()), type);
+            Output right = coerce(process(state, cmpExp.getRight()), type);
             ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Gte, left, right, cmpExp.getType());
             return node.getResult();
         } else if (exp instanceof LTExp) {
             LTExp cmpExp = (LTExp) exp;
-            Output left = process(state, cmpExp.getLeft());
-            Output right = process(state, cmpExp.getRight());
+            Type type = typeOfBinaryOperands(cmpExp);
+            Output left = coerce(process(state, cmpExp.getLeft()), type);
+            Output right = coerce(process(state, cmpExp.getRight()), type);
             ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Lt, left, right, cmpExp.getType());
             return node.getResult();
         } else if (exp instanceof LTEQExp) {
             LTEQExp cmpExp = (LTEQExp) exp;
-            Output left = process(state, cmpExp.getLeft());
-            Output right = process(state, cmpExp.getRight());
+            Type type = typeOfBinaryOperands(cmpExp);
+            Output left = coerce(process(state, cmpExp.getLeft()), type);
+            Output right = coerce(process(state, cmpExp.getRight()), type);
             ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Lte, left, right, cmpExp.getType());
             return node.getResult();
         } else {
             throw new NotImplementedYetException(exp);
         }
+    }
+
+    Output coerce(Output value, Type type) {
+        if (value.type.equals(type)) return value;
+
+        if (value.type.isIntType() && type.isRatType()) {
+            IntToRationalNode node = new IntToRationalNode(region, value, type);
+            return node.getResult();
+        }
+
+        throw new RuntimeException("Unknown coercion");
+    }
+
+    /**
+     * Calculates the expected type of binary operands for coercing.
+     */
+    Type typeOfBinaryOperands(Binary binNode) {
+        Type leftType = binNode.getLeft().getType();
+        Type rightType = binNode.getRight().getType();
+        if (leftType.equals(rightType)) return leftType;
+        if (leftType.isIntType() && rightType.isRatType()) return rightType;
+        if (leftType.isRatType() && rightType.isIntType()) return leftType;
+
+        throw new RuntimeException("Unknown type combination");
     }
 
     Output callBuiltin(CurrentState state, FunctionDecl decl, List<Output> args) {

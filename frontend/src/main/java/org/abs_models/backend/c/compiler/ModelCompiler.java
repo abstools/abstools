@@ -260,6 +260,23 @@ public class ModelCompiler {
             return;
         }
 
+        if (node instanceof ToRationalNode) {
+            ToRationalNode toRatNode = (ToRationalNode) node;
+            String numIdent = compileInput(region, toRatNode.getNumerator());
+            String denIdent = compileInput(region, toRatNode.getDenominator());
+            String resultIdent = useValue(region, toRatNode.getResult());
+            cFile.writeLine("absrat_initfromints(&" + resultIdent + ", " + numIdent + ", " + denIdent + ");");
+            return;
+        }
+
+        if (node instanceof IntToRationalNode) {
+            IntToRationalNode toRatNode = (IntToRationalNode) node;
+            String intIdent = compileInput(region, toRatNode.getInt());
+            String resultIdent = useValue(region, toRatNode.getResult());
+            cFile.writeLine("absrat_initfromint(&" + resultIdent + ", " + intIdent + ");");
+            return;
+        }
+
         throw new RuntimeException("Unhandled node: " + node);
     }
 

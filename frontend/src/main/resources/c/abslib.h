@@ -122,3 +122,62 @@ void absint_mod(absint *val, absint left, absint right) {
     mpz_init(val->mpint);
     mpz_mod(val->mpint, left.mpint, right.mpint);
 }
+
+// Rational implementation
+typedef struct absrat {
+    mpq_t mprat;
+} absrat;
+
+void absrat_initzero(absrat *val) {
+    mpq_init(val->mprat);
+}
+
+void absrat_initcopy(absrat *val, absrat other) {
+    mpq_init(val->mprat);
+    mpq_set(val->mprat, other.mprat);
+}
+
+void absrat_initfromints(absrat *val, absint num, absint den) {
+    mpq_init(val->mprat);
+    mpz_set(mpq_numref(val->mprat), num.mpint);
+    mpz_set(mpq_denref(val->mprat), den.mpint);
+    mpq_canonicalize(val->mprat);
+}
+
+void absrat_initfromint(absrat *val, absint num) {
+    mpq_init(val->mprat);
+    mpq_set_z(val->mprat, num.mpint);
+}
+
+void absrat_deinit(absrat *val) {
+    mpq_clear(val->mprat);
+}
+
+void absrat_tostring(absstr *result, absrat val) {
+    result->data = mpq_get_str(NULL, 10, val.mprat);
+    result->size = strlen(result->data);
+}
+
+int absrat_compare(absrat left, absrat right) {
+    return mpq_cmp(left.mprat, right.mprat);
+}
+
+void absrat_add(absrat *val, absrat left, absrat right) {
+    mpq_init(val->mprat);
+    mpq_add(val->mprat, left.mprat, right.mprat);
+}
+
+void absrat_sub(absrat *val, absrat left, absrat right) {
+    mpq_init(val->mprat);
+    mpq_sub(val->mprat, left.mprat, right.mprat);
+}
+
+void absrat_mul(absrat *val, absrat left, absrat right) {
+    mpq_init(val->mprat);
+    mpq_mul(val->mprat, left.mprat, right.mprat);
+}
+
+void absrat_div(absrat *val, absrat left, absrat right) {
+    mpq_init(val->mprat);
+    mpq_div(val->mprat, left.mprat, right.mprat);
+}
