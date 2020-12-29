@@ -112,8 +112,8 @@ public class Builder {
             }
 
             return node.getResult();
-        } else if (exp instanceof AddExp) {
-            AddExp addExp = (AddExp) exp;
+        } else if (exp instanceof AddAddExp) {
+            AddAddExp addExp = (AddAddExp) exp;
             Output leftResult = process(state, addExp.getLeft());
             Output rightResult = process(state, addExp.getRight());
 
@@ -128,6 +128,24 @@ public class Builder {
             }
 
             throw new NotImplementedYetException(exp);
+        } else if (exp instanceof SubAddExp) {
+            SubAddExp subExp = (SubAddExp) exp;
+            Output leftResult = process(state, subExp.getLeft());
+            Output rightResult = process(state, subExp.getRight());
+            BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Sub, leftResult, rightResult);
+            return node.getResult();
+        } else if (exp instanceof MultMultExp) {
+            MultMultExp multExp = (MultMultExp) exp;
+            Output leftResult = process(state, multExp.getLeft());
+            Output rightResult = process(state, multExp.getRight());
+            BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Mul, leftResult, rightResult);
+            return node.getResult();
+        }  else if (exp instanceof ModMultExp) {
+            ModMultExp modExp = (ModMultExp) exp;
+            Output leftResult = process(state, modExp.getLeft());
+            Output rightResult = process(state, modExp.getRight());
+            BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Mod, leftResult, rightResult);
+            return node.getResult();
         } else if (exp instanceof StringLiteral) {
             String content = ((StringLiteral) exp).getContent();
             StringLiteralNode node = new StringLiteralNode(region, exp.getType(), content);
@@ -147,6 +165,36 @@ public class Builder {
             Output left = process(state, eqExp.getLeft());
             Output right = process(state, eqExp.getRight());
             ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Eq, left, right, eqExp.getType());
+            return node.getResult();
+        }  else if (exp instanceof NotEqExp) {
+            NotEqExp cmpExp = (NotEqExp) exp;
+            Output left = process(state, cmpExp.getLeft());
+            Output right = process(state, cmpExp.getRight());
+            ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.NotEq, left, right, cmpExp.getType());
+            return node.getResult();
+        } else if (exp instanceof GTExp) {
+            GTExp cmpExp = (GTExp) exp;
+            Output left = process(state, cmpExp.getLeft());
+            Output right = process(state, cmpExp.getRight());
+            ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Gt, left, right, cmpExp.getType());
+            return node.getResult();
+        } else if (exp instanceof GTEQExp) {
+            GTEQExp cmpExp = (GTEQExp) exp;
+            Output left = process(state, cmpExp.getLeft());
+            Output right = process(state, cmpExp.getRight());
+            ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Gte, left, right, cmpExp.getType());
+            return node.getResult();
+        } else if (exp instanceof LTExp) {
+            LTExp cmpExp = (LTExp) exp;
+            Output left = process(state, cmpExp.getLeft());
+            Output right = process(state, cmpExp.getRight());
+            ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Lt, left, right, cmpExp.getType());
+            return node.getResult();
+        } else if (exp instanceof LTEQExp) {
+            LTEQExp cmpExp = (LTEQExp) exp;
+            Output left = process(state, cmpExp.getLeft());
+            Output right = process(state, cmpExp.getRight());
+            ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Lte, left, right, cmpExp.getType());
             return node.getResult();
         } else {
             throw new NotImplementedYetException(exp);

@@ -40,6 +40,28 @@ void absstr_literal(absstr *str, char *data, size_t size) {
     memcpy(str->data, data, size);
 }
 
+void absstr_tostring(absstr *result, absstr str) {
+    absstr_alloc(result, str.size);
+    memcpy(result->data, str.data, str.size);
+}
+
+int absstr_compare(absstr a, absstr b) {
+    for (size_t i = 0;; i++) {
+
+        // We reached the end of both strings at the same time
+        if (i >= a.size && i >= b.size) return 0;
+
+        // We reached the end of the RHS string => the LHS is greater.
+        if (i >= b.size) return 1;
+
+        // We reached the end of the LHS string => the RHS is greater.
+        if (i >= a.size) return -1;
+
+        int diff = a.data[i] - b.data[i];
+        if (diff != 0) return diff;
+    }
+}
+
 void absstr_concat(absstr *result, absstr left, absstr right) {
     absstr_alloc(result, left.size + right.size);
     memcpy(result->data, left.data, left.size);
@@ -67,8 +89,13 @@ void absint_literal(absint *val, char *data, size_t size) {
     mpz_init_set_str(val->mpint, data, 10);
 }
 
+void absint_tostring(absstr *result, absint val) {
+    result->data = mpz_get_str(NULL, 10, val.mpint);
+    result->size = strlen(result->data);
+}
+
 int absint_compare(absint left, absint right) {
-    return mpz_cmp(left.mpint, left.mpint);
+    return mpz_cmp(left.mpint, right.mpint);
 }
 
 void absint_add(absint *val, absint left, absint right) {
