@@ -41,7 +41,7 @@ public class DataTypeRepresentation implements TypeRepresentation {
                     cFile.writeLine(field.repr.getCType() + " " + field.cname + ";");
                 }
             }
-            cFile.writeLine("} " + variant.cname);
+            cFile.writeLine("} " + variant.cname + ";");
         }
         cFile.writeLine("} data;");
         cFile.writeLine("} " + cname + ";");
@@ -54,7 +54,7 @@ public class DataTypeRepresentation implements TypeRepresentation {
         if (var != null) {
             cFile.writeLine("val->tag = " + var.tag + ";");
             for (Field field : var.fields) {
-                field.repr.initZero(cFile, "val->" + field.cname);
+                field.repr.initZero(cFile, "val->data." + var.cname + "." + field.cname);
             }
         }
         cFile.stopFunction();
@@ -67,7 +67,7 @@ public class DataTypeRepresentation implements TypeRepresentation {
         for (Variant variant : variants) {
             cFile.writeLine("case " + variant.tag + ":");
             for (Field field : variant.fields) {
-                field.repr.deinit(cFile, "val->data." + field.cname);
+                field.repr.deinit(cFile, "val->data." + variant.cname + "." + field.cname);
             }
             cFile.writeLine("break;");
         }
@@ -85,7 +85,8 @@ public class DataTypeRepresentation implements TypeRepresentation {
         for (Variant variant : variants) {
             cFile.writeLine("case " + variant.tag + ":");
             for (Field field : variant.fields) {
-                field.repr.initCopy(cFile, "val->data." + field.cname, "other.data." + field.cname);
+                String path = "data." + variant.cname + "." + field.cname;
+                field.repr.initCopy(cFile, "val->" + path, "other." + path);
             }
             cFile.writeLine("break;");
         }
@@ -106,6 +107,27 @@ public class DataTypeRepresentation implements TypeRepresentation {
             cFile.writeLine("break;");
         }
         cFile.writeLine("}");
+        cFile.stopFunction();
+
+        CFunctionDecl compare = new CFunctionDecl(cname + "_compare", "static int", List.of(
+            new CFunctionParam("a", cname),
+            new CFunctionParam("b", cname)
+        ));
+        cFile.startFunction(compare);
+        cFile.writeLine("int cmp;");
+        cFile.writeLine("if (a.tag != b.tag) return a.tag - b.tag;");
+        cFile.writeLine("switch (a.tag) {");
+        for (Variant variant : variants) {
+            cFile.writeLine("case " + variant.tag + ":");
+            for (Field field : variant.fields) {
+                String path = "data." + variant.cname + "." + field.cname;
+                cFile.writeLine("cmp = " + field.repr.getCType() + "_compare(a." + path + ", b." + path + ");");
+                cFile.writeLine("if (cmp != 0) return cmp;");
+            }
+            cFile.writeLine("break;");
+        }
+        cFile.writeLine("}");
+        cFile.writeLine("return 0;");
         cFile.stopFunction();
 
         isDeclared = true;
