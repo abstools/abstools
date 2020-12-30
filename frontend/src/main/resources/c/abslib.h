@@ -231,7 +231,7 @@ void absflo_literal(absflo *val, double content) {
 }
 
 void absflo_tostring(absstr *result, absflo val) {
-    int size = snprintf(0, 0, "%f", val.data);
+    int size = snprintf(0, 0, "%g", val.data);
     absstr_alloc(result, size);
     snprintf(result->data, size + 1, "%f", val.data);
 }
