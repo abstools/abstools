@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <gmp.h>
 
 // String representation
@@ -192,6 +193,22 @@ void absrat_div(absrat *val, absrat left, absrat right) {
     mpq_div(val->mprat, left.mprat, right.mprat);
 }
 
+void absrat_mod(absrat *val, absrat left, absrat right) {
+    mpz_t a, b;
+    mpz_init(a); mpz_init(b);
+
+    mpq_init(val->mprat);
+
+    // rem({ N1, D1 }, { N2, D2 }) -> { (N1 * D2) rem (N2 * D1), D1 * D2 }).
+    mpz_mul(a, mpq_numref(left.mprat), mpq_denref(right.mprat));
+    mpz_mul(b, mpq_numref(right.mprat), mpq_denref(left.mprat));
+    mpz_mod(mpq_numref(val->mprat), a, b);
+    mpz_mul(mpq_denref(val->mprat), mpq_denref(left.mprat), mpq_denref(right.mprat));
+    mpq_canonicalize(val->mprat);
+
+    mpz_clear(a); mpz_clear(b);
+}
+
 // Float implementation
 
 typedef struct absflo {
@@ -239,4 +256,8 @@ void absflo_mul(absflo *val, absflo left, absflo right) {
 
 void absflo_div(absflo *val, absflo left, absflo right) {
     val->data = left.data / right.data;
+}
+
+void absflo_mod(absflo *val, absflo left, absflo right) {
+    val->data = fmod(left.data, right.data);
 }

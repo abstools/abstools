@@ -105,11 +105,15 @@ public class Builder {
             throw new NotImplementedYetException(exp);
         } else if (exp instanceof DataConstructorExp) {
             DataConstructorExp cexp = (DataConstructorExp) exp;
-            DataConstructNode node = new DataConstructNode(region, cexp.getDataConstructor());
+            DataConstructor dataConstructor = cexp.getDataConstructor();
+            DataConstructNode node = new DataConstructNode(region, dataConstructor);
 
+            int i = 0;
             for (PureExp param : cexp.getParams()) {
-                Output result = process(state, param);
+                Type type = dataConstructor.getConstructorArg(i).getType();
+                Output result = coerce(process(state, param), type);
                 node.addParam(result);
+                i++;
             }
 
             return node.getResult();
@@ -145,8 +149,9 @@ public class Builder {
             return node.getResult();
         }  else if (exp instanceof ModMultExp) {
             ModMultExp modExp = (ModMultExp) exp;
-            Output leftResult = process(state, modExp.getLeft());
-            Output rightResult = process(state, modExp.getRight());
+            Type type = typeOfBinaryOperands(modExp);
+            Output leftResult = coerce(process(state, modExp.getLeft()), type);
+            Output rightResult = coerce(process(state, modExp.getRight()), type);
             BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Mod, leftResult, rightResult);
             return node.getResult();
         } else if (exp instanceof DivMultExp) {
@@ -159,7 +164,12 @@ public class Builder {
                 return node.getResult();
             }
 
-            throw new NotImplementedYetException(exp);
+            Type type = typeOfBinaryOperands(divExp);
+            leftResult = coerce(leftResult, type);
+            rightResult = coerce(rightResult, type);
+
+            BinaryArithmeticNode node = new BinaryArithmeticNode(region, BinaryArithmeticNode.Operator.Div, leftResult, rightResult);
+            return node.getResult();
         } else if (exp instanceof MinusExp) {
             MinusExp minExp = (MinusExp) exp;
             Output value = process(state, minExp.getOperand());
