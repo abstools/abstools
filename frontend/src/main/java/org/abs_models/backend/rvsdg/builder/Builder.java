@@ -160,6 +160,11 @@ public class Builder {
             }
 
             throw new NotImplementedYetException(exp);
+        } else if (exp instanceof MinusExp) {
+            MinusExp minExp = (MinusExp) exp;
+            Output value = process(state, minExp.getOperand());
+            NegateNode node = new NegateNode(region, value, minExp.getType());
+            return node.getResult();
         } else if (exp instanceof StringLiteral) {
             String content = ((StringLiteral) exp).getContent();
             StringLiteralNode node = new StringLiteralNode(region, exp.getType(), content);

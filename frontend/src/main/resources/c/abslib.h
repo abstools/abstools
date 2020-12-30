@@ -81,6 +81,11 @@ void absint_initcopy(absint *val, absint other) {
     mpz_init_set(val->mpint, other.mpint);
 }
 
+void absint_initneg(absint *val, absint other) {
+    mpz_init(val->mpint);
+    mpz_neg(val->mpint, other.mpint);
+}
+
 void absint_deinit(absint *val) {
     mpz_clear(val->mpint);
 }
@@ -149,6 +154,11 @@ void absrat_initfromint(absrat *val, absint num) {
     mpq_set_z(val->mprat, num.mpint);
 }
 
+void absrat_initneg(absrat *val, absrat other) {
+    mpq_init(val->mprat);
+    mpq_neg(val->mprat, other.mprat);
+}
+
 void absrat_deinit(absrat *val) {
     mpq_clear(val->mprat);
 }
@@ -193,6 +203,10 @@ void absflo_deinit(absflo *val) { }
 
 void absflo_initcopy(absflo *val, absflo other) {
     val->data = other.data;
+}
+
+void absflo_initneg(absflo *val, absflo other) {
+    val->data = -other.data;
 }
 
 void absflo_literal(absflo *val, double content) {

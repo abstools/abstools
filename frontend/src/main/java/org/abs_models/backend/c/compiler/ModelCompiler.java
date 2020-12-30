@@ -268,6 +268,15 @@ public class ModelCompiler {
             return;
         }
 
+        if (node instanceof NegateNode) {
+            NegateNode negNode = (NegateNode) node;
+            String baseIdent = compileInput(region, negNode.getBase());
+            String resultIdent = useValue(region, negNode.getResult());
+            TypeRepresentation repr = types.get(negNode.getResult().type);
+            cFile.writeLine(repr.getCType() + "_initneg" + "(&" + resultIdent + ", " + baseIdent + ");");
+            return;
+        }
+
         if (node instanceof ToRationalNode) {
             ToRationalNode toRatNode = (ToRationalNode) node;
             String numIdent = compileInput(region, toRatNode.getNumerator());
