@@ -235,7 +235,19 @@ public class Builder {
             Output right = coerce(process(state, cmpExp.getRight()), type);
             ComparisonNode node = new ComparisonNode(region, ComparisonNode.Operator.Lte, left, right, cmpExp.getType());
             return node.getResult();
-        } else {
+        } else if (exp instanceof AndBoolExp) {
+            AndBoolExp andExp = (AndBoolExp) exp;
+            Output left = process(state, andExp.getLeft());
+            Output right = process(state, andExp.getRight());
+            AndNode node = new AndNode(region, left, right);
+            return node.getResult();
+        } else if (exp instanceof OrBoolExp) {
+            OrBoolExp orExp = (OrBoolExp) exp;
+            Output left = process(state, orExp.getLeft());
+            Output right = process(state, orExp.getRight());
+            OrNode node = new OrNode(region, left, right);
+            return node.getResult();
+        }else {
             throw new NotImplementedYetException(exp);
         }
     }

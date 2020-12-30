@@ -294,6 +294,28 @@ public class ModelCompiler {
             return;
         }
 
+        if (node instanceof OrNode) {
+            OrNode orNode = (OrNode) node;
+            String leftIdent = compileInput(region, orNode.getLeft());
+            String rightIdent = compileInput(region, orNode.getRight());
+            String resultIdent = useValue(region, orNode.getResult());
+            String leftIsTrue = leftIdent + ".tag == 0";
+            String rightIsTrue = rightIdent + ".tag == 0";
+            cFile.writeLine(resultIdent + ".tag = (" + leftIsTrue + " || " + rightIsTrue +" ) ? 0 : 1;");
+            return;
+        }
+
+        if (node instanceof AndNode) {
+            AndNode andNode = (AndNode) node;
+            String leftIdent = compileInput(region, andNode.getLeft());
+            String rightIdent = compileInput(region, andNode.getRight());
+            String resultIdent = useValue(region, andNode.getResult());
+            String leftIsTrue = leftIdent + ".tag == 0";
+            String rightIsTrue = rightIdent + ".tag == 0";
+            cFile.writeLine(resultIdent + ".tag = (" + leftIsTrue + " && " + rightIsTrue +" ) ? 0 : 1;");
+            return;
+        }
+
         throw new RuntimeException("Unhandled node: " + node);
     }
 
