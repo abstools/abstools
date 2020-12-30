@@ -247,7 +247,12 @@ public class Builder {
             Output right = process(state, orExp.getRight());
             OrNode node = new OrNode(region, left, right);
             return node.getResult();
-        }else {
+        } else if (exp instanceof NegExp) {
+            NegExp negExp = (NegExp) exp;
+            Output value = process(state, negExp.getOperand());
+            NegateNode node = new NegateNode(region, value, negExp.getType());
+            return node.getResult();
+        } else {
             throw new NotImplementedYetException(exp);
         }
     }

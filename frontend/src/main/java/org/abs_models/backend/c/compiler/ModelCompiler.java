@@ -272,8 +272,13 @@ public class ModelCompiler {
             NegateNode negNode = (NegateNode) node;
             String baseIdent = compileInput(region, negNode.getBase());
             String resultIdent = useValue(region, negNode.getResult());
-            TypeRepresentation repr = types.get(negNode.getResult().type);
-            cFile.writeLine(repr.getCType() + "_initneg" + "(&" + resultIdent + ", " + baseIdent + ");");
+            Type type = negNode.getResult().type;
+            if (type.isBoolType()) {
+                cFile.writeLine(resultIdent + ".tag = !" + baseIdent + ".tag;");
+            } else {
+                TypeRepresentation repr = types.get(type);
+                cFile.writeLine(repr.getCType() + "_initneg" + "(&" + resultIdent + ", " + baseIdent + ");");
+            }
             return;
         }
 
