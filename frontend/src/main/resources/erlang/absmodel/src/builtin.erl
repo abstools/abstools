@@ -2,7 +2,7 @@
 -module(builtin).
 %%All builtin functions
 %%Must correspond to the set in GenerateErlang.jadd:FnApp.ERLANG_BUILTINS
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 -export([currentms/1,ms_since_model_start/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
 -export([random/2,truncate/2,numerator/2, denominator/2]).
 -export([float/2, rat/2, floor/2, ceil/2, sqrt/2, log/2, exp/2]).

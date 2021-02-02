@@ -2,7 +2,7 @@
 -module(init_task).
 -behaviour(task).
 -export([init/4,start/1]).
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 %% Inits an object
 %% Used if it is spawned on an new COG
 
