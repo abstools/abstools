@@ -209,7 +209,7 @@ handle_call(From, get_dc_info_string, _State, _Data=#data{cog=Cog,oid=Oid}) ->
                           builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
     {keep_state_and_data, {reply, From, Result}};
 handle_call(From, get_traces, _State,
-            Data=#data{cog=MyCog, active=A, blocked=B, idle=I, id=Id, recorded=Recorded}) ->
+            _Data=#data{cog=MyCog, active=A, blocked=B, idle=I, id=Id, recorded=Recorded}) ->
     Cogs = gb_sets:add(MyCog, gb_sets:union([A, B, I])),
     Init = #{Id => lists:reverse(Recorded)},
     Traces = gb_sets:fold(fun (Cog, AccT) ->
@@ -335,8 +335,8 @@ active(cast, {task_confirm_clock_wakeup, CogRef, TaskRef},
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
     end;
-active(cast, Event={consume_resource, CogRef, TaskRef, RequestEvent},
-       Data=#data{replaying=[ExpectedEvent | Replaying], retries=Retries})
+active(cast, Event={consume_resource, _CogRef, _TaskRef, RequestEvent},
+       Data=#data{replaying=[ExpectedEvent | _Replaying], retries=Retries})
   when RequestEvent =/= ExpectedEvent ->
     {keep_state, Data#data{retries=[{next_event, cast, Event} | Retries]}};
 active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
@@ -545,8 +545,8 @@ advanceTotalsHistory(History, {dataFin,Amount}) ->
     [ Amount | History ];
 advanceTotalsHistory(History, dataInfRat) -> History.
 
-mte(Data=#data{clock_waiting=ClockWaiting,
-               resource_waiting=ResourceWaiting}) ->
+mte(_Data=#data{clock_waiting=ClockWaiting,
+                resource_waiting=ResourceWaiting}) ->
     %% MTE as an ABS rational or `infinity' if nothing’s waiting.  MTE is the
     %% minimum of the next clock boundary (if we’re waiting for resources) and
     %% the MTEs of all task(s) that are waiting for the clock.  We could
@@ -610,9 +610,9 @@ add_to_queue_internal([Head={_CogRefHead, _TaskRefHead, _MinHead, MaxHead} | Tai
 add_to_queue_internal([], Item) ->
     [Item].
 
-get_retries(Retries, []) ->
+get_retries(_Retries, []) ->
     {[], []};
-get_retries(Retries, [ExpectedEvent | Replaying]) ->
+get_retries(Retries, [ExpectedEvent | _Replaying]) ->
     lists:partition(
       fun ({next_event, cast,
             {consume_resource, _TaskRef, _CogRef, RequestEvent}}) ->

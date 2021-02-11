@@ -131,7 +131,7 @@ init([Main,Keepalive,Trace])->
     {ok,running,
      #data{main=Main, keepalive_after_clock_limit=Keepalive, trace=Trace}}.
 
-handle_event({call, From}, {keep_alive, Class}, _State, Data=#data{keepalive_after_clock_limit=KeepAlive}) ->
+handle_event({call, From}, {keep_alive, Class}, _State, _Data=#data{keepalive_after_clock_limit=KeepAlive}) ->
     %% Do not garbage-collect DeploymentComponent objects when we do
     %% visualization (KeepAlive=true)
     Result=case KeepAlive of
@@ -173,7 +173,7 @@ handle_event({call, From}, {cog,Cog,RecordedTrace,die}, _State,
     {keep_state, S1,
      {reply, From, ok}};
 handle_event({call, From}, {new_dc, DCRef, Cog}, _State, Data=#data{dcrefs=DCs, cog_names=M,trace=T}) ->
-    {C, N} = maps:get(Cog, M, {[], 0}),
+    {C, _N} = maps:get(Cog, M, {[], 0}),
     Id = [-1 | C],
     NewM = maps:put(DCRef, {Id, 0}, M),
     ShownId = lists:reverse(Id),

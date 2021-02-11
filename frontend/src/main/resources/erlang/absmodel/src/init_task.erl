@@ -7,7 +7,7 @@
 %% Used if it is spawned on an new COG
 
 
-init(Cog,_Future,CalleeObj,Args)->
+init(_Cog,_Future,CalleeObj,Args)->
     {CalleeObj,Args}.
 
 

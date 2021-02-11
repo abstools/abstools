@@ -20,9 +20,7 @@
 
 
 behaviour_info(callbacks) ->
-    [{init, 4},{start,1}];
-behaviour_info(_) ->
-    undefined.
+    [{init, 4},{start,1}].
 
 start(Cog,TaskType,Future,CalleeObj,Args,Info)->
     spawn_link(task,init,[TaskType,Cog,Future,CalleeObj,Args,Info]).

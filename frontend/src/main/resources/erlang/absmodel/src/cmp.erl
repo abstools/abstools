@@ -18,8 +18,8 @@ eq(A, B) when is_tuple(A), is_tuple(B) ->
     %% tuples representing rational numbers are handled above
     eq(tuple_to_list(A), tuple_to_list(B));
 eq([], []) -> true;
-eq([A | RA], []) -> false;
-eq([], [B | RB]) -> false;
+eq([_A | _RA], []) -> false;
+eq([], [_B | _RB]) -> false;
 eq([A | RA], [B | RB]) ->
     eq(A, B) andalso eq(RA, RB);
 eq(A,B)->
@@ -83,8 +83,8 @@ lt([_A | _B], []) -> true;
 lt(A,B)->
     A<B.
 
-le(A,B) -> 
+le(A,B) ->
    eq(A,B) orelse lt(A,B).
 
-ge(A,B) -> 
+ge(A,B) ->
    eq(A,B) orelse gt(A,B).

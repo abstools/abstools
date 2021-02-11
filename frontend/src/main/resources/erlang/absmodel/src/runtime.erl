@@ -197,7 +197,7 @@ run_mod(Module, Verbose, Debug, Port, Urlprefix, Clocklimit, Trace, DumpTrace)  
 run_dpor_slave(Module, Clocklimit, Trace) ->
     StartTime = erlang:system_time(millisecond),
     {ok, TaskRef} = start_mod(Module, false, false, Clocklimit, false, Trace, StartTime),
-    RetVal=task:join(TaskRef),
+    _RetVal=task:join(TaskRef),
     Status = cog_monitor:waitfor(),
     NewTrace = cog_monitor:get_trace(),
     gc:stop(),
