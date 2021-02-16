@@ -24,7 +24,7 @@ aspect TypeCheckerExtension {
         
     refine Typing eq TypedVarOrFieldDecl.getType() {
         Type t = Typing.TypedVarOrFieldDecl.getType();
-        getModel().getTypeExt().annotateType(t, this, getAccess());
+        getModel().getTypeExt().annotateType(t, this, getTypeUse());
         return t; 
     }
     
