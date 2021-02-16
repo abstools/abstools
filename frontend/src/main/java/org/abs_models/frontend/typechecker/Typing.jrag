@@ -125,7 +125,7 @@ aspect Typing {
     }
 
     eq LoopVarDecl.getType() {
-        ForeachStmt fs = (ForeachStmt) getParent();
+        ForeachStmt fs = closestParent(ForeachStmt.class);
         if (fs.hasIndexVar() && this == fs.getIndexVar()) {
             // We are the value bound to the list index
             return getModel().getIntType();

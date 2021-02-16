@@ -87,7 +87,7 @@ public enum ErrorMessage {
     CIRCULAR_TYPESYN("Circular type synonym %s."),
     LOCATION_TYPE_MULTIPLE("Multiple location type annotations defined."),
     LOCATION_TYPE_CANNOT_ASSIGN("Cannot assign location type %s to location type %s."),
-    LOCATION_TYPE_SYNC_CALL_ON_NON_NEAR("Synchronous call on non-near reference."),
+    LOCATION_TYPE_SYNC_CALL_ON_NON_NEAR("Synchronous call on non-near reference."), // currently unused, see https://github.com/abstools/abstools/issues/290
     LOCATION_TYPE_DIFFERENT_TYPE_INSTANTIATIONS("Type parameter %s in data constructor %s is instantiated with different location types %s and %s."),
     LOCATION_TYPE_CALL_ON_BOTTOM("Call on Bottom location type."),
     CLASSKIND_PLAIN("Cannot instantiate class %s with cog as it is annotated with class kind Plain."),

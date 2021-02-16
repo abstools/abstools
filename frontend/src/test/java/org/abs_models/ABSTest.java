@@ -27,7 +27,7 @@ import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.parser.Main;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 
 public class ABSTest {
     public static enum Config {
@@ -120,8 +120,8 @@ public class ABSTest {
                         p.expandForeachLoops();
                         p.expandAwaitAsyncCalls();
                         if (isSet(WITH_LOC_INF, config)) {
-                            LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(p);
-                            p.registerTypeSystemExtension(ltie);
+                            LocationTypeExtension lte = new LocationTypeExtension(p);
+                            p.registerTypeSystemExtension(lte);
                         }
                         SemanticConditionList l = p.typeCheck();
                         if (isSet(EXPECT_TYPE_ERROR,config)) {

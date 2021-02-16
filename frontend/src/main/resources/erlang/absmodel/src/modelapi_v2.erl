@@ -156,7 +156,7 @@ handle_object_call([Objectname, Methodname], Parameters, Req) ->
                     %% FIXME: we ignore the updated request `Req2'.  Hopefully
                     %% this won't matter since we don't attempt to read the
                     %% request body again (body can only be read once).
-                    {ok, Body, Req2} = case cowboy_req:has_body(Req) of
+                    {ok, Body, _Req2} = case cowboy_req:has_body(Req) of
                                false -> {ok, <<"[]">>, Req};
                                true -> cowboy_req:read_body(Req)
                            end,
@@ -397,10 +397,10 @@ json_to_trace(JSON) ->
 
 json_to_scheduling_trace(JSON) ->
     Trace = json_to_trace(JSON),
-    maps:map(fun(Cog, LocalTrace) ->
-                     lists:filter(fun (E=#event{type=schedule}) -> true;
-                                      (E=#dc_event{}) -> true;
-                                      (E) -> false
+    maps:map(fun(_Cog, LocalTrace) ->
+                     lists:filter(fun (_E=#event{type=schedule}) -> true;
+                                      (_E=#dc_event{}) -> true;
+                                      (_E) -> false
                                   end, LocalTrace)
              end, Trace).
 

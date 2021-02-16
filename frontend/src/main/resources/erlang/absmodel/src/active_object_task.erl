@@ -6,7 +6,7 @@
 
 %% Active object task -> executes run method
 
-init(_Cog,_Future,Object,Params)->
+init(_Cog,_Future,Object,_Params)->
     Object.
 
 start(O)->

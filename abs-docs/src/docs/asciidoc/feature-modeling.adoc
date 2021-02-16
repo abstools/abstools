@@ -268,7 +268,7 @@ guides the code generation by ordering the application of the delta modules.
 |====
 | _Configuration_ ::= | `productline` _TypeId_ `;` _Features_ `;` { _DeltaClause_ }
 | _Features_      ::= | `features` _FName_ { `,` _FName_ }
-| _DeltaClause_   ::= | `delta` _DeltaSpec_ [ _AfterCondition_ ] [ _ApplicationCondition_ ] `;`
+| _DeltaClause_   ::= | `delta` _DeltaSpec_ [ _AfterClause_ ] [ _WhenClause_ ] `;`
 | _DeltaSpec_     ::= | _DeltaName_ [ `(` _DeltaParams_ `)` ]
 | _DeltaName_     ::= | _TypeId_
 | _DeltaParams_   ::= | _DeltaParam_ { `,` _DeltaParam_ }

@@ -45,9 +45,7 @@
                n_cycles=0}).
 
 behaviour_info(callbacks) ->
-    [{get_references, 1}];
-behaviour_info(_) ->
-    undefined.
+    [{get_references, 1}].
 
 
 start(Debug, Verbose) ->
@@ -122,7 +120,7 @@ idle_state_next(Data=#data{verbose=Verbose, cogs=Cogs, objects=Objects, n_cycles
             {idle, Data}
     end.
 
-idle(cast, {register_future, Ref, Sender}, Data=#data{root_futures=RootFutures}) ->
+idle(cast, {register_future, Ref, _Sender}, Data=#data{root_futures=RootFutures}) ->
     {NextState, NewData} = idle_state_next(Data#data{root_futures=gb_sets:insert({future, Ref}, RootFutures)}),
     {next_state, NextState, NewData};
 idle(cast, {register_object, O=#object{oid=_Oid}}, Data=#data{objects=Objects}) ->
@@ -248,9 +246,9 @@ get_references({cog, Ref}) ->
         false -> []
     end.
 
-is_collection_needed(Data=#data{futures=Futures,
-                                previous=PTime,limit=Lim,proc_factor=PFactor,
-                                debug=Debug}) ->
+is_collection_needed(_Data=#data{futures=_Futures,
+                                 previous=_PTime,limit=_Lim,proc_factor=PFactor,
+                                 debug=Debug}) ->
     Debug
     %% do not aim for interactivity; we're fine with few but large gc pauses
 
