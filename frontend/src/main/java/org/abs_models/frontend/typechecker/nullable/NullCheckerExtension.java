@@ -76,8 +76,6 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
                     ErrorMessage.NULLABLE_TYPE_MISMATCH,
                     NullableType.NonNull.toString(),
                     NullableType.Nullable.toString()));
-                // Only report one error
-                return;
             }
         }
     }
