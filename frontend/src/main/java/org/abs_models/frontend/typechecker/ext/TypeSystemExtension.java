@@ -22,7 +22,7 @@ public interface TypeSystemExtension {
 
     void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n);
 
-    void checkAssignable(Type l, Exp r, ASTNode<?> n);
+    void checkAssignableBehaviorType(Type l, Exp r, ASTNode<?> n);
 
     void annotateType(Type t, ASTNode<?> orinatingNode, ASTNode<?> typeNode);
 

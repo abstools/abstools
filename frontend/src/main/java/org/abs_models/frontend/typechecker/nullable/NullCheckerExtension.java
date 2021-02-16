@@ -106,7 +106,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     }
 
     @Override
-    public void checkAssignable(Type l, Exp r, ASTNode<?> n) {
+    public void checkAssignableBehaviorType(Type l, Exp r, ASTNode<?> n) {
         checkAssignable(getNullableTypeDefault(l), r.getNullableType(), n);
     }
 

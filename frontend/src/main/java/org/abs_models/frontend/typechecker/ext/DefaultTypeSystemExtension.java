@@ -44,7 +44,7 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {    }
 
     @Override
-    public void checkAssignable(Type l, Exp r, ASTNode<?> n) {
+    public void checkAssignableBehaviorType(Type l, Exp r, ASTNode<?> n) {
 
     }
 

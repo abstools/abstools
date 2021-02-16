@@ -15,7 +15,6 @@ import org.abs_models.frontend.typechecker.KindedName;
 import org.abs_models.frontend.typechecker.Type;
 import org.abs_models.frontend.typechecker.TypeParameter;
 import org.abs_models.frontend.typechecker.KindedName.Kind;
-import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
 public class TypeExtensionHelper implements TypeSystemExtension {
     private java.util.List<TypeSystemExtension> obs = new ArrayList<>();
@@ -117,7 +116,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
 
         checkAssignable(s.getValue().getType(),s.getVar().getType(), s);
-        checkAssignable(s.getVar().getType(), s.getValue(), s);
+        checkAssignableBehaviorType(s.getVar().getType(), s.getValue(), s);
     }
 
     public void checkReturnStmt(ReturnStmt s) {
@@ -132,7 +131,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
 
         checkAssignable(s.getRetExp().getType(), m.getMethodSig().getType(), s);
-        checkAssignable(m.getMethodSig().getType(), s.getRetExp(), s);
+        checkAssignableBehaviorType(m.getMethodSig().getType(), s.getRetExp(), s);
     }
 
     public void checkAssignable(Type callee, HasParams params, ASTNode<?> n) {
@@ -141,7 +140,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             Type argType = paramsTypes.get(i);
             PureExp exp = ((HasActualParams)n).getParams().getChild(i);
             checkAssignable(callee, AdaptDirection.TO, exp.getType(), argType, n);
-            checkAssignable(argType, exp, n);
+            checkAssignableBehaviorType(argType, exp, n);
         }
     }
 
@@ -169,10 +168,10 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     @Override
-    public void checkAssignable(Type l, Exp r, ASTNode<?> n) {
+    public void checkAssignableBehaviorType(Type l, Exp r, ASTNode<?> n) {
         if (l.isReferenceType() && r.getType().isReferenceType()) {
             for (TypeSystemExtension tse : obs) {
-                tse.checkAssignable(l, r, n);
+                tse.checkAssignableBehaviorType(l, r, n);
             }
         }
     }
