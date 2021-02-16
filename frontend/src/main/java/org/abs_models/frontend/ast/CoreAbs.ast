@@ -147,6 +147,10 @@ MainBlock: Block; // Active behavior of the model
 ThrowStmt: Stmt ::= Reason:PureExp;
 DieStmt: Stmt ::= Reason:PureExp;
 
+// Virtual AST nodes used in control flow analysis
+CFGEntry : SkipStmt;
+CFGExit : SkipStmt;
+VirtualStmt: SkipStmt;
 
 abstract Guard;
 ClaimGuard: Guard ::= Var:PureExp;
