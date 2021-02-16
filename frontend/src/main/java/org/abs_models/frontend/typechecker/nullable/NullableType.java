@@ -14,13 +14,13 @@ public enum NullableType {
     /**
      * The expression or declaration can never be null
      */
-    NonNull,
+    Nonnull,
     /**
      * The expression or declaration may be null
      */
     Nullable;
 
-    public static final NullableType[] USER_TYPES = {NonNull, Nullable};
+    public static final NullableType[] USER_TYPES = {Nonnull, Nullable};
 
     /**
      * Whether this is assignable to `n`
@@ -41,9 +41,9 @@ public enum NullableType {
             return Nullable;
         }
 
-        if (this == NonNull) {
-            if (other == NonNull) {
-                return NonNull;
+        if (this == Nonnull) {
+            if (other == Nonnull) {
+                return Nonnull;
             }
             return Nullable;
         }
@@ -62,8 +62,8 @@ public enum NullableType {
      * @return - Whether the assignment lhs = rhs would be correct
      */
     public static boolean assignable(NullableType lhs, NullableType rhs) {
-        if (lhs == NullableType.NonNull) {
-            return rhs == NullableType.NonNull;
+        if (lhs == NullableType.Nonnull) {
+            return rhs == NullableType.Nonnull;
         }
         return true;
     }
@@ -74,8 +74,8 @@ public enum NullableType {
      * @return - The converted type
      */
     public static NullableType fromName(String name) {
-        if (name.equals("NonNull")) {
-            return NullableType.NonNull;
+        if (name.equals("Nonnull")) {
+            return NullableType.Nonnull;
         }
         return NullableType.Nullable;
     }
@@ -83,8 +83,8 @@ public enum NullableType {
     /**
      * @return - Whether `this` is NonNull
      */
-    public boolean isNonNull() {
-        return this == NonNull;
+    public boolean isNonnull() {
+        return this == Nonnull;
     }
 
     /**

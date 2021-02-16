@@ -54,7 +54,7 @@ export Deadline, Critical;
 export Inv, Pre, Post;
 
 // Various annotations
-export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer, NullableType, NonNull, Nullable;
+export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer, NullableType, Nonnull, Nullable;
 export COG, Plain, Final, Atomic, Readonly;
 export HTTPName, HTTPCallable;
 export Expansion, ExpansionCall;
@@ -618,7 +618,7 @@ data Annotation = TypeAnnotation;
 data LocationType = Far | Near | Somewhere | Infer;
 
 [TypeAnnotation]
-data NullableType = NonNull | Nullable;
+data NullableType = Nonnull | Nullable;
  
 /**
  * Can be used to annotated classes and to ensure that
@@ -829,12 +829,12 @@ interface CloudProvider {
     // (pre)launchInstance might have a delay, the others are instantaneous.
     // launchInstance might hand out an already-running instance if it has
     // been released; in this case there will be no delay.
-    [NonNull] DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
-    [NonNull] DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
+    [Nonnull] DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
+    [Nonnull] DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
     // acquireInstance, releaseInstance are called from deployment components.
     // launchInstance does the equivalent of acquireInstance.
     Bool acquireInstance([Nullable] DeploymentComponent instance);
-    Bool releaseInstance([NonNull] DeploymentComponent instance);
+    Bool releaseInstance([Nonnull] DeploymentComponent instance);
     Bool shutdownInstance([Nullable] DeploymentComponent instance);
 
     Rat getAccumulatedCost();
@@ -854,7 +854,7 @@ interface CloudProvider {
 }
 
 interface CloudProviderForDeploymentComponent extends CloudProvider {
-    Unit internalShutdownInstance([NonNull] DeploymentComponentForCloudProvider instance);
+    Unit internalShutdownInstance([Nonnull] DeploymentComponentForCloudProvider instance);
 }
 
 
@@ -865,10 +865,10 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     Map<String, Map<Resourcetype, Rat>> instanceDescriptions = map[];
 
     // All launched instances
-    Set<[NonNull] DeploymentComponent> launchedInstances = set[];
+    Set<[Nonnull] DeploymentComponent> launchedInstances = set[];
     // Launched instances that are currently acquired
-    Set<[NonNull] DeploymentComponent> acquiredInstances = set[];
-    Set<[NonNull] DeploymentComponent> killedInstances = set[];
+    Set<[Nonnull] DeploymentComponent> acquiredInstances = set[];
+    Set<[Nonnull] DeploymentComponent> killedInstances = set[];
     Int nextInstanceId = 0;
     Rat accumulatedCostOfKilledDCs = 0;
 
@@ -877,21 +877,21 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         skip;
     }
 
-    [NonNull] DeploymentComponent createInstance(String instancename, Map<Resourcetype, Rat> d) {
+    [Nonnull] DeploymentComponent createInstance(String instancename, Map<Resourcetype, Rat> d) {
         Bool mightNeedToStartAccounting = emptySet(launchedInstances);
-        [NonNull] DeploymentComponentForCloudProvider result
+        [Nonnull] DeploymentComponentForCloudProvider result
         = new DeploymentComponent(instancename + "-" + toString(nextInstanceId), d);
         result!setProvider(this);
         nextInstanceId = nextInstanceId + 1;
         // Work around a bug in the type system: upcasting in `insertElement'
         // does not work although it should
-        [NonNull] DeploymentComponent stupidTypeSystem = result;
+        [Nonnull] DeploymentComponent stupidTypeSystem = result;
         launchedInstances = insertElement(launchedInstances, stupidTypeSystem);
         return result;
     }
 
-    [NonNull] DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
-        [NonNull] DeploymentComponent result = this.createInstance(name, d);
+    [Nonnull] DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
+        [Nonnull] DeploymentComponent result = this.createInstance(name, d);
         Rat startup_duration = await result!getStartupDuration();
         await duration(startup_duration, startup_duration);
         return result;
@@ -909,8 +909,8 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         return dc;
     }
 
-    [NonNull] DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
-        [NonNull] DeploymentComponent result = this.prelaunchInstance(d);
+    [Nonnull] DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
+        [Nonnull] DeploymentComponent result = this.prelaunchInstance(d);
         acquiredInstances = insertElement(acquiredInstances, result);
         return result;
     }
@@ -918,7 +918,7 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     [Nullable] DeploymentComponent launchInstanceNamed(String instancename) {
         [Nullable] DeploymentComponent result = this.prelaunchInstanceNamed(instancename);
         if (result != null) {
-            [NonNull] DeploymentComponent nullableWorkAround = result;
+            [Nonnull] DeploymentComponent nullableWorkAround = result;
             acquiredInstances = insertElement(acquiredInstances, nullableWorkAround);
         }
         return result;
@@ -927,7 +927,7 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     Bool acquireInstance([Nullable] DeploymentComponent instance) {
         Bool result = True;
         [Nullable] CloudProvider cp = await instance!getProvider();
-        [NonNull] DeploymentComponent nullableWorkAround = instance;
+        [Nonnull] DeploymentComponent nullableWorkAround = instance;
         if (cp != this) {
             // it's not one of "our" deployment components
             result = False;
@@ -939,7 +939,7 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         }
         return result;
     }
-    Bool releaseInstance([NonNull] DeploymentComponent instance) {
+    Bool releaseInstance([Nonnull] DeploymentComponent instance) {
         // FIXME: Currently we do not protect against double-release and always
         // return True.  Once we have means of testing whether there is still
         // activity on a deployment component, we could refuse to release it in
@@ -955,8 +955,8 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         return True;
     }
 
-    Unit internalShutdownInstance([NonNull] DeploymentComponentForCloudProvider instance) {
-        [NonNull] DeploymentComponent stupidTypeSystem = instance;
+    Unit internalShutdownInstance([Nonnull] DeploymentComponentForCloudProvider instance) {
+        [Nonnull] DeploymentComponent stupidTypeSystem = instance;
         // Also kill an instance that is acquired.  FIXME: is this the right
         // thing, or should we refuse to shutdown?
         acquiredInstances = remove(acquiredInstances, stupidTypeSystem);
@@ -1141,7 +1141,7 @@ implements DeploymentComponentForCloudProvider {
     [Atomic] Unit setProvider([Nullable] CloudProviderForDeploymentComponent provider) {
         this.cloudprovider = provider;
     }
-    [Atomic, NonNull] DeploymentComponent convertToDC() { return this; }
+    [Atomic, Nonnull] DeploymentComponent convertToDC() { return this; }
 
     [Atomic, Readonly, Nullable] CloudProvider getProvider() { return cloudprovider; }
     [Readonly] Bool acquire() {

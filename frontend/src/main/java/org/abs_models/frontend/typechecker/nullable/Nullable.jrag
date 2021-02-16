@@ -21,8 +21,8 @@ aspect Nullable {
       return null;
     }
 
-    if (nonNull()) {
-      return NullableType.NonNull;
+    if (nonnull()) {
+      return NullableType.Nonnull;
     }
     if (isNull()) {
       return NullableType.Null;

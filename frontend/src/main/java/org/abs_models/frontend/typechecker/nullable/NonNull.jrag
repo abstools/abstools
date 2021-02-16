@@ -3,9 +3,9 @@ import org.abs_models.frontend.analyser.BitVec;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 
 /**
- * Computes whether references (or futures) are NonNull using data flow analysis
+ * Computes whether references (or futures) are Nonnull using data flow analysis
  */
-aspect NonNull {
+aspect Nonnull {
 
   /**
    *  Gathers all declarations relevant to the nullable type analysis
@@ -55,11 +55,11 @@ aspect NonNull {
     return decls;
   }
 
-  // == NonNull in ==
+  // == Nonnull in ==
   /**
-   * Used to compute nonNull, do not use directly
+   * Used to compute nonnull, do not use directly
    */
-  syn BitVec<VarOrFieldDecl> CFGNode.nonNull_in() circular [entry().getAllVarOrFieldDecls()] {
+  syn BitVec<VarOrFieldDecl> CFGNode.nonnull_in() circular [entry().getAllVarOrFieldDecls()] {
     CFGNode self = this;
 
     boolean isCatch = self instanceof CaseBranchStmt 
@@ -74,26 +74,26 @@ aspect NonNull {
       if (p instanceof IfStmt) {
         IfStmt i = (IfStmt) p;
         if (self == i.getThen()) {
-          return p.nonNull_out_then();
+          return p.nonnull_out_then();
         } else {
-          return p.nonNull_out_else();
+          return p.nonnull_out_else();
         }
       } else if(p instanceof WhileStmt) {
         WhileStmt w = (WhileStmt) p;
         if (self == w.getBody()) {
-          return p.nonNull_out_then();
+          return p.nonnull_out_then();
         } else {
-          return p.nonNull_out_else();
+          return p.nonnull_out_else();
         }
       } else if(p instanceof AssertStmt) {
         AssertStmt a = (AssertStmt) p;
         if (self instanceof CaseBranchStmt) {
-          return p.nonNull_out_else();
+          return p.nonnull_out_else();
         } else {
-          return p.nonNull_out_then();
+          return p.nonnull_out_then();
         }
       } else {
-        return isCatch ? p.nonNull_in() : p.nonNull_out();
+        return isCatch ? p.nonnull_in() : p.nonnull_out();
       }
     }
 
@@ -103,34 +103,34 @@ aspect NonNull {
       if (!isCatch && n instanceof IfStmt && !((IfStmt) n).hasElse()) {
         // We are in a stmt that follows an if without else and we have > 1 preds
         // This means that we can use the else information
-        s = s.intersect(n.nonNull_out_else());
+        s = s.intersect(n.nonnull_out_else());
         continue;
       }
-      s = s.intersect(isCatch ? n.nonNull_in() : n.nonNull_out());
+      s = s.intersect(isCatch ? n.nonnull_in() : n.nonnull_out());
     }
     return s;
   }
   
 
-  // == NonNull out ==
+  // == Nonnull out ==
   /**
-   * Used to compute nonNull, do not use directly
+   * Used to compute nonnull, do not use directly
    * For most stmts out = in
    */
-  syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out() circular [entry().getAllVarOrFieldDecls()] = nonNull_in();
+  syn BitVec<VarOrFieldDecl> CFGNode.nonnull_out() circular [entry().getAllVarOrFieldDecls()] = nonnull_in();
   /**
-   * Used to compute nonNull, do not use directly
+   * Used to compute nonnull, do not use directly
    * What gets propagated to the `then` successors of a conditional node (if, while)
    */
-  syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out_then() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
+  syn BitVec<VarOrFieldDecl> CFGNode.nonnull_out_then() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
   /**
-   * Used to compute nonNull, do not use directly
+   * Used to compute nonnull, do not use directly
    * What gets propagated to the `else` successors of a conditional node (if, while)
    */
-  syn BitVec<VarOrFieldDecl> CFGNode.nonNull_out_else() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
+  syn BitVec<VarOrFieldDecl> CFGNode.nonnull_out_else() circular [entry().getAllVarOrFieldDecls()] = new BitVec<>();
 
-  // Add all declarations to the entry that we know are NonNull (i.e., relevant params and fields)
-  eq CFGEntry.nonNull_out() {
+  // Add all declarations to the entry that we know are Nonnull (i.e., relevant params and fields)
+  eq CFGEntry.nonnull_out() {
     BitVec<VarOrFieldDecl> s = new BitVec<>();
 
     ASTNode parent = getParent();
@@ -147,7 +147,7 @@ aspect NonNull {
     
     if (c != null) {
       for (ParamDecl p : c.getParams()) {
-        if (p.nonNull()) {
+        if (p.nonnull()) {
           s.add(p);
         }
       }
@@ -156,14 +156,14 @@ aspect NonNull {
     if (parent instanceof MethodImpl) {
       MethodImpl met = (MethodImpl) getParent();
       for (ParamDecl p : met.getMethodSig().getParams()) {
-        if (p.nonNull()) {
+        if (p.nonnull()) {
           s.add(p);
         }
       }
 
       // Fields can only surely be initialized in methods
       for (FieldDecl f : c.getFields()) {
-        if (f.nonNull()) {
+        if (f.nonnull()) {
           s.add(f);
         }
       }
@@ -173,31 +173,31 @@ aspect NonNull {
   }
 
   // AssertStmt can propagate conditional information
-  eq AssertStmt.nonNull_out_then() {
+  eq AssertStmt.nonnull_out_then() {
     VarOrFieldDecl d = getCondition().testsNotNull();
     if (d != null) {
-      return nonNull_in().union(d);
+      return nonnull_in().union(d);
     }
-    return nonNull_in();
+    return nonnull_in();
   }
-  eq AssertStmt.nonNull_out_else() {
+  eq AssertStmt.nonnull_out_else() {
     VarOrFieldDecl d = getCondition().testsNull();
     if (d != null) {
-      return nonNull_in().union(d);
+      return nonnull_in().union(d);
     }
-    return nonNull_in();
+    return nonnull_in();
   }
 
   // Add or remove the corresponding decl depending on the assigned value
-  eq AssignStmt.nonNull_out() {
+  eq AssignStmt.nonnull_out() {
     Exp e = getValue();
-    BitVec<VarOrFieldDecl> out = e.nonNull_out();
+    BitVec<VarOrFieldDecl> out = e.nonnull_out();
 
     VarOrFieldUse var = getVar();
 
     VarOrFieldDecl d = var.getDecl();
 
-    if (e.nonNull()) {
+    if (e.nonnull()) {
       return out.union(d);
     } else {
       return out.compl(d);
@@ -205,29 +205,29 @@ aspect NonNull {
   }
 
   // Get information from the expression an propagate it
-  eq ExpressionStmt.nonNull_out() = getExp().nonNull_out();
+  eq ExpressionStmt.nonnull_out() = getExp().nonnull_out();
 
   // Give conditional information if applicable
-  eq IfStmt.nonNull_out_then() {
+  eq IfStmt.nonnull_out_then() {
     VarOrFieldDecl d = getCondition().testsNotNull();
     if (d != null) {
-      return nonNull_in().union(d);
+      return nonnull_in().union(d);
     }
-    return nonNull_in();
+    return nonnull_in();
   }
-  eq IfStmt.nonNull_out_else() {
+  eq IfStmt.nonnull_out_else() {
     VarOrFieldDecl d = getCondition().testsNull();
     if (d != null) {
-      return nonNull_in().union(d);
+      return nonnull_in().union(d);
     }
-    return nonNull_in();
+    return nonnull_in();
   }
 
-  // Add decl if the value is NonNull
-  eq VarDeclStmt.nonNull_out() {
+  // Add decl if the value is Nonnull
+  eq VarDeclStmt.nonnull_out() {
     VarDecl d = getVarDecl();
 
-    BitVec<VarOrFieldDecl> out = nonNull_in();
+    BitVec<VarOrFieldDecl> out = nonnull_in();
 
     if (!d.hasInitExp()) {
       // Because we have no init, the value is null
@@ -235,27 +235,27 @@ aspect NonNull {
     }
 
     Exp init = d.getInitExp();
-    if (init.nonNull()) {
-      return init.nonNull_out().union(d);
+    if (init.nonnull()) {
+      return init.nonnull_out().union(d);
     } else {
-      return init.nonNull_out().compl(d);
+      return init.nonnull_out().compl(d);
     }
   }
 
   // Give conditional information if applicable
-  eq WhileStmt.nonNull_out_then() {
+  eq WhileStmt.nonnull_out_then() {
     VarOrFieldDecl d = getCondition().testsNotNull();
     if (d != null) {
-      return nonNull_in().union(d);
+      return nonnull_in().union(d);
     }
-    return nonNull_in();
+    return nonnull_in();
   }
-  eq WhileStmt.nonNull_out_else() {
+  eq WhileStmt.nonnull_out_else() {
     VarOrFieldDecl d = getCondition().testsNull();
     if (d != null) {
-      return nonNull_in().union(d);
+      return nonnull_in().union(d);
     }
-    return nonNull_in();
+    return nonnull_in();
   }
 
   // == Exp ==
@@ -263,25 +263,25 @@ aspect NonNull {
   // Expressions can alter nullability, but most don't
 
   /**
-   * Used to compute nonNull, do not use directly
+   * Used to compute nonnull, do not use directly
    *
    * We get the current nullability from the parent stmt.
    * We could just make expressions nodes, but that would complicate the analysis
-   * We also could just pass the current nonNull-set to the `nonNull` attribute, but we that would make the API more difficult to use
+   * We also could just pass the current nonnull-set to the `nonnull` attribute, but we that would make the API more difficult to use
    */
-  syn BitVec<VarOrFieldDecl> Exp.nonNull_in() = parentStmt().nonNull_in();
+  syn BitVec<VarOrFieldDecl> Exp.nonnull_in() = parentStmt().nonnull_in();
 
   /**
-   * Used to compute nonNull, do not use directly
+   * Used to compute nonnull, do not use directly
    */
-  syn BitVec<VarOrFieldDecl> Exp.nonNull_out();
+  syn BitVec<VarOrFieldDecl> Exp.nonnull_out();
 
   // Most expressions don't change the set
-  eq Exp.nonNull_out() = nonNull_in();
+  eq Exp.nonnull_out() = nonnull_in();
 
-  // Calls make the callee NonNull
-  eq Call.nonNull_out() {
-    BitVec<VarOrFieldDecl> in = nonNull_in();
+  // Calls make the callee Nonnull
+  eq Call.nonnull_out() {
+    BitVec<VarOrFieldDecl> in = nonnull_in();
     PureExp callee = getCallee();
 
     if (callee instanceof VarOrFieldUse) {
@@ -293,28 +293,28 @@ aspect NonNull {
   }
   
   /**
-    * True iff the expression is ensured to be NonNull
+    * True iff the expression is ensured to be Nonnull
     */
-  syn boolean Exp.nonNull() circular [true];
+  syn boolean Exp.nonnull() circular [true];
 
-  eq Call.nonNull() = getMethodSig().nonNull();
+  eq Call.nonnull() = getMethodSig().nonnull();
 
-  eq GetExp.nonNull() = getPureExp().nonNull();
+  eq GetExp.nonnull() = getPureExp().nonnull();
 
-  eq NewExp.nonNull() = true;
+  eq NewExp.nonnull() = true;
 
-  eq OriginalCall.nonNull() = false;
+  eq OriginalCall.nonnull() = false;
 
-  eq VarOrFieldUse.nonNull() = nonNull_in().contains(getDecl());
+  eq VarOrFieldUse.nonnull() = nonnull_in().contains(getDecl());
 
-  eq AsExp.nonNull() = false;
+  eq AsExp.nonnull() = false;
 
   // Binary expr can't be a reference
-  eq Binary.nonNull() = false;
+  eq Binary.nonnull() = false;
 
-  eq CaseExp.nonNull() {
+  eq CaseExp.nonnull() {
     for (CaseBranch b : getBranchs()) {
-      if (!b.getRight().nonNull()) {
+      if (!b.getRight().nonnull()) {
         return false;
       }
     }
@@ -322,56 +322,56 @@ aspect NonNull {
   }
 
   // Can't be a reference
-  eq DataConstructorExp.nonNull() = false;
+  eq DataConstructorExp.nonnull() = false;
 
-  eq FnApp.nonNull() {
+  eq FnApp.nonnull() {
     // We cannot get the NullableType from the decl, because of generics
     Type t = getType();
     NullableType nt = NullCheckerExtension.getNullableType(t);
     if (nt == null) return false;
-    return nt.isNonNull();
+    return nt.isNonnull();
   }
 
-  eq IfExp.virtualThenStmt().nonNull_in() {
+  eq IfExp.virtualThenStmt().nonnull_in() {
     VarOrFieldDecl d = getCondExp().testsNotNull();
     if (d != null) {
-      return nonNull_in().union(d);
+      return nonnull_in().union(d);
     }
-    return nonNull_in();
+    return nonnull_in();
   }
 
-  eq IfExp.virtualElseStmt().nonNull_in() {
+  eq IfExp.virtualElseStmt().nonnull_in() {
     VarOrFieldDecl d = getCondExp().testsNull();
     if (d != null) {
-      return nonNull_in().union(d);
+      return nonnull_in().union(d);
     }
-    return nonNull_in();
+    return nonnull_in();
   }
 
-  eq IfExp.nonNull() = getThenExp().nonNull() && getElseExp().nonNull();
+  eq IfExp.nonnull() = getThenExp().nonnull() && getElseExp().nonnull();
 
-  eq ImplementsExp.nonNull() = false;
+  eq ImplementsExp.nonnull() = false;
 
-  inh BitVec<VarOrFieldDecl> VirtualStmt.nonNull_in();
-  eq LetExp.virtualStmt().nonNull_in() {
-    BitVec<VarOrFieldDecl> in = nonNull_in();
+  inh BitVec<VarOrFieldDecl> VirtualStmt.nonnull_in();
+  eq LetExp.virtualStmt().nonnull_in() {
+    BitVec<VarOrFieldDecl> in = nonnull_in();
     ParamDecl d = getVar();
 
-    if (getVal().nonNull()) {
+    if (getVal().nonnull()) {
       return in.union(d);
     }
 
     return in;
   }
-  eq LetExp.nonNull() = getExp().nonNull();
+  eq LetExp.nonnull() = getExp().nonnull();
 
-  eq ExpFunctionDef.virtualStmt().nonNull_in() {
+  eq ExpFunctionDef.virtualStmt().nonnull_in() {
     FunctionDecl d = (FunctionDecl) getParent();
 
     BitVec<VarOrFieldDecl> in = new BitVec<>();
 
     for (ParamDecl p : d.getParams()) {
-      if (p.nonNull()) {
+      if (p.nonnull()) {
         in.add(p);
       }
     }
@@ -379,21 +379,21 @@ aspect NonNull {
     return in;
   }
 
-  eq LiteralExp.nonNull() = false;
+  eq LiteralExp.nonnull() = false;
 
-  eq NullExp.nonNull() = false;
+  eq NullExp.nonnull() = false;
 
-  eq ParFnApp.nonNull() {
+  eq ParFnApp.nonnull() {
     // We cannot get the NullableType from the decl, because of generics
     Type t = getType();
     NullableType nt = NullCheckerExtension.getNullableType(t);
     if (nt == null) return false;
-    return nt.isNonNull();
+    return nt.isNonnull();
   }
 
-  eq ThisExp.nonNull() = true;
+  eq ThisExp.nonnull() = true;
 
-  eq Unary.nonNull() = false;
+  eq Unary.nonnull() = false;
 
   /**
    * Whether this expr is `id == null` or `null == id`
@@ -436,14 +436,14 @@ aspect NonNull {
   }
 
   /**
-   * Whether the annotation is the NonNull annotation
+   * Whether the annotation is the Nonnull annotation
    */
-  syn boolean Annotation.nonNull() {
+  syn boolean Annotation.nonnull() {
     PureExp e = getValue();
     if (e instanceof DataConstructorExp) {
       DataConstructorExp d = (DataConstructorExp) e;
       String name = d.getConstructor();
-      if (name.equals("NonNull") && !d.hasParam()) {
+      if (name.equals("Nonnull") && !d.hasParam()) {
         return true;
       }
     }
@@ -452,53 +452,53 @@ aspect NonNull {
 
   // == Parameters ==
   /**
-   * Whether the param is declared as NonNull
+   * Whether the param is declared as Nonnull
    */
-  syn boolean ParamDecl.nonNull() {
+  syn boolean ParamDecl.nonnull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
-    return nt.isNonNull();
+    return nt.isNonnull();
   }
 
   // == MethodSig ==
   /**
-   * Whether the method return type is declared as NonNull
+   * Whether the method return type is declared as Nonnull
    */
-  syn boolean MethodSig.nonNull() {
+  syn boolean MethodSig.nonnull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
-    return nt.isNonNull();
+    return nt.isNonnull();
   }
 
   // == Function ==
   /**
-   * Whether the function is declared as NonNull
+   * Whether the function is declared as Nonnull
    */
-  syn boolean FunctionDecl.nonNull() {
+  syn boolean FunctionDecl.nonnull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
-    return nt.isNonNull();
+    return nt.isNonnull();
   }
 
   // == Partial Function
   /**
-   * Whether the function is declared as NonNull
+   * Whether the function is declared as Nonnull
    */
-  syn boolean PartialFunctionDecl.nonNull() {
+  syn boolean PartialFunctionDecl.nonnull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
-    return nt.isNonNull();
+    return nt.isNonnull();
   }
 
   // == VarOrFieldDecl
   /**
-   * Whether the variable or field is declared as NonNull
+   * Whether the variable or field is declared as Nonnull
    */
-  syn boolean VarOrFieldDecl.nonNull() = false;
+  syn boolean VarOrFieldDecl.nonnull() = false;
 
-  eq TypedVarOrFieldDecl.nonNull() {
+  eq TypedVarOrFieldDecl.nonnull() {
     NullableType nt = getNullableType();
     if (nt == null) return false;
-    return nt.isNonNull();
+    return nt.isNonnull();
   }
 }

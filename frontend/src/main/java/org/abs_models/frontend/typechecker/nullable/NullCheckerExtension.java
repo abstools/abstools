@@ -7,7 +7,6 @@ import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.Type;
 import org.abs_models.frontend.typechecker.TypeAnnotation;
-import org.abs_models.frontend.typechecker.ext.AdaptDirection;
 import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         List<FieldDecl> nonNullFields = new ArrayList<>();
         for (FieldDecl f : decl.getFields()) {
             setAnnotatedType(f.getType(), f);
-            if (f.nonNull() && !f.hasInitExp()) {
+            if (f.nonnull() && !f.hasInitExp()) {
                 nonNullFields.add(f);
             }
         }
@@ -63,18 +62,18 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
             errors.add(new TypeError(
                 nonNullFields.get(0),
                 ErrorMessage.NULLABLE_TYPE_MISMATCH,
-                NullableType.NonNull.toString(),
+                NullableType.Nonnull.toString(),
                 NullableType.Nullable.toString()));
             return;
         }
         // Get all fields that are nonNull at the end of the init block
-        BitVec<VarOrFieldDecl> out = decl.getInitBlock().exit().nonNull_in();
+        BitVec<VarOrFieldDecl> out = decl.getInitBlock().exit().nonnull_in();
         for (FieldDecl f : nonNullFields) {
             if (!out.contains(f)) {
                 errors.add(new TypeError(
                     f,
                     ErrorMessage.NULLABLE_TYPE_MISMATCH,
-                    NullableType.NonNull.toString(),
+                    NullableType.Nonnull.toString(),
                     NullableType.Nullable.toString()));
             }
         }
@@ -146,7 +145,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public void checkCondition(PureExp cond) {
         VarOrFieldDecl d = cond.testsNotNull();
         if (d != null) {
-            if (cond.nonNull_in().contains(d)) {
+            if (cond.nonnull_in().contains(d)) {
                 errors.add(new SemanticWarning(cond, ErrorMessage.NULLABLE_TYPE_COND_ALWAYS_SAME, "true"));
             }
             if (cond.null_in().contains(d)) {
@@ -156,7 +155,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         }
         d = cond.testsNull();
         if (d != null) {
-            if (cond.nonNull_in().contains(d)) {
+            if (cond.nonnull_in().contains(d)) {
                 errors.add(new SemanticWarning(cond, ErrorMessage.NULLABLE_TYPE_COND_ALWAYS_SAME, "false"));
             }
             if (cond.null_in().contains(d)) {
@@ -178,7 +177,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         setAnnotatedType(t, varDeclStmt);
         if (!shouldHaveNullableType(t)) return;
         NullableType nt = getNullableTypeDefault(t);
-        if (nt == NullableType.NonNull && !d.hasInitExp()) {
+        if (nt == NullableType.Nonnull && !d.hasInitExp()) {
             errors.add(new TypeError(varDeclStmt, ErrorMessage.NULLABLE_TYPE_MISMATCH, NullableType.Null.toString(), nt.toString()));
         }
     }

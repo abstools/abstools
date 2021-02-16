@@ -84,7 +84,7 @@ aspect Null {
 
     /*
      * This is a special case. Fields without init (or with init `null`) are null at the beginning of the InitBlock
-     * This is the only case in which variables declared as `NonNull` are allowed to be `null`
+     * This is the only case in which variables declared as `Nonnull` are allowed to be `null`
      * The checker ensures that these fields are initialized in the InitBlock
      */
     if (getParent() instanceof InitBlock) {
