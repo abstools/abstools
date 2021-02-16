@@ -46,12 +46,12 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     @Override
     public void checkClassDecl(ClassDecl decl) {
         for (ParamDecl p : decl.getParams()) {
-            setAnnotatedType(p.getType(), p, p.getAccess());
+            setAnnotatedType(p.getType(), p);
         }
 
         List<FieldDecl> nonNullFields = new ArrayList<>();
         for (FieldDecl f : decl.getFields()) {
-            setAnnotatedType(f.getType(), f, f.getAccess());
+            setAnnotatedType(f.getType(), f);
             if (f.nonNull() && !f.hasInitExp()) {
                 nonNullFields.add(f);
             }
@@ -90,9 +90,9 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     }
 
     public void checkMethodSig(MethodSig ms) {
-        setAnnotatedType(ms.getType(), ms, ms.getReturnType());
+        setAnnotatedType(ms.getType(), ms);
         for (ParamDecl p : ms.getParams()) {
-            setAnnotatedType(p.getType(), p, p.getAccess());
+            setAnnotatedType(p.getType(), p);
         }
     }
 
@@ -177,7 +177,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
         VarDecl d = varDeclStmt.getVarDecl();
         Type t = d.getType();
-        setAnnotatedType(t, varDeclStmt, d.getAccess());
+        setAnnotatedType(t, varDeclStmt);
         if (!shouldHaveNullableType(t)) return;
         NullableType nt = getNullableTypeDefault(t);
         if (nt == NullableType.NonNull && !d.hasInitExp()) {
@@ -204,13 +204,13 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
-        setAnnotatedType(t, originatingNode, typeNode);
+        setAnnotatedType(t, originatingNode);
     }
 
-    private void setAnnotatedType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
+    private void setAnnotatedType(Type t, ASTNode<?> originatingNode) {
         try {
             NullableType nt = getNullableTypeFromAnnotation(t);
-            if (shouldWarn(t, nt, originatingNode, typeNode)) {
+            if (shouldWarn(t, nt, originatingNode)) {
                 errors.add(new SemanticWarning(originatingNode, ErrorMessage.NULLABLETYPE_MISSING_ANNOTATION, new String[0]));
             }
             if (shouldHaveNullableType(t))
@@ -220,7 +220,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         }
     }
 
-    private boolean shouldWarn(Type t, NullableType nt, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
+    private boolean shouldWarn(Type t, NullableType nt, ASTNode<?> originatingNode) {
         if (!warnAboutMissingAnnotation || nt != null || !shouldHaveNullableType(t)) return false;
 
         return !(originatingNode instanceof NullExp)

@@ -305,7 +305,6 @@ aspect NonNull {
 
   eq OriginalCall.nonNull() = false;
 
-  eq Access.nonNull() = false;
   eq VarOrFieldUse.nonNull() = nonNull_in().contains(getDecl());
 
   eq AsExp.nonNull() = false;

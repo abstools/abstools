@@ -219,7 +219,6 @@ aspect Null {
 
   eq OriginalCall.isNull() = false;
 
-  eq Access.isNull() = false;
   eq VarOrFieldUse.isNull() = null_in().contains(getDecl());
 
   eq AsExp.isNull() = false;

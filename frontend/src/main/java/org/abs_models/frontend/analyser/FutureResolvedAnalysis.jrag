@@ -121,7 +121,6 @@ aspect FutureResolvedAnalysis {
 
   eq OriginalCall.resolved() = false;
 
-  eq Access.resolved() = false;
   eq VarOrFieldUse.resolved() = resolved_in().contains(getDecl());
 
   eq AsExp.resolved() = false;
