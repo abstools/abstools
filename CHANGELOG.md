@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Fixed a deadlock in the erlang backend: https://github.com/abstools/abstools/issues/276
+
 ## [1.9.1] - 2020-11-27
 
 ### Added

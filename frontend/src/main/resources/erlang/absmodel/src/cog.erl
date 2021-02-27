@@ -24,6 +24,8 @@
          block_current_task_for_bandwidth/4,
          block_current_task_for_future/3]).
 -export([return_token/5]).
+%% functions being called by a dc whose object state we're holding.
+-export([consume_resource_on_dc/7]).
 %% Called by cog_monitor
 -include_lib("../include/abs_types.hrl").
 
@@ -373,6 +375,12 @@ block_current_task_for_future(_Cog=#cog{ref=CogRef}, Future, _Stack) ->
                              get(this),
                              Future}).
 
+consume_resource_on_dc(_Cog=#cog{ref=CogRef}, DCRef, DCOid, ConsumingCog, ConsumingTask, Resourcetype, Amount_raw) ->
+    gen_statem:cast(CogRef, {consume_resource_on_dc, DCRef, DCOid, ConsumingCog, ConsumingTask, Resourcetype, Amount_raw});
+consume_resource_on_dc(CogRef, DCRef, DCOid, ConsumingCog, ConsumingTask, Resourcetype, Amount_raw) ->
+    gen_statem:cast(CogRef, {consume_resource_on_dc, DCRef, DCOid, ConsumingCog, ConsumingTask, Resourcetype, Amount_raw}).
+
+
 return_token(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState) ->
     receive
         {stop_world, _Sender} -> ok
@@ -506,10 +514,10 @@ handle_event(cast, {future_is_ready, FutureRef}, _StateName, _Data) ->
     future:confirm_wait_unblocked(FutureRef, {waiting_cog, self()}),
     keep_state_and_data;
 
-%% Record/replay a method invocation, and return a stable identifier for the
-%% invocation.
 handle_event({call, From}, {register_invocation, Method}, _StateName,
              Data=#data{next_stable_id=N, id=Id, recorded=Recorded}) ->
+    %% Record/replay a method invocation, and return a stable
+    %% identifier for the invocation.
     Event = #event{type=invocation, caller_id=Id, local_id=N, name=Method},
     NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded]},
     {keep_state, NewData, {reply, From, Event}};
@@ -564,6 +572,53 @@ handle_event(cast, {object_dead, Oid}, _StateName, Data=#data{object_states=Obje
     end,
     {keep_state, Data#data{object_states=maps:remove(Oid, NewStates)}};
 
+handle_event(cast, {consume_resource_on_dc, DCRef, DCOid, ConsumingCog, ConsumingTask, Resourcetype, Amount_raw},
+            _StateName, Data=#data{object_states=ObjectStates}) ->
+    %% Silently fix negative resource amounts, treat them as 0
+    Requested = rationals:max(rationals:to_r(Amount_raw), 0),
+    C=class_ABS_DC_DeploymentComponent,
+    OState=maps:get(DCOid, ObjectStates, dead),
+    Initialized=C:get_val_internal(OState, 'initialized'),
+    case Initialized of
+        null ->
+            %% The init block of the DC object has not run yet (should not
+            %% happen) - just tell the dc to enqueue the request.
+            dc:enqueue_consume_resource(DCRef, ConsumingCog, ConsumingTask, Resourcetype, Amount_raw),
+            {keep_state_and_data};
+        true ->
+            ResourceVarCurrent=dc:var_current_for_resourcetype(Resourcetype),
+            ResourceVarMax=dc:var_max_for_resourcetype(Resourcetype),
+            %% We modify the DC object state directly, which looks
+            %% scary - but we do not reach this point when we're in
+            %% state `running' so no one else can overwrite the state
+            %% with an outdated version.
+            Total=C:get_val_internal(OState,ResourceVarMax),
+            Consumed=rationals:to_r(C:get_val_internal(OState,ResourceVarCurrent)),
+            Available=case Total of
+                          dataInfRat -> Requested;
+                          {dataFin, Total1} -> rationals:sub(Total1, Consumed)
+                      end,
+            case rationals:is_greater(Requested, Available) of
+                true ->
+                    %% We need more than is available - get what we can and
+                    %% queue the rest.
+                    Remaining = rationals:sub(Requested, Available),
+                    NewConsumed = rationals:add(Consumed, Available),
+                    %% Do not set current to total since that is of type InfRat
+                    OState1=C:set_val_internal(OState,ResourceVarCurrent, NewConsumed),
+                    dc:enqueue_consume_resource(DCRef, ConsumingCog, ConsumingTask, Resourcetype, Remaining),
+                    {keep_state,
+                     Data#data{object_states=maps:put(DCOid, OState1, ObjectStates)}};
+                false ->
+                    %% Do not inform cog_monitor that cog is blocked; just
+                    %% unblock task here
+                    NewConsumed=rationals:add(Consumed, Requested),
+                    OState1=C:set_val_internal(OState,ResourceVarCurrent, NewConsumed),
+                    cog:task_is_runnable(ConsumingCog, ConsumingTask),
+                    {keep_state,
+                     Data#data{object_states=maps:put(DCOid, OState1, ObjectStates)}}
+            end
+    end;
 handle_event({call, _From}, _Event, _StateName, Data) ->
     {stop, not_supported, Data};
 handle_event(cast, _Event, _StateName, Data) ->
@@ -1115,6 +1170,15 @@ task_running(cast, stop_world, Data=#data{running_task=R,gc_waiting_to_start=fal
     task:send_stop_for_gc(R),
     {keep_state,
      Data#data{next_state_after_gc=task_running, gc_waiting_to_start=true}};
+task_running(cast, {consume_resource_on_dc, _DCRef, _DCOid, _ConsumingCog, _ConsumingTask, _Resourcetype, _Amount_raw}, _Data) ->
+    %% This event is only sent to cogs who contain a DC object ()as
+    %% its sole object, since DCs can't be created via `new_local`.
+    %% We need to modify the dc object's state, so postpone resource
+    %% consumption until the running process (who will have the dc
+    %% object state checked out) has finished.  Note that all methods
+    %% on the class ABS.DC.DeploymentComponent are short and terminate
+    %% quickly.
+    {keep_state_and_data, [postpone]};
 task_running(info, {'EXIT',TaskRef,_Reason},
             Data=#data{gc_waiting_to_start=GCWaitingToStart,
                        running_task=R,runnable_tasks=Run,polling_tasks=Pol,
