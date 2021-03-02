@@ -1,11 +1,24 @@
 * The abs-models.org website source
 
-This is the source code for the abs-models.org website.  The site is built
-using [[https://gohugo.io/][Hugo]], and deployed both inside collaboratory docker containers and at https://abs-models.org/.
+This is the source code for the abs-models.org website.  The site is
+built using [[https://gohugo.io/][Hugo]], and deployed both inside collaboratory docker
+containers and at https://abs-models.org/.
+
+** Updating the theme
+
+Newer hugo releases might emit warnings or errors for our theme.  In
+that case:
+- remove ~themes/hugo-theme-learn~
+- in ~themes/~, run ~git clone
+https://github.com/matcornic/hugo-theme-learn~
+- remove the directory ~static/hugo-theme-learn/.git~
 
 ** Deploying on the website
 
-The website is deployed into the repository https://github.com/abstools/abstools.github.io.  If that repository is checked out in the same directory as this one, the following command will prepare a new version:
+The website is deployed into the repository
+https://github.com/abstools/abstools.github.io.  If that repository is
+checked out in the same directory as this one, the following command
+will prepare a new version:
 
 : hugo --cleanDestinationDir -d ../abstools.github.io/
 
