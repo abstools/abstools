@@ -8,15 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- A fixed version of location type checking has been implemented, use the parameter `--loctypecheck` to enable location type checking.  Location types express whether a given object resides on the same cog as the current object.
-
 ### Changed
 
 ### Removed
 
 ### Fixed
 
-- Fixed a deadlock in the erlang backend: https://github.com/abstools/abstools/issues/276
+## [1.9.2] - 2021-03-02
+
+### Added
+
+- A first version of location type checking has been added.  This feature is currently not enabled by default.  Use the parameter `--loctypecheck` to enable location type checking.  Location types express whether a given object resides on the same cog as the current object; see Section 3.6 in the manual for initial documentation.
+
+### Fixed
+
+- A deadlock in the erlang backend has been fixed. https://github.com/abstools/abstools/issues/276
 
 ## [1.9.1] - 2020-11-27
 
@@ -402,8 +408,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.1...HEAD
-[1.9.1]: https://github.com/abstools/abstools/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.2...HEAD
+[1.9.2]: https://github.com/abstools/abstools/compare/v1.9.1...v1.9.2
+[1.9.1]: https://github.com/abstools/abstools/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/abstools/abstools/compare/v1.8.2...v1.9.0
 [1.8.2]: https://github.com/abstools/abstools/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/abstools/abstools/compare/v_1.8.0...v1.8.1
