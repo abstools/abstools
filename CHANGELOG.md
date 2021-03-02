@@ -18,11 +18,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.9.2] - 2021-03-02
+
+### Added
+
+- A first version of location type checking has been added.  This feature is currently not enabled by default.  Use the parameter `--loctypecheck` to enable location type checking.  Location types express whether a given object resides on the same cog as the current object; see Section 3.6 in the manual for initial documentation.
+
+### Fixed
+
+- A deadlock in the erlang backend has been fixed. https://github.com/abstools/abstools/issues/276
+
+## [1.9.1] - 2020-11-27
+
+### Added
+
 - The `foreach` loop now supports an optional second variable of type `Int` that is bound to the index of the current element, starting at zero.  The syntax is `foreach (elem, index in list) { ... }`.
 
 - The second argument to the `duration` statement and `await duration` guard is now optional; `duration(x)` has the same behavior as `duration(x, x)`.
 
 - The new function `ms_since_model_start` returns an integer containing the elapsed time in milliseonds since the model was started.
+
+- The Model API in the erlang backend can now export its endpoints with a link prefix via the `--url-prefix` command-line option.
 
 ### Changed
 
@@ -37,8 +59,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The import/export combination `import A from OtherModule; export A;` now issues a compile-time warning instead of an error.  This keeps older models running while announcing the upcoming change.  (The same construct is an error in the xtext branch already.)
 
 - In the Erlang backend, wall-clock time for running a model is now reported in milliseconds instead  of microseconds.  (To see the elapsed time, start the model with parameter `-v`.)
-
-### Removed
 
 ### Fixed
 
@@ -404,8 +424,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.4.0] - 2016-09-30
 
 
-
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.2...HEAD
+[1.9.2]: https://github.com/abstools/abstools/compare/v1.9.1...v1.9.2
+[1.9.1]: https://github.com/abstools/abstools/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/abstools/abstools/compare/v1.8.2...v1.9.0
 [1.8.2]: https://github.com/abstools/abstools/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/abstools/abstools/compare/v_1.8.0...v1.8.1

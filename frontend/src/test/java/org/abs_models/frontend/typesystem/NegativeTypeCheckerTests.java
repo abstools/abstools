@@ -727,4 +727,9 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         // TODO: should be type error but xtext detects this during parsing already
         assertParseError("module M; interface M.I {}");
     }
+
+    @Test
+    public void foreachWithNoList() {
+	assertTypeErrors("{ foreach(v, i in 5) { println(`$i$'th int value is $v$`);} }");
+    }
 }

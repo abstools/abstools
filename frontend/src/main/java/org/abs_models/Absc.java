@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.typechecker.CheckSPLCommand;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
@@ -172,13 +170,13 @@ public class Absc implements Callable<Integer> {
             description = "disable typechecking")
     public boolean notypecheck = false;
 
-    @Option(names = { "--loctypes" },
+    @Option(names = { "--loctypecheck" },
             description = "enable location type checking")
     public boolean locationTypeInferenceEnabled = false;
 
     static class LocationTypeUserTypes extends ArrayList<String> {
         LocationTypeUserTypes() {
-            super(Arrays.stream(LocationType.ALLUSERTYPES)
+            super(Arrays.stream(LocationType.ALL_USER_TYPES)
                   .map(LocationType::toString)
                   .collect(Collectors.toList()));
         }
@@ -196,14 +194,6 @@ public class Absc implements Callable<Integer> {
     // default value taken from declaration of
     // LocationTypeInferrerExtension.defaultType
     public LocationType defaultLocationType = LocationType.INFER;
-
-
-    @Option(names = { "--locscope" },
-            description = "sets the location aliasing scope (allowed values: ${COMPLETION-CANDIDATES}) (default: ${DEFAULT-VALUE})",
-            paramLabel = "scope")
-    // default value taken from declaration of
-    // LocationTypeInferrerExtension.precision
-    public LocationTypeInferrerExtension.LocationTypingPrecision locationTypeScope = LocationTypingPrecision.CLASS_LOCAL_FAR;
 
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {

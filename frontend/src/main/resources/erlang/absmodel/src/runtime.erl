@@ -8,13 +8,14 @@
 
 -include_lib("../include/absmodulename.hrl").
 
--export([start/0,start/1,run/1,start_link/1,start_http/0,start_http/6,run_dpor_slave/3]).
+-export([start/0,start/1,run/1,start_link/1,run_dpor_slave/3]).
 
 %% Supervisor callbacks
 -export([init/1]).
 
 -define(CMDLINE_SPEC,
         [{port,$p,"port",{integer,none},"Listen for model API requests on port (0 for random port) and keep model running"},
+         {url_prefix,undefined,"url-prefix",{string, none},"Url prefix for model API: index.html will be served at localhost:port/prefix/index.html"},
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
          {dump_trace,$t,"dump-trace",{string, none},"Dump the trace as a JSON file"},
@@ -39,7 +40,7 @@ init([]) ->
 start()->
     case init:get_plain_arguments() of
         []->
-            run_mod(?ABSMAINMODULE, false, false, none, none, maps:new(), false);
+            run_mod(?ABSMAINMODULE, false, false, none, none, none, maps:new(), false);
         Args->
             start(Args)
    end.
@@ -50,19 +51,16 @@ start(Args) ->
 run(Args) ->
     parse(Args,"run").
 
-start_http() ->
-    {ok, _} = application:ensure_all_started(absmodel).
-
-start_http(Port, Module, Verbose, Debug, Clocklimit, Trace) ->
+start_http(Port, Urlprefix, Module, Verbose, Debug, Clocklimit, Trace) ->
     ok = application:load(absmodel),
     ok = application:set_env(absmodel, port, Port),
+    ok = application:set_env(absmodel, url_prefix, Urlprefix),
     ok = application:set_env(absmodel, module, Module),
     ok = application:set_env(absmodel, debug, Debug),
     ok = application:set_env(absmodel, verbose, Verbose),
     ok = application:set_env(absmodel, clocklimit, Clocklimit),
     ok = application:set_env(absmodel, replay_trace, Trace),
-    start_http().
-
+    {ok, _} = application:ensure_all_started(absmodel).
 
 parse(Args,Exec)->
     case getopt:parse_and_check(?CMDLINE_SPEC,Args) of
@@ -82,6 +80,7 @@ parse(Args,Exec)->
             Debug=proplists:get_value(debug,Parsed, false),
             Verbose=proplists:get_value(verbose,Parsed,0),
             Port=proplists:get_value(port,Parsed,none),
+            Urlprefix=proplists:get_value(url_prefix,Parsed,none),
             Clocklimit=proplists:get_value(clocklimit,Parsed,none),
             Schedulers=proplists:get_value(schedulers,Parsed,none),
             DumpTrace=proplists:get_value(dump_trace,Parsed,none),
@@ -107,7 +106,7 @@ parse(Args,Exec)->
                           end,
             case ExploreMode of
                 true -> dpor:start_link(Module, Clocklimit);
-                false -> run_mod(Module, Verbose, Debug, Port, Clocklimit, ReplayTrace, DumpTrace)
+                false -> run_mod(Module, Verbose, Debug, Port, Urlprefix, Clocklimit, ReplayTrace, DumpTrace)
             end;
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
@@ -184,10 +183,10 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     Ret.
 
 
-run_mod(Module, Verbose, Debug, Port, Clocklimit, Trace, DumpTrace)  ->
+run_mod(Module, Verbose, Debug, Port, Urlprefix, Clocklimit, Trace, DumpTrace)  ->
     case Port of
         _ when is_integer(Port) ->
-            start_http(Port, Module, Verbose, Debug, Clocklimit, Trace),
+            start_http(Port, Urlprefix, Module, Verbose, Debug, Clocklimit, Trace),
             receive ok -> ok end;
         _ ->
             StartTime = erlang:system_time(millisecond),
@@ -198,7 +197,7 @@ run_mod(Module, Verbose, Debug, Port, Clocklimit, Trace, DumpTrace)  ->
 run_dpor_slave(Module, Clocklimit, Trace) ->
     StartTime = erlang:system_time(millisecond),
     {ok, TaskRef} = start_mod(Module, false, false, Clocklimit, false, Trace, StartTime),
-    RetVal=task:join(TaskRef),
+    _RetVal=task:join(TaskRef),
     Status = cog_monitor:waitfor(),
     NewTrace = cog_monitor:get_trace(),
     gc:stop(),

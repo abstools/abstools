@@ -255,6 +255,10 @@ $.ajax({
 });
 ----
 
+NOTE: Note the missing solidus (`/`) at the beginning of the query url -- this
+makes the request robust against custom url prefixes (see
+<<customizing-url-prefixes>>).
+
 Care must be taken to disable timeouts on the HTTP client when querying for
 long-running methods in this way.
 
@@ -305,7 +309,9 @@ Since the Model API is implemented via HTTP, it can be accessed from a
 web browser.  The `--modelapi-index-file` command-line switch is used
 to supply an `index.html` file at compile-time:
 
-  $ absc --erlang --modelapi-index-file ./index.html *.abs
+----
+$ absc --erlang --modelapi-index-file ./index.html *.abs
+----
 
 When running a model on port 8080 and accessing
 `http://localhost:8080/` from a browser, the contents of that file
@@ -316,9 +322,33 @@ e.g., CSS files, images or JavaScript libraries.  The contents of one
 directory can be added to the model via the `--modelapi-static-dir`
 command-line switch:
 
-  $ absc --erlang --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs
+----
+$ absc --erlang --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs
+----
 
 The contents of the given directory are copied at compile-time.  The
 files within that directory are available within the Model API below
 the `static/` path.  For example, a file `./support-files/js/d3.js`
-will be accessible as `http://localhost:8080/static/js/d3.js`.
+will be accessible as `http://localhost:8080/static/js/d3.js`, and can be referred within the `index.html` file like this:
+
+----
+<script type="text/javascript" src="static/js/d3.js"></script>
+----
+
+[[customizing-url-prefixes]]
+=== Customizing the Model API URL
+
+It is sometimes necessary to change the url under which the model publishes
+the given `index.html` file and static files.  When starting a model, the
+parameter `--url-prefix` can be used to insert a prefix to these paths, and
+to the `/call` and `/o` URLs described above.
+
+As an example, the following command will make the index file given at compile-time available at http://localhost:8080/abcd/5080/index.html:
+
+----
+$ gen/erl/run -p 8080 --url-prefix /abcd/5080
+----
+
+CAUTION: In the `index.html` file, do not use an initial solidus (`/`) to
+refer to static files and method calls, since such http requests will not work
+when the model is run with an url prefix. Instead of `<script src="/static/js/d3.js"></script>`, write `<script src="static/js/d3.js"></script>`.

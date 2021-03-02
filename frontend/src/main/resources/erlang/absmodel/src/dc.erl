@@ -27,6 +27,10 @@
 
 -export([notify_time_advance/2, get_traces/1]).
 
+%% Called by the cog which holds our object state.
+-export([enqueue_consume_resource/5]).
+-export([var_current_for_resourcetype/1, var_max_for_resourcetype/1]).
+
 %% External API
 
 new(Cog, Oid) ->
@@ -88,6 +92,12 @@ task_confirm_clock_wakeup(DCRef, CogRef, TaskRef) ->
 
 block_task_for_resource(DCRef, CogRef, TaskRef, RequestEvent) ->
     gen_statem:cast(DCRef, {consume_resource, CogRef, TaskRef, RequestEvent}).
+
+enqueue_consume_resource(DCRef, CogRef, TaskRef, Resourcetype, Amount) ->
+    %% Called by the cog that holds the object state when `CogRef'
+    %% asked for more resources than available.  We also mark `CogRef'
+    %% as blocked since it's waiting for resources.
+    gen_statem:cast(DCRef, {enqueue_consume_resource, CogRef, TaskRef, Resourcetype, Amount}).
 
 notify_time_advance(DCRef, Delta) ->
     gen_statem:cast(DCRef, {clock_advance_for_dc, Delta}).
@@ -209,7 +219,7 @@ handle_call(From, get_dc_info_string, _State, _Data=#data{cog=Cog,oid=Oid}) ->
                           builtin:toString(undefined, C:get_val_internal(OState,cpuhistory))]),
     {keep_state_and_data, {reply, From, Result}};
 handle_call(From, get_traces, _State,
-            Data=#data{cog=MyCog, active=A, blocked=B, idle=I, id=Id, recorded=Recorded}) ->
+            _Data=#data{cog=MyCog, active=A, blocked=B, idle=I, id=Id, recorded=Recorded}) ->
     Cogs = gb_sets:add(MyCog, gb_sets:union([A, B, I])),
     Init = #{Id => lists:reverse(Recorded)},
     Traces = gb_sets:fold(fun (Cog, AccT) ->
@@ -276,6 +286,13 @@ handle_cast({clock_advance_for_dc, Amount}, State,
         false -> {keep_state, NewData};
         true -> switch_to_idle(State, NewData)
     end;
+handle_cast({enqueue_consume_resource, CogRef, TaskRef, Resourcetype, Amount},
+            _StateName,
+            Data=#data{resource_waiting=RQueue}) ->
+    Queue = maps:get(Resourcetype, RQueue, []),
+    {keep_state,
+     Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Amount}]}},
+     [{next_event, internal, {cog_blocked, CogRef}}]};
 handle_cast(_Event, _StateName, Data) ->
     {stop, not_supported, Data}.
 
@@ -315,6 +332,7 @@ active({call, From}, {cog_blocked_for_clock, CogRef, TaskRef, Min, Max},
     NewData=Data#data{clock_waiting=NewW,
                       active=gb_sets:del_element(CogRef, A),
                       blocked=gb_sets:add_element(CogRef, B)},
+    %% TODO: check whether we should call dc_mte here as well
     gen_statem:reply(From, ok),
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
@@ -328,95 +346,38 @@ active({call, From}, {task_waiting_for_clock, CogRef, TaskRef, Min, Max},
     {keep_state, NewData, {reply, From, ok}};
 active(cast, {task_confirm_clock_wakeup, CogRef, TaskRef},
        Data=#data{active_before_next_clock=ABNC}) ->
-    NewData=Data#data{active_before_next_clock=gb_sets:delete(
+    NewData=Data#data{active_before_next_clock=gb_sets:del_element(
                                                  {CogRef, TaskRef}, ABNC)},
     case can_switch_to_idle(NewData) of
         false -> {keep_state, NewData};
         true -> switch_to_idle(active, NewData)
     end;
-active(cast, Event={consume_resource, CogRef, TaskRef, RequestEvent},
-       Data=#data{replaying=[ExpectedEvent | Replaying], retries=Retries})
+active(cast, Event={consume_resource, _CogRef, _TaskRef, RequestEvent},
+       Data=#data{replaying=[ExpectedEvent | _Replaying], retries=Retries})
   when RequestEvent =/= ExpectedEvent ->
     {keep_state, Data#data{retries=[{next_event, cast, Event} | Retries]}};
 active(cast, {consume_resource, CogRef, TaskRef, RequestEvent},
-       Data=#data{cog=MyCog, oid=MyOid, resource_waiting=RQueue,
-                  active_before_next_clock=ABNC,
+       Data=#data{cog=MyCog, oid=MyOid,
+                  active_before_next_clock=_ABNC,
                   recorded=Recorded, replaying=Replaying, retries=Retries}) ->
     #dc_event{type=Resourcetype, amount=Amount_raw} = RequestEvent,
-    %% We clamp the value -- do not try to consume a negative amount
-    Requested = rationals:max(rationals:to_r(Amount_raw), 0),
-    C=class_ABS_DC_DeploymentComponent,
-    OState=cog:get_object_state_for_update(MyCog, MyOid),
-    Initialized=C:get_val_internal(OState, 'initialized'),
-    ResourceVarCurrent=var_current_for_resourcetype(Resourcetype),
-    ResourceVarMax=var_max_for_resourcetype(Resourcetype),
-    Queue = maps:get(Resourcetype, RQueue, []),
+    cog:consume_resource_on_dc(MyCog, self(), MyOid, CogRef, TaskRef, Resourcetype, Amount_raw),
     NewReplaying = case Replaying of
+                       %% Must be either of these, since the third
+                       %% case is handled in the previous function
+                       %% case
                        [] -> [];
                        [RequestEvent | Rest] -> Rest
                    end,
     {RetryNow, NewRetries} = get_retries(Retries, NewReplaying),
-    case Initialized of
-        null ->
-            %% The init block of the DC object has not run yet (should not
-            %% happen) - but just record the request and deal with it later.
-            %% Remember put back object state so `MyCog' is unblocked.
-            cog:object_state_changed(MyCog, MyOid, OState),
-            {keep_state,
-             Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Requested}]},
-                       recorded=[RequestEvent | Recorded],
-                       replaying=NewReplaying, retries=NewRetries},
-             [{next_event, internal, {cog_blocked, CogRef}} | RetryNow]};
-        true ->
-            %% We modify the DC object state directly, which looks scary - but
-            %% no ABS code modifies that part of the object state so we’re
-            %% safe.  (The relevant fields are marked `[Final]' in the class
-            %% definition.)
-            Total=C:get_val_internal(OState,ResourceVarMax),
-            Consumed=rationals:to_r(C:get_val_internal(OState,ResourceVarCurrent)),
-            Available=case Total of
-                          dataInfRat -> Requested;
-                          {dataFin, Total1} -> rationals:sub(Total1, Consumed)
-                      end,
-            case rationals:is_greater(Requested, Available) of
-                true ->
-                    %% We need more than is available - get what we can and
-                    %% queue the rest.
-                    Remaining = rationals:sub(Requested, Available),
-                    NewConsumed = rationals:add(Consumed, Available),
-                    %% Do not set current to total since that is of type InfRat
-                    OState1=C:set_val_internal(OState,ResourceVarCurrent, NewConsumed),
-                    cog:object_state_changed(MyCog, MyOid, OState1),
-                    {keep_state,
-                     %% In this case, `Queue' should be empty *or* `Available'
-                     %% should be 0 (because we should have given out
-                     %% everything during time advance).  In either case,
-                     %% appending to the end does the right thing.
-                     Data#data{resource_waiting=RQueue#{Resourcetype => Queue ++ [{CogRef, TaskRef, Remaining}]},
-                               recorded=[RequestEvent | Recorded],
-                               replaying=NewReplaying, retries=NewRetries},
-                     [{next_event, internal, {cog_blocked, CogRef}} | RetryNow]};
-                false ->
-                    %% Do not inform cog_monitor that cog is blocked; just
-                    %% unblock task here
-                    NewConsumed=rationals:add(Consumed, Requested),
-                    OState1=C:set_val_internal(OState,ResourceVarCurrent, NewConsumed),
-                    cog:object_state_changed(MyCog, MyOid, OState1),
-                    cog:task_is_runnable(CogRef, TaskRef),
-                    {keep_state,
-                     Data#data{recorded=[RequestEvent | Recorded],
-                               replaying=NewReplaying,
-                               retries=NewRetries,
-                               %% KLUDGE: The cog task will send
-                               %% `task_confirm_clock_wakeup` even in case the
-                               %% clock did not advance -- prepare to accept
-                               %% it.
-                               active_before_next_clock=gb_sets:add_element(
-                                                          {CogRef, TaskRef},
-                                                          ABNC)},
-                     RetryNow}
-            end
-    end;
+    %% TODO: in one case (task got unblocked), we added `{CogRef,
+    %% TaskRef}' to `active_before_next_clock', since it would send a
+    %% spurious `task_confirm_clock_wakeup'.  Prepare to handle that
+    %% somehow.
+    {keep_state,
+     Data#data{recorded=[RequestEvent | Recorded],
+               replaying=NewReplaying, retries=NewRetries},
+     RetryNow};
 active({call, From}, Event, Data) ->
     handle_call(From, Event, active, Data);
 active(cast, Event, Data) ->
@@ -544,8 +505,8 @@ advanceTotalsHistory(History, {dataFin,Amount}) ->
     [ Amount | History ];
 advanceTotalsHistory(History, dataInfRat) -> History.
 
-mte(Data=#data{clock_waiting=ClockWaiting,
-               resource_waiting=ResourceWaiting}) ->
+mte(_Data=#data{clock_waiting=ClockWaiting,
+                resource_waiting=ResourceWaiting}) ->
     %% MTE as an ABS rational or `infinity' if nothing’s waiting.  MTE is the
     %% minimum of the next clock boundary (if we’re waiting for resources) and
     %% the MTEs of all task(s) that are waiting for the clock.  We could
@@ -609,9 +570,9 @@ add_to_queue_internal([Head={_CogRefHead, _TaskRefHead, _MinHead, MaxHead} | Tai
 add_to_queue_internal([], Item) ->
     [Item].
 
-get_retries(Retries, []) ->
+get_retries(_Retries, []) ->
     {[], []};
-get_retries(Retries, [ExpectedEvent | Replaying]) ->
+get_retries(Retries, [ExpectedEvent | _Replaying]) ->
     lists:partition(
       fun ({next_event, cast,
             {consume_resource, _TaskRef, _CogRef, RequestEvent}}) ->

@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -52,7 +50,8 @@ import org.abs_models.frontend.ast.ProductLine;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
-import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
+import org.abs_models.frontend.typechecker.locationtypes.LocationTypeInferenceExtension;
 import org.abs_models.xtext.AbsStandaloneSetup;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -433,19 +432,20 @@ public class Main {
         if (arguments.locationTypeInferenceEnabled) {
             if (arguments.verbose)
                 System.out.println("Registering Location Type Checking...");
-            LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+            LocationTypeInferenceExtension ltie = new LocationTypeInferenceExtension(m);
+
             if (arguments.verbose) {
-                ltie.enableStatistics();
+                // lte.enableStatistics();
             }
             if (arguments.debug) {
-                ltie.enableDebugOutput();
+                // ltie.enableDebugOutput();
             }
             if (arguments.defaultLocationType != null) {
                 ltie.setDefaultType(arguments.defaultLocationType);
             }
-            if (arguments.locationTypeScope != null) {
+            /*if (arguments.locationTypeScope != null) {
                 ltie.setLocationTypingPrecision(arguments.locationTypeScope);
-            }
+            }*/
             m.registerTypeSystemExtension(ltie);
         }
     }
@@ -577,11 +577,11 @@ public class Main {
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
-                + "                 where <loctype> in " + Arrays.toString(LocationType.ALLUSERTYPES) + "\n"
-                + "  -locscope=<scope> \n"
-                + "                 sets the location aliasing scope to <scope>\n"
-                + "                 where <scope> in " + Arrays.toString(
-            LocationTypeInferrerExtension.LocationTypingPrecision.values()) + "\n"
+                + "                 where <loctype> in " + Arrays.toString(LocationType.ALL_USER_TYPES) + "\n"
+            //    + "  -locscope=<scope> \n"
+            //    + "                 sets the location aliasing scope to <scope>\n"
+            //    + "                 where <scope> in " + Arrays.toString(
+            // LocationTypeInferrerExtension.LocationTypingPrecision.values()) + "\n"
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature\n"
                 + "                 model and print a solution\n"
                 + "  -solveall      print ALL solutions for the CSP\n"

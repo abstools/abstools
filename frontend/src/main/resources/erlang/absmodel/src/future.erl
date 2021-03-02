@@ -193,7 +193,7 @@ code_change(_OldVsn, StateName, Data, _Extra) ->
     {ok, StateName, Data}.
 
 
-handle_call(From, poll, Data=#data{value=Value}) ->
+handle_call(From, poll, _Data=#data{value=Value}) ->
     case Value of
         none -> {keep_state_and_data, {reply, From, unresolved}};
         _ -> {keep_state_and_data, {reply, From, completed}}
@@ -205,10 +205,10 @@ handle_call(_From, _Event, Data) ->
 
 %% State functions
 
-next_state_on_completion(Data=#data{waiting_tasks=WaitingTasks,
-                                    calleetask=TerminatingProcess,
-                                    cookie=Cookie,
-                                    register_in_gc=RegisterInGC}) ->
+next_state_on_completion(_Data=#data{waiting_tasks=WaitingTasks,
+                                     calleetask=TerminatingProcess,
+                                     cookie=Cookie,
+                                     register_in_gc=RegisterInGC}) ->
     case ordsets:is_empty(WaitingTasks) of
         true ->
             TerminatingProcess ! {Cookie, self()},
@@ -263,13 +263,13 @@ next_state_on_okthx(Data=#data{calleetask=CalleeTask,
 
 completing({call, From}, get_references, _Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
-completing({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}) ->
+completing({call, From}, {done_waiting, Cog}, _Data=#data{value=Value,event=Event}) ->
     #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
     CompletionEvent=#event{type=await_future, caller_id=Cid,
                            local_id=Lid, name=Name, reads=R, writes=W},
     cog:register_await_future_complete(Cog, CompletionEvent),
     {keep_state_and_data, {reply, From, Value}};
-completing({call, From}, {get, modelapi}, _Data=#data{value=Value,event=Event}) ->
+completing({call, From}, {get, modelapi}, _Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, Value}};
 completing({call, From}, {get, Cog}, _Data=#data{value=Value,event=Event}) ->
     #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
@@ -280,7 +280,7 @@ completing({call, From}, {get, Cog}, _Data=#data{value=Value,event=Event}) ->
 completing(cast, {okthx, Task}, Data) ->
     {NextState, Data1} = next_state_on_okthx(Data, Task),
     {next_state, NextState, Data1};
-completing({call, From}, {waiting, Task}, Data=#data{waiting_tasks=WaitingTasks}) ->
+completing({call, From}, {waiting, _Task}, _Data) ->
     {keep_state_and_data,
      {reply, From, completed}};
 completing({call, From}, Msg, Data) ->
@@ -291,13 +291,13 @@ completing(info, Msg, Data) ->
 
 completed({call, From}, get_references, _Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, gc:extract_references(Value)}};
-completed({call, From}, {done_waiting, Cog}, Data=#data{value=Value,event=Event}) ->
+completed({call, From}, {done_waiting, Cog}, _Data=#data{value=Value,event=Event}) ->
     #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,
     CompletionEvent=#event{type=await_future, caller_id=Cid,
                            local_id=Lid, name=Name, reads=R, writes=W},
     cog:register_await_future_complete(Cog, CompletionEvent),
     {keep_state_and_data, {reply, From, Value}};
-completed({call, From}, {get, modelapi}, _Data=#data{value=Value,event=Event}) ->
+completed({call, From}, {get, modelapi}, _Data=#data{value=Value}) ->
     {keep_state_and_data, {reply, From, Value}};
 completed({call, From}, {get, Cog}, _Data=#data{value=Value,event=Event}) ->
     #event{caller_id=Cid, local_id=Lid, name=Name, reads=R, writes=W} = Event,

@@ -10,7 +10,7 @@
 
 -export([get_traces_from_db/0]).
 
--include_lib("abs_types.hrl").
+-include_lib("../include/abs_types.hrl").
 -include_lib("stdlib/include/qlc.hrl").
 
 %% Is there a better way to do this?
@@ -167,7 +167,7 @@ move(Trace, {Cog, I}, {Cog, J}) ->
     case is_legal_move(Trace, {Cog, I}, {Cog, J}, Moving) of
         false -> false;
         true ->
-            MovingSorted = lists:sort(fun({Cog, X}, {Cog, Y}) -> X =< Y end, Moving),
+            MovingSorted = lists:sort(fun({Cog2, X}, {Cog2, Y}) -> X =< Y end, Moving),
             MovingBlocks = lists:map(fun(K1) ->
                                           lists:map(fun(K2) -> event_key_to_event(Trace, K2) end,
                                                     atomic_block(K1, Trace))
@@ -222,7 +222,7 @@ event_keys_conflict(Trace, K1, K2) ->
 
 generate_trace(Trace, {Cog, I}) ->
     Moves = find_moves(Trace, {Cog, I}),
-    lists:map(fun({Cog, J}) -> move(Trace, {Cog, I}, {Cog, J}) end, Moves).
+    lists:map(fun({Cog2, J}) -> move(Trace, {Cog2, I}, {Cog2, J}) end, Moves).
 
 remove_read_write_sets_from_trace(Trace) ->
     maps:map(fun (_Cog, LocalTrace) ->
