@@ -173,7 +173,7 @@ public class Absc implements Callable<Integer> {
     @Option(names = { "--loctypecheck" },
             description = "enable location type checking")
     public boolean locationTypeInferenceEnabled = false;
-
+    
     static class LocationTypeUserTypes extends ArrayList<String> {
         LocationTypeUserTypes() {
             super(Arrays.stream(LocationType.ALL_USER_TYPES)
@@ -195,6 +195,19 @@ public class Absc implements Callable<Integer> {
     // LocationTypeInferrerExtension.defaultType
     public LocationType defaultLocationType = LocationType.INFER;
 
+    //mtvl
+    @Option(names = {"--solve"},
+    		description = "solve constraint satisfaction problem (CSP) for the feature model")
+    public boolean solve = false;
+    
+    @Option(names = {"--isvoid"},
+    		description = "check if any void feature exist in feature model")
+    public boolean isvoid = false;
+    
+    @Option(names = {"--core"},
+    		description = "Core")
+    public boolean core = false;
+    
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {
             String version = Absc.class.getPackage().getImplementationVersion();

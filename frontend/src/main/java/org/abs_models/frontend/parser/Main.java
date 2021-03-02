@@ -51,6 +51,7 @@ import org.abs_models.frontend.ast.ProductDecl;
 import org.abs_models.frontend.ast.ProductLine;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
+import org.abs_models.frontend.mtvl.ChocoSolver;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeInferenceExtension;
@@ -247,7 +248,7 @@ public class Main {
             m.dumpMVars();
             m.dump(System.out);
         }
-
+        
         final SemanticConditionList semErrs = m.getErrors();
 
         if (semErrs.containsErrors()) {
@@ -260,9 +261,10 @@ public class Main {
         }
         if (!semErrs.containsErrors()) {
             typeCheckModel(m);
+            analyzeMTVL(m);
         }
     }
-
+    
     /**
      * Perform various rewrites that cannot be done in JastAdd.
      *
@@ -643,6 +645,31 @@ public class Main {
 	} finally {
 	    reader.close();
 	}
+    }
+    
+    private void analyzeMTVL(Model m) {
+        ProductDecl p_product = null;
+        
+       if(m.hasMTVL()) {
+    	   if(arguments.solve) {
+    		   System.out.print("Testing");
+    		   if(arguments.verbose) System.out.println("Searching for solution for the feature model...");
+    		   ChocoSolver s = m.instantiateCSModel();
+               System.out.println(s.getSolutionsAsString());
+           }
+    	   
+    	   if (arguments.isvoid) {
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   System.out.println(s.isVoid());
+    	   }
+    	   if (arguments.core) {
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   System.out.println("Core features: ");
+    	   }
+    	   
+       }
+       
+        
     }
 
 }

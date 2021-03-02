@@ -29,6 +29,7 @@ import choco.kernel.model.constraints.MetaConstraint;
 import choco.kernel.model.variables.integer.IntegerExpressionVariable;
 import choco.kernel.model.variables.integer.IntegerVariable;
 import choco.kernel.solver.ContradictionException;
+import choco.kernel.solver.Solution;
 
 public class ChocoSolver {
 
@@ -613,6 +614,14 @@ public class ChocoSolver {
 
         return s.checkSolution();
     }
+    
+    
+    public String isVoid() {
+    	if(countSolutions() == 0) return "Feature Model is void.";
+    	else return "Feature Model is not void.";
+    }
+    
+    
 
     public static Constraint eqeq(IntegerVariable v1, IntegerVariable v2) {
         return Choco.eq(v1, v2);
