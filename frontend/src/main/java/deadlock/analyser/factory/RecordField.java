@@ -28,7 +28,7 @@ import com.gzoumix.semisolver.term.TermStructured;
 
 public class RecordField extends GenericStructuredTerm implements IRecord { // not really a record, but it helps the debug
 
-  public static String prefix = "Field-";
+  public final static String prefix = "Field-";
 
   /* Constructors */
   public  RecordField(String name, List<Term> fields) { super(name, fields); }

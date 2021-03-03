@@ -29,7 +29,7 @@ import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementAwait extends ContractElement {
 
-  public static String name = "ContractAwait";
+  public final static String name = "ContractAwait";
 
   /* Constructors */
   public ContractElementAwait(List<Term> l) { super(name, l); }

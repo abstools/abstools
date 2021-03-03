@@ -14,7 +14,6 @@ import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
 
 public class OutlinePrinterBackEnd extends Main {
-    private File outputfile;
     private boolean force = false;
 
     public static int doMain(Absc args) {
@@ -48,8 +47,8 @@ public class OutlinePrinterBackEnd extends Main {
         PrintStream stream = System.out;
         String loc = "Standard Output Stream";
         if (arguments.outputfile != null) {
-            stream = new PrintStream(outputfile);
-            loc = outputfile.getAbsolutePath();
+            stream = new PrintStream(arguments.outputfile);
+            loc = arguments.outputfile.getAbsolutePath();
         }
 
         if (arguments.verbose) {

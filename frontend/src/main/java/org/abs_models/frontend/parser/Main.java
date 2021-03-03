@@ -300,6 +300,9 @@ public class Main {
                     break;
                 }
             }
+            if (modProductline == null) {
+                throw new WrongProgramArgumentException("Internal error: did not find module " + Constants.PL_NAME + "(should have been defined in the abslang.abs standard library)");
+            }
             for (Decl d : modProductline.getDecls()) {
                 if (d instanceof DataTypeDecl && d.getName().equals("Feature")) {
                     featureDecl = (DataTypeDecl)d;

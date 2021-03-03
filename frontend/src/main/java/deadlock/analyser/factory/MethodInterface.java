@@ -29,7 +29,7 @@ import com.gzoumix.semisolver.term.TermStructured;
 
 public class MethodInterface extends TermStructured {
 
-  public static String name = "MethodInterface";
+  public final static String name = "MethodInterface";
 
   /* Constructors */
   public MethodInterface(List<Term> l) { super(name, l); }
