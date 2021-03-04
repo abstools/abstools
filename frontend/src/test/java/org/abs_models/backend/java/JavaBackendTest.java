@@ -6,6 +6,7 @@ package org.abs_models.backend.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -64,12 +65,12 @@ public class JavaBackendTest extends ABSTest {
         assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, Config.WITHOUT_MODULE_NAME));
     }
 
-    public static void assertValidJava(JavaCode javaCode) throws Exception {
+    public static void assertValidJava(JavaCode javaCode) throws IOException {
         try {
             javaCode.compile("-classpath", LIB_CLASSPATH, "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
-        } catch (Exception e) {
+        } catch (JavaCodeGenerationException e) {
             System.out.println(javaCode);
-            throw e;
+            fail();
         } finally {
             javaCode.deleteCode();
         }

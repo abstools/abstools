@@ -90,7 +90,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     private String runAndCheck(String absCode) throws Exception {
         File f = null;
         try {
-            f = Files.createTempDir();
+            f = java.nio.file.Files.createTempDirectory("erlangtest").toFile();
             f.deleteOnExit();
             Model model = assertParse(absCode, Config.TYPE_CHECK, /* XXX:CI Config.WITH_LOC_INF, */ Config.WITHOUT_MODULE_NAME);
             String mainModule = genCode(model, f, true);

@@ -89,11 +89,9 @@ public class JavaBackend extends Main {
             printErrorMessage();
             return 1;
         }
-        arguments.destDir.mkdirs();
-        if (!arguments.destDir.exists()) {
-            throw new InternalBackendException("Destination directory " + arguments.destDir.getAbsolutePath() + " does not exist!");
+        if (!arguments.destDir.mkdirs() && !arguments.destDir.isDirectory()) {
+            throw new IOException("Could not create directory " + arguments.destDir.toString());
         }
-
         if (!arguments.destDir.canWrite()) {
             throw new InternalBackendException("Destination directory " + arguments.destDir.getAbsolutePath() + " cannot be written to!");
         }
