@@ -51,6 +51,13 @@ public class PrettyPrinterTests extends ABSTest {
     }
 
     @Test
+    public void prettyPrinterNoStdLibTest() throws Exception {
+        String ms = "module Test; interface Foo {} interface Bar extends Bar {}";
+        Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING_AFTER_TYPECHECK);
+        assertEqualsAndParses(ms, m);
+    }
+
+    @Test
     public void prettyPrinterLiterals() throws Exception {
         String ms = readFile("abssamples/backend/PrettyPrinterTests/Literals.abs");
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING_AFTER_TYPECHECK);
