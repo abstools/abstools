@@ -1,6 +1,7 @@
 // -*- mode: java; tab-width: 4; -*-
 import java.io.PrintWriter;
 import org.abs_models.backend.prettyprint.*;
+import com.google.common.collect.Streams;
 
 aspect doPrettyPrinter {
 
@@ -815,9 +816,11 @@ aspect doPrettyPrinter {
         }
         stream.print("interface ");
         stream.print(getName());
-        if (getNumExtendedInterfaceUse() > 0) {
+	/* Filter `extends ABS.StdLib.Object, ...` */
+	Stream<InterfaceTypeUse> s = Streams.stream(getExtendedInterfaceUses()).filter(i -> !i.getName().startsWith("ABS.StdLib."));
+        if (s.count() > 0) {
             stream.print(" extends ");
-            getExtendedInterfaceUseList().doPrettyPrint(stream, formatter, ",");
+	    s.forEach(tu -> { tu.doPrettyPrint(stream, formatter); stream.print(", ");});
         }
         formatter.beforeOpenBrace();
         stream.println(" {");
