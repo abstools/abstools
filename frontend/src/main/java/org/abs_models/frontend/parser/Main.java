@@ -15,6 +15,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.jar.JarEntry;
 
@@ -60,6 +61,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import choco.kernel.model.constraints.Constraint;
+
 /**
  * @author rudi
  *
@@ -69,6 +72,7 @@ public class Main {
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     public static final String UNKNOWN_FILENAME = "<unknown file>";
     public Absc arguments = new Absc(); // tests often create a random Main object, need to initialize this
+    public String product; // used when mtvl analyzation
 
 
     /**
@@ -648,15 +652,42 @@ public class Main {
     }
     
     private void analyzeMTVL(Model m) {
-        ProductDecl p_product = null;
+        ProductDecl productDecl = null;
+        
+        try {
+        	productDecl = product == null? null : m.findProduct(product); 
+        }catch(WrongProgramArgumentException e) {
+        	
+        }
         
        if(m.hasMTVL()) {
-    	   if(arguments.solve) {
+    	   if (arguments.solve) {
     		   System.out.print("Testing");
     		   if(arguments.verbose) System.out.println("Searching for solution for the feature model...");
     		   ChocoSolver s = m.instantiateCSModel();
                System.out.println(s.getSolutionsAsString());
            }
+    	   if (arguments.maxProduct) {
+    		   assert product != null;
+               if (arguments.verbose) System.out.println("Searching for solution that includes "+product+"...");
+               ChocoSolver s = m.instantiateCSModel();
+               HashSet<Constraint> newcs = new HashSet<>();
+               s.addIntVar("noOfFeatures", 0, 50);
+               if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
+                   for (Constraint c: newcs) s.addConstraint(c);
+                   System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
+               }
+               else {
+                   System.out.println("---No solution-------------");
+               }
+    	   }
+    	   if(arguments.nsol && !arguments.ignoreattr) { //count ALL number of solution without ignore
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   System.out.println("Number of solutions found: " + s.countSolutions());
+    	   }
+    	   else if(arguments.nsol && arguments.ignoreattr) { //count number of solution while ignoring model attributes
+    		   
+    	   }
     	   
     	   if (arguments.isvoid) {
     		   ChocoSolver s = m.instantiateCSModel();
