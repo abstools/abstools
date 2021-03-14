@@ -818,7 +818,7 @@ aspect doPrettyPrinter {
         stream.print("interface ");
         stream.print(getName());
 	/* Filter `extends ABS.StdLib.Object, ...` by way of streams. */
-	String s = Streams.stream(getExtendedInterfaceUses()).filter(i -> !i.getName().startsWith("ABS.StdLib.")).map(tu -> tu.getName()).collect(Collectors.joining(", "));
+	String s = Streams.stream(getExtendedInterfaceUses()).filter(i -> !i.getName().equals(Constants.STDLIB_NAME+".Object")).map(tu -> tu.getName()).collect(Collectors.joining(", "));
         if (s.length() > 0) {
             stream.print(" extends ");
             stream.print(s);
