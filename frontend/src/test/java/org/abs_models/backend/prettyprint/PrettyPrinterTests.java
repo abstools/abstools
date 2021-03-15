@@ -52,7 +52,7 @@ public class PrettyPrinterTests extends ABSTest {
 
     @Test
     public void prettyPrinterNoStdLibTest() throws Exception {
-        String ms = "module Test; interface Foo {} interface Bar extends Bar {}";
+        String ms = "module Test; interface Foo {} interface Bar extends Foo {}";
         Model m = assertParse(ms, Config.WITHOUT_MODULE_NAME, Config.WITHOUT_DESUGARING_AFTER_TYPECHECK);
         assertEqualsAndParses(ms, m);
     }
