@@ -15,7 +15,7 @@ configurations {
 }
 
 application {
-    mainClassName = 'org.abs_models.frontend.parser.Main'
+    mainClass.set('org.abs_models.frontend.parser.Main')
 }
 
 java {
