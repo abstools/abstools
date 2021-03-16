@@ -23,6 +23,8 @@ java {
     withSourcesJar()
 }
 
+compileJava.options.encoding = 'UTF-8'
+
 distributions {
     main { distributionBaseName = 'absc' }
 }
