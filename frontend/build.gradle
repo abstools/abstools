@@ -86,6 +86,7 @@ task generateJastAddAST(type: JavaExec) {
 }
 sourceSets.main.java.srcDir "$buildDir/generated-src/jastadd/main"
 compileJava.dependsOn 'generateJastAddAST'
+compileJava.options.encoding = 'UTF-8'
 
 // antlr
 generateGrammarSource {
@@ -222,6 +223,7 @@ spotbugsTest {
 }
 
 javadoc {
+    options.encoding = 'UTF-8'
     failOnError = false
     options.addStringOption('Xdoclint:none', '-quiet')
     options.tags = [ 'apilevel', 'declaredat', 'aspect', 'ast', 'attribute',
