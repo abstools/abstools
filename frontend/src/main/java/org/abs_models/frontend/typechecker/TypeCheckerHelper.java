@@ -323,8 +323,6 @@ public class TypeCheckerHelper {
         }
     }
 
-    static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
-
     public static void checkForDuplicateDecls(ModuleDecl mod, SemanticConditionList errors) {
         Map<KindedName, ResolvedName> duplicateNames = new HashMap<>();
         Map<KindedName, ResolvedName> names = getVisibleNames(mod, duplicateNames);
