@@ -123,7 +123,7 @@ public class ASTPreProcessor {
                     needsImport = false;
             }
             if (needsImport) {
-                moduleDecl.getImports().add(new StarImport(Constants.STDLIB_NAME));
+                moduleDecl.getImports().add(new StarImport(Constants.STDLIB_NAME) {public int getEndLine() { return -1; }});
             }
         }
         if (moduleDecl.hasBlock()) {
