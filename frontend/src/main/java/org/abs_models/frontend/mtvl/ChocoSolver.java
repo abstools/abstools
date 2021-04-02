@@ -29,7 +29,6 @@ import choco.kernel.model.constraints.MetaConstraint;
 import choco.kernel.model.variables.integer.IntegerExpressionVariable;
 import choco.kernel.model.variables.integer.IntegerVariable;
 import choco.kernel.solver.ContradictionException;
-import choco.kernel.solver.Solution;
 
 public class ChocoSolver {
 
@@ -619,6 +618,71 @@ public class ChocoSolver {
     public String isVoid() {
     	if(countSolutions() == 0) return "Feature Model is void.";
     	else return "Feature Model is not void.";
+    }
+    
+    
+    // get core features to string
+    public String coreToStrings()
+    {	
+    	Set<Map<String,Integer>> solutions = getSolutions();   
+        StringBuilder result = new StringBuilder();
+        
+        int i = 0;
+        //to go through all the feature in cpmodel
+        Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
+        while (it.hasNext()) {
+            IntegerVariable var = it.next();
+            boolean core = true;
+            if(absmodel.debug) {
+            	System.out.println("Debug: Feature " + ++i + " is " + var.getName().toString() + ".\n"
+                        + "Checking all solution for this feature.");
+            }
+            //chk if every solution got this feature
+            for (Map<String,Integer> sol : solutions) {   
+            	if( sol.get(var.getName()) == 0) {
+            		//break the for loop if feature is not present in solution
+            		core = false;
+            		break;
+            	} 
+            }
+            if(core) {
+            	result.append( var.getName().toString() + "\n");
+            }
+        }   
+     
+        return result.toString();
+    }
+    
+    // get variant features to string
+    public String variantoStrings()
+    {	
+    	Set<Map<String,Integer>> solutions = getSolutions();   
+        StringBuilder result = new StringBuilder();
+        
+        int i = 0;
+        //to go through all the feature in cpmodel
+        Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
+        while (it.hasNext()) {
+            IntegerVariable var = it.next();
+            boolean variant = false;
+            if(absmodel.debug) {
+            	System.out.println("Debug: Feature " + ++i + " is " + var.getName().toString() + ".\n"
+                        + "Checking all solution for this feature.");
+            }
+            //chk if every solution got this feature
+            for (Map<String,Integer> sol : solutions) {   
+            	if( sol.get(var.getName()) == 0) {
+            		//break the for loop if feature is not present in solution
+            		variant = true;
+            		break;
+            	} 
+            }
+            if(variant) {
+            	result.append( var.getName().toString() + "\n");
+            }
+        }   
+     
+        return result.toString();
     }
     
     

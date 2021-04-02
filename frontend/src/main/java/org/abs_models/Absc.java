@@ -211,12 +211,16 @@ public class Absc implements Callable<Integer> {
     @Option(names = {"--nsol"},description = "count the number of solutions")
     public boolean nsol = false;
     
-    @Option(names = {"--noattr"}, description = "ignore model attributes *currently not implemented")
+    @Option(names = {"--noattr"}, description = "ignore model attributes ONLY WORK FOR MTVL ANALYSIS")
     public boolean ignoreattr = false;
     
     @Option(names = {"--core"},
-    		description = "Core")
+    		description = "check for core feature within the feature model")
     public boolean core = false;
+    
+    @Option(names = {"--variant"},
+    		description = "check for variant feature within the feature model")
+    public boolean variant = false;
     
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {

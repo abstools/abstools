@@ -654,6 +654,11 @@ public class Main {
     private void analyzeMTVL(Model m) {
         ProductDecl productDecl = null;
         
+        //remove attributes for mtvl analysis
+        if(arguments.ignoreattr) {
+        	m.dropAttributes();
+        }
+        
         try {
         	productDecl = product == null? null : m.findProduct(product); 
         }catch(WrongProgramArgumentException e) {
@@ -662,7 +667,6 @@ public class Main {
         
        if(m.hasMTVL()) {
     	   if (arguments.solve) {
-    		   System.out.print("Testing");
     		   if(arguments.verbose) System.out.println("Searching for solution for the feature model...");
     		   ChocoSolver s = m.instantiateCSModel();
                System.out.println(s.getSolutionsAsString());
@@ -681,12 +685,13 @@ public class Main {
                    System.out.println("---No solution-------------");
                }
     	   }
-    	   if(arguments.nsol && !arguments.ignoreattr) { //count ALL number of solution without ignore
+    	   if(arguments.nsol && arguments.ignoreattr) { //count ALL number of solution while ignoring attributes
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   System.out.println("Number of solutions found without attributes: " + s.countSolutions());
+    	   }
+    	   else if(arguments.nsol && !arguments.ignoreattr) { //count number of solution without ignoring
     		   ChocoSolver s = m.instantiateCSModel();
     		   System.out.println("Number of solutions found: " + s.countSolutions());
-    	   }
-    	   else if(arguments.nsol && arguments.ignoreattr) { //count number of solution while ignoring model attributes
-    		   
     	   }
     	   
     	   if (arguments.isvoid) {
@@ -695,11 +700,14 @@ public class Main {
     	   }
     	   if (arguments.core) {
     		   ChocoSolver s = m.instantiateCSModel();
-    		   System.out.println("Core features: ");
+    		   System.out.println("Core features: \n" + s.coreToStrings());
+    	   }
+    	   if (arguments.variant) {
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   System.out.println("Variant features: \n" + s.variantoStrings());
     	   }
     	   
        }
-       
         
     }
 
