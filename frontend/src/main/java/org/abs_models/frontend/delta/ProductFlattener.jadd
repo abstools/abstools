@@ -584,15 +584,21 @@ aspect ProductFlattener {
     public void Model.flattenforLocalProducts() throws WrongProgramArgumentException,DeltaModellingException {
         ArrayList<Product> alreadyFlattened = new ArrayList<>();
         Set<ProductDecl> productDecls =  new HashSet<>(getProductDeclsFromExps());
-
-        evaluateAllProductDeclarations();
-
-        for (ProductDecl prod : productDecls) {
-            Product p = prod.getProduct();
-            if (!p.featuresFromGlobalPL(getProductLine()) && ! alreadyFlattened.contains(p)) {
-               flattenModuleForProduct(prod, true);
-               alreadyFlattened.add(p);
+        
+        boolean gotNewDecls = true;
+        while(gotNewDecls){
+            evaluateAllProductDeclarations();
+            for (ProductDecl prod : productDecls) {
+                Product p = prod.getProduct();
+                if (!p.featuresFromGlobalPL(getProductLine()) && ! alreadyFlattened.contains(p)) {
+                   flattenModuleForProduct(prod, true);
+                   alreadyFlattened.add(p);
+                }
             }
+            Set<ProductDecl> decls = new HashSet<>(getProductDeclsFromExps());
+            if(!decls.isEmpty()) productDecls = decls;
+            else gotNewDecls = false;
+            
         }
          Set<ProductDecl> globalProductDecls = new HashSet<>(getProductDecls());
          for (ProductDecl prod : globalProductDecls) {
