@@ -1087,21 +1087,24 @@ aspect GenerateErlang {
     if(getGuard().hasPoll()){
       getGuard().generateErlangCode(ecs,after,vars);
       after.close();
-      for (FieldUse gf : getGuard().getFields().fields) {
-          ecs.format("object:register_read('%s'),", gf.getName());
-          ecs.println();
-      }
       ecs.println("cog:return_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
+      // FIXME: Dangerously relying on toString.
+      // What I want to do:
+      // String fieldNames = Arrays.stream(getGuard().getFields().fields)
+      //     .map(gf -> gf.getName())
+      //     .collect(Collectors.joining(", "));
+      // ecs.format("ReadSet = [%s],%n", fieldNames);
+      ecs.format("ReadSet = %s,%n", getGuard().getFields().fields.toString());
       ecs.incIndent().println("receive {check, OState} -> ");
       ecs.incIndent().println("put(this, OState),");
       ecs.incIndent().println("try");
       ecs.incIndent().pf("case %s of",sw);
-      ecs.incIndent().pf("true -> cog:task_poll_is_ready(Cog, self(), get(task_info)), Poll(%s);",vars.toParamList());
-      ecs.pf("false -> cog:task_poll_is_not_ready(Cog, self(), get(task_info)),  Poll(%s)",vars.toParamList());
+      ecs.incIndent().pf("true -> cog:task_poll_is_ready(Cog, self(), ReadSet), Poll(%s);",vars.toParamList());
+      ecs.pf("false -> cog:task_poll_is_not_ready(Cog, self(), ReadSet),  Poll(%s)",vars.toParamList());
       ecs.decIndent().println("end");
       ecs.decIndent().println("catch");
-      ecs.incIndent().println("_:Exception -> cog:task_poll_has_crashed(Cog, self(), get(task_info)), throw(Exception)");
+      ecs.incIndent().println("_:Exception -> cog:task_poll_has_crashed(Cog, self(), ReadSet), throw(Exception)");
       ecs.decIndent().println("end;");
       ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
       ecs.println("{token, OState} -> put(this, OState), ok;");
