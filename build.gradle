@@ -28,7 +28,7 @@ def gitVersion() {
 
 subprojects {
     repositories {
-        jcenter()
+        mavenCentral()
     }
     group = 'org.abs_models'
     version = gitVersion()
