@@ -79,7 +79,6 @@ task generateJastAddAST(type: JavaExec) {
     args += "--o=$buildDir/generated-src/jastadd/main"
     args += '--rewrite=regular'
     args += '--visitCheck=false'
-    args += '--debug'
     args += '--package=org.abs_models.frontend.ast'
     args += fileTree(dir: 'src/main/java',
                      includes: ['**/*.ast', '**/*.jrag', '**/*.jadd']).files
@@ -87,12 +86,14 @@ task generateJastAddAST(type: JavaExec) {
 sourceSets.main.java.srcDir "$buildDir/generated-src/jastadd/main"
 compileJava.dependsOn 'generateJastAddAST'
 compileJava.options.encoding = 'UTF-8'
+sourcesJar.dependsOn 'generateJastAddAST'
 
 // antlr
 generateGrammarSource {
     arguments += [ '-package', 'org.abs_models.frontend.antlr.parser' ]
 }
 compileJava.dependsOn 'generateGrammarSource'
+sourcesJar.dependsOn 'generateGrammarSource'
 
 // erlang
 
