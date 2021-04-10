@@ -98,13 +98,13 @@ class Worker(MapReduce master) implements Worker {
 }
 
 class MapReduce implements MapReduce {
-  Set<Worker> workers = EmptySet;
+  Set<Worker> workers = set[];
   Int nWorkers = 0;
 
   List<Pair<OutKeyType, List<OutValueType>>> mapReduce(List<Pair<InKeyType, InValueType>> items) {
-    Set<Fut<List<Pair<OutKeyType, OutValueType>>>> fMapResults = EmptySet;
-    ABS.StdLib.Map<OutKeyType, List<OutValueType>> intermediates = EmptyMap;
-    Set<Pair<OutKeyType, Fut<List<OutValueType>>>> fReduceResults = EmptySet;
+    Set<Fut<List<Pair<OutKeyType, OutValueType>>>> fMapResults = set[];
+    ABS.StdLib.Map<OutKeyType, List<OutValueType>> intermediates = map[];
+    Set<Pair<OutKeyType, Fut<List<OutValueType>>>> fReduceResults = set[];
     List<Pair<OutKeyType, List<OutValueType>>> result = Nil;
 
     while (!isEmpty(items)) {

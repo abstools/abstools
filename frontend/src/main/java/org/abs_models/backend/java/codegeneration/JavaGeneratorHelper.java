@@ -47,6 +47,7 @@ import org.abs_models.frontend.ast.VarDecl;
 import org.abs_models.frontend.ast.VarOrFieldDecl;
 import org.abs_models.frontend.ast.VarUse;
 import org.abs_models.frontend.typechecker.Type;
+import org.apache.commons.io.FileUtils;
 
 public class JavaGeneratorHelper {
 
@@ -420,26 +421,11 @@ public class JavaGeneratorHelper {
     /**
      * removes the gen folder and all its contents
      * @param code
+     * @throws IOException
      */
-    public static void cleanGenFolder(JavaCode code) {
+    public static void cleanGenFolder(JavaCode code) throws IOException {
         File genDir = code.getSrcDir();
-        cleanGenFolderRecursively(genDir);
-    }
-
-    private static void cleanGenFolderRecursively(File dir) {
-        if (dir == null) throw new IllegalArgumentException();
-        if (!dir.exists()) return;
-        for (File f : dir.listFiles()) {
-            if (f.isDirectory()) {
-                cleanGenFolderRecursively(f);
-            } else {
-                if (f.getAbsolutePath().endsWith(".java")
-                        || f.getAbsolutePath().endsWith(".class")) {
-                    f.delete();
-                }
-            }
-        }
-        dir.delete();
+        FileUtils.deleteDirectory(genDir);
     }
 
     public static void printEscapedString(PrintStream stream, String content) {

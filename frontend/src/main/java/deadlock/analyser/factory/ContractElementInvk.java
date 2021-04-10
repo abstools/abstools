@@ -29,7 +29,7 @@ import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementInvk extends ContractElement {
 
-  public static String prefix = "ContractInvk-";
+  public final static String prefix = "ContractInvk-";
 
   /* Constructors */
   public ContractElementInvk(String name, List<Term> l) { super(name, l); } // DO NOT USE !!!

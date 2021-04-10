@@ -60,4 +60,9 @@ task plainJar(type: Copy, dependsOn: shadowJar) {
 clean {
     delete 'dist/'
 }
+plainJar.dependsOn shadowJar
+distTar.dependsOn shadowJar
+distZip.dependsOn shadowJar
+startScripts.dependsOn shadowJar
+
 assemble.dependsOn plainJar

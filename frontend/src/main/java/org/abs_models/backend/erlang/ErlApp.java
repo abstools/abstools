@@ -58,9 +58,10 @@ public class ErlApp {
         this.destDir = destDir;
         this.destCodeDir = new File(destDir, "absmodel/src/");
         this.destIncludeDir = new File(destDir, "absmodel/include/");
-        destDir.mkdirs();
+        if (!destDir.mkdirs() && !destDir.isDirectory()) {
+            throw new IOException("Could not create directory " + destDir.toString());
+        }
         FileUtils.cleanDirectory(destDir);
-        destDir.mkdirs();
         // new File(destDir, "absmodel/ebin").mkdir();
         index_file = http_index_file;
         static_dir = http_static_dir;
@@ -180,7 +181,10 @@ public class ErlApp {
                         String dirname = f.substring(0, f.length() - 2);
                         String inname = JAR_PATH + dirname;
                         String outname = destDir + "/" + dirname;
-                        new File(outname).mkdirs();
+                        File outdir = new File(outname);
+                        if (! outdir.mkdirs() && !outdir.isDirectory()) {
+                            throw new IOException("Could not create directory " + outname);
+                        }
                         copyJarDirectory(((JarURLConnection) resource).getJarFile(),
                                 inname, outname);
                     } else {
@@ -189,7 +193,9 @@ public class ErlApp {
                             throw new RuntimeException("Could not locate Runtime file:" + f);
                         String outputFile = f.replace('/', File.separatorChar);
                         File file = new File(destDir, outputFile);
-                        file.getParentFile().mkdirs();
+                        if (!file.getParentFile().mkdirs() && !file.getParentFile().isDirectory()) {
+                            throw new IOException("Could not create directory " + file.getParentFile().toString());
+                        }
                         Files.asByteSink(file).writeFrom(is);
                     }
                 }
@@ -204,12 +210,16 @@ public class ErlApp {
             }
             if (index_file != null) {
                 File http_out_file = new File(destDir, "absmodel/_build/default/lib/absmodel/priv/index.html");
-                http_out_file.getParentFile().mkdirs();
+                if (!http_out_file.getParentFile().mkdirs() && !http_out_file.getParentFile().isDirectory()) {
+                    throw new IOException("Could not create directory " + http_out_file.getParentFile().toString());
+                }
                 FileUtils.copyFile(index_file, http_out_file);
             }
             if (static_dir != null) {
                 File static_out_dir = new File(destDir, "absmodel/_build/default/lib/absmodel/priv/static/");
-                static_out_dir.mkdirs();
+                if (!static_out_dir.mkdirs() && !static_out_dir.isDirectory()) {
+                    throw new IOException("Could not create directory " + static_out_dir.toString());
+                }
                 FileUtils.copyDirectory(static_dir, static_out_dir);
             }
         } finally {
@@ -231,7 +241,10 @@ public class ErlApp {
                     is = jarFile.getInputStream(entry);
                     ByteStreams.copy(is, Files.asByteSink(new File(outname, relFilename)).openStream());
                 } else {
-                    new File(outname, relFilename).mkdirs();
+                    File newDir = new File(outname, relFilename);
+                    if (!newDir.mkdirs() && !newDir.isDirectory()) {
+                        throw new IOException("Could not create directory " + new File(outname, relFilename).toString());
+                    }
                 }
             }
         }

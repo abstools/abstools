@@ -77,7 +77,14 @@ public class BackPositionTest extends FrontendTest {
     public void testListFunction() {
         assertNodeAtPos("module M; import * from ABS.StdLib;\n{ Int abc = 2; List<Int> ints = list[1, abc, 3]; }", 2, 40, VarUse.class);
     }
-    
+
+    @Test
+    public void testEndLine() {
+	/* If we don't import StdLib, it will be injected. Earlier versions of the frontend would make this
+	   "virtual" statement have a bogus value for getEndLine() (end-of-file), which would trip up the bisection.
+           We're here just reusing one of the test cases above, which one exactly is of no consequence. */
+        assertNodeAtPos("module M; \n{ Int abc = 2; List<Int> ints = list[1, abc, 3]; }", 2, 40, VarUse.class);
+    }
 
     @Test
     public void testFuncDef() {

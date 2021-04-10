@@ -29,7 +29,7 @@ import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementInvkA extends ContractElement {
 
-  public static String name = "ContractInvkA";
+  public final static String name = "ContractInvkA";
 
 
   /* Constructors */

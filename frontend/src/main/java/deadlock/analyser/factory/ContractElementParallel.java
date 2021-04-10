@@ -13,7 +13,7 @@ import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementParallel extends ContractElement {
 
-    public static final String name = "ContractParallel";
+    public final static String name = "ContractParallel";
 
     public ContractElementParallel( List<Term> l) {
         super(name, l);

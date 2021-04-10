@@ -29,7 +29,7 @@ import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementGet extends ContractElement {
 
-  public static String name = "ContractGet";
+  public final static String name = "ContractGet";
 
   /* Constructors */
   public ContractElementGet(List<Term> l) { super(name, l); }

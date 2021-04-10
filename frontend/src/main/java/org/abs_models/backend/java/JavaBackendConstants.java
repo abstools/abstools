@@ -15,14 +15,14 @@ public class JavaBackendConstants {
     //public static String LIB_EXPR_PACKAGE = Let.class.getPackage().getName();
     //public static String LIB_IMPORT_STATEMENT = "import " + LIB_TYPES_PACKAGE + ".*; " + "import " + LIB_EXPR_PACKAGE
     //        + ".*;";
-    public static String UNITVALUE = ABSUnit.class.getName()+".UNIT";
-    public static String ABSRUNTIME = ABSRuntime.class.getName();
-    public static String ANDGUARD = ABSAndGuard.class.getName();
-    public static String CLAIMGUARD = ABSFutureGuard.class.getName();
-    public static String EXPGUARD = ABSExpGuard.class.getName();
+    public final static String UNITVALUE = ABSUnit.class.getName()+".UNIT";
+    public final static String ABSRUNTIME = ABSRuntime.class.getName();
+    public final static String ANDGUARD = ABSAndGuard.class.getName();
+    public final static String CLAIMGUARD = ABSFutureGuard.class.getName();
+    public final static String EXPGUARD = ABSExpGuard.class.getName();
 
     // Package names for generated products, deltas
-    public static String LIB_RDM_PACKAGE = "rdm";
-    public static String LIB_DELTAS_PACKAGE = "deltas";
-    public static String LIB_UPDATES_PACKAGE = "updates";
+    public final static String LIB_RDM_PACKAGE = "rdm";
+    public final static String LIB_DELTAS_PACKAGE = "deltas";
+    public final static String LIB_UPDATES_PACKAGE = "updates";
 }

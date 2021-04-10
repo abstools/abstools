@@ -410,8 +410,9 @@ public class DynamicJavaGeneratorHelper {
     /**
      * removes the gen folder and all its contents
      * @param code
+     * @throws IOException
      */
-    public static void cleanGenFolder(JavaCode code) {
+    public static void cleanGenFolder(JavaCode code) throws IOException {
         JavaGeneratorHelper.cleanGenFolder(code);
     }
 

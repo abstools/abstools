@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
@@ -94,11 +95,21 @@ public abstract class CompilerCondition {
     }
 
     private String readLineFromFile() {
+        Reader r = null;
         try {
-            return readLineFromReader(new FileReader(file));
+            r = new FileReader(file);
+            return readLineFromReader(r);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return null;
+        } finally {
+            if (r != null) {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    // ignore since we opened the file read-only
+                }
+            }
         }
     }
 

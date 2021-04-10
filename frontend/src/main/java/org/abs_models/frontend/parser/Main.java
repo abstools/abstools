@@ -374,6 +374,9 @@ public class Main {
                     break;
                 }
             }
+            if (modProductline == null) {
+                throw new WrongProgramArgumentException("Internal error: did not find module " + Constants.PL_NAME + "(should have been defined in the abslang.abs standard library)");
+            }
             for (Decl d : modProductline.getDecls()) {
                 if (d instanceof DataTypeDecl && d.getName().equals("Feature")) {
                     featureDecl = (DataTypeDecl)d;
@@ -558,6 +561,7 @@ public class Main {
         return parseUnit(new File(ABS_STD_LIB), new InputStreamReader(stream));
     }
 
+    @Deprecated
     public static void printUsage() {
         printHeader();
         System.out.println(""
@@ -599,15 +603,7 @@ public class Main {
                 + "  -noattr        ignore the attributes\n"
                 + "  -check=<PID>   check satisfiability of a product with name PID\n"
                 + "  -h             print this message\n"
-                + "\nDiagnostic options:\n"
 );
-        MaudeCompiler.printUsage();
-        JavaBackend.printUsage();
-        ErlangBackend.printUsage();
-        PrologBackend.printUsage();
-        CoreAbsBackend.printUsage();
-        PrettyPrinterBackEnd.printUsage();
-        OutlinePrinterBackEnd.printUsage();
     }
 
     protected static void printHeader() {

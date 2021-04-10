@@ -79,7 +79,7 @@ public class Tester extends Main {
                     fixpointVersion = Integer.parseInt(arg.split("=")[1]);
 
                 } catch (Exception e) {
-                    System.err.println(args.toString());
+                    System.err.println(Arrays.toString(args));
                     System.err.println(e.toString());
                     System.err.println("The fix point version (-fixPointVersion) should be an integer. Default value 1 for original version, value 2 for the newest version");
                     System.exit(1);
