@@ -29,12 +29,3 @@ jobs:
         LANG: en_US.UTF-8
       with:
         arguments: test
-    - name: Test Report
-      # See https://github.com/marketplace/actions/test-reporter for
-      # how to set this up to handle pull requests from cloned
-      # repositories
-      uses: dorny/test-reporter@v1
-      with:
-        name: JUnit Tests
-        path: **/test/TEST-*.xml
-        reporter: java-junit
