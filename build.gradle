@@ -18,7 +18,7 @@ def gitBranch() {
 }
 
 def gitVersion() {
-    def version = ""
+    def version = "unknown-not_compiled_in_git_repo"
     def proc = "git describe --tags".execute()
     proc.in.eachLine { line -> version = line }
     proc.err.eachLine { line -> println line }
