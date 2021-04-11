@@ -29,3 +29,9 @@ jobs:
         LANG: en_US.UTF-8
       with:
         arguments: test
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      with:
+        name: JUnit Tests
+        path: **/test/TEST-*.xml
+        reporter: java-junit
