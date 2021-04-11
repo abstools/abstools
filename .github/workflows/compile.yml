@@ -34,8 +34,6 @@ jobs:
       # how to set this up to handle pull requests from cloned
       # repositories
       uses: dorny/test-reporter@v1
-      # run this step even if previous step failed
-      if: success() || failure()
       with:
         name: JUnit Tests
         path: **/test/TEST-*.xml
