@@ -23,6 +23,22 @@ jobs:
         LANG: en_US.UTF-8
       with:
         arguments: build -x check -x test
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+    - name: Install Erlang
+      uses: gleam-lang/setup-erlang@v1.1.2
+      with:
+        otp-version: '23.2'
     - name: Run tests
       uses: eskatos/gradle-command-action@v1
       env:
