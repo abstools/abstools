@@ -17,4 +17,10 @@ jobs:
     - name: Build with Gradle
       env:
         LANG: en_US.UTF-8
-      run: ./gradlew build -x check
+      run: ./gradlew build -x spotbugsMain -x spotbugsTest
+    # tests hang - try without gradle plugin
+    # - uses: eskatos/gradle-command-action@v1
+    #   env:
+    #     LANG: en_US.UTF-8
+    #   with:
+    #     arguments: build -x check -x test
