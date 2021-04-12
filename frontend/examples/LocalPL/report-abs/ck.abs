@@ -1,0 +1,15 @@
+productline Report;
+    features Income, Expense, Exp, Program;
+
+delta DIncome when Income;
+
+delta DExpense after DIncome when Expense ;
+delta DAddExpense when Expense;
+
+delta DExp when Exp;
+delta DAddExp when Exp;
+
+
+product IncomeReport (Income);
+product IncExpConflict (Income, Expense); 
+product IncExpReport (Income, Exp);

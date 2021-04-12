@@ -1,0 +1,45 @@
+module Test;
+import * from MFinancialReport;
+
+
+class EnterTest()
+{
+    FinancialReport report;
+    Unit run(){
+        FinancialReport report = new local FinancialReportImpl (10, "21-10-2019");
+        report.addData(report);        
+    }
+}
+    {
+        new EnterTest();
+    }
+
+//Feature addExpense with similar addData method with Income
+delta DAddExpense;
+uses Test;
+
+modifies class EnterTest
+{
+    modifies Unit run()
+    {   original();
+        println("Expense");
+        FinancialReport reporta = new FinancialReportImpl(12, "24-01-2020");
+        reporta.addData(reporta);
+    }
+}
+
+
+//Feature addExpense with different addData method with Expense
+delta DAddExp;
+uses Test;
+
+modifies class EnterTest
+{
+    modifies Unit run()
+    {   original();
+        FinancialReport report = new FinancialReportImpl(12, "21-01-2020");
+        report.addExpenseData(report); //change addData to addExpenseData
+    }
+}
+
+

@@ -1,0 +1,180 @@
+module TrackElements;
+
+export *;
+
+import * from Wrapper;
+
+unique interface TrackElementI{
+  List<Transmission> triggerFront(Train train, Time t, Edge e);	//OK
+  Transmission triggerBack(Train train, Time t, Edge e);   			//OK
+  SignalState getState();                       						   			//OK
+  String getName();                             						   			//OK
+  Information getInfoState();													//OK
+  Unit setState(SignalState state, Time t);
+}
+
+interface Specific extends TrackElementI { // this is needed because in some situations we actually need additional exposed methods
+}
+  
+
+class TrackElement(Node n, Edge waitTrack, String sigName, String name) implements Specific {
+  SignalState state = STOP;
+ {
+    logOut("TOWARDS;"+toString(this)+";"+toString(waitTrack));
+ }
+  String getName(){ return this.name; }
+  Unit register(Train t){ skip; }
+  Unit deregister(Train t){ skip; }  
+  Information getInfoState() { return NoInfo; }
+  List<Transmission> triggerFront(Train train, Time t, Edge e){
+    return list[Pass(NoInfo)];
+  }
+  Transmission triggerBack(Train train, Time t, Edge e){
+    return Pass(NoInfo);
+  }
+  SignalState getState(){
+    return this.state;
+  }
+  Unit setState(SignalState newState, Time t){
+    this.state = newState;
+    logOut(( ( ( ( ( "CH;" + toString(this) ) + ";" ) + toString(newState) ) + ";" ) + toString(timeValue(t)) ));
+  }
+}
+
+/***************************************************************
+ ***************************************************************
+ ***************************************************************/
+
+features Main, Pre, FSpeed, FSignal, FPoV with Main <-> !Pre; // && (FSpeed || FSignal || FPoV) && (FPoV <-> !(FSpeed || FSignal)) && !(FPoV && Pre);
+
+delta Signal;
+modifies interface Specific{
+  adds Unit setObservable(Observable ob);						
+  adds Observable getObservable();												
+}
+modifies class TrackElement {
+  adds Observable s = null;
+  adds [Atomic] Unit setObservable(Observable ob){ this.setSignal(ob); }
+  adds Observable getObservable(){ return this.s; }
+  adds [Atomic] Unit setSignal(Observable sig){
+    this.s = sig;
+  }
+}
+
+delta Speed;
+modifies interface Specific{
+ adds Unit setAllowed(Int i);
+}
+modifies class TrackElement {
+  adds Int allowed = allow;
+  adds SignalState getState(){
+    return NOSIG;
+  }
+  adds Unit setAllowed(Int i){
+    this.allowed = i;
+  }
+}
+
+delta PoV;
+modifies class TrackElement {
+  adds SignalState state = STOP;
+  adds Observable s = null;
+  modifies Unit register(Train train){
+        if(s != null) this.s.setObserver(train);    
+  }
+  modifies Unit deregister(Train t){
+        if(s != null) this.s.setObserver(null);    
+  }
+  modifies  List<Transmission> triggerFront(Train train, Time t, Edge e){
+    Information ret = NoInfo;
+    if ( ( ( this.s != null ) && ( this.waitTrack == e ) ) ){
+      this.s.setObserver(train);
+      Observed observed = this.s.getObserved();
+      ret = observed.getInfoState();
+    }
+    //println("TRIGGERED POV");
+    return list[See(ret, distance), Pass(StartObserve(s))]; 
+  }
+    adds [Atomic] Unit setSignal(Observable sig){
+    this.s = sig;
+  }
+}
+
+delta HS;
+modifies interface Specific{
+	adds Node getNode();
+	adds Edge getWaitTrack();
+}
+modifies class TrackElement {
+  adds Transmission triggerBack(Train train, Time t, Edge e){ 
+    Information ret = NoInfo;
+    if (( this.waitTrack == e ) ){
+      ret = HsPassed(sigName);
+    }
+    return Pass(ret);
+  }
+  adds Node getNode(){ 
+  	return this.n; 
+  }
+  adds Edge getWaitTrack(){ 
+  	return this.waitTrack; 
+  }
+  adds Information getInfoState() {
+  	return HauptSig( this.state , sigName); 
+  }
+  
+  modifies List<Transmission> triggerFront(Train train, Time t, Edge e){
+    Information ret = NoInfo;
+    if ( ( ( this.s != null ) && ( this.waitTrack == e ) ) ){
+      this.s.setObserver(null);
+      ret = HauptSig( this.state, sigName );
+    }
+    return list[Pass(ret),Pass(EndObserve(s))];
+  }
+}
+
+
+delta VS;
+modifies class TrackElement {
+  modifies Information getInfoState() {
+  	return VorSig( this.state , sigName); 
+  }
+  
+  modifies List<Transmission> triggerFront(Train train, Time t, Edge e){
+    Information ret = NoInfo;
+    if ( ( ( this.s != null ) && ( this.waitTrack == e ) ) ){
+      ret = VorSig( this.state, sigName);
+    }
+    return list[Pass(ret)];
+  }  
+}
+
+delta HLimit;
+modifies class TrackElement{
+  modifies Transmission triggerBack(Train train, Time t, Edge e){
+    Information info = NoInfo;
+    if ( ( ( this.waitTrack == e ) && ( this.allowed >= 0 ) ) ){
+      info = Limit( this.allowed );
+    }
+    return Pass(info);
+  }
+}
+
+delta VLimit;
+modifies class TrackElement{
+  modifies List<Transmission> triggerFront(Train train, Time t, Edge e){
+    Information info = NoInfo;
+    if ( ( ( this.waitTrack == e ) && ( this.allowed >= 0 ) ) ){
+      info = LimitPrepare( this.allowed );
+    }
+    return list[Pass(info)];
+  }
+}
+
+delta VLimit when Pre && FSpeed;
+delta HLimit when Main && FSpeed;
+delta VS when Pre && FSignal;
+delta HS when Main && FSignal;
+delta PoV when FPoV;
+delta Signal when FSignal;
+delta Speed when FSpeed;

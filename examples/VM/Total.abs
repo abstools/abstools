@@ -1,0 +1,316 @@
+//This is the AISCO Case Study
+
+module MFinancialReport;
+export *;
+configuration IncomeReport = {Income};
+configuration IncExpConflict = {Income, Expense};
+configuration IncExpReport = {Income, Exp};
+
+interface FinancialReport {
+    Int getId();
+    Unit setId(Int id);
+    String getDatestamp();
+    Unit setDatestamp(String datestamp);
+    Unit addRecord(Int x);
+    Unit totalBalances();
+    Unit addData(FinancialReport reporta);
+}
+
+
+class FinancialReportImpl (Int id, String datestamp) implements FinancialReport {
+    Int balances = 0;
+    Int getId() { return this.id; }
+    Unit setId(Int id) { this.id = id; }
+   
+    String getDatestamp() { return this.datestamp; }
+    Unit setDatestamp(String datestamp) { this.datestamp = datestamp; }
+
+
+    Unit addRecord(Int x)
+    {
+        println("add a record: "+toString(x));
+        balances = balances+x;
+    }
+
+    Unit totalBalances()
+    {
+       println("Total balances: "+toString(balances));
+    }
+
+    Unit addData(FinancialReport reporta)
+    {
+        println("Add data FinancialReport");
+    }
+
+}
+
+class Test()
+{
+    FinancialReport report;
+    Unit run(){
+        FinancialReport report = new local FinancialReportImpl (10, "21-10-2019");
+        report.addData(report);        
+    }
+}
+
+// Productline
+features Income, Expense, Exp, Program with !(Expense && Exp);
+delta DExp;
+modifies interface FinancialReport
+{
+    adds Unit totalExpense();
+    adds Unit addExpenseData(FinancialReport expense);
+}
+
+modifies class FinancialReportImpl
+{
+    adds Unit addExpenseData(FinancialReport expense)
+    {
+       println("Expense Report");
+       expense.addRecord(50000);
+       expense.addRecord(100000);
+       expense.addRecord(20000);
+       expense.totalExpense();
+    }
+
+    adds Unit totalExpense()
+    {
+        println("Total expenses: "+toString(balances));
+    }
+
+}
+
+delta DExpense;
+
+modifies class FinancialReportImpl
+{   adds FinancialReport februari;
+
+    modifies Unit addData(FinancialReport reporta)
+    {
+       original(reporta);
+       println("Expense Report");
+       reporta.addRecord(50000);
+       reporta.addRecord(100000);
+       reporta.addRecord(20000);
+       reporta.totalBalances();  
+    }
+
+     modifies Unit totalBalances()
+     {
+        println("Total expenses: "+toString(balances));
+     }
+
+}
+delta DIncome;
+
+modifies class FinancialReportImpl
+{
+
+    modifies Unit addData(FinancialReport reporta)
+    { 
+       println("Income Report");
+       reporta.addRecord(100000);
+       reporta.addRecord(250000);
+       reporta.addRecord(500000);
+       reporta.totalBalances();
+    }
+
+    modifies Unit totalBalances()
+    {
+
+        println("Total incomes: "+toString(balances));
+    }
+}
+
+//Feature addExpense with similar addData method with Income
+delta DAddExpense;
+modifies class Test
+{
+    modifies Unit run()
+    {   original();
+        println("Expense");
+        FinancialReport reporta = new FinancialReportImpl(12, "24-01-2020");
+        reporta.addData(reporta);
+    }
+}
+
+//Feature addExpense with different addData method with Expense
+delta DAddExp;
+modifies class Test
+{
+    modifies Unit run()
+    {   original();
+        FinancialReport report = new FinancialReportImpl(12, "21-01-2020");
+        report.addExpenseData(report); //change addData to addExpenseData
+    }
+}
+
+delta DIncome when Income;
+
+delta DExpense after DIncome when Expense ;
+delta DExp  after DIncome when Exp;
+delta DAddExp when Exp && !Expense ;
+delta DAddExpense after DAddExp when Expense;
+
+module Main;
+import * from MFinancialReport;
+
+{
+FinancialReport fr = new FinancialReportImpl(12, "24-01-2020") with IncomeReport;
+new Test() with IncExpConflict;
+}
+
+
+module Test;
+import * from MFinancialReport;
+
+
+class EnterTest()
+{
+    FinancialReport report;
+    Unit run(){
+        FinancialReport report = new local FinancialReportImpl (10, "21-10-2019");
+        report.addData(report);        
+    }
+}
+    {
+        new EnterTest();
+    }
+
+//Feature addExpense with similar addData method with Income
+delta DAddExpense;
+uses Test;
+
+modifies class EnterTest
+{
+    modifies Unit run()
+    {   original();
+        println("Expense");
+        FinancialReport reporta = new FinancialReportImpl(12, "24-01-2020");
+        reporta.addData(reporta);
+    }
+}
+
+
+//Feature addExpense with different addData method with Expense
+delta DAddExp;
+uses Test;
+
+modifies class EnterTest
+{
+    modifies Unit run()
+    {   original();
+        FinancialReport report = new FinancialReportImpl(12, "21-01-2020");
+        report.addExpenseData(report); //change addData to addExpenseData
+    }
+}
+
+
+
+
+
+
+delta DIncome;
+uses MFinancialReport;
+
+modifies class FinancialReportImpl
+{
+
+    modifies Unit addData(FinancialReport reporta)
+    {
+       println("Income Report");
+       reporta.addRecord(100000);
+       reporta.addRecord(250000);
+       reporta.addRecord(500000);
+       reporta.totalBalances();
+    }
+
+    modifies Unit totalBalances()
+    {
+
+        println("Total incomes: "+toString(balances));
+    }
+}
+delta DExpense;
+uses MFinancialReport;
+
+modifies class FinancialReportImpl
+{   adds FinancialReport februari;
+
+    modifies Unit addData(FinancialReport reporta)
+    {
+       println("Expense Report");
+       reporta.addRecord(50000);
+       reporta.addRecord(100000);
+       reporta.addRecord(20000);
+       reporta.totalBalances();  
+    }
+
+     modifies Unit totalBalances()
+     {
+        println("Total expenses: "+toString(balances));
+     }
+
+}
+
+
+delta DExp;
+uses MFinancialReport;
+modifies interface FinancialReport
+{
+    adds Unit totalExpense();
+    adds Unit addExpenseData(FinancialReport expense);
+}
+
+modifies class FinancialReportImpl
+{
+    adds Unit addExpenseData(FinancialReport expense)
+    {
+       println("Expense Report");
+       expense.addRecord(50000);
+       expense.addRecord(100000);
+       expense.addRecord(20000);
+       expense.totalExpense();
+    }
+
+    adds Unit totalExpense()
+    {
+        println("Total expenses: "+toString(balances));
+    }
+
+}
+productline Report;
+    features Income, Expense, Exp, Program;
+
+delta DIncome when Income;
+
+delta DExpense after DIncome when Expense ;
+delta DAddExpense when Expense;
+
+delta DExp when Exp;
+delta DAddExp when Exp;
+
+
+product IncomeReport (Income);
+product IncExpConflict (Income, Expense); 
+product IncExpReport (Income, Exp);
+root CharityOrganizationSystem {
+            group allof {
+                Income,
+                opt Expense,
+                opt Exp,
+                opt AutomaticReport {
+                    group [0 .. *] {
+                        ByLevel {
+                            group oneof {
+                                GenericSummary,
+                                PSAK45Summary,
+                                DetailSummary
+                            }
+                        },
+                        AutomaticReportByProgram
+                    }
+                }
+            }
+   }
+

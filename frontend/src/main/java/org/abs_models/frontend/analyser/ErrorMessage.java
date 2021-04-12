@@ -152,7 +152,16 @@ public enum ErrorMessage {
     INVALID_PRODUCT("Product %s does not satisfy the feature model. Constraints failed: %s."),
     MATCHING_NOT_ALLOWED_IN_CATCH("Non-free pattern variable %s (not allowed in catch branches)."),
     DUPLICATE_INTERFACE_IMPLEMENTATION("Class %s already implements interface %s."),
-    MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s.")
+    MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s."),
+    INVALID_UNIQUE_IN_CLASS("The class %s is specified as \"unique\" but modified by a delta or references a class or interface modified by a delta."),
+    INVALID_UNIQUE_IN_INTERFACE("The interface %s is specified as \"unique\" but modified by a delta or references an interface modified by a delta."),
+    COULDBE_UNIQUE_DECL("%s is not declared as \"unique\" but is not modified by a delta."),
+    NO_PRODUCTLINE_FOR_PRODUCT( "Error within product %s: Set of features cannot be found within a single productline"),
+    INVALID_PRODUCT_LOCAL("Set of features %s does not satisfy the constraint of the productline"),
+    PREPRODUCT_NOT_IN_VARIABLE("Preproduct %s is not declared in a variable module."),
+    PREPRODUCT_NOT_LOCAL("Preproduct %s uses features that are not declared in its variable module."),
+    LOCAL_ARGUMENT_FAILURE("An error occurred while evaluating local feature models: %s."),
+
     ;
 
     private String pattern;

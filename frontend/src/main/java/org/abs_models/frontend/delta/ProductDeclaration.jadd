@@ -7,6 +7,7 @@ aspect ProductDeclaration {
     public void Model.evaluateAllProductDeclarations() throws WrongProgramArgumentException {
         // Initialize set of ProductDecl
         Set<ProductDecl> productDecls = new HashSet<ProductDecl>(getProductDecls());
+        productDecls.addAll(getProductDeclsFromExps());
 
         // Sort all ProductDecl
         TopologicalSorting productSorter = new TopologicalSorting<ProductDecl>(productDecls);
@@ -34,9 +35,15 @@ aspect ProductDeclaration {
     /*
      * Return true if this Product is the same as that Product; false otherwise.
      */
-    public boolean Product.equals(Product that) {
+     @Override
+    public boolean Product.equals(Object that) {
+        if (this == that)
+            return true;
+        else if (! (that instanceof Product))
+            return false;
+        Product thatProduct = (Product) that;
         Set<Feature> thisFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(getFeatures()));
-        Set<Feature> thatFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(that.getFeatures()));
+        Set<Feature> thatFeatures = new HashSet<Feature>(ListUtils.ASTListToSet(thatProduct.getFeatures()));
         return thisFeatures.equals(thatFeatures);
     }
 
@@ -60,6 +67,30 @@ aspect ProductDeclaration {
     }
     syn lazy Product ProductDecl.getProduct() {
         return product;
+    }
+
+    /*
+     * Set all of product name recursively by given object of ProductExpr
+     */
+    public abstract boolean ProductExpr.usesFeatures(List<Feature> features);
+
+    public boolean ProductFeatureSet.usesFeatures(List<Feature> features) {
+        Set<Feature> sF = new HashSet<>();
+        for(Feature f: features){ sF.add(f); }
+        for(Feature f: getFeatureList()){ if( !sF.contains(f) ) { return false; }}
+        return true;
+    }
+    public boolean ProductIntersect.usesFeatures(List<Feature> features) {
+        return getLeft().usesFeatures(features) && getRight().usesFeatures(features);
+    }
+    public boolean ProductUnion.usesFeatures(List<Feature> features) {
+        return getLeft().usesFeatures(features) && getRight().usesFeatures(features);
+    }
+    public boolean ProductDifference.usesFeatures(List<Feature> features) {
+        return getLeft().usesFeatures(features) && getRight().usesFeatures(features);
+    }
+    public boolean ProductName.usesFeatures(List<Feature> features) {
+        return true;
     }
 
     /*
@@ -132,4 +163,60 @@ aspect ProductDeclaration {
         left.removeAll(right);
         return left;
     }
+
+    /*** Add ProductDecl to InterfaceTypeUse ***/
+   /* public ProductDecl InterfaceTypeUse.productDecl = null;
+
+    public void InterfaceTypeUse.setProductDecl(ProductDecl prod) {
+        productDecl = prod;
+    }
+    public ProductDecl InterfaceTypeUse.getProductDecl() {
+        return productDecl;
+    }
+
+    public boolean InterfaceTypeUse.hasProductDecl() {
+        return productDecl != null;
+    }*/
+    syn lazy ModuleDecl ProductDecl.getModuleWithPL() {
+        if (getProduct() != null) {
+            Model m = getModel();
+            return m.findModuleDeclForProduct(getProduct());
+        }
+        return null;
+    }
+
+    syn lazy boolean ProductDecl.featuresFromGlobalPL() {
+        if (getProduct() != null)
+            return getProduct().featuresFromGlobalPL(getModel().getProductLine());
+        else {
+            return false;
+        }
+    }
+
+     syn lazy boolean Product.featuresFromGlobalPL(ProductLine pl){
+          if (pl != null) {
+              for (Feature f : getFeatures()) {
+                   if (!pl.getDeclaredFeatures().contains(f.getName()))
+                          return false;
+              }
+              return true;
+          }
+          else return false;
+      }
+
+    syn lazy boolean ProductDecl.satisfiesConstraints() {
+        ModuleDecl module = getModuleWithPL();
+        if (module != null) {
+            LocalProductLine pl = module.getProductLine();
+            if (pl.hasFeatCond()) {
+                HashSet<String> onFeatureIDs = new HashSet<String>();
+                for (Feature f : getProduct().getFeatures()) {
+                    onFeatureIDs.add(f.getName());
+                }
+                return pl.getFeatCond().evaluate(onFeatureIDs);
+            }
+        }
+        return true;
+    }
+
 }

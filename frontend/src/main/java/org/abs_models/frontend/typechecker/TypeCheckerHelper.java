@@ -200,41 +200,36 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckProductDecl(ProductDecl prod,
-            Map<String,Feature> featureNames,
-            Set<String> prodNames,
-            Map<String,DeltaDecl> deltaNames,
-            SemanticConditionList e) {
-        if (featureNames != null) {
+    public static void typeCheckProductDeclFromGlobalPL(ProductDecl prod,
+                                            boolean fromGlobalPL,
+                                            SemanticConditionList e) {
+        if (fromGlobalPL) {
             // Do the features exist in the PL declaration (and also check feature attributes)?
             Model m = prod.getModel();
             for (Feature f : prod.getProduct().getFeatures()) {
-                if (!featureNames.containsKey(f.getName()))
-                    e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
-                else {
-                    Collection<DeltaClause> dcs = findDeltasForFeature(m,f);
-                    for (int i = 0; i<f.getNumAttrAssignment(); i++) {
-                        AttrAssignment aa = f.getAttrAssignment(i);
-                        for (DeltaClause dc : dcs) {
-                            DeltaDecl dd = m.findDelta(dc.getDeltaspec().getDeltaID());
-                            DeltaParamDecl dp = dd.getParam(i);
-                            // FIXME: we assumed here that delta
-                            // parameters and feature parameters have
-                            // same order, arity.  This is clearly
-                            // wrong, and parameters for the delta are
-                            // named with the feature.  we should find a
-                            // dp with the same name as aa, and ignore
-                            // any superfluous aa (the value is simply
-                            // not used by this delta).
-                            if (dp != null && !dp.accepts(aa.getValue())) {
-                                e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(), dp.getType().getSimpleName()));
-                            }
+                Collection<DeltaClause> dcs = findDeltasForFeature(m, f);
+                for (int i = 0; i < f.getNumAttrAssignment(); i++) {
+                    AttrAssignment aa = f.getAttrAssignment(i);
+                    for (DeltaClause dc : dcs) {
+                        DeltaDecl dd = m.findDelta(dc.getDeltaspec().getDeltaID());
+                        DeltaParamDecl dp = dd.getParam(i);
+                        // FIXME: we assumed here that delta
+                        // parameters and feature parameters have
+                        // same order, arity.  This is clearly
+                        // wrong, and parameters for the delta are
+                        // named with the feature.  we should find a
+                        // dp with the same name as aa, and ignore
+                        // any superfluous aa (the value is simply
+                        // not used by this delta).
+                        if (dp != null && !dp.accepts(aa.getValue())) {
+                            e.add(new TypeError(aa, ErrorMessage.CANNOT_ASSIGN, aa.getValue().getName(), dp.getType().getSimpleName()));
                         }
                     }
                 }
             }
         }
 
+	/* FIXME: not referenced?
         // Check the right side of product expression that contains in prodNames
         Set<String> productNames = new HashSet<>();
         prod.getProductExpr().setRightSideProductNames(productNames);
@@ -242,7 +237,7 @@ public class TypeCheckerHelper {
             if (!prodNames.contains(productName)) {
                 e.add(new TypeError(prod, ErrorMessage.UNDECLARED_PRODUCT, productName));
             }
-        }
+        }*/
 
         // Check solution from getProduct()
         if (prod.getProduct() != null) {
@@ -260,6 +255,40 @@ public class TypeCheckerHelper {
         }
     }
 
+    public static void typeCheckPreProductDecl(ProductDecl prod,
+                                               Set<Feature> features,
+                                               SemanticConditionList e) {
+    }
+
+    public static void typeCheckProductDecl(ProductDecl prod,
+                                             Set<String> prodNames,
+                                             SemanticConditionList e) {
+        if (!prod.getModel().hasProductLine() && !prod.getModel().hasLocalProductLines()) {
+            e.add(new SemanticWarning(prod, ErrorMessage.ERROR_IN_PRODUCT, prod.getName(),
+                "Model does not have a product line definiton."));
+        }
+        else if((prod.getModel().hasProductLine() && !prod.featuresFromGlobalPL()) ||
+                (prod.getModel().hasLocalProductLines() && prod.getModuleWithPL() == null )) {
+            e.add(new TypeError(prod, ErrorMessage.ERROR_IN_PRODUCT, prod.getName(),
+                "Set of features " + prod.getProduct().getFeatureSetAsString() +
+                    " cannot be found within a single product line"));
+        } else if (prod.getModuleWithPL() != null && !prod.satisfiesConstraints()){
+            e.add(new TypeError(prod, ErrorMessage.INVALID_PRODUCT_LOCAL, prod.getName()));
+        }
+
+        if (!prodNames.isEmpty()) {
+            // Check the right side of product expression that contains in prodNames
+            Set<String> productNames = new HashSet<>();
+            prod.getProductExpr().setRightSideProductNames(productNames);
+            for (String productName : productNames) {
+                if (!prodNames.contains(productName)) {
+                    e.add(new TypeError(prod, ErrorMessage.UNDECLARED_PRODUCT, productName));
+                }
+            }
+        }
+    }
+
+
     /**
      * Look for all deltas that have a particular feature in the application condition --
      * up to the boolean madness that lies within AppConds (delta D(F.x) when ~F will
@@ -271,6 +300,16 @@ public class TypeCheckerHelper {
             DeltaClause dc = m.getProductLine().getDeltaClause(i);
             if (dc.refersTo(f)) {
                 dcs.add(dc);
+            }
+        }
+        if (dcs.isEmpty()) {
+            for (ProductLine pl : m.getLocalProductLines()) {
+                for (int i = 0; i < pl.getNumDeltaClause(); i++) {
+                    DeltaClause dc = pl.getDeltaClause(i);
+                    if (dc.refersTo(f)) {
+                        dcs.add(dc);
+                    }
+                }
             }
         }
         return dcs;

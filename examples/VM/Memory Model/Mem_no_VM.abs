@@ -1,0 +1,1322 @@
+module Communication;
+export *;
+
+data LocationT = LocationT(String name);
+data Access   = Write(Thread, LocationT, Int value, Int) | Read(Thread, LocationT, Int);
+
+interface Thread { }
+
+
+
+
+
+module Mem;
+export *;
+import * from Communication;
+
+def List<T> slice<T>(List<T> list, Int startPos, Int endPos) = sliceAux(list, startPos, endPos, 0);
+def List<T> sliceAux<T>(List<T> list, Int startPos, Int endPos, Int it) =  when it > endPos then Nil
+ else when it < startPos then sliceAux(tail(list), startPos, endPos, it + 1)
+ else case list{
+ 	Cons(x, xs) => Cons(x ,sliceAux(xs, startPos, endPos, it + 1));
+ 	Nil => Nil;
+ };
+ 
+	
+def Maybe<Int> getWriteValueFor(List<Access> list, LocationT loc, Thread tid) = getWriteForAux(list, loc, 0, tid);
+def Maybe<Int> getWriteForAux(List<Access> list, LocationT loc, Int pos, Thread tid) = case list {
+		Cons(x, xs) => case x {
+			Write(tidW,locW,_,id) => when (locW == loc && tid == tidW) then Just(id) else getWriteForAux(xs, loc, pos+1, tid);
+			_ => getWriteForAux(xs, loc, pos+1, tid);
+		};
+		Nil => Nothing;
+	};
+	
+	
+def Int getFirstRead(List<Int> list,List<Access> acc) = getFirstReadAux(list,acc,0);
+
+def Int getFirstReadAux(List<Int> list, List<Access> acc, Int pos) = case list{
+	Cons(x,xs) => case (nth(acc,x)){
+		Read(_,_,_)    => pos;
+		Write(_,_,_,_) => getFirstReadAux(xs,acc, pos+1);
+	};
+	Nil => 0;
+};
+	
+	
+interface MemoryI{
+     Fut<Int> read(Thread t, LocationT loc);
+     Unit write(Thread t, LocationT loc, Int val);
+     
+     Int const(Int i);
+     Int internalRead(Int myId); //spec only
+}
+
+
+module MemoryInternal1;
+import * from Communication;
+import * from Mem;
+export *;
+
+class Memory implements MemoryI {
+	
+     Int counter = 0;                                                                 //internal modeling of equality   
+     List<Access> list = Nil;                                                         //access list
+     Set<Int> done = EmptySet;                                                        //completed accesses
+     Map<Int, Int> ret = EmptyMap;                                                    //maps access ids to return values
+     Map<LocationT, Int> mem = put(put(EmptyMap, LocationT("w"), 0), LocationT("v"), 0); //actual memory
+     
+     //issues a read operation, returns the read value once the access has succeeded
+     Fut<Int> read(Thread t, LocationT loc){
+       Int myId = counter;
+       list = appendright(list, Read(t, loc, myId));
+       counter = counter + 1;
+       Fut<Int> ff = this!internalRead(myId);
+       return ff;
+     }
+     
+     Int internalRead(Int myId){     
+       await contains(done, myId);
+       return lookupUnsafe(ret, myId);
+     }
+     
+     //issues a write operation, returns immediately once the access is added to the access list
+     Unit write(Thread t, LocationT loc, Int val){
+       Int myId = counter;
+       list = appendright(list, Write(t, loc, val, myId));     
+       counter = counter + 1;
+     }
+     
+     //for init
+     Int const(Int i){
+       return i;
+     }
+     
+     
+     List<Int> strategy(){
+     	Int i = 0;
+     	List<Int> allowed = Nil;
+     	while(i < length(list)){
+     		Bool add = True;
+     		Int j = 0;
+     		while(j < i){
+     			Bool b = this.maySwap(nth(list,j),nth(list,i));
+     			if(!b){
+     				add = False;
+     				j = length(list);
+     			}
+     			j = j +1;
+     		}
+     		if(add){ allowed = Cons(i, allowed);}
+     		i = i + 1;
+     	}
+     	return allowed;
+	 }
+	 
+	 Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  
+     	switch (a) {
+     		Read(t1,_,_)    => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     		Write(t1,_,_,_) => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     	}
+     	return ret;
+	 }
+	 
+	 Int getValueFor(Thread tid, LocationT loc, Int pos){
+	 	return lookupUnsafe(mem, loc);
+	 }
+	 
+	 Pair<Access, Int> getAccess(Int pos){
+     	Access acc = nth(list, pos);
+	    Int val = -1;
+	    switch (acc) { 
+	      	Write(_, _ ,vi, _) => {val = vi;}
+	      	Read(tid, loc,_ ) => {val = this.getValueFor(tid, loc, pos);}
+	    }
+	    
+     	this.list = concatenate(slice(list, 0, pos-1), slice(list, pos+1, length(list)));
+     	return Pair(acc, val);
+	 }
+	 
+	 Int retrieve(List<Int> myList){
+	 	return head(myList);//nth(accList, random(length(list))); for less predictability
+	 }
+	 
+     Unit run(){
+     	while(True){
+     	   	await list != Nil;	 
+     	   	  
+	       	List<Int> accList = this.strategy();
+	       	Int pos = this.retrieve(accList);
+	       	
+	       	Pair<Access, Int> pp = this.getAccess(pos); 
+	       	
+	     	switch (fst(pp)) {
+	     		Write(t, loc, val, id) => {
+	     			done = insertElement(done, id);
+	     			mem = put(mem, loc, val);
+	     		}
+	     		Read(t, loc, id)       => {
+	     			done = insertElement(done, id);
+			  		ret = put(ret, id, snd(pp));
+	     	   	}
+	     	}     	   
+     	}
+     }
+}
+
+module MemoryInternal2;
+import * from Communication;
+import * from Mem;
+export *;
+
+class Memory implements MemoryI {
+	
+     Int counter = 0;                                                                 //internal modeling of equality   
+     List<Access> list = Nil;                                                         //access list
+     Set<Int> done = EmptySet;                                                        //completed accesses
+     Map<Int, Int> ret = EmptyMap;                                                    //maps access ids to return values
+     Map<LocationT, Int> mem = put(put(EmptyMap, LocationT("w"), 0), LocationT("v"), 0); //actual memory
+     
+     //issues a read operation, returns the read value once the access has succeeded
+     Fut<Int> read(Thread t, LocationT loc){
+       Int myId = counter;
+       list = appendright(list, Read(t, loc, myId));
+       counter = counter + 1;
+       Fut<Int> ff = this!internalRead(myId);
+       return ff;
+     }
+     
+     Int internalRead(Int myId){     
+       await contains(done, myId);
+       return lookupUnsafe(ret, myId);
+     }
+     
+     //issues a write operation, returns immediately once the access is added to the access list
+     Unit write(Thread t, LocationT loc, Int val){
+       Int myId = counter;
+       list = appendright(list, Write(t, loc, val, myId));     
+       counter = counter + 1;
+     }
+     
+     //for init
+     Int const(Int i){
+       return i;
+     }
+     
+     
+     List<Int> strategy(){
+     	Int i = 0;
+     	List<Int> allowed = Nil;
+     	while(i < length(list)){
+     		Bool add = True;
+     		Int j = 0;
+     		while(j < i){
+     			Bool b = this.maySwap(nth(list,j),nth(list,i));
+     			if(!b){
+     				add = False;
+     				j = length(list);
+     			}
+     			j = j +1;
+     		}
+     		if(add){ allowed = Cons(i, allowed);}
+     		i = i + 1;
+     	}
+     	return allowed;
+	 }
+	 
+	 Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  
+     	switch (a) {
+     		Read(t1,_,_)    => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     		Write(t1,_,_,_) => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     	}
+     	return ret;
+	 }
+	 
+	 Int getValueFor(Thread tid, LocationT loc, Int pos){
+	 	return lookupUnsafe(mem, loc);
+	 }
+	 
+	 Pair<Access, Int> getAccess(Int pos){
+     	Access acc = nth(list, pos);
+	    Int val = -1;
+	    switch (acc) { 
+	      	Write(_, _ ,vi, _) => {val = vi;}
+	      	Read(tid, loc,_ ) => {val = this.getValueFor(tid, loc, pos);}
+	    }
+	    
+     	this.list = concatenate(slice(list, 0, pos-1), slice(list, pos+1, length(list)));
+     	return Pair(acc, val);
+	 }
+	 
+	 Int retrieve(List<Int> myList){
+	 	return head(myList);//nth(accList, random(length(list))); for less predictability
+	 }
+	 
+     Unit run(){
+     	while(True){
+     	   	await list != Nil;	 
+     	   	  
+	       	List<Int> accList = this.strategy();
+	       	Int pos = this.retrieve(accList);
+	       	
+	       	Pair<Access, Int> pp = this.getAccess(pos); 
+	       	
+	     	switch (fst(pp)) {
+	     		Write(t, loc, val, id) => {
+	     			done = insertElement(done, id);
+	     			mem = put(mem, loc, val);
+	     		}
+	     		Read(t, loc, id)       => {
+	     			done = insertElement(done, id);
+			  		ret = put(ret, id, snd(pp));
+	     	   	}
+	     	}     	   
+     	}
+     }
+}
+
+module MemoryInternal3;
+import * from Communication;
+import * from Mem;
+export *;
+
+class Memory implements MemoryI {
+	
+     Int counter = 0;                                                                 //internal modeling of equality   
+     List<Access> list = Nil;                                                         //access list
+     Set<Int> done = EmptySet;                                                        //completed accesses
+     Map<Int, Int> ret = EmptyMap;                                                    //maps access ids to return values
+     Map<LocationT, Int> mem = put(put(EmptyMap, LocationT("w"), 0), LocationT("v"), 0); //actual memory
+     
+     //issues a read operation, returns the read value once the access has succeeded
+     Fut<Int> read(Thread t, LocationT loc){
+       Int myId = counter;
+       list = appendright(list, Read(t, loc, myId));
+       counter = counter + 1;
+       Fut<Int> ff = this!internalRead(myId);
+       return ff;
+     }
+     
+     Int internalRead(Int myId){     
+       await contains(done, myId);
+       return lookupUnsafe(ret, myId);
+     }
+     
+     //issues a write operation, returns immediately once the access is added to the access list
+     Unit write(Thread t, LocationT loc, Int val){
+       Int myId = counter;
+       list = appendright(list, Write(t, loc, val, myId));     
+       counter = counter + 1;
+     }
+     
+     //for init
+     Int const(Int i){
+       return i;
+     }
+     
+     
+     List<Int> strategy(){
+     	Int i = 0;
+     	List<Int> allowed = Nil;
+     	while(i < length(list)){
+     		Bool add = True;
+     		Int j = 0;
+     		while(j < i){
+     			Bool b = this.maySwap(nth(list,j),nth(list,i));
+     			if(!b){
+     				add = False;
+     				j = length(list);
+     			}
+     			j = j +1;
+     		}
+     		if(add){ allowed = Cons(i, allowed);}
+     		i = i + 1;
+     	}
+     	return allowed;
+	 }
+	 
+	 Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  
+     	switch (a) {
+     		Read(t1,_,_)    => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     		Write(t1,_,_,_) => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     	}
+     	return ret;
+	 }
+	 
+	 Int getValueFor(Thread tid, LocationT loc, Int pos){
+	 	return lookupUnsafe(mem, loc);
+	 }
+	 
+	 Pair<Access, Int> getAccess(Int pos){
+     	Access acc = nth(list, pos);
+	    Int val = -1;
+	    switch (acc) { 
+	      	Write(_, _ ,vi, _) => {val = vi;}
+	      	Read(tid, loc,_ ) => {val = this.getValueFor(tid, loc, pos);}
+	    }
+	    
+     	this.list = concatenate(slice(list, 0, pos-1), slice(list, pos+1, length(list)));
+     	return Pair(acc, val);
+	 }
+	 
+	 Int retrieve(List<Int> myList){
+	 	return head(myList);//nth(accList, random(length(list))); for less predictability
+	 }
+	 
+     Unit run(){
+     	while(True){
+     	   	await list != Nil;	 
+     	   	  
+	       	List<Int> accList = this.strategy();
+	       	Int pos = this.retrieve(accList);
+	       	
+	       	Pair<Access, Int> pp = this.getAccess(pos); 
+	       	
+	     	switch (fst(pp)) {
+	     		Write(t, loc, val, id) => {
+	     			done = insertElement(done, id);
+	     			mem = put(mem, loc, val);
+	     		}
+	     		Read(t, loc, id)       => {
+	     			done = insertElement(done, id);
+			  		ret = put(ret, id, snd(pp));
+	     	   	}
+	     	}     	   
+     	}
+     }
+}
+
+module MemoryInternal4;
+import * from Communication;
+import * from Mem;
+export *;
+
+class Memory implements MemoryI {
+	
+     Int counter = 0;                                                                 //internal modeling of equality   
+     List<Access> list = Nil;                                                         //access list
+     Set<Int> done = EmptySet;                                                        //completed accesses
+     Map<Int, Int> ret = EmptyMap;                                                    //maps access ids to return values
+     Map<LocationT, Int> mem = put(put(EmptyMap, LocationT("w"), 0), LocationT("v"), 0); //actual memory
+     
+     //issues a read operation, returns the read value once the access has succeeded
+     Fut<Int> read(Thread t, LocationT loc){
+       Int myId = counter;
+       list = appendright(list, Read(t, loc, myId));
+       counter = counter + 1;
+       Fut<Int> ff = this!internalRead(myId);
+       return ff;
+     }
+     
+     Int internalRead(Int myId){     
+       await contains(done, myId);
+       return lookupUnsafe(ret, myId);
+     }
+     
+     //issues a write operation, returns immediately once the access is added to the access list
+     Unit write(Thread t, LocationT loc, Int val){
+       Int myId = counter;
+       list = appendright(list, Write(t, loc, val, myId));     
+       counter = counter + 1;
+     }
+     
+     //for init
+     Int const(Int i){
+       return i;
+     }
+     
+     
+     List<Int> strategy(){
+     	Int i = 0;
+     	List<Int> allowed = Nil;
+     	while(i < length(list)){
+     		Bool add = True;
+     		Int j = 0;
+     		while(j < i){
+     			Bool b = this.maySwap(nth(list,j),nth(list,i));
+     			if(!b){
+     				add = False;
+     				j = length(list);
+     			}
+     			j = j +1;
+     		}
+     		if(add){ allowed = Cons(i, allowed);}
+     		i = i + 1;
+     	}
+     	return allowed;
+	 }
+	 
+	 Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  
+     	switch (a) {
+     		Read(t1,_,_)    => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     		Write(t1,_,_,_) => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     	}
+     	return ret;
+	 }
+	 
+	 Int getValueFor(Thread tid, LocationT loc, Int pos){
+	 	return lookupUnsafe(mem, loc);
+	 }
+	 
+	 Pair<Access, Int> getAccess(Int pos){
+     	Access acc = nth(list, pos);
+	    Int val = -1;
+	    switch (acc) { 
+	      	Write(_, _ ,vi, _) => {val = vi;}
+	      	Read(tid, loc,_ ) => {val = this.getValueFor(tid, loc, pos);}
+	    }
+	    
+     	this.list = concatenate(slice(list, 0, pos-1), slice(list, pos+1, length(list)));
+     	return Pair(acc, val);
+	 }
+	 
+	 Int retrieve(List<Int> myList){
+	 	return head(myList);//nth(accList, random(length(list))); for less predictability
+	 }
+	 
+     Unit run(){
+     	while(True){
+     	   	await list != Nil;	 
+     	   	  
+	       	List<Int> accList = this.strategy();
+	       	Int pos = this.retrieve(accList);
+	       	
+	       	Pair<Access, Int> pp = this.getAccess(pos); 
+	       	
+	     	switch (fst(pp)) {
+	     		Write(t, loc, val, id) => {
+	     			done = insertElement(done, id);
+	     			mem = put(mem, loc, val);
+	     		}
+	     		Read(t, loc, id)       => {
+	     			done = insertElement(done, id);
+			  		ret = put(ret, id, snd(pp));
+	     	   	}
+	     	}     	   
+     	}
+     }
+}
+
+
+
+
+module DeviceInternal1;
+export *;
+import * from Communication;
+import * from Threads;
+import * from Mem;
+import * from MemoryInternal1;
+import * from MemoryInternal2;
+import * from MemoryInternal3;
+import * from MemoryInternal4;
+import * from Devices;
+
+class DevicePair implements DevicePairI {
+    MemoryI mem1 = null;
+    MemoryI mem2 = null;
+    DeviceI d1 = null;
+    DeviceI d2 = null;
+    Unit run(){
+        this.d1 = new Device();
+        this.d2 = new Device();
+        this.setupDevice1();
+        this.setupDevice2();
+        d1.setOther(d2);
+        d2.setOther(d1);
+        d1!launch(mem1);
+        d2!launch(mem2);
+    }
+
+    Unit setupDevice1(){
+	 	  this.mem1 = null; //new Memory(); //with MaximalProduct;
+    }
+
+    Unit setupDevice2(){
+	 	 this.mem1 = null; //new Memory();
+    }
+}
+
+module DeviceInternal2;
+export *;
+import * from Communication;
+import * from Threads;
+import * from Mem;
+import * from MemoryInternal1;
+import * from MemoryInternal2;
+import * from MemoryInternal3;
+import * from MemoryInternal4;
+import * from Devices;
+
+class DevicePair implements DevicePairI {
+    MemoryI mem1 = null;
+    MemoryI mem2 = null;
+    DeviceI d1 = null;
+    DeviceI d2 = null;
+    Unit run(){
+        this.d1 = new Device();
+        this.d2 = new Device();
+        this.setupDevice1();
+        this.setupDevice2();
+        d1.setOther(d2);
+        d2.setOther(d1);
+        d1!launch(mem1);
+        d2!launch(mem2);
+    }
+
+    Unit setupDevice1(){
+	 	  this.mem1 = null; //new Memory(); //with MaximalProduct;
+    }
+
+    Unit setupDevice2(){
+	 	 this.mem1 = null; //new Memory();
+    }
+}
+
+
+module Threads;
+export *;
+import * from Mem;
+import * from Devices;
+import * from Communication;
+
+class Thread1(MemoryI mem, DeviceI other) implements Thread {
+   Fut<Int> reg1;
+             
+   Unit run(){
+     reg1 = mem!const(0);
+     reg1.get;
+     
+     //duration(3,3); //duration enforces demo ordering
+	 await mem!write(this,LocationT("w"),1);  
+     reg1 = await mem!read(this,LocationT("v"));    
+     Int i = reg1.get;
+     println("thread1: "+toString(i));
+   }
+}
+
+class Thread2(MemoryI mem, DeviceI other) implements Thread {
+   Fut<Int> reg1;
+     
+   Unit run(){
+     reg1 = mem!const(0);
+     reg1.get;
+
+	 await mem!write(this,LocationT("v"),1);  
+     reg1 = await mem!read(this,LocationT("w"));  
+     Int i = reg1.get;
+     await other!directSaveMainThread("v", i);
+     println("thread2: "+toString(i));
+   }
+}
+
+module Devices;
+export *;
+import * from Communication;
+import * from Threads;
+import * from Mem;
+
+interface DevicePairI{ }
+
+interface DeviceI{
+    Unit directSaveMainThread(String loc, Int val);
+    Unit setOther(DeviceI newOther);
+    Unit launch(MemoryI newMem);
+}
+
+class Device implements DeviceI {
+    DeviceI other = null;
+    MemoryI mem = null;
+    Thread t1 = null;
+    Thread t2 = null;
+    Unit setOther(DeviceI newOther){ this.other = newOther; }
+    Unit launch(MemoryI newMem){
+        this.mem = newMem;
+        this.t1 = new Thread1(mem, other);
+        this.t2 = new Thread2(mem, other);
+    }
+    Unit directSaveMainThread(String loc, Int val){
+        await mem!write(t1,LocationT(loc),val);
+    }
+}
+
+
+
+module Main;
+import * from Devices;
+import * from Mem;
+import * from Communication;
+
+class Application{ 
+	Unit run(){
+   //     DevicePairI p1 = new DevicePair() with {FTSO1, FTSO2};
+   //     DevicePairI p2 = new DevicePair() with {FTSO1, FPSO2};
+    //    MemoryI mi = new Memory() ; //with PSO;
+    // XXX: I did not bother to add a main block for each situation
+	}
+}
+
+{
+   new Application();
+}
+
+
+
+
+
+
+/**************************************/
+/**************************************/
+/**************************************/
+/**************************************/
+ /**
+Allows to reorder a read before a read
+**/
+delta ReadReadDelta1;
+modifies class MemoryInternal1.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;
+        
+     	switch (a) {
+     		Read(_,loca,_)    => switch (b) {
+     								Read(_,locb,_) => {  rets = last || loca != locb; }
+     								Write(_,_,_,_) => { rets = original(a,b);}
+     						  }
+     		Write(_,_,_,_) => { rets = original(a,b);}
+     	}
+     	return rets;
+	 }
+}
+/**
+Allows to reorder a write before a read
+**/
+delta ReadWriteDelta1;
+modifies class MemoryInternal1.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,loca,_)    => switch (b) {
+     								Read(_,_,_) => { ret = last; }
+     								Write(_,locb,_,_) => {  ret = last || loca != locb; }
+     						  }
+     		Write(_,_,_,_) => { ret = last; }
+     	}
+     	return ret;
+	 }
+}
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadDelta1;
+modifies class MemoryInternal1.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,locb,_) => {  
+     								                    ret = last || loca != locb; }
+     								Write(_,_,_,_) => { ret = last; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteWriteDelta1;
+modifies class MemoryInternal1.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,_,_) => { ret = last; }
+     								Write(_,locb,_,_) => {  ret = last || loca != locb; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadOwnDelta1;
+modifies class MemoryInternal1.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,locb,_) => { if(loca == locb) ret = True; else ret = last; }
+     								Write(_,_,_,_) => { ret = last; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+
+/**
+Instead of reading from the memory, the read may read from a write it is reorder before
+**/
+delta ReadEarlyLocalDelta1;
+modifies class MemoryInternal1.Memory {
+     modifies Int getValueFor(Thread tid, LocationT loc, Int pos){
+     	List<Access> pre = slice(list, 0, pos-1);
+     	Maybe<Int> ret = getWriteValueFor(pre, loc, tid);
+     	Int i = -1;
+     	switch (ret){
+     		Just(val) => i = val;
+     		Nothing   => i = original(tid, loc, pos);
+     	}
+		return i;
+	 }
+}
+
+delta DemoDelta1;
+modifies class MemoryInternal1.Memory {
+     modifies Unit run(){
+	 	await duration(3,3);
+	 	original();
+	 } 
+	 
+	 modifies Int retrieve(List<Int> myList){
+	 	Int i = getFirstRead(reverse(myList), this.list);
+	 	return i;
+	 }
+	 
+}
+ /**
+Allows to reorder a read before a read
+**/
+delta ReadReadDelta2;
+modifies class MemoryInternal2.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;
+        
+     	switch (a) {
+     		Read(_,loca,_)    => switch (b) {
+     								Read(_,locb,_) => {  rets = last || loca != locb; }
+     								Write(_,_,_,_) => { rets = original(a,b);}
+     						  }
+     		Write(_,_,_,_) => { rets = original(a,b);}
+     	}
+     	return rets;
+	 }
+}
+/**
+Allows to reorder a write before a read
+**/
+delta ReadWriteDelta2;
+modifies class MemoryInternal2.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,loca,_)    => switch (b) {
+     								Read(_,_,_) => { ret = last; }
+     								Write(_,locb,_,_) => {  ret = last || loca != locb; }
+     						  }
+     		Write(_,_,_,_) => { ret = last; }
+     	}
+     	return ret;
+	 }
+}
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadDelta2;
+modifies class MemoryInternal2.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,locb,_) => {  
+     								                    ret = last || loca != locb; }
+     								Write(_,_,_,_) => { ret = last; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteWriteDelta2;
+modifies class MemoryInternal2.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,_,_) => { ret = last; }
+     								Write(_,locb,_,_) => {  ret = last || loca != locb; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadOwnDelta2;
+modifies class MemoryInternal2.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,locb,_) => { if(loca == locb) ret = True; else ret = last; }
+     								Write(_,_,_,_) => { ret = last; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+
+/**
+Instead of reading from the memory, the read may read from a write it is reorder before
+**/
+delta ReadEarlyLocalDelta2;
+modifies class MemoryInternal2.Memory {
+     modifies Int getValueFor(Thread tid, LocationT loc, Int pos){
+     	List<Access> pre = slice(list, 0, pos-1);
+     	Maybe<Int> ret = getWriteValueFor(pre, loc, tid);
+     	Int i = -1;
+     	switch (ret){
+     		Just(val) => i = val;
+     		Nothing   => i = original(tid, loc, pos);
+     	}
+		return i;
+	 }
+}
+
+delta DemoDelta2;
+modifies class MemoryInternal2.Memory {
+     modifies Unit run(){
+	 	await duration(3,3);
+	 	original();
+	 } 
+	 
+	 modifies Int retrieve(List<Int> myList){
+	 	Int i = getFirstRead(reverse(myList), this.list);
+	 	return i;
+	 }
+	 
+}
+ /**
+Allows to reorder a read before a read
+**/
+delta ReadReadDelta3;
+modifies class MemoryInternal3.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;
+        
+     	switch (a) {
+     		Read(_,loca,_)    => switch (b) {
+     								Read(_,locb,_) => {  rets = last || loca != locb; }
+     								Write(_,_,_,_) => { rets = original(a,b);}
+     						  }
+     		Write(_,_,_,_) => { rets = original(a,b);}
+     	}
+     	return rets;
+	 }
+}
+/**
+Allows to reorder a write before a read
+**/
+delta ReadWriteDelta3;
+modifies class MemoryInternal3.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,loca,_)    => switch (b) {
+     								Read(_,_,_) => { ret = last; }
+     								Write(_,locb,_,_) => {  ret = last || loca != locb; }
+     						  }
+     		Write(_,_,_,_) => { ret = last; }
+     	}
+     	return ret;
+	 }
+}
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadDelta3;
+modifies class MemoryInternal3.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,locb,_) => {  
+     								                    ret = last || loca != locb; }
+     								Write(_,_,_,_) => { ret = last; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteWriteDelta3;
+modifies class MemoryInternal3.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,_,_) => { ret = last; }
+     								Write(_,locb,_,_) => {  ret = last || loca != locb; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadOwnDelta3;
+modifies class MemoryInternal3.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,locb,_) => { if(loca == locb) ret = True; else ret = last; }
+     								Write(_,_,_,_) => { ret = last; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+
+/**
+Instead of reading from the memory, the read may read from a write it is reorder before
+**/
+delta ReadEarlyLocalDelta3;
+modifies class MemoryInternal3.Memory {
+     modifies Int getValueFor(Thread tid, LocationT loc, Int pos){
+     	List<Access> pre = slice(list, 0, pos-1);
+     	Maybe<Int> ret = getWriteValueFor(pre, loc, tid);
+     	Int i = -1;
+     	switch (ret){
+     		Just(val) => i = val;
+     		Nothing   => i = original(tid, loc, pos);
+     	}
+		return i;
+	 }
+}
+
+delta DemoDelta3;
+modifies class MemoryInternal3.Memory {
+     modifies Unit run(){
+	 	await duration(3,3);
+	 	original();
+	 } 
+	 
+	 modifies Int retrieve(List<Int> myList){
+	 	Int i = getFirstRead(reverse(myList), this.list);
+	 	return i;
+	 }
+	 
+}
+ /**
+Allows to reorder a read before a read
+**/
+delta ReadReadDelta4;
+modifies class MemoryInternal4.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;
+        
+     	switch (a) {
+     		Read(_,loca,_)    => switch (b) {
+     								Read(_,locb,_) => {  rets = last || loca != locb; }
+     								Write(_,_,_,_) => { rets = original(a,b);}
+     						  }
+     		Write(_,_,_,_) => { rets = original(a,b);}
+     	}
+     	return rets;
+	 }
+}
+/**
+Allows to reorder a write before a read
+**/
+delta ReadWriteDelta4;
+modifies class MemoryInternal4.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,loca,_)    => switch (b) {
+     								Read(_,_,_) => { ret = last; }
+     								Write(_,locb,_,_) => {  ret = last || loca != locb; }
+     						  }
+     		Write(_,_,_,_) => { ret = last; }
+     	}
+     	return ret;
+	 }
+}
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadDelta4;
+modifies class MemoryInternal4.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,locb,_) => {  
+     								                    ret = last || loca != locb; }
+     								Write(_,_,_,_) => { ret = last; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteWriteDelta4;
+modifies class MemoryInternal4.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,_,_) => { ret = last; }
+     								Write(_,locb,_,_) => {  ret = last || loca != locb; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadOwnDelta4;
+modifies class MemoryInternal4.Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { ret = last; }
+     		Write(_,loca,_,_) => switch (b) {
+     								Read(_,locb,_) => { if(loca == locb) ret = True; else ret = last; }
+     								Write(_,_,_,_) => { ret = last; }
+     						  }
+     	}
+     	return ret;
+	 }
+}
+
+
+/**
+Instead of reading from the memory, the read may read from a write it is reorder before
+**/
+delta ReadEarlyLocalDelta4;
+modifies class MemoryInternal4.Memory {
+     modifies Int getValueFor(Thread tid, LocationT loc, Int pos){
+     	List<Access> pre = slice(list, 0, pos-1);
+     	Maybe<Int> ret = getWriteValueFor(pre, loc, tid);
+     	Int i = -1;
+     	switch (ret){
+     		Just(val) => i = val;
+     		Nothing   => i = original(tid, loc, pos);
+     	}
+		return i;
+	 }
+}
+
+delta DemoDelta4;
+modifies class MemoryInternal4.Memory {
+     modifies Unit run(){
+	 	await duration(3,3);
+	 	original();
+	 } 
+	 
+	 modifies Int retrieve(List<Int> myList){
+	 	Int i = getFirstRead(reverse(myList), this.list);
+	 	return i;
+	 }
+	 
+}
+
+delta Max11;
+modifies class DeviceInternal1.DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new MemoryInternal1.Memory(); }          
+}
+delta Max21;
+modifies class DeviceInternal2.DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new MemoryInternal2.Memory(); }          
+}
+delta IBM11;
+modifies class DeviceInternal1.DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new MemoryInternal1.Memory(); }          
+}
+delta IBM21;
+modifies class DeviceInternal2.DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new MemoryInternal2.Memory(); }          
+}
+delta TSO11;
+modifies class DeviceInternal1.DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new MemoryInternal1.Memory(); }          
+}
+delta TSO21;
+modifies class DeviceInternal2.DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new MemoryInternal2.Memory(); }          
+}
+delta PSO11;
+modifies class DeviceInternal1.DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new MemoryInternal1.Memory(); }          
+}
+delta PSO21;
+modifies class DeviceInternal2.DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new MemoryInternal2.Memory(); }          
+}
+
+delta Max12;
+modifies class DeviceInternal1.DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new MemoryInternal3.Memory(); }          
+}
+delta Max22;
+modifies class DeviceInternal2.DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new MemoryInternal4.Memory(); }          
+}
+delta IBM12;
+modifies class DeviceInternal1.DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new MemoryInternal3.Memory(); }          
+}
+delta IBM22;
+modifies class DeviceInternal2.DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new MemoryInternal4.Memory(); }          
+}
+delta TSO12;
+modifies class DeviceInternal1.DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new MemoryInternal3.Memory(); }          
+}
+delta TSO22;
+modifies class DeviceInternal2.DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new MemoryInternal4.Memory(); }          
+}
+delta PSO12;
+modifies class DeviceInternal1.DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new MemoryInternal3.Memory(); }          
+}
+delta PSO22;
+modifies class DeviceInternal2.DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new MemoryInternal4.Memory(); }          
+}
+
+
+productline MemoryLine;
+features 
+ReadReadFeature1, ReadWriteFeature1, WriteWriteFeature1, WriteReadFeature1, ReadEarlyFeature1, DemoFeature1,
+ReadReadFeature2, ReadWriteFeature2, WriteWriteFeature2, WriteReadFeature2, ReadEarlyFeature2, DemoFeature2,
+ReadReadFeature3, ReadWriteFeature3, WriteWriteFeature3, WriteReadFeature3, ReadEarlyFeature3, DemoFeature3,
+ReadReadFeature4, ReadWriteFeature4, WriteWriteFeature4, WriteReadFeature4, ReadEarlyFeature4, DemoFeature4,
+FPSO11, FPSO21, FTSO11, FTSO21, FIBM11, FIBM21, FMax11, FMax21,
+FPSO12, FPSO22, FTSO12, FTSO22, FIBM12, FIBM22, FMax12, FMax22;
+delta IBM11 when FIBM11;
+delta IBM21 when FIBM21;
+delta TSO11 when FTSO11;
+delta TSO21 when FTSO21;
+delta PSO11 when FPSO11;
+delta PSO21 when FPSO21;
+delta Max11 when FMax11;
+delta Max21 when FMax21;
+delta IBM12 when FIBM11;
+delta IBM22 when FIBM21;
+delta TSO12 when FTSO11;
+delta TSO22 when FTSO21;
+delta PSO12 when FPSO11;
+delta PSO22 when FPSO21;
+delta Max12 when FMax11;
+delta Max22 when FMax21;
+delta ReadReadDelta1 when ReadReadFeature1;
+delta DemoDelta1 when DemoFeature1;
+delta ReadWriteDelta1 when ReadWriteFeature1;
+delta WriteWriteDelta1 when WriteWriteFeature1;
+delta WriteReadDelta1  when WriteReadFeature1;
+delta ReadEarlyLocalDelta1 when ReadEarlyFeature1;
+delta WriteReadOwnDelta1 after WriteReadDelta1 when ReadEarlyFeature1;
+delta ReadReadDelta2 when ReadReadFeature2;
+delta DemoDelta2 when DemoFeature2;
+delta ReadWriteDelta2 when ReadWriteFeature2;
+delta WriteWriteDelta2 when WriteWriteFeature2;
+delta WriteReadDelta2  when WriteReadFeature2;
+delta ReadEarlyLocalDelta2 when ReadEarlyFeature2;
+delta WriteReadOwnDelta2 after WriteReadDelta2 when ReadEarlyFeature2;
+delta ReadReadDelta3 when ReadReadFeature3;
+delta DemoDelta3 when DemoFeature3;
+delta ReadWriteDelta3 when ReadWriteFeature3;
+delta WriteWriteDelta3 when WriteWriteFeature3;
+delta WriteReadDelta3  when WriteReadFeature3;
+delta ReadEarlyLocalDelta3 when ReadEarlyFeature3;
+delta WriteReadOwnDelta3 after WriteReadDelta3 when ReadEarlyFeature3;
+delta ReadReadDelta4 when ReadReadFeature4;
+delta DemoDelta4 when DemoFeature4;
+delta ReadWriteDelta4 when ReadWriteFeature4;
+delta WriteWriteDelta4 when WriteWriteFeature4;
+delta WriteReadDelta4  when WriteReadFeature4;
+delta ReadEarlyLocalDelta4 when ReadEarlyFeature4;
+delta WriteReadOwnDelta4 after WriteReadDelta4 when ReadEarlyFeature4;

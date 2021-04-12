@@ -1,6 +1,20 @@
 ABS Tools
 =========
 
+
+Variable Modules
+----------------
+
+This branch is an implementation of variable modules, a new local product line concept for interoperable variables.
+Case studies can be found under examples/VM, the test cases are in the module `org.abs_models.frontend.delta.localpls`.
+
+To compile and test follow the instructions below, to see the flattened code rune `java -jar <path/to/absfrontend.jar> -prettyprint <path/to/file.abs>`.
+The insurance case study (/examples/VM/Portal.abs) also needs a global product, passed with the parameter `-product=<productname>`.
+The FormbaR study (/examples/VM/formbar) contains both the version with and without variable modules. The given code is a compilable except of the relevant parts from the whole FormbaR code.
+
+General Information
+-------------------
+
 [![CircleCI](https://img.shields.io/circleci/project/abstools/abstools.svg)](https://circleci.com/gh/abstools/abstools)
 [![GitHub release](https://img.shields.io/github/release/abstools/abstools.svg)](https://github.com/abstools/abstools/releases/latest)
 [![Gitter](https://badges.gitter.im/abstools/general.svg)](https://gitter.im/abstools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)

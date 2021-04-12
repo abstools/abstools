@@ -238,7 +238,8 @@ public final class AbsASTBuilderUtil {
         return new InterfaceDecl(interfaceName,
             new List<>(),
             new List<>(),
-            new List<>());
+            new List<>(),
+            true);
     }
 
     public static final MethodImpl createMethodImpl(MethodSig method) {

@@ -1,0 +1,23 @@
+delta DExpense;
+uses MFinancialReport;
+
+modifies class FinancialReportImpl
+{   adds FinancialReport februari;
+
+    modifies Unit addData(FinancialReport reporta)
+    {
+       println("Expense Report");
+       reporta.addRecord(50000);
+       reporta.addRecord(100000);
+       reporta.addRecord(20000);
+       reporta.totalBalances();  
+    }
+
+     modifies Unit totalBalances()
+     {
+        println("Total expenses: "+toString(balances));
+     }
+
+}
+
+

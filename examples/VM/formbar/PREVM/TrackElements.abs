@@ -1,0 +1,241 @@
+module TrackElements;
+
+export *;
+
+import * from Wrapper;
+
+/**
+General interfaces for PoI and PoIs with a PoV
+**/
+interface TrackElement {
+  List<Transmission> triggerFront(Train train, Time t, Edge e);
+  Transmission triggerBack(Train train, Time t, Edge e);
+  SignalState getState();
+  String getName();
+
+    Unit register(Train t);
+    Unit deregister(Train t);
+}
+  
+interface Observed{
+  Information getInfoState();
+  [Atomic] Unit setObservable(Observable ob);
+  Observable getObservable();
+}
+
+/**
+"Really" physical PoIs
+**/
+interface HauptSignal extends TrackElement, Observed {
+  Unit setState(SignalState state, Time t);
+  Node getNode();
+  Edge getWaitTrack();
+  [Atomic]Unit setSignal(Observable sig);
+}
+interface VorSignal extends TrackElement, Observed {
+  Unit setState(SignalState state, Time t);
+  [Atomic]
+  Unit setSignal(Signal sig);
+}
+//these are also Lf signals
+interface GeschwindigkeitsAnzeiger extends TrackElement {
+  Unit setAllowed(Int i);
+}
+interface GeschwindigkeitsVorAnzeiger extends TrackElement {
+  Unit setAllowed(Int i);
+}
+ 
+interface SichtbarkeitsPunkt extends TrackElement {
+  Unit setState(SignalState state, Time t);
+  [Atomic] Unit setObservable(Observable obs);
+}
+
+trait ObserveBean = {
+    [Atomic] Unit setObservable(Observable ob){ this.obs = ob; }
+  Observable getObservable(){ return this.obs; }
+}
+
+trait Nameable = {
+  String getName(){ return this.name; }
+    Unit register(Train t){ skip; }
+    Unit deregister(Train t){ skip; }
+}
+
+trait NoSig = {
+  SignalState getState(){
+    return NOSIG;
+  }
+}
+
+trait NoFront = {
+  List<Transmission> triggerFront(Train train, Time t, Edge e){
+    return list[Pass(NoInfo)];
+  }
+}
+
+trait NoBack = {
+  Transmission triggerBack(Train train, Time t, Edge e){
+    return Pass(NoInfo);
+  }
+}
+
+/***************************************************************
+ ***************************************************************
+ ***************************************************************/
+class HauptSignalImpl(Node n, Edge waitTrack, String sigName, String name) implements HauptSignal {
+  SignalState state = STOP;
+  Observable s = null;
+ {
+    logOut("TOWARDS;"+toString(this)+";"+toString(waitTrack));
+ }
+
+  uses Nameable;
+  [Atomic] Unit setObservable(Observable ob){ this.setSignal(ob); }
+  Observable getObservable(){ return this.s; }
+ 
+  Transmission triggerBack(Train train, Time t, Edge e){ 
+    Information ret = NoInfo;
+    if (( this.waitTrack == e ) ){
+      ret = HsPassed(sigName);
+    }
+    return Pass(ret);
+  }
+  
+  Node getNode(){ 
+  	return this.n; 
+  }
+  Edge getWaitTrack(){ 
+  	return this.waitTrack; 
+  }
+  List<Transmission> triggerFront(Train train, Time t, Edge e){
+    Information ret = NoInfo;
+    if ( ( ( this.s != null ) && ( this.waitTrack == e ) ) ){
+      this.s.setObserver(null);
+      ret = HauptSig( this.state, sigName );
+    }
+    return list[Pass(ret),Pass(EndObserve(s))];
+  }
+  Information getInfoState() {
+  	return HauptSig( this.state , sigName); 
+  }
+  [Atomic] Unit setSignal(Observable sig){
+    this.s = sig;
+  }
+  SignalState getState(){
+    return this.state;
+  }
+  Unit setState(SignalState newState, Time t){
+    this.state = newState;
+    logOut(( ( ( ( ( "CH;" + toString(this) ) + ";" ) + toString(newState) ) + ";" ) + toString(timeValue(t)) ));
+  }
+}
+
+class VorSignalImpl(Edge waitTrack, String sigName, String name) implements VorSignal {
+  SignalState state = STOP;
+  Signal s = null;
+  
+  {
+    logOut("TOWARDS;"+toString(this)+";"+toString(waitTrack));
+  }  
+  uses NoBack adds Nameable;
+
+  [Atomic] Unit setObservable(Observable ob){ }
+  Observable getObservable(){ return this.s; }
+  
+  List<Transmission> triggerFront(Train train, Time t, Edge e){
+    Information ret = NoInfo;
+    if ( ( ( this.s != null ) && ( this.waitTrack == e ) ) ){
+      ret = VorSig( this.state, sigName);
+    }
+    return list[Pass(ret)];
+  }
+  [Atomic] Unit setSignal(Signal sig){
+    this.s = sig;
+  }
+  SignalState getState(){
+    return this.state;
+  }
+  Unit setState(SignalState newState, Time t){
+    this.state = newState;
+    logOut(( ( ( ( ( "CH;" + toString(this) ) + ";" ) + toString(newState) ) + ";" ) + toString(timeValue(t)) ));
+  }  
+  Information getInfoState() {
+  	return VorSig( this.state , sigName); 
+  }
+ }
+
+class GeschwindigkeitsAnzeigerImpl(Edge waitTrack, Int allow, String name) implements GeschwindigkeitsAnzeiger {
+  Int allowed = allow;
+ {
+    logOut("TOWARDS;"+toString(this)+";"+toString(waitTrack)+";"+toString(allowed));
+ }
+  
+  uses NoSig adds NoFront adds Nameable;
+  Transmission triggerBack(Train train, Time t, Edge e){
+    Information info = NoInfo;
+    if ( ( ( this.waitTrack == e ) && ( this.allowed >= 0 ) ) ){
+      info = Limit( this.allowed );
+    }
+    return Pass(info);
+  }
+  Unit setAllowed(Int i){
+    this.allowed = i;
+  }
+}
+
+class GeschwindigkeitsVorAnzeigerImpl(Edge waitTrack, Int allow, String name) implements GeschwindigkeitsVorAnzeiger {
+  Int allowed = allow;
+ {
+    logOut("TOWARDS;"+toString(this)+";"+toString(waitTrack)+";"+toString(allowed));
+ }
+  uses NoBack adds NoSig adds Nameable;
+  
+  List<Transmission> triggerFront(Train train, Time t, Edge e){
+    Information info = NoInfo;
+    if ( ( ( this.waitTrack == e ) && ( this.allowed >= 0 ) ) ){
+      info = LimitPrepare( this.allowed );
+    }
+    return list[Pass(info)];
+  }
+  Unit setAllowed(Int i){
+    this.allowed = i;
+  }
+}
+
+class SichtbarkeitsPunktImpl(Edge waitTrack, Rat distance, String name) implements SichtbarkeitsPunkt {
+  SignalState state = STOP;
+  Observable s = null;
+  
+ {
+    logOut("TOWARDS;"+toString(this)+";"+toString(waitTrack));
+ }
+ 
+  uses NoBack;
+  String getName(){ return this.name; }
+  Unit register(Train train){
+        if(s != null) this.s.setObserver(train);    
+  }
+  Unit deregister(Train t){
+        if(s != null) this.s.setObserver(null);    
+  }
+  List<Transmission> triggerFront(Train train, Time t, Edge e){
+    Information ret = NoInfo;
+    if ( ( ( this.s != null ) && ( this.waitTrack == e ) ) ){
+      this.s.setObserver(train);
+      Observed observed = this.s.getObserved();
+      ret = observed.getInfoState();
+    }
+    //println("TRIGGERED POV");
+    return list[See(ret, distance), Pass(StartObserve(s))]; 
+  }
+  [Atomic] Unit setObservable(Observable obs){
+    this.s = obs;
+  }
+  SignalState getState(){
+    return this.state;
+  }
+  Unit setState(SignalState newState, Time t){
+    this.state = newState;
+    logOut(( ( ( ( ( "CH;" + toString(this) ) + ";" ) + toString(newState) ) + ";" ) + toString(timeValue(t)) ));
+  }
+}

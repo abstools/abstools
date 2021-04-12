@@ -1,0 +1,665 @@
+//This is the Insurance Case Study
+
+module UserCompanyData;
+export IUser, ICompany, Company;
+interface IUser {
+ String getJob();
+ String getName();
+}
+class User (String n, Int age)implements IUser {
+    String job = "";
+    String getJob() {
+        return job;
+    }
+    String getName() {
+        return n;
+    }
+}
+interface ICompany extends IUser {
+    Int getPrice1(Int dep1);
+    Int getPrice2(String s1);
+    Int getPrice3(String s1, Int p1);
+    Int getPrice4(Int p1, Int p2, Int p3);
+    Int getPrice5(Int p1, Int p2);
+    Float getPrice6(Int p1, List<String> s1);
+    Int getPrice7(Int p1, Int p2, Int p3, Int p4);
+    Bool createContract(IUser user);
+    Bool hasRecord(IUser user);
+}
+class Company (String name) implements ICompany {
+     Int getPrice1(Int p1) {
+        	return 100;
+     }
+     Int getPrice2(String s1) {
+	    return 100 ;
+     }
+
+     Int getPrice3(String s1, Int p1) {
+     	return 100 ;
+     }
+    Int getPrice4(Int p1, Int p2, Int p3) {
+        return p1 * p2  + p3 ;
+    }
+    Int getPrice5(Int p1, Int p2){
+      return p2 * 10;
+    }
+    Float getPrice6(Int p1, List<String> s1) {
+        return 10.04;
+    }
+    Int getPrice7(Int p1, Int p2, Int p3, Int p4) {
+        return p1 + p3;
+    }
+    String getJob() {
+        return "Employer";
+    }
+    String getName() {
+        return name;
+    }
+    Bool createContract(IUser user){
+        return True;
+    }
+     Bool hasRecord(IUser user) {
+        return False;
+     }
+}
+
+
+
+module PortalUI;
+export * ;
+import * from Services;
+interface IUIObject {
+    Int getInfoInt();
+    String getInfoString();
+    List<String> getList();
+}
+class UIob (String name) implements IUIObject{
+    Int getInfoInt() {
+      return 2;
+    }
+    String getInfoString(){
+      return "String";
+    }
+    List<String> getList() {
+     return Nil;
+    }
+}
+interface IPanel {
+    Int getInfoInt(Int id);
+    String getInfoString(Int id);
+    Int addField(String title);
+    Int addPickField(String name, List<Int> options);
+    List<String> getList(Int id);
+}
+class UIPanel (String title) implements IPanel {
+    List <IUIObject> content = Nil;
+
+    Int addField(String title) {
+        IUIObject o = new UIob(title);
+        appendright(content, o);
+        return length(content);
+    }
+    Int getInfoInt(Int id) {
+        IUIObject e = nth(content, id);
+        return e.getInfoInt();
+    }
+    String getInfoString(Int id) {
+        IUIObject e = nth(content, id);
+        return e.getInfoString();
+    }
+    List<String> getList(Int id) {
+        IUIObject e = nth(content, id);
+        return e.getList();
+    }
+    Int addPickField(String name, List<Int> options) {
+        IUIObject o = new UIob(title);
+        appendright(content, o);
+        return length(content);
+    }
+}
+
+
+
+
+module Insurances;
+export IInsurance, CInsurance ;
+import * from UserCompanyData;
+import IService from Services;
+import IPanel from PortalUI;
+
+unique interface IInsurance extends IService {
+    Map<ICompany,Int> getPrices();
+    Bool commonCompanies (IInsurance ins);
+    List<ICompany> getCompanies();
+ }
+
+class CInsurance(IPanel panel) implements IInsurance {
+     Map<String, ICompany> companies = map[];
+     Map<ICompany, Int> companiesPrices = map[];
+     Int p1 = 0;
+     Map<ICompany,Int> getPrices() {
+         foreach(c in values(companies)) {
+            Int price = c.getPrice1(p1);
+            println(toString(price));
+         }
+         return map[];
+     }
+
+     Unit addFields() {
+
+     }
+     Unit getInfo () {
+
+     }
+     Bool commonCompanies (IInsurance ins) {
+         List<ICompany> cs = ins.getCompanies();
+         Bool found = False;
+         Int i = 0;
+         foreach (c1 in values(companies)) {
+             while (!found && i < length(cs)) {
+                 found = c1 == nth(cs, i);
+                 i = i + 1;
+             }
+         }
+         return found;
+     }
+     List<ICompany> getCompanies() {
+         return values(companies);
+     }
+ }
+unique class Management () {
+   Unit contractCompany(ICompany company,  IUser user) {
+          company.createContract(user);
+   }
+ }
+
+features Health, House, Legal with Health -> ! (Legal || House);
+
+delta DHealth;
+modifies class CInsurance {
+    adds Int salaryField = 0;
+    adds Int salary = 0;
+    modifies Map<ICompany,Int> getPrices() {
+        this.getInfo();
+        foreach(c in values(companies)) {
+          Int p = c.getPrice3(job, salary);
+	      p = when job == "Student" then p - 10 else p;
+          companiesPrices = put(companiesPrices, c, p);
+        }
+        return companiesPrices;
+    }
+    modifies Unit addFields() {
+       salaryField = panel.addField("Salary");
+       original();
+    }
+    modifies Unit getInfo(){
+	   salary = panel.getInfoInt(salaryField);
+       job = panel.getInfoString(jobField);
+       original();
+    }
+}
+
+delta DLegal;
+modifies class CInsurance {
+    modifies Map<ICompany,Int> getPrices() {
+        this.getInfo();
+        foreach(c in values(companies)) {
+        Int price = c.getPrice2(job);
+        companiesPrices = put(companiesPrices, c, price);
+      }
+      return companiesPrices;
+    }
+}
+delta DHouse;
+modifies class CInsurance {
+    adds Int houseSizeField = 0;
+    adds Int houseSize = 0 ;
+    modifies Map<ICompany,Int> getPrices() {
+        this.getInfo();
+        foreach(c in values(companies)) {
+          Int price = c.getPrice1(houseSize);
+          price = when houseSize < 50 then 30 else price;
+          companiesPrices = put(companiesPrices, c, price);
+      }
+      return companiesPrices;
+    }
+    modifies Unit addFields() {
+       houseSizeField = panel.addField("House Size");
+       original();
+    }
+     modifies Unit getInfo(){
+       houseSize = panel.getInfoInt(houseSizeField);
+       original();
+    }
+}
+delta JobRequest;
+modifies class CInsurance {
+    adds Int jobField = 0;
+    adds String job = "";
+    modifies Unit addFields() {
+       jobField = panel.addField("Job");
+       original();
+    }
+    modifies Unit getInfo(){
+       job = panel.getInfoString(jobField);
+       original();
+    }
+}
+delta LegalHouse;
+modifies class CInsurance {
+ modifies Map<ICompany,Int> getPrices() {
+   this.getInfo();
+    foreach(c in values(companies)) {
+        Int price = c.getPrice3(job,houseSize);
+        price = when houseSize < 50 && job == "Student" then 20 else price - 20;
+        companiesPrices = put(companiesPrices, c, price);
+    }
+    return companiesPrices;
+ }
+}
+delta LegalHouse after DLegal, DHouse when Legal && House;
+delta DHealth after JobRequest when Health;
+delta DLegal after JobRequest when Legal;
+delta DHouse when House;
+delta JobRequest when Health || Legal;
+
+module GE_Services;
+export *;
+import IService from Services;
+import * from UserCompanyData;
+import IPanel from PortalUI;
+
+unique interface IGE extends IService {
+Map<ICompany, Int> calculatePrice();
+}
+class GEService(IPanel panel) implements IGE {
+    List<ICompany> companies = Nil;
+    Int zipCode = 0;
+    Int zipCodeField = 0;
+    Int kWh = 0;
+    Int kWhField = 0;
+    Int other = 0;
+    Int otherField = 0;
+    String otherFieldName = "";
+    Map<ICompany, Int> companiesPrices = map[];
+    Unit addFields() {
+       zipCodeField = panel.addField("Zip Code");
+       kWhField = panel.addField("KWh");
+       otherField = panel.addField(otherFieldName);
+    }
+    Map<ICompany, Int>  calculatePrice() {
+        Int i = 0;
+        Int price = 0;
+        Int lowest = 1000;
+        this.getInfo();
+        while (i < length(companies)) {
+            ICompany c = nth(companies, 0);
+            price = c.getPrice4(zipCode, kWh, other);
+            put(companiesPrices, c, price);
+            lowest = when price < lowest then price else lowest;
+            i = i + 1;
+        }
+        return companiesPrices;
+    }
+
+    Unit getInfo () {
+        zipCode = panel.getInfoInt(zipCodeField);
+        kWh = panel.getInfoInt(kWhField);
+        other = panel.getInfoInt(otherField);
+    }
+}
+unique class Management () {
+    List<ICompany> companies = Nil;
+    Unit contractCompany(Int companyPos, IUser user) {
+        ICompany company = nth(companies, companyPos);
+        Bool done = company.createContract(user);
+    }
+ }
+
+features Gas, Electricity;
+
+delta DGas;
+modifies class GEService {
+    removes String otherFieldName;
+    adds String otherFieldName = "House Size";
+}
+delta DElectricity;
+modifies class GEService {
+    removes String otherFieldName;
+    adds String otherFieldName = "Nr. of Persons";
+}
+delta DElectricityGas;
+modifies class GEService {
+    removes String otherFieldName;
+    adds String otherFieldName = "Nr. of Persons";
+    adds Int size = 0;
+    adds Int sizeField = 0;
+
+    modifies Map<ICompany, Int> calculatePrice() {
+        Int lowest = 100000;
+        Int i=0;
+        this.getInfo();
+        while (i < length(companies)) {
+            ICompany c = nth(companies, i);
+            Int price = c.getPrice7(zipCode, kWh, otherField, size);
+            put(companiesPrices, c, price);
+            lowest = when price < lowest then price else lowest;
+            i = i + 1;
+         }
+         return companiesPrices;
+     }
+    modifies Unit addFields() {
+        sizeField = panel.addField("HouseSize");
+        original();
+    }
+    modifies Unit getInfo () {
+        original();
+        size = panel.getInfoInt(sizeField);
+    }
+}
+
+delta DGas when Gas && !Electricity;
+delta DElectricity when Electricity && !Gas;
+delta DElectricityGas when Electricity && Gas;
+
+module MediaServices;
+export *;
+import * from Services;
+import IPanel from PortalUI;
+import * from UserCompanyData;
+
+unique interface IMedia extends IService {
+    Map<ICompany, Float> getPrices();
+}
+class CMedia(IPanel panel) implements IMedia {
+    List<ICompany> companies = Nil;
+    Map<ICompany, Float> companiesPrices = map[];
+    Map<ICompany, Float> getPrices() {
+        return map[];
+    }
+    Unit addFields() {
+
+    }
+    Unit getInfo() {
+
+    }
+     Int getPrice() {
+        return 0;
+    }
+}
+unique class Management () {
+    List<ICompany> companies = Nil;
+    Bool contractCompany(ICompany c, IUser user){
+        c.createContract(user);
+        return True;
+    }
+ }
+features Internet, Phone, Tv;
+delta DInternet;
+modifies class CMedia {
+adds Int speedField = 0;
+adds Int speed = 0;
+
+ modifies Unit getInfo() {
+    speed = panel.getInfoInt(speedField);
+    original();
+ }
+ modifies Unit addFields() {
+    original();
+    speedField = panel.addField("Speed");
+ }
+ modifies Map<ICompany, Float> getPrices() {
+     this.getInfo();
+     Int i = 0;
+     while (i < length(companies)) {
+        ICompany c = nth(companies, i);
+        Int price = c.getPrice4(address, speed, volume);
+        Float fPrice = float(price);
+        put(companiesPrices, c, fPrice);
+        i = i + 1;
+    }
+    return companiesPrices;
+ }
+}
+
+delta DTv;
+modifies class CMedia {
+adds Int channelsField = 0;
+adds List<String> channels = Nil;
+
+ modifies Unit getInfo() {
+    channels = panel.getList(channelsField);
+    original();
+ }
+ modifies Unit addFields() {
+    original();
+    channelsField = panel.addField("Channels");
+ }
+ modifies Map<ICompany, Float> getPrices() {
+     this.getInfo();
+     Int i = 0;
+     while (i < length(companies)) {
+        ICompany c = nth(companies, i);
+        Float price = c.getPrice6(address, channels);
+        price = when length(channels) > 10 then price * 0.8 else price;
+        put(companiesPrices, c, price);
+        i = i + 1;
+    }
+    return companiesPrices;
+ }
+}
+delta DPhone;
+modifies class CMedia {
+adds Int contractField = 0;
+adds Int contractLength = 0;
+adds List<Int> contractLengths = list[1, 12, 24];
+ modifies Unit getInfo() {
+    contractLength = panel.getInfoInt(contractField);
+    original();
+ }
+ modifies Unit addFields() {
+    original();
+    contractField = panel.addPickField("ContractLength", contractLengths);
+ }
+ modifies Map<ICompany, Float> getPrices() {
+     this.getInfo();
+     Int i = 0;
+     while (i < length(companies)) {
+        ICompany c = nth(companies, i);
+        Int pInt = c.getPrice5(contractLength, volume);
+        Float price = float(pInt);
+        put(companiesPrices, c, price);
+        i = i + 1;
+    }
+    return companiesPrices;
+ }
+}
+delta DAddress;
+modifies class CMedia {
+ adds Int addressField = 0;
+ adds Int address = 0;
+
+ modifies Unit getInfo() {
+    address = panel.getInfoInt(addressField);
+    original();
+ }
+ modifies Unit addFields() {
+    original();
+    addressField = panel.addField("Address");
+ }
+}
+
+delta DGBs;
+modifies class CMedia {
+ adds Int volumeField = 0;
+ adds Int volume = 0;
+
+ modifies Unit getInfo() {
+    volume = panel.getInfoInt(volumeField);
+    original();
+ }
+ modifies Unit addFields() {
+    original();
+    volumeField = panel.addField("Volume");
+ }
+}
+
+delta Dall;
+modifies class CMedia {
+    modifies Map<ICompany, Float> getPrices() {
+     this.getInfo();
+     Int i = 0;
+     while (i < length(companies)) {
+        ICompany c = nth(companies, i);
+        Int pInt = c.getPrice5(contractLength, volume);
+	Float pInt2 = c.getPrice6(address, channels);
+        Float price = float(pInt) + (pInt2 * 0.5);
+        put(companiesPrices, c, price);
+        i = i + 1;
+    	}
+     return companiesPrices;
+    }
+}
+
+delta DInternet after DAddress, DGBs when Internet;
+delta DTv after DAddress when Tv;
+delta DPhone after DGBs when Phone;
+delta DAddress when Internet || Tv;
+delta DGBs when Internet || Phone;
+delta Dall after DTv, DInternet, DPhone when Internet && Phone && Tv;
+
+module Services;
+import * from Insurances;
+import * from PortalUI;
+import * from MediaServices;
+import * from GE_Services;
+export *;
+import IUser, ICompany from UserCompanyData;
+
+interface IService {
+    Unit getInfo();
+    Unit addFields();
+}
+class MainServices(IUser u){
+    IUser user = u;
+    List <IService> services = Nil;
+
+    Unit initializeServices() {
+    }
+}
+
+
+delta DIns;
+uses Services;
+modifies class MainServices {
+    adds IInsurance with {Health} hIns;
+    adds IInsurance with {Legal} lIns;
+    adds IPanel insPanel1;
+    adds IPanel insPanel2;
+    adds List<IInsurance> insurances = Nil;
+    modifies Unit initializeServices() {
+        insPanel1 = new UIPanel("Health Insurances");
+        insPanel2 = new UIPanel("Legal Insurances");
+        original();
+        hIns = new CInsurance(insPanel1);
+        lIns = new CInsurance(insPanel2);
+        appendright(services, hIns);
+        appendright(services, lIns);
+        appendright(insurances, hIns);
+        appendright(insurances, lIns);
+    }
+    adds Unit offerPackages(IInsurance i1, IInsurance i2) {
+        if (length(insurances) > 2)  {
+            i1 = nth(insurances, 0);
+            i2 = nth(insurances, 1);
+            i1.commonCompanies(i2);
+        }
+    }
+}
+delta DMedia;
+uses Services;
+modifies class MainServices {
+    adds IMedia intService;
+    adds IPanel mediaPanel1;
+    adds IPanel mediaPanel2;
+    adds IMedia with {Phone} phoneService;
+    modifies Unit initializeServices() {
+        original();
+        mediaPanel1 = new UIPanel("Media Tv & Internet");
+        mediaPanel2 = new UIPanel("Phone");
+        intService = new CMedia(mediaPanel1) with {Tv, Internet};
+        phoneService = new CMedia (mediaPanel2);
+        appendright(services, intService);
+        appendright(services, phoneService);
+    }
+}
+
+delta DSchufa;
+adds interface Services.ISchufaConnector {
+    Unit connectToDB(IUser user);
+    Bool approved();
+}
+modifies class MediaServices.Management {
+adds ISchufaConnector s;
+modifies Bool contractCompany(ICompany c, IUser user){
+    Bool done = c.createContract(user);
+    return True; //friendly Schufa
+    }
+}
+
+delta DG_E;
+uses Services;
+modifies class MainServices {
+    adds IGE gasEService;
+    adds IGE with {Electricity} electricityService;
+    adds IPanel pGE;
+    adds IPanel panelGas;
+    adds IPanel panelE;
+    modifies Unit initializeServices() {
+        original();
+        panelGas = new UIPanel("Gas");
+        panelE = new UIPanel("Electricity");
+        gasEService = new GEService(panelGas) with {Gas};
+        electricityService = new GEService(panelE);
+        appendright(services, gasEService);
+        appendright(services, electricityService);
+    }
+}
+delta DCompact;
+uses Services;
+modifies class MainServices {
+adds IInsurance with {House, Legal} ins;
+adds IGE with {Gas, Electricity} gasElectricityServices;
+adds IMedia with {Tv, Phone, Internet} mediaServices;
+adds IPanel insPanel;
+adds IPanel gEPanel;
+adds IPanel mediaPanel;
+    modifies Unit initializeServices() {
+        insPanel = new UIPanel("Insurances");
+        gEPanel = new UIPanel("Gas & Electricity");
+        mediaPanel = new UIPanel("Media");
+        original();
+        ins = new CInsurance(insPanel);
+        gasElectricityServices = new GEService(gEPanel);
+        mediaServices = new CMedia(mediaPanel);
+        appendright(services, ins);
+        appendright(services, gasElectricityServices);
+        appendright(services, mediaServices);
+    }
+}
+
+productline ServicesPL;
+features Ins, Media, GasElectricity, Compact;
+delta DIns when Ins;
+delta DMedia after DIns, DSchufa when Media;
+delta DG_E after DMedia, DIns when GasElectricity;
+delta DSchufa when Media|| Compact;
+delta DCompact when Compact;
+product InsProduct = {Ins};
+product InsMediaProduct = {Ins, Media};
+product GEProduct = {GasElectricity};
+product MediaProduct  = {Media};
+product CompactProduct  = {Compact};
+product MediaGEProduct = {Media, GasElectricity};
+product InsGEProduct = {Ins, GasElectricity};
+product ProductAll = {Ins, GasElectricity, Media};

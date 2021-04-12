@@ -11,6 +11,10 @@ order to add it. This style of programming is called delta-oriented
 programming. The ABS code modules that encapsulate feature implementations are
 called delta modules (deltas).
 
+ABS has currently experimental support for local product lines, which describe the 
+variability of a single module and allow one to use multiple variants of this module in one model.
+The following sections describe global product lines, local product lines are described in the very last section of this chapter.
+
 
 === Delta-Oriented Programming
 
@@ -377,4 +381,111 @@ consistency checks. These fall into two categories.
 These checks are performed automatically upon compilation and help ensure that 
 all variants defined by an SPL specified in ABS can be built and are well-typed 
 ABS programs.
+
+
+
+
+
+
+
+=== Local Product Lines
+Local product lines are an experimental feature.
+
+Local product lines describe the variability of a single module. When a variable class or interface of this module is referenced, then a variant of this module is generated.
+For this generation, local deltas are used. A local delta is a special delta which modifies only classes and interfaces within its module. 
+Similarly, there are local features, but instead of the feature modeling language for global variability, local product lines use simple boolean expressions.
+To reference variable classes and interfaces, the type reference or `new` expression must contain a product of the module.
+
+[source]
+----
+module M;
+export I,C;
+
+preproduct P = {g};
+
+unique interface I { Unit m(); } //may not be modified
+class C implements I { }
+
+
+features f,g with (f || g) && !(f && g); //local features
+
+//local deltas
+delta D1; modifies C { adds Unit m() {println("1");} }
+delta D2; modifies C { adds Unit m() {println("2");} }
+
+delta D1 when f; delta D2 when g;
+
+module N;
+import * from M;
+{
+    I i = new C() with {f}; //references a variant of C
+    I j = new C() with P; //references another variant of C
+    i!m(); //prints "1"
+    j!m(); //prints "2"
+}
+----
+
+In variable modules, i.e., modules with local features, it is distinguished between `unique` and non-`unique`  classes (and interfaces). 
+Only non-`unique` classes may be modified by local deltas.
+A `unique` class may not reference on non-`unique` elements from any module without a `with` clause that specifies the product to use.
+A non-`unique` class may not reference non-`unique` elements from other modules without a `with` clause that specifies the product to use.
+It may reference non-`unique` classes within its own module.
+
+In non-variable modules, all elements are implicitly `unique`.
+
+One can use `preproduct` to give a name to a set of features from its own module.
+
+Local variability is based on a syntactic operations, the above example results in the following model after rewriting but before type checking:
+[source]
+----
+module M;
+export *;
+interface I { Unit m(); }
+
+module M_f;
+import * from M;
+export C;
+
+class C implements I { Unit m() {println("1");} }
+
+module M_g;
+import * from M;
+export C;
+
+class C implements I { Unit m() {println("2");} }
+
+module N;
+import * from M;
+import * from M_f;
+import * from M_g;
+{
+    M.I i = new M_f.D();
+    M.I i = new M_g.D();
+    i!m();
+    j!m();
+}
+----
+
+If both global and local product lines are used, then first the global product line is flattened and then the local ones. 
+This may require to annotate classes added my global product lines with `unique`.
+Local and global features are disjoint sets, global feature selection can, thus, not influence local feature selection.
+
+==== Syntax
+The syntax of modules is extended as follows.
+
+ - Modules can define products using product declarations `preproduct _TypeId_ = { _Features_ }`. 
+
+ - Modules can declare local features and a feature model using `features _Features_ with _BF_`, where `_BF_` is a boolean formula over the introduced features using the operators `||, &&, !`.
+
+ - Modules can contain local deltas and local delta clauses.
+
+ - Local deltas are identical to global deltas, except that (1) no `uses` module access clause can be used and (2) class and interfaces in module modifiers are not prefixed with the module. Local deltas must follow class and interface declarations.
+
+ - Local delta clauses are identical to global delta clauses. Local delta clauses must follow local deltas.
+
+The syntax of expressions, type references, class and interface declarations is extended as follows:
+
+ - The `new` expression and type references can have a `with _PE_` clause, where `_PE_` is either a product name or a set of features.
+
+- Class and interface declarations may be prefixed with `unique`.
 
