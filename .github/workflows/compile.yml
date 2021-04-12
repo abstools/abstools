@@ -1,0 +1,37 @@
+name: compile
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+    - name: Install Erlang
+      uses: gleam-lang/setup-erlang@v1.1.2
+      with:
+        otp-version: '23.2'
+    - name: Build abstools
+      uses: eskatos/gradle-command-action@v1
+      env:
+        LANG: en_US.UTF-8
+      with:
+        arguments: build -x check -x test
+    - name: Run tests
+      uses: eskatos/gradle-command-action@v1
+      env:
+        LANG: en_US.UTF-8
+      with:
+        arguments: test
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      with:
+        name: JUnit Tests
+        path: '**/test/TEST-*.xml'
+        reporter: java-junit
