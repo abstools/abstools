@@ -632,13 +632,16 @@ public class ChocoSolver {
         Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
         while (it.hasNext()) {
             IntegerVariable var = it.next();
+          //ignore the wrapper var "$..." AND attributes which contain "." in name
+            if(var.getName().startsWith("$") || var.getName().contains(".")) continue;
+            
             boolean core = true;
             if(absmodel.debug) {
             	System.out.println("Debug: Feature " + ++i + " is " + var.getName().toString() + ".\n"
                         + "Checking all solution for this feature.");
             }
             //chk if every solution got this feature
-            for (Map<String,Integer> sol : solutions) {   
+            for (Map<String,Integer> sol : solutions) {             		
             	if( sol.get(var.getName()) == 0) {
             		//break the for loop if feature is not present in solution
             		core = false;
@@ -664,6 +667,9 @@ public class ChocoSolver {
         Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
         while (it.hasNext()) {
             IntegerVariable var = it.next();
+            //ignore the wrapper var "$..." AND attributes which contain "." in name
+            if(var.getName().startsWith("$") || var.getName().contains(".")) continue;
+            
             boolean variant = false;
             if(absmodel.debug) {
             	System.out.println("Debug: Feature " + ++i + " is " + var.getName().toString() + ".\n"
