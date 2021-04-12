@@ -200,10 +200,6 @@ public class Absc implements Callable<Integer> {
     		description = "solve constraint satisfaction problem (CSP) for the feature model")
     public boolean solve = false;
     
-    @Option(names = {"--maxProduct"},
-    		description = "print the solution that has the most number of feature")
-    public boolean maxProduct = false;
-    
     @Option(names = {"--isvoid"},
     		description = "check if any void feature exist in feature model")
     public boolean isvoid = false;

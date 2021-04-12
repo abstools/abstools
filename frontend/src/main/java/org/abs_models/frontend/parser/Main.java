@@ -666,25 +666,17 @@ public class Main {
         }
         
        if(m.hasMTVL()) {
-    	   if (arguments.solve) {
+    	   if(arguments.solve && arguments.ignoreattr) {
+    		   if(arguments.verbose) System.out.println("Searching for solution(ignoring attribute) for the feature model...");
+    		   ChocoSolver s = m.instantiateCSModel();
+               System.out.println(s.getSolutionsAsString());
+    	   }
+    	   else if (arguments.solve && !arguments.ignoreattr) {
     		   if(arguments.verbose) System.out.println("Searching for solution for the feature model...");
     		   ChocoSolver s = m.instantiateCSModel();
                System.out.println(s.getSolutionsAsString());
            }
-    	   if (arguments.maxProduct) {
-    		   assert product != null;
-               if (arguments.verbose) System.out.println("Searching for solution that includes "+product+"...");
-               ChocoSolver s = m.instantiateCSModel();
-               HashSet<Constraint> newcs = new HashSet<>();
-               s.addIntVar("noOfFeatures", 0, 50);
-               if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
-                   for (Constraint c: newcs) s.addConstraint(c);
-                   System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
-               }
-               else {
-                   System.out.println("---No solution-------------");
-               }
-    	   }
+    	   
     	   if(arguments.nsol && arguments.ignoreattr) { //count ALL number of solution while ignoring attributes
     		   ChocoSolver s = m.instantiateCSModel();
     		   System.out.println("Number of solutions found without attributes: " + s.countSolutions());
