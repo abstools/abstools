@@ -1,7 +1,8 @@
 ABS Tools
 =========
 
-[![CircleCI](https://img.shields.io/circleci/project/abstools/abstools.svg)](https://circleci.com/gh/abstools/abstools)
+[![compile](https://github.com/abstools/abstools/actions/workflows/compile.yml/badge.svg?branch=master)](https://github.com/abstools/abstools/actions/workflows/compile.yml)
+[![test](https://github.com/abstools/abstools/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/abstools/abstools/actions/workflows/test.yml)
 [![GitHub release](https://img.shields.io/github/release/abstools/abstools.svg)](https://github.com/abstools/abstools/releases/latest)
 [![Gitter](https://badges.gitter.im/abstools/general.svg)](https://gitter.im/abstools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 

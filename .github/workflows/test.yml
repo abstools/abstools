@@ -1,9 +1,9 @@
-name: compile
+name: test
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -17,9 +17,16 @@ jobs:
       uses: gleam-lang/setup-erlang@v1.1.2
       with:
         otp-version: '23.2'
-    - name: Build abstools
+    - name: Run tests
       uses: eskatos/gradle-command-action@v1
       env:
         LANG: en_US.UTF-8
       with:
-        arguments: build -x check -x test
+        arguments: test
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()    # run this step even if previous step failed
+      with:
+        name: JUnit Tests
+        path: '**/test/TEST-*.xml'
+        reporter: java-junit

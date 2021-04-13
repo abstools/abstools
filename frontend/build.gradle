@@ -5,6 +5,7 @@ plugins {
     id 'application'
 
     id "com.github.spotbugs" version "4.6.0"
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 configurations {
@@ -14,7 +15,8 @@ configurations {
 }
 
 application {
-    mainClass.set('org.abs_models.frontend.parser.Main')
+    mainClass = 'org.abs_models.frontend.parser.Main'
+    mainClassName = 'org.abs_models.frontend.parser.Main' // for shadowJar
 }
 
 java {
@@ -124,6 +126,12 @@ clean {
 }
 jar.dependsOn 'compileErlangBackend'
 
+tasks.withType(AbstractArchiveTask) {
+    // Try to create reproducible builds
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
 // jar
 jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
@@ -140,19 +148,16 @@ jar {
             // getVersion and getSpecificationVersion)
             'Specification-Version': project.version
     }
-    from configurations.runtimeClasspath
-        .findAll { it.name.endsWith('jar') }
-        .collect { zipTree(it) }
-    // don't repack signatures of jars we include (see
-    // https://stackoverflow.com/a/14441628)
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
-    reproducibleFileOrder=true
+}
+
+shadowJar {
+    
 }
 
 // this is necessary for the `absc` scripts
-task plainJar(type: Copy, dependsOn: jar) {
-    description 'Copies absfrontend.jar into its documented location.'
-    from jar.archiveFile
+task plainJar(type: Copy, dependsOn: shadowJar) {
+    description 'Copies the combined jar into its documented location.'
+    from shadowJar.archiveFile
     into 'dist'
     rename '(.*).jar', 'absfrontend.jar'
 }
