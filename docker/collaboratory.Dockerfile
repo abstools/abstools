@@ -8,7 +8,7 @@ FROM erlang:23-alpine AS jdk-erlang
 RUN apk --update add \
         bash \
         nss \
-        openjdk8 \
+        openjdk11-jdk \
         git \
         && rm -rf /var/cache/apk/*
 
@@ -18,7 +18,7 @@ WORKDIR /appSrc
 RUN chmod +x gradlew \
     && ./gradlew --no-daemon frontend:assemble
 
-FROM php:7.3-apache-stretch
+FROM php:7.4-apache-buster
 # docker build -t abslang/collaboratory -f docker/collaboratory.Dockerfile ..
 # docker run -d -p 8080:80 --name easyinterface abslang/collaboratory
 

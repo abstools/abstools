@@ -5,6 +5,12 @@
  * Learn how to create Gradle builds at https://guides.gradle.org/creating-new-gradle-builds/
  */
 
+// Make sure all subprojects use the same plugin versions; see
+// https://docs.gradle.org/current/userguide/plugins.html#sec:subprojects_plugins_dsl
+plugins {
+    id 'com.github.johnrengelman.shadow' version '6.1.0' apply false
+}
+
 // https://stackoverflow.com/questions/15061277/how-can-i-get-the-current-git-branch-in-gradle/36760102#36760102
 def gitBranch() {
     def branch = ""
@@ -36,7 +42,6 @@ subprojects {
 }
 
 configure(subprojects.findAll { it.getPluginManager().hasPlugin('java') }) {
-    sourceCompatibility = '11'
-    targetCompatibility = '11'
+    toolchain.languageVersion = JavaLanguageVersion.of(11)
 }
 

@@ -14,7 +14,7 @@ check_defined = \
 __check_defined = \
     $(if $(value $1),, \
         $(error Undefined $1$(if $2, ($2))$(if $(value @), \
-                required by target `$@')))
+                required by target `$@`)))
 
 # https://stackoverflow.com/questions/18136918/how-to-get-current-relative-directory-of-your-makefile#18137056
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -49,7 +49,9 @@ manual:				## Build the ABS manual
 	@echo "HTML: abs-docs/build/asciidoc/html5/index.html"
 	@echo "PDF: abs-docs/build/asciidoc/pdf/index.pdf"
 
-docker:				## Build collaboratory and absc docker images
+docker:				## Build docker images for collaboratory and absc
+	$(DOCKER) pull erlang:23-alpine
+	$(DOCKER) pull php:7.4-apache-buster
 	$(DOCKER) build -t abslang/collaboratory -f docker/collaboratory.Dockerfile $(ROOT_DIR)
 	$(DOCKER) build -t abslang/absc -f docker/absc.Dockerfile $(ROOT_DIR)
 	@echo "Finished."
@@ -61,7 +63,7 @@ run-collaboratory:		## Run the collaboratory on port 8080
 server:				## Deploy development environment on Debian-based server
 	@:$(call check_defined, SERVER, server name or address as accepted by ssh)
 	ssh $(SERVER) sudo apt-get -y update
-	ssh $(SERVER) sudo apt-get -y install make openjdk-8-jdk openjdk-8-jre erlang maude emacs git
+	ssh $(SERVER) sudo apt-get -y install make openjdk-11-jdk openjdk-11-jre erlang maude emacs git
 	ssh $(SERVER) git clone https://github.com/abstools/abstools
 	ssh $(SERVER) make -f "~/abstools/Makefile" frontend
 	ssh $(SERVER) 'echo "PATH=\$$HOME/abstools/frontend/bin/bash:\$$PATH" >> ~/.bashrc'
