@@ -1,6 +1,6 @@
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath 'org.xtext:xtext-gradle-plugin:2.0.8'
@@ -9,11 +9,11 @@ buildscript {
 }
 
 plugins {
-    id 'com.github.johnrengelman.shadow'
     id 'java'
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
+    id 'eclipse'
+    id 'com.github.johnrengelman.shadow'
 }
-
 dependencyManagement {
     imports {
         mavenBom "org.eclipse.xtext:xtext-dev-bom:${xtextVersion}"
@@ -21,7 +21,6 @@ dependencyManagement {
 }
 apply plugin: 'org.xtext.xtend'
 apply from: "${rootDir}/gradle/xtext-source-layout.gradle"
-apply plugin: 'eclipse'
 
 group = 'org.abs_models.xtext'
 
