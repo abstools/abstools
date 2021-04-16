@@ -2,7 +2,7 @@ FROM erlang:23-alpine AS jdk-erlang
 RUN apk --update add \
         bash \
         nss \
-        openjdk8 \
+        openjdk11-jdk \
         git \
         && rm -rf /var/cache/apk/*
 
