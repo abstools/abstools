@@ -8,38 +8,90 @@ description: "Many of the tools can be run from the command line.  This page des
 Many of the tools can be run from the command line.  This page describes
 how to run various tools on a local machine.
 
-## Installing the ABS Compiler
+## Installing Dependencies
 
 The ABS compiler is contained in a single file called `absfrontend.jar`.
 
-Running the ABS compiler requires Java (version 8 or greater) and Erlang
-(version 22 or greater) installed.  Java can be downloaded, e.g., from
-<https://adoptopenjdk.net>.  Erlang is available at
+Running the ABS compiler requires Java (version 11 or greater) and
+Erlang (version 23 or greater) installed.  Java can be downloaded,
+e.g., from <https://adoptopenjdk.net>.  Erlang is available at
 <https://www.erlang-solutions.com/resources/download.html>.
 
-On macOS, the [homebrew](https://brew.sh/) package manager can be used to
-install the dependencies.  After installing homebrew, run the following
-command in a terminal: `brew install erlang git ; brew cask install
-adoptopenjdk8`
+### Installing dependencies on MacOS
 
-On windows, the [chocolatey](https://chocolatey.org/) package manager can be
-used to install the dependencies.  First install chocolatey following the
-instructions at <https://chocolatey.org/install>, then run the following
-command in a terminal with Administrator rights: `choco install jdk8 erlang
-git`.
+On MacOS, the [homebrew](https://brew.sh/) package manager can be used
+to install the dependencies.  After installing homebrew, run the
+following commands in a terminal:
+
+```bash
+brew tap adoptopenjdk/openjdk
+brew install erlang git adoptopenjdk11
+```
+
+### Installing dependencies on Windows
+
+On windows, the [chocolatey](https://chocolatey.org/) package manager
+can be used to install the dependencies.  First install chocolatey
+following the instructions at <https://chocolatey.org/install>, then
+run the following command in a terminal with Administrator rights:
+
+```powershell
+choco install AdoptOpenJDK11 erlang git
+```
+
+### Installing dependencies on Linux
 
 On Linux, check if your distribution offers the necessary programs
-pre-packaged in the version needed (JDK8, Erlang 22); otherwise download from
-the distribution pages linked above.
+pre-packaged in the version needed (JDK11, Erlang 22); otherwise
+download from the distribution pages linked above.
 
-### Installing a pre-built release
+## Using a pre-built ABS compiler
 
 A pre-built `absfrontend.jar` of the current release of ABS is always linked
 from <https://github.com/abstools/abstools/releases/latest>.  It can be
 invoked with `java -jar absfrontend.jar --help`.  (Java and Erlang still need
-to be installed to run ABS using this method.)
+to be installed to run ABS, as above.)
 
-### Compiling from source
+To compile an ABS model `model.abs`, invoke the compiler with `java
+-jar absfrontend.jar --erlang model.abs`, then run the model with
+`./gen/erl/run`.
+
+## Using Docker to run the ABS compiler
+
+The latest released ABS compiler is always published as a docker image
+called `abslang/absc:latest`.  To use this image, first install the
+docker tool from https://www.docker.com/products/docker-desktop or
+via your operating system's package manager.
+
+To install or update the docker image of the ABS compiler, run `docker
+pull abslang/absc:latest`.  Then, run `docker run --rm abslang/absc:latest
+--help` -- you should see the help output of the ABS compiler.
+
+To compile an ABS model `model.abs` in the current directory, invoke
+the compiler with the following command:
+
+```bash
+docker run --rm -v "$PWD":/usr/src -w /usr/src abslang/absc:latest --erlang model.abs
+```
+
+To run the model after compiling, either run `./gen/erl/run` (if the
+host machine has erlang installed), or run the model inside docker
+with the following command:
+
+```bash
+docker run --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /usr/src/gen/erl/run abslang/absc
+```
+
+Note that using the Model API of a model running inside a docker
+container requires additional parameters to make the listening port
+visible on the host system.  To run the Model API on port 8080, use
+the following command:
+
+```bash
+docker run --rm -v "$PWD":/usr/src -p 8080:8080 -w /usr/src --entrypoint /usr/src/gen/erl/run abslang/absc -p 8080
+```
+
+## Compiling the ABS compiler from source
 
 To compile the ABS compiler from source, clone the git repository and run
 gradle (after installing the necessary dependencies):
@@ -67,6 +119,9 @@ The directory `abstools/frontend/bin/bash` (for Linux, macOS, other Unix
 systems) or `abstools\frontend\bin\win` contains a convenience script for
 invoking the ABS compiler; this directory can be added to the PATH environment
 variable if desired.
+
+To compile an ABS model `model.abs`, invoke the compiler with `absc
+--erlang model.abs`, then run the model with `./gen/erl/run`.
 
 ## Installing KeY-ABS
 

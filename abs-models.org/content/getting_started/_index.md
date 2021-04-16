@@ -8,9 +8,9 @@ There are various ways of running ABS models.
 
 ## Use On-Line Tools
 
-The simplest way to use the ABS tools is on-line, in the collaboratory.  This
-means you only need a modern browser to start experimenting with ABS.  The
-tools work best with Firefox and Chrome.
+The simplest way to use the ABS tools is on-line, in the
+collaboratory.  This means you only need a modern browser to start
+experimenting with ABS.  The tools work best with Firefox and Chrome.
 
 An introduction and link to the collaboratory can be found at
 http://abs-models.org/laboratory/.
