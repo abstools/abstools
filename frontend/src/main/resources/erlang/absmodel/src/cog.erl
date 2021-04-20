@@ -533,11 +533,9 @@ handle_event({call, From}, {register_new_object, Class}, _StateName,
 
 handle_event({call, From}, {register_new_local_object, Class}, _StateName,
              Data=#data{next_stable_id=N, id=Id, recorded=Recorded}) ->
-    Event1 = #event{type=new_object, caller_id=Id, local_id=N, name=Class},
-    Event2 = #event{type=schedule, caller_id=Id, local_id=N, name=init},
-    NewRecorded = [Event2, Event1 | Recorded],
-    NewData = Data#data{next_stable_id=N+1, recorded=NewRecorded},
-    {keep_state, NewData, {reply, From, Event1}};
+    Event = #event{type=new_object, caller_id=Id, local_id=N, name=Class},
+    NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded]},
+    {keep_state, NewData, {reply, From, Event}};
 
 handle_event({call, From}, {register_future_read, Event}, _StateName,
              Data=#data{recorded=Recorded}) ->
