@@ -143,10 +143,10 @@ backend can record a trace of scheduling decisions and replay it to precisely
 reproduce the previous run.
 
 To record a trace to a file `trace.json`, start the model with a parameter
-`--dump-trace trace.json` or `-t trace.json`.
+`--record trace.json` or `-t trace.json`.
 
 To replay an existing trace recorded in `trace.json`, start the model with
-`--replay-trace trace.json` or `-r trace.json`.
+`--replay trace.json` or `-r trace.json`.
 
 A trace can also be obtained from a running model via the Model API.  Assuming
 the model is started on port 8080 (via a parameter `-p 8080`), the trace is
