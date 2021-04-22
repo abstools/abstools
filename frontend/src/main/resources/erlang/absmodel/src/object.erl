@@ -121,18 +121,23 @@ get_class_from_ref(O=#object{cog=Cog}) ->
 get_class_from_state(OState) ->
     element(2, OState).
 
+field_with_oid(Field, Oid) ->
+    OidStr = integer_to_list(Oid),
+    FieldStr = atom_to_list(Field),
+    list_to_atom(OidStr ++ "_" ++ FieldStr).
+
 register_read(Field) ->
     case TaskInfo=get(task_info) of
-        #task_info{event=E=#event{reads=R}} ->
-            R2 = ordsets:add_element(Field, R),
+        #task_info{this=#object{oid=Oid}, event=E=#event{reads=R}} ->
+            R2 = ordsets:add_element(field_with_oid(Field, Oid), R),
             put(task_info, TaskInfo#task_info{event=E#event{reads=R2}});
         _ -> ok
     end.
 
 register_write(Field) ->
     case TaskInfo=get(task_info) of
-        #task_info{event=E=#event{writes=W}} ->
-            W2 = ordsets:add_element(Field, W),
+        #task_info{this=#object{oid=Oid}, event=E=#event{writes=W}} ->
+            W2 = ordsets:add_element(field_with_oid(Field, Oid), W),
             put(task_info, TaskInfo#task_info{event=E#event{writes=W2}});
         _ -> ok
     end.
