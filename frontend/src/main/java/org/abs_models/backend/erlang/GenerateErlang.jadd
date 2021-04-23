@@ -1089,13 +1089,10 @@ aspect GenerateErlang {
       after.close();
       ecs.println("cog:return_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
-      // FIXME: Dangerously relying on toString.
-      // What I want to do:
-      // String fieldNames = Arrays.stream(getGuard().getFields().fields)
-      //     .map(gf -> gf.getName())
-      //     .collect(Collectors.joining(", "));
-      // ecs.format("ReadSet = [%s],%n", fieldNames);
-      ecs.format("ReadSet = %s,%n", getGuard().getFields().fields.toString());
+      String fieldNames = getGuard().getFields().fields.stream()
+          .map(gf -> gf.getName())
+          .collect(Collectors.joining(", "));
+      ecs.format("ReadSet = [%s],%n", fieldNames);
       ecs.incIndent().println("receive {check, OState} -> ");
       ecs.incIndent().println("put(this, OState),");
       ecs.incIndent().println("try");
