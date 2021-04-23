@@ -9,7 +9,7 @@
 %% if it dies itself.
 
 -include_lib("../include/abs_types.hrl").
--export([behaviour_info/1]).
+-export([behaviour_info/1,field_with_oid/2]).
 
 
 %% API

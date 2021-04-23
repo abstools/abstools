@@ -1090,10 +1090,11 @@ aspect GenerateErlang {
       ecs.println("cog:return_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
       ecs.pf("(fun Poll (%s)->",vars.toParamList());
       String fieldNames = getGuard().getFields().fields.stream()
-          .map(gf -> gf.getName())
+          .map(gf -> String.format("object:field_with_oid(%s, Oid)", gf.getName()))
           .collect(Collectors.joining(", "));
-      ecs.format("ReadSet = [%s],%n", fieldNames);
-      ecs.incIndent().println("receive {check, OState} -> ");
+      ecs.incIndent().format("ReadSet = [%s],", fieldNames);
+      ecs.println();
+      ecs.println("receive {check, OState} -> ");
       ecs.incIndent().println("put(this, OState),");
       ecs.incIndent().println("try");
       ecs.incIndent().pf("case %s of",sw);
