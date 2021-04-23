@@ -122,9 +122,10 @@ get_class_from_state(OState) ->
     element(2, OState).
 
 field_with_oid(Field, Oid) ->
-    OidStr = integer_to_list(Oid),
-    FieldStr = atom_to_list(Field),
-    list_to_atom(OidStr ++ "_" ++ FieldStr).
+    %% If this suddenly produces an error, check the format string
+    %% and/or flatten the output of `io_lib:format' with
+    %% `lists:flatten'.
+    list_to_atom(io_lib:format("~b_~s", [Oid, Field])).
 
 register_read(Field) ->
     case TaskInfo=get(task_info) of
