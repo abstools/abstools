@@ -696,7 +696,7 @@ public class Main {
     	   }
     	   if (arguments.variant) {
     		   ChocoSolver s = m.instantiateCSModel();
-    		   System.out.println("Variant features: \n" + s.variantoStrings());
+    		   System.out.println("Variant features: \n" + s.variantToStrings());
     	   }
     	   
        }

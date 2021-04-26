@@ -616,7 +616,11 @@ public class ChocoSolver {
     
     
     public String isVoid() {
-    	if(countSolutions() == 0) return "Feature Model is void.";
+    	//Default root also an feature(var) so count will never be 0
+    	if(countSolutions() == 1) {
+    		if(absmodel.debug) System.out.println("FM only have root");
+    		return "Feature Model is void.";
+    	}
     	else return "Feature Model is not void.";
     }
     
@@ -657,7 +661,7 @@ public class ChocoSolver {
     }
     
     // get variant features to string
-    public String variantoStrings()
+    public String variantToStrings()
     {	
     	Set<Map<String,Integer>> solutions = getSolutions();   
         StringBuilder result = new StringBuilder();
