@@ -1,9 +1,0 @@
-module ABSTest.Main;
-
-import * from ABSTest.Data;
-import * from ABSTest2.Fun;
-
-{
-  Bool x = someOtherFun(Value1);
-  Bool y = someFun(Value1);
-}

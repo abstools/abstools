@@ -42,9 +42,6 @@ Folders
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
   continuous integration at <https://envisage.ifi.uio.no:8080/jenkins/>.
 
-* `abs-packages` - demonstration and description of how to use ABS
-  packages (with Maven dependencies management)
-
 * `abs-unit` - demonstration, description and initial ideas about the
   ABSUnit (a unit testing framework for ABS) (with Maven dependencies
   management)
