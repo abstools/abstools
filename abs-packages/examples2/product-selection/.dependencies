@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-<entry key="/home/pwong/.m2/repository/abs-productline-example/delta1-artifact/1.0-SNAPSHOT/delta1-artifact-1.0-SNAPSHOT.jar">true</entry>
-<entry key="/home/pwong/.m2/repository/abs-productline-example/core-artifact/1.0-SNAPSHOT/core-artifact-1.0-SNAPSHOT.jar">true</entry>
-<entry key="/home/pwong/.m2/repository/eu/hats-project/abs-unit/1.0-SNAPSHOT/abs-unit-1.0-SNAPSHOT.jar">true</entry>
-<entry key="/home/pwong/.m2/repository/abs-productline-example/delta2-artifact/1.0-SNAPSHOT/delta2-artifact-1.0-SNAPSHOT.jar">true</entry>
-</properties>

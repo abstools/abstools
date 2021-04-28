@@ -397,14 +397,14 @@ return_token(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState) ->
                                       %% indicates we shouldn’t do that.
                                       wait_reason=none}).
 
-task_poll_is_ready(#cog{ref=Cog}, TaskRef, TaskInfo) ->
-    Cog ! {TaskRef, true, TaskInfo}.
+task_poll_is_ready(#cog{ref=Cog}, TaskRef, ReadSet) ->
+    Cog ! {TaskRef, true, ReadSet}.
 
-task_poll_is_not_ready(#cog{ref=Cog}, TaskRef, TaskInfo) ->
-    Cog ! {TaskRef, false, TaskInfo}.
+task_poll_is_not_ready(#cog{ref=Cog}, TaskRef, ReadSet) ->
+    Cog ! {TaskRef, false, ReadSet}.
 
-task_poll_has_crashed(#cog{ref=Cog}, TaskRef, TaskInfo) ->
-    Cog ! {TaskRef, crashed, TaskInfo}.
+task_poll_has_crashed(#cog{ref=Cog}, TaskRef, ReadSet) ->
+    Cog ! {TaskRef, crashed, ReadSet}.
 
 submit_references(#cog{ref=CogRef}, Refs) ->
     gen_statem:cast(CogRef, {references, self(), Refs});
@@ -533,11 +533,9 @@ handle_event({call, From}, {register_new_object, Class}, _StateName,
 
 handle_event({call, From}, {register_new_local_object, Class}, _StateName,
              Data=#data{next_stable_id=N, id=Id, recorded=Recorded}) ->
-    Event1 = #event{type=new_object, caller_id=Id, local_id=N, name=Class},
-    Event2 = #event{type=schedule, caller_id=Id, local_id=N, name=init},
-    NewRecorded = [Event2, Event1 | Recorded],
-    NewData = Data#data{next_stable_id=N+1, recorded=NewRecorded},
-    {keep_state, NewData, {reply, From, Event1}};
+    Event = #event{type=new_object, caller_id=Id, local_id=N, name=Class},
+    NewData = Data#data{next_stable_id=N+1, recorded=[Event | Recorded]},
+    {keep_state, NewData, {reply, From, Event}};
 
 handle_event({call, From}, {register_future_read, Event}, _StateName,
              Data=#data{recorded=Recorded}) ->
@@ -737,19 +735,26 @@ choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, []) ->
             end
     end.
 
+get_polling_status(P, PollingStates) ->
+    case maps:get(P, PollingStates) of
+        {Status, _ReadSet} -> Status
+    end.
+
 get_candidate_set(RunnableTasks, PollingTasks, PollingStates) ->
-    Ready = fun (X) -> maps:get(X, PollingStates) == true end,
+    Ready = fun (X) -> get_polling_status(X, PollingStates) == true end,
     gb_sets:union(RunnableTasks, gb_sets:filter(Ready, PollingTasks)).
 
 record_termination_or_suspension(R, TaskInfos, PollingStates, NewPollingStates, TaskState, Recorded) ->
-    Changed = [P || {P, V} <- maps:to_list(NewPollingStates),
-                    not(maps:is_key(P, PollingStates)) orelse V /= maps:get(P, PollingStates)],
-    AwaitEvents = lists:filtermap(fun (P) -> #task_info{event=E} = maps:get(P, TaskInfos),
-                                             case maps:get(P, NewPollingStates) of
-                                                 true -> {true, E#event{type=await_enable}};
-                                                 false -> {true, E#event{type=await_disable}};
-                                                 _ -> false
-                                             end
+    Changed = [{P, V} || {P, V} <- maps:to_list(NewPollingStates),
+                         not(maps:is_key(P, PollingStates)) orelse V /= maps:get(P, PollingStates)],
+    AwaitEvents = lists:filtermap(fun ({P, {Status, ReadSet}}) ->
+                                          #task_info{event=E} = maps:get(P, TaskInfos),
+                                          E2 = E#event{reads=ReadSet, writes=ordsets:new()},
+                                          case Status of
+                                              true -> {true, E2#event{type=await_enable}};
+                                              false -> {true, E2#event{type=await_disable}};
+                                              _ -> false
+                                          end
                                   end, Changed),
     TaskInfo = maps:get(R, TaskInfos),
     LastEvent = TaskInfo#task_info.event,
@@ -769,9 +774,9 @@ poll_waiting(Tasks, TaskInfos, ObjectStates) ->
                   end, PollingTasks),
     lists:foldl(fun (R, PollingStates) ->
                         receive
-                            {R, true, TaskInfo} -> maps:put(R, true, PollingStates);
-                            {R, false, TaskInfo} -> maps:put(R, false, PollingStates);
-                            {R, crashed, TaskInfo} -> maps:put(R, crashed, PollingStates)
+                            {R, true, ReadSet} -> maps:put(R, {true, ReadSet}, PollingStates);
+                            {R, false, ReadSet} -> maps:put(R, {false, ReadSet}, PollingStates);
+                            {R, crashed, ReadSet} -> maps:put(R, {crashed, ReadSet}, PollingStates)
                         end
                 end, #{}, PollingTasks).
 
@@ -958,8 +963,8 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
     NewPolling = case NewTaskState of waiting_poll -> gb_sets:add_element(R, Pol);
                      _ -> Pol end,
     NewPollingStates = poll_waiting(NewPolling, NewTaskInfos, NewObjectStates),
-    PollReadySet = gb_sets:filter(fun (X) -> maps:get(X, NewPollingStates) == true end, NewPolling),
-    PollCrashedSet = gb_sets:filter(fun (X) -> maps:get(X, NewPollingStates) == crashed end, NewPolling),
+    PollReadySet = gb_sets:filter(fun (X) -> get_polling_status(X, NewPollingStates) == true end, NewPolling),
+    PollCrashedSet = gb_sets:filter(fun (X) -> get_polling_status(X, NewPollingStates) == crashed end, NewPolling),
     %% Record/replay termination or suspension
     NewRecorded = record_termination_or_suspension(R, NewTaskInfos, PollingStates, NewPollingStates, TaskState, Recorded),
 

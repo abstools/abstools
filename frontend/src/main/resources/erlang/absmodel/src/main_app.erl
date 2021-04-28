@@ -25,7 +25,7 @@ start(_StartType, _StartArgs) ->
     {ok, Verbose} = application:get_env(absmodel, verbose),
     {ok, Debug} = application:get_env(absmodel, debug),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
-    {ok, Trace} = application:get_env(absmodel, replay_trace),
+    {ok, Trace} = application:get_env(absmodel, replay),
     Dispatch = cowboy_router:compile([{'_',
                                        [{Urlprefix, cowboy_static, {priv_file, absmodel, "index.html"}},
                                         {[Urlprefix, "static/[...]"], cowboy_static, {priv_dir, absmodel, "static"}},

@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The toolchain now requires Java 11 or later.
 
+- The long command-line parameter names for recording and replaying traces have been changed from `--dump-trace` and `--replay-trace` to `--record` and `--replay`.  The short parameters stay the same (`-t` and `-r`, respectively).
+
 ### Removed
 
 ### Fixed
