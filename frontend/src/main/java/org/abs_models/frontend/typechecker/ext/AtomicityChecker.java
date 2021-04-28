@@ -57,7 +57,7 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
     public void checkMethodCall(Call call) {
         if (!call.isAsync()) {
             MethodSig sig = call.getMethodSig();
-            if (!isAtomic(sig.getAnnotations())) {
+            if (!isAtomic(sig.getReturnType().getAnnotations())) {
                 ensureNonAtomic(call, call.getContextMethod(), "a synchronous call to non-atomic method " + sig.getName());
             }
         } else if (call instanceof AwaitAsyncCall) {

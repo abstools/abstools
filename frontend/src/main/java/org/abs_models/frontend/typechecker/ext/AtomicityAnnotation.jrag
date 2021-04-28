@@ -2,13 +2,13 @@
 aspect AtomicityAnnotation {
     
     syn lazy boolean MethodSig.isAtomic() {
-        return AtomicityChecker.isAtomic(this.getAnnotations());
+        return AtomicityChecker.isAtomic(this.getReturnType().getAnnotations());
     }
 
     syn lazy boolean MethodSig.isReadonly() {
-        return AtomicityChecker.isReadonly(this.getAnnotations());
+        return AtomicityChecker.isReadonly(this.getReturnType().getAnnotations());
     }
     syn lazy boolean MethodImpl.isReadonly() {
-        return AtomicityChecker.isReadonly(this.getMethodSig().getAnnotations());
+        return AtomicityChecker.isReadonly(this.getMethodSig().getReturnType().getAnnotations());
     }
 }

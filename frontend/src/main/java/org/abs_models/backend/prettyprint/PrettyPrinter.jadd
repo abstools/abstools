@@ -846,11 +846,6 @@ aspect doPrettyPrinter {
     }
 
     public void MethodSig.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        getAnnotationList().doPrettyPrint(stream, formatter, "");
-        if (getNumAnnotation() > 0) {
-            stream.println();
-            formatter.afterStmt();
-        }
         getReturnType().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName().replaceAll("\\$", ""));

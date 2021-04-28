@@ -321,7 +321,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     @Override public void exitMethodsig(ABSParser.MethodsigContext ctx) {
-        setV(ctx, new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.type_use()), v(ctx.paramlist())));
+        setV(ctx, new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.type_use()), v(ctx.paramlist())));
     }
 
     // Classes
@@ -348,8 +348,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     @Override public void exitMethod(ABSParser.MethodContext ctx) {
-        MethodSig ms = new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.type_use()),
-            v(ctx.paramlist()));
+        MethodSig ms = new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.type_use()), v(ctx.paramlist()));
         ms.setPosition(ctx.IDENTIFIER().getSymbol().getLine(), ctx.IDENTIFIER().getSymbol().getCharPositionInLine(),
                        ctx.paramlist().getStop().getLine(), ctx.paramlist().getStop().getCharPositionInLine() + ctx.paramlist().getStop().getText().length());
         Block b = new Block(new List<>(), new List<>());

@@ -7,9 +7,9 @@ aspect Annotations {
     // Abstraction over annotation list (which is not available for all nodes)
     syn List<Annotation> ASTNode.getNodeAnnotations() = new List<Annotation>();
     eq ClassDecl.getNodeAnnotations() = getAnnotations();
-    eq MethodImpl.getNodeAnnotations() = getMethodSig().getNodeAnnotations();
+    eq MethodImpl.getNodeAnnotations() = getMethodSig().getReturnType().getNodeAnnotations();
     eq Stmt.getNodeAnnotations() = getAnnotations();
-    eq MethodSig.getNodeAnnotations() = getAnnotations();
+    eq MethodSig.getNodeAnnotations() = getReturnType().getAnnotations();
 
     // Annotation inheritance
     syn PureExp ASTNode.getInheritedAnnotationValue(String simpleName) {

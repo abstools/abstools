@@ -221,12 +221,10 @@ aspect Typing {
 
     protected List<Annotation> TypeUse.calcAnnotations() {
         ASTNode<?> p = getParent();
-        if (p instanceof MethodSig) {
-            return ((MethodSig)p).getAnnotations();
-        } else if (p instanceof TypedVarOrFieldDecl) {
+        if (p instanceof TypedVarOrFieldDecl) {
             return ((TypedVarOrFieldDecl)p).getAnnotations();
         }
-        return getAnnotations();            
+        return getAnnotations();
     }
 
     // TODO: This looks really more like an 'inh'.

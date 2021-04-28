@@ -619,7 +619,7 @@ aspect GenerateMaude {
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();
-        PureExp cost = AnnotationHelper.getAnnotationValueFromName(sig.getAnnotationList(), "ABS.DC.Cost");
+        PureExp cost = AnnotationHelper.getAnnotationValueFromName(sig.getReturnType().getAnnotationList(), "ABS.DC.Cost");
         stream.print("< '" + sig.getName() + " : Method | Param: ");
         if (sig.getNumParam() == 0) {
             stream.print("noVid");

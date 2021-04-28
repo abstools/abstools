@@ -267,7 +267,7 @@ interface_decl : annotations
         '{' methodsig* '}'
     ;
 
-methodsig : annotations type_use IDENTIFIER paramlist ';' ;
+methodsig : type_use IDENTIFIER paramlist ';' ;
 
 // Classes
 
@@ -285,7 +285,7 @@ class_decl : annotations
 
 field_decl : annotations type_use IDENTIFIER ('=' pure_exp)? ';' ;
 
-method : annotations type_use IDENTIFIER paramlist '{' stmt* '}' ;
+method : type_use IDENTIFIER paramlist '{' stmt* '}' ;
 
 // Module declaration
 module_decl : 'module' qualified_type_identifier ';'

@@ -258,9 +258,7 @@ public final class AbsASTBuilderUtil {
                 dl.add(d);
         }
 
-        MethodSig method = new MethodSig(methodName,
-            new List<>(),
-                        returnType, dl);
+        MethodSig method = new MethodSig(methodName, returnType, dl);
 
         return method;
     }

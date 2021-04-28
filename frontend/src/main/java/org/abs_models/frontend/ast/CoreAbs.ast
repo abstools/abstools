@@ -90,7 +90,13 @@ abstract FunctionDef;
 BuiltinFunctionDef: FunctionDef ::= Argument:PureExp* ;
 ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
 
-MethodSig ::= <Name> Annotation* ReturnType:TypeUse Param:ParamDecl*;
+// Methods can (syntactically) carry annotations, but these are attached to
+// the ReturnType in the AST.  Semantically, annotations in that place "apply"
+// to both the method as a whole and to its return type.  E.g., for
+//     [Far, HTTPCallable] O m();
+// `m` is `HTTPCallable` and `O` is `Far`, since these annotations apply to a
+// method and a type, respectively.
+MethodSig ::= <Name> ReturnType:TypeUse Param:ParamDecl*;
 MethodImpl ::= MethodSig Block ;
 
 
