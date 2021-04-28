@@ -265,7 +265,7 @@ public class Main {
         }
         if (!semErrs.containsErrors()) {
             typeCheckModel(m);
-            analyzeMTVL(m);
+            analyzeFeatureModel(m);
         }
     }
     
@@ -651,19 +651,19 @@ public class Main {
 	}
     }
     
-    private void analyzeMTVL(Model m) {
+    private void analyzeFeatureModel(Model m) {
         ProductDecl productDecl = null;
         
-        //remove attributes for mtvl analysis
+        //remove attributes for Feature Model
         if(arguments.ignoreattr) {
         	m.dropAttributes();
         }
         
-        try {
-        	productDecl = product == null? null : m.findProduct(product); 
-        }catch(WrongProgramArgumentException e) {
-        	
-        }
+//        try {
+//        	productDecl = product == null? null : m.findProduct(product); 
+//        }catch(WrongProgramArgumentException e) {
+//        	
+//        }
         
        if(m.hasMTVL()) {
     	   if(arguments.solve && arguments.ignoreattr) {
