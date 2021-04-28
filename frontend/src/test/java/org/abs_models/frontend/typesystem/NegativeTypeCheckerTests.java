@@ -311,7 +311,8 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void newError() {
-        assertTypeErrors("interface I { } { I i; i = new local I(); }");
+        // KLUDGE: this used to be assertTypeErrors but xtext detects the error during parsing
+        assertParseError("interface I { } { I i; i = new local I(); }");
     }
 
     @Test
@@ -723,7 +724,8 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void declarationQualifiedName() {
         // Cannot use qualified names for declarations outside deltas
-        assertTypeErrors("module M; interface M.I {}");
+        // TODO: should be type error but xtext detects this during parsing already
+        assertParseError("module M; interface M.I {}");
     }
 
     @Test

@@ -77,7 +77,7 @@ AppCondFeature : AppCond ::= <Name> ;
 AttrAssignment ::= <Name:String> Value ;
 abstract Value;
 UnknownVal: Value ::= <Value>;
-IntVal: Value ::= <Value:int>;
+IntVal: Value ::= <Value:int>;  // TODO: make this BigInteger?
 BoolVal: Value ::= <Value:Boolean>;
 StringVal: Value ::= <Value:String>;
 

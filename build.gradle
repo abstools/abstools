@@ -38,6 +38,7 @@ subprojects {
     }
     group = 'org.abs_models'
     version = gitVersion()
+    ext.xtextVersion = '2.25.0'
 }
 
 configure(subprojects.findAll { it.getPluginManager().hasPlugin('java') }) {

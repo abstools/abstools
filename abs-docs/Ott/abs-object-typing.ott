@@ -138,24 +138,24 @@ defn
 % TODO: check that all patterns p match e
   G |- e : A
   G |- sbrl
-  -------------------- :: case_statement
-  G |- case e { sbrl }
+  -------------------- :: switch_statement
+  G |- switch e { sbrl }
 
 defn
   G |- sbrl :: :: sbrl :: ''
-    {{ com well-formed case statement branch list}} by
+    {{ com well-formed switch statement branch list}} by
 
   G |- sbr1 .. G |- sbrn
-  -------------------- :: case_statement_branch_list
+  -------------------- :: switch_statement_branch_list
   G |- sbr1 .. sbrn
 
 defn
   G |- sbr :: :: sbr :: ''
-    {{ com well-formed case statement branch }} by
+    {{ com well-formed switch statement branch }} by
 
   G' |- sl
   G' = G circ psubst ( p , A , G )
-  ------------------- :: case_statement_branch
+  ------------------- :: switch_statement_branch
   G |- p => sl
 
 defn 

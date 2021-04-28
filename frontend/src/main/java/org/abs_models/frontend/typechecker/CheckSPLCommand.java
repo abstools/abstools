@@ -240,7 +240,8 @@ public class CheckSPLCommand implements Callable<Void> {
         Main main = new Main();
         main.arguments = this.parent; // FIXME: fill in parent's verbose, debug
         Model m = main.parse(files);
-        analyzeModel(m);
+        // diagnostic output already printed if there were errors
+        if (m != null) analyzeModel(m);
         return null;
     }
 }

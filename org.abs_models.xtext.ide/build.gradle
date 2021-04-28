@@ -1,0 +1,71 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.xtext:xtext-gradle-plugin:2.0.8'
+        classpath 'io.spring.gradle:dependency-management-plugin:1.0.8.RELEASE'
+    }
+}
+
+plugins {
+    id 'java'
+    id "io.spring.dependency-management" version "1.0.8.RELEASE"
+    id 'eclipse'
+    id 'com.github.johnrengelman.shadow'
+}
+dependencyManagement {
+    imports {
+        mavenBom "org.eclipse.xtext:xtext-dev-bom:${xtextVersion}"
+    }
+}
+apply plugin: 'org.xtext.xtend'
+apply from: "${rootDir}/gradle/xtext-source-layout.gradle"
+
+group = 'org.abs_models.xtext'
+
+configurations.all {
+    exclude group: 'asm'
+}
+
+dependencies {
+    implementation project(':org.abs_models.xtext')
+    implementation "org.eclipse.xtext:org.eclipse.xtext.ide:${xtextVersion}"
+    implementation "org.eclipse.xtext:org.eclipse.xtext.xbase.ide:${xtextVersion}"
+}
+
+apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+mainClassName = "org.eclipse.xtext.ide.server.ServerLauncher"
+applicationName = 'abs-lsp-server'
+
+shadowJar {
+    from(project.convention.getPlugin(JavaPluginConvention).sourceSets.main.output)
+    configurations = [project.configurations.runtimeClasspath]
+    exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA','schema/*',
+            '.options', '.api_description', '*.profile', '*.html', 'about.*', 'about_files/*',
+            'plugin.xml', 'modeling32.png', 'systembundle.properties', 'profile.list')
+    classifier = ''
+    append('plugin.properties')
+}
+
+// stash away a reliably-named copy of the language server jar
+task plainJar(type: Copy, dependsOn: shadowJar) {
+    description 'Copies absfrontend.jar into its documented location.'
+    from shadowJar.archiveFile
+    into 'dist'
+    rename '(.*).jar', 'abs-language-server.jar'
+}
+clean {
+    delete 'dist/'
+}
+plainJar.dependsOn shadowJar
+plainJar.dependsOn jar
+distTar.dependsOn shadowJar
+distZip.dependsOn shadowJar
+startScripts.dependsOn shadowJar
+startShadowScripts.dependsOn jar
+shadowDistTar.dependsOn jar
+shadowDistZip.dependsOn jar
+
+assemble.dependsOn plainJar

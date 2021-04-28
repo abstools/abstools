@@ -70,7 +70,7 @@ abstract Modifier;
 abstract MethodModifier : Modifier;
 AddMethodModifier : MethodModifier ::= TraitExpr;
 ModifyMethodModifier : MethodModifier ::= TraitExpr;
-RemoveMethodModifier : MethodModifier ::= MethodSig*;
+RemoveMethodModifier : MethodModifier ::= MethodSig*; //TODO why is this a list
 AddFieldModifier : Modifier ::= FieldDecl;
 RemoveFieldModifier : Modifier ::= FieldDecl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;

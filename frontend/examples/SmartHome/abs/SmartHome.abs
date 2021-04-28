@@ -39,7 +39,7 @@ product Test (Interface, Sensors, TemperatureSensor);
 root SmartHome {
 	group allof {
 		opt ElectronicDoor {
-			group [1..*] {
+			group [1 .. *] {
 				SlidingDoor,
 				SwingingDoor
 			}
@@ -47,7 +47,7 @@ root SmartHome {
 		},
 		opt ElectronicBlinds { require: WindowSensor ; },
 		opt Sensors {
-			group [1..*] {
+			group [1 .. *] {
 				DoorSensor,
 				FireSensor,
 				MovementSensor,
@@ -57,7 +57,7 @@ root SmartHome {
 			}
 		},
 		opt Alarm {
-			group [1..*] {
+			group [1 .. *] {
 				FireAlarm { require: FireSensor ; },
 				BurglarAlarm { require: MovementSensor ; },
 				COAlarm { require: COSensor ; }

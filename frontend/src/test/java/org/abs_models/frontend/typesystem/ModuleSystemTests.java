@@ -11,6 +11,11 @@ import org.abs_models.frontend.FrontendTest;
 
 import static org.abs_models.ABSTest.Config.*;
 
+import java.io.IOException;
+
+import org.abs_models.backend.common.InternalBackendException;
+import org.abs_models.common.WrongProgramArgumentException;
+
 public class ModuleSystemTests extends FrontendTest {
 
     @Test
@@ -205,7 +210,8 @@ public class ModuleSystemTests extends FrontendTest {
     
     @Test
     public void ambigiousUseClass() {
-        assertTypeErrors("module A; export *; interface I {} class K implements I {}" +
+        // KLUDGE: this used to be assertTypeErrors but xtext detects the error during parsing
+        assertParseError("module A; export *; interface I {} class K implements I {}" +
                      "module B; export *; interface J {} class K implements J {}" +
                      "module C; import * from A; import * from B; { I k = new local K(); } ");
     }
@@ -289,6 +295,10 @@ public class ModuleSystemTests extends FrontendTest {
     public void importPartialStdLib() {
         assertTypeErrors("module A; import Unit from ABS.StdLib;\n" +
                  "{ println(\"println not imported and hence not accessible\"); } \n");
+    }
 
+    @Test
+    public void qualified_unqualified_imports() throws Exception {
+        assertTypeCheckFileOk("abssamples/frontend/qualified_unqualified_imports.abs");
     }
 }

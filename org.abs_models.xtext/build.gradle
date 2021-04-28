@@ -1,0 +1,74 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.xtext:xtext-gradle-plugin:2.0.8'
+        classpath 'io.spring.gradle:dependency-management-plugin:1.0.8.RELEASE'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'eclipse'
+}
+apply plugin: "org.xtext.xtend"
+apply from: "${rootDir}/gradle/xtext-source-layout.gradle"
+apply plugin: 'io.spring.dependency-management'
+dependencyManagement {
+    imports {
+        mavenBom "org.eclipse.xtext:xtext-dev-bom:${xtextVersion}"
+    }
+}
+
+group = 'org.abs_models.xtext'
+
+configurations.all {
+    exclude group: 'asm'
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
+    testImplementation "org.eclipse.xtext:org.eclipse.xtext.testing:${xtextVersion}"
+    testImplementation "org.eclipse.xtext:org.eclipse.xtext.xbase.testing:${xtextVersion}"
+    implementation "org.eclipse.xtext:org.eclipse.xtext:${xtextVersion}"
+    implementation "org.eclipse.xtext:org.eclipse.xtext.xbase:${xtextVersion}"
+}
+configurations {
+    mwe2 {
+        extendsFrom implementation
+    }
+}
+
+dependencies {
+    mwe2 "org.eclipse.emf:org.eclipse.emf.mwe2.launch"
+    mwe2 "org.eclipse.xtext:org.eclipse.xtext.common.types:${xtextVersion}"
+    mwe2 "org.eclipse.xtext:org.eclipse.xtext.xtext.generator:${xtextVersion}"
+    mwe2 "org.eclipse.xtext:xtext-antlr-generator"
+}
+
+task generateXtextLanguage(type: JavaExec) {
+    main = 'org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher'
+    classpath = configurations.mwe2
+    inputs.file "src/main/java/org/abs_models/xtext/GenerateAbs.mwe2"
+    inputs.file "src/main/java/org/abs_models/xtext/Abs.xtext"
+    outputs.dir "src/main/xtext-gen"
+    args += "src/main/java/org/abs_models/xtext/GenerateAbs.mwe2"
+    args += "-p"
+    args += "rootPath=/${projectDir}/.."
+}
+
+clean {
+    // This removes leftover files from previous git revisions
+    delete 'src/main/xtext-gen'
+    delete 'src/test/xtext-gen'
+}
+
+test {
+    useJUnitPlatform()
+}
+generateXtext.dependsOn(generateXtextLanguage)
+clean.dependsOn(cleanGenerateXtextLanguage)
+eclipse.classpath.plusConfigurations += [configurations.mwe2]
+processResources.dependsOn generateXtextLanguage

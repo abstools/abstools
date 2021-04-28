@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).  This project does not quite adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) since it does not declare a public API, as mandated in the linked specification.  The patch version number increases when existing models continue running with the new version; the minor version number increases when existing models can be adapted in a straightforward way; the major version number increases when existing models need to be partially or totally rewritten.
 
+## Branch
+
+- The toolchain now uses Xtext (https://eclipse.org/Xtext) as parsing framework.  This switch caused some incompatible changes, listed below.
+
+  - Incompatible change: the pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.
+
+  - Incompatible change: The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  (We still do not use the C-style `?:` ternary operator.)
+
+  - Incompatible change: the plain export clause `export Name;` will only export `Name` if `Name` is defined in the current module; use `export Name from OtherModule;` to re-export `Name` imported from `OtherModule`.  This mirrors the behavior of `export *;` vs. `export * from OtherModule;`.
+
 
 ## [Unreleased]
 
@@ -41,6 +51,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The Model API in the erlang backend can now export its endpoints with a link prefix via the `--url-prefix` command-line option.
 
 ### Changed
+
+- The toolchain now uses Xtext (https://eclipse.org/Xtext) as parsing framework.  This switch caused some incompatible changes, listed below.
+
+  - Incompatible change: the pattern matching statement now uses the keyword `switch` instead of `case`.  The pattern matching expression uses `case` as before.
+
+  - Incompatible change: The conditional expression now uses the keyword `when` instead of `if`.  The conditional statement uses `if` as before.  (We still do not use the C-style `?:` ternary operator.)
 
 - Function calls in the erlang backend are significantly faster via removal of the check for pending garbage collection at the beginning of each function body.  (Note that garbage collection, i.e., removing unreferenced futures and objects, happens rarely, so the increased waiting time when entering gc caused by this change is not paid often.)
 

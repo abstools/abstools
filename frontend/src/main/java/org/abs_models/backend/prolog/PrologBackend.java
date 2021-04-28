@@ -61,7 +61,7 @@ public class PrologBackend extends Main {
     private int generateProlog() throws DeltaModellingException, IOException, WrongProgramArgumentException, InternalBackendException{
         model = parse(arguments.files);
         int result = 0;
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
+        if (model == null || model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
             printErrorMessage();
             return 1;
         }

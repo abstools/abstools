@@ -96,6 +96,10 @@ public class MaudeCompiler extends Main {
         if (arguments.verbose) System.out.println("Generating Maude code...");
         module = arguments.maude_timed ? SIMULATOR.EQ_TIMED : SIMULATOR.RL;
         final Model model = parse(arguments.files);
+        if (model == null) {
+            printErrorMessage();
+            return 1;
+        }
         // Maude has build-in AwaitAsyncCall support
         model.doAACrewrite = false;
         if (model.hasParserErrors()

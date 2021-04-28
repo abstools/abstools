@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.stringtemplate.v4.misc.STNoSuchAttributeException;
-
 import deadlock.analyser.factory.Contract;
 import deadlock.analyser.factory.GroupName;
 import deadlock.analyser.factory.MainMethodContract;

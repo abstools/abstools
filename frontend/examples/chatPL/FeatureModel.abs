@@ -8,7 +8,7 @@ product Ev1(Text, Voice, Video, EvMode);
 root Chat {
     group allof {
         Mode {
-            group [1..*] { Text, Voice, Video }
+            group [1 .. *] { Text, Voice, Video }
         },
         opt Files
     }
@@ -28,9 +28,9 @@ extension Video {
 /*
 
 root Evolve {
-    group [1..*] {
+    group [1 .. *] {
         EvMode {
-            group [0..*] {
+            group [0 .. *] {
                 AddMode,
                 RemoveMode
             }

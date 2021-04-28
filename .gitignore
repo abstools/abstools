@@ -9,6 +9,9 @@
 .classpath
 target/
 build/
+xtext-gen/
+xtend-gen/
+bin/
 out/
 /log/
 /frontend/bin/
@@ -34,4 +37,6 @@ out/
 /abs-docs/Ott/core-abs_included.tex
 /abs-docs/ReferenceManual/absrefmanual.pdf
 /abs-docs/ReferenceManual/gitRevision.tex
+/org.abs_models.xtext/model/generated/
+/org.abs_models.xtext.ide/dist/
 /abs-foreign-interface/java/abs-java-util/bin/

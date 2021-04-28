@@ -1,0 +1,27 @@
+// Test Xtext-to-JastAdd conversion: all class references are the same in the
+// Xtext AST, but we need to re-calculate whether the JastAdd NewExp gets a
+// qualified or simple class name.
+module Definitions; export *;
+class A {} class B {}
+module Importer;
+import A from Definitions; import Definitions.B;
+{
+    new A();
+    new Definitions.B();
+}
+
+delta D1;
+adds class Importer.B() {
+    {
+        new Definitions.A();
+    }
+}
+
+delta D2;
+uses Importer;
+adds class C() {
+    {
+        new A();
+        new Definitions.B();
+    }
+}

@@ -1,0 +1,769 @@
+grammar org.abs_models.xtext.Abs hidden(WS,ML_COMMENT,SL_COMMENT)
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+
+generate abs "http://www.abs_models.org/xtext/Abs"
+
+// * Naming conventions
+//
+// This file is used to create Java class definitions.  Rule names become
+// class names, attribute names become setter and getter methods.  We choose
+// identifiers in this file with the aim of creating pleasant Java code.
+// Also, in the interest of autocompletion and IDE class browsing, we spell
+// out words instead of using abbreviations.
+//
+// - Use whole words: "Expression" instead of "Expr" or "Exp", "Declaration"
+//   instead of "Decl", "Statement" instead of "Stmt".
+//
+// - Begin rule names with uppercase, attribute names with lowercase.
+//
+// - Capitalize nouns in rule names.  Be inspired by the existing Java class
+//   naming conventions.
+//
+// - Capitalize nouns in attribute names ("usedTraits" not "usedtraits").  For
+//   compound nouns, choose which ones to capitalize with taste ("modulename"
+//   not "moduleName" but "typeParameter" not "typeparameter").
+//
+// Break the above rules with conviction and good taste.
+//
+// * Special Cases
+//
+// - Boolean rules ("star?=’*’") are converted into boolean methods with "is"
+//   prefix ("isStar()").  This cannot be circumvented, even when we’d like to
+//   have a method "hasStar()" instead.  Make the best of this behavior.
+//
+// - An attribute named "name" will lead to the element being treated as a
+//   definition, and being included in the Xtext index.  So, use "name" for,
+//   e.g., variable declarations but not variable uses.  In the latter case,
+//   use "variablename" or similar as the attribute name.
+
+CompilationUnit
+    : {CompilationUnit} (modules+=ModuleDeclaration)* (deltas+=DeltaDeclaration)*
+        productline=ProductlineDeclaration?
+        products+=ProductDeclaration*
+        ( rootFeatures+=MTVLFeatureRoot
+        | featureExtensions+=MTVLFeatureExtension)*
+    ;
+
+ModuleDeclaration
+    : 'module' name=QualifiedTypeIdentifier ';'
+        (exports+=ModuleExport | imports+=ModuleImport)*
+        (declarations+=Declaration)*
+        ( mainblockAnnotations=Annotations main?='{' (mainblockStatements+=Statement)* '}')?
+    ;
+
+ModuleExport
+    : 'export'
+        ( star?='*' | identifiers+=AnyIdentifier (',' identifiers+=AnyIdentifier)*)
+        ( 'from' modulename=QualifiedTypeIdentifier )?
+        ';'
+    ;
+
+ModuleImport
+    : 'import'
+        (( star?='*' 'from' modulename=QualifiedTypeIdentifier )
+        | (identifiers+=AnyIdentifier (',' identifiers+=AnyIdentifier)*
+                ( 'from' modulename=QualifiedTypeIdentifier )?
+            ))
+        ';'
+    ;
+
+// Annotations
+
+Annotation: (id=TYPE_IDENTIFIER ':')? value=Expression ;
+
+Annotations: {Annotations} ( '[' annotations+=Annotation (',' annotations+=Annotation)* ']')* ;
+
+// Declarations
+
+Declaration
+    : annotations=Annotations
+        ( datatypeDeclaration=DataTypeDeclaration
+        | typesynonymDeclaration=TypesynonymDeclaration
+        | exceptionDeclaration=ExceptionDeclaration
+        | functionDeclaration=FunctionDeclaration
+        | traitDeclaration=TraitDeclaration
+        | interfaceDeclaration=InterfaceDeclaration
+        | classDeclaration=ClassDeclaration
+        )
+    ;
+
+DataTypeDeclaration
+    : 'data' name=QualifiedTypeIdentifier
+        ('<' typeParameters+=TYPE_IDENTIFIER (',' typeParameters+=TYPE_IDENTIFIER)* '>')?
+        ('=' constructors+=DataConstructorDeclaration ('|' constructors+=DataConstructorDeclaration)* )?
+        ';'
+    ;
+
+DataConstructorDeclaration : name=TYPE_IDENTIFIER ('(' arguments+=DataConstructorParameter (',' arguments+=DataConstructorParameter)* ')')? ;
+
+DataConstructorParameter : type=TypeUse (name=IDENTIFIER)? ;
+
+TypesynonymDeclaration : 'type' name=QualifiedTypeIdentifier '=' type=TypeUse ';' ;
+
+ExceptionDeclaration
+    : 'exception' name=QualifiedTypeIdentifier
+        ('(' arguments+=DataConstructorParameter (',' arguments+=DataConstructorParameter)* ')')? ';'
+    ;
+
+FunctionDeclaration
+    : 'def' resulttype=TypeUse name=QualifiedIdentifier
+        ('<' typeParameters+=TYPE_IDENTIFIER (',' typeParameters+=TYPE_IDENTIFIER)* '>')?
+        ( '(' (functionArguments+=IDENTIFIER (',' functionArguments+=IDENTIFIER)*)? ')')?
+        '(' (arguments+=Parameter (',' arguments+=Parameter)* )? ')'
+        '='
+        ( builtin?='builtin' ('(' (builtinArguments+=Expression ( ',' builtinArguments+=Expression)* )? ')' )?
+        | body=Expression)
+        ';'
+    ;
+
+TraitDeclaration : 'trait' name=QualifiedTypeIdentifier '=' traitExpression=TraitExpression ;
+
+TraitExpression : basicExpression=BasicTraitExpression traitOperations+=TraitOperation* ;
+
+BasicTraitExpression
+    : MethodSet?='{' methods+=MethodDeclaration* '}'
+    | methods+=MethodDeclaration
+    | ref=TYPE_IDENTIFIER
+    ;
+
+TraitOperation
+    : 'removes'
+        ( RemoveMethodModifier?='{' ( removedSignatures+=MethodSignature ';' )* '}'
+        | removedSignatures+=MethodSignature ';' )
+    | 'adds' addedExpression=BasicTraitExpression
+    | 'modifies' modifiedExpression=BasicTraitExpression
+    ;
+
+InterfaceDeclaration
+    : 'interface' name=QualifiedTypeIdentifier
+        ('extends' superinterfaces+=QualifiedTypeIdentifier (',' superinterfaces+=QualifiedTypeIdentifier)* )?
+        '{' (methods+=MethodSignature ';' )* '}'
+    ;
+
+MethodSignature
+    : annotations=Annotations resulttype=TypeUseNoAnnotations name=IDENTIFIER
+        '(' ( arguments+=Parameter (',' arguments+=Parameter)* )? ')'
+    ;
+
+ClassDeclaration
+    : 'class' name=QualifiedTypeIdentifier
+        ( '(' ( arguments+=Parameter (',' arguments+=Parameter)* )? ')' )?
+        ( 'implements' interfaces+=QualifiedTypeIdentifier (',' interfaces+=QualifiedTypeIdentifier)* )?
+        '{'
+        (fields+=FieldDeclaration ';')*
+        ( '{' initblockStatements+=Statement* '}' )?
+        ( 'recover' '{' (recoverbranches+=SwitchStatementBranch)* '}' )?
+        ( 'uses' usedTraits+=TraitExpression ';' )*
+        (methods+=MethodDeclaration)*
+        '}'
+    ;
+
+FieldDeclaration
+    : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER
+        (hasInit?='=' init=Expression)?
+    ;
+
+MethodDeclaration
+    : annotations=Annotations resulttype=TypeUseNoAnnotations name=IDENTIFIER
+        // Our JastAdd AST has an embedded MethodSig inside MethodDeclaration while
+        // in xtext we just parse name etc. directly.  `sigEndPosition' is
+        // used to calculate the end location of that embedded node.
+        '(' (arguments+=Parameter (',' arguments+=Parameter)* )? sigEndPosition=')'
+        '{' (statements+=Statement)* '}'
+    ;
+
+Parameter : annotations=Annotations type=TypeUseNoAnnotations name=IDENTIFIER ;
+
+// Statements
+
+Statement : Annotations
+        ( {VariableDeclarationStatement.annotations=current}
+            type=TypeUseNoAnnotations variablename=IDENTIFIER
+            ( '=' init=Expression )? ';'
+        | {AssignStatement.annotations=current}
+            lhs=VariableOrFieldExpression '=' expression=Expression ';'
+        | {SkipStatement.annotations=current}
+             'skip' ';'
+        | {ReturnStatement.annotations=current}
+            'return' expression=Expression ';'
+        | {AssertStatement.annotations=current}
+            'assert' expression=Expression ';'
+        | {Block.annotations=current}
+            '{' (statements+=Statement)* '}'
+        | {IfStatement.annotations=current}
+            'if' '(' condition=Expression ')' consequence=Statement
+            (=>'else' alternate=Statement)?
+        | {WhileStatement.annotations=current}
+            'while' '(' condition=Expression ')' body=Statement
+        | {ForeachStatement.annotations=current}
+            'foreach' '(' loopvar=IDENTIFIER (',' indexvar=IDENTIFIER)? 'in' list=Expression ')'
+            body=Statement
+        | {TryCatchFinallyStatement.annotations=current}
+            'try' body=Statement
+            'catch' (( '{' (branches+=SwitchStatementBranch)* '}')
+                     | branches+=SwitchStatementBranch)
+            (=> 'finally' finally=Statement)?
+        // await is parsed as an expression; this way we catch both "await
+        // o!m()" and "await f?;" in one syntax rule.  We disallow certain
+        // combinations of guards in validation -- see
+        // AbsValidator.checkSideEffectExpressionAllowed,
+        // AbsValidator.checkNoMethodCallInSubguard.
+        | {SuspendStatement.annotations=current}
+            'suspend' ';'
+        | {DurationStatement.annotations=current}
+            'duration' '(' min=Expression (',' max=Expression)? ')' ';'
+        | {ThrowStatement.annotations=current}
+            'throw' exception=Expression ';'
+        | {DieStatement.annotations=current}
+            'die' exception=Expression ';'
+        | {MoveCogToStatement.annotations=current}
+            'movecogto' target=Expression ';'
+        | {ExpressionStatement.annotations=current}
+            expression=Expression ';'
+        | {SwitchStatement.annotations=current}
+            'switch' '(' condition=Expression ')' '{' (branches+=SwitchStatementBranch)* '}'
+        )
+    ;
+
+Guard : AndGuard ;
+
+AndGuard returns Guard
+    : SingleGuard ({AndGuard.left=current} '&' right=SingleGuard)*
+    ;
+
+SingleGuard returns Guard
+    : {ExpressionGuard} expression=Expression claim?='?'?
+    | {DurationGuard} 'duration' '(' min=Expression (',' max=Expression)? ')'
+    ;
+
+SwitchStatementBranch : pattern=Pattern '=>' body=Statement ;
+
+Pattern
+    : {WildcardPattern} '_'
+    | {IntLiteralPattern} value=INTLITERAL
+    | {StringLiteralPattern} value=STRINGLITERAL
+    | {FloatLiteralPattern} value=FLOATLITERAL
+    | {VariablePattern} value=IDENTIFIER
+    | {ConstructorPattern} constructorname=QualifiedTypeIdentifier
+        ( '(' (arguments+=Pattern (',' arguments+=Pattern)* )? ')' )?
+    ;
+
+// Expressions
+
+// KLUDGE: I did not manage to express the separation of side-effect and pure
+// expressions in the Xtext parser in the way that antlr4 did it -- having
+// PureExpression as prefixes in GetExpression, AsyncCallExpression and
+// SyncCallExpression did not lead to compile-time warnings for these
+// expressions but mis-parsed them nevertheless.
+
+// KLUDGE: the expression grammar fragment is not LL(2) (although Expression
+// by itself is) -- we turned on backtracking in `GenerateAbs.mwe2' for now.
+
+// TODO: check if this is still necessary now that we merged EffExpression and
+// PureExpression
+Expression
+    : OrExpression
+    ;
+
+// See http://www.eclipse.org/Xtext/documentation/307_special_languages.html#expressions
+
+OrExpression returns Expression
+    : AndExpression ({OrExpression.left=current} '||' right=AndExpression)*
+    ; // left-assoc
+
+AndExpression returns Expression
+    : EqExpression ({AndExpression.left=current} '&&' right=EqExpression)*
+    ; // left-assoc
+
+EqExpression returns Expression
+    : CompareExpression
+        (( {EqExpression.left=current} '=='
+         | {NotEqExpression.left=current} '!=')
+        right=CompareExpression)?
+    ; // non-assoc
+
+CompareExpression returns Expression
+    : PlusMinusExpression
+        (( {LTExpression.left=current} '<'
+         | {GTExpression.left=current} '>'
+         | {LTEQExpression.left=current} '<='
+         | {GTEQExpression.left=current} '>=')
+        right=PlusMinusExpression)?
+    ; // non-assoc
+
+PlusMinusExpression returns Expression
+    : MulDivModExpression
+        (( {PlusExpression.left=current} '+'
+         | {MinusExpression.left=current} '-')
+        right=MulDivModExpression)*
+    ; // left-assoc
+
+MulDivModExpression returns Expression
+    : MethodCallExpression
+        (( {MulExpression.left=current} '*'
+         | {DivExpression.left=current}'/'
+         | {ModExpression.left=current} '%')
+        right=MethodCallExpression)*
+    ; // left-assoc
+
+MethodCallExpression returns Expression
+// "await o!m()" is parsed as an AwaitExpression with an ExpressionGuard
+// containing a MethodCallExpression instead of a MethodCallExpression with an
+// "await" prefix -- see also AbsValidator where we filter out invalid
+// syntaxes, and XtextToJastAdd where we disambiguate between AwaitStatement
+// and AwaitAsyncCall; the code there is not pretty.
+//
+// But: “In general, a good practice in Xtext DSL implementations is to keep
+// the grammar simple.  It is better to have a loose grammar and a strict
+// validation phase (loose grammar, strict validation, see the presentation
+// Zarnekow 2012).” (Bettini 2016, pg. 207)
+    : GetExpression ({MethodCallExpression.target=current} operator=('!' | '.') methodname=IDENTIFIER '(' (arguments+=Expression ( ',' arguments+=Expression)* )? ')' )?
+    ;
+
+GetExpression returns Expression
+    : ConversionExpression ({GetExpression.futureExpression=current} '.' 'get' )?
+    ;
+
+ConversionExpression returns Expression
+    : PrimaryExpression
+        (( {ImplementsExpression.body=current} 'implements'
+         | {AsExpression.body=current} 'as' )
+        interface=QualifiedTypeIdentifier )?
+    ;
+
+PrimaryExpression returns Expression
+    :  '(' Expression ')'
+    | UnaryExpression
+    | AwaitExpression
+    | NewExpression
+    | OriginalCallExpression
+    | CaseExpression
+    | LetExpression
+    | WhenExpression
+    | FunctionAppExpression
+    | VariadicFunctionAppExpression
+    | ConstructorAppExpression
+    | TemplateStringExpression
+    | AtomicExpression
+    ;
+
+UnaryExpression returns Expression
+    : ( '!' PrimaryExpression {NotExpression.body=current}
+      | '-' PrimaryExpression {NegExpression.body=current}
+      // | '+' PrimaryExpression {PosExpression.body=current}
+    )
+    ;
+
+AwaitExpression returns Expression : {AwaitExpression} 'await' guard=Guard ;
+
+NewExpression returns Expression
+    : {NewExpression} 'new' (local?='local')? class=[ClassDeclaration|QualifiedTypeIdentifier] '('  (arguments+=Expression ( ',' arguments+=Expression)* )? ')'
+    ;
+
+OriginalCallExpression returns Expression
+    : {OriginalCallExpression} (( delta=TYPE_IDENTIFIER | core?='core' ) '.')? 'original' '(' (arguments+=Expression ( ',' arguments+=Expression)* )? ')' ;
+
+CaseExpression returns Expression
+    : {CaseExpression} 'case' condition=Expression '{' (casebranches+=CaseExpressionBranch)* '}'
+    ;
+
+CaseExpressionBranch
+    : '|'? pattern=Pattern '=>' expression=Expression ';'?
+    ;
+
+LetExpression returns Expression
+    : {LetExpression} 'let' '('? variables+=Parameter ')'? '=' expressions+=Expression
+        (',' '('? variables+=Parameter ')'? '=' expressions+=Expression)*
+        'in' body=Expression
+    ;
+
+WhenExpression returns Expression
+    : {WhenExpression} 'when' condition=Expression 'then' consequence=Expression 'else' alternate=Expression
+    ;
+
+FunctionAppExpression returns Expression
+    : {FunctionAppExpression} functionname=QualifiedIdentifier
+        ( '(' functionArguments+=PartialFunctionParam (',' functionArguments+=PartialFunctionParam )* ')' )?
+        '(' (arguments+=Expression ( ',' arguments+=Expression)* )? ')'
+    ;
+
+PartialFunctionParam
+    : functionname=QualifiedIdentifier
+    | '(' ( parameters+=Parameter (',' parameters+=Parameter)* )? ')' "=>" body=Expression
+    ;
+
+VariadicFunctionAppExpression returns Expression
+    : {VariadicFunctionAppExpression} functionname=QualifiedIdentifier '[' (arguments+=Expression ( ',' arguments+=Expression)* )? ']'
+    ;
+
+ConstructorAppExpression returns Expression
+    : {ConstructorAppExpression} constructorname=QualifiedTypeIdentifier ( '(' ( arguments+=Expression ( ',' arguments+=Expression)* )? ')' )?
+    ;
+
+TemplateStringExpression returns Expression
+    : {TemplateStringSimpleExpression} string=TEMPLATESTRINGLITERAL
+    | {TemplateStringExpression} startString=TEMPLATESTRINGSTART firstExpression=Expression
+        (betweenStrings+=TEMPLATESTRINGINBETWEEN expressions+=Expression)*
+        endString=TEMPLATESTRINGEND
+    ;
+
+AtomicExpression returns Expression
+    : {IntLiteral} value=INTLITERAL
+    | {FloatLiteral} value=FLOATLITERAL
+    | {StringLiteral} value=STRINGLITERAL
+    | VariableOrFieldExpression
+    | {ThisExpression} 'this'
+    | {NullLiteral} 'null'
+    ;
+
+VariableOrFieldExpression returns Expression
+    : {VariableOrFieldExpression} (field?='this' '.')? variablename=IDENTIFIER
+    ;
+
+// Types
+
+TypeUse : annotations=Annotations type=TypeUseNoAnnotations ;
+
+// We use TypeUseNoAnnotations for parameters and methods so
+// annotations are parsed as part of the method / parameter, not its
+// type.
+TypeUseNoAnnotations
+    : typename=QualifiedTypeIdentifier
+        ('<' parameters+=TypeUse (',' parameters+=TypeUse)* '>')?
+    ;
+
+// Terminals
+
+terminal ML_COMMENT : '/*' -> '*/';
+terminal SL_COMMENT : '//' !('\n'|'\r')* ('\r'? '\n')?;
+
+terminal WS: (' '|'\t'|'\r'|'\n')+;
+
+terminal fragment SMALLLETTER : 'a'..'z' ;
+terminal fragment CAPITALLETTER : 'A'..'Z' ;
+
+terminal DIGIT : '0'..'9' ;
+
+// "Note: It is generally not a good idea to implement floating point literals
+// with terminal rules. You should use data type rules instead due to possible
+// shadowing problems explained above."
+// https://www.eclipse.org/Xtext/documentation/301_grammarlanguage.html
+
+// But if we use a datatype rule, 'e' and 'E' become reserved words and,
+// hence, unavailable as variable names.  Just be careful to define floats
+// before ints so they don't get shadowed by the greedy lexer.
+terminal FLOATLITERAL returns ecore::EDouble
+    : DIGIT* '.' DIGIT+ (("e" | "E" | "e+" | "E+" | "e-" | "E-") DIGIT+)?
+    ;
+
+terminal INTLITERAL returns ecore::EBigInteger : DIGIT+ ;
+
+terminal STRINGLITERAL
+    : '"' ( '\\' ('"' | '\\' | 't' | 'n' | 'r') | !('"' | '\\'))* '"'
+    ;
+
+terminal fragment TEMPLATESTRING_INNER
+    : '\\' ('`' | '$')
+    | !('`' | '$')
+    ;
+
+terminal TEMPLATESTRINGLITERAL : '`' TEMPLATESTRING_INNER* '`' ;
+
+terminal TEMPLATESTRINGSTART
+    : '`' TEMPLATESTRING_INNER* '$'
+    ;
+
+terminal TEMPLATESTRINGINBETWEEN
+    : '$' TEMPLATESTRING_INNER* '$'
+    ;
+terminal TEMPLATESTRINGEND
+    : '$' TEMPLATESTRING_INNER* '`'
+    ;
+
+
+terminal IDENTIFIER : SMALLLETTER (CAPITALLETTER|SMALLLETTER|'_'|DIGIT)* ;
+
+terminal TYPE_IDENTIFIER : CAPITALLETTER (CAPITALLETTER|SMALLLETTER|'_'|DIGIT)* ;
+
+QualifiedIdentifier returns ecore::EString : (TYPE_IDENTIFIER '.')* IDENTIFIER ;
+QualifiedTypeIdentifier returns ecore::EString : (TYPE_IDENTIFIER '.')* TYPE_IDENTIFIER ;
+
+AnyIdentifier returns ecore::EString
+    : QualifiedIdentifier
+    | QualifiedTypeIdentifier
+    ;
+
+// ========== end of Core ABS ==========
+
+// Deltas
+
+DeltaDeclaration
+    : 'delta' name=TYPE_IDENTIFIER
+        ( '(' ( arguments+=DeltaParameter (',' arguments+=DeltaParameter)* )? ')' )?
+        ';'
+        // TODO: multiple in the antlr grammar but the AST only supports one
+        // instance of this
+        ('uses' usedModulename=QualifiedTypeIdentifier ';')?
+        (modifiers+=DeltaModuleModifier)*
+    ;
+
+DeltaParameter
+    : normalParameter=Parameter
+    | ( classModifier=QualifiedTypeIdentifier condition=DeltaCondition )
+    ;
+
+DeltaCondition
+    : 'hasField' deltaFieldCondition=FieldDeclaration
+    | 'hasMethod' deltaMethodCondition=MethodSignature
+    | 'hasInterface' deltaInterfaceCondition=QualifiedTypeIdentifier
+    ;
+
+DeltaModuleModifier
+    : 'adds'
+        ( addedDeclaration=Declaration
+        | addedImport=ModuleImport
+        | addedExport=ModuleExport)
+    | 'removes'
+        ( 'class' removedClassName=QualifiedTypeIdentifier ';'
+        | 'interface' removedInterfaceName=QualifiedTypeIdentifier ';')
+    | 'modifies'
+        ( 'class' modifiedClassName=QualifiedTypeIdentifier
+            ('adds' addedInterfaces+=QualifiedTypeIdentifier
+                (',' addedInterfaces+=QualifiedTypeIdentifier)*)?
+            ('removes' removedInterfaces+=QualifiedTypeIdentifier
+                (',' removedInterfaces+=QualifiedTypeIdentifier)*)?
+            '{' (classModifiers+=ClassModifier)* '}'
+        | 'interface' modifiedInterfaceName=QualifiedTypeIdentifier
+            '{' (interfaceModifiers+=InterfaceModifier)* '}'
+        | modifiedTypesynonym=TypesynonymDeclaration
+        | modifiedDatatype=DataTypeDeclaration
+        )
+    ;
+
+ClassModifier
+    : 'adds'
+        ( addedField=FieldDeclaration ';'
+        | '{' addedMethods+=MethodDeclaration* '}'
+        | addedMethods+=MethodDeclaration
+        | addedTrait=TYPE_IDENTIFIER)
+    | 'removes'
+        ( removedField=FieldDeclaration ';'
+        | '{' ( removedMethods+=MethodSignature ';' )* '}'
+        | removedMethods+=MethodSignature ';' )
+    | 'modifies'
+        ( modifiedMethods+=MethodDeclaration
+        | '{' modifiedMethods+=MethodDeclaration* '}'
+        | modifiedTrait=TYPE_IDENTIFIER
+        )
+    ;
+
+InterfaceModifier
+    : 'adds' addedMethod=MethodSignature ';'
+    | 'removes' removedMethod=MethodSignature ';'
+    ;
+
+// Productline
+
+ProductlineDeclaration
+    : 'productline' name=TYPE_IDENTIFIER ';'
+        'features' features+=ProductFeature (',' features+=ProductFeature)* ';'
+        deltaClauses+=ProductlineDeltaClause*
+    ;
+
+ProductFeature
+// allow writing Feat' to refer to the intermediate feature "$feat"
+    : name=TYPE_IDENTIFIER p?='\''?
+        ('{' attributeAssignments+=AttributeAssignment (',' attributeAssignments+=AttributeAssignment)* '}')?
+    ;
+
+AttributeAssignment : attributename=IDENTIFIER '=' value = AttributeAssignmentValue ;
+
+AttributeAssignmentValue
+    : {AttributeAssignmentValue_Int} value=INTLITERAL
+    | {AttributeAssignmentValue_Bool} value=TYPE_IDENTIFIER
+    | {AttributeAssignmentValue_String} value=STRINGLITERAL
+    ;
+
+ProductlineDeltaClause
+    : 'delta' name=TYPE_IDENTIFIER
+        ('(' parameters+=DeltaClauseParam (',' parameters+=DeltaClauseParam)* ')')?
+        ('after' afterIds+=TYPE_IDENTIFIER (',' afterIds+=TYPE_IDENTIFIER)* )?
+        ('from' fromCondition=DeltaClauseApplicationClause)?
+        (('when' | 'to') whenCondition=DeltaClauseApplicationClause)?
+        ';'
+    ;
+
+DeltaClauseParam
+// CID | FID.aid | CONSTANT
+// The following comment copied from ABS.g4, which copied from ABS.parser:
+// TODO: accept feature, attributes, or constants (DataExpression)
+    : {DeltaClauseParam_Int} intParameter=INTLITERAL
+    | {DeltaClauseParam_Id} idParameter=TYPE_IDENTIFIER ('.' fidaidParameter=IDENTIFIER)?
+    ;
+
+DeltaClauseApplicationClause : DeltaClauseApplicationClauseOr ;
+
+DeltaClauseApplicationClauseOr returns DeltaClauseApplicationClause
+    : DeltaClauseApplicationClauseAnd ({DeltaClauseApplicationClauseOr.left = current} '||' right=DeltaClauseApplicationClauseAnd)* ;
+
+DeltaClauseApplicationClauseAnd returns DeltaClauseApplicationClause
+    : DeltaClauseApplicationClausePrimary ({DeltaClauseApplicationClauseAnd.left = current} '&&' right=DeltaClauseApplicationClausePrimary)* ;
+
+DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
+    : '!' not=DeltaClauseApplicationClausePrimary
+    | '(' paren=DeltaClauseApplicationClause ')'
+    | featureName=TYPE_IDENTIFIER
+    ;
+
+// Products
+
+ProductDeclaration
+    : 'product' name=TYPE_IDENTIFIER
+        ( '(' ( features+=ProductFeature (',' features+=ProductFeature)* )? ')' ';'
+        | '=' expression=ProductExpression ';' )
+    ;
+
+ProductExpression : ProductExprDifference ;
+
+ProductExprDifference returns ProductExpression
+    : ProductExprUnion ({ProductExprDifference.left = current} '-' right=ProductExprUnion)*
+    ;
+
+ProductExprUnion returns ProductExpression
+    : ProductExprIntersect ({ProductExprUnion.left = current} '||' right=ProductExprIntersect)*
+    ;
+
+ProductExprIntersect returns ProductExpression
+    : ProductExprPrimary ({ProductExprIntersect.left = current} '&&' right=ProductExprPrimary)*
+    ;
+
+ProductExprPrimary returns ProductExpression
+    : '{' features+=ProductFeature (',' features+=ProductFeature)* '}'
+    | prodname=TYPE_IDENTIFIER
+    | '(' paren=ProductExpression ')'
+    ;
+
+// Feature Model
+
+
+// The following rules are translations of the corresponding antlr rules and
+// differ from the grammar in the manual in some places.
+MTVLFeatureRoot
+    : 'root' name=TYPE_IDENTIFIER
+        (
+            '{'
+            group=MTVLFeatureGroup?
+            (attributes+=MTVLAttributeDeclaration | constraints+=MTVLConstraint)*
+            '}'
+        )?
+    ;
+
+MTVLFeatureDeclaration
+// same as MTVLFeatureRoot without the ’root’ keyword in front
+    : name=TYPE_IDENTIFIER
+        (
+            '{'
+            group=MTVLFeatureGroup?
+            (attributes+=MTVLAttributeDeclaration | constraints+=MTVLConstraint)*
+            '}'
+        )?
+    ;
+
+MTVLFeatureExtension
+    : 'extension' name=TYPE_IDENTIFIER
+        '{'
+        group=MTVLFeatureGroup?
+        (attributes+=MTVLAttributeDeclaration | constraints+=MTVLConstraint)*
+        '}'
+    ;
+
+MTVLFeatureGroup
+    : 'group'
+        ( allof?='allof'
+        | oneof?='oneof'
+        | '[' lower=INTLITERAL '..' upper=MTVLIntLimit ']'
+        )
+        '{'
+        children+=MTVLChildFeature (',' children+=MTVLChildFeature)*
+        '}'
+    ;
+
+MTVLChildFeature : opt?='opt'? feature=MTVLFeatureDeclaration ;
+
+MTVLAttributeDeclaration
+    : type=TYPE_IDENTIFIER name=IDENTIFIER
+        ('in'
+            ( interval?='[' lower=MTVLIntLimit '..' upper=MTVLIntLimit ']'
+            | set?='{' content+=MTVLIntValue (',' content+=MTVLIntValue)* '}')
+        )?
+        ';'
+    ;
+
+MTVLIntLimit : star?='*' | minus?='-'? value=INTLITERAL ;
+
+MTVLIntValue : minus?='-'? value=INTLITERAL ;
+
+MTVLConstraint returns MTVLConstraint
+    : 'ifin' {MTVLIfInConstraint} ':' expression=MTVLConstraintExpression ';'
+    | 'ifout' {MTVLIfOutConstraint} ':' expression=MTVLConstraintExpression ';'
+    | 'require' {MTVLRequireConstraint} ':' require=TYPE_IDENTIFIER ';'
+    | 'exclude' {MTVLExcludeConstraint} ':' exclude=TYPE_IDENTIFIER ';'
+    | {MTVLIfInConstraint} expression=MTVLConstraintExpression ';'
+    ;
+
+MTVLConstraintExpression : MTVLConstraintOrExpression ;
+
+MTVLConstraintOrExpression returns MTVLConstraintExpression
+    : MTVLConstraintAndExpression ({MTVLConstraintOrExpression.left=current} '||' right=MTVLConstraintAndExpression)*
+    ; // left-assoc
+
+MTVLConstraintAndExpression returns MTVLConstraintExpression
+    : MTVLConstraintImplEqvExpression ({MTVLConstraintAndExpression.left=current} '&&' right=MTVLConstraintImplEqvExpression)*
+    ; // left-assoc
+
+MTVLConstraintImplEqvExpression returns MTVLConstraintExpression
+    : MTVLConstraintEqNeqExpression
+        ( ({MTVLConstraintImplExpression.left=current} '->' right=MTVLConstraintEqNeqExpression)
+        | ({MTVLConstraintEqvExpression.left=current} '<->' right=MTVLConstraintEqNeqExpression))?
+    ; // non-assoc
+
+MTVLConstraintEqNeqExpression returns MTVLConstraintExpression
+    : MTVLConstraintCompareExpression
+        ( ({MTVLConstraintEqExpression.left=current} '==' right=MTVLConstraintCompareExpression)
+        | ({MTVLConstraintNeqExpression.left=current} '!=' right=MTVLConstraintCompareExpression))?
+    ; // non-assoc
+
+MTVLConstraintCompareExpression returns MTVLConstraintExpression
+    : MTVLConstraintPlusMinusExpression
+        ( ({MTVLConstraintLTExpression.left=current} '<' right=MTVLConstraintPlusMinusExpression)
+        | ({MTVLConstraintGTExpression.left=current} '>' right=MTVLConstraintPlusMinusExpression)
+        | ({MTVLConstraintLTEQExpression.left=current} '<=' right=MTVLConstraintPlusMinusExpression)
+        | ({MTVLConstraintGTEQExpression.left=current} '>=' right=MTVLConstraintPlusMinusExpression))?
+    ; // non-assoc
+
+MTVLConstraintPlusMinusExpression returns MTVLConstraintExpression
+    : MTVLConstraintMulDivModExpression
+      ( ({MTVLConstraintPlusExpression.left=current} '+' right=MTVLConstraintMulDivModExpression)
+        | ({MTVLConstraintMinusExpression.left=current} '-' right=MTVLConstraintMulDivModExpression))*
+    ; // left-assoc
+
+MTVLConstraintMulDivModExpression returns MTVLConstraintExpression
+    : MTVLConstraintPrimaryExpression
+      ( ({MTVLConstraintMulExpression.left=current} '*' right=MTVLConstraintPrimaryExpression)
+        | ({MTVLConstraintDivExpression.left=current} '/' right=MTVLConstraintPrimaryExpression)
+        | ({MTVLConstraintModExpression.left=current} '%' right=MTVLConstraintPrimaryExpression))*
+    ; // left-assoc
+
+MTVLConstraintPrimaryExpression returns MTVLConstraintExpression
+    : '(' parenExpression=MTVLConstraintExpression ')'
+    | '-' minusExpression=MTVLConstraintPrimaryExpression
+    | '!' negExpression=MTVLConstraintPrimaryExpression
+    | intExpression=INTLITERAL
+    | idExpression=IDENTIFIER
+    | typeExpression=TYPE_IDENTIFIER (dot?='.' dotId=IDENTIFIER)?
+    ;
+
+// Local Variables:
+// mode: antlr
+// End:

@@ -18,6 +18,8 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.jar.JarEntry;
 
+import com.google.inject.Injector;
+
 import org.abs_models.Absc;
 import org.abs_models.backend.autodeploy.Tester;
 import org.abs_models.backend.common.InternalBackendException;
@@ -32,10 +34,6 @@ import org.abs_models.common.Constants;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.SemanticCondition;
 import org.abs_models.frontend.analyser.SemanticConditionList;
-import org.abs_models.frontend.antlr.parser.ABSLexer;
-import org.abs_models.frontend.antlr.parser.ABSParser;
-import org.abs_models.frontend.antlr.parser.CreateJastAddASTListener;
-import org.abs_models.frontend.antlr.parser.SyntaxErrorCollector;
 import org.abs_models.frontend.ast.CompilationUnit;
 import org.abs_models.frontend.ast.DataConstructor;
 import org.abs_models.frontend.ast.DataConstructorExp;
@@ -54,16 +52,25 @@ import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeInferenceExtension;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.abs_models.xtext.AbsStandaloneSetup;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.diagnostics.Severity;
+import org.eclipse.xtext.resource.XtextResource;
+import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.util.CancelIndicator;
+import org.eclipse.xtext.validation.IResourceValidator;
+import org.eclipse.xtext.validation.Issue;
 
 /**
  * @author rudi
  *
  */
 public class Main {
+
+    // Do this only once per application.  Public because the tests need
+    // access
+    public static final Injector absinjector = new AbsStandaloneSetup().createInjectorAndDoEMFRegistration();
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     public static final String UNKNOWN_FILENAME = "<unknown file>";
@@ -118,7 +125,7 @@ public class Main {
                 }
                 if (arguments.backend.dumpProducts) {
                     Model m = parse(arguments.files);
-                    if (m.hasParserErrors()) {
+                    if (m == null || m.hasParserErrors()) {
                         // parse should have already printed errors
                         result = Math.max(result, 1);
                     } else {
@@ -134,7 +141,7 @@ public class Main {
             if (!done) {
                 // no backend selected, just do type-checking
                 Model m = parse(arguments.files);
-                if (m.hasParserErrors() || m.hasErrors() || m.hasTypeErrors()) {
+                if (m == null || m.hasParserErrors() || m.hasErrors() || m.hasTypeErrors()) {
                     printErrorMessage();
                     result = 1;
                 }
@@ -160,43 +167,110 @@ public class Main {
         return remainingArgs;
     }
 
-    // entry point for unit tests who just want to parse one or more files
+    /**
+     * Entry point for parsing files.  This method uses the `arguments` field
+     * for additional parameters.  In case of parse errors, returns null and
+     * prints diagnostic messages to stdout.
+     *
+     * @param args - a list of File 
+     * @return A Model instance, or null in case of errors.
+     * @throws IOException
+     * @throws DeltaModellingException
+     * @throws WrongProgramArgumentException
+     * @throws InternalBackendException
+     */
+    //
     public Model parse(final java.util.List<File> args) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException {
         Model m = parseFiles(this.arguments.verbose, args);
-        analyzeFlattenAndRewriteModel(m);
+        if (m != null) analyzeFlattenAndRewriteModel(m);
         return m;
     }
 
+    /**
+     *
+     * @param verbose controls whether to print diagnostic messages
+     * @param fileNames the files to parse into a Model
+     * @return An instance of Model, or null in case of errors in the source files.
+     * @throws IOException
+     * @throws InternalBackendException
+     */
     private static Model parseFiles(boolean verbose, final java.util.List<File> fileNames) throws IOException, InternalBackendException {
         if (fileNames.isEmpty()) {
             throw new IllegalArgumentException("Please provide at least one input file");
         }
 
-        java.util.List<CompilationUnit> units = new ArrayList<>();
+        // TODO parse not only files but also package files
 
-        for (File f : fileNames) {
-            if (!f.canRead()) {
-                throw new IllegalArgumentException("File "+f+" cannot be read");
+        // TODO document abs package files (this involves finding out what they do)
+
+                // https://typefox.io/how-and-why-use-xtext-without-the-ide
+        // (outdated) and
+        // https://stackoverflow.com/questions/47110291/xtext-standalone-and-validation
+        // and
+        // https://www.eclipse.org/Xtext/documentation/302_configuration.html#dependency-injection
+
+        // obtain a resourceset from the injector
+        XtextResourceSet resourceSet = absinjector.getInstance(XtextResourceSet.class);
+
+        for (File file : fileNames) {
+            resourceSet.createResource(org.eclipse.emf.common.util.URI.createFileURI(file.toString()))
+                .load(null);
+        }
+        // load the standard library
+        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(ABS_STD_LIB).toString()))
+            .load(null);
+        boolean hasErrors = false;
+        for (Resource r : resourceSet.getResources()) {
+            IResourceValidator validator = ((XtextResource)r).getResourceServiceProvider().getResourceValidator();
+            java.util.List<Issue> issues = validator.validate(r, org.eclipse.xtext.validation.CheckMode.ALL, CancelIndicator.NullImpl);
+            for (Issue issue : issues) {
+                if (issue.getSeverity() == Severity.ERROR) hasErrors = true;
+                String filename = issue.getUriToProblem().toFileString();
+                if (filename == null) filename = UNKNOWN_FILENAME;
+                System.out.println(filename
+                                   + ":" + issue.getLineNumber()
+                                   // we need zero-based column numbers
+                                   + ":" + (issue.getColumn() - 1)
+                                   + ":" + issue.getMessage()
+                                   );
             }
-
-            if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
-                throw new IllegalArgumentException("File "+f+" is not a legal ABS file");
-            }
         }
-
-        for (File f : fileNames) {
-            parseFileOrDirectory(units, f, verbose);
+        Model result = null;
+        if (!hasErrors) {
+            result = XtextToJastAdd.fromResourceSet(resourceSet);
+        } else {
+            System.out.println("\nNote that the ABS syntax has changed after release 1.8.2!");
+            System.out.println("For the conditional expression, write ‘when .. then .. else ..’\ninstead of ‘if .. then .. else ..’.\nFor the pattern-matching statement, write ‘switch’ instead of ‘case’.\n(For the pattern-matching expression, write ‘case’ as before.)");
         }
+        return result;
 
-	units.add(getStdLib());
+        // ------------------------- old code follows -------------------------
 
-        List<CompilationUnit> unitList = new List<>();
-        for (CompilationUnit u : units) {
-            unitList.add(u);
-        }
+        // java.util.List<CompilationUnit> units = new ArrayList<>();
 
-        Model m = new Model(unitList);
-        return m;
+        // for (File f : fileNames) {
+        //     if (!f.canRead()) {
+        //         throw new IllegalArgumentException("File "+f+" cannot be read");
+        //     }
+
+        //     if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
+        //         throw new IllegalArgumentException("File "+f+" is not a legal ABS file");
+        //     }
+        // }
+
+        // for (File f : fileNames) {
+        //     parseFileOrDirectory(units, f, verbose);
+        // }
+
+	// units.add(getStdLib());
+
+        // List<CompilationUnit> unitList = new List<>();
+        // for (CompilationUnit u : units) {
+        //     unitList.add(u);
+        // }
+
+        // Model m = new Model(unitList);
+        // return m;
     }
 
     /**
@@ -609,36 +683,44 @@ public class Main {
      */
     private static CompilationUnit parseUnit(File file, Reader reader)
 	throws IOException
-    {
-	try {
-	    SyntaxErrorCollector errorlistener = new SyntaxErrorCollector(file);
-	    ANTLRInputStream input = new ANTLRInputStream(reader);
-	    ABSLexer lexer = new ABSLexer(input);
-	    lexer.removeErrorListeners();
-	    lexer.addErrorListener(errorlistener);
-	    CommonTokenStream tokens = new CommonTokenStream(lexer);
-	    ABSParser aparser = new ABSParser(tokens);
-	    aparser.removeErrorListeners();
-	    aparser.addErrorListener(errorlistener);
-	    ParseTree tree = aparser.goal();
-	    if (errorlistener.parserErrors.isEmpty()) {
-		ParseTreeWalker walker = new ParseTreeWalker();
-		CreateJastAddASTListener l = new CreateJastAddASTListener(file);
-		walker.walk(l, tree);
-		CompilationUnit u
-		    = new ASTPreProcessor().preprocess(l.getCompilationUnit());
-		return u;
-	    } else {
-		String path = "<unknown path>";
-		if (file != null) path = file.getPath();
-                CompilationUnit u = new CompilationUnit();
-                u.setName(path);
-		u.setParserErrors(errorlistener.parserErrors);
-		return u;
-	    }
-	} finally {
-	    reader.close();
-	}
-    }
+    { return null; }
+    // {
+    //     try {
+    //         SyntaxErrorCollector errorlistener = new SyntaxErrorCollector(file);
+    //         ANTLRInputStream input = new ANTLRInputStream(reader);
+    //         ABSLexer lexer = new ABSLexer(input);
+    //         lexer.removeErrorListeners();
+    //         lexer.addErrorListener(errorlistener);
+    //         CommonTokenStream tokens = new CommonTokenStream(lexer);
+    //         ABSParser aparser = new ABSParser(tokens);
+    //         aparser.removeErrorListeners();
+    //         aparser.addErrorListener(errorlistener);
+    //         ParseTree tree = aparser.goal();
+    //         if (errorlistener.parserErrors.isEmpty()) {
+    //     	ParseTreeWalker walker = new ParseTreeWalker();
+    //     	CreateJastAddASTListener l = new CreateJastAddASTListener(file);
+    //     	walker.walk(l, tree);
+    //     	CompilationUnit u
+    //     	    = new ASTPreProcessor().preprocess(l.getCompilationUnit());
+    //     	return u;
+    //        } else {
+    //             String path = "<unknown path>";
+    //             if (file != null) path = file.getPath();
+    //             CompilationUnit u = new CompilationUnit();
+    //             u.setName(path);
+    //             u.setParserErrors(errorlistener.parserErrors);
+    //             return u;
+    //         }
+    //     	String path = "<unknown path>";
+    //     	if (file != null) path = file.getPath();
+    //     	@SuppressWarnings("rawtypes")
+    //     	    CompilationUnit u = new CompilationUnit(path,new List(),new List(),new List(),new Opt(),new List(),new List(),new List());
+    //     	u.setParserErrors(errorlistener.parserErrors);
+    //     	return u;
+    //         }
+    //     } finally {
+    //         reader.close();
+    //     }
+    // }
 
 }

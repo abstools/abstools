@@ -45,7 +45,7 @@ public class Tester extends Main {
         Absc absc = Absc.parseArgs(upstreamArgs.toArray(new String[0]));
         this.arguments = absc;
         final Model model = this.parse(arguments.files);
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
+        if (model == null || model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
 	    return 127;
         }
 

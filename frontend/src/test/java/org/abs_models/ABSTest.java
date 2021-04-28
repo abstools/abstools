@@ -10,6 +10,7 @@ import static org.abs_models.ABSTest.Config.TYPE_CHECK;
 import static org.abs_models.ABSTest.Config.WITHOUT_DESUGARING_AFTER_TYPECHECK;
 import static org.abs_models.ABSTest.Config.WITHOUT_MODULE_NAME;
 import static org.abs_models.ABSTest.Config.WITH_LOC_INF;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -20,6 +21,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.inject.Injector;
+
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.SemanticCondition;
@@ -27,7 +30,17 @@ import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.parser.Main;
+import org.abs_models.frontend.parser.XtextToJastAdd;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
+import org.abs_models.xtext.AbsStandaloneSetup;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.diagnostics.Severity;
+import org.eclipse.xtext.resource.XtextResource;
+import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.testing.util.ParseHelper;
+import org.eclipse.xtext.util.CancelIndicator;
+import org.eclipse.xtext.validation.IResourceValidator;
+import org.eclipse.xtext.validation.Issue;
 
 public class ABSTest {
     public static enum Config {
@@ -86,7 +99,29 @@ public class ABSTest {
     }
 
     public static Model parseString(String s) throws Exception {
-        return Main.parse(null, new StringReader(s));
+        XtextResourceSet resourceSet = Main.absinjector.getInstance(XtextResourceSet.class);
+        // This is a bit gross but seems to work
+        ParseHelper<org.abs_models.xtext.abs.CompilationUnit> ph = (ParseHelper<org.abs_models.xtext.abs.CompilationUnit>)(Main.absinjector.getInstance(ParseHelper.class));
+        // NOTE: some tests depend on the standard library being first, see
+        // e.g. FrontendTest.getLastDecl et al.  Using AST walking methods
+        // (Model.lookup() etc.) would be nicer, but rewriting a whole lot of
+        // unit tests is a bit time consuming as well.
+        resourceSet.createResource(org.eclipse.emf.common.util.URI.createURI(Main.class.getClassLoader().getResource(Main.ABS_STD_LIB).toString()))
+            .load(null);
+        ph.parse(s, resourceSet);
+        boolean hasErrors = false;
+        for (Resource r : resourceSet.getResources()) {
+            IResourceValidator validator = ((XtextResource)r).getResourceServiceProvider().getResourceValidator();
+            java.util.List<Issue> issues = validator.validate(r, org.eclipse.xtext.validation.CheckMode.ALL, CancelIndicator.NullImpl);
+            for (Issue issue : issues) {
+                if (issue.getSeverity() == Severity.ERROR) hasErrors = true;
+            }
+        }
+        Model result = null;
+        if (!hasErrors) {
+            result = XtextToJastAdd.fromResourceSet(resourceSet);
+        }
+        return result;
     }
 
     protected static Model assertParse(String s, Config... config) {
@@ -97,41 +132,45 @@ public class ABSTest {
             s = preamble + s;
         try {
             Model p = parseString(s);
+            if (isSet(EXPECT_PARSE_ERROR,config)) {
+                // in case of syntax errors, p is null
+                if (!(p == null) && !p.hasParserErrors()) {
+                    fail("Expected to find parse error");
+                } else {
+                    return p;
+                }
+            }
+            assertNotNull(p);
 
             if (isSet(WITHOUT_DESUGARING_AFTER_TYPECHECK, config)) {
                 p.doAACrewrite = false;
                 p.doForEachRewrite = false;
             }
 
-            if (isSet(EXPECT_PARSE_ERROR,config)) {
-                if (!p.hasParserErrors())
-                    fail("Expected to find parse error");
+            if (p.hasParserErrors()) {
+                fail("Failed to parse: " + s + "\n" + p.getParserErrors().get(0).getMessage());
             } else {
-                if (p.hasParserErrors()) {
-                    fail("Failed to parse: " + s + "\n" + p.getParserErrors().get(0).getMessage());
-                } else {
-                    // make ProductDecl.getProduct() not return null
-                    p.evaluateAllProductDeclarations();
-                    if (isSet(TYPE_CHECK, config)) {
-                        // copy other choice parts of Main.analyzeFlattenAndRewriteModel
-                        p.flattenTraitOnly();
-                        p.collapseTraitModifiers();
-                        p.expandPartialFunctions();
-                        p.expandForeachLoops();
-                        p.expandAwaitAsyncCalls();
-                        if (isSet(WITH_LOC_INF, config)) {
-                            LocationTypeExtension lte = new LocationTypeExtension(p);
-                            p.registerTypeSystemExtension(lte);
+                // make ProductDecl.getProduct() not return null
+                p.evaluateAllProductDeclarations();
+                if (isSet(TYPE_CHECK, config)) {
+                    // copy other choice parts of Main.analyzeFlattenAndRewriteModel
+                    p.flattenTraitOnly();
+                    p.collapseTraitModifiers();
+                    p.expandPartialFunctions();
+                    p.expandForeachLoops();
+                    p.expandAwaitAsyncCalls();
+                    if (isSet(WITH_LOC_INF, config)) {
+                        LocationTypeExtension ltie = new LocationTypeExtension(p);
+                        p.registerTypeSystemExtension(ltie);
+                    }
+                    SemanticConditionList l = p.typeCheck();
+                    if (isSet(EXPECT_TYPE_ERROR,config)) {
+                        if (!l.containsErrors()) {
+                            fail("Expected type errors, but none appeared");
                         }
-                        SemanticConditionList l = p.typeCheck();
-                        if (isSet(EXPECT_TYPE_ERROR,config)) {
-                            if (!l.containsErrors()) {
-                                fail("Expected type errors, but none appeared");
-                            }
-                        } else {
-                            if (l.containsErrors()) {
-                                fail("Failed to typecheck: " + s + "\n" + l.getFirstError().getMessage());
-                            }
+                    } else {
+                        if (l.containsErrors()) {
+                            fail("Failed to typecheck: " + s + "\n" + l.getFirstError().getMessage());
                         }
                     }
                 }
@@ -153,7 +192,16 @@ public class ABSTest {
     static public Model assertParseFileOk(String fileName, Config... config) throws IOException,
         WrongProgramArgumentException, InternalBackendException, DeltaModellingException {
         Main main = new Main();
-        Model m = main.parse(Arrays.asList(new File(resolveFileName(fileName))));
+        File file = new File(resolveFileName(fileName));
+        Model m;
+        if (file.isDirectory()) {
+            m = main.parse(Arrays.asList(file.listFiles(f ->
+                                                        f.isFile()
+                                                        && Main.isABSSourceFile(f))));
+        } else {
+            m = main.parse(Arrays.asList(file));
+        }
+        assertNotNull(m);
         m.evaluateAllProductDeclarations();
         return assertParseModelOk(m, config);
     }
@@ -162,6 +210,7 @@ public class ABSTest {
         Main main = new Main();
         java.util.List<File> files = fileNames.stream().map(f -> new File(resolveFileName(f))).collect(Collectors.toList());
         Model m = main.parse(files);
+        assertNotNull(m);
         return assertParseModelOk(m, config);
     }
 
