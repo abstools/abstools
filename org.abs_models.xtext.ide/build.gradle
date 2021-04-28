@@ -60,8 +60,12 @@ clean {
     delete 'dist/'
 }
 plainJar.dependsOn shadowJar
+plainJar.dependsOn jar
 distTar.dependsOn shadowJar
 distZip.dependsOn shadowJar
 startScripts.dependsOn shadowJar
+startShadowScripts.dependsOn jar
+shadowDistTar.dependsOn jar
+shadowDistZip.dependsOn jar
 
 assemble.dependsOn plainJar

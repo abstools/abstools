@@ -71,3 +71,4 @@ test {
 generateXtext.dependsOn(generateXtextLanguage)
 clean.dependsOn(cleanGenerateXtextLanguage)
 eclipse.classpath.plusConfigurations += [configurations.mwe2]
+processResources.dependsOn generateXtextLanguage
