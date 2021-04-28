@@ -80,7 +80,7 @@ abstract VarOrFieldDecl ::= <Name>;
 FunctionParamDecl : VarOrFieldDecl ;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= TypeUse ;
 VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
-FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* ;
+FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] ;
 ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
 ClassParamDecl: ParamDecl;
 PatternVarDecl: VarOrFieldDecl;

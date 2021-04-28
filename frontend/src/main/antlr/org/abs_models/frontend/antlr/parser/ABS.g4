@@ -283,7 +283,7 @@ class_decl : annotations
         '}'
     ;
 
-field_decl : annotations type_use IDENTIFIER ('=' pure_exp)? ';' ;
+field_decl : type_use IDENTIFIER ('=' pure_exp)? ';' ;
 
 method : type_use IDENTIFIER paramlist '{' stmt* '}' ;
 

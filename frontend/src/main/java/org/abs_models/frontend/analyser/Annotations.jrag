@@ -3,6 +3,7 @@ aspect Annotations {
     public abstract List<Annotation> TypedVarOrFieldDecl.getAnnotations();
     inh lazy List<Annotation> VarDecl.getAnnotations();
     eq VarDeclStmt.getVarDecl().getAnnotations() = getAnnotations();
+    syn List<Annotation> FieldDecl.getAnnotations() = getTypeUse().getAnnotations();
 
     // Abstraction over annotation list (which is not available for all nodes)
     syn List<Annotation> ASTNode.getNodeAnnotations() = new List<Annotation>();
