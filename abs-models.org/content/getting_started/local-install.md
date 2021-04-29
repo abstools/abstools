@@ -12,10 +12,11 @@ how to run various tools on a local machine.
 
 The ABS compiler is contained in a single file called `absfrontend.jar`.
 
-Running the ABS compiler requires Java (version 11 or greater) and
-Erlang (version 23 or greater) installed.  Java can be downloaded,
-e.g., from <https://adoptopenjdk.net>.  Erlang is available at
-<https://www.erlang-solutions.com/resources/download.html>.
+Running the ABS compiler requires Java (version 11 or greater) and Erlang
+(version 23 or greater) installed.  Java can be downloaded, e.g., from
+<https://adoptopenjdk.net>.  Erlang is available at
+<https://www.erlang.org/downloads> (but also check below for platform-specific
+instructions).
 
 ### Installing dependencies on MacOS
 
@@ -42,7 +43,7 @@ choco install AdoptOpenJDK11 erlang git
 ### Installing dependencies on Linux
 
 On Linux, check if your distribution offers the necessary programs
-pre-packaged in the version needed (JDK11, Erlang 22); otherwise
+pre-packaged in the version needed (JDK11, Erlang 23); otherwise
 download from the distribution pages linked above.
 
 ## Using a pre-built ABS compiler
