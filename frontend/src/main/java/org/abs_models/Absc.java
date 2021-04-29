@@ -194,34 +194,6 @@ public class Absc implements Callable<Integer> {
     // default value taken from declaration of
     // LocationTypeInferrerExtension.defaultType
     public LocationType defaultLocationType = LocationType.INFER;
-
-    //mtvl
-    @Option(names = {"--solve"},
-    		description = "solve constraint satisfaction problem (CSP) for the feature model")
-    public boolean solve = false;
-    
-    @Option(names = {"--isvoid"},
-    		description = "check if any void feature exist in feature model")
-    public boolean isvoid = false;
-    
-    @Option(names = {"--nsol"},description = "count the number of solutions")
-    public boolean nsol = false;
-    
-    @Option(names = {"--noattr"}, description = "ignore model attributes ONLY WORK FOR MTVL ANALYSIS")
-    public boolean ignoreattr = false;
-    
-    @Option(names = {"--core"},
-    		description = "check for core feature within the feature model")
-    public boolean core = false;
-    
-    @Option(names = {"--variant"},
-    		description = "check for variant feature within the feature model")
-    public boolean variant = false;
-    
-    @Option(names = {"--validpconfig"},
-    		description = "check if the entered configuration is present in solution",
-    		paramLabel="feature")
-    public String validPartialConfig;
     
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {

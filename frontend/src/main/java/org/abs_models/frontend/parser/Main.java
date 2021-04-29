@@ -15,7 +15,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.jar.JarEntry;
 
@@ -52,7 +51,6 @@ import org.abs_models.frontend.ast.ProductDecl;
 import org.abs_models.frontend.ast.ProductLine;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
-import org.abs_models.frontend.mtvl.ChocoSolver;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeInferenceExtension;
@@ -60,8 +58,6 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-
-import choco.kernel.model.constraints.Constraint;
 
 /**
  * @author rudi
@@ -265,7 +261,6 @@ public class Main {
         }
         if (!semErrs.containsErrors()) {
             typeCheckModel(m);
-            analyzeFeatureModel(m);
         }
     }
     
@@ -620,102 +615,35 @@ public class Main {
     private static CompilationUnit parseUnit(File file, Reader reader)
 	throws IOException
     {
-	try {
-	    SyntaxErrorCollector errorlistener = new SyntaxErrorCollector(file);
-	    ANTLRInputStream input = new ANTLRInputStream(reader);
-	    ABSLexer lexer = new ABSLexer(input);
-	    lexer.removeErrorListeners();
-	    lexer.addErrorListener(errorlistener);
-	    CommonTokenStream tokens = new CommonTokenStream(lexer);
-	    ABSParser aparser = new ABSParser(tokens);
-	    aparser.removeErrorListeners();
-	    aparser.addErrorListener(errorlistener);
-	    ParseTree tree = aparser.goal();
-	    if (errorlistener.parserErrors.isEmpty()) {
-		ParseTreeWalker walker = new ParseTreeWalker();
-		CreateJastAddASTListener l = new CreateJastAddASTListener(file);
-		walker.walk(l, tree);
-		CompilationUnit u
-		    = new ASTPreProcessor().preprocess(l.getCompilationUnit());
-		return u;
-	    } else {
-		String path = "<unknown path>";
-		if (file != null) path = file.getPath();
-                CompilationUnit u = new CompilationUnit();
-                u.setName(path);
-		u.setParserErrors(errorlistener.parserErrors);
-		return u;
-	    }
-	} finally {
-	    reader.close();
-	}
+		try {
+		    SyntaxErrorCollector errorlistener = new SyntaxErrorCollector(file);
+		    ANTLRInputStream input = new ANTLRInputStream(reader);
+		    ABSLexer lexer = new ABSLexer(input);
+		    lexer.removeErrorListeners();
+		    lexer.addErrorListener(errorlistener);
+		    CommonTokenStream tokens = new CommonTokenStream(lexer);
+		    ABSParser aparser = new ABSParser(tokens);
+		    aparser.removeErrorListeners();
+		    aparser.addErrorListener(errorlistener);
+		    ParseTree tree = aparser.goal();
+		    if (errorlistener.parserErrors.isEmpty()) {
+			ParseTreeWalker walker = new ParseTreeWalker();
+			CreateJastAddASTListener l = new CreateJastAddASTListener(file);
+			walker.walk(l, tree);
+			CompilationUnit u
+			    = new ASTPreProcessor().preprocess(l.getCompilationUnit());
+			return u;
+		    } else {
+			String path = "<unknown path>";
+			if (file != null) path = file.getPath();
+	                CompilationUnit u = new CompilationUnit();
+	                u.setName(path);
+			u.setParserErrors(errorlistener.parserErrors);
+			return u;
+		    }
+		} finally {
+		    reader.close();
+		}
     }
     
-    private void analyzeFeatureModel(Model m) {
-        ProductDecl productDecl = null;
-        
-        //remove attributes for Feature Model
-        if(arguments.ignoreattr) {
-        	m.dropAttributes();
-        }
-        
-//        try {
-//        	productDecl = product == null? null : m.findProduct(product); 
-//        }catch(WrongProgramArgumentException e) {
-//        	
-//        }
-        
-       if(m.hasMTVL()) {
-    	   if(arguments.solve && arguments.ignoreattr) {
-    		   if(arguments.verbose) System.out.println("Searching for solution(ignoring attribute) for the feature model...");
-    		   ChocoSolver s = m.instantiateCSModel();
-               System.out.println(s.getSolutionsAsString());
-    	   }
-    	   else if (arguments.solve && !arguments.ignoreattr) {
-    		   if(arguments.verbose) System.out.println("Searching for solution for the feature model...");
-    		   ChocoSolver s = m.instantiateCSModel();
-               System.out.println(s.getSolutionsAsString());
-           }
-    	   
-    	   if(arguments.nsol && arguments.ignoreattr) { //count ALL number of solution while ignoring attributes
-    		   ChocoSolver s = m.instantiateCSModel();
-    		   System.out.println("Number of solutions found without attributes: " + s.countSolutions());
-    	   }
-    	   else if(arguments.nsol && !arguments.ignoreattr) { //count number of solution without ignoring
-    		   ChocoSolver s = m.instantiateCSModel();
-    		   System.out.println("Number of solutions found: " + s.countSolutions());
-    	   }
-    	   
-    	   if (arguments.isvoid) {
-    		   ChocoSolver s = m.instantiateCSModel();
-    		   System.out.println(s.isVoid());
-    	   }
-    	   if (arguments.core) {
-    		   ChocoSolver s = m.instantiateCSModel();
-    		   System.out.println("Core features: \n" + s.coreToStrings());
-    	   }
-    	   if (arguments.variant) {
-    		   ChocoSolver s = m.instantiateCSModel();
-    		   System.out.println("Variant features: \n" + s.variantToStrings());
-    	   }
-    	   if (arguments.validPartialConfig != null) {
-    		   ChocoSolver s = m.instantiateCSModel();
-    		   ArrayList<String[]> listSRFeature = new ArrayList<String[]>();
-    		   
-               try {
-            	   listSRFeature = s.splitStrFeatures(arguments.validPartialConfig);
-               } catch (WrongProgramArgumentException e) {
-                   System.out.println(e);
-               }
-               
-               if (!listSRFeature.isEmpty()) {
-            	   System.out.println("Valid Partial Configuration Check: \n" + s.validPartialConfig(listSRFeature));
-               }
-               
-    	   }
-    	   
-       }
-        
-    }
-
 }

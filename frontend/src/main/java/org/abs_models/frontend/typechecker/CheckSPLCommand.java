@@ -1,6 +1,7 @@
 package org.abs_models.frontend.typechecker;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,21 @@ public class CheckSPLCommand implements Callable<Void> {
             description = "check satisfiability of @|italic product|@",
             paramLabel = "product")
     public String checkProduct;
+    @Option(names = {"--isvoid"},
+    		description = "check if any void feature exist in feature model")
+    public boolean isvoid = false;
+    @Option(names = {"--core"},
+    		description = "check for core feature within the feature model")
+    public boolean core = false;
+    
+    @Option(names = {"--variant"},
+    		description = "check for variant feature within the feature model")
+    public boolean variant = false;
+    
+    @Option(names = {"--validpconfig"},
+    		description = "check if the entered configuration is present in solution",
+    		paramLabel="feature")
+    public String validPartialConfig;
 
     private void typeCheckProductLine(Model m) {
 
@@ -204,6 +220,33 @@ public class CheckSPLCommand implements Callable<Void> {
                     System.out.println("Number of solutions found: "+s.countSolutions());
                 }
             }
+     	   if (isvoid) {
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   System.out.println(s.isVoid());
+    	   }
+    	   if (core) {
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   System.out.println("Core features: \n" + s.coreToStrings());
+    	   }
+    	   if (variant) {
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   System.out.println("Variant features: \n" + s.variantToStrings());
+    	   }
+    	   if (validPartialConfig != null) {
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   ArrayList<String[]> listSRFeature = new ArrayList<String[]>();
+    		   
+               try {
+            	   listSRFeature = s.splitStrFeatures(validPartialConfig);
+               } catch (WrongProgramArgumentException e) {
+                   System.out.println(e);
+               }
+               
+               if (!listSRFeature.isEmpty()) {
+            	   System.out.println("Valid Partial Configuration Check: \n" + s.validPartialConfig(listSRFeature));
+               }
+               
+    	   }
         }
     }
 
