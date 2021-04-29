@@ -218,6 +218,11 @@ public class Absc implements Callable<Integer> {
     		description = "check for variant feature within the feature model")
     public boolean variant = false;
     
+    @Option(names = {"--validpconfig"},
+    		description = "check if the entered configuration is present in solution",
+    		paramLabel="feature")
+    public String validPartialConfig;
+    
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {
             String version = Absc.class.getPackage().getImplementationVersion();

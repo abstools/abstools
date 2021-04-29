@@ -698,6 +698,21 @@ public class Main {
     		   ChocoSolver s = m.instantiateCSModel();
     		   System.out.println("Variant features: \n" + s.variantToStrings());
     	   }
+    	   if (arguments.validPartialConfig != null) {
+    		   ChocoSolver s = m.instantiateCSModel();
+    		   ArrayList<String[]> listSRFeature = new ArrayList<String[]>();
+    		   
+               try {
+            	   listSRFeature = s.splitStrFeatures(arguments.validPartialConfig);
+               } catch (WrongProgramArgumentException e) {
+                   System.out.println(e);
+               }
+               
+               if (!listSRFeature.isEmpty()) {
+            	   System.out.println("Valid Partial Configuration Check: \n" + s.validPartialConfig(listSRFeature));
+               }
+               
+    	   }
     	   
        }
         

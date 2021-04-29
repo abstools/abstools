@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.ast.BoundaryInt;
 import org.abs_models.frontend.ast.BoundaryVal;
 import org.abs_models.frontend.ast.Limit;
@@ -693,6 +694,76 @@ public class ChocoSolver {
         }   
      
         return result.toString();
+    }
+    
+    public String validPartialConfig(ArrayList<String[]> listSRFeature) 
+    {	
+    	Set<Map<String,Integer>> solutions = getSolutions();
+    	boolean validConfig = false;
+    	
+    	String[] sFeatures = listSRFeature.get(0);
+    	//loop for checking selected feature
+    	for(Map<String,Integer>sol: solutions) {
+    		boolean validSol = true;
+    		
+    		//chk within solution if the selected feature is not available
+    		//selected feature must be 1
+    		for(String sfeature:sFeatures) {
+    			if(sol.get(sfeature) == 0) {
+    				validSol = false;
+    				break;
+    			}
+    		}
+    		
+    		//if selected feature all is satisfy than check for removed feature
+    		if(validSol && listSRFeature.size() == 2) {
+    			String[] rFeatures = listSRFeature.get(1);
+    			
+    			//chk within solution if the removed feature is available
+    			//removed feature must be 0
+    			for(String rfeature:rFeatures) {
+        			if(sol.get(rfeature) == 1) {
+        				validSol = false;
+        				break;
+        			}
+        		}
+    		}
+    		
+    		if(validSol) { 
+    			validConfig = true;
+    			break;
+    		}
+    	}
+    	
+    	
+    	if(validConfig) {
+    		return "Config is valid";
+    	}else {
+    		return "Config is not valid";
+    	}		
+    	
+    }
+    
+    public ArrayList<String[]> splitStrFeatures(String strFeatures) throws WrongProgramArgumentException {
+    	ArrayList<String[]> listSRFeature = new ArrayList<>();
+    	
+    	if(strFeatures.isBlank() || strFeatures.isEmpty()) {
+    		throw new WrongProgramArgumentException("Feature enter is null or empty.");
+    	}else {
+    		if(strFeatures.contains(">,<")) {
+        		String[] arrSRFeature = strFeatures.split(">,<");
+        		arrSRFeature[0] = arrSRFeature[0].replaceAll("<","");
+            	arrSRFeature[1] = arrSRFeature[1].replaceAll(">","");
+            	String[] sFeatures = arrSRFeature[0].split(",");
+            	String[] rFeatures = arrSRFeature[1].split(",");
+            	listSRFeature.add(0,sFeatures);
+            	listSRFeature.add(1,rFeatures);	
+        	}else {
+        		String[] sFeature = strFeatures.split(",");
+        		listSRFeature.add(0,sFeature);
+        	}
+        	return listSRFeature; 
+    	}
     }
     
     
