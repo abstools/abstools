@@ -61,9 +61,11 @@ public class ABSTest {
     }
 
     /**
-     * Take a file name and returns that name if it points to an existing file,
-     * otherwise if {@link File#getAbsoluteFile()} returns a file that points to
-     * an existing file, this method returns {@link File#getAbsolutePath()}.
+     * Take a file name and returns that name if it points to an existing
+     * file, either relative to the current directory or to `testfileroot`.
+     * otherwise if {@link File#getAbsoluteFile()} returns a file that points
+     * to an existing file, this method returns {@link
+     * File#getAbsolutePath()}.
      *
      * @param fileName
      * @return a valid file name from the input file name

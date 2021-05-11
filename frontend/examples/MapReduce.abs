@@ -1,0 +1,381 @@
+module MapReduce;
+import * from ABS.DC;
+
+// We arbitrarily choose to implement word count in the basic model.
+
+// These definitions to be changed in delta
+type InKeyType = String;         // filename
+type InValueType = List<String>; // file contents
+type OutKeyType = String;        // word
+type OutValueType = Int;         // count
+
+
+// Note we use lists where the paper says "set" since the authors mean
+// multisets in many cases, especially in the reduce phase.
+interface IMap {
+  // invoked by MapReduce component
+  List<Pair<OutKeyType, OutValueType>> invokeMap(InKeyType key, InValueType value);
+}
+
+interface IReduce {
+  // invoked by MapReduce component
+  List<OutValueType> invokeReduce(OutKeyType key, List<OutValueType> value);
+}
+
+interface Worker extends IMap, IReduce { }
+
+interface MapReduce {
+  // invoked by client
+  List<Pair<OutKeyType, List<OutValueType>>> mapReduce(List<Pair<InKeyType, InValueType>> documents);
+  // invoked by workers
+  Unit finished(Worker w);
+}
+
+class Worker(MapReduce master) implements Worker {
+  List<Pair<OutKeyType, OutValueType>> mapResults = Nil;
+  List<OutValueType> reduceResults = Nil;
+
+  // begin customizable section ------------------
+  Unit map(InKeyType key, InValueType value) {
+    List<String> wordlist = value;
+    while (!(wordlist == Nil)) {
+      String word = head(wordlist);
+      wordlist = tail(wordlist);
+      this.emitMapResult(word, 1);
+    }
+  }
+  Unit reduce(OutKeyType key, List<OutValueType> value) {
+    List<Int> numlist = value;
+    Int result = 0;
+    while (!(numlist == Nil)) {
+      result = result + head(numlist);
+      numlist = tail(numlist);
+    }
+    this.emitReduceResult(result);
+  }
+  Unit onMapStart(InKeyType key, InValueType value) {
+    skip;
+  }
+  Unit onMapEmit(OutKeyType key, OutValueType value) {
+    skip;
+  }
+  Unit onReduceStart(OutKeyType key, List<OutValueType> value) {
+    skip;
+  }
+  Unit onReduceEmit(OutValueType value) {
+    skip;
+  }
+  // end customizable section---------------------
+
+  List<Pair<OutKeyType, OutValueType>> invokeMap(InKeyType key, InValueType value) {
+    mapResults = Nil;
+    this.onMapStart(key, value);
+    this.map(key, value);
+    master!finished(this);
+    List<Pair<OutKeyType, OutValueType>> result = mapResults;
+    mapResults = Nil;
+    return result;
+  }
+
+  List<OutValueType> invokeReduce(OutKeyType key, List<OutValueType> value) {
+    reduceResults = Nil;
+    this.onReduceStart(key, value);
+    this.reduce(key, value);
+    master!finished(this);
+    List<OutValueType> result = reduceResults;
+    reduceResults = Nil;
+    return result;
+  }
+
+  Unit emitMapResult(OutKeyType key, OutValueType value) {
+    this.onMapEmit(key, value);
+    mapResults = Cons(Pair(key, value), mapResults);
+  }
+  Unit emitReduceResult(OutValueType value) {
+    this.onReduceEmit(value);
+    reduceResults = Cons(value, reduceResults);
+  }
+}
+
+class MapReduce implements MapReduce {
+  Set<Worker> workers = set[];
+  Int nWorkers = 0;
+
+  List<Pair<OutKeyType, List<OutValueType>>> mapReduce(List<Pair<InKeyType, InValueType>> items) {
+    Set<Fut<List<Pair<OutKeyType, OutValueType>>>> fMapResults = set[];
+    ABS.StdLib.Map<OutKeyType, List<OutValueType>> intermediates = map[];
+    Set<Pair<OutKeyType, Fut<List<OutValueType>>>> fReduceResults = set[];
+    List<Pair<OutKeyType, List<OutValueType>>> result = Nil;
+
+    while (!isEmpty(items)) {
+      Pair<InKeyType, InValueType> item = head(items);
+      items = tail(items);
+      Worker w = this.getWorker();
+      String key = fst(item);
+      InValueType value = snd(item);
+      // "Map, written by the user, takes an input pair and produces a
+      // set of intermediate key/value pairs." [MapReduce, pg. 2]
+      Fut<List<Pair<OutKeyType, OutValueType>>> fMap = w!invokeMap(key, value);
+      fMapResults = insertElement(fMapResults, fMap);
+    }
+    while (!emptySet(fMapResults)) {
+      // "The MapReduce library groups together all intermediate values
+      // associated with the same intermediate key I ..." [ditto]
+      Fut<List<Pair<OutKeyType, OutValueType>>> fMapResult = take(fMapResults);
+      fMapResults = remove(fMapResults, fMapResult);
+      await fMapResult?;
+      List<Pair<OutKeyType, OutValueType>> mapResult = fMapResult.get;
+      while (!isEmpty(mapResult)) {
+        Pair<OutKeyType, OutValueType> keyValuePair = head(mapResult);
+        mapResult = tail(mapResult);
+        List<OutValueType> inter = lookupDefault(intermediates, fst(keyValuePair), Nil);
+        intermediates = put(intermediates, fst(keyValuePair),
+          Cons(snd(keyValuePair), inter));
+      }
+    }
+    // "... and passes them to the Reduce function.  The Reduce
+    // function, also written by the user, accepts an intermediate key I
+    // and a set of values for that key. It merges together these values
+    // to form a possibly smaller set of values.  Typically just zero or
+    // one outpout value is produced per Reduce invocation." [ditto]
+    Set<OutKeyType> keys = keys(intermediates);
+    while(!emptySet(keys)) {
+      OutKeyType key = take(keys);
+      keys = remove(keys, key);
+      List<OutValueType> values = lookupUnsafe(intermediates, key);
+      Worker w = this.getWorker();
+      Fut<List<OutValueType>> fReduce = w!invokeReduce(key, values);
+      fReduceResults = insertElement(fReduceResults, Pair(key, fReduce));
+    }
+    while (!emptySet(fReduceResults)) {
+      Pair<OutKeyType, Fut<List<OutValueType>>> reduceResult = take(fReduceResults);
+      fReduceResults = remove(fReduceResults, reduceResult);
+      OutKeyType key = fst(reduceResult);
+      Fut<List<OutValueType>> fValues = snd(reduceResult);
+      await fValues?;
+      List<OutValueType> values = fValues.get;
+      result = Cons(Pair(key, values), result);
+    }
+    return result;
+  }
+
+  // begin customizable section ------------------
+  Worker getWorker() {
+    Worker w = null;
+    if (emptySet(workers)) {
+      w = new Worker(this);
+      nWorkers = nWorkers + 1;
+      } else {
+      w = take(workers);
+      workers = remove(workers, w);
+    }
+    return w;
+  }
+  Unit finished(Worker w) {
+    workers = insertElement(workers, w);
+  }
+  // end customizable section---------------------
+}
+
+
+// Environment
+class Client(MapReduce m) {
+  List<Pair<InKeyType, InValueType>> inputs =
+    list[Pair("paul_clifford.txt",
+          list["it", "was", "a", "dark", "and", "stormy", "night"]),
+      Pair("tale_of_two_cities.txt",
+        list["it", "was", "the", "best", "of", "times",
+          "it", "was", "the", "worst", "of", "times"]),
+      Pair("neuromancer.txt",
+        list["the", "sky", "above", "the", "port", "was", "the", "color", 
+          "of", "television", "tuned", "to", "a", "dead", "channel"])];
+  List<Pair<OutKeyType, List<OutValueType>>> result = Nil;
+  Unit run() {
+    Fut<List<Pair<OutKeyType, List<OutValueType>>>> f = m!mapReduce(inputs);
+    await f?;
+    result = f.get;
+  }
+}
+
+{
+  MapReduce m = new MapReduce();
+  new local Client(m);
+}
+// End Environment
+
+delta DOccurrences;
+uses MapReduce;
+modifies type OutValueType = String;
+modifies class Worker {
+  // KLUDGE: here it would be neat to have a delta parameter of type String.
+  adds String searchword = "it";
+  modifies Unit map(InKeyType key, InValueType value) {
+    List<String> wordlist = value;
+    while (!(wordlist == Nil)) {
+      String word = head(wordlist);
+      wordlist = tail(wordlist);
+      if (word == searchword) {
+        this.emitMapResult(word, key);
+      }
+    }
+  }
+  modifies Unit reduce(OutKeyType key, List<OutValueType> value) {
+    Set<OutValueType> resultset = EmptySet;
+    while (!(value == Nil)) {
+      resultset = insertElement(resultset, head(value));
+      value = tail(value);
+    }
+    while (!(resultset == EmptySet)) {
+      OutValueType file = take(resultset);
+      resultset = remove(resultset, file);
+      this.emitReduceResult(file);
+    }
+  }
+}
+
+delta DIndexing;
+uses MapReduce;
+modifies type InValueType = String;
+modifies type OutValueType = String;
+adds def Int max_prefix_length() = 12;
+modifies class Worker {
+  modifies   Unit map(InKeyType key, InValueType value) {
+    String content = value;
+    Int begin = 0;
+    Int max = strlen(content);
+    Int end = begin;
+    while (begin < max) {
+      while (substr(content, begin, 1) == " " && begin < max) {
+        begin = begin + 1;
+      }
+      // got a word boundary
+      end = begin + 1;
+      while (end - begin < max_prefix_length() && end <= max) {
+        this.emitMapResult(substr(content, begin, end - begin), key);
+        end = end + 1;
+      }
+      while (substr(content, begin, 1) != " " && begin < max - 1) {
+        begin = begin + 1;
+      }
+      begin = begin + 1;
+    }
+  }
+  modifies Unit reduce(OutKeyType key, List<OutValueType> value) {
+    // Remove duplicates in occurrence list: convert into set.
+    Set<OutValueType> resultset = set(value);
+    while (!(resultset == EmptySet)) {
+      OutValueType file = take(resultset);
+      resultset = remove(resultset, file);
+      this.emitReduceResult(file);
+    }
+  }
+}
+modifies class Client {
+  removes List<Pair<InKeyType, InValueType>> inputs;
+  adds List<Pair<InKeyType, InValueType>> inputs =
+    list[Pair("paul_clifford.txt", "it was a dark and stormy night"),
+      Pair("tale_of_two_cities.txt",
+        "it was the best of times it was the worst of times"),
+      Pair("neuromancer.txt",
+        "the sky above the port was the color of television tuned to a dead channel")];
+
+  }
+
+
+delta DFixedCost (Int cost);
+uses MapReduce;
+modifies class Worker {
+  modifies Unit onMapEmit(OutKeyType key, OutValueType value) {
+    [Cost: cost] skip;
+  }
+  modifies Unit onReduceEmit(OutValueType value) {
+    [Cost: cost] skip;
+  }
+}
+
+delta DUnboundedDeployment (Int capacity);
+uses MapReduce;
+modifies class MapReduce {
+  modifies Worker getWorker() {
+    Worker w = null;
+    if (emptySet(workers)) {
+      DeploymentComponent dc = new DeploymentComponent("worker "
+        + toString(nWorkers + 1), map[Pair(Speed, capacity)]);
+      [DC: dc] w = new Worker(this);
+      nWorkers = nWorkers + 1;
+    } else {
+      w = take(workers);
+      workers = remove(workers, w);
+    }
+    return w;
+  }
+}
+
+delta DBoundedDeployment (Int capacity, Int maxWorkers);
+uses MapReduce;
+modifies class MapReduce {
+  modifies Worker getWorker() {
+    if (emptySet(workers) && nWorkers < maxWorkers) {
+      DeploymentComponent dc = new DeploymentComponent("worker "
+        + toString(nWorkers + 1), map[Pair(Speed, capacity)]);
+      [DC: dc] Worker w = new Worker(this);
+      workers = insertElement(workers, w);
+      nWorkers = nWorkers + 1;
+    }
+    await !(emptySet(workers));
+    Worker w = take(workers);
+    workers = remove(workers, w);
+    return w;
+  }
+}
+
+productline DeltaResourceExample;
+features Cost, NoCost,
+  NoDeploymentScenario, UnlimitedMachines, LimitedMachines,
+  Wordcount, Wordsearch, Indexing;
+delta DOccurrences when Wordsearch;
+delta DIndexing when Indexing;
+delta DFixedCost(Cost.cost) when Cost;
+delta DUnboundedDeployment(UnlimitedMachines.capacity) when UnlimitedMachines;
+delta DBoundedDeployment(LimitedMachines.capacity, LimitedMachines.machinelimit) when LimitedMachines;
+
+
+product WordcountModel (Wordcount, NoCost, NoDeploymentScenario);
+product WordcountFull (Wordcount, Cost{cost=10}, UnlimitedMachines{capacity=20});
+product WordcountDemo (Wordcount, Cost{cost=10}, LimitedMachines{capacity=20, machinelimit=2});
+product WordsearchModel (Wordsearch, NoCost, NoDeploymentScenario);
+product WordsearchFull (Wordsearch, Cost{cost=10}, UnlimitedMachines{capacity=20});
+product WordsearchDemo (Wordsearch, Cost{cost=10}, LimitedMachines{capacity=20, machinelimit=2});
+product IndexingModel (Indexing, NoCost, NoDeploymentScenario);
+product IndexingFull (Indexing, Cost{cost=10}, UnlimitedMachines{capacity=20});
+product IndexingDemo (Indexing, Cost{cost=10}, LimitedMachines{capacity=20, machinelimit=2});
+
+
+root Calculations {
+  group oneof {
+    Wordcount,
+    Wordsearch,
+    Indexing
+  }
+}
+
+root Resources {
+  group oneof {
+    NoCost,
+    Cost { Int cost in [ 0 .. 10000 ] ; }
+  }
+}
+
+root Deployments {
+  group oneof {
+    NoDeploymentScenario,
+    UnlimitedMachines { Int capacity in [ 0 .. 10000 ] ; },
+    LimitedMachines { Int capacity in [ 0 .. 10000 ] ;
+      Int machinelimit in [ 0 .. 100 ] ; }
+  }    
+}
+
+// Local Variables:
+// abs-use-timed-interpreter: t
+// abs-indent: 2
+// End:

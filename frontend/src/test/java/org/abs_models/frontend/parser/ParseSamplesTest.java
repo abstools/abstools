@@ -15,10 +15,13 @@ import org.junit.runners.Parameterized.Parameters;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.Model;
 
+/**
+ * Render filename and product in JUnit output via test name.  Files are found
+ * via {@link ABSTest#resolveFileName()}.
+*/
 @RunWith(Parameterized.class)
 public class ParseSamplesTest extends FrontendTest {
 
-    /* Render filename and product in JUnit output via test name */
     @Parameters(name="{0}, {1}")
     public static Collection<?> data() {
         final Object[][] data = new Object[][] { { "examples/PeerToPeer.abs" , null }
@@ -35,7 +38,17 @@ public class ParseSamplesTest extends FrontendTest {
                                                //, { "examples/chatPL/" , "Regular" } // invalid in HATS repository too (missing class definitions)
                                                , { "abssamples/RandomBool.abs" , null}
                                                , { "abssamples/ReplicationSystem.abs" , null}
-                                               , { "abssamples/10wikipediadocstokenized.abs" , null}                                               
+                                               , { "abssamples/10wikipediadocstokenized.abs" , null}
+                                               , { "examples/MapReduce.abs" , null }
+                                               , { "examples/MapReduce.abs" , "WordcountModel" }
+                                               , { "examples/MapReduce.abs" , "WordcountFull" }
+                                               , { "examples/MapReduce.abs" , "WordcountDemo" }
+                                               , { "examples/MapReduce.abs" , "WordsearchModel" }
+                                               , { "examples/MapReduce.abs" , "WordsearchFull" }
+                                               , { "examples/MapReduce.abs" , "WordsearchDemo" }
+                                               , { "examples/MapReduce.abs" , "IndexingModel" }
+                                               , { "examples/MapReduce.abs" , "IndexingFull" }
+                                               , { "examples/MapReduce.abs" , "IndexingDemo" }                                               
         };
         return Arrays.asList(data);
     }
