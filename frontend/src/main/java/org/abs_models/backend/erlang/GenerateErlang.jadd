@@ -1085,26 +1085,29 @@ aspect GenerateErlang {
     StringWriter sw = new StringWriter();
     CodeStream after = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")), "");
     if(getGuard().hasPoll()){
+        String fieldNames = getGuard().getFields().fields.stream()
+            .map(gf -> String.format("object:field_with_oid(%s, Oid)", gf.getName()))
+            .collect(Collectors.joining(", "));
       getGuard().generateErlangCode(ecs,after,vars);
       after.close();
-      ecs.println("cog:return_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
-      ecs.pf("(fun Poll (%s)->",vars.toParamList());
-      String fieldNames = getGuard().getFields().fields.stream()
-          .map(gf -> String.format("object:field_with_oid(%s, Oid)", gf.getName()))
-          .collect(Collectors.joining(", "));
-      ecs.incIndent().format("ReadSet = [%s],", fieldNames);
-      ecs.println();
-      ecs.println("receive {check, OState} -> ");
+      ecs.println("cog:return_token(Cog,self(),{waiting_poll, get(vars), fun (Vars, OState) ->");
       ecs.incIndent().println("put(this, OState),");
-      ecs.incIndent().println("try");
-      ecs.incIndent().pf("case %s of",sw);
-      ecs.incIndent().pf("true -> cog:task_poll_is_ready(Cog, self(), ReadSet), Poll(%s);",vars.toParamList());
-      ecs.pf("false -> cog:task_poll_is_not_ready(Cog, self(), ReadSet),  Poll(%s)",vars.toParamList());
-      ecs.decIndent().println("end");
+      ecs.println("put(vars, Vars),");
+      ecs.pf("ReadSet=[%s],", fieldNames);
+      ecs.println("Result=try");
+      ecs.incIndent().pf("%s", sw);
       ecs.decIndent().println("catch");
-      ecs.incIndent().println("_:Exception -> cog:task_poll_has_crashed(Cog, self(), ReadSet), throw(Exception)");
-      ecs.decIndent().println("end;");
-      ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
+      ecs.incIndent().println("_:Exception -> {crashed, Exception}");
+      ecs.println("%% Exception will be re-thrown manually below");
+      ecs.decIndent().println("end,");
+      ecs.println("erase(this),");
+      ecs.println("erase(vars),");
+      ecs.println("{Result, ReadSet}");
+      ecs.decIndent().println("end}, get(task_info), get(this)),");
+      ecs.pf("(fun Poll (%s)->",vars.toParamList());
+      ecs.println("receive");
+      ecs.incIndent().println("{terminate, Exception} -> throw(Exception);");
+      ecs.pf("wait -> Poll(%s);", vars.toParamList());
       ecs.println("{token, OState} -> put(this, OState), ok;");
       ecs.println("{stop_world, _Sender} -> % only happens when stop_world and return_token cross");
       ecs.incIndent().pf("Poll(%s);", vars.toParamList());

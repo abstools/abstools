@@ -9,8 +9,6 @@
 %% functions informing cog about task state change
 -export([task_is_runnable/2,
          task_is_blocked_for_gc/4,
-         task_poll_is_ready/3, task_poll_is_not_ready/3,
-         task_poll_has_crashed/3,
          submit_references/2]).
 %% functions for registering / creating trace events
 -export([register_invocation/2, register_new_object/2,
@@ -47,12 +45,15 @@
 
 -record(data,
         {
-         %% Currently running / blocked task or `idle'
+         %% Currently running / blocked task PID or `idle'
          running_task=idle,
-         %% Tasks ready to run, including `running_task'
+         %% Tasks ready to run, including `running_task', stored as PIDs
          runnable_tasks=gb_sets:empty(),
-         %% Tasks maybe ready to run (ask them)
-         polling_tasks=gb_sets:empty(),
+         %% Tasks maybe ready to run (ask them). Stored as map from PID to
+         %% {Vars, Guard} where Vars is a map of local variables to their
+         %% values and Guard is a function taking (Vars, ObjectState) and
+         %% returning {State, ReadSet}.  State can be true, false, crashed.
+         polling_tasks_and_guard=maps:new(),
          %% Tasks not ready to run (future or dc will call `task_is_runnable'
          %% when ready)
          waiting_tasks=gb_sets:empty(),
@@ -397,15 +398,6 @@ return_token(#cog{ref=Cog}, TaskRef, State, TaskInfo, ObjectState) ->
                                       %% indicates we shouldn’t do that.
                                       wait_reason=none}).
 
-task_poll_is_ready(#cog{ref=Cog}, TaskRef, ReadSet) ->
-    Cog ! {TaskRef, true, ReadSet}.
-
-task_poll_is_not_ready(#cog{ref=Cog}, TaskRef, ReadSet) ->
-    Cog ! {TaskRef, false, ReadSet}.
-
-task_poll_has_crashed(#cog{ref=Cog}, TaskRef, ReadSet) ->
-    Cog ! {TaskRef, crashed, ReadSet}.
-
 submit_references(#cog{ref=CogRef}, Refs) ->
     gen_statem:cast(CogRef, {references, self(), Refs});
 submit_references(CogRef, Refs) ->
@@ -463,7 +455,7 @@ code_change(_OldVsn, StateName, Data, _Extra) ->
     {ok, StateName, Data}.
 
 handle_event({call, From}, {token, R, done, TaskInfo, _ObjectState}, _StateName,
-            Data=#data{running_task=T, polling_tasks=Pol,
+            Data=#data{running_task=T, polling_tasks_and_guard=PolMap,
                        task_infos=TaskInfos})
   when R =/= T ->
     %% How do we end up in this case?  If a task crashes while checking its
@@ -472,9 +464,9 @@ handle_event({call, From}, {token, R, done, TaskInfo, _ObjectState}, _StateName,
     %% filling the future with an exception etc., but we have already
     %% scheduled some other process to run.  Ignore the object state, it's
     %% outdated from the last suspension point.
-    NewPolling=gb_sets:del_element(R, Pol),
+    NewPolling=maps:remove(R, PolMap),
     NewTaskInfos=maps:put(R, TaskInfo, TaskInfos),
-    {keep_state, Data#data{task_infos=NewTaskInfos}, {reply, From, ok}};
+    {keep_state, Data#data{task_infos=NewTaskInfos,polling_tasks_and_guard=NewPolling}, {reply, From, ok}};
 handle_event({call, From}, {get_object_state, Oid}, _StateName, #data{object_states=ObjectStates}) ->
     {keep_state_and_data, {reply, From, maps:get(Oid, ObjectStates, dead)}};
 handle_event({call, From}, {get_object_state_for_update, Oid}, StateName, Data=#data{object_states=ObjectStates}) ->
@@ -629,13 +621,13 @@ handle_event(cast, _Event, _StateName, Data) ->
 %% should not happen since a blocked process does not execute user-defined ABS
 %% code and should not be able to crash.
 handle_event(info, {'EXIT',TaskRef,_Reason}, _StateName,
-            Data=#data{running_task=R,runnable_tasks=Run, polling_tasks=Pol,
+            Data=#data{running_task=R,runnable_tasks=Run, polling_tasks_and_guard=PolMap,
                        waiting_tasks=Wai, new_tasks=New,
                        task_infos=TaskInfos}) ->
     {keep_state,
      Data#data{running_task=R,
                runnable_tasks=gb_sets:del_element(TaskRef, Run),
-               polling_tasks=gb_sets:del_element(TaskRef, Pol),
+               polling_tasks_and_guard=maps:remove(TaskRef, PolMap),
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New),
                task_infos=maps:remove(TaskRef, TaskInfos)}};
@@ -741,8 +733,12 @@ get_polling_status(P, PollingStates) ->
     end.
 
 get_candidate_set(RunnableTasks, PollingTasks, PollingStates) ->
-    Ready = fun (X) -> get_polling_status(X, PollingStates) == true end,
-    gb_sets:union(RunnableTasks, gb_sets:filter(Ready, PollingTasks)).
+    Ready = fun (X, _V, Acc) -> case get_polling_status(X, PollingStates) of
+                                      true -> gb_sets:add(X, Acc);
+                                      _ -> Acc
+                                      end
+            end,
+    gb_sets:union(RunnableTasks, maps:fold(Ready, gb_sets:new(), PollingTasks)).
 
 record_termination_or_suspension(R, TaskInfos, PollingStates, NewPollingStates, TaskState, Recorded) ->
     Changed = [{P, V} || {P, V} <- maps:to_list(NewPollingStates),
@@ -765,21 +761,22 @@ record_termination_or_suspension(R, TaskInfos, PollingStates, NewPollingStates, 
     [Event | AwaitEvents] ++ Recorded.
 
 
-%% Polls all tasks in the polling list.  Return a set of all polling tasks
-%% ready to run
-poll_waiting(Tasks, TaskInfos, ObjectStates) ->
-    PollingTasks = gb_sets:to_list(Tasks),
-    lists:foreach(fun(R) ->
-                          send_token(check, R, TaskInfos, ObjectStates)
-                  end, PollingTasks),
-    lists:foldl(fun (R, PollingStates) ->
-                        receive
-                            {R, true, ReadSet} -> maps:put(R, {true, ReadSet}, PollingStates);
-                            {R, false, ReadSet} -> maps:put(R, {false, ReadSet}, PollingStates);
-                            {R, crashed, ReadSet} -> maps:put(R, {crashed, ReadSet}, PollingStates)
-                        end
-                end, #{}, PollingTasks).
-
+%% Polls all tasks in the map Pid -> {Vars, Guard}.  Return a map of all
+%% polling tasks mapping to their state (true, false, or {crashed, Exception})
+%% and the read set of the guard. Tells processes whose guard crashes to
+%% terminate themselves.
+poll_waiting(TaskMap, TaskInfos, ObjectStates) ->
+    maps:map(fun (R, {Vars, GuardFun}) ->
+                     ObjectState=object_state_from_pid(R, TaskInfos, ObjectStates),
+                     {Status,ReadSet}=GuardFun(Vars, ObjectState),
+                     case Status of
+                         {crashed, Exception} -> R ! {terminate, Exception};
+                         _ -> ok
+                     end,
+                     {Status,ReadSet}
+             end,
+             TaskMap).
+    
 maybe_send_unblock_confirmation(DCRef, CogRef, TaskRef, TaskInfos) ->
     %% This needs to be sent after dc:cog_active/2
     TaskInfo=maps:get(TaskRef, TaskInfos),
@@ -825,7 +822,7 @@ no_task_schedulable({call, From}, {new_task,TaskType,Future,CalleeObj,Args,Info,
 no_task_schedulable({call, From}, Event, Data) ->
     handle_event({call, From}, Event, no_task_schedulable, Data);
 no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
-                    Data=#data{waiting_tasks=Wai,polling_tasks=Pol,
+                    Data=#data{waiting_tasks=Wai,polling_tasks_and_guard=PolMap,
                                runnable_tasks=Run, new_tasks=New,
                                scheduler=Scheduler, dcref=DCRef,
                                task_infos=TaskInfos,
@@ -839,7 +836,7 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
     NewWaitingTasks = gb_sets:del_element(TaskRef, Wai),
     NewNewTasks = gb_sets:del_element(TaskRef, New),
 
-    Candidates = get_candidate_set(NewRunnableTasks, Pol, PollingStates),
+    Candidates = get_candidate_set(NewRunnableTasks, PolMap, PollingStates),
     T = choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, Replaying),
     case T of
         none->     % None found -- can happen during replay
@@ -867,12 +864,12 @@ no_task_schedulable(cast, {task_runnable, TaskRef, ConfirmTask},
              %% T can come from Pol or NewRunnableTasks - adjust cog state
              Data#data{running_task=T,
                        waiting_tasks=NewWaitingTasks,
-                       polling_tasks=gb_sets:del_element(T, Pol),
+                       polling_tasks_and_guard=maps:remove(T, PolMap),
                        runnable_tasks=gb_sets:add_element(T, NewRunnableTasks),
                        new_tasks=NewNewTasks, recorded=NewRecorded, replaying=NewReplaying}}
     end;
 no_task_schedulable(cast, {future_is_ready, FutureRef},
-                    Data=#data{polling_tasks=Pol,
+                    Data=#data{polling_tasks_and_guard=PolMap,
                                runnable_tasks=Run, new_tasks=New,
                                scheduler=Scheduler, dcref=DCRef,
                                task_infos=TaskInfos,
@@ -885,8 +882,8 @@ no_task_schedulable(cast, {future_is_ready, FutureRef},
     %% stored in a local variable, the future will wake it up
     %% directly.)  Try a normal scheduling round and see if anyone
     %% unblocks.
-    NewPollingStates=poll_waiting(Pol, TaskInfos, ObjectStates),
-    Candidates = get_candidate_set(Run, Pol, NewPollingStates),
+    NewPollingStates=poll_waiting(PolMap, TaskInfos, ObjectStates),
+    Candidates = get_candidate_set(Run, PolMap, NewPollingStates),
     T = choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, Replaying),
     case T of
         none->
@@ -917,7 +914,7 @@ no_task_schedulable(cast, {future_is_ready, FutureRef},
             {next_state, task_running,
              %% T can come from Pol or NewRunnableTasks - adjust cog state
              Data#data{running_task=T,
-                       polling_tasks=gb_sets:del_element(T, Pol),
+                       polling_tasks_and_guard=maps:remove(T, PolMap),
                        runnable_tasks=gb_sets:add_element(T, Run),
                        polling_states=NewPollingStates,
                        recorded=NewRecorded, replaying=NewReplaying}}
@@ -942,7 +939,7 @@ task_running({call, From}, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,
 task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                 Data=#data{gc_waiting_to_start=GCWaitingToStart,
                            running_task=R, runnable_tasks=Run,
-                           waiting_tasks=Wai, polling_tasks=Pol,
+                           waiting_tasks=Wai, polling_tasks_and_guard=PolMap,
                            new_tasks=New, scheduler=Scheduler,
                            task_infos=TaskInfos, dc=DC, dcref=DCRef,
                            object_states=ObjectStates,
@@ -960,17 +957,17 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                       _ -> gb_sets:del_element(R, Run) end,
     NewWaiting = case NewTaskState of waiting -> gb_sets:add_element(R, Wai);
                      _ -> Wai end,
-    NewPolling = case NewTaskState of waiting_poll -> gb_sets:add_element(R, Pol);
-                     _ -> Pol end,
-    NewPollingStates = poll_waiting(NewPolling, NewTaskInfos, NewObjectStates),
-    PollReadySet = gb_sets:filter(fun (X) -> get_polling_status(X, NewPollingStates) == true end, NewPolling),
-    PollCrashedSet = gb_sets:filter(fun (X) -> get_polling_status(X, NewPollingStates) == crashed end, NewPolling),
+    NewPollingMap = case NewTaskState of {waiting_poll, Vars, Closure} -> maps:put(R, {Vars, Closure}, PolMap);
+                        _ -> PolMap end,
+    NewPollingStates = poll_waiting(NewPollingMap, NewTaskInfos, NewObjectStates),
+    PollReadyMap = maps:filter(fun (X, {_Vars, _Closure}) -> get_polling_status(X, NewPollingStates) == true end, NewPollingMap),
+    PollCrashedMap = maps:filter(fun (X, {_Vars, _Closure}) -> get_polling_status(X, NewPollingStates) == crashed end, NewPollingMap),
     %% Record/replay termination or suspension
     NewRecorded = record_termination_or_suspension(R, NewTaskInfos, PollingStates, NewPollingStates, TaskState, Recorded),
 
     case GCWaitingToStart of
         false ->
-            Candidates = get_candidate_set(NewRunnable, NewPolling, NewPollingStates),
+            Candidates = get_candidate_set(NewRunnable, NewPollingMap, NewPollingStates),
             T = choose_runnable_task(Scheduler, Candidates, NewTaskInfos, NewObjectStates, Replaying),
             case T of
                 none->
@@ -981,7 +978,7 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                     {next_state, no_task_schedulable,
                      Data#data{running_task=idle, runnable_tasks=NewRunnable,
                                waiting_tasks=NewWaiting,
-                               polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
+                               polling_tasks_and_guard=maps:without(maps:keys(PollCrashedMap), NewPollingMap),
                                task_infos=NewTaskInfos,
                                object_states=NewObjectStates,
                                polling_states=NewPollingStates,
@@ -999,9 +996,9 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                      Data#data{running_task=T,
                                runnable_tasks=gb_sets:add_element(T, NewRunnable),
                                waiting_tasks=NewWaiting,
-                               polling_tasks=gb_sets:difference(
-                                               gb_sets:del_element(T, NewPolling),
-                                               PollCrashedSet),
+                               polling_tasks_and_guard=maps:without(
+                                                         maps:keys(PollCrashedMap),
+                                                         maps:remove(T, NewPollingMap)),
                                task_infos=NewTaskInfos,
                                object_states=NewObjectStates,
                                polling_states=NewPollingStates,
@@ -1020,15 +1017,15 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                 %% Hence, we take care to not send `cog_idle()' when leaving
                 %% `in_gc', and instead send it here if necessary.
                 true ->
-                    case gb_sets:is_empty(PollReadySet) of
-                        true -> dc:cog_idle(DCRef, self());
-                        false -> ok
+                    case maps:size(PollReadyMap) of
+                        0 -> dc:cog_idle(DCRef, self());
+                        _ -> ok
                     end,
                     {next_state, in_gc,
                      Data#data{next_state_after_gc=no_task_schedulable,
                                running_task=idle, runnable_tasks=NewRunnable,
                                waiting_tasks=NewWaiting,
-                               polling_tasks=gb_sets:difference(NewPolling, PollCrashedSet),
+                               polling_tasks_and_guard=maps:without(maps:keys(PollCrashedMap), NewPollingMap),
                                task_infos=NewTaskInfos,
                                object_states=NewObjectStates,
                                polling_states=NewPollingStates,
@@ -1037,7 +1034,8 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                     {next_state, in_gc,
                      Data#data{next_state_after_gc=no_task_schedulable,
                                running_task=idle, runnable_tasks=NewRunnable,
-                               waiting_tasks=NewWaiting, polling_tasks=NewPolling,
+                               waiting_tasks=NewWaiting,
+                               polling_tasks_and_guard=NewPollingMap,
                                task_infos=NewTaskInfos,
                                object_states=NewObjectStates,
                                polling_states=NewPollingStates,
@@ -1186,7 +1184,7 @@ task_running(cast, {consume_resource_on_dc, _DCRef, _DCOid, _ConsumingCog, _Cons
     {keep_state_and_data, [postpone]};
 task_running(info, {'EXIT',TaskRef,_Reason},
             Data=#data{gc_waiting_to_start=GCWaitingToStart,
-                       running_task=R,runnable_tasks=Run,polling_tasks=Pol,
+                       running_task=R,runnable_tasks=Run,polling_tasks_and_guard=PolMap,
                        waiting_tasks=Wai,new_tasks=New,scheduler=Scheduler,
                        task_infos=TaskInfos, dc=DC, dcref=DCRef,
                        object_states=ObjectStates,
@@ -1196,7 +1194,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
     NewTaskInfos=maps:remove(TaskRef, TaskInfos),
     %% TODO check if we need to update ObjectStates somehow
     NewRunnable=gb_sets:del_element(TaskRef, Run),
-    NewPolling=gb_sets:del_element(TaskRef, Pol),
+    NewPollingMap=maps:remove(TaskRef, PolMap),
     NewWaiting=gb_sets:del_element(TaskRef, Wai),
     NewNew=gb_sets:del_element(TaskRef, New),
     case GCWaitingToStart of
@@ -1205,7 +1203,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
                 %% The running task crashed / finished -- schedule a new one;
                 %% duplicated from `task_running'.
                 true ->
-                    Candidates = get_candidate_set(NewRunnable, NewPolling, PollingStates),
+                    Candidates = get_candidate_set(NewRunnable, NewPollingMap, PollingStates),
                     T = choose_runnable_task(Scheduler, Candidates, NewTaskInfos, ObjectStates, Replaying),
                     case T of
                         none->
@@ -1216,7 +1214,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
                             {next_state, no_task_schedulable,
                              Data#data{running_task=idle, runnable_tasks=NewRunnable,
                                        waiting_tasks=NewWaiting,
-                                       polling_tasks=NewPolling,
+                                       polling_tasks_and_guard=NewPollingMap,
                                        new_tasks=NewNew,
                                        task_infos=NewTaskInfos}};
                         _ ->
@@ -1232,7 +1230,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
                              Data#data{running_task=T,
                                        runnable_tasks=gb_sets:add_element(T, NewRunnable),
                                        waiting_tasks=NewWaiting,
-                                       polling_tasks=gb_sets:del_element(T, NewPolling),
+                                       polling_tasks_and_guard=maps:remove(T, NewPollingMap),
                                        new_tasks=NewNew,
                                        task_infos=NewTaskInfos,
                                        recorded=NewRecorded, replaying=NewReplaying}}
@@ -1240,7 +1238,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
                 %% Some other task crashed / finished -- keep calm and carry on
                 false -> {keep_state,
                       Data#data{runnable_tasks=NewRunnable,
-                                polling_tasks=NewPolling,
+                                polling_tasks_and_guard=NewPollingMap,
                                 waiting_tasks=NewWaiting,
                                 new_tasks=NewNew,
                                 task_infos=NewTaskInfos}}
@@ -1261,7 +1259,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
                                         _ -> R
                                     end,
                        runnable_tasks=NewRunnable,
-                       polling_tasks=NewPolling,
+                       polling_tasks_and_guard=NewPollingMap,
                        waiting_tasks=NewWaiting,
                        task_infos=NewTaskInfos,
                        new_tasks=NewNew}}
@@ -1338,8 +1336,8 @@ in_gc(cast, {task_runnable, TaskRef, ConfirmTask},
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New)}};
 in_gc(cast, {get_references, Sender},
-      Data=#data{runnable_tasks=Run, waiting_tasks=Wai, polling_tasks=Pol}) ->
-    AllTasks = gb_sets:union([Run, Wai, Pol]),
+      Data=#data{runnable_tasks=Run, waiting_tasks=Wai, polling_tasks_and_guard=PolMap}) ->
+    AllTasks = gb_sets:union([Run, Wai, gb_sets:from_list(maps:keys(PolMap))]),
     case gb_sets:is_empty(AllTasks) of
         true ->
             Sender ! {references_from_cog, []},
@@ -1362,7 +1360,7 @@ in_gc(cast, {new_task,TaskType,Future,CalleeObj,Args,Info,Sender,Notify,Cookie},
                task_infos=maps:put(NewTask, NewInfo, TaskInfos)},
      {next_event, cast, {task_runnable, NewTask, none}}};
 in_gc(cast, resume_world, Data=#data{running_task=RunningTask,
-                                     runnable_tasks=Run, polling_tasks=Pol,
+                                     runnable_tasks=Run, polling_tasks_and_guard=PolMap,
                                      next_state_after_gc=NextState,
                                      scheduler=Scheduler,
                                      task_infos=TaskInfos,
@@ -1377,7 +1375,7 @@ in_gc(cast, resume_world, Data=#data{running_task=RunningTask,
         true ->
             case NextState of
                 no_task_schedulable ->
-                    Candidates = get_candidate_set(Run, Pol, PollingStates),
+                    Candidates = get_candidate_set(Run, PolMap, PollingStates),
                     T = choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, Replaying),
                     case T of
                         none->   % None found
@@ -1397,7 +1395,7 @@ in_gc(cast, resume_world, Data=#data{running_task=RunningTask,
                              Data#data{gc_waiting_to_start=false,
                                        running_task=T,
                                        runnable_tasks=gb_sets:add_element(T, Run),
-                                       polling_tasks=gb_sets:del_element(T, Pol),
+                                       polling_tasks_and_guard=maps:remove(T, PolMap),
                                        recorded=NewRecorded,
                                        replaying=NewReplaying}}
                     end;
@@ -1416,25 +1414,25 @@ in_gc(cast, resume_world, Data=#data{running_task=RunningTask,
             end
         end;
 in_gc(_EventType, {'EXIT',TaskRef,_Reason},
-            Data=#data{running_task=R,runnable_tasks=Run, polling_tasks=Pol,
+            Data=#data{running_task=R,runnable_tasks=Run, polling_tasks_and_guard=PolMap,
                        waiting_tasks=Wai, new_tasks=New,
                        task_infos=TaskInfos}) ->
     NewTaskInfos=maps:remove(TaskRef, TaskInfos),
     NewRunnable=gb_sets:del_element(TaskRef, Run),
-    NewPolling=gb_sets:del_element(TaskRef, Pol),
+    NewPollingMap=maps:remove(TaskRef, PolMap),
     NewWaiting=gb_sets:del_element(TaskRef, Wai),
     NewNew=gb_sets:del_element(TaskRef, New),
     case TaskRef of
         R -> {keep_state,
               Data#data{next_state_after_gc=no_task_schedulable,
                         runnable_tasks=NewRunnable,
-                        polling_tasks=NewPolling,
+                        polling_tasks_and_guard=NewPollingMap,
                         waiting_tasks=NewWaiting,
                         new_tasks=NewNew,
                         task_infos=NewTaskInfos}};
         _ -> {keep_state,
               Data#data{runnable_tasks=NewRunnable,
-                        polling_tasks=NewPolling,
+                        polling_tasks_and_guard=NewPollingMap,
                         waiting_tasks=NewWaiting,
                         new_tasks=NewNew,
                         task_infos=NewTaskInfos}}
@@ -1503,7 +1501,7 @@ waiting_for_references(cast, Event, Data) ->
 waiting_for_references(info, {'EXIT',TaskRef,_Reason},
             Data=#data{next_state_after_gc=StateAfterGC,
                        running_task=R, runnable_tasks=Run,
-                       waiting_tasks=Wai, polling_tasks=Pol,
+                       waiting_tasks=Wai, polling_tasks_and_guard=PolMap,
                        new_tasks=New, task_infos=TaskInfos,
                        references=ReferenceRecord=#{
                                     sender := Sender,
@@ -1521,7 +1519,7 @@ waiting_for_references(info, {'EXIT',TaskRef,_Reason},
              Data#data{
                next_state_after_gc=NewStateAfterGC,
                runnable_tasks=gb_sets:del_element(TaskRef, Run),
-               polling_tasks=gb_sets:del_element(TaskRef, Pol),
+               polling_tasks_and_guard=maps:remove(TaskRef, PolMap),
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New),
                task_infos=maps:remove(TaskRef, TaskInfos),
@@ -1531,7 +1529,7 @@ waiting_for_references(info, {'EXIT',TaskRef,_Reason},
              Data#data{
                next_state_after_gc=NewStateAfterGC,
                runnable_tasks=gb_sets:del_element(TaskRef, Run),
-               polling_tasks=gb_sets:del_element(TaskRef, Pol),
+               polling_tasks_and_guard=maps:remove(TaskRef, PolMap),
                waiting_tasks=gb_sets:del_element(TaskRef, Wai),
                new_tasks=gb_sets:del_element(TaskRef, New),
                task_infos=maps:remove(TaskRef, TaskInfos),

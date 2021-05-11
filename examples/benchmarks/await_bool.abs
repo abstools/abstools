@@ -1,0 +1,50 @@
+module AwaitBoolBench;
+
+// This file contains a microbenchmark for awaiting on Boolean conditions.
+// 
+// The `await e;` syntax is difficult to implement since the value of `e` can
+// change on each scheduling point.  Therefore a naive fair or random
+// scheduler must evaluate all conditions.  This also applies if the class or
+// object uses a user-defined scheduler.
+// 
+// We create a number of processes waiting on a boolean condition, then
+// "unlock" them all at once; for $n$ processes, the guard will be evaluated
+// $n!$ times.
+
+interface I {
+    Unit do_bench();
+}
+
+class C(Int n_processes) implements I {
+    Bool start = False;
+    Int counter = 0;
+
+    {
+        // Note that we create all processes here before scheduling any, since
+        // the class only starts accepting method calls once the init block is
+        // finished
+        Int n = 0;
+        while (n < n_processes) {
+            this!workMethod();
+            n = n + 1;
+        }
+    }
+
+    Unit workMethod() {
+        await start;
+        counter = counter + 1;
+    }
+    Unit do_bench() {
+        start = True;
+        await counter == n_processes;
+    }
+}
+
+{
+    Int n_processes = 10000;
+    println(`Creating test class with $n_processes$ processes at $ms_since_model_start()$ ms`);
+    I o = new C(n_processes);
+    println(`Unlocking processes in test class at $ms_since_model_start()$ ms`);
+    await o!do_bench();
+    println(`All processes finished at $ms_since_model_start()$ ms`);
+}

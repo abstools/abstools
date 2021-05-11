@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- A cog with multiple processes awaiting on Boolean conditions now evaluates all guards itself instead of sending signals to the waiting processes and collecting results.  This results in better performance (factor 3-10 in microbenchmarks) and better concurrency (all guards are evaluated on one core, so other processes can run in parallel).
+
 ## [1.9.2] - 2021-03-02
 
 ### Added
