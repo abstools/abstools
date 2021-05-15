@@ -1104,18 +1104,19 @@ aspect GenerateErlang {
       ecs.println("erase(vars),");
       ecs.println("{Result, ReadSet}");
       ecs.decIndent().println("end}, get(task_info), get(this)),");
-      ecs.pf("(fun Poll (%s)->",vars.toParamList());
+      ecs.pf("(fun Poll (Params=%s, Exception)->",vars.toParamList());
       ecs.println("receive");
-      ecs.incIndent().println("{terminate, Exception} -> throw(Exception);");
-      ecs.pf("wait -> Poll(%s);", vars.toParamList());
-      ecs.println("{token, OState} -> put(this, OState), ok;");
-      ecs.println("{stop_world, _Sender} -> % only happens when stop_world and return_token cross");
-      ecs.incIndent().pf("Poll(%s);", vars.toParamList());
+      ecs.incIndent().println("{throw, E} -> Poll(Params, E);");
+      ecs.println("{token, OState} ->");
+      ecs.incIndent().println("put(this, OState),");
+      ecs.println("case Exception of none -> ok; _ -> throw(Exception) end;");
+      ecs.decIndent().println("{stop_world, _Sender} -> % only happens when stop_world and return_token cross");
+      ecs.incIndent().println("Poll(Params, Exception);");
       ecs.decIndent().println("{get_references, Sender} ->");
       ecs.incIndent().pf("cog:submit_references(Sender, gc:extract_references(%s)),", vars.toStack());
-      ecs.pf("Poll(%s)", vars.toParamList());
+      ecs.println("Poll(Params, Exception)");
       ecs.decIndent().println("end end)");
-      ecs.decIndent().format("(%s)",vars.toParamList());
+      ecs.decIndent().format("(%s, none)",vars.toParamList());
       ecs.decIndent();
     }
     else {

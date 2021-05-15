@@ -734,9 +734,14 @@ get_polling_status(P, PollingStates) ->
 
 get_candidate_set(RunnableTasks, PollingTasks, PollingStates) ->
     Ready = fun (X, _V, Acc) -> case get_polling_status(X, PollingStates) of
-                                      true -> gb_sets:add(X, Acc);
-                                      _ -> Acc
-                                      end
+                                    false -> Acc;
+                                    %% Both guard = true and guard = crashed
+                                    %% are ready to execute.  Crashed guards
+                                    %% will cause the most recent exception to
+                                    %% be thrown when their process is
+                                    %% scheduled.
+                                    _ -> gb_sets:add(X, Acc)
+                                end
             end,
     gb_sets:union(RunnableTasks, maps:fold(Ready, gb_sets:new(), PollingTasks)).
 
@@ -764,13 +769,13 @@ record_termination_or_suspension(R, TaskInfos, PollingStates, NewPollingStates, 
 %% Polls all tasks in the map Pid -> {Vars, Guard}.  Return a map of all
 %% polling tasks mapping to their state (true, false, or {crashed, Exception})
 %% and the read set of the guard. Tells processes whose guard crashes to
-%% terminate themselves.
+%% throw an exception when scheduled next.
 poll_waiting(TaskMap, TaskInfos, ObjectStates) ->
     maps:map(fun (R, {Vars, GuardFun}) ->
                      ObjectState=object_state_from_pid(R, TaskInfos, ObjectStates),
                      {Status,ReadSet}=GuardFun(Vars, ObjectState),
                      case Status of
-                         {crashed, Exception} -> R ! {terminate, Exception};
+                         {crashed, Exception} -> R ! {throw, Exception};
                          _ -> ok
                      end,
                      {Status,ReadSet}

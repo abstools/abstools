@@ -1,0 +1,36 @@
+module BackendTest;
+
+interface I {
+    Bool test();
+    Unit set(Int i);
+}
+
+class C implements I {
+    Int n = 0;
+    Bool test() {
+        Bool result = False;
+        try
+            await 5 / n > 0;
+        catch
+            e => result = True;
+        return result;
+    }
+    Unit set(Int i) { this.n = i; }
+}
+
+{
+    Bool testresult = True;
+    Bool methodresult = False;
+    I o = new C();
+    // No exception is thrown since guard is protected; will return True
+    try methodresult = await o!test();
+    catch e => testresult = False;
+    // test should have returned True since an exception was caught
+    testresult = testresult && methodresult;
+    await o!set(5);
+    try methodresult = await o!test();
+    catch e => testresult = False;
+    // test should have returned False
+    testresult = testresult && !methodresult;
+    println(`Result: $testresult$`);
+}

@@ -169,6 +169,12 @@ Guards can wait for a futures to become resolved, for a Boolean condition over
 the object state to become true, or (in timed ABS) for a certain duration to
 pass.
 
+NOTE: When evaluating a guard results in an exception, that exception will be
+thrown when the task is scheduled next, and can be caught as normal (see
+<<try-catch-finally-stmt>>).  Note that a guard can be evaluated multiple
+times before its task is scheduled -- the most recent exception will be thrown
+even if the guard evaluated without an exception afterwards.
+
 In general, each cog will continue running a task without preempting it until
 the task is finished or it reaches a _scheduling point_.  Await statements are
 scheduling points, as are `suspend` statements and assignment or expression
