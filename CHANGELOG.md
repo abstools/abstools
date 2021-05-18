@@ -10,15 +10,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- The toolchain now requires Java 11 or later.
-
-- The long command-line parameter names for recording and replaying traces have been changed from `--dump-trace` and `--replay-trace` to `--record` and `--replay`.  The short parameters stay the same (`-t` and `-r`, respectively).
-
 ### Removed
 
 ### Fixed
 
-- A cog with multiple processes awaiting on Boolean conditions now evaluates all guards itself instead of sending signals to the waiting processes and collecting results.  This results in better performance (factor 3-10 in microbenchmarks) and better concurrency (all guards are evaluated on one core, so other processes can run in parallel).
+## [1.9.3] - 2021-05-18
+
+### Changed
+
+- The toolchain now requires Java 11 or later.
+
+- The long command-line parameter names for recording and replaying traces have been changed from `--dump-trace` and `--replay-trace` to `--record` and `--replay`.  The short parameters stay the same (`-t` and `-r`, respectively).
+
+### Fixed
+
+- Performance improvement in the Erlang backend: a cog with multiple processes awaiting on Boolean conditions now evaluates all guards in-process instead of delegating to the waiting processes.  This results in better performance -- observed an improvement factor of 3-9 and utilization of a single core (as opposed to  running on all cores of a multi-core machine) in microbenchmarks involving a single cog.
 
 ## [1.9.2] - 2021-03-02
 
@@ -414,7 +420,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.2...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.3...HEAD
+[1.9.3]: https://github.com/abstools/abstools/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/abstools/abstools/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/abstools/abstools/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/abstools/abstools/compare/v1.8.2...v1.9.0

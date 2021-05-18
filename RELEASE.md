@@ -1,7 +1,7 @@
 # Release Checklist
 
-If possible, perform the release using Java 8, since jars generated with later
-versions (e.g., Java 11) cannot be used with earlier versions.
+If possible, perform the release using Java 11, since jars generated with
+later versions (e.g., Java 16) cannot be used with earlier versions.
 
 ## Pre-release checks
 
