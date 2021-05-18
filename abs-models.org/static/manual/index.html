@@ -746,7 +746,7 @@ p { margin-bottom: 1.25rem; }
 <h1>ABS Documentation</h1>
 <div class="details">
 <span id="author" class="author">ABS Development Team</span><br>
-<span id="revnumber">version v1.9.2</span>
+<span id="revnumber">version v1.9.3</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -3681,6 +3681,22 @@ the same COG can be scheduled.</p>
 <p>Guards can wait for a futures to become resolved, for a Boolean condition over
 the object state to become true, or (in timed ABS) for a certain duration to
 pass.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+When evaluating a guard results in an exception, that exception will be
+thrown when the task is scheduled next, and can be caught as normal (see
+<a href="#try-catch-finally-stmt">Handling Exceptions with Try-Catch-Finally</a>).  Note that a guard can be evaluated multiple
+times before its task is scheduled&#8201;&#8212;&#8201;the most recent exception will be thrown
+even if the guard evaluated without an exception afterwards.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>In general, each cog will continue running a task without preempting it until
@@ -8838,11 +8854,11 @@ reproduce the previous run.</p>
 </div>
 <div class="paragraph">
 <p>To record a trace to a file <code>trace.json</code>, start the model with a parameter
-<code>--dump-trace trace.json</code> or <code>-t trace.json</code>.</p>
+<code>--record trace.json</code> or <code>-t trace.json</code>.</p>
 </div>
 <div class="paragraph">
 <p>To replay an existing trace recorded in <code>trace.json</code>, start the model with
-<code>--replay-trace trace.json</code> or <code>-r trace.json</code>.</p>
+<code>--replay trace.json</code> or <code>-r trace.json</code>.</p>
 </div>
 <div class="paragraph">
 <p>A trace can also be obtained from a running model via the Model API.  Assuming
@@ -9113,8 +9129,8 @@ No other runtime system libraries and dependencies will be generated.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version v1.9.2<br>
-Last updated 2020-09-21 14:44:57 +0200
+Version v1.9.3<br>
+Last updated 2021-04-25 16:07:01 +0200
 </div>
 </div>
 </body>
