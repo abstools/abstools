@@ -64,16 +64,16 @@ public class HistoryItem {
 
     public static List<HistoryItem> loadHistory(File f) throws IOException {
         List<HistoryItem> history;
-        BufferedReader reader = new BufferedReader(new FileReader(f));
-        history = new ArrayList<>();
-        while (reader.ready()) {
-            String s = reader.readLine();
-            if (s == null)
-                break;
+        try (BufferedReader reader = new BufferedReader(new FileReader(f))) {
+            history = new ArrayList<>();
+            while (reader.ready()) {
+                String s = reader.readLine();
+                if (s == null)
+                    break;
 
-            history.add(new HistoryItem(s));
+                history.add(new HistoryItem(s));
+            }
         }
-
 
         return history;
     }

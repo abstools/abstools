@@ -248,9 +248,8 @@ class SourceView extends JPanel implements DebugModelListener {
     }
 
     private void fillArea() {
-        try {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             int lineNo = 1;
-            BufferedReader reader = new BufferedReader(new FileReader(file));
             while (reader.ready()) {
                 String line = reader.readLine();
                 if (line == null)
