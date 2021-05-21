@@ -112,11 +112,38 @@ sourcesJar.dependsOn 'generateGrammarSource'
 //     outputs.file('src/main/resources/erlang/absmodel/ebin/cog.beam')
 // }
 
+task checkErlang() {
+    doLast {
+        def minVersion = "22"
+        def command = ['erl', '-noshell', '-eval', 'io:fwrite("~s~n", [erlang:system_info(otp_release)]).', '-s', 'erlang', 'halt']
+        // def command = 'erl -noshell -eval \'io:fwrite("~s~n", [erlang:system_info(otp_release)]).\' -s erlang halt'
+        def out = "", serr = new StringBuilder()
+        def success = 0
+        try {
+            def result = command.execute()
+            result.consumeProcessErrorStream(serr)
+            out = result.text
+            result.waitFor()
+            success = result.exitValue()
+        } catch (IOException e) {
+            throw new GradleException("*** Could not find erlang executable in path - please install erlang version ${minVersion} or later")
+        }
+        if (success != 0) {
+            throw new GradleException("*** Could not determine erlang version - please install erlang version ${minVersion} or later")
+        }
+        def currVersion = out.trim()
+        if (currVersion < minVersion) {
+            throw new GradleException("*** We need at least erlang version ${minVersion}, installed erlang version is ${currVersion}.")
+        }
+    }
+}
+
 task compileErlangBackend(type: Exec, dependsOn: processResources) {
     description 'Compiles Erlang backend support files.'
     workingDir 'build/resources/main/erlang/absmodel'
     commandLine 'escript', '../bin/rebar3', 'compile'
 }
+compileErlangBackend.dependsOn 'checkErlang'
 clean {
     // This removes beam files left over after updating from old versions
     // (e.g. v1.8.1), when we precompiled the erlang backend in `src/` instead
