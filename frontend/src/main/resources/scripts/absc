@@ -1,0 +1,20 @@
+#!/bin/bash
+
+PROGNAME=$(readlink "$0")
+if [ -z "$PROGNAME" ] ; then
+    PROGNAME="$0"
+fi
+
+DIRNAME=$(dirname "$PROGNAME")
+
+if [ -f "$DIRNAME/../dist/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$DIRNAME/../dist/absfrontend.jar"
+elif [ -f "$DIRNAME/lib/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$DIRNAME/lib/absfrontend.jar"
+else
+    echo "Error: could not find absfrontend.jar"
+    echo "(expected in $DIRNAME/../dist/ or $DIRNAME/lib/)"
+    exit 1
+fi
+
+java -Xmx512m -jar "$ABSFRONTENDJAR" "$@"

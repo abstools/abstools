@@ -200,10 +200,7 @@ assemble.dependsOn plainJar
 // https://abstools.github.io/getting_started/local-install/)
 task copyScripts(type: Copy) {
     description 'Copies absc scripts into their documented locations.'
-    from('src/main/resources') {
-        include 'bash/**'
-        include 'win/**'
-    }
+    from 'src/main/resources/scripts'
     into 'bin/'
 }
 clean {

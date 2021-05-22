@@ -9,10 +9,9 @@ See <https://abs-models.org/getting_started/local-install/> for installation ins
 After building, the command `java -jar frontend/dist/absfrontend.jar` will run
 the compiler and output a help message.
 
-A convenience script called `absc` that invokes the ABS compiler can be found
-in `frontend/bin/bash/` (for Unix-like systems) and `frontend/bin/win` (for
-Windows).  For a list of options to the compiler, see the output of `absc
---help`.
+Convenience scripts called `absc` and `absc.bat` that invoke the ABS compiler
+on Unix and Windows systems can be found in `frontend/bin/`.  For a list of
+options to the compiler, see the output of `absc --help`.
 
 ## Checking ABS code ##
 
