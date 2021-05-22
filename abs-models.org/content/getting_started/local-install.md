@@ -102,7 +102,7 @@ gradle (after installing the necessary dependencies):
 git clone https://github.com/abstools/abstools.git
 cd abstools
 ./gradlew assemble
-frontend/bin/bash/absc --help
+frontend/bin/absc --help
 ```
 
 ```powershell
@@ -110,16 +110,16 @@ frontend/bin/bash/absc --help
 git clone "https://github.com/abstools/abstools.git"
 cd abstools
 .\gradlew assemble
-frontend\bin\win\absc --help
+frontend\bin\absc.bat --help
 ```
 
 At the end of these commands, you should see the help output of the ABS
 compiler.
 
-The directory `abstools/frontend/bin/bash` (for Linux, macOS, other Unix
-systems) or `abstools\frontend\bin\win` contains a convenience script for
-invoking the ABS compiler; this directory can be added to the PATH environment
-variable if desired.
+The directory `abstools/frontend/bin` contains convenience scripts `absc` (for
+Linux, macOS, other Unix systems) and `absc.bat` (for Windows) that invoke the
+ABS compiler.  This directory can be added to the `PATH` environment variable
+if desired.
 
 To compile an ABS model `model.abs`, invoke the compiler with `absc
 --erlang model.abs`, then run the model with `./gen/erl/run`.
