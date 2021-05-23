@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The toolchain now requires Erlang 23 or later.
+
 - The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 
 ### Changed
