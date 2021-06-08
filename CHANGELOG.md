@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Removed the one-minute timeout for the Model API (calls to the Model API used to abort with a 5xx error code after one minute).
+
 ## [1.9.3] - 2021-05-18
 
 ### Changed

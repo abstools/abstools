@@ -36,7 +36,7 @@ start(_StartType, _StartArgs) ->
     %% https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy.start_clear/
     case cowboy:start_clear(http, [{port, Port}, {ip, loopback}],
                             #{env => #{dispatch => Dispatch}
-                             , idle_timeout => 300*1000}) of
+                             , idle_timeout => infinity }) of
         {ok, _} ->
             case Verbose of
                 0 -> ok;
