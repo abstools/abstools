@@ -159,7 +159,7 @@ assert x != null;
 
 
 [[await-stmt]]
-=== Await Statement
+=== Await (Statement)
 
 An await statement suspends the current task until the given guard becomes
 active (evaluates to `True`).  While the task is suspended, other tasks within
