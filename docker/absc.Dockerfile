@@ -1,4 +1,4 @@
-FROM erlang:23-alpine AS jdk-erlang
+FROM erlang:24-alpine AS jdk-erlang
 RUN apk --update add \
         bash \
         nss \
