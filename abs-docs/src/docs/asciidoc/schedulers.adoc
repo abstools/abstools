@@ -42,6 +42,7 @@ def Process earliest_deadline_scheduler(List<Process> queue) =
 All schedulers must have a result type `Process` and must take an argument of
 type `List<Process>` as their first argument.
 
+[[sec:process-attributes]]
 === Processes and Process Attributes
 
 A _process_ is an ABS abstract datatype; i.e., there is no constructor

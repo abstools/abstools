@@ -730,4 +730,23 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void foreachWithNoList() {
 	assertTypeErrors("{ foreach(v, i in 5) { println(`$i$'th int value is $v$`);} }");
     }
+
+    @Test
+    public void sqlite3Wrong() {
+	// wrong return value: must be a list
+	assertTypeErrors("def Int query() = builtin(sqlite3, `test.db`, `select * from table`);");
+	// wrong return value: list type must be a datatype that can be converted from sql values
+	assertTypeErrors("def List<Object> query() = builtin(sqlite3, `test.db`, `select * from table`);");
+	// wrong return value: list type must have 1 constructor
+	assertTypeErrors("data Tuple; def List<Tuple> query() = builtin(sqlite3, `test.db`, `select * from table`);");
+	// wrong return value: list type constructor must have > 0 arguments
+	assertTypeErrors("def List<Unit> query() = builtin(sqlite3, `test.db`, `select * from table`);");
+	// wrong arguments: too few arguments
+	assertTypeErrors("def List<Int> query() = builtin(sqlite3);");
+	assertTypeErrors("def List<Int> query() = builtin(sqlite3, `test.db`);");
+	// wrong arguments: too many arguments
+	assertTypeErrors("def List<Int> query() = builtin(sqlite3, `test.db`, `select * from table`, `hi there!`);");
+	// wrong argument types
+	assertTypeErrors("def List<Int> query() = builtin(sqlite3, Unit, 13);");
+    }
 }

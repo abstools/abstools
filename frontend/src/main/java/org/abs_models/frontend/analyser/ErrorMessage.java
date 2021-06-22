@@ -152,7 +152,10 @@ public enum ErrorMessage {
     INVALID_PRODUCT("Product %s does not satisfy the feature model. Constraints failed: %s."),
     MATCHING_NOT_ALLOWED_IN_CATCH("Non-free pattern variable %s (not allowed in catch branches)."),
     DUPLICATE_INTERFACE_IMPLEMENTATION("Class %s already implements interface %s."),
-    MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s.")
+    MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s."),
+
+    SQLITE3_INCORRECT_ARGUMENTS("SQLite3 query functions must have three arguments: `sqlite3', a string containing the database filename, and a string with the SQL query."),
+    SQLITE3_INCORRECT_RETURN_TYPE("SQLite3 query functions must return a list of values that can be converted from SQL types.")
     ;
 
     private String pattern;
