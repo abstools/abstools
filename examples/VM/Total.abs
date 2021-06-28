@@ -161,6 +161,7 @@ new Test() with IncExpConflict;
 }
 
 
+/* Comparison with global version
 module Test;
 import * from MFinancialReport;
 
@@ -178,7 +179,7 @@ class EnterTest()
     }
 
 //Feature addExpense with similar addData method with Income
-delta DAddExpense;
+delta DGAddExpense;
 uses Test;
 
 modifies class EnterTest
@@ -193,7 +194,7 @@ modifies class EnterTest
 
 
 //Feature addExpense with different addData method with Expense
-delta DAddExp;
+delta DGAddExp;
 uses Test;
 
 modifies class EnterTest
@@ -210,9 +211,8 @@ modifies class EnterTest
 
 
 
-delta DIncome;
+delta DGIncome;
 uses MFinancialReport;
-
 modifies class FinancialReportImpl
 {
 
@@ -231,7 +231,7 @@ modifies class FinancialReportImpl
         println("Total incomes: "+toString(balances));
     }
 }
-delta DExpense;
+delta DGExpense;
 uses MFinancialReport;
 
 modifies class FinancialReportImpl
@@ -254,7 +254,7 @@ modifies class FinancialReportImpl
 }
 
 
-delta DExp;
+delta DGExp;
 uses MFinancialReport;
 modifies interface FinancialReport
 {
@@ -280,25 +280,25 @@ modifies class FinancialReportImpl
 
 }
 productline Report;
-    features Income, Expense, Exp, Program;
+    features GIncome, GExpense, GExp, GProgram;
 
-delta DIncome when Income;
+delta DGIncome when GIncome;
 
-delta DExpense after DIncome when Expense ;
-delta DAddExpense when Expense;
+delta DGExpense after DGIncome when GExpense ;
+delta DGAddExpense when GExpense;
 
-delta DExp when Exp;
-delta DAddExp when Exp;
+delta DGExp when GExp;
+delta DGAddExp when GExp;
 
 
-product IncomeReport (Income);
-product IncExpConflict (Income, Expense); 
-product IncExpReport (Income, Exp);
+product GIncomeReport (GIncome);
+product GIncExpConflict (GIncome, GExpense);
+product GIncExpReport (GIncome, GExp);
 root CharityOrganizationSystem {
             group allof {
-                Income,
-                opt Expense,
-                opt Exp,
+                GIncome,
+                opt GExpense,
+                opt GExp,
                 opt AutomaticReport {
                     group [0 .. *] {
                         ByLevel {
@@ -313,4 +313,4 @@ root CharityOrganizationSystem {
                 }
             }
    }
-
+*/
