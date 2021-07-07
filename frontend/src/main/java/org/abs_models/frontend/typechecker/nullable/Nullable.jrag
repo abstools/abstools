@@ -1,0 +1,126 @@
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
+
+/**
+ * Gives access to the nullable type of expressions
+ */
+aspect Nullable {
+  public interface HasNullableType {
+        NullableType getNullableType();
+    }
+    
+  ParamDecl implements HasNullableType;
+  Exp implements HasNullableType;
+
+  /**
+    * The nullable type of the expression. Returns null when the type is not a reference or future type
+    */
+  syn NullableType Exp.getNullableType() {
+    Type t = getType();
+
+    if (!NullCheckerExtension.shouldHaveNullableType(t)) {
+      return null;
+    }
+
+    if (nonnull()) {
+      return NullableType.Nonnull;
+    }
+    if (isNull()) {
+      return NullableType.Null;
+    }
+    return NullableType.Nullable;
+  }
+
+  /**
+    * True iff the expression is either Nullable or Null
+    */
+  syn boolean Exp.couldBeNull() = getNullableType() == NullableType.Nullable || getNullableType() == NullableType.Null;
+
+  // == Parameters ==
+  syn boolean ParamDecl.nullable() {
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
+  }
+
+  // == MethodSig ==
+  /**
+   * Whether the return type is declared as Nullable
+   */
+  syn boolean MethodSig.nullable() {
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
+  }
+
+  // == Function ==
+  /**
+   * Whether the return type is declared as Nullable
+   */
+  syn boolean FunctionDecl.nullable() {
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
+  }
+
+  // == Partial Function
+  /**
+   * Whether the return type is declared as Nullable
+   */
+  syn boolean PartialFunctionDecl.nullable() {
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
+  }
+
+  // == VarOrFieldDecl
+  /**
+   * Whether the variable or field type is declared as Nullable
+   */
+  syn boolean VarOrFieldDecl.nullable() = false;
+
+  eq TypedVarOrFieldDecl.nullable() {
+    NullableType nt = getNullableType();
+    if (nt == null) return false;
+    return nt.isNullable();
+  }
+
+  /**
+   * The nullable type of this parameter
+   */
+  syn NullableType ParamDecl.getNullableType() {
+    Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
+  }
+
+  /**
+   * The nullable type of the return type
+   */
+  syn NullableType MethodSig.getNullableType() {
+    Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
+  }
+
+  /**
+   * The nullable type of the return type
+   */
+  syn NullableType FunctionDecl.getNullableType() {
+    Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
+  }
+
+  /**
+   * The nullable type of the return type
+   */
+  syn NullableType PartialFunctionDecl.getNullableType() {
+    Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
+  }
+
+  /**
+   * The nullable type of the this variable or field
+   */
+  syn NullableType VarOrFieldDecl.getNullableType() {
+    Type t = getType();
+    return NullCheckerExtension.getNullableType(t);
+  }
+}

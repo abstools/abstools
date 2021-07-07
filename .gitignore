@@ -35,3 +35,14 @@ out/
 /abs-docs/ReferenceManual/absrefmanual.pdf
 /abs-docs/ReferenceManual/gitRevision.tex
 /abs-foreign-interface/java/abs-java-util/bin/
+
+# IntelliJ files
+/**/shelf/
+/**/workspace.xml
+# Datasource local storage ignored files
+/**/dataSources/
+/**/dataSources.local.xml
+# Editor-based HTTP Client requests
+/**/httpRequests/
+*.xml
+*.iml

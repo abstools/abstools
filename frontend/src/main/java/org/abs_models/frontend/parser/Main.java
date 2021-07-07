@@ -54,6 +54,7 @@ import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeInferenceExtension;
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -349,11 +350,26 @@ public class Main {
             if (arguments.verbose)
                 System.out.println("Typechecking Model...");
 
+            registerNullableTypeChecking(m);
             registerLocationTypeChecking(m);
             SemanticConditionList typeerrors = m.typeCheck();
             for (SemanticCondition se : typeerrors) {
                 System.err.println(se.getHelpMessage());
             }
+        }
+    }
+
+    private void registerNullableTypeChecking(Model m) {
+        if (!arguments.nonullcheck) {
+            if (arguments.verbose)
+                System.out.println("Registering Nullable Type Checking...");
+            NullCheckerExtension nce = new NullCheckerExtension(m);
+            if (arguments.defaultNullableType != null)
+                nce.setDefaultType(arguments.defaultNullableType);
+            if (arguments.verbose)
+                nce.setWarnAboutMissingAnnotation(true);
+
+            m.registerTypeSystemExtension(nce);
         }
     }
 

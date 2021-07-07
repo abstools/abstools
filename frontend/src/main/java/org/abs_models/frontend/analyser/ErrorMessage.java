@@ -109,6 +109,12 @@ public enum ErrorMessage {
     WRONG_HTTP_OBJECT("Cannot export a value of type %s via HTTPName annotation, must be an object."),
     WRONG_HTTPCALLABLE("Parameter %s: type %s not supported for calling from HTTP."),
     DUPLICATE_HTTPNAME("Warning: Duplicate HTTP name %s in datatype declaration."),
+    NULLABLE_TYPE_MULTIPLE("Multiple nullable type annotations defined."),
+    NULLABLE_TYPE_COND_ALWAYS_SAME("Warning: This condition will always be %s."),
+    NULLABLE_TYPE_ONLY_REF_OR_FUT("Type %s cannot be annotated with a nullable type. Expected a future or reference type."),
+    NULLABLE_TYPE_MISMATCH("Nullable type %s does not match declared type %s."),
+    NULLABLETYPE_MISSING_ANNOTATION("Warning: There is no nullable type annotation here. Consider adding one."),
+    NULLABLETYPE_NULLCALL("The callee %s is always null."),
 
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
