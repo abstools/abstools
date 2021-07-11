@@ -68,6 +68,9 @@ public class Absc implements Callable<Integer> {
         @Option(names = { "--prolog" }, required = true,
                 description = "@|bold Prolog backend:|@ generate Prolog data file")
         public boolean prolog = false;
+        @Option(names = { "--c" }, required = true,
+            description = "@|bold C backend:|@ generate C code")
+        public boolean c = false;
 
         @Option(names = { "--prettyprint" }, required = true,
                 description = "@|bold Pretty-printer:|@ pretty print model and exit")
