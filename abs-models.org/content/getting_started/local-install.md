@@ -37,7 +37,7 @@ following the instructions at <https://chocolatey.org/install>, then
 run the following command in a terminal with Administrator rights:
 
 ```powershell
-choco install AdoptOpenJDK11 erlang git
+choco install openjdk11 git erlang visualstudio2019buildtools
 ```
 
 ### Installing dependencies on Linux
