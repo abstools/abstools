@@ -113,14 +113,35 @@ aspect GenerateErlang {
     throw new NotImplementedYetException(this);
   }
   @Override
-  public  void BuiltinFunctionDef.generateErlangCode(CodeStream ecs,Vars vars) throws IOException{
-    ecs.print("builtin");
+  public  void BuiltinFunctionDef.generateErlangCode(CodeStream ecs,Vars vars) throws IOException {
+      boolean isSQLiteQuery = getNumArgument() == 3
+          && getArgument(0) instanceof VarUse
+          && ((VarUse)getArgument(0)).getName().equals("sqlite3");
+      if (isSQLite3Query()) {
+          String dbname = ((StringLiteral)getArgument(1)).getContent();
+          String query = ((StringLiteral)getArgument(2)).getContent();
+          FunctionDecl decl = closestParent(FunctionDecl.class);
+          // Type checking ensures that decl has a type `List<X>'; get the X
+          Type query_type = ((DataTypeType)decl.getType()).getTypeArg(0);
+          if (new File(dbname).getParent() == null) {
+              ecs.println("DbName = filename:join(code:priv_dir(absmodel), \"" + dbname + "\"),");
+          } else {
+              ecs.println("DbName = \"" + dbname + "\",");
+          }
+          ecs.println("{ok, Db} = esqlite3:open(DbName),");
+          ecs.println("Result = " + ErlUtil.calculateSQLite3TransformatorExpression(query_type, query, "Db") + ",");
+          ecs.println("esqlite3:close(Db),");
+          ecs.print("Result");
+      } else {
+          ecs.print("builtin");
+      }
   }
 
   public void PartialFunctionDecl.generateErlangCode(ErlApp ea) throws IOException {
     // ignore
   }
 
+  // These are the builtin functions from the standard library.
   private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
       "ABS.StdLib.currentms", "ABS.StdLib.ms_since_model_start", "ABS.Meta.getProductLine",
       "ABS.StdLib.lowlevelDeadline", "ABS.StdLib.print", "ABS.StdLib.println",
@@ -133,17 +154,22 @@ aspect GenerateErlang {
       "ABS.Scheduler.method", "ABS.Scheduler.arrival", "ABS.Scheduler.proc_deadline");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
-    boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
-    if(builtin){
-      if(!ERLANG_BUILTINS.contains(decl.getQualifiedName()))
-          throw new NotImplementedYetException(this, "The builtin function "+decl.getQualifiedName() + " is not implemented in the Erlang backend yet");
-      ecs.print("builtin:");
-      ecs.print(decl.getName());
+    boolean emitBuiltinHeader = false;
+    if(decl.getFunctionDef() instanceof BuiltinFunctionDef){
+        BuiltinFunctionDef bfd = (BuiltinFunctionDef)decl.getFunctionDef();
+        if(ERLANG_BUILTINS.contains(decl.getQualifiedName())) {
+            ecs.print("builtin:");
+            ecs.print(decl.getName());
+            emitBuiltinHeader = true;
+        } else if (bfd.isSQLite3Query()) {
+            ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
+        } else {
+            throw new NotImplementedYetException(this, "The builtin function "+decl.getQualifiedName() + " is not implemented in the Erlang backend yet");
+        }
+    } else {
+        ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    else {
-      ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
-    }
-    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars);
+    ErlUtil.argumentList(ecs,null, emitBuiltinHeader, isFnAppContextImperative(), getParams(), vars);
   }
 
   @Override

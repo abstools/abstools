@@ -1,10 +1,11 @@
 FROM erlang:24-alpine AS jdk-erlang
 RUN apk --update add \
-        bash \
-        nss \
-        openjdk11-jdk \
-        git \
-        && rm -rf /var/cache/apk/*
+    bash \
+    nss \
+    openjdk11-jdk \
+    gcc libc-dev \
+    git \
+ && rm -rf /var/cache/apk/*
 
 FROM jdk-erlang AS builder
 COPY ./ /appSrc/
