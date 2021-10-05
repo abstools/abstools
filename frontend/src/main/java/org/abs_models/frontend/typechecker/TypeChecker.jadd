@@ -353,17 +353,27 @@ aspect TypeChecker {
 		&& ((VarUse)def.getArgument(0)).getName().equals("sqlite3"))
 	    {
 		// check function result type: must be a list of basic type or type with constructor.
-		if (!TypeCheckerHelper.isValidSQLite3Type(getTypeUse().getType())) {
+		if (!TypeCheckerHelper.isValidSQLite3ReturnType(getTypeUse().getType())) {
 		    e.add(new TypeError(getTypeUse(), ErrorMessage.SQLITE3_INCORRECT_RETURN_TYPE, ""));
 		}
 		// check `builtin' parameters
-		if (def.getNumArgument() != 3) {
+		if (def.getNumArgument() < 3) {
 		    e.add(new TypeError(def, ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
 		} else if (!(def.getArgument(1) instanceof StringLiteral)) {
 		    e.add(new TypeError(def.getArgument(1), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
 		} else if ((!(def.getArgument(2) instanceof StringLiteral))) {
 		    e.add(new TypeError(def.getArgument(2), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
 		}
+                for (int i = 3; i < def.getNumArgument(); i++) {
+                    if (!(def.getArgument(i) instanceof PureExp)) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                        continue;
+                    }
+                    PureExp arg = (PureExp)def.getArgument(i);
+                    if (!TypeCheckerHelper.isValidSQLite3ArgumentType(arg.getType())) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                    }
+                }
 	    }
         }
     }

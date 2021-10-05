@@ -900,10 +900,11 @@ Built-in functions in the standard library include:
 The Erlang backend can read from a relational database and convert the
 result into ABS lists.  Currently only SQLite databases are supported.
 
-A SQLite database is queried by writing a function with a `builtin`
-body with three arguments: a literal `sqlite3`, the name of the
-database file, and the query as a SQL string.  The return value is a
-list of ABS values.  The return type of such a function can be:
+A SQLite database is queried by writing a function with a `builtin` body with
+three or more arguments: a literal `sqlite3`, the name of the database file,
+the query as a SQL string, and zero or more arguments to the query.  The
+return value is a list of ABS values.  The return type of such a function can
+be:
 
 - `Int`, when the query returns rows with a single SQLite `INTEGER`
   value;
@@ -918,6 +919,15 @@ list of ABS values.  The return type of such a function can be:
 - An algebraic datatype, with a single constructor taking only the
   above datatypes, such that the constructor can be invoked for each
   row returned by the query.
+
+Query parameters are written as `?` in the SQL query string.  Each of these
+parameters must be supplied with a value.  ABS values are converted into SQL
+values as follows:
+
+- `Int` values are converted into integers;
+- `Float`, `Rat` values are converted into floating-point numbers;
+- `Bool` values are converted into `0` and `1` (note that SQLite treats all non-zero values as true; consider directly using a query parameter of type `Int` instead);
+- `String` values are converted to strings.
 
 [source]
 .Example: creating a database
@@ -954,7 +964,17 @@ data RowResult = RowResult(Int, Bool, Float, Rat, String);
 def List<RowResult> ftuple() = builtin(sqlite3, <3>
     "/tmp/test.sqlite3",
     `SELECT int_value, bool_value, float_value, float_value, string_value
-     FROM test_table`);
+       FROM test_table`);
+
+def List<RowResult> ftuple_with_params(String str, Rat rat) = builtin(sqlite3,
+    "/tmp/test.sqlite3",
+    `SELECT int_value, bool_value, float_value, float_value, string_value
+       FROM test_table
+      WHERE string_value = ? <4>
+        AND float_value = ?`,
+    str, <5>
+    rat);
+
 
 {
     foreach (v, i in frat()) {
@@ -966,17 +986,19 @@ def List<RowResult> ftuple() = builtin(sqlite3, <3>
     foreach (v, i in ftuple()) {
         println(`$i$'th tuple is $v$`);
     }
+    foreach (v, i in ftuple_with_params("world", 85/2)) {
+        println(`$i$'th tuple is $v$`);
+    }
 }
 ----
 <1> A `builtin` function with first argument `sqlite3` takes two more arguments: the name of the database, and a SQL query string.
 <2> SQL float values are converted to ABS rational values
 <3> Rows of SQL relations with more than one column are converted into ABS user-defined datatypes. The data constructor of the result datatype has to take the same number of arguments as the `SELECT` returns, and the datatypes must be compatible.
+<4> Query parameters in SQLite are written as plain `?` in the query string.
+<5> For each parameter in the query string, a value must be supplied.
 
 NOTE: When the database file (the second argument to the `builtin` expression)
 does not contain a path, the model will look for it in the `priv` directory of
 the compiled model.  That directory is the value of the erlang function
 `code:priv_dir(absmodel)`, typically
 `gen/erl/absmodel/_build/default/lib/absmodel/priv/`.
-
-NOTE: The SQL query currently cannot contain parameters; this will be
-implemented in a future release.

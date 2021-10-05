@@ -1,6 +1,10 @@
 {"1.2.0",
 [{<<"cowboy">>,{pkg,<<"cowboy">>,<<"2.8.0">>},0},
  {<<"cowlib">>,{pkg,<<"cowlib">>,<<"2.9.1">>},1},
+ {<<"esqlite">>,
+  {git,"https://github.com/rudi/esqlite.git",
+       {ref,"d21351b0a9b2d741c6f79d6b8d88253828d123be"}},
+  0},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.10.0">>},0},
  {<<"ranch">>,{pkg,<<"ranch">>,<<"1.7.1">>},1}]}.
 [

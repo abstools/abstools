@@ -209,7 +209,10 @@ public class ErlUtil {
         return Vars.PREFIX + p.getName() + "_0";
     }
 
-    private static String sqlDataTypeTransformerFunction(Type type, String var) {
+    /**
+     * Create expression that converts SQL result set data values to ABS.
+     */
+    public static String sqlDataTypeTransformerFunction(Type type, String var) {
         if (type.isIntType() || type.isFloatType()) {
             return var;
         } else if (type.isRatType()) {
@@ -222,45 +225,5 @@ public class ErlUtil {
             // can't happen
             return null;
         }
-    }
-
-    /**
-     * Create an expression that transforms tuples coming from SQLite3 queries
-     * to ABS datatypes.
-     *
-     * See
-     * https://github.com/mmzeeman/esqlite/blob/master/test/esqlite_test.erl
-     * for the closest thing we have to an API description of the sqlite3
-     * side.
-     *
-     * @Param query_type the desired ABS type
-     * @Param query the SQL query string
-     * @Param db_name the name of the database connection
-     */
-    public static String calculateSQLite3TransformatorExpression(Type query_type, String query, String db_name) {
-        StringBuilder result = new StringBuilder("esqlite3:map(");
-        if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType()) {
-            result.append("fun ({I}) -> ").append(sqlDataTypeTransformerFunction(query_type, "I")).append(" end");
-
-        } else {
-            // We're a datatype with suitable arguments - the type checker
-            // makes sure of this.  For now, we arbitrarily pick the first
-            // constructor.
-            result.append("fun ({");
-            DataConstructor c = ((DataTypeType)query_type).getDecl().getDataConstructor(0);
-            List<Type> args = c.getTypes();
-            String comma = "";
-            for (int i = 0; i < args.size(); i++) {
-                result.append(comma).append("V").append(i);
-                comma = ",";
-            }
-            result.append("}) -> { data").append(c.getName());
-            for (int i = 0; i < args.size(); i++) {
-                result.append(",").append(sqlDataTypeTransformerFunction(args.get(i), "V" + i));
-            }
-            result.append(" } end");
-        }
-        result.append(", \"").append(query).append("\", ").append(db_name).append(")");
-        return result.toString();
     }
 }

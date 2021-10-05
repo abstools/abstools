@@ -114,10 +114,14 @@ aspect GenerateErlang {
   }
   @Override
   public  void BuiltinFunctionDef.generateErlangCode(CodeStream ecs,Vars vars) throws IOException {
-      boolean isSQLiteQuery = getNumArgument() == 3
+      boolean isSQLiteQuery = getNumArgument() >= 3
           && getArgument(0) instanceof VarUse
           && ((VarUse)getArgument(0)).getName().equals("sqlite3");
       if (isSQLite3Query()) {
+          // See
+          // https://github.com/mmzeeman/esqlite/blob/master/test/esqlite_test.erl
+          // for the closest thing we have to an API description of the
+          // sqlite3 side.
           String dbname = ((StringLiteral)getArgument(1)).getContent();
           String query = ((StringLiteral)getArgument(2)).getContent();
           FunctionDecl decl = closestParent(FunctionDecl.class);
@@ -129,7 +133,49 @@ aspect GenerateErlang {
               ecs.println("DbName = \"" + dbname + "\",");
           }
           ecs.println("{ok, Db} = esqlite3:open(DbName),");
-          ecs.println("Result = " + ErlUtil.calculateSQLite3TransformatorExpression(query_type, query, "Db") + ",");
+          ecs.print("Result = esqlite3:map(");
+          if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType()) {
+              ecs.print("fun ({I}) -> ");
+              ecs.print(ErlUtil.sqlDataTypeTransformerFunction(query_type, "I"));
+              ecs.print(" end");
+          } else {
+              // We're a datatype with suitable arguments - the type checker
+              // makes sure of this.  For now, we arbitrarily pick the first
+              // constructor.
+              ecs.print("fun ({");
+              DataConstructor c = ((DataTypeType)query_type).getDecl().getDataConstructor(0);
+              java.util.List<org.abs_models.frontend.typechecker.Type> args = c.getTypes();
+              String comma = "";
+              for (int i = 0; i < args.size(); i++) {
+                  ecs.print(comma);
+                  ecs.print("V");
+                  ecs.print(i);
+                  comma = ",";
+              }
+              ecs.print("}) -> { data");
+              ecs.print(c.getName());
+              for (int i = 0; i < args.size(); i++) {
+                  ecs.print(",");
+                  ecs.print(ErlUtil.sqlDataTypeTransformerFunction(args.get(i), "V" + i));
+              }
+              ecs.print(" } end");
+          }
+          ecs.print(", \"");
+          ecs.print(query);
+          ecs.print("\", ");
+          if (getNumArgument() > 3) {
+              String comma = "";
+              ecs.print("[");
+              for (int i = 3; i < getNumArgument(); i++) {
+                  ecs.print(comma); comma = ", ";
+                  PureExp e = getArgument(i);
+                  ecs.print("util:abs_value_to_sql(");
+                  e.generateErlangCode(ecs, vars);
+                  ecs.print(")");
+              }
+              ecs.print("], ");
+          }
+          ecs.println("Db),");
           ecs.println("esqlite3:close(Db),");
           ecs.print("Result");
       } else {

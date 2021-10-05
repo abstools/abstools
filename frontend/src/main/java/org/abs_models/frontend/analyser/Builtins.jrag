@@ -1,7 +1,7 @@
 aspect Builtins {
 
     syn boolean BuiltinFunctionDef.isSQLite3Query();
-    eq BuiltinFunctionDef.isSQLite3Query() = getNumArgument() == 3
+    eq BuiltinFunctionDef.isSQLite3Query() = getNumArgument() >= 3
         && getArgument(0) instanceof VarOrFieldUse
         && ((VarUse)getArgument(0)).getName().equals("sqlite3");
 }

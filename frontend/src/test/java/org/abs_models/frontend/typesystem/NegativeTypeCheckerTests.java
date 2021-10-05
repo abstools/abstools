@@ -744,9 +744,9 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 	// wrong arguments: too few arguments
 	assertTypeErrors("def List<Int> query() = builtin(sqlite3);");
 	assertTypeErrors("def List<Int> query() = builtin(sqlite3, `test.db`);");
-	// wrong arguments: too many arguments
-	assertTypeErrors("def List<Int> query() = builtin(sqlite3, `test.db`, `select * from table`, `hi there!`);");
 	// wrong argument types
 	assertTypeErrors("def List<Int> query() = builtin(sqlite3, Unit, 13);");
+	// wrong arguments: wrong query parameter type
+	assertTypeErrors("def List<Int> query() = builtin(sqlite3, `test.db`, `select * from table`, Unit);");
     }
 }

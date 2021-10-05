@@ -1,5 +1,14 @@
 %%This file is licensed under the terms of the Modified BSD License.
 
+-type abs_value() :: atom()             % Booleans, null, ADTs without constructor argument
+                   | float()            % Float
+                   | integer()          % Int
+                   | tuple()            % Rat, ADTs with constructor arguments
+                   | binary()           % String
+                   | pid()              % Future
+                   | list(abs_value())  % List
+                     .
+
 -record(object,{oid,cog}).
 -record(cog,{ref,dcobj}).
 -record(task_info, % use `get(task_info)' in a task to get this structure

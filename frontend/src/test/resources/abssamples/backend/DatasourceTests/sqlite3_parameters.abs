@@ -1,0 +1,46 @@
+module BackendTest;
+
+// The database was created as follows:
+/*
+CREATE TABLE IF NOT EXISTS test_table (
+  int_value INTEGER,
+  float_value REAL,
+  string_value TEXT,
+  bool_value BOOLEAN
+);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(15, 13.53, "hello", 0);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(30, 42.5, "world", 1);
+*/
+
+data RowResult = RowResult(Int, Bool, Float, Rat, String);
+
+def List<RowResult> ftuple_with_rat(Rat rat_value) = builtin(sqlite3,
+    // "/Users/rudi/Source/abstools/frontend/src/test/resources/sqlite3/test.sqlite3",
+    "test.sqlite3",
+    `SELECT int_value, bool_value, float_value, float_value, string_value
+       FROM test_table
+      WHERE float_value = ?`,
+    rat_value);
+
+def List<RowResult> ftuple_with_all_except_rat(Int int_value, Bool bool_value, Float float_value, String string_value) = builtin(sqlite3,
+    // "/Users/rudi/Source/abstools/frontend/src/test/resources/sqlite3/test.sqlite3",
+    "test.sqlite3",
+    `SELECT int_value, bool_value, float_value, float_value, string_value
+       FROM test_table
+      WHERE int_value = ?
+        AND bool_value = ?
+        AND float_value = ?
+        AND string_value = ?`,
+     int_value,
+     bool_value,
+     float_value,
+     string_value);
+
+{
+    Bool testresult = True;
+    println("Starting SQLite3 test");
+    testresult = testresult && ftuple_with_rat(1353/100) == list[RowResult(15,False,13.53,1353/100,"hello")];
+    testresult = testresult && ftuple_with_rat(85/2) == list[RowResult(30,True,42.5,85/2,"world")];
+    testresult = testresult && ftuple_with_all_except_rat(15,False,13.53,"hello") == list[RowResult(15,False,13.53,1353/100,"hello")];
+    testresult = testresult && ftuple_with_all_except_rat(30,True,42.5,"world") == list[RowResult(30,True,42.5,85/2,"world")];
+}

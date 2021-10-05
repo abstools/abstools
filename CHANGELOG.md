@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- In the Erlang backend, it is now possible to calculate the result of a function from the result of a query to a provided SQLite database.  The preliminary syntax for this is `def Int f() = builtin(sqlite3, "db.sqlite3", "SELECT i FROM t");`
+- In the Erlang backend, it is now possible to calculate the result of a function from the result of a query to a provided SQLite database.  The preliminary syntax for this is `def Int f(Int x) = builtin(sqlite3, "db.sqlite3", "SELECT i FROM t where i = ?", x);`
 
 - The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 

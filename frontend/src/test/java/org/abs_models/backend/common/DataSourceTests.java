@@ -26,4 +26,10 @@ public class DataSourceTests extends SemanticTests {
                                     new File("sqlite3/test.sqlite3"));
      }
 
+    @Test
+    public void readFromSQLite3WithParameters() throws Exception {
+        Assume.assumeTrue("Only meaningful with SQLite support", driver.supportsSQLite());
+        assertEvalTrueWithTestfiles(new File("abssamples/backend/DatasourceTests/sqlite3_parameters.abs"),
+            new File("sqlite3/test.sqlite3"));
+    }
 }

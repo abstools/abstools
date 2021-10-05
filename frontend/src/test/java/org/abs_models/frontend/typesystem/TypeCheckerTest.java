@@ -507,4 +507,12 @@ public class TypeCheckerTest extends FrontendTest {
         if (m.hasParserErrors())
             fail(m.getParserErrors().get(0).toString());
     }
+
+    @Test
+    public void sqlite3() {
+        // plain query
+        assertTypeOK("def List<Int> query() = builtin(sqlite3, `test.db`, `select * from table`);");
+        // Query with parameters
+        assertTypeOK("def List<Int> query() = builtin(sqlite3, `test.db`, `select * from table`, 1 + 2, `hello`);");
+    }
 }

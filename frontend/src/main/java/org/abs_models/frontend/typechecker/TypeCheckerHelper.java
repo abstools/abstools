@@ -662,13 +662,38 @@ public class TypeCheckerHelper {
     }
 
     /**
+     * Check whether argument t can be an argument to a SQLite3 query.
+     *
+     * This method returns true if t is a string, numeric or boolean type.
+     */
+    public static boolean isValidSQLite3ArgumentType(Type t) {
+	if (t.isUnknownType())
+	    return false;
+	else if (!t.isDataType())
+	    return false;
+	DataTypeType lt = (DataTypeType) t;
+	if (lt.isBoolType())
+	    return true;
+	else if (lt.isIntType())
+	    return true;
+	else if (lt.isRatType())
+	    return true;
+	else if (lt.isFloatType())
+	    return true;
+	else if (lt.isStringType())
+	    return true;
+        else
+            return false;
+    }
+
+    /**
      * Check whether argument t can be the result of a SQLite3 query.
      *
      * This method returns true if t is a list whose type parameter is
      * a string, numeric or boolean type, or an algebraic datatype
      * whose first constructor takes parameters of these types.
      */
-    public static boolean isValidSQLite3Type(Type t) {
+    public static boolean isValidSQLite3ReturnType(Type t) {
 	if (t.isUnknownType())
 	    return false;
 	if (!t.isDataType())

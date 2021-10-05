@@ -154,7 +154,8 @@ public enum ErrorMessage {
     DUPLICATE_INTERFACE_IMPLEMENTATION("Class %s already implements interface %s."),
     MISSING_INTERFACE_IMPLEMENTATION("Class %s does not implement interface %s."),
 
-    SQLITE3_INCORRECT_ARGUMENTS("SQLite3 query functions must have three arguments: `sqlite3', a string containing the database filename, and a string with the SQL query."),
+    SQLITE3_INCORRECT_ARGUMENTS("SQLite3 query functions must have three or more arguments: `sqlite3', a string containing the database filename, a string with the SQL query, and an expression of type String, Boolean or numeric for each query parameter."),
+    SQLITE3_INCORRECT_QUERY_ARGUMENT("SQLite3 query arguments must be expressions of type String, Boolean, Int, Float or Rat."),
     SQLITE3_INCORRECT_RETURN_TYPE("SQLite3 query functions must return a list of values that can be converted from SQL types.")
     ;
 
