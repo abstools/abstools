@@ -1,0 +1,13 @@
+{application,absmodel,
+             [{description,"Generated code for ABS"},
+              {vsn,"1"},
+              {registered,[]},
+              {applications,[kernel,stdlib,cowboy,cowlib,ranch,crypto,jsx,
+                             inets,esqlite]},
+              {mod,{main_app,[]}},
+              {env,[{port,8080}]},
+              {modules,[active_object_task,async_call_task,builtin,clock,cmp,
+                        cog,cog_monitor,coverage,dc,dpor,error_transform,
+                        future,gc,getopt,init_task,intar,main_app,main_task,
+                        mochinum,modelapi_v1,modelapi_v2,object,rationals,
+                        runtime,task,util]}]}.

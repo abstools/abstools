@@ -13,7 +13,6 @@ out/
 /log/
 /frontend/bin/
 /frontend/dist/
-/frontend/src/main/resources/erlang/absmodel/_build/
 /abs-docs/**/*.aux
 /abs-docs/**/*.bbl
 /abs-docs/**/*.blg
@@ -35,3 +34,12 @@ out/
 /abs-docs/ReferenceManual/absrefmanual.pdf
 /abs-docs/ReferenceManual/gitRevision.tex
 /abs-foreign-interface/java/abs-java-util/bin/
+/frontend/src/main/resources/erlang/absmodel/_build/default/lib/.rebar3/
+/frontend/src/main/resources/erlang/absmodel/_build/default/lib/absmodel/include
+/frontend/src/main/resources/erlang/absmodel/_build/default/lib/absmodel/src
+/frontend/src/main/resources/erlang/absmodel/_build/default/lib/cowboy/
+/frontend/src/main/resources/erlang/absmodel/_build/default/lib/esqlite/
+/frontend/src/main/resources/erlang/absmodel/_build/default/lib/jsx/
+/frontend/src/main/resources/erlang/absmodel/_build/default/lib/cowlib/
+/frontend/src/main/resources/erlang/absmodel/_build/default/lib/ranch/
+/frontend/src/main/resources/erlang/absmodel/_build/default/plugins/
