@@ -16,7 +16,9 @@ jobs:
     - name: Install Erlang
       uses: gleam-lang/setup-erlang@v1.1.2
       with:
-        otp-version: '23.2'
+        # version is used for download URL (see https://github.com/gleam-lang/setup-erlang/blob/main/main.sh)
+        # Available versions: see https://www.erlang-solutions.com/downloads/
+        otp-version: '24.0.5'
     - name: Run tests
       uses: eskatos/gradle-command-action@v1
       env:
