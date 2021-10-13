@@ -50,8 +50,8 @@ export Duration, InfDuration, durationValue, isDurationInfinite, addDuration, su
 export lowlevelDeadline, deadline;
 export Deadline, Critical;
 
-// KeY-ABS annotations
-export Inv, Pre, Post;
+// Crowbar annotations
+export Spec, ObjInv, Ensures, Requires, WhileInv, Resolves, Local, Role, Succeeds, Overlaps;
 
 // Various annotations
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer;
@@ -598,10 +598,11 @@ def Duration subtractFromDuration(Duration d, Rat v) =
       Duration(x) => Duration(x - v);
   };
 
-// Annotation data types for KeyABS invariants, preconditions, postconditions
-data Inv;
-data Pre;
-data Post;
+// Annotations for Crowbar specifications
+data Spec = ObjInv(Bool) | Ensures(Bool) | Requires(Bool)    // object invariants and method contracts
+          | WhileInv(Bool) | Resolves(String)                // loop invariants and resolving contracts
+          | Local(String) | Role(String, Object)             // local types (experimental)
+          | Succeeds(List<String>) | Overlaps(List<String>); // cooperative contracts
 
 // Annotation data type to express deadlines:
 // [Deadline: Duration(5)] o!m();
