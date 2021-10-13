@@ -160,6 +160,7 @@ clean {
     }
 }
 jar.dependsOn 'compileErlangBackend'
+processTestResources.dependsOn 'compileErlangBackend'
 
 tasks.withType(AbstractArchiveTask) {
     // Try to create reproducible builds
