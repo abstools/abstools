@@ -17,7 +17,6 @@ configurations {
 
 application {
     mainClass = 'org.abs_models.frontend.parser.Main'
-    mainClassName = 'org.abs_models.frontend.parser.Main' // for shadowJar
 }
 
 java {
@@ -68,7 +67,7 @@ task generateJastAddAST(type: JavaExec) {
     // so we use a JavaExec task directly.
     description 'Processes the JastAdd AST.'
     classpath = project.configurations.jastadd2
-    main = 'org.jastadd.JastAdd'
+    mainClass = 'org.jastadd.JastAdd'
     doFirst {
         // Avoid left-over Java files when modifying the AST.  Re-running
         // JastAdd regenerates all files, so deleting everything beforehand
@@ -216,7 +215,7 @@ clean {
 assemble.dependsOn copyScripts
 
 task generateAutocomplete(type: JavaExec) {
-    main = 'picocli.AutoComplete'
+    mainClass = 'picocli.AutoComplete'
     classpath = sourceSets.main.runtimeClasspath
     args = [ '--force', '--completionScript', 'bin/bash/absc_completion.sh', 'org.abs_models.Absc' ]
 }
