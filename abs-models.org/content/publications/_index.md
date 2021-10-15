@@ -21,7 +21,7 @@ This page links ABS workshops, as well as selected research papers on the develo
 ## Case Studies
 
 - G. Turin, A. Borgarelli, S. Donetti, E. B. Johnsen, S. L. Tapia Tarifa, and F. Damiani.  
-  * A Formal Model of the Kubernetes Container Framework..*  
+  *A Formal Model of the Kubernetes Container Framework..*  
   Leveraging Applications of Formal Methods, Verification and Validation (ISoLA 2020). LNCS 12476. Springer, 2020.  
   DOI: [10.1007/978-3-030-61362-4\_32](https://doi.org/10.1007/978-3-030-61362-4_32). Download a [preprint](https://ebjohnsen.org/publication/20-isola2/20-isola2.pdf).  
 
@@ -44,12 +44,12 @@ This page links ABS workshops, as well as selected research papers on the develo
 ## Language Development
 
 - L. Tveito, E. B. Johnsen, and R. Schlatte.  
-  * Global Reproducibility through Local Control for Distributed Active Objects.*  
+  *Global Reproducibility through Local Control for Distributed Active Objects.*  
   In Proc. 23th International Conference on Fundamental Approaches to Software Engineering (FASE 2020), LNCS 12076. Springer , 2020.  
   DOI: [10.1007/978-3-030-45234-6_7](https://doi.org/10.1007/978-3-030-45234-6_7). Download a [preprint](https://ebjohnsen.org/publication/20-fase/20-fase.pdf).
 
 -  R. Schlatte, E. B. Johnsen, J. Mauro, S. L. Tapia Tarifa, and I. C. Yu .  
-  * Release the Beasts: When Formal Methods Meet Real World Data.*  
+  *Release the Beasts: When Formal Methods Meet Real World Data.*  
   Festschrift Farhad Arbab, LNCS 10865. Springer , 2018.  
   DOI: [10.1007/978-3-642-25271-6_8](http://dx.doi.org/10.1007/978-3-642-25271-6_8). Download a [preprint](https://ebjohnsen.org/publication/18-farhad/18-farhad.pdf).
 
@@ -76,12 +76,12 @@ This page links ABS workshops, as well as selected research papers on the develo
 ## Software Product Lines
 
 - F. Damiani, R. Hähnle, E. Kamburjan, M. Lienhardt, L. Paolini.  
-  *Variability modules for Java-like languages.*
+  *Variability modules for Java-like languages.*  
   Proc. 25th ACM International Systems and Software Product Line Conference (SPLC 2021). ACM, 2021.  
   DOI: [10.1145/3461001.3471143](https://doi.org/10.1145/3461001.3471143).  
 
 - F. Damiani, M. Lienhardt, R. Muschevici, I. Schaefer.  
-  *An Extension of the ABS Toolchain with a Mechanism for Type Checking SPLs.*
+  *An Extension of the ABS Toolchain with a Mechanism for Type Checking SPLs.*  
   Proc. 13th International Conference on Integrated Formal Methods (IFM 2017), LNCS 10510. Springer, 2017.  
   DOI: [10.1007/978-3-319-66845-1_8](https://doi.org/10.1007/978-3-319-66845-1_8).  Download a [postprint](http://hdl.handle.net/2318/1649744).
 
