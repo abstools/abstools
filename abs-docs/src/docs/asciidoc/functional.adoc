@@ -939,8 +939,10 @@ CREATE TABLE IF NOT EXISTS test_table (
   string_value TEXT,
   bool_value BOOLEAN
 );
-INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(15, 13.53, "hello", 0);
-INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(30, 42.5, "world", 1);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value)
+     VALUES (15, 13.53, "hello", 0);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value)
+     VALUES (30, 42.5, "world", 1);
 .quit
 ----
 
@@ -991,11 +993,11 @@ def List<RowResult> ftuple_with_params(String str, Rat rat) = builtin(sqlite3,
     }
 }
 ----
-<1> A `builtin` function with first argument `sqlite3` takes two more arguments: the name of the database, and a SQL query string.
+<1> A `builtin` function with first argument `sqlite3` takes two or more additional arguments: the name of the database, a SQL query string, and the query parameters.
 <2> SQL float values are converted to ABS rational values
-<3> Rows of SQL relations with more than one column are converted into ABS user-defined datatypes. The data constructor of the result datatype has to take the same number of arguments as the `SELECT` returns, and the datatypes must be compatible.
+<3> SQL query results with more than one column are converted into ABS user-defined datatypes. The data constructor of the result datatype has to take the same number of arguments as the `SELECT` returns, and the datatypes must be compatible.
 <4> Query parameters in SQLite are written as plain `?` in the query string.
-<5> For each parameter in the query string, a value must be supplied.
+<5> For each parameter in the SQL query, a value must be supplied.
 
 NOTE: When the database file (the second argument to the `builtin` expression)
 does not contain a path, the model will look for it in the `priv` directory of
