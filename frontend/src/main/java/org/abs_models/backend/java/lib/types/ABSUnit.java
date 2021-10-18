@@ -5,7 +5,7 @@
 package org.abs_models.backend.java.lib.types;
 
 public class ABSUnit extends ABSBuiltInDataType {
-    public static ABSUnit UNIT = new ABSUnit();
+    public final static ABSUnit UNIT = new ABSUnit();
 
     private ABSUnit() {
         super("Unit");

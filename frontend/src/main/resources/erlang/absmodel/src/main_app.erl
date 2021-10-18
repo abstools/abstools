@@ -25,7 +25,7 @@ start(_StartType, _StartArgs) ->
     {ok, Verbose} = application:get_env(absmodel, verbose),
     {ok, Debug} = application:get_env(absmodel, debug),
     {ok, Clocklimit} = application:get_env(absmodel, clocklimit),
-    {ok, Trace} = application:get_env(absmodel, replay_trace),
+    {ok, Trace} = application:get_env(absmodel, replay),
     Dispatch = cowboy_router:compile([{'_',
                                        [{Urlprefix, cowboy_static, {priv_file, absmodel, "index.html"}},
                                         {[Urlprefix, "static/[...]"], cowboy_static, {priv_dir, absmodel, "static"}},
@@ -35,7 +35,8 @@ start(_StartType, _StartArgs) ->
     %% In case we need a random port, see example at bottom of
     %% https://ninenines.eu/docs/en/cowboy/2.0/manual/cowboy.start_clear/
     case cowboy:start_clear(http, [{port, Port}, {ip, loopback}],
-                            #{env => #{dispatch => Dispatch}}) of
+                            #{env => #{dispatch => Dispatch}
+                             , idle_timeout => infinity }) of
         {ok, _} ->
             case Verbose of
                 0 -> ok;

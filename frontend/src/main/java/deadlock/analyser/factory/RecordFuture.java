@@ -28,7 +28,7 @@ import com.gzoumix.semisolver.term.TermStructured;
 
 public class RecordFuture extends GenericStructuredTerm implements IRecord {
 
-  public static String name = "RecordFuture";
+  public final static String name = "RecordFuture";
 
   /* Constructors */
   public RecordFuture(List<Term> l) { super(name, l); }

@@ -200,7 +200,7 @@ abstract class AbstractABSTestRunnerGenerator implements ABSTestRunnerGenerator 
      */
     protected MethodSig findDataPoints(InterfaceDecl inf) {
         for (MethodSig meth : inf.getAllMethodSigs()) {
-            if (hasTestAnnotation(meth.getAnnotations(), dataPointType)) {
+            if (hasTestAnnotation(meth.getReturnType().getAnnotations(), dataPointType)) {
                 Decl d = ((DataTypeUse) meth.getReturnType()).getDecl();
                 if (d.getType().getQualifiedName().equals(absStdSet)) {
                     return meth;
@@ -217,8 +217,8 @@ abstract class AbstractABSTestRunnerGenerator implements ABSTestRunnerGenerator 
             /*
              * Add those methods that are tests but are not ignored
              */
-            if (hasTestAnnotation(meth.getAnnotations(), testType) &&
-                ! hasTestAnnotation(meth.getAnnotations(), ignoreType)) {
+            if (hasTestAnnotation(meth.getReturnType().getAnnotations(), testType) &&
+                ! hasTestAnnotation(meth.getReturnType().getAnnotations(), ignoreType)) {
                 testmethods.add(meth);
             }
         }
@@ -228,7 +228,7 @@ abstract class AbstractABSTestRunnerGenerator implements ABSTestRunnerGenerator 
     protected boolean isIgnored(ClassDecl clazz, MethodSig method) {
         for (MethodImpl m : clazz.getMethodList()) {
             if (m.getMethodSig().getName().equals(method.getName())) {
-                return hasTestAnnotation(m.getMethodSig().getAnnotationList(), ignoreType);
+                return hasTestAnnotation(m.getMethodSig().getReturnType().getAnnotationList(), ignoreType);
             }
         }
         return false;

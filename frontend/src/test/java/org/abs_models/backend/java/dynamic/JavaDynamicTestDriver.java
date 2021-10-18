@@ -5,8 +5,12 @@
 package org.abs_models.backend.java.dynamic;
 
 import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.java.codegeneration.JavaCode;
+import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 
 public class JavaDynamicTestDriver implements BackendTestDriver {
@@ -45,6 +49,11 @@ public class JavaDynamicTestDriver implements BackendTestDriver {
     }
 
     @Override
+    public void assertEvalTrueWithTestfiles(Model m, File ...f) throws Exception {
+        throw new Exception("Auxiliary files not supported in Java test backend.");
+    }
+
+    @Override
     public BackendName getBackendName() {
         return BackendName.JAVA;
     }
@@ -60,4 +69,7 @@ public class JavaDynamicTestDriver implements BackendTestDriver {
 
     @Override
     public boolean supportsDowncasting() { return false; }
+
+    @Override
+    public boolean supportsSQLite() { return false; }
 }

@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -402,7 +403,8 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         // never invoked
     }
 
-    public static final List<String> EMPTY_STRING_LIST = new ArrayList<>(0);
+    public static final List<String> EMPTY_STRING_LIST =
+        Collections.unmodifiableList(new ArrayList<>(0));
 
     Collection<String> getObservedClasses() {
         return createdCOGClasses.values();

@@ -41,7 +41,7 @@ public class ErlangBackend extends Main {
         COVERAGE
     }
 
-    public static int minErlangVersion = 22;
+    public final static int minErlangVersion = 23;
 
     public static int doMain(Absc args) {
         int result = 0;

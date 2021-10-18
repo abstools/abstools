@@ -5,8 +5,8 @@
 package org.abs_models.backend.java.lib.types;
 
 public class ABSBool extends ABSBuiltInDataType {
-    public static ABSBool TRUE = new ABSBool("True", true);
-    public static ABSBool FALSE = new ABSBool("False", false);
+    public final static ABSBool TRUE = new ABSBool("True", true);
+    public final static ABSBool FALSE = new ABSBool("False", false);
 
     private boolean value;
 

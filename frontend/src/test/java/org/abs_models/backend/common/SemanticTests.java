@@ -87,6 +87,14 @@ public abstract class SemanticTests {
         driver.assertEvalTrue(m);
     }
 
+    public void assertEvalTrueWithTestfiles(File model, File ...f) throws Exception {
+        Model m = ABSTest.assertParseFileOk(model.getPath());
+        assertFalse(m.hasParserErrors());
+        assertFalse(m.hasTypeErrors());
+        assertNotNull(m.lookupModule("BackendTest"));
+        driver.assertEvalTrueWithTestfiles(m, f);
+    }
+
     public void assertEvalTrue(File f) throws Exception {
         Model m = ABSTest.assertParseFileOk(f.getPath());
         assertFalse(m.hasParserErrors());

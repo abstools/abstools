@@ -83,24 +83,15 @@ public class JavaBackend extends Main {
     // unused -- does not work
     private boolean untypedJavaGen = false;
 
-    public static void printUsage() {
-        System.out.println("Java Backend (-java):\n"
-                + "  -d <dir>       generate files to <dir>\n"
-                + "  -sourceonly    do not generate class files\n"
-                + "  -dynamic       generate dynamically updateable code\n");
-    }
-
     private int compile() throws Exception {
         final Model model = parse(arguments.files);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
             printErrorMessage();
             return 1;
         }
-        arguments.destDir.mkdirs();
-        if (!arguments.destDir.exists()) {
-            throw new InternalBackendException("Destination directory " + arguments.destDir.getAbsolutePath() + " does not exist!");
+        if (!arguments.destDir.mkdirs() && !arguments.destDir.isDirectory()) {
+            throw new IOException("Could not create directory " + arguments.destDir.toString());
         }
-
         if (!arguments.destDir.canWrite()) {
             throw new InternalBackendException("Destination directory " + arguments.destDir.getAbsolutePath() + " cannot be written to!");
         }

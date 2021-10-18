@@ -339,14 +339,42 @@ aspect TypeChecker {
         TypeCheckerHelper.typeCheckParamList(e,this);
         getTypeUse().typeCheck(e);
         if (getFunctionDef() instanceof ExpFunctionDef) {
-            // built-in functions are assumed type-correct.
             ExpFunctionDef def = (ExpFunctionDef)getFunctionDef();
             def.getRhs().typeCheck(e);
             if (nerrors == e.getErrorCount()) {
                 TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), def.getRhs());
             }
         } else {
-            // BuiltinFunctionDef: parser guarantees that all arguments are string literals
+	    BuiltinFunctionDef def = (BuiltinFunctionDef)getFunctionDef();
+	    // do not use def.isSQLiteQuery() here since we want to
+	    // detect incorrect argument counts etc.
+	    if (def.getNumArgument() > 0
+		&& def.getArgument(0) instanceof VarOrFieldUse
+		&& ((VarUse)def.getArgument(0)).getName().equals("sqlite3"))
+	    {
+		// check function result type: must be a list of basic type or type with constructor.
+		if (!TypeCheckerHelper.isValidSQLite3ReturnType(getTypeUse().getType())) {
+		    e.add(new TypeError(getTypeUse(), ErrorMessage.SQLITE3_INCORRECT_RETURN_TYPE, ""));
+		}
+		// check `builtin' parameters
+		if (def.getNumArgument() < 3) {
+		    e.add(new TypeError(def, ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+		} else if (!(def.getArgument(1) instanceof StringLiteral)) {
+		    e.add(new TypeError(def.getArgument(1), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+		} else if ((!(def.getArgument(2) instanceof StringLiteral))) {
+		    e.add(new TypeError(def.getArgument(2), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+		}
+                for (int i = 3; i < def.getNumArgument(); i++) {
+                    if (!(def.getArgument(i) instanceof PureExp)) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                        continue;
+                    }
+                    PureExp arg = (PureExp)def.getArgument(i);
+                    if (!TypeCheckerHelper.isValidSQLite3ArgumentType(arg.getType())) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                    }
+                }
+	    }
         }
     }
 

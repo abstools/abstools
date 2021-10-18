@@ -9,9 +9,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.commons.io.FileUtils;
 
 
 public class JavaCode {
@@ -20,9 +23,7 @@ public class JavaCode {
     private final List<String> mainClasses = new ArrayList<>();
 
     public JavaCode() throws IOException {
-        srcDir = File.createTempFile("absjavabackend", Long.toString(System.nanoTime()));
-        srcDir.delete();
-        srcDir.mkdir();
+        srcDir = Files.createTempDirectory("absjavabackend").toFile();
     }
 
     public JavaCode(File srcDir) {
@@ -42,7 +43,7 @@ public class JavaCode {
         return res;
     }
 
-    public Package createPackage(String packageName) {
+    public Package createPackage(String packageName) throws IOException {
         return new Package(packageName);
     }
 
@@ -51,11 +52,13 @@ public class JavaCode {
         public final File packageDir;
         private String firstPackagePart;
 
-        public Package(String packageName) {
+        public Package(String packageName) throws IOException {
             this.packageName = packageName;
             this.packageDir = new File(srcDir, packageName.replace('.', File.separatorChar));
             this.firstPackagePart = packageName.split("\\.")[0];
-            packageDir.mkdirs();
+            if (!packageDir.mkdirs() && !packageDir.isDirectory()) {
+                throw new IOException("Could not create directory " + packageDir.toString());
+            }
         }
 
         public File createJavaFile(String name) throws IOException, JavaCodeGenerationException {
@@ -70,7 +73,9 @@ public class JavaCode {
             }
             File file = new File(packageDir, name + ".java");
             addFile(file);
-            file.createNewFile();
+            if (!file.createNewFile()) {
+                throw new IOException("File already exists: " + file.toString());
+            }
             return file;
         }
 
@@ -83,19 +88,8 @@ public class JavaCode {
         return srcDir;
     }
 
-    public void deleteCode() {
-        deleteDir(srcDir);
-    }
-
-    private void deleteDir(File dir) {
-        for (File f : dir.listFiles()) {
-            if (f.isDirectory()) {
-                deleteDir(f);
-            } else {
-                f.delete();
-            }
-        }
-        dir.delete();
+    public void deleteCode() throws IOException {
+        FileUtils.deleteDirectory(srcDir);
     }
 
     public void compile() throws JavaCodeGenerationException {

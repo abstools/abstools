@@ -1,0 +1,75 @@
+// Check for deadlock between process and DC on cog.  Testcase for
+// https://github.com/abstools/abstools/issues/276 reduced from
+// NewYearsEve2.abs.
+
+module BackendTest;
+import * from ABS.DC;
+
+interface Balancer  {
+}
+
+interface TelephoneServer  {
+  Unit call();
+}
+
+interface SMSServer {
+  Unit sendSMS();
+}
+
+class TelephoneServer implements TelephoneServer  {
+  Unit call(){
+    [Cost: 1] skip;
+    await duration(1, 1);
+  }
+}
+
+class SMSServer implements SMSServer  {
+  Unit sendSMS() {
+    [Cost: 1] skip;
+  }
+}
+
+
+class Handset (Int interval, Int cyclelength, TelephoneServer ts, SMSServer smss) {
+  Bool call = False;
+
+  Unit run(){
+    if (call) {
+      await ts!call();
+    } else {
+      smss!sendSMS();
+    }
+    call = ! call;
+    await duration(cyclelength,cyclelength);
+    if  (timeValue(now()) < 10) {
+      this!run();
+    }
+  }
+}
+
+class Balancer(String name) implements Balancer {
+  Rat ld = 100;
+
+  Unit run() {
+    while (timeValue(now()) < 10) {
+      await duration(1, 1);
+      ld = await thisDC()!load(Speed, 1); 
+    }
+  }
+}
+
+{ // Main block:
+  Bool testresult = False;
+  println("Starting");
+  DC smscomp = new DeploymentComponent("smscomp", map[Pair(Speed, 80)]);
+  DC telcomp = new DeploymentComponent("telcomp", map[Pair(Speed, 80)]);
+  [DC: smscomp] SMSServer sms = new SMSServer();
+  [DC: telcomp] TelephoneServer tel = new TelephoneServer();
+  [DC: smscomp] Balancer smsb = new Balancer("smsb");
+  [DC: telcomp] Balancer telb = new Balancer("telb");
+  new Handset(100,1,tel,sms);
+  println("Syncing");
+  await duration(10, 10);
+  testresult = True;
+  println(`Finished. testresult = $testresult$`);
+}

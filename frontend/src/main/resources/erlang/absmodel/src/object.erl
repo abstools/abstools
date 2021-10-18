@@ -9,7 +9,7 @@
 %% if it dies itself.
 
 -include_lib("../include/abs_types.hrl").
--export([behaviour_info/1]).
+-export([behaviour_info/1,field_with_oid/2]).
 
 
 %% API
@@ -121,18 +121,24 @@ get_class_from_ref(O=#object{cog=Cog}) ->
 get_class_from_state(OState) ->
     element(2, OState).
 
+field_with_oid(Field, Oid) ->
+    %% If this suddenly produces an error, check the format string
+    %% and/or flatten the output of `io_lib:format' with
+    %% `lists:flatten'.
+    list_to_atom(io_lib:format("~b_~s", [Oid, Field])).
+
 register_read(Field) ->
     case TaskInfo=get(task_info) of
-        #task_info{event=E=#event{reads=R}} ->
-            R2 = ordsets:add_element(Field, R),
+        #task_info{this=#object{oid=Oid}, event=E=#event{reads=R}} ->
+            R2 = ordsets:add_element(field_with_oid(Field, Oid), R),
             put(task_info, TaskInfo#task_info{event=E#event{reads=R2}});
         _ -> ok
     end.
 
 register_write(Field) ->
     case TaskInfo=get(task_info) of
-        #task_info{event=E=#event{writes=W}} ->
-            W2 = ordsets:add_element(Field, W),
+        #task_info{this=#object{oid=Oid}, event=E=#event{writes=W}} ->
+            W2 = ordsets:add_element(field_with_oid(Field, Oid), W),
             put(task_info, TaskInfo#task_info{event=E#event{writes=W2}});
         _ -> ok
     end.

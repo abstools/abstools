@@ -391,8 +391,8 @@ construct_local_trace(LocalTrace) ->
 
 json_to_trace(JSON) ->
     RawTrace = jsx:decode(JSON, [{labels, atom}, return_maps]),
-    lists:foldl(fun (#{cog_id := Id, cog_schedule := LocalTrace}, Acc) ->
-                        maps:put(Id, construct_local_trace(LocalTrace), Acc)
+    lists:foldl(fun (#{node := Node, local_trace := LocalTrace}, Acc) ->
+                        maps:put(Node, construct_local_trace(LocalTrace), Acc)
                 end, #{}, RawTrace).
 
 json_to_scheduling_trace(JSON) ->
@@ -408,9 +408,9 @@ local_trace_to_json_friendly(LocalTrace) ->
     lists:map(fun event_to_map/1, LocalTrace).
 
 trace_to_json_friendly(Trace) ->
-    T = maps:fold(fun (CogId, LocalTrace, Acc) ->
-                          [#{cog_id => CogId,
-                             cog_schedule => local_trace_to_json_friendly(LocalTrace)}
+    T = maps:fold(fun (Node, LocalTrace, Acc) ->
+                          [#{node => Node,
+                             local_trace => local_trace_to_json_friendly(LocalTrace)}
                            | Acc]
                   end, [], Trace),
     lists:reverse(T).

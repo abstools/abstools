@@ -469,9 +469,8 @@ public class ABSRuntime {
                 errStream.println("Could not find ABS-FLI properties file "+propertiesFileName);
             }
         } else {
-            try {
-                fliProperties.load(new BufferedReader(
-                        new InputStreamReader(url.openStream())));
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(url.openStream()))) {
+                fliProperties.load(r);
 
                 if (DEBUG_FLI) {
                     errStream.println("FLI: Loaded properties from URL "+url);

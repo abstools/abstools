@@ -18,8 +18,8 @@
          {url_prefix,undefined,"url-prefix",{string, none},"Url prefix for model API: index.html will be served at localhost:port/prefix/index.html"},
          {clocklimit,$l,"clock-limit",{integer,none},"Do not advance simulation clock above given clock value"},
          {schedulers,$s,"schedulers",{integer,none},"Set number of online erlang schedulers"},
-         {dump_trace,$t,"dump-trace",{string, none},"Dump the trace as a JSON file"},
-         {replay_trace,$r,"replay-trace",{string, none},"Replay a trace, given as a JSON file"},
+         {record,$t,"record",{string, none},"Record the trace and store it as a JSON file"},
+         {replay,$r,"replay",{string, none},"Replay a trace, given as a JSON file"},
          {explore,undefined,"explore",undefined,"Explore different execution paths"},
          {verbose,$v,"verbose",{integer,0},"Print status messages to stderr (more with -v 2)"},
          {debug,undefined,"debug",{boolean,false},"Turn on debug mode (model will run much slower and crash more often)"},
@@ -59,7 +59,7 @@ start_http(Port, Urlprefix, Module, Verbose, Debug, Clocklimit, Trace) ->
     ok = application:set_env(absmodel, debug, Debug),
     ok = application:set_env(absmodel, verbose, Verbose),
     ok = application:set_env(absmodel, clocklimit, Clocklimit),
-    ok = application:set_env(absmodel, replay_trace, Trace),
+    ok = application:set_env(absmodel, replay, Trace),
     {ok, _} = application:ensure_all_started(absmodel).
 
 parse(Args,Exec)->
@@ -83,8 +83,8 @@ parse(Args,Exec)->
             Urlprefix=proplists:get_value(url_prefix,Parsed,none),
             Clocklimit=proplists:get_value(clocklimit,Parsed,none),
             Schedulers=proplists:get_value(schedulers,Parsed,none),
-            DumpTrace=proplists:get_value(dump_trace,Parsed,none),
-            ReplayMode=proplists:get_value(replay_trace,Parsed,none),
+            RecordTrace=proplists:get_value(record,Parsed,none),
+            ReplayMode=proplists:get_value(replay,Parsed,none),
             ExploreMode=proplists:get_value(explore,Parsed,false),
 
             case Schedulers of
@@ -106,7 +106,7 @@ parse(Args,Exec)->
                           end,
             case ExploreMode of
                 true -> dpor:start_link(Module, Clocklimit);
-                false -> run_mod(Module, Verbose, Debug, Port, Urlprefix, Clocklimit, ReplayTrace, DumpTrace)
+                false -> run_mod(Module, Verbose, Debug, Port, Urlprefix, Clocklimit, ReplayTrace, RecordTrace)
             end;
         _ ->
             getopt:usage(?CMDLINE_SPEC,Exec)
@@ -158,7 +158,7 @@ start_mod(Module, Verbose, Debug, Clocklimit, Keepalive, Trace, StartTime) ->
                           this=null, destiny=null},
     {ok, cog:add_main_task(Cog,[Module,self()], TaskInfo)}.
 
-end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
+end_mod(TaskRef, Verbose, RecordTrace, StartTime) ->
     %%Wait for termination of main task and idle state
     RetVal=task:join(TaskRef),
     coverage:write_files(),
@@ -167,10 +167,10 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
         0 -> ok;
         _ -> io:format(standard_error, "Simulation time: ~p ms with status ~w~n", [erlang:system_time(millisecond) - StartTime, Status])
     end,
-    case DumpTrace of
+    case RecordTrace of
         none -> ok;
         _ -> JsonTrace = modelapi_v2:get_trace_json(),
-             file:write_file(DumpTrace, JsonTrace)
+             file:write_file(RecordTrace, JsonTrace)
     end,
     Ret = case Status of
               success -> RetVal;
@@ -183,7 +183,7 @@ end_mod(TaskRef, Verbose, DumpTrace, StartTime) ->
     Ret.
 
 
-run_mod(Module, Verbose, Debug, Port, Urlprefix, Clocklimit, Trace, DumpTrace)  ->
+run_mod(Module, Verbose, Debug, Port, Urlprefix, Clocklimit, Trace, RecordTrace)  ->
     case Port of
         _ when is_integer(Port) ->
             start_http(Port, Urlprefix, Module, Verbose, Debug, Clocklimit, Trace),
@@ -191,7 +191,7 @@ run_mod(Module, Verbose, Debug, Port, Urlprefix, Clocklimit, Trace, DumpTrace)  
         _ ->
             StartTime = erlang:system_time(millisecond),
             {ok, R}=start_mod(Module, Verbose, Debug, Clocklimit, false, Trace, StartTime),
-            end_mod(R, Verbose, DumpTrace, StartTime)
+            end_mod(R, Verbose, RecordTrace, StartTime)
     end.
 
 run_dpor_slave(Module, Clocklimit, Trace) ->

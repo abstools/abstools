@@ -9,10 +9,13 @@ import java.util.List;
 
 import org.abs_models.backend.common.CodeStream;
 import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.DataConstructor;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.ModuleDecl;
 import org.abs_models.frontend.ast.ParamDecl;
 import org.abs_models.frontend.ast.PureExp;
+import org.abs_models.frontend.typechecker.DataTypeType;
+import org.abs_models.frontend.typechecker.Type;
 
 /**
  * Utility functions to mostly generate headers or parameter lists.
@@ -204,5 +207,23 @@ public class ErlUtil {
 
     public static String absParamDeclToErlVarName(ParamDecl p) {
         return Vars.PREFIX + p.getName() + "_0";
+    }
+
+    /**
+     * Create expression that converts SQL result set data values to ABS.
+     */
+    public static String sqlDataTypeTransformerFunction(Type type, String var) {
+        if (type.isIntType() || type.isFloatType()) {
+            return var;
+        } else if (type.isRatType()) {
+            return "builtin:rat(null, " + var + ")";
+        } else if (type.isStringType()) {
+            return "unicode:characters_to_binary(" + var + ")";
+        } else if (type.isBoolType()) {
+            return "case " + var + " of 0 -> false; _ -> true end";
+        } else {
+            // can't happen
+            return null;
+        }
     }
 }

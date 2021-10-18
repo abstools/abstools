@@ -19,9 +19,11 @@ class C implements I {
 {
     Bool testresult = False;
     I o = new C();
+    // Here we expect an exception (o will be kept alive by the recover block)
     try Unit r = await o!test();
     catch e => testresult = True;
     await o!set(5);
+    // Here no exception is thrown
     try Unit r = await o!test();
     catch e => testresult = False;
     // println("Result: " + toString(testresult));

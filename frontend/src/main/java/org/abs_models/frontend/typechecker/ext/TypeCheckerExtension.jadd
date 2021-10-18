@@ -268,7 +268,7 @@ aspect TypeCheckerExtension {
             ExpFunctionDef def = (ExpFunctionDef)getFunctionDef();
             def.getRhs().typeCheck(s);
             getModel().getTypeExt().checkAssignable(def.getRhs().getType(), getType(), this);
-            getModel().getTypeExt().checkAssignable(getType(), def.getRhs(), this);
+            getModel().getTypeExt().checkAssignable(getType(), def.getRhs().getType(), this);
         }
     }
 
@@ -304,7 +304,7 @@ aspect TypeCheckerExtension {
 
         if (hasInitExp()) {
             getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
-            getModel().getTypeExt().checkAssignable(getType(), getInitExp(), this);
+            getModel().getTypeExt().checkAssignable(getType(), getInitExp().getType(), this);
         }
     }
 
@@ -315,7 +315,7 @@ aspect TypeCheckerExtension {
 
         if (hasInitExp()) {
             getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
-            getModel().getTypeExt().checkAssignable(getType(), getInitExp(), this);
+            getModel().getTypeExt().checkAssignable(getType(), getInitExp().getType(), this);
         }
  
      }

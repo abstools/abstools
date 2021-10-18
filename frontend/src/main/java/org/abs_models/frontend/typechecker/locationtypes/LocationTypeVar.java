@@ -10,18 +10,18 @@ import java.util.Map;
  * Used to abstract location types for inference
  */
 public class LocationTypeVar {
+    private ASTNode<?> node;
+
+    private static int counter = 0;
+
+    private int id = counter++;
+
     public static final String LOCATION_VAR_KEY = "LOCATION_VAR_KEY";
 
     public static final LocationTypeVar NEAR = new LocationTypeVar(null);
     public static final LocationTypeVar FAR = new LocationTypeVar(null);
     public static final LocationTypeVar SOMEWHERE = new LocationTypeVar(null);
     public static final LocationTypeVar BOTTOM = new LocationTypeVar(null);
-
-    private ASTNode<?> node;
-
-    private static int counter = 0;
-
-    private int id = counter++;
 
     public LocationTypeVar(ASTNode<?> node) {
         this.node = node;

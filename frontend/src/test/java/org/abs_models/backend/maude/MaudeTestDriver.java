@@ -5,9 +5,11 @@
 package org.abs_models.backend.maude;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
 
 import org.abs_models.backend.BackendTestDriver;
+import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 
 public class MaudeTestDriver implements BackendTestDriver {
@@ -50,6 +52,11 @@ public class MaudeTestDriver implements BackendTestDriver {
     }
 
     @Override
+    public void assertEvalTrueWithTestfiles(Model m, File ...f) throws Exception {
+        throw new Exception("Auxiliary files not supported in Java test backend.");
+    }
+
+    @Override
     public BackendName getBackendName() {
         return BackendName.MAUDE;
     }
@@ -66,4 +73,7 @@ public class MaudeTestDriver implements BackendTestDriver {
 
     @Override
     public boolean supportsDowncasting() { return false; }
+
+    @Override
+    public boolean supportsSQLite() { return false; }
 }

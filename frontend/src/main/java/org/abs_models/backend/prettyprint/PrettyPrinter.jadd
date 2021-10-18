@@ -1,6 +1,8 @@
 // -*- mode: java; tab-width: 4; -*-
 import java.io.PrintWriter;
 import org.abs_models.backend.prettyprint.*;
+import java.util.stream.Collectors;
+import com.google.common.collect.Streams;
 
 aspect doPrettyPrinter {
 
@@ -815,9 +817,11 @@ aspect doPrettyPrinter {
         }
         stream.print("interface ");
         stream.print(getName());
-        if (getNumExtendedInterfaceUse() > 0) {
+	/* Filter `extends ABS.StdLib.Object, ...` by way of streams. */
+	String s = Streams.stream(getExtendedInterfaceUses()).filter(i -> !i.getName().equals(Constants.STDLIB_NAME+".Object")).map(tu -> tu.getName()).collect(Collectors.joining(", "));
+        if (s.length() > 0) {
             stream.print(" extends ");
-            getExtendedInterfaceUseList().doPrettyPrint(stream, formatter, ",");
+            stream.print(s);
         }
         formatter.beforeOpenBrace();
         stream.println(" {");
@@ -842,11 +846,6 @@ aspect doPrettyPrinter {
     }
 
     public void MethodSig.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        getAnnotationList().doPrettyPrint(stream, formatter, "");
-        if (getNumAnnotation() > 0) {
-            stream.println();
-            formatter.afterStmt();
-        }
         getReturnType().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName().replaceAll("\\$", ""));
@@ -927,11 +926,6 @@ aspect doPrettyPrinter {
     }
 
     public void FieldDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        getAnnotationList().doPrettyPrint(stream, formatter, "");
-        if (getNumAnnotation() > 0) {
-            stream.println();
-            formatter.afterStmt();
-        }
         getTypeUse().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());

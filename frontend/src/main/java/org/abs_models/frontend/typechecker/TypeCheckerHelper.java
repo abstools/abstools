@@ -323,8 +323,6 @@ public class TypeCheckerHelper {
         }
     }
 
-    static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
-
     public static void checkForDuplicateDecls(ModuleDecl mod, SemanticConditionList errors) {
         Map<KindedName, ResolvedName> duplicateNames = new HashMap<>();
         Map<KindedName, ResolvedName> names = getVisibleNames(mod, duplicateNames);
@@ -661,5 +659,78 @@ public class TypeCheckerHelper {
                 }
             }
         }
+    }
+
+    /**
+     * Check whether argument t can be an argument to a SQLite3 query.
+     *
+     * This method returns true if t is a string, numeric or boolean type.
+     */
+    public static boolean isValidSQLite3ArgumentType(Type t) {
+	if (t.isUnknownType())
+	    return false;
+	else if (!t.isDataType())
+	    return false;
+	DataTypeType lt = (DataTypeType) t;
+	if (lt.isBoolType())
+	    return true;
+	else if (lt.isIntType())
+	    return true;
+	else if (lt.isRatType())
+	    return true;
+	else if (lt.isFloatType())
+	    return true;
+	else if (lt.isStringType())
+	    return true;
+        else
+            return false;
+    }
+
+    /**
+     * Check whether argument t can be the result of a SQLite3 query.
+     *
+     * This method returns true if t is a list whose type parameter is
+     * a string, numeric or boolean type, or an algebraic datatype
+     * whose first constructor takes parameters of these types.
+     */
+    public static boolean isValidSQLite3ReturnType(Type t) {
+	if (t.isUnknownType())
+	    return false;
+	if (!t.isDataType())
+	    return false;
+
+	DataTypeType dt = (DataTypeType) t;
+	if (!(dt.getDecl().getName().equals("List")))
+	    return false;
+	if (!(dt.numTypeArgs() == 1
+	      && dt.getTypeArg(0).isDataType()))
+	    return false;
+
+	DataTypeType lt = (DataTypeType)dt.getTypeArg(0);
+	if (lt.isBoolType())
+	    return true;
+	if (lt.isIntType())
+	    return true;
+	if (lt.isRatType())
+	    return true;
+	if (lt.isFloatType())
+	    return true;
+	if (lt.isStringType())
+	    return true;
+	DataTypeDecl ltd = lt.getDecl();
+	if (ltd.getNumDataConstructor() != 1)
+	    return false;
+	if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
+	    return false;
+	for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
+	    Type cat = ca.getTypeUse().getType();
+	    if (!(cat.isBoolType()
+		  || cat.isIntType()
+		  || cat.isRatType()
+		  || cat.isFloatType()
+		  || cat.isStringType()))
+		return false;
+	}
+	return true;
     }
 }

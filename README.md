@@ -1,8 +1,7 @@
 ABS Tools
 =========
 
-[![CircleCI](https://img.shields.io/circleci/project/abstools/abstools.svg)](https://circleci.com/gh/abstools/abstools)
-[![GitHub release](https://img.shields.io/github/release/abstools/abstools.svg)](https://github.com/abstools/abstools/releases/latest)
+[![compile](https://github.com/abstools/abstools/actions/workflows/compile.yml/badge.svg?branch=master)](https://github.com/abstools/abstools/actions/workflows/compile.yml)<!-- [![test](https://github.com/abstools/abstools/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/abstools/abstools/actions/workflows/test.yml) --> [![GitHub release](https://img.shields.io/github/release/abstools/abstools.svg)](https://github.com/abstools/abstools/releases/latest)
 [![Gitter](https://badges.gitter.im/abstools/general.svg)](https://gitter.im/abstools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Inside this repository we develop the core tools of the ABS modelling
@@ -42,9 +41,6 @@ Folders
 
 * `org.abs-models.releng` - Files used by Jenkins and Buckminster for
   continuous integration at <https://envisage.ifi.uio.no:8080/jenkins/>.
-
-* `abs-packages` - demonstration and description of how to use ABS
-  packages (with Maven dependencies management)
 
 * `abs-unit` - demonstration, description and initial ideas about the
   ABSUnit (a unit testing framework for ABS) (with Maven dependencies

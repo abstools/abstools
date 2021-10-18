@@ -1,38 +1,28 @@
 == Expressions
 
-This chapter specifies all ABS expressions.  ABS expressions can either be
-side effect-free (i.e., part of the _functional sublanguage_) or have side effects.
+This chapter specifies all ABS expressions.  Expressions are usually evaluated
+for their value, although they can be used inside annotations as purely
+syntactic constructs that do not need to follow standard evaluation rules.
+
+ABS expressions can either be pure or have side effects. _Pure expressions_
+only refer to entities in the functional and expression layer.  They can be
+evaluated multiple times without influencing the execution of the imperative
+and object oriented layers of ABS.  Pure expressions can be sub-expressions of
+other expressions and can be used as function bodies.  _Side-effect
+expressions_, on the other hand, refer to semantic entities “above” the
+functional layer (objects and futures).  They are only legal “stand-alone”
+(i.e., not as a sub-expression of another expression) and in certain places,
+mostly in the right-hand side of an assignment.  This strict separation of
+pure and side-effect expressions simplifies the language, for
+example wrt. using expressions inside annotations and reasoning about
+expressions in static analysis tools.
+
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
 |====
 | _Exp_ ::= | _PureExp_ {vbar} _EffExp_
-|====
-
-The functional sublanguage of ABS is a purely-functional, side effect-free
-language.  It comprises functions and operators on built-in datatypes,
-user-defined algebraic datatypes, and user-defined functions defined on
-datatypes.
-
-Additionally, ABS contains a number of special expressions with well-defined
-side effects, such as the `new` expression which creates a new object.
-Expressions with side effects cannot be combined with other expressions, for
-example as an argument to a function call.  This slight notational
-inconvenience makes it easier to develop static analysis techniques and tools
-for ABS.
-
-[[sec:pure-expressions]]
-=== Pure Expressions
-
-Pure Expressions are side effect-free expressions.  The value of these
-expressions only depends on their arguments, and they can be evaluated
-multiple times without influencing the execution semantics.
-
-
-[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
-.Syntax
-|====
-|_PureExp_ ::= | _SimpleIdentifier_ +
+| _PureExp_ ::= | _SimpleIdentifier_ +
  {vbar} `this` `.` _SimpleIdentifier_ +
  {vbar} `this` +
  {vbar} _Literal_ +
@@ -48,13 +38,18 @@ multiple times without influencing the execution semantics.
  {vbar} _TypeCheckExp_ +
  {vbar} _TypeCastExp_ +
  {vbar} `(` _PureExp_ `)`
+| _EffExp_ ::= | _NewExp_ +
+ {vbar} _SyncCall_ +
+ {vbar} _AsyncCall_ +
+ {vbar} _GetExp_ +
+ {vbar} _AwaitExp_
 |====
 
-==== Literal Expressions
+=== Literals
 
 Literals, as defined in <<sec:literals>>, are expressions.
 
-==== Template Strings
+=== Template Strings
 
 Template strings are strings allowing embedded expressions.  In
 contrast to normal string literals, template strings can contain
@@ -88,7 +83,7 @@ The price is \$$price$.`
 ----
 The result of this expression will be a string with two lines, and with the values of the local variables `name` and `price` in place.
 
-==== Operator Expressions
+=== Operator Expressions
 
 ABS has a range of unary and binary operators working on pre-defined
 datatypes.  All operators are pure (side effect-free).
@@ -131,7 +126,7 @@ to high precedence.
 |=======================
 
 
-===== Semantics of Comparison Operators
+==== Semantics of Comparison Operators
 
 ABS has generic equality and less-than comparison between two values of the
 same type.
@@ -168,7 +163,7 @@ Cons(1, _) < Cons(2, _)
   program invocations, e.g., when reading back an ordered list of objects.]
 
 
-==== The Let Expression
+=== Let
 
 The expression `let T v = p in b` evaluates `b`, with `v` bound to the value
 of evaluating the expression `p`.  The newly-introduced binding of `v` can
@@ -193,7 +188,7 @@ let Int x = 2 + 2, Int y = x + 1 in y * 2 <1>
 ----
 <1> The value of this expression is 10 (`((2 + 2) + 1) * 2`)
 
-==== The Data Constructor Expression
+=== Data Constructor Expressions
 
 
 Data Constructor Expressions are expressions that create data values by
@@ -221,7 +216,7 @@ Defining new data types and their constructors is described in
 <<sec:algebraic-data-types>>.
 
 
-==== The Function Call Expression
+=== Function Calls
 
 Function calls apply arguments to functions, producing a value.  Function call
 expressions look similar to data constructor expressions, but function names
@@ -242,7 +237,7 @@ head(list)
 ----
 
 
-===== The N-ary Function Call Expression
+==== N-ary Function Calls
 
 Calls to n-ary Constructors (see <<sec:n_ary-constructors>>) are written with
 brackets (`[]`) instead of parentheses (`()`).
@@ -254,7 +249,7 @@ brackets (`[]`) instead of parentheses (`()`).
 |====
 
 
-==== The Partially-Defined-Function Call Expression
+=== Partially-Defined-Function Calls
 
 Calls to partially defined functions (see <<sec:partially-defined-functions>>) are similar to
 function call expressions, but have an additional prepended set of arguments.
@@ -280,7 +275,7 @@ filter((Int i) => i > 0)(list[0, 1, 2])
 ----
 
 
-==== The Conditional Expression
+=== Conditional Expressions
 
 The value of the conditional expression `when c then e1 else e2` is either the
 value of `e1` or the value of `e2`, depending on the value of `c`, which must
@@ -300,7 +295,7 @@ when 5 == 4 then True else False
 ----
 
 [[case-expression]]
-==== Case Expressions
+=== Case
 
 ABS supports pattern matching via the Case Expression.  A case expression
 consists of an input expression and one or more branches, each consisting of a
@@ -335,7 +330,7 @@ There are four different kinds of patterns available in ABS:
 NOTE: Older versions of the ABS language used the semicolon (`’`) to terminate
 case branches.  This older syntax is still supported by the compiler.
 
-===== The Variable Pattern
+==== Variable Patterns
 
 Variable patterns are written as identifiers starting with a lower-case
 letter.  If the identifier does not name a variable in the current scope, the
@@ -381,7 +376,7 @@ let (x = 7) in
 
 
 
-===== The Literal Pattern
+==== Literal Patterns
 
 Literals can be used as patterns.  The pattern matches if the value of the
 case expression is equal to the literal value.
@@ -400,7 +395,7 @@ let (Pair<Int, Int> a) = Pair(5, 5) in
 <3> The value of the whole expression is 5, produced by the second branch.
 
 
-===== The Data Constructor Pattern
+==== Data Constructor Patterns
 
 A data constructor pattern is written like a standard data constructor expression.
 Constructor arguments are again patterns.
@@ -422,7 +417,7 @@ let (List<Int> l) = list[1, 2, 3] in
 <4> The value of the whole expression is 15, produced by the second branch.
 
 
-===== The Wildcard Pattern
+==== The Wildcard Pattern
 
 The wildcard pattern, written with an underscore (`_`) matches any value.
 
@@ -455,7 +450,7 @@ type-correct if it can match the corresponding case expression.
 
 
 [[typecheck-expression]]
-==== The Type-Check Expression
+=== Type-Check Expressions
 
 Variables pointing to objects are typed by interface, which means that the
 concrete class of the referenced object might support more methods than can be
@@ -486,7 +481,7 @@ class C implements I, J {}
 
 
 [[typecast-expression]]
-==== The Type-Cast Expression
+=== Type-Cast Expressions
 
 Variables pointing to objects are typed by interface, which means that
 the concrete class of the referenced object might support more methods
@@ -515,35 +510,15 @@ class D implements I {}
 }
 ----
 
-
-
-[[sec:side-effect-expressions]]
-=== Expressions with Side Effects
-
-ABS has expressions with side effects.  These expressions are only legal
-“stand-alone”, i.e., not as a sub-expression of another expression.  This
-means that sub-expressions of expressions can only be pure expressions.  This
-restriction simplifies the reasoning about expressions in the ABS modeling
-language.
-
-
-[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
-.Syntax
-|====
-| _EffExp_ ::= | _NewExp_ +
-                 {vbar} _SyncCall_ +
-                 {vbar} _AsyncCall_ +
-                 {vbar} _GetExp_ +
-                 {vbar} _AwaitExp_
-|====
-
-==== New Expression
+=== New
 
 A `new` expression creates a new object from a class name and a list of
 arguments.  In ABS objects can be created in two different ways.  Either they
 are created in the current COG, using the `new local` expression, or they are
 created in a new COG by using the `new` expression (see
 <<sec:concurrency-model>> for more details about cogs).
+
+NOTE: This expression is a side-effect expression and cannot be used as a sub-expression.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -572,10 +547,12 @@ local` expression.  This works as expected when the fresh object is on
 the same cog (i.e., is created with `new local` but will deadlock when
 the fresh object is on its own cog).
 
-==== Synchronous Call Expression
+=== Synchronous Method Calls
 
 A synchronous call consists of a target expression evaluating to an interface
 type, a method name declared in that interface, and a list of argument expressions.
+
+NOTE: This expression is a side-effect expression and cannot be used as a sub-expression.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -604,11 +581,13 @@ the caller cog.
 
 
 [[async-call-expression]]
-==== Asynchronous Call Expression
+=== Asynchronous Method Calls
 
 An asynchronous call consists of a target expression evaluating to an
 interface type, a method name declared in that interface, and a list of
 argument expressions.
+
+NOTE: This expression is a side-effect expression and cannot be used as a sub-expression.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -633,14 +612,15 @@ Fut<Bool> f = x!m(5);
 ----
 
 [[get-expression]]
-==== Get Expression
-
+=== Get
 
 A get expression is used to obtain the value from a future.  The current task
 is blocked until the future has been resolved, i.e., until either the return
 value is available or an exception has occurred in the callee task.  No other
 task in the COG can be activated while the current task is blocked by a get
 expression.
+
+NOTE: This expression is a side-effect expression and cannot be used as a sub-expression.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -671,10 +651,12 @@ try b = f.get; catch { _ => b = False; }
 
 
 [[await-expression]]
-==== Await Expression
+=== Await (Expression)
 
 An await expression is a way to asynchronously call a method, wait for the
 callee to finish, and optionally get the result in one expression.
+
+NOTE: This expression is a side-effect expression and cannot be used as a sub-expression.
 
 [frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
 .Syntax
@@ -698,7 +680,7 @@ await fx?;
 A x = fx.get;
 ----
 
-===== Exception Propagation and the Await Expression
+==== Exception Propagation and the Await Expression
 
 As explained in Section <<get-expression>>, exceptions propagate from callee
 to caller via the `get` expression.  An `await` statement will proceed once
@@ -731,8 +713,8 @@ await fx?;
 
 Functions take a list of arguments and evaluate the expression in their body,
 producing a return value.  ABS functions are always pure.  This means the body
-of a function can use all pure expressions (see <<sec:pure-expressions>>) but
-no expressions with side effects (see <<sec:side-effect-expressions>>).
+of a function can use all pure expressions but
+no expressions with side effects.
 
 
 Functions can be _parametric_, which means that they can take and return
@@ -770,16 +752,6 @@ def A head<A>(List<A> list) = <3>
 <1> The `abs` function returns the absolute value of its argument.
 <2> This parametric function takes lists with arbitrary values and returns an Integer.
 <3> This parametric function returns the same type that is contained in the list.  (Note that `head` is a partial function which is not defined for empty lists.)
-
-NOTE: The ABS standard library contains some special functions that cannot be
-defined with pure expressions, for example the function `println`.  The
-definition of such functions is done via a special function body of the form
-`builtin`, with optional pure expression arguments `builtin(a, "b", 3)`.  Such
-builtin functions have to be defined separately in the code generator for each
-backend where the model is compiled; details of this are
-implementation-specific and outside the scope of this manual.
-
-
 
 [[sec:partially-defined-functions]]
 === Partial Function Definitions
@@ -905,3 +877,128 @@ expansion during the type checking of core ABS, but the expanded function
 definition has an annotation referring to the statement that caused the
 expansion, hence error reporting will be accurate wrt. the original source
 code.
+
+=== Built-In Functions
+
+Some special "functions" cannot be defined with pure expressions, for example
+the function `println`.  The definition of such functions is done via a
+special function body written as `builtin`, with optional pure expression
+arguments `builtin(a, "b", 3)`.  Such builtin functions have to be defined
+separately in the code generator for each backend where the model is compiled.
+
+Built-in functions in the standard library include:
+
+- The functions `sqrt`, `log`, `exp` that work on floating-point numbers
+- Functions that convert between different numerical types: `truncate`, `float`, `rat`, `floor`, `ceil`, `numerator`, `denominator`
+- String functions: `substr`, `strlen`, `toString`, `println`
+- Clock access: `currentms`, `ms_since_model_start`
+- Functions that return process attributes (see Section <<sec:process-attributes>>)
+- The `random` function
+
+=== Embedded SQLite Database Queries
+
+The Erlang backend can read from a relational database and convert the
+result into ABS lists.  Currently only SQLite databases are supported.
+
+A SQLite database is queried by writing a function with a `builtin` body with
+three or more arguments: a literal `sqlite3`, the name of the database file,
+the query as a SQL string, and zero or more arguments to the query.  The
+return value is a list of ABS values.  The return type of such a function can
+be:
+
+- `Int`, when the query returns rows with a single SQLite `INTEGER`
+  value;
+- `Float`, when the query returns rows with a single SQLite `INTEGER`
+  or `REAL` value;
+- `Rat`, when the query returns rows with a single SQLite `INTEGER` or
+  `REAL` value;
+- `Bool`, when the query returns rows with a single SQLite `INTEGER`
+  value, where `0` corresponds to ABS `False`;
+- `String`, when the query returns rows with a single SQLite `TEXT`
+  value;
+- An algebraic datatype, with a single constructor taking only the
+  above datatypes, such that the constructor can be invoked for each
+  row returned by the query.
+
+Query parameters are written as `?` in the SQL query string.  Each of these
+parameters must be supplied with a value.  ABS values are converted into SQL
+values as follows:
+
+- `Int` values are converted into integers;
+- `Float`, `Rat` values are converted into floating-point numbers;
+- `Bool` values are converted into `0` and `1` (note that SQLite treats all non-zero values as true; consider directly using a query parameter of type `Int` instead);
+- `String` values are converted to strings.
+
+[source]
+.Example: creating a database
+----
+$ sqlite3 /tmp/test.sqlite3
+CREATE TABLE IF NOT EXISTS test_table (
+  int_value INTEGER,
+  float_value REAL,
+  string_value TEXT,
+  bool_value BOOLEAN
+);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(15, 13.53, "hello", 0);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(30, 42.5, "world", 1);
+.quit
+----
+
+With the above database, the following ABS model can be run:
+
+[source]
+.Example: reading from the database
+----
+module Test;
+
+def List<String> fstring() = builtin(sqlite3, <1>
+    "/tmp/test.sqlite3",
+    "SELECT string_value FROM test_table");
+
+def List<Rat> frat() = builtin(sqlite3, <2>
+    "/tmp/test.sqlite3",
+    "SELECT float_value FROM test_table");
+
+data RowResult = RowResult(Int, Bool, Float, Rat, String);
+
+def List<RowResult> ftuple() = builtin(sqlite3, <3>
+    "/tmp/test.sqlite3",
+    `SELECT int_value, bool_value, float_value, float_value, string_value
+       FROM test_table`);
+
+def List<RowResult> ftuple_with_params(String str, Rat rat) = builtin(sqlite3,
+    "/tmp/test.sqlite3",
+    `SELECT int_value, bool_value, float_value, float_value, string_value
+       FROM test_table
+      WHERE string_value = ? <4>
+        AND float_value = ?`,
+    str, <5>
+    rat);
+
+
+{
+    foreach (v, i in frat()) {
+        println(`$i$'th rational value is $v$`);
+    }
+    foreach (v, i in fstring()) {
+        println(`$i$'th string value is $v$`);
+    }
+    foreach (v, i in ftuple()) {
+        println(`$i$'th tuple is $v$`);
+    }
+    foreach (v, i in ftuple_with_params("world", 85/2)) {
+        println(`$i$'th tuple is $v$`);
+    }
+}
+----
+<1> A `builtin` function with first argument `sqlite3` takes two more arguments: the name of the database, and a SQL query string.
+<2> SQL float values are converted to ABS rational values
+<3> Rows of SQL relations with more than one column are converted into ABS user-defined datatypes. The data constructor of the result datatype has to take the same number of arguments as the `SELECT` returns, and the datatypes must be compatible.
+<4> Query parameters in SQLite are written as plain `?` in the query string.
+<5> For each parameter in the query string, a value must be supplied.
+
+NOTE: When the database file (the second argument to the `builtin` expression)
+does not contain a path, the model will look for it in the `priv` directory of
+the compiled model.  That directory is the value of the erlang function
+`code:priv_dir(absmodel)`, typically
+`gen/erl/absmodel/_build/default/lib/absmodel/priv/`.

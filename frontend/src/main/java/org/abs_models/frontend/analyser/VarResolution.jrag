@@ -311,15 +311,6 @@ aspect VarResolution {
     eq MethodImpl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) {
         return locallookupVarOrFieldName(name,fieldOnly);
     }
-    eq MethodSig.getAnnotation().lookupVarOrFieldName(String name, boolean fieldOnly) {
-        if (!fieldOnly) {
-            VarOrFieldDecl d = locallookupVarOrFieldName(name, fieldOnly);
-            if (d != null) return d;
-        }
-        // A MethodImpl can talk about its surrounding class, but a MethodSig
-        // occurs in interface contexts etc., so maybe can't
-        return null;
-    }
     
     eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
     eq ModuleDecl.getDecl(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 

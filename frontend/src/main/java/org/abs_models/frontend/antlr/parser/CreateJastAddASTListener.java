@@ -321,7 +321,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     @Override public void exitMethodsig(ABSParser.MethodsigContext ctx) {
-        setV(ctx, new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.type_use()), v(ctx.paramlist())));
+        setV(ctx, new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.type_use()), v(ctx.paramlist())));
     }
 
     // Classes
@@ -343,13 +343,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
 
     @Override public void exitField_decl(ABSParser.Field_declContext ctx) {
         // FIXME: 'port' missing (for component model)
-        FieldDecl f = setV(ctx, new FieldDecl(ctx.IDENTIFIER().getText(), v(ctx.type_use()), o(ctx.pure_exp()),
-            v(ctx.annotations())));
+        FieldDecl f = setV(ctx, new FieldDecl(ctx.IDENTIFIER().getText(), v(ctx.type_use()), o(ctx.pure_exp())));
     }
 
     @Override public void exitMethod(ABSParser.MethodContext ctx) {
-        MethodSig ms = new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.annotations()), v(ctx.type_use()),
-            v(ctx.paramlist()));
+        MethodSig ms = new MethodSig(ctx.IDENTIFIER().getText(), v(ctx.type_use()), v(ctx.paramlist()));
         ms.setPosition(ctx.IDENTIFIER().getSymbol().getLine(), ctx.IDENTIFIER().getSymbol().getCharPositionInLine(),
                        ctx.paramlist().getStop().getLine(), ctx.paramlist().getStop().getCharPositionInLine() + ctx.paramlist().getStop().getText().length());
         Block b = new Block(new List<>(), new List<>());

@@ -8,13 +8,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- A fixed version of location type checking has been implemented, use the parameter `--loctypecheck` to enable location type checking.  Location types express whether a given object resides on the same cog as the current object.
+- In the Erlang backend, it is now possible to calculate the result of a function from the result of a query to a provided SQLite database.  The preliminary syntax for this is `def Int f(Int x) = builtin(sqlite3, "db.sqlite3", "SELECT i FROM t where i = ?", x);`
+
+- The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 
 ### Changed
+
+- The toolchain now requires Erlang >= 23 and a C compiler.
 
 ### Removed
 
 ### Fixed
+
+- Removed the one-minute timeout for the Model API (calls to the Model API used to abort with a 5xx error code after one minute).
+
+## [1.9.3] - 2021-05-18
+
+### Changed
+
+- The toolchain now requires Java 11 or later.
+
+- The long command-line parameter names for recording and replaying traces have been changed from `--dump-trace` and `--replay-trace` to `--record` and `--replay`.  The short parameters stay the same (`-t` and `-r`, respectively).
+
+### Fixed
+
+- Performance improvement in the Erlang backend: a cog with multiple processes awaiting on Boolean conditions now evaluates all guards in-process instead of delegating to the waiting processes.  This results in better performance -- observed an improvement factor of 3-9 and utilization of a single core (as opposed to  running on all cores of a multi-core machine) in microbenchmarks involving a single cog.
+
+## [1.9.2] - 2021-03-02
+
+### Added
+
+- A first version of location type checking has been added.  This feature is currently not enabled by default.  Use the parameter `--loctypecheck` to enable location type checking.  Location types express whether a given object resides on the same cog as the current object; see Section 3.6 in the manual for initial documentation.
+
+### Fixed
+
+- A deadlock in the erlang backend has been fixed. https://github.com/abstools/abstools/issues/276
 
 ## [1.9.1] - 2020-11-27
 
@@ -400,8 +428,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.1...HEAD
-[1.9.1]: https://github.com/abstools/abstools/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.3...HEAD
+[1.9.3]: https://github.com/abstools/abstools/compare/v1.9.2...v1.9.3
+[1.9.2]: https://github.com/abstools/abstools/compare/v1.9.1...v1.9.2
+[1.9.1]: https://github.com/abstools/abstools/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/abstools/abstools/compare/v1.8.2...v1.9.0
 [1.8.2]: https://github.com/abstools/abstools/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/abstools/abstools/compare/v_1.8.0...v1.8.1

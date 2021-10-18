@@ -5,6 +5,7 @@
 package org.abs_models.common;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Constants {
@@ -19,17 +20,16 @@ public class Constants {
     public static final String SMARTDEPLOY_NAME = "ABS.SmartDeploy";
     public static final String JUNIT_NAME = "ABS.JUnit";
 
-    public static final List<String> BUILT_IN_LIBS = 
-            Arrays.asList(STDLIB_NAME,
-                          FLI_NAME,
-                          META_NAME,
-                          DC_NAME,
-                          SCHEDULE_NAME,
-                          PL_NAME,
-                          EXCEPTIONS_NAME,
-                          SMARTDEPLOY_NAME,
-                          JUNIT_NAME
-                          );
+    public static final List<String> BUILT_IN_LIBS =
+        Collections.unmodifiableList(Arrays.asList(STDLIB_NAME,
+                                                   FLI_NAME,
+                                                   META_NAME,
+                                                   DC_NAME,
+                                                   SCHEDULE_NAME,
+                                                   PL_NAME,
+                                                   EXCEPTIONS_NAME,
+                                                   SMARTDEPLOY_NAME,
+                                                   JUNIT_NAME));
 
     public static final String FUNCTIONAL_BREAK_POINT_FUNCTION = "watch";
     public static boolean isFunctionalBreakPointFunctionName(String functionName) {

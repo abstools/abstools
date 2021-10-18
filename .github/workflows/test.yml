@@ -1,0 +1,34 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'adopt'
+        java-version: '11'
+    - name: Install Erlang
+      uses: gleam-lang/setup-erlang@v1.1.2
+      with:
+        # version is used for download URL (see https://github.com/gleam-lang/setup-erlang/blob/main/main.sh)
+        # Available versions: see https://www.erlang-solutions.com/downloads/
+        otp-version: '24.0.5'
+    - name: Run tests
+      uses: eskatos/gradle-command-action@v1
+      env:
+        LANG: en_US.UTF-8
+      with:
+        arguments: test
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()    # run this step even if previous step failed
+      with:
+        name: JUnit Tests
+        path: '**/test/TEST-*.xml'
+        reporter: java-junit

@@ -29,7 +29,7 @@ import com.gzoumix.semisolver.term.Term;
 
 public class ContractElementUnion extends ContractElement {
 
-  public static final String name = "ContractUnion";
+  public final static String name = "ContractUnion";
 
   private Contract branchOne;
   private Contract branchTwo;

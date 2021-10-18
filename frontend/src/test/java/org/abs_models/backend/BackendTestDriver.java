@@ -4,6 +4,8 @@
  */
 package org.abs_models.backend;
 
+import java.io.File;
+
 import org.abs_models.frontend.ast.Model;
 
 public interface BackendTestDriver {
@@ -22,6 +24,8 @@ public interface BackendTestDriver {
     
     public abstract boolean supportsDowncasting();
 
+    public abstract boolean supportsSQLite();
+
     public abstract void assertEvalEquals(String absCode, boolean value) throws Exception;
 
     public abstract void assertEvalFails(String absCode) throws Exception;
@@ -29,4 +33,13 @@ public interface BackendTestDriver {
     public abstract void assertEvalTrue(String absCode) throws Exception;
 
     public abstract void assertEvalTrue(Model m) throws Exception;
+
+    /**
+     * Execute model m, making all files f available to the running model in a
+     * backend-specific manner.  Currently used to provision an SQLite3
+     * database to unit tests.
+     *
+     * @see org.abs_models.backend.common.SemanticTests#assertEvalTrueWithTestfiles(File, File...)
+     */
+    public abstract void assertEvalTrueWithTestfiles(Model m, File ...f) throws Exception;
 }

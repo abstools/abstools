@@ -113,14 +113,81 @@ aspect GenerateErlang {
     throw new NotImplementedYetException(this);
   }
   @Override
-  public  void BuiltinFunctionDef.generateErlangCode(CodeStream ecs,Vars vars) throws IOException{
-    ecs.print("builtin");
+  public  void BuiltinFunctionDef.generateErlangCode(CodeStream ecs,Vars vars) throws IOException {
+      boolean isSQLiteQuery = getNumArgument() >= 3
+          && getArgument(0) instanceof VarUse
+          && ((VarUse)getArgument(0)).getName().equals("sqlite3");
+      if (isSQLite3Query()) {
+          // See
+          // https://github.com/mmzeeman/esqlite/blob/master/test/esqlite_test.erl
+          // for the closest thing we have to an API description of the
+          // sqlite3 side.
+          String dbname = ((StringLiteral)getArgument(1)).getContent();
+          String query = ((StringLiteral)getArgument(2)).getContent();
+          FunctionDecl decl = closestParent(FunctionDecl.class);
+          // Type checking ensures that decl has a type `List<X>'; get the X
+          Type query_type = ((DataTypeType)decl.getType()).getTypeArg(0);
+          if (new File(dbname).getParent() == null) {
+              ecs.println("DbName = filename:join(code:priv_dir(absmodel), \"" + dbname + "\"),");
+          } else {
+              ecs.println("DbName = \"" + dbname + "\",");
+          }
+          ecs.println("{ok, Db} = esqlite3:open(DbName),");
+          ecs.print("Result = esqlite3:map(");
+          if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType()) {
+              ecs.print("fun ({I}) -> ");
+              ecs.print(ErlUtil.sqlDataTypeTransformerFunction(query_type, "I"));
+              ecs.print(" end");
+          } else {
+              // We're a datatype with suitable arguments - the type checker
+              // makes sure of this.  For now, we arbitrarily pick the first
+              // constructor.
+              ecs.print("fun ({");
+              DataConstructor c = ((DataTypeType)query_type).getDecl().getDataConstructor(0);
+              java.util.List<org.abs_models.frontend.typechecker.Type> args = c.getTypes();
+              String comma = "";
+              for (int i = 0; i < args.size(); i++) {
+                  ecs.print(comma);
+                  ecs.print("V");
+                  ecs.print(i);
+                  comma = ",";
+              }
+              ecs.print("}) -> { data");
+              ecs.print(c.getName());
+              for (int i = 0; i < args.size(); i++) {
+                  ecs.print(",");
+                  ecs.print(ErlUtil.sqlDataTypeTransformerFunction(args.get(i), "V" + i));
+              }
+              ecs.print(" } end");
+          }
+          ecs.print(", \"");
+          ecs.print(query);
+          ecs.print("\", ");
+          if (getNumArgument() > 3) {
+              String comma = "";
+              ecs.print("[");
+              for (int i = 3; i < getNumArgument(); i++) {
+                  ecs.print(comma); comma = ", ";
+                  PureExp e = getArgument(i);
+                  ecs.print("util:abs_value_to_sql(");
+                  e.generateErlangCode(ecs, vars);
+                  ecs.print(")");
+              }
+              ecs.print("], ");
+          }
+          ecs.println("Db),");
+          ecs.println("esqlite3:close(Db),");
+          ecs.print("Result");
+      } else {
+          ecs.print("builtin");
+      }
   }
 
   public void PartialFunctionDecl.generateErlangCode(ErlApp ea) throws IOException {
     // ignore
   }
 
+  // These are the builtin functions from the standard library.
   private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
       "ABS.StdLib.currentms", "ABS.StdLib.ms_since_model_start", "ABS.Meta.getProductLine",
       "ABS.StdLib.lowlevelDeadline", "ABS.StdLib.print", "ABS.StdLib.println",
@@ -133,17 +200,22 @@ aspect GenerateErlang {
       "ABS.Scheduler.method", "ABS.Scheduler.arrival", "ABS.Scheduler.proc_deadline");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
-    boolean builtin = decl.getFunctionDef() instanceof BuiltinFunctionDef;
-    if(builtin){
-      if(!ERLANG_BUILTINS.contains(decl.getQualifiedName()))
-          throw new NotImplementedYetException(this, "The builtin function "+decl.getQualifiedName() + " is not implemented in the Erlang backend yet");
-      ecs.print("builtin:");
-      ecs.print(decl.getName());
+    boolean emitBuiltinHeader = false;
+    if(decl.getFunctionDef() instanceof BuiltinFunctionDef){
+        BuiltinFunctionDef bfd = (BuiltinFunctionDef)decl.getFunctionDef();
+        if(ERLANG_BUILTINS.contains(decl.getQualifiedName())) {
+            ecs.print("builtin:");
+            ecs.print(decl.getName());
+            emitBuiltinHeader = true;
+        } else if (bfd.isSQLite3Query()) {
+            ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
+        } else {
+            throw new NotImplementedYetException(this, "The builtin function "+decl.getQualifiedName() + " is not implemented in the Erlang backend yet");
+        }
+    } else {
+        ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
     }
-    else {
-      ecs.print( ErlUtil.getName(decl.getModuleDecl())+ "_funs:f_" + decl.getName());
-    }
-    ErlUtil.argumentList(ecs,null, builtin, isFnAppContextImperative(), getParams(), vars);
+    ErlUtil.argumentList(ecs,null, emitBuiltinHeader, isFnAppContextImperative(), getParams(), vars);
   }
 
   @Override
@@ -1085,29 +1157,38 @@ aspect GenerateErlang {
     StringWriter sw = new StringWriter();
     CodeStream after = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")), "");
     if(getGuard().hasPoll()){
+        String fieldNames = getGuard().getFields().fields.stream()
+            .map(gf -> String.format("object:field_with_oid(%s, Oid)", gf.getName()))
+            .collect(Collectors.joining(", "));
       getGuard().generateErlangCode(ecs,after,vars);
       after.close();
-      ecs.println("cog:return_token(Cog,self(),waiting_poll,get(task_info),get(this)),");
-      ecs.pf("(fun Poll (%s)->",vars.toParamList());
-      ecs.incIndent().println("receive {check, OState} -> ");
+      ecs.println("cog:return_token(Cog,self(),{waiting_poll, get(vars), fun (Vars, OState) ->");
       ecs.incIndent().println("put(this, OState),");
-      ecs.incIndent().println("try");
-      ecs.incIndent().pf("case %s of",sw);
-      ecs.incIndent().pf("true -> cog:task_poll_is_ready(Cog, self(), get(task_info)), Poll(%s);",vars.toParamList());
-      ecs.pf("false -> cog:task_poll_is_not_ready(Cog, self(), get(task_info)),  Poll(%s)",vars.toParamList());
-      ecs.decIndent().println("end");
+      ecs.println("put(vars, Vars),");
+      ecs.pf("ReadSet=[%s],", fieldNames);
+      ecs.println("Result=try");
+      ecs.incIndent().pf("%s", sw);
       ecs.decIndent().println("catch");
-      ecs.incIndent().println("_:Exception -> cog:task_poll_has_crashed(Cog, self(), get(task_info)), throw(Exception)");
-      ecs.decIndent().println("end;");
-      ecs.decIndent().pf("wait -> Poll(%s);", vars.toParamList());
-      ecs.println("{token, OState} -> put(this, OState), ok;");
-      ecs.println("{stop_world, _Sender} -> % only happens when stop_world and return_token cross");
-      ecs.incIndent().pf("Poll(%s);", vars.toParamList());
+      ecs.incIndent().println("_:Exception -> {crashed, Exception}");
+      ecs.println("%% Exception will be re-thrown manually below");
+      ecs.decIndent().println("end,");
+      ecs.println("erase(this),");
+      ecs.println("erase(vars),");
+      ecs.println("{Result, ReadSet}");
+      ecs.decIndent().println("end}, get(task_info), get(this)),");
+      ecs.pf("(fun Poll (Params=%s, Exception)->",vars.toParamList());
+      ecs.println("receive");
+      ecs.incIndent().println("{throw, E} -> Poll(Params, E);");
+      ecs.println("{token, OState} ->");
+      ecs.incIndent().println("put(this, OState),");
+      ecs.println("case Exception of none -> ok; _ -> throw(Exception) end;");
+      ecs.decIndent().println("{stop_world, _Sender} -> % only happens when stop_world and return_token cross");
+      ecs.incIndent().println("Poll(Params, Exception);");
       ecs.decIndent().println("{get_references, Sender} ->");
       ecs.incIndent().pf("cog:submit_references(Sender, gc:extract_references(%s)),", vars.toStack());
-      ecs.pf("Poll(%s)", vars.toParamList());
+      ecs.println("Poll(Params, Exception)");
       ecs.decIndent().println("end end)");
-      ecs.decIndent().format("(%s)",vars.toParamList());
+      ecs.decIndent().format("(%s, none)",vars.toParamList());
       ecs.decIndent();
     }
     else {

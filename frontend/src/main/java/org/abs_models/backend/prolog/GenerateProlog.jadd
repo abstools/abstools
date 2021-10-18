@@ -715,7 +715,7 @@ aspect GenerateProlog {
             getMethodSig().generateProlog(s,reachInfo);
             s.print(","+quotedClass+",");
 
-            List<Annotation> anns = getMethodSig().getAnnotations();
+            List<Annotation> anns = getMethodSig().getReturnType().getAnnotations();
             int n = anns.getNumChild();
             s.print("[");
             for (int i = 0; i < n; i++){

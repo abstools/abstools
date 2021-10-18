@@ -29,7 +29,7 @@ import com.gzoumix.semisolver.term.TermStructured;
 
 public class MethodContract extends TermStructured {
 
-  public static String name = "MethodContract";
+  public final static String name = "MethodContract";
 
   /* Constructors */
   public MethodContract(List<Term> l) { super(name, l); }
