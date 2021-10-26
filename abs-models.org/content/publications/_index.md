@@ -14,31 +14,59 @@ This page links ABS workshops, as well as selected research papers on the develo
 
 - **2019** Third International ABS Workshop: May 13--May 15, 2019, Amsterdam, The Netherlands.   https://www.cwi.nl/research/groups/formal-methods/events/third-international-workshop-on-the-abs-modeling-language-and-tools
 
-- **2020**  Fourth International ABS Workshop: June 3--June 5, 2020, Torino, Italy.  https://abs2020.di.unito.it
+- **2021**  Fourth International ABS Workshop: August 26--August 27, 2021, Virtual.  https://formbar.raillab.de/en/abs-workshop-2021/
+
+- **2022**  Fifth International ABS Workshop: TBA
 
 ## Case Studies
 
-- E. Albert, F. de Boer, R. Hähnle, E. B. Johnsen, R. Schlatte, S. L. Tapia Tarifa, P. Y. H. Wong.  
+- G. Turin, A. Borgarelli, S. Donetti, E. B. Johnsen, S. L. Tapia Tarifa, and F. Damiani.  
+  *A Formal Model of the Kubernetes Container Framework..*  
+  Leveraging Applications of Formal Methods, Verification and Validation (ISoLA 2020). LNCS 12476. Springer, 2020.  
+  DOI: [10.1007/978-3-030-61362-4\_32](https://doi.org/10.1007/978-3-030-61362-4_32). Download a [preprint](https://ebjohnsen.org/publication/20-isola2/20-isola2.pdf).  
+
+- J-C Lin, M-C Lee, I. C. Yu, and E. B. Johnsen.  
+  *A configurable and executable model of Spark Streaming on Apache YARN.*  
+  International Journal of Grid and Utility Computing. Volume 11(2). Indescience, 2020.  
+  DOI: [10.1504/IJGUC.2020.105531](https://doi.org/10.1504/IJGUC.2020.105531). Download a [preprint](https://ebjohnsen.org/publication/20-ijguc/20-ijguc.pdf).  
+
+- E. Kamburjan, R. Hähnle, and S. Schön 
+  *Formal modeling and analysis of railway operations with active objects.*  
+  Science of Computer Programming. Volume 166. Elsevier, 2018.  
+  DOI: [10.1016/j.scico.2018.07.001](https://doi.org/10.1016/j.scico.2018.07.001).  
+
+- E. Albert, F. de Boer, R. Hähnle, E. B. Johnsen, R. Schlatte, S. L. Tapia Tarifa, and P. Y. H. Wong.  
   *Formal modeling and analysis of resource management for cloud architectures: an industrial case study using Real-Time ABS.*  
   Service Oriented Computing and Applications 8 (4):323-339, 2014.  
-  DOI: [10.1007/s11761-013-0148-0](http://dx.doi.org/10.1007/s11761-013-0148-0). Download a [preprint](http://einarj.at.ifi.uio.no/Papers/albert14soca.pdf).  
+  DOI: [10.1007/s11761-013-0148-0](http://dx.doi.org/10.1007/s11761-013-0148-0). Download a [preprint](https://ebjohnsen.org/publication/14-soca/14-soca.pdf).  
 
-- J-C Lin, I. C. Yu, E. B. Johnsen, M-C Lee.  
-  *ABS-YARN: A Formal Framework for Modeling Hadoop YARN Clusters.*  
-  Proc. 19th Intl. Conf. on Fundamental Approaches to Software Engineering  (FASE 2016). LNCS 9633. Springer, 2016.  
-  DOI: [10.1007/978-3-662-49665-7\_4](http://dx.doi.org/10.1007/978-3-662-49665-7_4). Download a [preprint](http://einarj.at.ifi.uio.no/Papers/lin16fase.pdf).
 
 ## Language Development
+
+- L. Tveito, E. B. Johnsen, and R. Schlatte.  
+  *Global Reproducibility through Local Control for Distributed Active Objects.*  
+  In Proc. 23th International Conference on Fundamental Approaches to Software Engineering (FASE 2020), LNCS 12076. Springer , 2020.  
+  DOI: [10.1007/978-3-030-45234-6_7](https://doi.org/10.1007/978-3-030-45234-6_7). Download a [preprint](https://ebjohnsen.org/publication/20-fase/20-fase.pdf).
+
+-  R. Schlatte, E. B. Johnsen, J. Mauro, S. L. Tapia Tarifa, and I. C. Yu .  
+  *Release the Beasts: When Formal Methods Meet Real World Data.*  
+  Festschrift Farhad Arbab, LNCS 10865. Springer , 2018.  
+  DOI: [10.1007/978-3-642-25271-6_8](http://dx.doi.org/10.1007/978-3-642-25271-6_8). Download a [preprint](https://ebjohnsen.org/publication/18-farhad/18-farhad.pdf).
+
+- E. Kamburjan.  
+  *From post-conditions to post-region invariants: deductive verification of hybrid objects..*  
+  In 24th ACM International Conference on Hybrid Systems: Computation and Control (HSCC 2021). ACM , 2021.  
+  DOI: [10.1145/3447928.3456633](https://doi.org/10.1145/3447928.3456633).
 
 - E. B. Johnsen, R. Hähnle, J. Schäfer, R. Schlatte, and M. Steffen.  
   *ABS: A Core Language for Abstract Behavioral Specification.*  
   In Proc. 9th Intl. Symp. on Formal Methods for Components and Objects (FMCO 2010), LNCS 6957. Springer , 2011.  
-  DOI: [10.1007/978-3-642-25271-6_8](http://dx.doi.org/10.1007/978-3-642-25271-6_8). Download a [preprint](http://einarj.at.ifi.uio.no/Papers/johnsen10fmco.pdf).
+  DOI: [10.1007/978-3-642-25271-6_8](http://dx.doi.org/10.1007/978-3-642-25271-6_8). Download a [preprint](https://ebjohnsen.org/publication/10-fmco/10-fmco.pdf).
 
 - E. B. Johnsen, R. Schlatte, and S. L. Tapia Tarifa.  
   *Integrating Deployment Architecture and Resource Consumption in Timed Object-Oriented Models.*  
   Journal of Logical and Algebraic Methods in Programming 84(1): 67-91, 2015.  
-  DOI: [10.1016/j.jlamp.2014.07.001](http://dx.doi.org/10.1016/j.jlamp.2014.07.001). Download a [preprint](http://einarj.at.ifi.uio.no/Papers/johnsen15jlamp.pdf).
+  DOI: [10.1016/j.jlamp.2014.07.001](http://dx.doi.org/10.1016/j.jlamp.2014.07.001). Download a [preprint](https://ebjohnsen.org/publication/15-jlamp1/15-jlamp1.pdf).
 
 - F. Damiani, R. Hähnle, E. Kamburjan, M. Lienhardt.  
   *A Unified and Formal Programming Model for Deltas and Traits.*  
@@ -47,12 +75,22 @@ This page links ABS workshops, as well as selected research papers on the develo
 
 ## Software Product Lines
 
+- F. Damiani, R. Hähnle, E. Kamburjan, M. Lienhardt, L. Paolini.  
+  *Variability modules for Java-like languages.*  
+  Proc. 25th ACM International Systems and Software Product Line Conference (SPLC 2021). ACM, 2021.  
+  DOI: [10.1145/3461001.3471143](https://doi.org/10.1145/3461001.3471143).  
+
 - F. Damiani, M. Lienhardt, R. Muschevici, I. Schaefer.  
-  *An Extension of the ABS Toolchain with a Mechanism for Type Checking SPLs.*
+  *An Extension of the ABS Toolchain with a Mechanism for Type Checking SPLs.*  
   Proc. 13th International Conference on Integrated Formal Methods (IFM 2017), LNCS 10510. Springer, 2017.  
   DOI: [10.1007/978-3-319-66845-1_8](https://doi.org/10.1007/978-3-319-66845-1_8).  Download a [postprint](http://hdl.handle.net/2318/1649744).
 
 ## Deductive Verification
+
+- E. Kamburjan, C. C. Din, R. Hähnle and E. B. Johnsen.  
+  *Behavioral Contracts for Cooperative Scheduling.*  
+  In  Deductive Software Verification: Future Perspectives, LNCS 12345. Springer, 2020.  
+  DOI: [10.1007/978-3-030-64354-6_4](https://doi.org/10.1007/978-3-030-64354-6_4). Download a [preprint](https://ebjohnsen.org/publication/20-key2/20-key2.pdf).
 
 - C. C. Din, R. Bubel and R. Hähnle.  
   *KeY-ABS: A Deductive Verification Tool for the Concurrent Modelling Language ABS.*  
@@ -64,18 +102,26 @@ This page links ABS workshops, as well as selected research papers on the develo
   In Proc. 17th Intl. Conf. on Formal Engineering Method (ICFEM 2015), LNCS 9407. Springer, 2015.  
   DOI: [10.1007/978-3-319-25423-4_14](http://doi.org/10.1007/978-3-319-25423-4_14). Download a [preprint](http://envisage-project.eu/wp-content/uploads/2014/12/ICFEM_2015_submission_59.pdf).
 
-## Cost Analysis
+## Analysis
+
+- C. Laneve, M. Lienhardt, K. I Pun, and G. Román-Díez.  
+  *Time analysis of actor programs.*  
+  Journal of Logical and Algebraic Methods in Programming, Volume 105, Elsevier, 2019.  
+  DOI: [10.1016/j.jlamp.2019.02.007](https://doi.org/10.1016/j.jlamp.2019.02.007).
+
+- A. Garcia, C. Laneve, and M. Lienhardt.  
+  *Static analysis of cloud elasticity.*  
+  Science of Computer Programming, Volume 147, Elsevier, 2017.  
+  DOI: [10.1016/j.scico.2017.03.008](https://doi.org/10.1016/j.scico.2017.03.008).
 
 - E. Albert, P. Arenas, A. Flores-Montoya, S. Genaim, M. Gómez-Zamalloa, E. Martin-Martin, G. Puebla, and G. Román-Díez.  
   *SACO: Static Analyzer for Concurrent Objects.*  
   In Proc. 20th Intl. Conf. on Tools and Algorithms for the Construction and Analysis of Systems (TACAS). LNCS 8413, Springer, 2014.  
   DOI: [10.1007/978-3-642-54862-8_46](http://dx.doi.org/10.1007/978-3-642-54862-8_46). Download a [preprint](http://eprints.ucm.es/36623/1/SACO%20static%20analyzer%20for%20concurrent.pdf).
 
-## Deadlock Analysis
-
 - E. Giachino, C. Laneve, and M. Lienhardt.  
   *A Framework for Deadlock Detection in ABS.*  
-  Journal of Software and Systems Modeling, to appear, 2015.  
+  Journal of Software and Systems Modeling, Volume 15(4), Springer, 2015.  
   DOI: [10.1007/s10270-014-0444-y](http://dx.doi.org/10.1007/s10270-014-0444-y). Download a [preprint](http://df4abs.nws.cs.unibo.it/longDF4ABS.pdf).
 
 ## Code Generation from ABS

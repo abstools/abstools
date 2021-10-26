@@ -124,6 +124,27 @@ if desired.
 To compile an ABS model `model.abs`, invoke the compiler with `absc
 --erlang model.abs`, then run the model with `./gen/erl/run`.
 
+## Installing Crowbar 
+
+For a local installation of the Crowbar verification systems, either download a [prepackaged jar file](https://github.com/Edkamb/crowbar-tool/releases/), or compile the code locally.
+Crowbar requires Java >= 1.8 and an SMT-Solver to run. 
+On an Ubuntu machine, run the following to install Crowbar and run it on an example file:
+```bash
+sudo apt-get install z3
+mkdir crowbar
+cd crowbar
+git clone https://github.com/Edkamb/crowbar-tool.git .
+./gradlew assemble
+java -jar build/libs/crowbar.jar --full examples/account.abs
+```
+The expected output should end in the lines
+```bash
+...
+Crowbar  : Final verification result: true
+Crowbar  : Verification time: ...
+Crowbar  : Total number of branches: 6
+```
+
 ## Installing KeY-ABS
 
 For a local installation of the KeY-ABS theorem prover, install Java 8.  Then,
