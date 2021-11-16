@@ -11,7 +11,7 @@ that case:
 - remove ~themes/hugo-theme-learn~
 - in ~themes/~, run ~git clone
 https://github.com/matcornic/hugo-theme-learn~
-- remove the directory ~static/hugo-theme-learn/.git~
+- remove the directory ~themes/hugo-theme-learn/.git~
 
 ** Deploying on the website
 

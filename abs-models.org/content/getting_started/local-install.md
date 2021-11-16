@@ -40,11 +40,15 @@ run the following command in a terminal with Administrator rights:
 choco install openjdk11 git erlang visualstudio2019buildtools
 ```
 
+To compile the ABS toolchain, make sure to run the command `./gradlew build`
+from a developer shell (Start -> Visual Studio 2019 -> Developer PowerShell
+for VS 2019).
+
 ### Installing dependencies on Linux
 
 On Linux, check if your distribution offers the necessary programs
-pre-packaged in the version needed (JDK11, Erlang 23); otherwise
-download from the distribution pages linked above.
+pre-packaged in the version needed (JDK11, Erlang >= 23, a C compiler);
+otherwise download from the distribution pages linked above.
 
 ## Using a pre-built ABS compiler
 
