@@ -1,17 +1,17 @@
+# syntax=docker/dockerfile:1.3-labs
 FROM erlang:24-alpine AS jdk-erlang
-RUN apk --update add \
-    bash \
-    nss \
-    openjdk11-jdk \
-    gcc libc-dev \
-    git \
- && rm -rf /var/cache/apk/*
+RUN <<EOF
+apk --update add bash nss openjdk11-jdk gcc libc-dev git
+rm -rf /var/cache/apk/*
+EOF
 
 FROM jdk-erlang AS builder
 COPY ./ /appSrc/
 WORKDIR /appSrc
-RUN chmod +x gradlew \
-    && ./gradlew --no-daemon frontend:assemble
+RUN <<EOF
+chmod +x gradlew
+./gradlew --no-daemon frontend:assemble
+EOF
 
 # A dockerfile for running the `absc` command-line compiler and the analysis
 # tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`.
@@ -42,29 +42,33 @@ RUN chmod +x gradlew \
 # be in your current directory.
 FROM jdk-erlang
 LABEL maintainer="Rudolf Schlatte <rudi@ifi.uio.no>"
-RUN wget http://costa.fdi.ucm.es/download/saco.colab.zip -O saco.colab.zip \
-        && unzip saco.colab.zip -d /usr/local/lib \
-        && rm saco.colab.zip \
-        && ln -s ../lib/saco/bin/costabs /usr/local/bin/ \
-        && ln -s ../lib/saco/bin/deco /usr/local/bin/ \
-        && ln -s ../lib/saco/bin/generateProlog /usr/local/bin/ \
-        && ln -s ../lib/saco/bin/maypar /usr/local/bin/ \
-        && ln -s ../lib/saco/bin/pubs /usr/local/bin/ \
-        && wget http://costa.fdi.ucm.es/download/cofloco.colab.zip -O cofloco.colab.zip \
-        && unzip cofloco.colab.zip -d /usr/local/lib \
-        && rm cofloco.colab.zip \
-        && ln -s ../lib/cofloco/bin/cofloco /usr/local/bin/ \
-        && wget http://costa.fdi.ucm.es/download/sra.colab.zip -O sra.colab.zip \
-        && unzip sra.colab.zip -d /usr/local/lib \
-        && rm sra.colab.zip \
-        && wget http://costa.fdi.ucm.es/download/apet.colab.zip -O apet.colab.zip \
-        && unzip apet.colab.zip -d /usr/local/lib \
-        && rm apet.colab.zip \
-        && ln -s ../lib/apet/bin/apet /usr/local/bin/ \
-        && ln -s ../lib/apet/bin/syco /usr/local/bin/
+RUN <<EOF
+wget http://costa.fdi.ucm.es/download/saco.colab.zip -O saco.colab.zip
+unzip saco.colab.zip -d /usr/local/lib
+rm saco.colab.zip
+ln -s ../lib/saco/bin/costabs /usr/local/bin/
+ln -s ../lib/saco/bin/deco /usr/local/bin/
+ln -s ../lib/saco/bin/generateProlog /usr/local/bin/
+ln -s ../lib/saco/bin/maypar /usr/local/bin/
+ln -s ../lib/saco/bin/pubs /usr/local/bin/
+wget http://costa.fdi.ucm.es/download/cofloco.colab.zip -O cofloco.colab.zip
+unzip cofloco.colab.zip -d /usr/local/lib
+rm cofloco.colab.zip
+ln -s ../lib/cofloco/bin/cofloco /usr/local/bin/
+wget http://costa.fdi.ucm.es/download/sra.colab.zip -O sra.colab.zip
+unzip sra.colab.zip -d /usr/local/lib
+rm sra.colab.zip
+wget http://costa.fdi.ucm.es/download/apet.colab.zip -O apet.colab.zip
+unzip apet.colab.zip -d /usr/local/lib
+rm apet.colab.zip
+ln -s ../lib/apet/bin/apet /usr/local/bin/
+ln -s ../lib/apet/bin/syco /usr/local/bin/
+EOF
 COPY --from=builder /appSrc/frontend/bin/bash/absc /usr/local/bin/absc
 COPY --from=builder /appSrc/frontend/dist/absfrontend.jar /usr/local/lib/absfrontend.jar
-RUN sed -i 's|java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend|java -jar /usr/local/lib/absfrontend.jar --prolog|g' /usr/local/lib/saco/bin/generateProlog
-RUN sed -i 's|java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend|java -jar /usr/local/lib/absfrontend.jar --prolog|g' /usr/local/lib/apet/bin/generateProlog
+RUN <<EOF
+sed -i 's|java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend|java -jar /usr/local/lib/absfrontend.jar --prolog|g' /usr/local/lib/saco/bin/generateProlog
+sed -i 's|java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend|java -jar /usr/local/lib/absfrontend.jar --prolog|g' /usr/local/lib/apet/bin/generateProlog
+EOF
 CMD ["--help"]
 ENTRYPOINT ["/usr/local/bin/absc"]
