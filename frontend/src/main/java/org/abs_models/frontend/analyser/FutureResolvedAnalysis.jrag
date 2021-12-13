@@ -1,0 +1,158 @@
+import org.abs_models.frontend.analyser.BitVec;
+
+/**
+ * Computes whether futures are already resolved using data flow analysis.
+ */
+aspect FutureResolvedAnalysis {
+  /**
+   * Used to compute resolved, do not use directly
+   */
+  syn BitVec<VarOrFieldDecl> CFGNode.resolved_in() circular [entry().getAllVarOrFieldDecls()] {
+    CFGNode self = this;
+
+    boolean isCatch = self instanceof CaseBranchStmt 
+      && ((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt;
+
+    BitVec<VarOrFieldDecl> s = entry().getAllVarOrFieldDecls();
+
+    for (CFGNode n : pred()) {
+      s = s.intersect(isCatch ? n.resolved_in() : n.resolved_out());
+    }
+    return s;
+  }
+
+  // For most stmts out = in
+  /**
+   * Used to compute resolved, do not use directly
+   */
+  syn BitVec<VarOrFieldDecl> CFGNode.resolved_out() circular [entry().getAllVarOrFieldDecls()] = resolved_in();
+
+  eq CFGEntry.resolved_out() = new BitVec<>();
+
+  eq AssignStmt.resolved_out() {
+    BitVec<VarOrFieldDecl> in = resolved_in();
+
+    Exp e = getValue();
+    VarOrFieldUse var = getVar();
+
+    VarOrFieldDecl d = var.getDecl();
+
+    if (e.resolved()) {
+      return in.union(d);
+    } else {
+      return in.compl(d);
+    }
+  }
+
+  eq AwaitStmt.resolved_out() = getGuard().resolved_out();
+  eq AwaitStmt.getGuard().resolved_in() = resolved_in();
+  inh BitVec<VarOrFieldDecl> Guard.resolved_in();
+  syn BitVec<VarOrFieldDecl> Guard.resolved_out();
+  eq AndGuard.resolved_out() = getLeft().resolved_out().union(getRight().resolved_out());
+  eq ClaimGuard.resolved_out() {
+    BitVec<VarOrFieldDecl> in = resolved_in();
+    PureExp e = getVar();
+    if (e instanceof VarOrFieldUse) {
+      VarOrFieldUse v = (VarOrFieldUse) e;
+      return in.union(v.getDecl());
+    }
+    return in;
+  }
+  eq DurationGuard.resolved_out() = resolved_in();
+  eq ExpGuard.resolved_out() = resolved_in();
+
+  eq ExpressionStmt.resolved_out() = getExp().resolved_out();
+
+  eq VarDeclStmt.resolved_out() {
+    VarDecl d = getVarDecl();
+
+    BitVec<VarOrFieldDecl> in = resolved_in();
+
+    if (!d.hasInitExp()) {
+      // Because we have no init, the value is (kinda) resolved
+      return in.union(d);
+    }
+
+    Exp init = d.getInitExp();
+    if (init.resolved()) {
+      return init.resolved_out().union(d);
+    } else {
+      // We don't have to remove d, as it has not existed yet
+      return init.resolved_out();
+    }
+  }
+
+  // == Exp ==
+
+  /**
+   * Used to compute resolved, do not use directly
+   */
+  syn BitVec<VarOrFieldDecl> Exp.resolved_in() = parentStmt().resolved_in();
+
+  /**
+   * Used to compute resolved, do not use directly
+   */
+  syn BitVec<VarOrFieldDecl> Exp.resolved_out();
+
+  eq Exp.resolved_out() = resolved_in();
+
+  eq GetExp.resolved_out() {
+    BitVec<VarOrFieldDecl> in = resolved_in();
+    PureExp e = getPureExp();
+
+    if (e instanceof VarOrFieldUse) {
+      VarOrFieldUse v = (VarOrFieldUse) e;
+      return in.union(v.getDecl());
+    }
+
+    return in;
+  }
+
+  /**
+    * Whether a Future is resolved. If the value is not a future, the value will be false
+    */
+  syn boolean Exp.resolved() circular [true];
+
+  eq Call.resolved() = false;
+
+  eq GetExp.resolved() = false;
+
+  eq NewExp.resolved() = false;
+
+  eq OriginalCall.resolved() = false;
+
+  eq VarOrFieldUse.resolved() = resolved_in().contains(getDecl());
+
+  eq AsExp.resolved() = false;
+
+  eq Binary.resolved() = false;
+
+  eq CaseExp.resolved() {
+    for (CaseBranch b : getBranchs()) {
+      if (!b.getRight().resolved()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  eq DataConstructorExp.resolved() = false;
+
+  eq FnApp.resolved() = false;
+
+  eq IfExp.resolved() = getThenExp().resolved() && getElseExp().resolved();
+
+  eq ImplementsExp.resolved() = false;
+
+  eq LetExp.resolved() = false;
+
+  eq LiteralExp.resolved() = false;
+
+  eq NullExp.resolved() = false;
+
+  eq ParFnApp.resolved() = false;
+
+  eq ThisExp.resolved() = false;
+
+  eq Unary.resolved() = false;
+}

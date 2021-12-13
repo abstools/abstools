@@ -8,10 +8,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.abs_models.frontend.ast.InterfaceDecl;
-import org.abs_models.frontend.ast.InterfaceTypeUse;
-import org.abs_models.frontend.ast.List;
-import org.abs_models.frontend.ast.MethodSig;
+import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
 
 public class InterfaceType extends ReferenceType {
     private final java.util.List<Type> supertypes;
@@ -123,6 +122,6 @@ public class InterfaceType extends ReferenceType {
 
     @Override
     public InterfaceTypeUse toUse() {
-        return new InterfaceTypeUse(getQualifiedName(), new List<>());
+        return new InterfaceTypeUse(getQualifiedName(), NullCheckerExtension.getAnnotations(this));
     }
 }

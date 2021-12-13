@@ -15,8 +15,7 @@ aspect TypeCheckerExtension {
     public TypeExtensionHelper Model.getTypeExt() {
         return typeCheckerExtension;
     }
-    
-/*    
+
     refine Typing eq FunctionDecl.getType() {
         Type t = Typing.FunctionDecl.getType();
         getModel().getTypeExt().annotateType(t, this, getTypeUse());
@@ -25,7 +24,7 @@ aspect TypeCheckerExtension {
         
     refine Typing eq TypedVarOrFieldDecl.getType() {
         Type t = Typing.TypedVarOrFieldDecl.getType();
-        getModel().getTypeExt().annotateType(t, this, getAccess());
+        getModel().getTypeExt().annotateType(t, this, getTypeUse());
         return t; 
     }
     
@@ -34,7 +33,6 @@ aspect TypeCheckerExtension {
         getModel().getTypeExt().annotateType(t, this, getReturnType());
         return t;
     }
-*/    
     
 //    refine Typing eq ParametricDataTypeUse.getType() {
 //        Type t = Typing.ParametricDataTypeUse.getType().treeCopyNoTransform();        
@@ -270,6 +268,7 @@ aspect TypeCheckerExtension {
             ExpFunctionDef def = (ExpFunctionDef)getFunctionDef();
             def.getRhs().typeCheck(s);
             getModel().getTypeExt().checkAssignable(def.getRhs().getType(), getType(), this);
+            getModel().getTypeExt().checkAssignableBehaviorType(getType(), def.getRhs(), this);
         }
     }
 
@@ -305,6 +304,7 @@ aspect TypeCheckerExtension {
 
         if (hasInitExp()) {
             getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
+            getModel().getTypeExt().checkAssignableBehaviorType(getType(), getInitExp(), this);
         }
     }
 
@@ -315,6 +315,7 @@ aspect TypeCheckerExtension {
 
         if (hasInitExp()) {
             getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
+            getModel().getTypeExt().checkAssignableBehaviorType(getType(), getInitExp(), this);
         }
  
      }

@@ -487,7 +487,6 @@ aspect Typing {
         TypeCheckerHelper.addTypeParamBinding(node, binding, getTypes(), args);
         return binding;
     }
-
 }
 
 // Local Variables:

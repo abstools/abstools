@@ -116,6 +116,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
 
         checkAssignable(s.getValue().getType(),s.getVar().getType(), s);
+        checkAssignableBehaviorType(s.getVar().getType(), s.getValue(), s);
     }
 
     public void checkReturnStmt(ReturnStmt s) {
@@ -130,6 +131,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
 
         checkAssignable(s.getRetExp().getType(), m.getMethodSig().getType(), s);
+        checkAssignableBehaviorType(m.getMethodSig().getType(), s.getRetExp(), s);
     }
 
     public void checkAssignable(Type callee, HasParams params, ASTNode<?> n) {
@@ -138,6 +140,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             Type argType = paramsTypes.get(i);
             PureExp exp = ((HasActualParams)n).getParams().getChild(i);
             checkAssignable(callee, AdaptDirection.TO, exp.getType(), argType, n);
+            checkAssignableBehaviorType(argType, exp, n);
         }
     }
 
@@ -160,6 +163,15 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         if (lht.isReferenceType() && rht.isReferenceType()) {
             for (TypeSystemExtension tse : obs) {
                 tse.checkAssignable(adaptTo, dir, rht, lht, n);
+            }
+        }
+    }
+
+    @Override
+    public void checkAssignableBehaviorType(Type l, Exp r, ASTNode<?> n) {
+        if (l.isReferenceType() && r.getType().isReferenceType()) {
+            for (TypeSystemExtension tse : obs) {
+                tse.checkAssignableBehaviorType(l, r, n);
             }
         }
     }

@@ -14,14 +14,16 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
 
-public class DataTypeType extends Type  {
+public class DataTypeType extends Type {
     private final DataTypeDecl decl;
     private final List<Type> typeArgs = new ArrayList<>();
 
     @Override
     public Type copy() {
-        return new DataTypeType(decl,typeArgs);
+        return new DataTypeType(decl, typeArgs);
     }
 
     @Override
@@ -30,7 +32,7 @@ public class DataTypeType extends Type  {
         for (Type t : typeArgs) {
             typeArgCopy.add(t.fullCopy());
         }
-        Type copy = new DataTypeType(decl,typeArgCopy);
+        Type copy = new DataTypeType(decl, typeArgCopy);
         copy.metaData.putAll(metaData);
         return copy;
     }
@@ -187,7 +189,7 @@ public class DataTypeType extends Type  {
 
     @Override
     public boolean isAnnotationType() {
-        for (Annotation a :decl.getAnnotations()) {
+        for (Annotation a : decl.getAnnotations()) {
             try {
                 Type t = a.getType();
                 if (t.isDataType()) {
@@ -271,7 +273,6 @@ public class DataTypeType extends Type  {
     }
 
 
-
     public Type substituteTypeParams(Type t) {
         if (!hasTypeArgs())
             return t;
@@ -290,7 +291,7 @@ public class DataTypeType extends Type  {
                 } else {
                     TypeParameter tp = (TypeParameter) arg;
                     Type st = substitution.get(tp.getDecl().getName());
-                    assert st != null : "We're pretty sure getSubstitution() took care of it: "+tp.getDecl().getName();
+                    assert st != null : "We're pretty sure getSubstitution() took care of it: " + tp.getDecl().getName();
                     substitutedArgs.add(st);
                 }
             }
@@ -314,7 +315,7 @@ public class DataTypeType extends Type  {
     @Override
     public Type applyBinding(Map<TypeParameter, Type> binding) {
         if (hasTypeArgs()) {
-            List<Type> argTypes = TypeCheckerHelper.applyBindings(binding,getTypeArgs());
+            List<Type> argTypes = TypeCheckerHelper.applyBindings(binding, getTypeArgs());
             return new DataTypeType(getDecl(), argTypes);
         } else
             return super.applyBinding(binding);
@@ -327,7 +328,7 @@ public class DataTypeType extends Type  {
             for (Type arg : getTypeArgs()) {
                 ls.add(arg.toUse());
             }
-            return new ParametricDataTypeUse(getQualifiedName(), new org.abs_models.frontend.ast.List<>(), ls);
+            return new ParametricDataTypeUse(getQualifiedName(), NullCheckerExtension.getAnnotations(this), ls);
         } else {
             return new DataTypeUse(getQualifiedName(), new org.abs_models.frontend.ast.List<>());
         }

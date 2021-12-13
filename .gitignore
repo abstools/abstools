@@ -43,3 +43,14 @@ out/
 /frontend/src/main/resources/erlang/absmodel/_build/default/lib/cowlib/
 /frontend/src/main/resources/erlang/absmodel/_build/default/lib/ranch/
 /frontend/src/main/resources/erlang/absmodel/_build/default/plugins/
+
+# IntelliJ files
+/**/shelf/
+/**/workspace.xml
+# Datasource local storage ignored files
+/**/dataSources/
+/**/dataSources.local.xml
+# Editor-based HTTP Client requests
+/**/httpRequests/
+*.xml
+*.iml

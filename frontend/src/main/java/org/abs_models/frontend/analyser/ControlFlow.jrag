@@ -1,0 +1,499 @@
+import org.abs_models.frontend.analyser.BitVec;
+
+/**
+ * Control flow analysis for ABS.
+ * Computes a control flow graph with statements as the nodes. Results are usable via the `pred`/`succ` attributes.
+ */
+aspect ControlFlow {
+
+	public interface CFGNode {
+   	
+  }
+
+	Stmt implements CFGNode;
+	CaseBranchStmt implements CFGNode;
+
+	//== Entry / Exit ==
+	
+	syn String CFGEntry.toString() = "Entry";
+	syn String CFGExit.toString() = "Exit";
+	/**
+	 * The entry node to the CFG
+	 */
+	inh CFGEntry CFGNode.entry();
+	/**
+     * The exit node to the CFG
+     */
+	inh CFGExit CFGNode.exit();
+
+	syn nta CFGEntry MethodImpl.entry() = new CFGEntry();
+	syn nta CFGExit MethodImpl.exit() = new CFGExit();
+	eq MethodImpl.entry().following() = new BitVec<CFGNode>(getBlock());
+	eq MethodImpl.getBlock().following() = new BitVec<CFGNode>(exit());
+	eq MethodImpl.exit().following() = new BitVec<CFGNode>();
+	eq MethodImpl.entry().entry() = entry();
+	eq MethodImpl.getBlock().entry() = entry();
+	eq MethodImpl.getBlock().exit() = exit();
+	eq MethodImpl.entry().exit() = exit();
+	eq MethodImpl.exit().entry() = entry();
+	eq MethodImpl.exit().exit() = null;
+
+	syn nta CFGEntry InitBlock.entry() = new CFGEntry();
+	syn nta CFGExit InitBlock.exit() = new CFGExit();
+	eq InitBlock.entry().following() = new BitVec<>(this);
+	eq ClassDecl.getInitBlock().following() = new BitVec<>(getInitBlock().exit());
+	eq InitBlock.exit().following() = new BitVec<CFGNode>();
+	eq InitBlock.entry().entry() = entry();
+	eq InitBlock.entry().exit() = exit();
+	eq InitBlock.exit().entry() = entry();
+	eq InitBlock.exit().exit() = null;
+	eq InitBlock.getStmt(int i).entry() = entry();
+	eq InitBlock.getStmt(int i).exit() = exit();
+
+	syn nta CFGEntry ClassDecl.recoverEntry() = new CFGEntry();
+	syn nta CFGExit ClassDecl.recoverExit() = new CFGExit();
+	eq ClassDecl.recoverEntry().following() = hasRecoverBranch()
+		? new BitVec<>(getRecoverBranch(0))
+		: new BitVec<>();
+	eq ClassDecl.getRecoverBranch(int i).following() = new BitVec<CFGNode>(getRecoverBranch(i).getRight())
+		.union(i + 1 < getNumRecoverBranch()
+			? getRecoverBranch(i + 1)
+			: recoverExit());
+	eq ClassDecl.recoverEntry().entry() = recoverEntry();
+	eq ClassDecl.recoverEntry().exit() = recoverExit();
+	eq ClassDecl.recoverExit().entry() = recoverEntry();
+	eq ClassDecl.recoverExit().exit() = null;
+	eq ClassDecl.getRecoverBranch(int i).entry() = recoverEntry();
+	eq ClassDecl.getRecoverBranch(int i).exit() = recoverExit();
+	eq ClassDecl.recoverExit().following() = new BitVec<>();
+	eq ClassDecl.getRecoverBranch(int i).parentStmt() = null;
+
+	syn nta CFGEntry MainBlock.entry() = new CFGEntry();
+	syn nta CFGExit MainBlock.exit() = new CFGExit();
+	eq MainBlock.entry().following() = new BitVec<>(this);
+	eq ModuleDecl.getBlock().following() = new BitVec<>(getBlock().exit());
+	eq MainBlock.exit().following() = new BitVec<CFGNode>();
+	eq MainBlock.entry().entry() = entry();
+	eq MainBlock.entry().exit() = exit();
+	eq MainBlock.exit().entry() = entry();
+	eq MainBlock.exit().exit() = null;
+	eq MainBlock.getStmt(int i).entry() = entry();
+	eq MainBlock.getStmt(int i).exit() = exit();
+
+	//== Predecessors ==
+	/**
+	 * The predecessor nodes of the current one
+	 */
+	coll BitVec<CFGNode> CFGNode.pred() with add root ModuleDecl;
+	// Stmt contributes this to CFGNode.pred() for each succ();
+
+	// NTAs are not, in general, included in the collection attribute traversal; we have to fudge around this
+  protected void MethodImpl.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+  	entry().collect_contributors_CFGNode_pred(_root, _map);
+  	exit().collect_contributors_CFGNode_pred(_root, _map);
+  	super.collect_contributors_CFGNode_pred(_root, _map);
+  }
+
+	protected void InitBlock.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+  	entry().collect_contributors_CFGNode_pred(_root, _map);
+  	exit().collect_contributors_CFGNode_pred(_root, _map);
+  	super.collect_contributors_CFGNode_pred(_root, _map);
+  }
+
+	protected void ClassDecl.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+  	recoverEntry().collect_contributors_CFGNode_pred(_root, _map);
+  	recoverExit().collect_contributors_CFGNode_pred(_root, _map);
+  	super.collect_contributors_CFGNode_pred(_root, _map);
+  }
+
+	protected void MainBlock.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+  	entry().collect_contributors_CFGNode_pred(_root, _map);
+  	exit().collect_contributors_CFGNode_pred(_root, _map);
+  	super.collect_contributors_CFGNode_pred(_root, _map);
+  }
+
+	// Do this manually because of a bug in JastAdd
+	protected void Stmt.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+    for (CFGNode target : (Iterable<? extends CFGNode>) (succ())) {
+      ASTNode _targetRoot = (ASTNode) target;
+      ASTNode _targetParent = (ASTNode) target;
+      while (_targetParent != null) {
+        _targetParent = _targetParent.getParent();
+        if (_targetParent instanceof ModuleDecl) {
+          _targetRoot = _targetParent;
+        }
+      }
+      ASTNode _sourceRoot = _root;
+      ASTNode _sourceParent = _root;
+      while (_sourceParent != null) {
+        _sourceParent = _sourceParent.getParent();
+        if (_sourceParent instanceof ModuleDecl) {
+          _sourceRoot = _sourceParent;
+        }
+      }
+      if (_targetRoot != _sourceRoot) {
+        throw new RuntimeException("Contribution source and target do not share a common collection "
+            + "root node for collection attribute CFGNode.pred().");
+      }
+      java.util.Set<ASTNode> contributors = _map.get(target);
+      if (contributors == null) {
+        contributors = new java.util.LinkedHashSet<ASTNode>();
+        _map.put((ASTNode) target, contributors);
+      }
+      contributors.add(this);
+    }
+    super.collect_contributors_CFGNode_pred(_root, _map);
+  }
+
+	protected void Stmt.contributeTo_CFGNode_pred(BitVec<CFGNode> collection) {
+    super.contributeTo_CFGNode_pred(collection);
+    collection.add(this);
+  }
+
+	// Do this manually because of a bug in JastAdd
+	protected void CaseBranchStmt.collect_contributors_CFGNode_pred(ModuleDecl _root, java.util.Map<ASTNode, java.util.Set<ASTNode>> _map) {
+    for (CFGNode target : (Iterable<? extends CFGNode>) (succ())) {
+      ASTNode _targetRoot = (ASTNode) target;
+      ASTNode _targetParent = (ASTNode) target;
+      while (_targetParent != null) {
+        _targetParent = _targetParent.getParent();
+        if (_targetParent instanceof ModuleDecl) {
+          _targetRoot = _targetParent;
+        }
+      }
+      ASTNode _sourceRoot = _root;
+      ASTNode _sourceParent = _root;
+      while (_sourceParent != null) {
+        _sourceParent = _sourceParent.getParent();
+        if (_sourceParent instanceof ModuleDecl) {
+          _sourceRoot = _sourceParent;
+        }
+      }
+      if (_targetRoot != _sourceRoot) {
+        throw new RuntimeException("Contribution source and target do not share a common collection "
+            + "root node for collection attribute CFGNode.pred().");
+      }
+      java.util.Set<ASTNode> contributors = _map.get(target);
+      if (contributors == null) {
+        contributors = new java.util.LinkedHashSet<ASTNode>();
+        _map.put((ASTNode) target, contributors);
+      }
+      contributors.add(this);
+    }
+    super.collect_contributors_CFGNode_pred(_root, _map);
+  }
+
+	protected void CaseBranchStmt.contributeTo_CFGNode_pred(BitVec<CFGNode> collection) {
+    super.contributeTo_CFGNode_pred(collection);
+    collection.add(this);
+  }
+
+	//== Successors ==
+
+	/**
+	 * All possible Statements that could follow this one
+	 */
+	syn BitVec<CFGNode> CFGNode.succ() = following();
+	
+	/**
+	 * The next statement in the AST
+	 */
+	inh BitVec<CFGNode> CFGNode.following();
+
+	eq AssertStmt.succ() = following().union(throwTarget());
+
+	eq AssignStmt.succ() = getValue().canThrow() ? following().union(throwTarget()) : following();
+
+	eq AwaitStmt.succ() = getGuard().canThrow() ? following().union(throwTarget()) : following();
+
+	eq Block.succ() = getNumStmt() != 0
+		? new BitVec<CFGNode>(getStmt(0)) 
+		: following();
+	eq Block.getStmt(int i).following() = i != getNumStmt() - 1
+		? new BitVec<CFGNode>(getStmt(i+1))
+		: following();
+
+	
+	eq CaseStmt.succ() {
+		BitVec<CFGNode> normalSucc = hasBranch()
+			? new BitVec<CFGNode>(getBranch(0))
+			: following();
+		
+		if (getExpr().canThrow()) {
+			return normalSucc.union(throwTarget());
+		}
+		return normalSucc;
+	}
+	eq CaseStmt.getBranch(int i).following() = i + 1 < getNumBranch()
+		? new BitVec<CFGNode>(getBranch(i).getRight()).union(getBranch(i + 1))
+		// We don't need to add the throwTarget, because the compiler generates a pattern for exceptions where needed
+		: new BitVec<CFGNode>(getBranch(i).getRight()).union(following());
+	// Parent CaseStmt, TryCatchFinallyStmt, or null when in recover block
+	inh Stmt CaseBranchStmt.parentStmt();
+	eq CaseBranchStmt.getRight().following() {
+		Stmt parent = parentStmt();
+
+		// If parentStmt is null, we are in a recover block
+		if (parent == null) {
+			return new BitVec<>(exit());
+		}
+
+		if (parent instanceof TryCatchFinallyStmt) {
+			TryCatchFinallyStmt t = (TryCatchFinallyStmt) parent;
+
+			if (t.hasFinally()) {
+				return new BitVec<>(t.getFinally());
+			}
+		}
+
+		return parent.following();
+	}
+
+	eq DieStmt.succ() = new BitVec<>(exit());
+
+	eq DurationStmt.succ() = getMin().canThrow() || getMax().canThrow() ? following().union(throwTarget()) : following();
+
+	eq ExpressionStmt.succ() = getExp().canThrow() ? following().union(throwTarget()) : following();
+
+	eq ForeachStmt.succ() = following().union(getBody()).union(getListExp().canThrow() ? new BitVec<>(throwTarget()) : new BitVec<>());
+	eq ForeachStmt.getBody().following() = new BitVec<>(this);
+
+	eq IfStmt.succ() {
+		BitVec<CFGNode> normalSucc = hasElse()
+			? new BitVec<CFGNode>(getThen()).union(getElse())
+			: following().union(getThen());
+
+		if (getCondition().canThrow()) {
+			return normalSucc.union(throwTarget());
+		}
+		return normalSucc;
+	}
+
+	eq MoveCogToStmt.succ() = getTarget().canThrow() ? following().union(throwTarget()) : following();
+
+	// ReturnStmt does not need extra handling. It has to be the last stmt
+
+	eq ThrowStmt.succ() = new BitVec<CFGNode>(throwTarget());
+
+	eq TryCatchFinallyStmt.succ() = new BitVec<>(getBody());
+	eq TryCatchFinallyStmt.getBody().following() = hasFinally()
+		? new BitVec<CFGNode>(getFinally())
+		: following();
+	eq TryCatchFinallyStmt.getFinally().following() = following().union(throwTarget());
+	eq TryCatchFinallyStmt.getBody().throwTarget() = getCatch(0);
+	eq TryCatchFinallyStmt.getCatch(int i).following() = new BitVec<CFGNode>(getCatch(i).getRight())
+		.union(i + 1 < getNumCatch()
+			// Next catch branch
+			? getCatch(i + 1)
+			// Either finally, or throw again
+			: hasFinally() ? getFinally() : throwTarget());
+
+	eq VarDeclStmt.succ() = getVarDecl().hasInitExp() && getVarDecl().getInitExp().canThrow() 
+		? following().union(throwTarget()) 
+		: following();
+
+	eq WhileStmt.succ() = following().union(getBody()).union(getCondition().canThrow() ? new BitVec<>(throwTarget()) : new BitVec<>());
+	eq WhileStmt.getBody().following() = new BitVec<CFGNode>(this);
+
+    /**
+     * The closest stmt. May be a virtual statement used to model complex expressions such as Let
+     */
+	inh Stmt Exp.parentStmt();
+
+	eq AssertStmt.getCondition().parentStmt() = this;
+
+	eq AssignStmt.getVar().parentStmt() = this;
+	eq AssignStmt.getValue().parentStmt() = this;
+
+	eq AwaitStmt.getChild(int i).parentStmt() = this;
+
+	eq CaseStmt.getExpr().parentStmt() = this;
+	eq CaseStmt.getBranch(int i).parentStmt() = this;
+
+	eq DieStmt.getReason().parentStmt() = this;
+
+	eq DurationStmt.getMin().parentStmt() = this;
+	eq DurationStmt.getMax().parentStmt() = this;
+
+	eq ExpressionStmt.getExp().parentStmt() = this;
+
+	eq ForeachStmt.getListExp().parentStmt() = this;
+
+	syn nta Stmt ExpFunctionDef.virtualStmt() = new VirtualStmt();
+	eq ExpFunctionDef.getRhs().parentStmt() = virtualStmt();
+
+	eq IfStmt.getCondition().parentStmt() = this;
+
+	syn nta Stmt IfExp.virtualThenStmt() = new VirtualStmt();
+	syn nta Stmt IfExp.virtualElseStmt() = new VirtualStmt();
+	eq IfExp.getThenExp().parentStmt() = virtualThenStmt();
+	eq IfExp.getElseExp().parentStmt() = virtualElseStmt();
+
+	syn nta Stmt LetExp.virtualStmt() = new VirtualStmt();
+	eq LetExp.getExp().parentStmt() = virtualStmt();
+
+	eq MoveCogToStmt.getTarget().parentStmt() = this;
+
+	eq ReturnStmt.getRetExp().parentStmt() = this;
+
+	eq ThrowStmt.getReason().parentStmt() = this;
+
+	eq TryCatchFinallyStmt.getCatch(int i).parentStmt() = this;
+
+	inh Stmt VarDecl.parentStmt();
+	eq VarDeclStmt.getVarDecl().parentStmt() = this;
+
+	eq WhileStmt.getCondition().parentStmt() = this;
+
+	//== Exceptions ==
+
+	/**
+	 * The closest surrounding catch or the exit node
+	 */
+	inh CFGNode CFGNode.throwTarget();
+	eq MethodImpl.getChild(int i).throwTarget() = exit();
+	eq InitBlock.getChild(int i).throwTarget() = exit();
+	eq ClassDecl.getRecoverBranch(int i).throwTarget() = recoverExit();
+	eq ClassDecl.recoverEntry().throwTarget() = recoverExit();
+	eq ClassDecl.recoverExit().throwTarget() = null;
+	eq MainBlock.getChild(int i).throwTarget() = exit();
+
+	// Some exprs can throw (e.g. division, incomplete patterns, etc.)
+	syn boolean Exp.canThrow() circular [true];
+
+	eq Exp.canThrow() = false;
+
+	eq AsExp.canThrow() = getExp().canThrow();
+
+	eq Binary.canThrow() = getLeft().canThrow() || getRight().canThrow();
+
+	eq DivMultExp.canThrow() {
+		PureExp r = getRight();
+		// TODO: Only throw for /0\.0+/ float lits
+		if (r instanceof IntLiteral) {
+			IntLiteral l = (IntLiteral) r;
+			return l.getContent().equals("0");
+		}
+		return true;
+	}
+
+	eq CaseExp.canThrow() {
+		boolean underscore = false;
+
+		for (CaseBranch cb : getBranchs()) {
+			if (cb.getLeft() instanceof UnderscorePattern) {
+				underscore = true;
+			}
+		}
+
+		if (!underscore) {
+			return true;
+		}
+
+		for (CaseBranch cb : getBranchs()) {
+			if (cb.getRight().canThrow()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	eq DataConstructorExp.canThrow() {
+		for (PureExp p : getParams()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	eq FnApp.canThrow() {
+		for (PureExp p : getParams()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+
+		if (!(getDecl() instanceof FunctionDecl)) {
+			return true;
+		}
+
+		FunctionDef def = ((FunctionDecl) getDecl()).getFunctionDef();
+
+		if (def instanceof BuiltinFunctionDef) {
+			// TODO: We assume it can't throw, that should be checked;
+			return false;
+		}
+
+		if (def instanceof ExpFunctionDef) {
+			return ((ExpFunctionDef) def).getRhs().canThrow();
+		}
+
+		return true;
+	}
+
+	eq IfExp.canThrow() = getCondExp().canThrow() || getThenExp().canThrow() || getElseExp().canThrow();
+
+	eq ImplementsExp.canThrow() = getExp().canThrow();
+
+	eq LetExp.canThrow() = getVal().canThrow() || getExp().canThrow();
+
+	eq ListLiteral.canThrow() {
+		for (PureExp p : getPureExps()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	eq ParFnApp.canThrow() {
+		for (PureExp p : getParams()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+
+		for (ParFnAppParam p : getFuncParams()) {
+			if (p instanceof AnonymousFunctionDecl) {
+				AnonymousFunctionDecl a = (AnonymousFunctionDecl) p;
+				if (a.getPureExp().canThrow()) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	eq Unary.canThrow() = getOperand().canThrow();
+
+	eq Call.canThrow() = true;
+
+	eq GetExp.canThrow() = true;
+
+	eq NewExp.canThrow() {
+		for (PureExp p : getParams()) {
+			if (p.canThrow()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	eq OriginalCall.canThrow() = true;
+
+	syn boolean Guard.canThrow() = true;
+
+	eq AndGuard.canThrow() = getLeft().canThrow() || getRight().canThrow();
+
+	eq ClaimGuard.canThrow() = false;
+
+	eq DurationGuard.canThrow() = getMin().canThrow() || getMax().canThrow();
+
+	eq ExpGuard.canThrow() = getPureExp().canThrow();
+}
