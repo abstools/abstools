@@ -95,7 +95,6 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkEq(Type lt, Type t, ASTNode<?> origin) {
-        System.out.println(origin);
         // Ideally, we would use the behavioral nullable types for the parameter
         // but we can't because the type we are checking may be a type parameter,
         // where we don't have a corresponding expression

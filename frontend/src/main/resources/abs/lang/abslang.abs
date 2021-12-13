@@ -886,8 +886,8 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         nextInstanceId = nextInstanceId + 1;
         // Work around a bug in the type system: upcasting in `insertElement'
         // does not work although it should
-        [Nonnull] DeploymentComponent stupidTypeSystem = result;
-        launchedInstances = insertElement(launchedInstances, stupidTypeSystem);
+        [Nonnull] DeploymentComponent nullWorkAround = result;
+        launchedInstances = insertElement(launchedInstances, nullWorkAround);
         return result;
     }
 
@@ -957,19 +957,19 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     }
 
     Unit internalShutdownInstance([Nonnull] DeploymentComponentForCloudProvider instance) {
-        [Nonnull] DeploymentComponent stupidTypeSystem = instance;
+        [Nonnull] DeploymentComponent nullWorkAround = instance;
         // Also kill an instance that is acquired.  FIXME: is this the right
         // thing, or should we refuse to shutdown?
-        acquiredInstances = remove(acquiredInstances, stupidTypeSystem);
+        acquiredInstances = remove(acquiredInstances, nullWorkAround);
         // Insert `instance' into killedInstances so it doesn't get
         // re-acquired.
-        killedInstances = insertElement(killedInstances, stupidTypeSystem);
+        killedInstances = insertElement(killedInstances, nullWorkAround);
         Rat shutdown_duration = await instance!getShutdownDuration();
         await duration(shutdown_duration, shutdown_duration);
 
         // Now remove from launchedInstances (after waiting for shutdown) so
         // shutdown duration gets billed
-        launchedInstances = remove(launchedInstances, stupidTypeSystem);
+        launchedInstances = remove(launchedInstances, nullWorkAround);
 
         Rat cost = await instance!getAccumulatedCost();
         accumulatedCostOfKilledDCs = accumulatedCostOfKilledDCs + cost;
