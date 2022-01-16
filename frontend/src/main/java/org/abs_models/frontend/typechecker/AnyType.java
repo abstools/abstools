@@ -4,6 +4,8 @@
  */
 package org.abs_models.frontend.typechecker;
 
+import org.abs_models.frontend.variablechecker.ModelFamilySignature;
+
 public final class AnyType extends Type {
     public static final AnyType INSTANCE = new AnyType();
 
@@ -22,6 +24,10 @@ public final class AnyType extends Type {
 
     public int hashCode() {
         return 42;              // we're a singleton
+    }
+    @Override
+    public boolean varIsAssignableTo(Type t, ModelFamilySignature signature) {
+        return this.isAssignableTo(t);
     }
 
     @Override

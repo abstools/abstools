@@ -12,6 +12,9 @@ import org.abs_models.frontend.ast.InterfaceDecl;
 import org.abs_models.frontend.ast.InterfaceTypeUse;
 import org.abs_models.frontend.ast.List;
 import org.abs_models.frontend.ast.MethodSig;
+import org.abs_models.frontend.variablechecker.BottomFamilySignature;
+import org.abs_models.frontend.variablechecker.InterfaceFamilySignature;
+import org.abs_models.frontend.variablechecker.ModelFamilySignature;
 
 public class InterfaceType extends ReferenceType {
     private final java.util.List<Type> supertypes;
@@ -55,6 +58,26 @@ public class InterfaceType extends ReferenceType {
     @Override
     public int hashCode() {
         return decl.hashCode();
+    }
+
+    @Override
+    public boolean varIsAssignableTo(Type t, ModelFamilySignature signature) {
+        return this.varIsAssignableTo(t, true, signature);
+    }
+
+    @Override
+    public boolean varIsAssignableTo(Type t, boolean considerSubtyping , ModelFamilySignature signature) {
+        if (super.varIsAssignableTo(t, signature))
+            return true;
+
+        if (considerSubtyping) {
+            BottomFamilySignature mySig = signature.resolve(getSimpleName());
+            BottomFamilySignature theirSig = signature.resolve(t.getSimpleName());
+            if(theirSig == null)
+                return false;
+            return theirSig.extendsInterface(mySig);
+        }
+        return false;
     }
 
     @Override

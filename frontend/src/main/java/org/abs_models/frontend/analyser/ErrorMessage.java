@@ -5,6 +5,13 @@
 package org.abs_models.frontend.analyser;
 
 public enum ErrorMessage {
+    EXPORTED_UNKNOWN("Error: Variable Modules do not allow to export unknown name."),
+    EXPORTED_REFERENCE("Error: Variable Modules do not allow `from` exports."),
+
+    UNIQUE_REDUNDANT("Warning: Unique is not needed in non-variable modules."),
+    MAIN_BLOCK_MULTI("Error: Variable modules do not allow multiple main blocks."),
+    NOT_TYPE_UNIFORM("Error: The variable module is not type uniform."),
+
     ACESSOR_INCOMPARABLE_TYPE("Accessor functions with incomparable types, %s and %s."),
     CYCLIC_INHERITANCE("Cyclic inheritance chain for interface: %s."),
     UNKOWN_INTERFACE("Unknown interface: %s."),
@@ -160,9 +167,7 @@ public enum ErrorMessage {
     INVALID_PRODUCT_LOCAL("Set of features %s does not satisfy the constraint of the productline"),
     PREPRODUCT_NOT_IN_VARIABLE("Preproduct %s is not declared in a variable module."),
     PREPRODUCT_NOT_LOCAL("Preproduct %s uses features that are not declared in its variable module."),
-    LOCAL_ARGUMENT_FAILURE("An error occurred while evaluating local feature models: %s."),
-
-    ;
+    LOCAL_ARGUMENT_FAILURE("An error occurred while evaluating local feature models: %s.");
 
     private String pattern;
 

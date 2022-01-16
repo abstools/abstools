@@ -13,6 +13,7 @@ import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 
+import org.abs_models.frontend.variablechecker.CheckVarCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -38,13 +39,15 @@ import picocli.CommandLine.RunLast;
          mixinStandardHelpOptions = true, // handles -h, -V
          synopsisHeading = "",
          customSynopsis =  {"Usage: @|bold absc|@ [BACKEND] [OPTIONS] [<files>...]",
-                            "   or: @|bold absc|@ checkspl [OPTIONS] [<files>...]"
+                             "   or: @|bold absc|@ checkspl [OPTIONS] [<files>...]",
+                             "   or: @|bold absc|@ checkvar [OPTIONS] [<files>...]"
          },
          sortOptions = false,
          // separator = " ", // no need; " " and "=" are separators by default
          subcommands = {
              // HelpCommand.class, // no need; we have the standard -h / --help options
-             CheckSPLCommand.class
+             CheckSPLCommand.class,
+             CheckVarCommand.class
          },
          versionProvider = Absc.AbscVersionProvider.class
          )

@@ -50,7 +50,7 @@ public class ResolvedMap extends HashMap<KindedName, ResolvedName> {
      * 
      * @param source
      */
-    void addAllNamesNoHiding(ResolvedMap source) {
+    public void addAllNamesNoHiding(ResolvedMap source) {
         for (Entry<KindedName, ResolvedName> e : source.entrySet()) {
             KindedName kindedName = e.getKey();
             ResolvedName resolvedName = e.getValue();

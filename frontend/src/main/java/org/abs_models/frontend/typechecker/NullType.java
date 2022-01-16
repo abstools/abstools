@@ -4,6 +4,8 @@
  */
 package org.abs_models.frontend.typechecker;
 
+import org.abs_models.frontend.variablechecker.ModelFamilySignature;
+
 public final class NullType extends ReferenceType {
     public final static NullType INSTANCE = new NullType();
 
@@ -25,6 +27,11 @@ public final class NullType extends ReferenceType {
         return 42;
     }
 
+    public boolean varIsAssignableTo(Type t, ModelFamilySignature signature) {
+        if (super.varIsAssignableTo(t, signature))
+            return true;
+        return t instanceof ReferenceType;
+    }
     @Override
     public boolean isAssignableTo(Type t) {
         if (super.isAssignableTo(t))

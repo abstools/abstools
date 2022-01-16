@@ -1,0 +1,21 @@
+module M;
+export *;
+interface A {}
+interface C extends B {}
+
+features FF;
+
+delta DD;
+adds interface B extends A {}
+delta DD when FF;
+
+module Main;
+import * from M;
+{
+        A with {FF} a = null;
+        B with {FF} b = null;
+        C with {FF} c = null;
+        b = a;
+        c = a;
+        c = b;
+}

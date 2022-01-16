@@ -4,6 +4,8 @@
  */
 package org.abs_models.frontend.typechecker;
 
+import org.abs_models.frontend.variablechecker.ModelFamilySignature;
+
 public class BoundedType extends Type {
     private Type boundType;
     private boolean gaveOutHashCode = false; // don't give out different values
@@ -49,6 +51,11 @@ public class BoundedType extends Type {
         } else  {
             super.addMetaData(key, value);
         }
+    }
+
+    @Override
+    public boolean varIsAssignableTo(Type t, ModelFamilySignature signature) {
+        return this.isAssignableTo(t);
     }
 
     @Override

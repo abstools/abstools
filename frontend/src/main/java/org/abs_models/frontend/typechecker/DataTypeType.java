@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.variablechecker.ModelFamilySignature;
 
 public class DataTypeType extends Type  {
     private final DataTypeDecl decl;
@@ -147,6 +148,16 @@ public class DataTypeType extends Type  {
                 return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean varIsAssignableTo(Type t, ModelFamilySignature signature) {
+        return this.isAssignableTo(t);
+    }
+
+    @Override
+    public boolean varIsAssignableTo(Type t, boolean considerSubtyping, ModelFamilySignature signature) {
+        return this.isAssignableTo(t, considerSubtyping);
     }
 
     @Override

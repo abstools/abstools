@@ -273,10 +273,10 @@ aspect TypeResolution {
     }
     public void Decl.getInterfaceTypeUseAndExpsWithProductDecl(HashSet<VariableInterfaceTypeUse> typeUses, HashSet<NewExp> exps) { }
 
-    HashSet<VariableInterfaceTypeUse> Model.interfaceTypeUseWithProductDecl = new HashSet<>();
-    HashSet<NewExp> Model.newExpsWithProductDecl  = new HashSet<>();
+    public HashSet<VariableInterfaceTypeUse> Model.interfaceTypeUseWithProductDecl = new HashSet<>();
+    public HashSet<NewExp> Model.newExpsWithProductDecl  = new HashSet<>();
 
-    private void Model.getInterfaceTypeUseAndExpsWithProductDecl() {
+    public void Model.getInterfaceTypeUseAndExpsWithProductDecl() {
         for (CompilationUnit u : getCompilationUnits()) {
             for (ModuleDecl m : u.getModuleDecls()) {
                 if (m.hasBlock()) {

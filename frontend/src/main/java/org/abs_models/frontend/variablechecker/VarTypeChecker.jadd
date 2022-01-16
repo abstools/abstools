@@ -1,0 +1,885 @@
+
+/* $Id$ */
+import org.abs_models.common.*;
+
+import org.abs_models.frontend.analyser.ErrorMessage;
+import org.abs_models.frontend.analyser.TypeError;
+import org.abs_models.frontend.typechecker.*;
+
+import org.abs_models.frontend.typechecker.TypeCheckerHelper;
+
+import java.util.HashMap;
+
+aspect VarTypeChecker {
+    /* typeCheck() is already cached, no need to cache this simple getter. */
+    public boolean Model.hasVarTypeErrors(ModelFamilySignature signature) { return varTypeCheck(signature).containsErrors(); }
+
+    syn lazy SemanticConditionList Model.varTypeCheck(ModelFamilySignature signature) {
+        SemanticConditionList res = new SemanticConditionList();
+        varTypeCheck(res, signature);
+        return res;
+    }
+
+    /**
+     * @see #typeCheck()
+     */
+    public SemanticConditionList Model.getVarTypeErrors(ModelFamilySignature signature) {
+        return varTypeCheck(signature);
+    }
+
+    public void Model.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature) {
+        try {
+            VarTypeCheckerHelper.checkForDuplicateModulesAndDeltas(errors, getCompilationUnits());
+            for (CompilationUnit u : getCompilationUnits()) {
+                u.varTypeCheck(errors, signature);
+            }
+        } catch (TypeCheckerException e) {
+            errors.add(e);
+        }
+    }
+
+    public void ModuleDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+
+        VarTypeCheckerHelper.checkForDuplicateDecls(this,e);
+
+        for (Decl d : getDecls()) {
+            if (d.getName().indexOf('.') != -1) {
+                e.add(new TypeError(d, ErrorMessage.NO_QUALIFIED_NAMES_IN_CORE_DECLARATION, d.getName()));
+            }
+            d.varTypeCheck(e, signature);
+        }
+
+        if (hasBlock()) {
+            getBlock().varTypeCheck(e, signature);
+        }
+    }
+
+    public void CompilationUnit.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        for (ModuleDecl d : getModuleDecls()) {
+            d.varTypeCheck(e, signature);
+        }
+    }
+
+
+    public abstract void Decl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature);
+
+    public void ClassDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        Set<String> fields = new HashSet<String>();
+        for (ParamDecl d : getParams()) {
+            d.varTypeCheck(e, signature);
+            if (!fields.add(d.getName())) {
+                e.add(new TypeError(d, ErrorMessage.DUPLICATE_FIELD_NAME, d.getName()));
+            }
+        }
+
+        for (InterfaceTypeUse i : getImplementedInterfaceUses()) {
+            i.varTypeCheck(e, signature);
+        }
+
+        for (FieldDecl f : getFields())
+            f.varTypeCheck(e, signature);
+
+
+        if (hasInitBlock()) {
+            getInitBlock().varTypeCheck(e, signature);
+            getInitBlock().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE);
+        }
+        for (CaseBranchStmt recoverBranch : getRecoverBranchList()) {
+            recoverBranch.getLeft().varTypeCheck(e, getModel().getExceptionType(), signature);
+            recoverBranch.getRight().varTypeCheck(e, signature);
+            recoverBranch.getRight().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_RECOVER_CODE);
+        }
+
+        HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
+        addAllMethodSigs(sigs,e);
+
+
+        for (MethodImpl m : getMethods()) {
+            m.varTypeCheck(e, signature);
+            String name = m.getMethodSig().getName();
+            MethodSig s = sigs.get(name);
+            if (s != null) {
+                MethodSig ms = m.getMethodSig();
+                InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
+                if (s.getNumParam() != ms.getNumParam()) {
+                    e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_NUM_PARAMS, name, d.getName(), ""+s.getNumParam(), ""+ms.getNumParam()));
+                } else {
+                    for (int i = 0; i < s.getNumParam(); i++) {
+                        Type texpected = s.getParam(i).getType();
+                        Type t = ms.getParam(i).getType();
+                        if (!texpected.equals(t)) {
+                            e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_PARAM_TYPE,
+                                    ms.getParam(i).getName(), name, d.getName(),
+                                    texpected.toString(), t.toString()));
+                        }
+                    }
+                }
+
+                Type expectedReturnType = s.getReturnType().getType();
+                Type actualReturnType = ms.getReturnType().getType();
+                if (!expectedReturnType.equals(actualReturnType)) {
+                    e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_RETURN_TYPE,
+                            name, d.getName(),
+                            expectedReturnType.toString(), actualReturnType.toString()));
+
+                }
+            }
+        }
+
+      ClassFamilySignature bottom =  signature.getModuleSignature(moduleName()).getClassSignature(getName());
+      Collection<MethodSig> methods = bottom.methods();//new HashMap<String, MethodImpl>();
+        for (MethodSig s : sigs.values()) {
+            if (methods.stream().noneMatch(methodSig -> methodSig.matches(s))) {
+                ASTNode<?> location = this;
+                InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
+                // find the location where the error should be marked:
+                for (InterfaceTypeUse implementedInterface : getImplementedInterfaceUses()) {
+                    if (implementedInterface.getDecl().getType().isAssignableTo(d.getType())) {
+                        location = implementedInterface;
+                        break;
+                    }
+                }
+                e.add(new TypeError(location, ErrorMessage.METHOD_NOT_IMPLEMENTED, s.getName(), d.getName(), getName()));
+            }
+        }
+
+    }
+
+    public void FunctionDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        this.typeCheck(e);
+    }
+
+    public void ParametricFunctionDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        this.typeCheck(e);
+    }
+
+    public void PartialFunctionDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {}
+    public void ParFnApp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {}
+
+    public void TraitDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {}
+
+    public void InterfaceDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        HashMap<String, MethodSig> names = new HashMap<String, MethodSig>();
+        for (MethodSig s : getBodys()) {
+            if (s.getName().equals("run")) {
+               VarTypeCheckerHelper.typeCheckRunMethodSig(e, s);
+            }
+            s.varTypeCheck(e, signature);
+        }
+
+        /* should be handled by the signature generation
+        HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
+        for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
+            Decl d = u.getDecl();
+
+            InterfaceDecl id = (InterfaceDecl) d;
+
+            HashMap<String, MethodSig> mysigs = new HashMap<String, MethodSig>();
+            id.addAllMethodSigs(mysigs, new HashSet<InterfaceDecl>());
+            checkOverloading(sigs,mysigs,u,e);
+            mysigs.putAll(sigs);
+            sigs.clear();
+            sigs.putAll(mysigs);
+
+            for (MethodSig s : id.getBodys()) {
+                if (names.containsKey(s.getName())) {
+                    e.add(new TypeError(names.get(s.getName()), ErrorMessage.NO_METHOD_OVERRIDE, s.getName(), id.getName()));
+                }
+            }
+        }
+        */
+    }
+
+    public void MethodSig.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getReturnType().varTypeCheck(e, signature);
+        VarTypeCheckerHelper.typeCheckParamList(e,this);
+    }
+
+    public void DataTypeDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        this.typeCheck(e);
+    }
+
+    public void ParametricDataTypeDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        HashSet<String> names = new HashSet<String>();
+        for (TypeParameterDecl d : getTypeParameters()) {
+            d.varTypeCheck(e, signature);
+            if (!names.add(d.getName())) {
+                e.add(new TypeError(d, ErrorMessage.DUPLICATE_DATATYPE_PARAMETER, d.getName()));
+            }
+            if (!lookup(new KindedName(Kind.TYPE_DECL,d.getName())).isUnknown()) {
+                e.add(new TypeError(d, ErrorMessage.EXISTING_DATATYPE_PARAMETER,
+                                    d.getName()));
+            }
+        }
+    }
+
+    public void DataConstructor.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        for (ConstructorArg d : getConstructorArgs()) {
+            d.varTypeCheck(e, signature);
+        }
+    }
+
+    public void ExceptionConstructor.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+    }
+
+    public void ConstructorArg.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getTypeUse().varTypeCheck(e, signature);
+    }
+
+    public void ExceptionDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+    }
+
+    public void TypeSynDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        if (getValue().getName().equals(getName()))
+            e.add(new TypeCheckerException(new TypeError(getValue(), ErrorMessage.CIRCULAR_TYPESYN, getName())));
+        else
+            getValue().varTypeCheck(e, signature);
+    }
+
+    public void TypeParameterDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        /* nothing to check */ }
+
+    public void UnknownDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+    /* nothing to check */ }
+
+
+    public void Block.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        for (Stmt s : getStmts()) {
+            s.varTypeCheck(e, signature);
+        }
+    }
+
+    public void MainBlock.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        if (getNumStmt() > 0) {
+            Stmt lastStmt = getStmt(getNumStmt()-1);
+            if (lastStmt instanceof ReturnStmt) {
+                e.add(new TypeError(lastStmt, ErrorMessage.MAIN_BLOCK_RETURN_STMT, "dummy"));
+            }
+        }
+    }
+
+
+    public void MethodImpl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        Block b = getBlock();
+        MethodSig sig = getMethodSig();
+        sig.varTypeCheck(e, signature);
+        b.varTypeCheck(e, signature);
+
+        if (sig.getName().equals("run")) {
+            VarTypeCheckerHelper.typeCheckRunMethodSig(e, sig);
+        }
+
+        Type lastType = getMethodSig().getReturnType().getType();
+        if (hasReturnStmt()) {
+            Stmt lastStmt = b.getStmt(b.getNumStmt() - 1);
+            ReturnStmt rs = (ReturnStmt) lastStmt;
+            Type rht = rs.getRetExp().getType();
+            // if UnknownType, ReturnStmt.typeCheck will report an error already
+            if (!rht.isUnknownType() && !rht.isAssignableTo(lastType)) {
+                e.add(new TypeError(rs,ErrorMessage.WRONG_RETURN_STMT_TYPE,rht.toString(),sig.getName(),lastType.toString()));
+            }
+        } else {
+            if (!lastType.isUnitType()) {
+                // need return stmt
+                e.add(new TypeError(this,ErrorMessage.METHOD_IMPL_MISSING_RETURN_STMT, sig.getName()));
+            }
+        }
+    }
+
+    public void VarDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        getAccess().varTypeCheck(e, signature);
+        if (e.getErrorCount() > nerrors) return;
+
+
+        Type t = getAccess().getType();
+        if(t.isUnknownType()){
+            Access ast = getAccess();
+            if(ast instanceof VariableInterfaceTypeUse) {
+                t = ((InterfaceFamilySignature) signature.resolve(((VariableInterfaceTypeUse)ast).getName())).toType();
+            }
+        }
+        if (hasInitExp()) {
+            getInitExp().varTypeCheck(e, signature);
+            if (e.getErrorCount() > nerrors) return;
+            VarTypeCheckerHelper.checkAssignment(e,this,t,getInitExp(), signature);
+        } else {
+            if (!t.isReferenceType() && !t.isFutureType()) {
+                e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
+            }
+        }
+    }
+
+    public void FieldDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        getAccess().varTypeCheck(e, signature);
+        if (e.getErrorCount() > nerrors) return;
+
+        Type t = getAccess().getType();
+        if (hasInitExp()) {
+            getInitExp().varTypeCheck(e, signature);
+            if (e.getErrorCount() > nerrors) return;
+            VarTypeCheckerHelper.checkAssignment(e,this,t,getInitExp(), signature);
+        } else {
+            if (!t.isReferenceType() && !t.isFutureType()) {
+                e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));
+            }
+        }
+    }
+
+    public void ParamDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getAccess().varTypeCheck(e, signature);
+    }
+
+
+
+    // STMTS
+
+    public void Stmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+    }
+
+    public void ExpressionStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getExp().varTypeCheck(e, signature);
+    }
+
+    public void VarDeclStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getVarDecl().varTypeCheck(e, signature);
+        VarTypeCheckerHelper.checkForDuplicatesOfVarDecl(e, this);
+    }
+
+    public void AssignStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        int nerrors = e.getErrorCount();
+        getValue().varTypeCheck(e, signature);
+        getVar().varTypeCheck(e, signature);
+
+        if (e.getErrorCount() > nerrors)
+            return;
+        Type tt = getVar().getType();
+        if(tt.isUnknownType()){
+            tt = VarTypeCheckerHelper.devar(getVar().getDecl(), signature);
+        }
+        VarTypeCheckerHelper.checkAssignment(e,this, tt, getValue(), signature);
+    }
+
+    public void MoveCogToStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        int nerrors = e.getErrorCount();
+        getTarget().varTypeCheck(e, signature);
+        if (e.getErrorCount() > nerrors) return;
+        Type t = getTarget().getType();
+        Decl d = t.getDecl();
+        if (d == null) {
+          e.add(new TypeError(this, ErrorMessage.EXPECTED_DC, t));
+          return;
+        }
+        if (!"DeploymentComponent".equals(d.getName())) {
+            e.add(new TypeError(this, ErrorMessage.EXPECTED_DC, t));
+        }
+    }
+
+    public void ReturnStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        super.varTypeCheck(e, signature);
+        getRetExp().varTypeCheck(e, signature);
+
+        MethodImpl m = getContextMethod();
+        Block block = getContextBlock();
+
+        if (m != null) {
+            block = m.getBlock();
+        }
+
+        Stmt lastStmt = block.getStmt(block.getNumStmt()-1);
+        if (lastStmt != this) {
+            // this also catches a return statement in the middle of a main
+            // block, when we don't have an enclosing method (m == null)
+            e.add(new TypeError(this, ErrorMessage.RETURN_STMT_MUST_BE_LAST, new String[0]));
+        }
+    }
+
+    public void AwaitStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getGuard().varTypeCheck(e, signature);
+    }
+
+    public void SuspendStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+    }
+
+    public void DurationStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getMin().varTypeCheck(e, signature);
+        getMax().varTypeCheck(e, signature);
+        getMin().assertHasType(e, getModel().getRatType());
+        getMax().assertHasType(e, getModel().getRatType());
+    }
+
+    public void IfStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getCondition().varTypeCheck(e, signature);
+        getCondition().assertHasType(e,getModel().getBoolType());
+        getThen().varTypeCheck(e, signature);
+        if (hasElse())
+            getElse().varTypeCheck(e, signature);
+
+    }
+
+    public void WhileStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getCondition().varTypeCheck(e, signature);
+        getCondition().assertHasType(e,getModel().getBoolType());
+        getBody().varTypeCheck(e, signature);
+    }
+
+    public void ForeachStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+
+        getListExp().varTypeCheck(e, signature);
+        // assertHasType() is too specific -- we need to check that ListExp is
+        // a list, not its specific type (List<Int>)
+        if (!getListExp().getType().isUnknownType()
+            && !getListExp().getType().getDecl().getQualifiedName()
+                .equals(getModel().getListType().getDecl().getQualifiedName())) {
+            e.add(new TypeError(getListExp(), ErrorMessage.EXPECTED_TYPE,
+                                getModel().getListType().getDecl().getQualifiedName(),
+                                getListExp().getType().getDecl().getQualifiedName()));
+        }
+        if (hasIndexVar() && getIndexVar().getName().equals(getValueVar().getName())) {
+            e.add(new SemanticError(getIndexVar(), ErrorMessage.LOOP_VARIABLE_ALREADY_IN_USE, getIndexVar().getName()));
+        }
+        getBody().varTypeCheck(e, signature);
+    }
+
+    public void CaseStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getExpr().varTypeCheck(e, signature);
+        Type et = getExpr().getType();
+        if (!et.isDataType()) {
+           e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
+           return;
+        }
+        Type t = getType();
+        for (CaseBranchStmt b : getBranchs()) {
+          b.varTypeCheck(e,(DataTypeType) et, signature);
+        }
+    }
+
+    public void CaseStmtOld.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_CASE_STMT, ""));
+    }
+
+
+
+    public void CaseBranchStmt.varTypeCheck(SemanticConditionList e, DataTypeType t, ModelFamilySignature signature) {
+        getLeft().varTypeCheck(e, t, signature);
+        getRight().varTypeCheck(e, signature);
+    }
+
+    public void TryCatchFinallyStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        Type exc = getModel().getExceptionType();
+        getBody().varTypeCheck(e, signature);
+        for (CaseBranchStmt b : getCatchs()) {
+            b.getLeft().varTypeCheck(e, exc, signature);
+            b.getRight().varTypeCheck(e, signature);
+            for (PatternVarUse pv : b.getLeft().getBoundPatternVars()) {
+                e.add(new TypeError(pv, ErrorMessage.MATCHING_NOT_ALLOWED_IN_CATCH, pv.getName()));
+            }
+        }
+        if (hasFinally()) {
+            getFinally().varTypeCheck(e, signature);
+            getFinally().checkLegalInit(e, ErrorMessage.NOT_ALLOWED_IN_FINALLY_CODE);
+        }
+    }
+
+    public void SkipStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+    }
+
+    public void AssertStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getCondition().varTypeCheck(e, signature);
+        getCondition().assertHasType(e,getModel().getBoolType());
+    }
+
+    // GUARDS
+    public abstract void Guard.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature);
+    public void AndGuard.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getLeft().varTypeCheck(e, signature);
+        getRight().varTypeCheck(e, signature);
+    }
+
+    public void ClaimGuard.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getVar().varTypeCheck(e, signature);
+        Type t = getVar().getType();
+        if (!t.isFutureType()) {
+            e.add(new TypeError(getVar(),ErrorMessage.EXPECTED_FUT_TYPE, t));
+        }
+    }
+    public void ExpGuard.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        PureExp exp = getPureExp();
+        // We'll only run "deeper" checks if the types check out.
+        int size = e.getErrorCount();
+        exp.varTypeCheck(e, signature);
+        getPureExp().assertHasType(e,getModel().getBoolType());
+        if (e.getErrorCount() == size)
+            hasFieldAccess(e); // check for visible change/builtin
+    }
+    public void DurationGuard.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getMin().varTypeCheck(e, signature);
+        getMax().varTypeCheck(e, signature);
+        getMin().assertHasType(e, getModel().getRatType());
+        getMax().assertHasType(e, getModel().getRatType());
+    }
+
+    // EXPRESSIONS
+
+    public void Exp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) { }
+
+    public void ThisExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+      if (getContextDecl().isUnknown())
+        e.add(new TypeError(this,ErrorMessage.THIS_STATIC,""));
+    }
+
+    public void OriginalCall.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        /* We are never typeChecking method bodies within deltas at the moment. #386*/
+        e.add(new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""));
+    }
+
+    public void TypeUse.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getDecl().checkDecl(this, e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName());
+    }
+
+    public void DataTypeUse.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        if (! getDecl().checkDecl(this, e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName())) {
+            return;
+        }
+        VarTypeCheckerHelper.checkDataTypeUse(e, this);
+    }
+
+    public void InterfaceTypeUse.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        BottomFamilySignature sig = signature.resolve(getName());
+        if(sig == null) {
+            e.add(new TypeError(this, ErrorMessage.TYPE_NOT_RESOLVABLE, getName()));
+            return;
+        }
+        if (sig instanceof ClassFamilySignature) {
+            e.add(new SemanticError(this,ErrorMessage.UNKOWN_INTERFACE,getName()));
+        }
+    }
+
+    public void UnresolvedTypeUse.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
+    }
+
+    public void VarOrFieldUse.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+       VarTypeCheckerHelper.checkDefBeforeUse(e, this, signature);
+    }
+
+    public void Call.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getCallee().varTypeCheck(e, signature);
+        if (!getCallee().getType().isReferenceType()) {
+            e.add(new TypeError(this, ErrorMessage.EXPECTED_REFERENCE_TYPE, getCallee().getType()));
+            return;
+        }
+        if (getCallee().getType().isNullType()) {
+            e.add(new TypeError(this, ErrorMessage.NULL_NOT_HERE, ""));
+            return;
+        }
+        Type t = getType();
+        if (t.isUnknownType() || getMethodSig() == null) {
+            e.add(new TypeError(this, ErrorMessage.NO_METHOD_DECL, getMethod()));
+        } else {
+            typeCheckEqualParams(e,getMethodSig());
+        }
+    }
+
+    public void NewExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        Decl decl = lookup(new KindedName(Kind.CLASS,getClassName()));
+        if (!decl.isClass()) {
+            e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName()));
+        } else {
+            ClassDecl cd = (ClassDecl) decl;
+            typeCheckEqualParams(e,cd);
+        }
+    }
+
+    public void ImplementsExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getInterfaceTypeUse().varTypeCheck(e, signature);
+        // TODO: check that getExp() is a reference type
+        getExp().varTypeCheck(e, signature);
+        // if (!getExp().getType().isReferenceType()) {
+        //     e.add(new TypeError(this, ErrorMessage.UNKOWN_INTERFACE, getInterfaceName()));
+        // }
+    }
+
+    public void AsExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        getInterfaceTypeUse().varTypeCheck(e, signature);
+        // TODO: check that getExp() is a reference type
+        getExp().varTypeCheck(e, signature);
+        // if (!getExp().getType().isReferenceType()) {
+        //     e.add(new TypeError(this, ErrorMessage.UNKOWN_INTERFACE, getInterfaceName()));
+        // }
+    }
+
+
+    public void GetExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        getPureExp().varTypeCheck(e, signature);
+        if (nerrors == e.getErrorCount()) {
+            if (!getPureExp().getType().isFutureType()) {
+                e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType()));
+            }
+        }
+    }
+
+    public void AddAddExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        // Special case: can also "add" strings.
+        int nerrors = e.getErrorCount();
+        getLeft().varTypeCheck(e, signature);
+        getRight().varTypeCheck(e, signature);
+        if (nerrors == e.getErrorCount()) {
+            Type lt = getLeft().getType();
+            Type rt = getRight().getType();
+
+            if (! (lt.isNumericType() || lt.isStringType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, lt));
+            }
+            if (! (rt.isNumericType() || rt.isStringType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, rt));
+            }
+            if (!lt.isAssignableTo(rt) && !rt.isAssignableTo(lt)) {
+                e.add(new TypeError(this, ErrorMessage.ADD_INCOMPARABLE_TYPE, lt, rt));
+            }
+        }
+    }
+    public void ArithmeticExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        getLeft().varTypeCheck(e, signature);
+        getRight().varTypeCheck(e, signature);
+        if (nerrors == e.getErrorCount()) {
+            Type lt = getLeft().getType();
+            Type rt = getRight().getType();
+
+            if (! (lt.isNumericType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_NUMERIC_TYPE, lt));
+            }
+            if (! (rt.isNumericType())) {
+                e.add(new TypeError(this, ErrorMessage.EXPECTED_NUMERIC_TYPE, rt));
+            }
+            if (!lt.isAssignableTo(rt) && !rt.isAssignableTo(lt)) {
+                e.add(new TypeError(this, ErrorMessage.ARITHMETIC_INCOMPATIBLE_TYPE, lt, rt));
+            }
+        }
+    }
+
+    public void BoolExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+       VarTypeCheckerHelper.typeCheckBinary(e,this,getModel().getBoolType());
+    }
+
+    public void RelationalExpr.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        getLeft().varTypeCheck(e, signature);
+        getRight().varTypeCheck(e, signature);
+        if (nerrors == e.getErrorCount()) {
+            Type tl = getLeft().getType();
+            Type tr = getRight().getType();
+            if (!tl.isAssignableTo(tr) && !tr.isAssignableTo(tl)) {
+                e.add(new TypeError(this, ErrorMessage.COMPARISON_INCOMPARABLE_TYPE, tl, tr));
+            }
+        }
+    }
+
+    public void IfExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        getCondExp().varTypeCheck(e, signature);
+        getThenExp().varTypeCheck(e, signature);
+        getElseExp().varTypeCheck(e, signature);
+        if (nerrors == e.getErrorCount()) {
+            getCondExp().assertHasType(e,getModel().getBoolType());
+            Type tt = getThenExp().getType();
+            Type et = getElseExp().getType();
+            if (!(et.isAssignableTo(tt) || tt.isAssignableTo(et))) {
+                e.add(new TypeError(this, ErrorMessage.IF_DIFFERENT_TYPE, tt, et));
+            }
+        }
+    }
+
+    public void IfExpOld.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_IF_EXPRESSION, ""));
+    }
+
+    public void CaseExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        getExpr().varTypeCheck(e, signature);
+        if (nerrors == e.getErrorCount()) {
+            Type et = getExpr().getType();
+            if (et.isDataType())  {
+                // we do not type-check the branches if we cannot determine
+                // our own type
+                Type t = getType();
+                for (CaseBranch b : getBranchs()) {
+                    nerrors = e.getErrorCount();
+                    b.varTypeCheck(e,(DataTypeType) et, signature);
+                    if (nerrors == e.getErrorCount()) {
+                        Type t2 = b.getType();
+                        if (!t2.isAssignableTo(t)) {
+                            e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
+                        }
+                    }
+                }
+            } else {
+                e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
+            }
+        }
+    }
+
+    public void CaseBranch.varTypeCheck(SemanticConditionList e, DataTypeType t, ModelFamilySignature signature) {
+        int size = e.getErrorCount();
+        getLeft().varTypeCheck(e, t, signature);
+        /* If the LHS is botched, we can't reliably use any variables bound therein. */
+        if (e.getErrorCount() == size)
+          getRight().varTypeCheck(e, signature);
+    }
+
+    public void FnApp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        Decl d = getDecl();
+        if (!d.isFunction()) {
+            e.add(new TypeError(this,ErrorMessage.FUNCTION_NOT_RESOLVABLE,getName()));
+        } else {
+            int size = e.getErrorCount();
+            for (PureExp p : getParams()) {
+                p.varTypeCheck(e, signature);
+            }
+            if (e.getErrorCount() == size) {
+                ((FunctionDecl)d).typeCheckParams(e, this);
+            }
+        }
+    }
+
+
+    public void DataConstructorExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        Decl decl = getDecl();
+        if (!(decl instanceof DataConstructor)) {
+            e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
+        } else {
+            DataConstructor c = (DataConstructor) decl;
+            String cname = c.getQualifiedName();
+            // Warn about using constructors that should not have been
+            // exported from their module
+            if (TypeCheckerHelper.deprecatedConstructors.contains(cname)
+                && !(cname.startsWith(getModuleDecl().getName()))) {
+                e.add(new SemanticWarning(this, ErrorMessage.DEPRECATED_CONSTRUCTOR, c.getQualifiedName()));
+            }
+
+            if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
+               VarTypeCheckerHelper.typeCheckMatchingParams(e,this,c, signature);
+            } else {
+               VarTypeCheckerHelper.typeCheckEqual(e,this,c.getTypes(), signature);
+            }
+        }
+
+    }
+    public void LetExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int nerrors = e.getErrorCount();
+        getVar().varTypeCheck(e, signature);
+        getVal().varTypeCheck(e, signature);
+        getExp().varTypeCheck(e, signature);
+        if (nerrors == e.getErrorCount()) {
+            VarTypeCheckerHelper.checkAssignment(e,this,getVar().getAccess().getType(),getVal(), signature);
+        }
+    }
+
+    public void MinusExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+         int size = e.getErrorCount();
+         getOperand().varTypeCheck(e, signature);
+         if (e.getErrorCount() == size) {
+             if (!getOperand().getType().isNumericType()) {
+                 e.add(new TypeError(getOperand(), ErrorMessage.EXPECTED_NUMERIC_TYPE,
+                                     getOperand().getType()));
+             }
+         }
+    }
+
+    public void NegExp.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int size = e.getErrorCount();
+        getOperand().varTypeCheck(e, signature);
+        if (e.getErrorCount() == size) {
+            getOperand().assertHasType(e,getModel().getBoolType());
+        }
+    }
+
+    public void ListLiteral.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        int size = e.getErrorCount();
+        for (PureExp exp : getPureExps()) {
+            exp.varTypeCheck(e, signature);
+        }
+        if (e.getErrorCount() != size) return;
+        Type acc = UnknownType.INSTANCE;
+        for (PureExp exp : getPureExps()) {
+            Type expt = exp.getType();
+            if (acc.isUnknownType())  {
+                // looking at first param
+                acc = expt;
+            } else {
+                if (!expt.isAssignableTo(acc) && !acc.isAssignableTo(expt)) {
+                    e.add(new TypeError(exp, ErrorMessage.LIST_LITERAL_TYPE_MISMATCH, acc, expt));
+                    break;
+                }
+                if (acc.isAssignableTo(expt)) {
+                    acc = expt;
+                }
+            }
+        }
+    }
+
+    // PATTERNS
+
+    public void Pattern.varTypeCheck(SemanticConditionList e, Type t, ModelFamilySignature signature) {  }
+
+    public void PatternVarUse.varTypeCheck(SemanticConditionList e, Type t, ModelFamilySignature signature) {
+        if (!getType().equals(t)) {
+            e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,getType(),t));
+        }
+    }
+
+    public void LiteralPattern.varTypeCheck(SemanticConditionList e, Type t, ModelFamilySignature signature) {
+        if (!getType().equals(t)) {
+            e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,getType(),t));
+        }
+    }
+
+    public void ConstructorPattern.varTypeCheck(SemanticConditionList e, Type t, ModelFamilySignature signature) {
+        VarTypeCheckerHelper.typeCheck(this,e,t);
+    }
+
+    //ASPECT
+    public void ThrowStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getReason().varTypeCheck(e, signature);
+        getReason().assertHasType(e,getModel().getExceptionType());
+    }
+
+    public void DieStmt.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
+        super.varTypeCheck(e, signature);
+        getReason().varTypeCheck(e, signature);
+        getReason().assertHasType(e,getModel().getExceptionType());
+    }
+
+
+}
+
+
+// Local Variables:
+// mode: java
+// End:

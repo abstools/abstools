@@ -4,6 +4,8 @@
  */
 package org.abs_models.frontend.typechecker;
 
+import org.abs_models.frontend.variablechecker.ModelFamilySignature;
+
 public final class UnknownType extends Type {
     public static final UnknownType INSTANCE = new UnknownType();
 
@@ -22,6 +24,11 @@ public final class UnknownType extends Type {
     @Override
     public boolean isUnknownType() {
         return true;
+    }
+
+    @Override
+    public boolean varIsAssignableTo(Type t, ModelFamilySignature signature) {
+        return this.isAssignableTo(t);
     }
 
     @Override

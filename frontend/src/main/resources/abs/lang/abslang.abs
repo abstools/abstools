@@ -882,8 +882,8 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         nextInstanceId = nextInstanceId + 1;
         // Work around a bug in the type system: upcasting in `insertElement'
         // does not work although it should
-        DeploymentComponent stupidTypeSystem = result;
-        launchedInstances = insertElement(launchedInstances, stupidTypeSystem);
+        // DeploymentComponent stupidTypeSystem = result;
+        launchedInstances = insertElement(launchedInstances, result);
         return result;
     }
 
@@ -906,8 +906,8 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         return dc;
     }
 
-    DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
-        DeploymentComponent result = this.prelaunchInstance(d);
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> description) {
+        DeploymentComponent result = this.prelaunchInstance(description);
         acquiredInstances = insertElement(acquiredInstances, result);
         return result;
     }
@@ -951,7 +951,7 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
     }
 
     Unit internalShutdownInstance(DeploymentComponentForCloudProvider instance) {
-        DeploymentComponent stupidTypeSystem = instance;
+        DeploymentComponentForCloudProvider stupidTypeSystem = instance;
         // Also kill an instance that is acquired.  FIXME: is this the right
         // thing, or should we refuse to shutdown?
         acquiredInstances = remove(acquiredInstances, stupidTypeSystem);

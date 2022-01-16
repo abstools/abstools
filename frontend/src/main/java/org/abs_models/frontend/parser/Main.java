@@ -194,7 +194,7 @@ public class Main {
      * @throws IOException
      * @throws InternalBackendException
      */
-    private static Model parseFiles(boolean verbose, final java.util.List<File> fileNames) throws IOException, InternalBackendException {
+    public static Model parseFiles(boolean verbose, final java.util.List<File> fileNames) throws IOException, InternalBackendException {
         if (fileNames.isEmpty()) {
             throw new IllegalArgumentException("Please provide at least one input file");
         }
@@ -380,7 +380,7 @@ public class Main {
      * @param productname The name of the product or null.
      * @throws WrongProgramArgumentException
      */
-    private static void rewriteModel(Model m, String productname)
+    public static void rewriteModel(Model m, String productname)
             throws WrongProgramArgumentException
     {
         // Generate reflective constructors for all features

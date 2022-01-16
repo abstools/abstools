@@ -16,6 +16,7 @@ import org.abs_models.frontend.ast.Decl;
 import org.abs_models.frontend.ast.FieldDecl;
 import org.abs_models.frontend.ast.MethodSig;
 import org.abs_models.frontend.ast.TypeUse;
+import org.abs_models.frontend.variablechecker.ModelFamilySignature;
 
 public abstract class Type {
     private static final Object ANNOTATION_KEY = "ANNOTATION_KEY";
@@ -224,6 +225,28 @@ public abstract class Type {
 
     public boolean isAssignableTo(Type t, boolean considerSubtyping) {
         return isAssignableTo(t);
+    }
+    public boolean varIsAssignableTo(Type t, boolean considerSubtyping, ModelFamilySignature signature) {
+        return varIsAssignableTo(t, signature);
+    }
+    public boolean varIsAssignableTo(Type t, ModelFamilySignature signature) {
+        if (t == null)
+            throw new IllegalArgumentException("t is null");
+
+        if (t.isAnyType())
+            return true;
+
+        if (this.equals(t))
+            return true;
+
+        if (t.isBoundedType()) {
+            BoundedType bt = (BoundedType) t;
+            if (bt.hasBoundType())
+                return this.isAssignableTo(bt.getBoundType());
+            bt.bindTo(this);
+            return true;
+        }
+        return false;
     }
 
     public boolean isAssignableTo(Type t) {

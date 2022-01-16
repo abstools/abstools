@@ -15,6 +15,7 @@ import org.abs_models.frontend.ast.InterfaceTypeUse;
 import org.abs_models.frontend.ast.List;
 import org.abs_models.frontend.ast.MethodImpl;
 import org.abs_models.frontend.ast.MethodSig;
+import org.abs_models.frontend.variablechecker.ModelFamilySignature;
 
 public class UnionType extends ReferenceType {
     private final java.util.List<InterfaceType> types;
@@ -54,6 +55,18 @@ public class UnionType extends ReferenceType {
     @Override
     public int hashCode() {
         return types.hashCode();
+    }
+
+
+    public boolean varIsAssignableTo(Type t, ModelFamilySignature signature) {
+        if (super.varIsAssignableTo(t, signature))
+            return true;
+
+        for (InterfaceType it : types) {
+            if (it.varIsAssignableTo(t, signature))
+                return true;
+        }
+        return false;
     }
 
     @Override

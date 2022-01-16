@@ -1,0 +1,47 @@
+/* $Id$ */
+import org.abs_models.common.*;
+
+import org.abs_models.frontend.analyser.ErrorMessage;
+import org.abs_models.frontend.analyser.TypeError;
+import org.abs_models.frontend.variablechecker.*;
+import org.abs_models.frontend.typechecker.*;
+
+import java.util.HashMap;
+
+aspect VarSanityChecker {
+    public void Model.varSanityCheck(SemanticConditionList e) {
+        try {
+            int blocks = 0;
+            for (ModuleDecl u : getModuleDecls()) {
+                u.varSanityCheck(e);
+                if(u.hasBlock()) blocks++;
+            }
+            if(blocks >= 2) e.add(new TypeError(this, ErrorMessage.MAIN_BLOCK_MULTI, ""));
+        } catch (TypeCheckerException exc) {
+            e.add(exc);
+        }
+    }
+
+    public void ModuleDecl.varSanityCheck(SemanticConditionList e) {
+        for (Import i : getImports()) {
+            i.typeCheck(e);
+        }
+
+        for (Export ex : getExports()) {
+            ex.typeCheck(e);
+        }
+
+        TypeCheckerHelper.checkForDuplicateDecls(this,e);
+
+        for (Decl d : getDecls()) {
+            if (d.getName().indexOf('.') != -1) {
+                e.add(new TypeError(d, ErrorMessage.NO_QUALIFIED_NAMES_IN_CORE_DECLARATION, d.getName()));
+            }
+            d.typeCheck(e);
+        }
+
+        if (hasBlock()) {
+            getBlock().typeCheck(e);
+        }
+    }
+}
