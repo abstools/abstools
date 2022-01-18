@@ -406,6 +406,12 @@ aspect ProductFlattener {
     public boolean AppCondFeature.evaluate(Set<String> features) {
         return (features.contains(getName()));
     }
+    public boolean AppCondFalse.evaluate(Set<String> features) {
+        return false;
+    }
+    public boolean AppCondTrue.evaluate(Set<String> features) {
+        return true;
+    }
 
 
     /**************************************************************************

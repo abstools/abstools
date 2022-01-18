@@ -79,6 +79,8 @@ AppCondAnd : AppCond ::= Left:AppCond Right:AppCond ;
 AppCondOr : AppCond ::= Left:AppCond Right:AppCond ;
 AppCondNot : AppCond ::= AppCond ;
 AppCondFeature : AppCond ::= <Name> ;
+AppCondTrue : AppCond;
+AppCondFalse : AppCond;
 // TODO allow application conditions over attributes too e.g. "delta D when (1 < F.foo < 5) && F.bar"
 
 

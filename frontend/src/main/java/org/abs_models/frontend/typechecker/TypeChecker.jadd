@@ -1371,6 +1371,8 @@ aspect TypeCheckProductline {
         if (! definedFeatures.contains(getName()))
             e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, getName()));
     }
+    public void AppCondFalse.typeCheck(Set<String> definedFeatures, SemanticConditionList e) { }
+    public void AppCondTrue.typeCheck(Set<String> definedFeatures, SemanticConditionList e) { }
 
     syn Type DeltaParamDecl.getType();
     eq DeltaClassParam.getType() = UnknownType.INSTANCE; // XXX
@@ -1388,6 +1390,8 @@ aspect TypeCheckProductline {
 	eq AppCondAnd.refersTo(Feature f) = getLeft().refersTo(f) || getRight().refersTo(f);
 	eq AppCondOr.refersTo(Feature f) = getLeft().refersTo(f) || getRight().refersTo(f);
 	eq AppCondNot.refersTo(Feature f) = getAppCond().refersTo(f);
+	eq AppCondTrue.refersTo(Feature f) = false;
+	eq AppCondFalse.refersTo(Feature f) = false;
 }
 
 // Local Variables:

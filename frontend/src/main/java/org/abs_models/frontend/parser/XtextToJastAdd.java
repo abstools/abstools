@@ -18,6 +18,7 @@ import org.abs_models.frontend.ast.TypeUse;
 import org.abs_models.frontend.typechecker.InterfaceType;
 import org.abs_models.xtext.abs.*;
 
+import org.abs_models.xtext.services.AbsGrammarAccess;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -1414,7 +1415,8 @@ public class XtextToJastAdd {
         return nodeWithLocation(result, xtext_clause);
     }
 
-    private static Deltaparam fromXtext(final org.abs_models.xtext.abs.DeltaClauseParam xtext_param) {
+
+        private static Deltaparam fromXtext(final org.abs_models.xtext.abs.DeltaClauseParam xtext_param) {
         Deltaparam result = null;
         if (xtext_param instanceof org.abs_models.xtext.abs.DeltaClauseParam_Int) {
             result = new Const(new IntVal(((org.abs_models.xtext.abs.DeltaClauseParam_Int)xtext_param).getIntParameter().intValue()));
@@ -1457,11 +1459,16 @@ public class XtextToJastAdd {
             result = new AppCondAnd(fromXtext(xtext_clause.getLeft()),
                                     fromXtext(xtext_clause.getRight()));
         } else {
+            //if(xtext_clause instanceof DeltaClauseApplicationClauseFalseConstant)
             // primary
             if (xtext_clause.getNot() != null) {
                 result = new AppCondNot(fromXtext(xtext_clause.getNot()));
             } else if (xtext_clause.getParen() != null) {
                 return fromXtext(xtext_clause.getParen());
+            } else if(xtext_clause.getConst().equals("true")){
+                result = new AppCondTrue();
+            } else if(xtext_clause.getConst().equals("false")){
+                result = new AppCondFalse();
             } else {
                 result = new AppCondFeature(xtext_clause.getFeatureName());
             }

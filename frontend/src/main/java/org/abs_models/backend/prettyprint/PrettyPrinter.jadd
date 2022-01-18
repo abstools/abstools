@@ -171,6 +171,12 @@ aspect doPrettyPrinter {
         stream.print(" && ");
         getRight().doPrettyPrint(stream, formatter);
     }
+    public void AppCondTrue.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print(" true ");
+    }
+    public void AppCondFalse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print(" false ");
+    }
     
     public void AppCondOr.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getLeft().doPrettyPrint(stream, formatter);

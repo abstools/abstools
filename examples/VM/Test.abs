@@ -3,7 +3,7 @@ export *;
 interface A {}
 interface C extends B {}
 
-features FF;
+features FF with true;
 
 delta DD;
 adds interface B extends A {}

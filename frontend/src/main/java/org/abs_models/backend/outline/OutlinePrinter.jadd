@@ -64,7 +64,13 @@ aspect doOutlinePrinter {
     }
 
     public abstract void AppCond.doOutlinePrint(PrintWriter stream, String prefix);
-    
+
+    public void AppCondTrue.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
+    public void AppCondFalse.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
     public void AppCondAnd.doOutlinePrint(PrintWriter stream, String prefix) {
     }
     

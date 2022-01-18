@@ -1,0 +1,15 @@
+/* $Id$ */
+import org.abs_models.common.*;
+
+import org.abs_models.frontend.analyser.ErrorMessage;
+import org.abs_models.frontend.analyser.TypeError;
+import org.abs_models.frontend.variablechecker.*;
+import org.abs_models.frontend.typechecker.*;
+
+import java.util.HashMap;
+
+aspect ApplyChecker {
+    public void Model.applyVarCheck(SemanticConditionList e) {
+        ApplicationConstraints apps = new ApplicationConstraints();
+    }
+}

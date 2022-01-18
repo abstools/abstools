@@ -629,8 +629,15 @@ DeltaClauseApplicationClauseAnd returns DeltaClauseApplicationClause
 DeltaClauseApplicationClausePrimary returns DeltaClauseApplicationClause
     : '!' not=DeltaClauseApplicationClausePrimary
     | '(' paren=DeltaClauseApplicationClause ')'
+    | DeltaClauseApplicationTrueConstant
+    | DeltaClauseApplicationClauseFalseConstant
     | featureName=TYPE_IDENTIFIER
     ;
+DeltaClauseApplicationTrueConstant returns DeltaClauseApplicationClause
+    : const='true' ;
+
+DeltaClauseApplicationClauseFalseConstant returns DeltaClauseApplicationClause
+    : const='false' ;
     
 //Local product lines
 LocalProductLineDeclaration
