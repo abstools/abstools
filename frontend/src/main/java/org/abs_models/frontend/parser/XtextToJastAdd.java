@@ -1465,9 +1465,9 @@ public class XtextToJastAdd {
                 result = new AppCondNot(fromXtext(xtext_clause.getNot()));
             } else if (xtext_clause.getParen() != null) {
                 return fromXtext(xtext_clause.getParen());
-            } else if(xtext_clause.getConst().equals("true")){
+            } else if(xtext_clause.getConst() != null && xtext_clause.getConst().equals("true")){
                 result = new AppCondTrue();
-            } else if(xtext_clause.getConst().equals("false")){
+            } else if(xtext_clause.getConst() != null && xtext_clause.getConst().equals("false")){
                 result = new AppCondFalse();
             } else {
                 result = new AppCondFeature(xtext_clause.getFeatureName());

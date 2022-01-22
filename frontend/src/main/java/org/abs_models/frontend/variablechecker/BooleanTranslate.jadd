@@ -1,0 +1,33 @@
+/* $Id$ */
+import org.abs_models.common.*;
+
+import org.abs_models.frontend.analyser.ErrorMessage;
+import org.abs_models.frontend.analyser.TypeError;
+import org.abs_models.frontend.variablechecker.*;
+import org.abs_models.frontend.typechecker.*;
+
+import choco.kernel.model.constraints.*;
+
+import java.util.HashMap;
+
+aspect BooleanTranslate {
+    public abstract Constraint AppCond.translateToChoco(ChocoSolver solver);
+    public Constraint AppCondOr.translateToChoco(ChocoSolver solver){
+        return Choco.or(getLeft().translateToChoco(solver), getRight().translateToChoco(solver));
+    }
+    public Constraint AppCondAnd.translateToChoco(ChocoSolver solver){
+        return Choco.and(getLeft().translateToChoco(solver), getRight().translateToChoco(solver));
+    }
+    public Constraint AppCondNot.translateToChoco(ChocoSolver solver){
+        return Choco.not(getAppCond().translateToChoco(solver));
+    }
+    public Constraint AppCondFeature.translateToChoco(ChocoSolver solver){
+        return ChocoSolver.isTrue(solver.getVar(getName())); //XXX
+    }
+    public Constraint AppCondFalse.translateToChoco(ChocoSolver solver){
+        return Choco.FALSE;
+    }
+    public Constraint AppCondTrue.translateToChoco(ChocoSolver solver){
+        return Choco.TRUE;
+    }
+}

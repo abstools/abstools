@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class ClassFamilySignature extends BottomFamilySignature{
+
     final private HashMap<String, Access> fields;
     final private ClassDecl decl;
     final private HashSet<String> directImplements;
@@ -48,5 +49,8 @@ public class ClassFamilySignature extends BottomFamilySignature{
     @Override
     public String toString() {
         return "ClassFamilySignature "+decl.getName();
+    }
+    public HashMap<String, Access> getFields() {
+        return fields;
     }
 }

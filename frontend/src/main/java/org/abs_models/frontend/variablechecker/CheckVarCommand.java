@@ -1,14 +1,15 @@
 package org.abs_models.frontend.variablechecker;
 
+import choco.kernel.model.constraints.Constraint;
 import org.abs_models.Absc;
 import org.abs_models.frontend.analyser.*;
 import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.mtvl.ChocoSolver;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.typechecker.ResolvedName;
 import picocli.CommandLine;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -150,10 +151,23 @@ public class CheckVarCommand implements Callable<Void> {
         signature.checkInheritance(e);
 
         // pre typing
-        // TODO: Finish
+        // TODO: redo
         m.varTypeCheck(e, signature);
 
-        // TODO: 29.12.2021 well-typedness
+        ApplicationConstraints constraints = m.applyVarCheck(e, signature);
+
+        ChocoSolver solver = new ChocoSolver();
+        for(ModuleDecl mDecl : m.getModuleDecls()) {
+            if(mDecl.hasProductLine()) {
+                for(Feature feat : mDecl.getProductLine().getFeatures())
+                    solver.addBoolVar(feat.getName());
+            }
+        }
+
+        Constraint c = constraints.getPsi().translateToChoco(solver);
+        solver.addConstraint(c);
+        if(!solver.solve())
+            e.add(new SemanticError(m,ErrorMessage.APPLICABILITY_FAIL,""));
 
         System.out.println("Finished");
         for(SemanticCondition x : e) {

@@ -11,6 +11,7 @@ public enum ErrorMessage {
     UNIQUE_REDUNDANT("Warning: Unique is not needed in non-variable modules."),
     MAIN_BLOCK_MULTI("Error: Variable modules do not allow multiple main blocks."),
     NOT_TYPE_UNIFORM("Error: The variable module is not type uniform."),
+    APPLICABILITY_FAIL("Error: Applicability constraint is not satisfiable."),
 
     ACESSOR_INCOMPARABLE_TYPE("Accessor functions with incomparable types, %s and %s."),
     CYCLIC_INHERITANCE("Cyclic inheritance chain for interface: %s."),
