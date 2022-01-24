@@ -30,12 +30,64 @@ aspect VarTypeChecker {
     public void Model.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature) {
         try {
             VarTypeCheckerHelper.checkForDuplicateModulesAndDeltas(errors, getCompilationUnits());
-            for (CompilationUnit u : getCompilationUnits()) {
+            for (CompilationUnit u : getCompilationUnits())
                 u.varTypeCheck(errors, signature);
-            }
+
+            //no type checking the global stuff
         } catch (TypeCheckerException e) {
             errors.add(e);
         }
+    }
+
+    public void LocalProductLine.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature) {
+        for(DeltaDecl dDecl: getDeltaDecls())
+            dDecl.varTypeCheck(errors, signature);
+    }
+
+    public void DeltaDecl.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature) {
+        for(ModuleModifier mod : getModuleModifiers())
+            mod.varTypeCheck(errors, signature);
+    }
+    public abstract void ModuleModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature);
+    public void FunctionModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void NamespaceModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void TypeSynModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void DataTypeModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+
+    public void AddClassModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){
+        this.getClassDecl().varTypeCheck(errors, signature);
+    }
+    public void ModifyClassModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){
+        for (Modifier mod : getModifiers())
+            mod.varTypeCheck(errors, signature);
+    }
+    public void RemoveClassModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void AddInterfaceModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){
+        getInterfaceDecl().varTypeCheck(errors, signature);
+    }
+    public void RemoveInterfaceModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void ModifyInterfaceModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){
+        for (MethodSigModifier mod : getMethodSigModifiers())
+            mod.varTypeCheck(errors, signature);
+    }
+
+    public abstract void Modifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature);
+    public void RemoveFieldModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void AddFieldModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void DeltaTraitModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void RemoveMethodModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void AddMethodModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){
+        this.getMethodImpl().varTypeCheck(errors, signature);
+    }
+    public void ModifyMethodModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){
+        this.getMethodImpl().varTypeCheck(errors, signature);
+    }
+
+
+    public abstract void MethodSigModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature);
+    public void RemoveMethodSigModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){}
+    public void AddMethodSigModifier.varTypeCheck(SemanticConditionList errors, ModelFamilySignature signature){
+        this.getMethodSig().varTypeCheck(errors, signature);
     }
 
     public void ModuleDecl.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
@@ -43,21 +95,22 @@ aspect VarTypeChecker {
         VarTypeCheckerHelper.checkForDuplicateDecls(this,e);
 
         for (Decl d : getDecls()) {
-            if (d.getName().indexOf('.') != -1) {
+            if (d.getName().indexOf('.') != -1)
                 e.add(new TypeError(d, ErrorMessage.NO_QUALIFIED_NAMES_IN_CORE_DECLARATION, d.getName()));
-            }
+
             d.varTypeCheck(e, signature);
         }
 
-        if (hasBlock()) {
+        if (hasBlock())
             getBlock().varTypeCheck(e, signature);
-        }
+
+        if(hasProductLine())
+            getProductLine().varTypeCheck(e, signature);
     }
 
     public void CompilationUnit.varTypeCheck(SemanticConditionList e, ModelFamilySignature signature) {
-        for (ModuleDecl d : getModuleDecls()) {
+        for (ModuleDecl d : getModuleDecls())
             d.varTypeCheck(e, signature);
-        }
     }
 
 

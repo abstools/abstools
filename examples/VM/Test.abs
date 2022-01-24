@@ -7,6 +7,9 @@ features FF with true;
 
 delta DD;
 adds interface B extends A {}
+/*adds class Q {
+  Int i = "hi";
+}*/
 delta DD when FF;
 
 module Main;
