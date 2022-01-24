@@ -44,6 +44,13 @@ public class ModelFamilySignature {
             BottomFamilySignature i = moduleFamilySignature.resolve(name);
             if(i != null) return i;
         }
+        if(name.contains(".")) { //dots are allowed in module names, so we try again by splitting at the last dot
+            int pos = name.lastIndexOf(".");
+            String modName = name.substring(0, pos);
+            if(elements.containsKey(modName)) {
+                return elements.get(modName).resolve(name.substring(pos+1, name.length() ));
+            } else return null;
+        }
         return null;
     }
 

@@ -1,6 +1,8 @@
 module M;
 export *;
 interface A {}
+interface D {}
+//interface C extends D {}
 interface C extends B {}
 
 features FF with true;

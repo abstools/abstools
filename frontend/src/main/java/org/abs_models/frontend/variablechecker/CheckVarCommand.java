@@ -128,6 +128,7 @@ public class CheckVarCommand implements Callable<Void> {
             }
         }
 
+        //SC1 and SC4 are part of the standard checker for imports and exports
 
         //collect all VM references
         //m.getInterfaceTypeUseAndExpsWithProductDecl();
@@ -135,9 +136,7 @@ public class CheckVarCommand implements Callable<Void> {
 
 
 
-        // TODO: 29.12.2021 Sanity checks
-        // TODO: (1) All VM names declared // This is not VM specific? //No dangling references to modules?
-        // TODO: (4) Only imported and declared names are used // This is not VM specific?
+        // TODO Sanity checks
         // TODO: (7) No open products are exported // They are not implemented yet anyway
         // TODO: (8) Proper definitions of products // Postpone until SAT solver is added
         // TODO: (9) Well-defined KEs // Postpone until SAT solver is added
@@ -151,7 +150,6 @@ public class CheckVarCommand implements Callable<Void> {
         signature.checkInheritance(e);
 
         // pre typing
-        // TODO: redo
         m.varTypeCheck(e, signature);
 
         ApplicationConstraints constraints = m.applyVarCheck(e, signature);
