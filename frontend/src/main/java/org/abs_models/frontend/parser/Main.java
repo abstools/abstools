@@ -52,6 +52,7 @@ import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import org.abs_models.frontend.variablechecker.CheckVarCommand;
 import org.abs_models.xtext.AbsStandaloneSetup;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -318,6 +319,9 @@ public class Main {
         }
         SemanticConditionList plErrors = m.getProductLineErrors();
 
+        CheckVarCommand cv = new CheckVarCommand();
+        cv.execute(m);
+
         if (plErrors.containsErrors()) {
             for (SemanticCondition error : plErrors) {
                 // Print both errors and warnings
@@ -329,7 +333,10 @@ public class Main {
 
         SemanticConditionList localErrors = new SemanticConditionList();
         try{
+            long vmStart = System.currentTimeMillis();
             m.flattenforLocalProducts();
+            long vmEnd = System.currentTimeMillis();
+            System.out.println("flat: "+(vmEnd - vmStart));
         } catch (WrongProgramArgumentException e){
             localErrors.add(new SemanticError(m, ErrorMessage.LOCAL_ARGUMENT_FAILURE, e.getMessage()));
         }

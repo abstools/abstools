@@ -13,13 +13,28 @@ import java.util.HashMap;
 aspect BooleanTranslate {
     public abstract Constraint AppCond.translateToChoco(ChocoSolver solver);
     public Constraint AppCondOr.translateToChoco(ChocoSolver solver){
-        return Choco.or(getLeft().translateToChoco(solver), getRight().translateToChoco(solver));
+        Constraint left = getLeft().translateToChoco(solver);
+        Constraint right = getRight().translateToChoco(solver);
+        if(left == Choco.TRUE || right == Choco.TRUE) return Choco.TRUE;
+        if(left == Choco.FALSE && right == Choco.FALSE) return Choco.FALSE;
+        if(left == Choco.FALSE) return right;
+        if(right == Choco.FALSE) return left;
+        return Choco.or(left, right);
     }
     public Constraint AppCondAnd.translateToChoco(ChocoSolver solver){
-        return Choco.and(getLeft().translateToChoco(solver), getRight().translateToChoco(solver));
+        Constraint left = getLeft().translateToChoco(solver);
+        Constraint right = getRight().translateToChoco(solver);
+        if(left == Choco.FALSE || right == Choco.FALSE) return Choco.FALSE;
+        if(left == Choco.TRUE && right == Choco.TRUE) return Choco.TRUE;
+        if(left == Choco.TRUE) return right;
+        if(right == Choco.TRUE) return left;
+        return Choco.and(left, right);
     }
     public Constraint AppCondNot.translateToChoco(ChocoSolver solver){
-        return Choco.not(getAppCond().translateToChoco(solver));
+        Constraint inner = getAppCond().translateToChoco(solver);
+        if(inner == Choco.TRUE) return Choco.FALSE;
+        if(inner == Choco.FALSE) return Choco.TRUE;
+        return Choco.not(inner);
     }
     public Constraint AppCondFeature.translateToChoco(ChocoSolver solver){
         return ChocoSolver.isTrue(solver.getVar(getName())); //XXX

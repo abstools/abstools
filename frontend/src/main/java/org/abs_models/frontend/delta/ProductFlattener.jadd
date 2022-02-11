@@ -81,10 +81,12 @@ aspect ProductFlattener {
         applyDeltas(deltas);
     }
 
+    public int Model.i = 0;
+
     public void Model.flattenModuleForProduct(ProductDecl decl, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         assert decl != null;
         if (verbose)
-            System.out.println("--- configuring product: " + decl.getName());
+            System.out.println("--- configuring product: " + decl.getName()+" which is "+(i++));
         if (check && !decl.satisfiesConstraints()) {
             String msg = "Product [" + (decl.getName().isEmpty() || decl.getName().equals("") ? decl.getProduct().getFeatureSetAsString() : decl.getName() )+ "] does not satisfy the feature model.";
             throw new WrongProgramArgumentException(msg);
@@ -592,18 +594,23 @@ aspect ProductFlattener {
         Set<ProductDecl> productDecls =  new HashSet<>(getProductDeclsFromExps());
         
         boolean gotNewDecls = true;
+        evaluateAllProductDeclarations();
         while(gotNewDecls){
-            evaluateAllProductDeclarations();
             for (ProductDecl prod : productDecls) {
                 Product p = prod.getProduct();
-                if (!p.featuresFromGlobalPL(getProductLine()) && ! alreadyFlattened.contains(p)) {
+                if( p == null )
+                    p = prod.getProduct();
+                if (p != null && !p.featuresFromGlobalPL(getProductLine()) && ! alreadyFlattened.contains(p)) {
                    flattenModuleForProduct(prod, true);
                    alreadyFlattened.add(p);
                 }
             }
             Set<ProductDecl> decls = new HashSet<>(getProductDeclsFromExps());
-            if(!decls.isEmpty()) productDecls = decls;
-            else gotNewDecls = false;
+            decls.removeAll(productDecls);
+            if(!decls.isEmpty())
+                productDecls = decls;
+            else
+                gotNewDecls = false;
             
         }
          Set<ProductDecl> globalProductDecls = new HashSet<>(getProductDecls());
@@ -791,7 +798,8 @@ aspect ProductFlattener {
     syn String Product.shortFeaturesName(String moduleName) {
         String ftsName = moduleName;
         String sub = "";
-        boolean shorten = getFeatures().getNumChild() > 2;
+        //active this later, the commented out condition has a bug that causes name clashes if two features share the first three laters
+        boolean shorten = false; //getFeatures().getNumChild() > 2;
         for (int i = 0; i < getNumFeature(); ++i) {
             sub = (shorten && getFeature(i).getName().length() > 3) ? getFeature(i).getName().substring(0,3) : getFeature(i).getName();
             ftsName = ftsName.concat("_" + sub);

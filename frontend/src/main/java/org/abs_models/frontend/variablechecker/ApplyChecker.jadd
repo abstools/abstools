@@ -11,28 +11,50 @@ import java.util.HashMap;
 aspect ApplyChecker {
     public ApplicationConstraints Model.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature) {
         ApplicationConstraints apps = new ApplicationConstraints();
-        for (CompilationUnit u : getCompilationUnits())
-            u.applyVarCheck(errors, signature, apps);
+        AppCond newPsi = new AppCondTrue();
+        for (CompilationUnit u : getCompilationUnits()){
+             ApplicationConstraints subCons = new ApplicationConstraints(apps, apps.getPsi());
+             u.applyVarCheck(errors, signature, subCons);
+             newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
+         }
+         apps.setPsi(newPsi);
          return apps;
     }
 
     public void CompilationUnit.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps) {
-        for (ModuleDecl d : getModuleDecls())
-            d.applyVarCheck(errors, signature, apps);
+        AppCond newPsi = new AppCondTrue();
+        for (ModuleDecl d : getModuleDecls()){
+             ApplicationConstraints subCons = new ApplicationConstraints(apps, apps.getPsi());
+             d.applyVarCheck(errors, signature, subCons);
+             newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
+         }
+         apps.setPsi(newPsi);
     }
-    public void ModuleDecl.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps) {
-            for (Decl d : getDecls())
-                d.applyVarCheck(errors, signature, apps, getName());
 
-            if(hasProductLine())
+    public void ModuleDecl.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps) {
+            if(hasProductLine()){
+                AppCond newPsi = new AppCondTrue();
+                for (Decl d : getDecls()){
+                    ApplicationConstraints subCons = new ApplicationConstraints(apps, apps.getPsi());
+                    d.applyVarCheck(errors, signature, subCons, getName());
+                    newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
+                }
+                AppCond psi = this.getProductLine().getFeatCond().treeCopyNoTransform();
+                apps.setPsi(ApplicationConstraints.imply(psi,newPsi));
                 getProductLine().applyVarCheck(errors, signature, apps, getName());
+            }
     }
 
 
     public void LocalProductLine.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps, String path) {
         apps.computeDeltaTheta(this);
-        for(DeltaDecl dDecl: getDeltaDecls()) //TODO: compute order first
-            dDecl.applyVarCheck(errors, signature, apps, path);
+        AppCond newPsi = apps.getPsi();
+        for(DeltaDecl dDecl: getDeltaDecls()) {//TODO: compute order first
+            ApplicationConstraints subCons = new ApplicationConstraints(apps, apps.getPsi());
+            dDecl.applyVarCheck(errors, signature, subCons, path);
+            newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
+        }
+        apps.setPsi(newPsi);
     }
 
     public void DeltaDecl.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps, String path) {
@@ -40,8 +62,8 @@ aspect ApplyChecker {
       AppCond newPsi = new AppCondTrue();
         for(ModuleModifier mod : getModuleModifiers()) {
             ApplicationConstraints subCons = new ApplicationConstraints(apps, apps.getDeltaTheta(this.getName()));
-            mod.applyVarCheck(errors, signature, apps, path);
-            newPsi = new AppCondAnd(newPsi.treeCopyNoTransform(), subCons.getPsi().treeCopyNoTransform());
+            mod.applyVarCheck(errors, signature, subCons, path);
+            newPsi = ApplySimplifier.and(newPsi.treeCopyNoTransform(), subCons.getPsi().treeCopyNoTransform());
         }
 
         apps.setPsi(newPsi);
@@ -62,9 +84,9 @@ aspect ApplyChecker {
         for (Modifier mod : getModifiers()){
             ApplicationConstraints subCons = new ApplicationConstraints(apps);
             mod.applyVarCheck(errors, signature, subCons, path+"."+getClassDecl().getName());
-            newPsi = new AppCondAnd(newPsi, subCons.getPsi());
+            newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
         }
-        apps.setPsi(psi);
+        apps.setPsi(newPsi);
     }
 
     public void RemoveClassModifier.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps, String path){
@@ -79,15 +101,15 @@ aspect ApplyChecker {
       for( String fieldName : cfSig.getFields().keySet() ){
           String fPath = myPath+"."+fieldName;
           AppCond fTheta = apps.getTheta(fPath);
-          apps.setTheta(fPath, new AppCondAnd(fTheta, new AppCondNot(psi)));
+          apps.setTheta(fPath,  ApplySimplifier.and(fTheta, ApplySimplifier.not(psi)));
       }
       cfSig.methods().stream().map(methodSig -> getName()).forEach(s -> {
           String fPath = myPath+"."+s;
           AppCond fTheta = apps.getTheta(fPath);
-          apps.setTheta(fPath, new AppCondAnd(fTheta, new AppCondNot(psi)));
+          apps.setTheta(fPath, ApplySimplifier.and(fTheta, ApplySimplifier.not(psi)));
       });
 
-      apps.setTheta(myPath, new AppCondAnd(myTheta, new AppCondNot(psi)));
+      apps.setTheta(myPath, ApplySimplifier.and(myTheta, ApplySimplifier.not(psi)));
     }
     public void AddInterfaceModifier.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps, String path){
         getInterfaceDecl().applyVarCheck(errors, signature, apps, path);
@@ -100,9 +122,9 @@ aspect ApplyChecker {
         for (MethodSigModifier mod : getMethodSigModifiers()){
             ApplicationConstraints subCons = new ApplicationConstraints(apps);
             mod.applyVarCheck(errors, signature, subCons, path+"."+getInterfaceDecl().getName());
-            newPsi = new AppCondAnd(newPsi, subCons.getPsi());
+            newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
         }
-        apps.setPsi(psi);
+        apps.setPsi(newPsi);
     }
 
     public void RemoveInterfaceModifier.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps, String path){
@@ -117,10 +139,10 @@ aspect ApplyChecker {
       cfSig.methods().stream().map(methodSig -> getName()).forEach(s -> {
           String fPath = myPath+"."+s;
           AppCond fTheta = apps.getTheta(fPath);
-          apps.setTheta(fPath, new AppCondAnd(fTheta, new AppCondNot(psi)));
+          apps.setTheta(fPath, ApplySimplifier.and(fTheta, ApplySimplifier.not(psi)));
       });
 
-      apps.setTheta(myPath, new AppCondAnd(myTheta, new AppCondNot(psi)));
+      apps.setTheta(myPath, ApplySimplifier.and(myTheta, ApplySimplifier.not(psi)));
     }
 
     public abstract void Modifier.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps, String path);
@@ -131,7 +153,7 @@ aspect ApplyChecker {
       AppCond myTheta = apps.getTheta(myPath);
       AppCond newPsi = ApplicationConstraints.imply(psi, myTheta);
       apps.setPsi(newPsi);
-      apps.setTheta(myPath, new AppCondAnd(myTheta, new AppCondNot(psi)));
+      apps.setTheta(myPath, ApplySimplifier.and(myTheta, ApplySimplifier.not(psi)));
     }
     public void ModifyMethodModifier.applyVarCheck(SemanticConditionList e, ModelFamilySignature signature, ApplicationConstraints apps, String path) {
         String myPath = path + "." + getMethodImpl().getMethodSig().getName();
@@ -153,8 +175,8 @@ aspect ApplyChecker {
           AppCond psi = apps.getPsi();
           AppCond myTheta = apps.getTheta(myPath);
           AppCond myPsi = ApplicationConstraints.imply(psi, myTheta);
-          newPsi = new AppCondAnd(myPsi, newPsi);
-          apps.setTheta(myPath, new AppCondAnd(myTheta, new AppCondNot(psi)));
+          newPsi = ApplySimplifier.and(myPsi, newPsi);
+          apps.setTheta(myPath, ApplySimplifier.and(myTheta, ApplySimplifier.not(psi)));
       }
       apps.setPsi(newPsi);
     }
@@ -168,7 +190,7 @@ aspect ApplyChecker {
       AppCond myTheta = apps.getTheta(myPath);
       AppCond newPsi = ApplicationConstraints.imply(psi, myTheta);
       apps.setPsi(newPsi);
-      apps.setTheta(myPath, new AppCondAnd(myTheta, new AppCondNot(psi)));
+      apps.setTheta(myPath, ApplySimplifier.and(myTheta, ApplySimplifier.not(psi)));
     }
     public void AddMethodSigModifier.applyVarCheck(SemanticConditionList e, ModelFamilySignature signature, ApplicationConstraints apps, String path) {
         getMethodSig().applyVarCheck(e, signature, apps, path);
@@ -183,19 +205,19 @@ aspect ApplyChecker {
       String myPath = path+"."+getName();
       AppCond psi = apps.getPsi();
       AppCond myTheta = apps.getTheta(myPath);
-      AppCond newPsi = ApplicationConstraints.imply(psi, new AppCondNot(myTheta));
-      apps.setTheta(myPath, new AppCondOr(myTheta, psi));
+      AppCond newPsi = ApplicationConstraints.imply(psi, ApplySimplifier.not(myTheta));
+      apps.setTheta(myPath, ApplySimplifier.or(myTheta, psi));
 
         for (FieldDecl f : getFields()){
             ApplicationConstraints subCons = new ApplicationConstraints(apps);
             f.applyVarCheck(errors, signature, subCons, myPath);
-            newPsi = new AppCondAnd(newPsi, subCons.getPsi());
+            newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
         }
 
         for (MethodImpl m : getMethods()){
             ApplicationConstraints subCons = new ApplicationConstraints(apps);
             m.applyVarCheck(errors, signature, subCons, myPath);
-            newPsi = new AppCondAnd(newPsi, subCons.getPsi());
+            newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
         }
 
       apps.setPsi(newPsi);
@@ -205,13 +227,13 @@ aspect ApplyChecker {
         String myPath = path+"."+getName();
         AppCond psi = apps.getPsi();
         AppCond myTheta = apps.getTheta(myPath);
-        AppCond newPsi = ApplicationConstraints.imply(psi, new AppCondNot(myTheta));
-        apps.setTheta(myPath, new AppCondOr(myTheta, psi));
+        AppCond newPsi = ApplicationConstraints.imply(psi, ApplySimplifier.not(myTheta));
+        apps.setTheta(myPath, ApplySimplifier.or(myTheta, psi));
 
         for (MethodSig s : getBodys()){
             ApplicationConstraints subCons = new ApplicationConstraints(apps);
             s.applyVarCheck(errors, signature, subCons, myPath);
-            newPsi = new AppCondAnd(newPsi, subCons.getPsi());
+            newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
         }
 
         apps.setPsi(newPsi);
@@ -225,18 +247,18 @@ aspect ApplyChecker {
         String myPath = path+"."+getName();
         AppCond psi = apps.getPsi();
         AppCond myTheta = apps.getTheta(myPath);
-        AppCond newPsi = ApplicationConstraints.imply(psi, new AppCondNot(myTheta));
+        AppCond newPsi = ApplicationConstraints.imply(psi, ApplySimplifier.not(myTheta));
         apps.setPsi(newPsi);
-        apps.setTheta(myPath, new AppCondOr(myTheta, psi));
+        apps.setTheta(myPath, ApplySimplifier.or(myTheta, psi));
     }
 
     public void FieldDecl.applyVarCheck(SemanticConditionList errors, ModelFamilySignature signature, ApplicationConstraints apps, String path) {
         String myPath = path+"."+getName();
         AppCond psi = apps.getPsi();
         AppCond myTheta = apps.getTheta(myPath);
-        AppCond newPsi = ApplicationConstraints.imply(psi, new AppCondNot(myTheta));
+        AppCond newPsi = ApplicationConstraints.imply(psi, ApplySimplifier.not(myTheta));
         apps.setPsi(newPsi);
-        apps.setTheta(myPath, new AppCondOr(myTheta, psi));
+        apps.setTheta(myPath, ApplySimplifier.or(myTheta, psi));
     }
 
     public void FunctionDecl.applyVarCheck(SemanticConditionList e, ModelFamilySignature signature, ApplicationConstraints apps, String path) {}

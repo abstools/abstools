@@ -1,3 +1,29 @@
+module Wrapper;
+
+export *;
+
+data SignalState = FAHRT | STOP | SLOW(Rat rr) | NOSIG | INVALID;
+data Transmission = See(Information info, Rat dist) | Pass(Information info); 
+data Information =  NoInfo 
+				  | TestInfo //for debugging only
+                  | HauptSig(SignalState si, String namep) | VorSig(SignalState sp, String name) | StartPrepare(SignalState spp) 
+                  | Limit(Int) | LimitPrepare(Int) | WeichenbereichVerlassen(Rat,Bool,Strecke)
+                  | Crash | ChangeResp(ZugMelde) | Cow(Bool)
+                  | Mhz1000 | Mhz2000 | Mhz500 | Zs1(Bool,String) | Ne5(Rat, String, Bool) | HsPassed(String nameHs)
+                  | StartObserve(Observable) | EndObserve(Observable)
+                  | NonStop(Rat,Rat) | NonStopStart(Rat) | NonStopEnd(Rat);
+                  
+def Unit logOut(String str) = println(str);                  
+                 
+interface Edge { }
+interface Node { }
+interface Strecke { }
+interface Train { }
+interface Observable {}
+interface ZugMelde {}
+interface Signal {} //logical signal group
+
+
 module TrackElements;
 
 export *;

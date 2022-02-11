@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 public class ApplicationConstraints {
     public static AppCond imply(AppCond a, AppCond b){
-        return new AppCondOr(new AppCondNot(a),b);
+        return ApplySimplifier.or(ApplySimplifier.not(a),b);
     }
 
     private HashMap<String, AppCond> theta;
@@ -16,8 +16,10 @@ public class ApplicationConstraints {
 
     public void computeDeltaTheta(LocalProductLine lpl){
         deltaTheta = new HashMap<>();
+        AppCond ac = lpl.getFeatCond().treeCopyNoTransform();
+        ac.setParent(null);
         for(DeltaClause clause : lpl.getDeltaClauses()){
-            deltaTheta.put(clause.getDeltaspec().getDeltaID(), clause.getAppCond());
+            deltaTheta.put(clause.getDeltaspec().getDeltaID(), ApplySimplifier.and(ac, clause.getAppCond().treeCopyNoTransform()));
         }
     }
 
@@ -35,10 +37,12 @@ public class ApplicationConstraints {
     public ApplicationConstraints(ApplicationConstraints old) {
         this.theta = old.theta; // use reference: all ACs manage the same map
         this.psi = new AppCondTrue();
+        this.deltaTheta = old.deltaTheta;
     }
     public ApplicationConstraints(ApplicationConstraints old, AppCond psi) {
         this.theta = old.theta; // use reference: all ACs manage the same map
         this.psi = psi;
+        this.deltaTheta = old.deltaTheta;
     }
 
     public AppCond getTheta(String path) {

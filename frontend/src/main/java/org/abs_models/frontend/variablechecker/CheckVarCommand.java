@@ -68,31 +68,9 @@ public class CheckVarCommand implements Callable<Void> {
         }
     }
 
-    @Override
-    public Void call() throws Exception {
-        if (verbose) System.out.println("Starting static checks of variability modules ...");
-        Main main = new Main();
-        main.arguments = this.parent;
-        Model m = main.parseFiles(main.arguments.verbose, files);
-        m.evaluateAllProductDeclarations(); // resolve ProductExpressions to simple sets of features
-        Main.rewriteModel(m, main.arguments.product);
-        m.flattenTraitOnly();
-        m.collapseTraitModifiers();
+    public void execute(Model m){
 
-        m.expandPartialFunctions();
-        m.expandForeachLoops();
-        m.expandAwaitAsyncCalls();
-
-        m.getProductDeclsFromExps();
-
-        if (main.arguments.product != null) {
-            if (main.arguments.notypecheck) {
-                m.flattenForProductUnsafe(main.arguments.product);
-            } else {
-                m.flattenForProduct(main.arguments.product);
-            }
-        }
-
+        long startPre = System.currentTimeMillis();
         SemanticConditionList e = new SemanticConditionList();
 
         //SC2: Only one main block
@@ -152,6 +130,8 @@ public class CheckVarCommand implements Callable<Void> {
         // pre typing
         m.varTypeCheck(e, signature);
 
+        long endPre = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         ApplicationConstraints constraints = m.applyVarCheck(e, signature);
 
         ChocoSolver solver = new ChocoSolver();
@@ -166,11 +146,44 @@ public class CheckVarCommand implements Callable<Void> {
         solver.addConstraint(c);
         if(!solver.solve())
             e.add(new SemanticError(m,ErrorMessage.APPLICABILITY_FAIL,""));
+        long end = System.currentTimeMillis();
 
         System.out.println("Finished");
         for(SemanticCondition x : e) {
             System.out.println(x);
         }
+        System.out.println("checks: "+(endPre-startPre));
+        System.out.println("app: "+(end-start));
+        System.out.println("size: "+c.pretty());
+    }
+
+    @Override
+    public Void call() throws Exception {
+        if (verbose) System.out.println("Starting static checks of variability modules ...");
+        Main main = new Main();
+        main.arguments = this.parent;
+        Model m = main.parseFiles(main.arguments.verbose, files);
+        m.evaluateAllProductDeclarations(); // resolve ProductExpressions to simple sets of features
+        Main.rewriteModel(m, main.arguments.product);
+        m.flattenTraitOnly();
+        m.collapseTraitModifiers();
+
+        m.expandPartialFunctions();
+        m.expandForeachLoops();
+        m.expandAwaitAsyncCalls();
+
+        m.getProductDeclsFromExps();
+
+        if (main.arguments.product != null) {
+            if (main.arguments.notypecheck) {
+                m.flattenForProductUnsafe(main.arguments.product);
+            } else {
+                m.flattenForProduct(main.arguments.product);
+            }
+        }
+
+        this.execute(m);
+
         return null;
     }
 }
