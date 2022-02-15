@@ -231,12 +231,58 @@ aspect ProductFlattener {
 
         // apply the applicable deltas in the given order
         newModule.applyDeltas(deltas);
+
+
+        newModule.collapseOpenProducts(product);
+
         // remove productlines related elements from the new module
         newModule.removeProductLine();
+
+
 
         newModule.removeNotVariableDecls(this.getName());
         return newModule.getName();
         }
+
+    public void ModuleDecl.collapseOpenProducts(Product product){
+        System.out.println("reached!: "+product);
+        for (LocalOpenProductDecl open : this.getLocalOpenProductDeclList()) {
+            this.addLocalProductDecl(open.resolve(product));
+            //this.getLocalOpenProductDeclList().setParent(null);
+        }
+    }
+
+
+    public LocalProductDecl LocalOpenProductDecl.resolve(Product product) {
+        for(LocalProductBranch branch : getLocalProductBranchList()){
+              AppCond act = branch.getguard();
+              ProductExpr expr = branch.getbody();
+              if(expr instanceof ProductFeatureSet) {
+                  List<Feature> list = product.getFeatures();
+                  Set<String> set = new HashSet<>();
+                  for(Feature f : list ) set.add(f.getName());
+                  boolean res = act.evaluate(set);
+                  if(res){
+                      expr.setParent(null);
+                      final LocalProductDecl result = new LocalProductDecl();
+                      result.setName(getName());
+                      result.setProductExpr(expr);
+                      return result;
+                  }
+              }
+        }
+        System.err.println("No matching guard of open product to a set of features");
+        return null;
+    }
+
+    @Override
+    protected boolean LocalOpenProductDecl.debugNodeAttachmentIsRoot() {
+        return false;
+    }
+    @Override
+    protected boolean ProductDecl.debugNodeAttachmentIsRoot() {
+        return false;
+    }
 
     /**************************************************************************
      * Simplifications before product line type checking
@@ -605,6 +651,7 @@ aspect ProductFlattener {
                    alreadyFlattened.add(p);
                 }
             }
+            evaluateAllProductDeclarations();
             Set<ProductDecl> decls = new HashSet<>(getProductDeclsFromExps());
             decls.removeAll(productDecls);
             if(!decls.isEmpty())
@@ -615,6 +662,7 @@ aspect ProductFlattener {
         }
          Set<ProductDecl> globalProductDecls = new HashSet<>(getProductDecls());
          for (ProductDecl prod : globalProductDecls) {
+            if(prod instanceof LocalProductDecl) continue; //Hack to get the JastADD AST working
             if (!prod.getProduct().featuresFromGlobalPL(getProductLine())) {
                 if (prod.getParent() instanceof List)
                     ((List<ProductDecl>)prod.getParent()).removeChild(prod);

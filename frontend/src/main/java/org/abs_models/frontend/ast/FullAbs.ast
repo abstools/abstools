@@ -8,7 +8,7 @@
 // Hook into CoreAbs.ast definitions
 Model : CoreModel ::= /Product*/ ;
 CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
-ModuleDecl : CoreModuleDecl ::= FeatureDecl* LocalProductDecl* [ProductLine:LocalProductLine];
+ModuleDecl : CoreModuleDecl ::= FeatureDecl* LocalProductDecl* LocalOpenProductDecl* [ProductLine:LocalProductLine];
 
 // Deltas
 
@@ -99,8 +99,11 @@ FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
 // Extended Product Selection Language
-ProductDecl ::= <Name> ProductExpr ;
+LocalProductDeclKind ::= <Name> ;
+ProductDecl : LocalProductDeclKind ::= ProductExpr ;
 LocalProductDecl : ProductDecl; //::= <Name> ProductExpr ;
+LocalOpenProductDecl : LocalProductDeclKind ::= LocalProductBranch*;
+LocalProductBranch ::= guard:AppCond body:ProductExpr;
 
 abstract ProductExpr ;
 ProductFeatureSet : ProductExpr ::= Feature* ;

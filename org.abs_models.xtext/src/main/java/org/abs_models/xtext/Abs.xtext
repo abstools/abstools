@@ -48,7 +48,7 @@ CompilationUnit
 ModuleDeclaration
     : 'module' name=QualifiedTypeIdentifier ';'
         (exports+=ModuleExport | imports+=ModuleImport)*
-        (localProductDecls+=LocalProductDeclaration)*
+        (localProductDecls+=LocalSetDeclaration)*
         (declarations+=Declaration)*
         (productLineDecl=LocalProductLineDeclaration)?
         ( mainblockAnnotations=Annotations main?='{' (mainblockStatements+=Statement)* '}')?
@@ -676,11 +676,21 @@ DeltaSet
 	;
 
 //Local products
-LocalProductDeclaration
+LocalSetDeclaration : LocalConfigurationDeclaration | LocalProductDeclaration ;
+
+LocalConfigurationDeclaration
     : 'configuration' name=TYPE_IDENTIFIER
-         '=' expression=ProductExpression ';' 
+         '=' expression=ProductExpression ';'
     ;
-	
+
+LocalProductDeclaration
+    : 'lproduct' name = TYPE_IDENTIFIER '='
+        ( '(' expression=ProductExpression ')' ';'
+        | '{' ( locals+=ProductBranch (',' locals+=ProductBranch)* )? '}' ';' )
+	;
+ProductBranch
+    : activate=DeltaClauseApplicationClause '->' expression=ProductExpression
+    ;
 // Products
 
 ProductDeclaration

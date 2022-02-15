@@ -35,6 +35,7 @@ import org.eclipse.xtext.util.ITextRegionWithLineInformation;
 import org.eclipse.xtext.util.LineAndColumn;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 //import java.util.*;
 
 // The methods in this class are roughly in the same order as the grammar rule
@@ -203,8 +204,11 @@ public class XtextToJastAdd {
              result.setProductLine(fromXtext(xtext_module.getProductLineDecl()));
         }
 
-         for(org.abs_models.xtext.abs.LocalProductDeclaration product : xtext_module.getLocalProductDecls()) {
-        	result.addLocalProductDeclNoTransform(fromXtext(product));
+         for(LocalSetDeclaration product : xtext_module.getLocalProductDecls()) {
+             if(product instanceof LocalConfigurationDeclaration)
+                 result.addLocalProductDeclNoTransform(fromXtext((LocalConfigurationDeclaration) product));
+             if(product instanceof LocalProductDeclaration)
+                 result.addLocalOpenProductDeclNoTransform((LocalOpenProductDecl) fromXtext((LocalProductDeclaration) product));
         }
 
         if(xtext_module.isMain()) {
@@ -1568,12 +1572,35 @@ public class XtextToJastAdd {
         return afterDeltas;
     }
 
-    private static LocalProductDecl fromXtext(org.abs_models.xtext.abs.LocalProductDeclaration xtext_decl) {
+    private static LocalProductDecl fromXtext(org.abs_models.xtext.abs.LocalConfigurationDeclaration xtext_decl) {
         final LocalProductDecl result = new LocalProductDecl();
         result.setName(xtext_decl.getName());
         result.setProductExpr(fromXtext(xtext_decl.getExpression()));
         return nodeWithLocation(result, xtext_decl);
     }
+
+    private static LocalProductBranch fromXtext(org.abs_models.xtext.abs.ProductBranch xtext_decl) {
+        final LocalProductBranch result = new LocalProductBranch();
+        result.setguard(fromXtext(xtext_decl.getActivate()));
+        result.setbody(fromXtext(xtext_decl.getExpression()));
+        return nodeWithLocation(result, xtext_decl);
+    }
+
+    private static LocalProductDeclKind fromXtext(org.abs_models.xtext.abs.LocalProductDeclaration xtext_decl) {
+        if(xtext_decl.getExpression() != null){
+            final LocalProductDecl result = new LocalProductDecl();
+            result.setName(xtext_decl.getName());
+            result.setProductExpr(fromXtext(xtext_decl.getExpression()));
+            return nodeWithLocation(result, xtext_decl);
+        } else if( xtext_decl.getLocals() != null){
+            final LocalOpenProductDecl result = new LocalOpenProductDecl();
+            result.setName(xtext_decl.getName());
+            for( ProductBranch prod : xtext_decl.getLocals())
+                result.addLocalProductBranch(fromXtext(prod));
+            return nodeWithLocation(result, xtext_decl);
+        } else return null;
+    }
+
 
     // Products
     private static ProductDecl fromXtext(org.abs_models.xtext.abs.ProductDeclaration xtext_decl) {
