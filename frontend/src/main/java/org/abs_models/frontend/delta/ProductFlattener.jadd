@@ -245,7 +245,6 @@ aspect ProductFlattener {
         }
 
     public void ModuleDecl.collapseOpenProducts(Product product){
-        System.out.println("reached!: "+product);
         for (LocalOpenProductDecl open : this.getLocalOpenProductDeclList()) {
             this.addLocalProductDecl(open.resolve(product));
             //this.getLocalOpenProductDeclList().setParent(null);
