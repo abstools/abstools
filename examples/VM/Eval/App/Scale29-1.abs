@@ -1,0 +1,153 @@
+module M;
+export *;
+interface A {}
+features F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,F13,F14,F15,F16,F17,F18,F19,F20,F21,F22,F23,F24,F25,F26,F27,F28,F29 with (F2 && F26) && F22;
+delta D1;
+modifies interface A{
+    adds Unit m();
+}
+delta D2;
+modifies interface A{
+    removes Unit m();
+}
+delta D3;
+modifies interface A{
+    adds Unit m();
+}
+delta D4;
+modifies interface A{
+    adds Unit m();
+}
+delta D5;
+modifies interface A{
+    removes Unit m();
+}
+delta D6;
+modifies interface A{
+    removes Unit m();
+}
+delta D7;
+modifies interface A{
+    removes Unit m();
+}
+delta D8;
+modifies interface A{
+    adds Unit m();
+}
+delta D9;
+modifies interface A{
+    adds Unit m();
+}
+delta D10;
+modifies interface A{
+    adds Unit m();
+}
+delta D11;
+modifies interface A{
+    adds Unit m();
+}
+delta D12;
+modifies interface A{
+    removes Unit m();
+}
+delta D13;
+modifies interface A{
+    removes Unit m();
+}
+delta D14;
+modifies interface A{
+    adds Unit m();
+}
+delta D15;
+modifies interface A{
+    removes Unit m();
+}
+delta D16;
+modifies interface A{
+    removes Unit m();
+}
+delta D17;
+modifies interface A{
+    adds Unit m();
+}
+delta D18;
+modifies interface A{
+    removes Unit m();
+}
+delta D19;
+modifies interface A{
+    adds Unit m();
+}
+delta D20;
+modifies interface A{
+    adds Unit m();
+}
+delta D21;
+modifies interface A{
+    removes Unit m();
+}
+delta D22;
+modifies interface A{
+    adds Unit m();
+}
+delta D23;
+modifies interface A{
+    adds Unit m();
+}
+delta D24;
+modifies interface A{
+    adds Unit m();
+}
+delta D25;
+modifies interface A{
+    removes Unit m();
+}
+delta D26;
+modifies interface A{
+    removes Unit m();
+}
+delta D27;
+modifies interface A{
+    adds Unit m();
+}
+delta D28;
+modifies interface A{
+    adds Unit m();
+}
+delta D29;
+modifies interface A{
+    adds Unit m();
+}
+
+delta D1 when (F1 || (F1 && F1)) && (F1 || F1);
+delta D2 when !(F1 && F1);
+delta D3 when (F3 || F1) || (F1 && F2);
+delta D4 when !!F4;
+delta D5 when !(F2 && F2);
+delta D6 when (F4 && F1) && (F5 || F1);
+delta D7 when F3 || !F3;
+delta D8 when !!F5;
+delta D9 when (F4 && F4) && (F3 && F2);
+delta D10 when (F1 && F5) && (F1 || F4);
+delta D11 when !(F3 && F3);
+delta D12 when !!F4;
+delta D13 when !F3 || F4;
+delta D14 when F5 || (F3 || F5);
+delta D15 when F4 && (F1 && F1);
+delta D16 when F5 && (F1 || F1);
+delta D17 when !!F5;
+delta D18 when !!F4;
+delta D19 when !(F4 && F5);
+delta D20 when !(F2 && F3);
+delta D21 when !!F3;
+delta D22 when !(F5 || F1);
+delta D23 when (F2 || F2) && !F4;
+delta D24 when F4 || (F2 && F5);
+delta D25 when F1 || (F3 || F1);
+delta D26 when F1 || !F4;
+delta D27 when (F1 && F1) && !F1;
+delta D28 when !F3 && (F5 || F1);
+delta D29 when (F3 && F2) && (F3 || F2);
+module Main;
+import * from M;
+{}

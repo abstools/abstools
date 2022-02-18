@@ -1,0 +1,19 @@
+module M;
+export *;
+interface A {}
+features F1,F2 with true;
+delta D1;
+modifies interface A{
+    adds Unit m1();
+}
+delta D2;
+modifies interface A{
+    adds Unit m2();
+}
+
+delta D1 when F1;
+delta D2 when F2;
+module Main;
+import * from M;
+{
+}

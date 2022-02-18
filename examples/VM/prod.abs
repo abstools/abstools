@@ -1,0 +1,31 @@
+module M;
+export *;
+
+lproduct P = {
+     FF -> {GG},
+    !FF -> {HH}
+};
+
+features FF with true;
+
+delta DD;
+adds interface B extends A with P {}
+delta DD when FF;
+
+
+module M2;
+export *;
+
+features GG, HH with true;
+
+delta EE;
+adds interface A {}
+delta EE when GG;
+
+
+module Main;
+import * from M;
+import * from M2;
+{
+        B with {FF} b = null;
+}

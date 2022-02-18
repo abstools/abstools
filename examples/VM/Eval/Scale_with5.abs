@@ -1,0 +1,65 @@
+module M;
+export *;
+interface A {}
+features F1,F2,F3,F4,F5 with true;
+delta D1;
+modifies interface A{
+    adds Unit m1();
+}
+delta D2;
+modifies interface A{
+    adds Unit m2();
+}
+delta D3;
+modifies interface A{
+    adds Unit m3();
+}
+delta D4;
+modifies interface A{
+    adds Unit m4();
+}
+delta D5;
+modifies interface A{
+    adds Unit m5();
+}
+
+delta D1 when F1;
+delta D2 when F2;
+delta D3 when F3;
+delta D4 when F4;
+delta D5 when F5;
+module Main;
+import * from M;
+{
+	A with {F1, F2, F3, F4, F5} a0 = null;
+	A with {F1, F2, F3, F4} a1 = null;
+	A with {F1, F2, F3, F5} a2 = null;
+	A with {F1, F2, F3} a3 = null;
+	A with {F1, F2, F4, F5} a4 = null;
+	A with {F1, F2, F4} a5 = null;
+	A with {F1, F2, F5} a6 = null;
+	A with {F1, F2} a7 = null;
+	A with {F1, F3, F4, F5} a8 = null;
+	A with {F1, F3, F4} a9 = null;
+	A with {F1, F3, F5} a10 = null;
+	A with {F1, F3} a11 = null;
+	A with {F1, F4, F5} a12 = null;
+	A with {F1, F4} a13 = null;
+	A with {F1, F5} a14 = null;
+	A with {F1} a15 = null;
+	A with {F2, F3, F4, F5} a16 = null;
+	A with {F2, F3, F4} a17 = null;
+	A with {F2, F3, F5} a18 = null;
+	A with {F2, F3} a19 = null;
+	A with {F2, F4, F5} a20 = null;
+	A with {F2, F4} a21 = null;
+	A with {F2, F5} a22 = null;
+	A with {F2} a23 = null;
+	A with {F3, F4, F5} a24 = null;
+	A with {F3, F4} a25 = null;
+	A with {F3, F5} a26 = null;
+	A with {F3} a27 = null;
+	A with {F4, F5} a28 = null;
+	A with {F4} a29 = null;
+	A with {F5} a30 = null;
+}

@@ -1,0 +1,22 @@
+module M;
+export *;
+//interface A { }
+interface A {Unit m(); Unit n();}
+
+features FF, FG with FG || FF;
+
+delta DE;
+modifies interface A {adds Unit m();}
+delta DD;
+modifies interface A {removes Unit m();}
+
+
+delta DD when FF;
+delta DE when FG;
+
+module Main;
+import * from M;
+{
+        A with {FF} a = null;
+        A with {FG} b = null;
+}

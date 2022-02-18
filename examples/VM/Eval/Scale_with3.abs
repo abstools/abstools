@@ -1,0 +1,31 @@
+module M;
+export *;
+interface A {}
+features F1,F2,F3 with true;
+delta D1;
+modifies interface A{
+    adds Unit m1();
+}
+delta D2;
+modifies interface A{
+    adds Unit m2();
+}
+delta D3;
+modifies interface A{
+    adds Unit m3();
+}
+
+delta D1 when F1;
+delta D2 when F2;
+delta D3 when F3;
+module Main;
+import * from M;
+{
+	A with {F1, F2, F3} a0 = null;
+	A with {F1, F2} a1 = null;
+	A with {F1, F3} a2 = null;
+	A with {F1} a3 = null;
+	A with {F2, F3} a4 = null;
+	A with {F2} a5 = null;
+	A with {F3} a6 = null;
+}

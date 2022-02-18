@@ -1,0 +1,804 @@
+module Communication;
+export *;
+
+data LocationT = LocationT(String name);
+data Access   = Write(Thread, LocationT, Int value, Int) | Read(Thread, LocationT, Int);
+
+def LocationT getLocation(Access acc) = case(acc) {
+    Write(_,l,_,_) => l;
+    Read(_,l,_)    => l;
+};
+
+interface Thread { }
+
+
+
+
+
+module Mem;
+export *;
+import * from Communication;
+
+configuration TSO = {WriteReadFeature, ReadEarlyFeature};
+configuration PSO = {WriteReadFeature, WriteWriteFeature, ReadEarlyFeature};
+configuration IBM370 = {WriteReadFeature};
+configuration Demo = {DemoFeature}; 
+configuration IBMDemo = {WriteReadFeature, DemoFeature}; 
+configuration TSODemo = {WriteReadFeature, ReadEarlyFeature, DemoFeature}; 
+configuration MaximalProduct = {ReadReadFeature, ReadWriteFeature, WriteWriteFeature, WriteReadFeature, ReadEarlyFeature};
+
+def List<T> slice<T>(List<T> list, Int startPos, Int endPos) = sliceAux(list, startPos, endPos, 0);
+def List<T> sliceAux<T>(List<T> list, Int startPos, Int endPos, Int it) =  when it > endPos then Nil
+ else when it < startPos then sliceAux(tail(list), startPos, endPos, it + 1)
+ else case list{
+ 	Cons(x, xs) => Cons(x ,sliceAux(xs, startPos, endPos, it + 1));
+ 	Nil => Nil;
+ };
+ 
+	
+def Maybe<Int> getWriteValueFor(List<Access> list, LocationT loc, Thread tid) = getWriteForAux(list, loc, 0, tid);
+def Maybe<Int> getWriteForAux(List<Access> list, LocationT loc, Int pos, Thread tid) = case list {
+		Cons(x, xs) => case x {
+			Write(tidW,locW,_,id) => when (locW == loc && tid == tidW) then Just(id) else getWriteForAux(xs, loc, pos+1, tid);
+			_ => getWriteForAux(xs, loc, pos+1, tid);
+		};
+		Nil => Nothing;
+	};
+	
+	
+def Int getFirstRead(List<Int> list,List<Access> acc) = getFirstReadAux(list,acc,0);
+
+def Int getFirstReadAux(List<Int> list, List<Access> acc, Int pos) = case list{
+	Cons(x,xs) => case (nth(acc,x)){
+		Read(_,_,_)    => pos;
+		Write(_,_,_,_) => getFirstReadAux(xs,acc, pos+1);
+	};
+	Nil => 0;
+};
+	
+	
+unique interface MemoryI{
+     Fut<Int> read(Thread t, LocationT loc);
+     Unit write(Thread t, LocationT loc, Int val);
+     
+     Int const(Int i);
+     Int internalRead(Int myId); //spec only
+}
+
+class Memory implements MemoryI {
+	
+     Int counter = 0;                                                                 //internal modeling of equality   
+     List<Access> list = Nil;                                                         //access list
+     Set<Int> done = EmptySet;                                                        //completed accesses
+     Map<Int, Int> ret = EmptyMap;                                                    //maps access ids to return values
+     Map<LocationT, Int> mem = put(put(EmptyMap, LocationT("w"), 0), LocationT("v"), 0); //actual memory
+     
+     //issues a read operation, returns the read value once the access has succeeded
+     Fut<Int> read(Thread t, LocationT loc){
+       Int myId = counter;
+       list = appendright(list, Read(t, loc, myId));
+       counter = counter + 1;
+       Fut<Int> ff = this!internalRead(myId);
+       return ff;
+     }
+     
+     Int internalRead(Int myId){     
+       await contains(done, myId);
+       return lookupUnsafe(ret, myId);
+     }
+     
+     //issues a write operation, returns immediately once the access is added to the access list
+     Unit write(Thread t, LocationT loc, Int val){
+       Int myId = counter;
+       list = appendright(list, Write(t, loc, val, myId));     
+       counter = counter + 1;
+     }
+     
+     //for init
+     Int const(Int i){
+       return i;
+     }
+     
+     
+     List<Int> strategy(){
+     	Int i = 0;
+     	List<Int> allowed = Nil;
+     	while(i < length(list)){
+     		Bool add = True;
+     		Int j = 0;
+     		while(j < i){
+     			Bool b = this.maySwap(nth(list,j),nth(list,i));
+     			if(!b){
+     				add = False;
+     				j = length(list);
+     			}
+     			j = j +1;
+     		}
+     		if(add){ allowed = Cons(i, allowed);}
+     		i = i + 1;
+     	}
+     	return allowed;
+	 }
+	 
+	 Bool maySwap(Access a, Access b){
+     	 Bool ret = False;  
+     	switch (a) {
+     		Read(t1,_,_)    => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     		Write(t1,_,_,_) => switch (b) {
+     								Read(t2,_,_) => { ret = t1 != t2; }
+     								Write(t2,_,_,_) => { ret = t1 != t2; }
+     						  }
+     	}
+     	return ret;
+	 }
+	 
+	 Int getValueFor(Thread tid, LocationT loc, Int pos){
+	 	return lookupUnsafe(mem, loc);
+	 }
+	 
+	 Pair<Access, Int> getAccess(Int pos){
+     	Access acc = nth(list, pos);
+	    Int val = -1;
+	    switch (acc) { 
+	      	Write(_, _ ,vi, _) => {val = vi;}
+	      	Read(tid, loc,_ ) => {val = this.getValueFor(tid, loc, pos);}
+	    }
+	    
+     	this.list = concatenate(slice(list, 0, pos-1), slice(list, pos+1, length(list)));
+     	return Pair(acc, val);
+	 }
+	 
+	 Int retrieve(List<Int> myList){
+	 	return head(myList);//nth(accList, random(length(list))); for less predictability
+	 }
+	 
+     Unit run(){
+     	while(True){
+     	   	await list != Nil;	 
+     	   	  
+	       	List<Int> accList = this.strategy();
+	       	Int pos = this.retrieve(accList);
+	       	
+	       	Pair<Access, Int> pp = this.getAccess(pos); 
+	       	
+	     	switch (fst(pp)) {
+	     		Write(t, loc, val, id) => {
+	     			done = insertElement(done, id);
+	     			mem = put(mem, loc, val);
+	     		}
+	     		Read(t, loc, id)       => {
+	     			done = insertElement(done, id);
+			  		ret = put(ret, id, snd(pp));
+	     	   	}
+	     	}     	   
+     	}
+     }
+}
+
+
+features ReadReadFeature, ReadWriteFeature, WriteWriteFeature, WriteReadFeature, ReadEarlyFeature, DemoFeature
+ with (DemoFeature || !DemoFeature);
+ /**
+Allows to reorder a read before a read
+**/
+delta ReadReadDelta;
+modifies class Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;
+        LocationT loca = getLocation(a);
+        LocationT locb = getLocation(b);
+        Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => switch (b) {
+     								Read(_,_,_) => {  rets = last || loca != locb; }
+     								Write(_,_,_,_) => { rets = last;}
+     						  }
+     		Write(_,_,_,_) => { rets = last;}
+     	}
+     	return rets;
+	 }
+}
+/**
+Allows to reorder a write before a read
+**/
+delta ReadWriteDelta;
+modifies class Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;  
+        LocationT loca = getLocation(a);
+        LocationT locb = getLocation(b);
+        Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => switch (b) {
+     								Read(_,_,_) => { rets = last; }
+     								Write(_,_,_,_) => {  rets = last || loca != locb; }
+     						  }
+     		Write(_,_,_,_) => { rets = last; }
+     	}
+     	return rets;
+	 }
+}
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadDelta;
+modifies class Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;  
+        LocationT loca = getLocation(a);
+        LocationT locb = getLocation(b);
+        Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { rets = last; }
+     		Write(_,_,_,_) => switch (b) {
+     								Read(_,_,_) => {  
+     								                    rets = last || loca != locb; }
+     								Write(_,_,_,_) => { rets = last; }
+     						  }
+     	}
+     	return rets;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteWriteDelta;
+modifies class Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;  
+        LocationT loca = getLocation(a);
+        LocationT locb = getLocation(b);
+        Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { rets = last; }
+     		Write(_,_,_,_) => switch (b) {
+     								Read(_,_,_) => { rets = last; }
+     								Write(_,_,_,_) => {  rets = last || loca != locb; }
+     						  }
+     	}
+     	return rets;
+	 }
+}
+
+/**
+Allows to reorder a read before a write
+**/
+delta WriteReadOwnDelta;
+modifies class Memory {
+	 //gets first read, if no read in list, gets first write
+     modifies Bool maySwap(Access a, Access b){
+     	Bool rets = False;  
+        LocationT loca = getLocation(a);
+        LocationT locb = getLocation(b);
+        Bool last = original(a,b);
+     	switch (a) {
+     		Read(_,_,_)    => { rets = last; }
+     		Write(_,_,_,_) => switch (b) {
+     								Read(_,_,_) => { if(loca == locb) rets = True; else rets = last; }
+     								Write(_,_,_,_) => { rets = last; }
+     						  }
+     	}
+     	return rets;
+	 }
+}
+
+
+/**
+Instead of reading from the memory, the read may read from a write it is reorder before
+**/
+delta ReadEarlyLocalDelta;
+modifies class Memory {
+     modifies Int getValueFor(Thread tid, LocationT loc, Int pos){
+     	List<Access> pre = slice(list, 0, pos-1);
+     	Maybe<Int> ret = getWriteValueFor(pre, loc, tid);
+     	Int i = -1;
+     	switch (ret){
+     		Just(val) => i = val;
+     		Nothing   => i = original(tid, loc, pos);
+     	}
+		return i;
+	 }
+}
+
+delta DemoDelta;
+modifies class Memory {
+     modifies Unit run(){
+	 	await duration(3,3);
+	 	original();
+	 } 
+	 
+	 modifies Int retrieve(List<Int> myList){
+	 	Int i = getFirstRead(reverse(myList), this.list);
+	 	return i;
+	 }
+	 
+}
+
+
+
+delta ReadReadDelta when ReadReadFeature;
+delta DemoDelta when DemoFeature;
+delta ReadWriteDelta when ReadWriteFeature;
+delta WriteWriteDelta when WriteWriteFeature;
+delta WriteReadDelta  when WriteReadFeature;
+delta ReadEarlyLocalDelta when ReadEarlyFeature;
+delta WriteReadOwnDelta after WriteReadDelta when ReadEarlyFeature;
+
+module Threads;
+export *;
+import * from Mem;
+import * from Devices;
+import * from Communication;
+
+class Thread1(MemoryI mem, DeviceI other) implements Thread {
+   Fut<Int> reg1;
+             
+   Unit run(){
+     reg1 = mem!const(0);
+     reg1.get;
+     
+     //duration(3,3); //duration enforces demo ordering
+	 await mem!write(this,LocationT("w"),1);  
+     reg1 = await mem!read(this,LocationT("v"));    
+     Int i = reg1.get;
+     println("thread1: "+toString(i));
+   }
+}
+
+class Thread2(MemoryI mem, DeviceI other) implements Thread {
+   Fut<Int> reg1;
+     
+   Unit run(){
+     reg1 = mem!const(0);
+     reg1.get;
+
+	 await mem!write(this,LocationT("v"),1);  
+     reg1 = await mem!read(this,LocationT("w"));  
+     Int i = reg1.get;
+     await other!directSaveMainThread("v", i);
+     println("thread2: "+toString(i));
+   }
+}
+
+module Devices;
+export *;
+import * from Communication;
+import * from Threads;
+import * from Mem;
+
+unique interface DevicePairI{ }
+
+unique interface DeviceI{
+    Unit directSaveMainThread(String loc, Int val);
+    Unit setOther(DeviceI newOther);
+    Unit launch(MemoryI newMem);
+}
+
+unique class Device implements DeviceI {
+    DeviceI other = null;
+    MemoryI mem = null;
+    Thread t1 = null;
+    Thread t2 = null;
+    Unit setOther(DeviceI newOther){ this.other = newOther; }
+    Unit launch(MemoryI newMem){
+        this.mem = newMem;
+        this.t1 = new Thread1(mem, other);
+        this.t2 = new Thread2(mem, other);
+    }
+    Unit directSaveMainThread(String loc, Int val){
+        await mem!write(t1,LocationT(loc),val);
+    }
+}
+
+class DevicePair implements DevicePairI {
+    MemoryI mem1 = null;
+    MemoryI mem2 = null;
+    DeviceI d1 = null;
+    DeviceI d2 = null;
+    Unit run(){
+        this.d1 = new Device();
+        this.d2 = new Device();
+        this.setupDevice1();
+        this.setupDevice2();
+        d1.setOther(d2);
+        d2.setOther(d1);
+        d1!launch(mem1);
+        d2!launch(mem2);
+    }
+
+    Unit setupDevice1(){
+	 	  this.mem1 = null; //new Memory(); //with MaximalProduct;
+    }
+
+    Unit setupDevice2(){
+	 	 this.mem1 = null; //new Memory();
+    }
+}
+
+
+features FPSO1, FPSO2, FTSO1, FTSO2, FIBM1, FIBM2, FMax1, FMax2 with FMax1 || !FMax1;
+
+delta Max1;
+modifies class DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new Memory() with MaximalProduct; }          
+}
+delta Max2;
+modifies class DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new Memory() with MaximalProduct; }          
+}
+delta IBM1;
+modifies class DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new Memory() with IBM370; }          
+}
+delta IBM2;
+modifies class DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new Memory() with IBM370; }          
+}
+delta TSO1;
+modifies class DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new Memory() with TSO; }          
+}
+delta TSO2;
+modifies class DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new Memory() with TSO; }          
+}
+delta PSO1;
+modifies class DevicePair {
+    modifies Unit setupDevice1(){ this.mem1 = new Memory() with PSO; }          
+}
+delta PSO2;
+modifies class DevicePair {
+    modifies Unit setupDevice2(){ this.mem2 = new Memory() with PSO; }          
+}
+
+delta IBM1 when FIBM1;
+delta IBM2 when FIBM2;
+delta TSO1 when FTSO1;
+delta TSO2 when FTSO2;
+delta PSO1 when FPSO1;
+delta PSO2 when FPSO2;
+delta Max1 when FMax1;
+delta Max2 when FMax2;
+
+module Main;
+import * from Devices;
+import * from Mem;
+import * from Communication;
+
+class Application{ 
+	Unit run(){
+
+
+MemoryI m0 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteWriteFeature,WriteReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m1 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteWriteFeature,WriteReadFeature,ReadEarlyFeature};
+MemoryI m2 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteWriteFeature,WriteReadFeature,DemoFeature};
+MemoryI m3 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteWriteFeature,WriteReadFeature};
+MemoryI m4 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteWriteFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m5 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteWriteFeature,ReadEarlyFeature};
+MemoryI m6 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteWriteFeature,DemoFeature};
+MemoryI m7 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteWriteFeature};
+MemoryI m8 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m9 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteReadFeature,ReadEarlyFeature};
+MemoryI m10 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteReadFeature,DemoFeature};
+MemoryI m11 = new Memory() with {ReadReadFeature,ReadWriteFeature,WriteReadFeature};
+MemoryI m12 = new Memory() with {ReadReadFeature,ReadWriteFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m13 = new Memory() with {ReadReadFeature,ReadWriteFeature,ReadEarlyFeature};
+MemoryI m14 = new Memory() with {ReadReadFeature,ReadWriteFeature,DemoFeature};
+MemoryI m15 = new Memory() with {ReadReadFeature,ReadWriteFeature};
+MemoryI m16 = new Memory() with {ReadReadFeature,WriteWriteFeature,WriteReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m17 = new Memory() with {ReadReadFeature,WriteWriteFeature,WriteReadFeature,ReadEarlyFeature};
+MemoryI m18 = new Memory() with {ReadReadFeature,WriteWriteFeature,WriteReadFeature,DemoFeature};
+MemoryI m19 = new Memory() with {ReadReadFeature,WriteWriteFeature,WriteReadFeature};
+MemoryI m20 = new Memory() with {ReadReadFeature,WriteWriteFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m21 = new Memory() with {ReadReadFeature,WriteWriteFeature,ReadEarlyFeature};
+MemoryI m22 = new Memory() with {ReadReadFeature,WriteWriteFeature,DemoFeature};
+MemoryI m23 = new Memory() with {ReadReadFeature,WriteWriteFeature};
+MemoryI m24 = new Memory() with {ReadReadFeature,WriteReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m25 = new Memory() with {ReadReadFeature,WriteReadFeature,ReadEarlyFeature};
+MemoryI m26 = new Memory() with {ReadReadFeature,WriteReadFeature,DemoFeature};
+MemoryI m27 = new Memory() with {ReadReadFeature,WriteReadFeature};
+MemoryI m28 = new Memory() with {ReadReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m29 = new Memory() with {ReadReadFeature,ReadEarlyFeature};
+MemoryI m30 = new Memory() with {ReadReadFeature,DemoFeature};
+MemoryI m31 = new Memory() with {ReadReadFeature};
+MemoryI m32 = new Memory() with {ReadWriteFeature,WriteWriteFeature,WriteReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m33 = new Memory() with {ReadWriteFeature,WriteWriteFeature,WriteReadFeature,ReadEarlyFeature};
+MemoryI m34 = new Memory() with {ReadWriteFeature,WriteWriteFeature,WriteReadFeature,DemoFeature};
+MemoryI m35 = new Memory() with {ReadWriteFeature,WriteWriteFeature,WriteReadFeature};
+MemoryI m36 = new Memory() with {ReadWriteFeature,WriteWriteFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m37 = new Memory() with {ReadWriteFeature,WriteWriteFeature,ReadEarlyFeature};
+MemoryI m38 = new Memory() with {ReadWriteFeature,WriteWriteFeature,DemoFeature};
+MemoryI m39 = new Memory() with {ReadWriteFeature,WriteWriteFeature};
+MemoryI m40 = new Memory() with {ReadWriteFeature,WriteReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m41 = new Memory() with {ReadWriteFeature,WriteReadFeature,ReadEarlyFeature};
+MemoryI m42 = new Memory() with {ReadWriteFeature,WriteReadFeature,DemoFeature};
+MemoryI m43 = new Memory() with {ReadWriteFeature,WriteReadFeature};
+MemoryI m44 = new Memory() with {ReadWriteFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m45 = new Memory() with {ReadWriteFeature,ReadEarlyFeature};
+MemoryI m46 = new Memory() with {ReadWriteFeature,DemoFeature};
+MemoryI m47 = new Memory() with {ReadWriteFeature};
+MemoryI m48 = new Memory() with {WriteWriteFeature,WriteReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m49 = new Memory() with {WriteWriteFeature,WriteReadFeature,ReadEarlyFeature};
+MemoryI m50 = new Memory() with {WriteWriteFeature,WriteReadFeature,DemoFeature};
+MemoryI m51 = new Memory() with {WriteWriteFeature,WriteReadFeature};
+MemoryI m52 = new Memory() with {WriteWriteFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m53 = new Memory() with {WriteWriteFeature,ReadEarlyFeature};
+MemoryI m54 = new Memory() with {WriteWriteFeature,DemoFeature};
+MemoryI m55 = new Memory() with {WriteWriteFeature};
+MemoryI m56 = new Memory() with {WriteReadFeature,ReadEarlyFeature,DemoFeature};
+MemoryI m57 = new Memory() with {WriteReadFeature,ReadEarlyFeature};
+MemoryI m58 = new Memory() with {WriteReadFeature,DemoFeature};
+MemoryI m59 = new Memory() with {WriteReadFeature};
+MemoryI m60 = new Memory() with {ReadEarlyFeature,DemoFeature};
+MemoryI m61 = new Memory() with {ReadEarlyFeature};
+MemoryI m62 = new Memory() with {DemoFeature};
+
+DevicePairI p0 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p1 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p2 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p3 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM1,FIBM2};
+DevicePairI p4 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM1,FMax1,FMax2};
+DevicePairI p5 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM1,FMax1};
+DevicePairI p6 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM1,FMax2};
+DevicePairI p7 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM1};
+DevicePairI p8 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM2,FMax1,FMax2};
+DevicePairI p9 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM2,FMax1};
+DevicePairI p10 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM2,FMax2};
+DevicePairI p11 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FIBM2};
+DevicePairI p12 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FMax1,FMax2};
+DevicePairI p13 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FMax1};
+DevicePairI p14 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2,FMax2};
+DevicePairI p15 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FTSO2};
+DevicePairI p16 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p17 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM1,FIBM2,FMax1};
+DevicePairI p18 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM1,FIBM2,FMax2};
+DevicePairI p19 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM1,FIBM2};
+DevicePairI p20 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM1,FMax1,FMax2};
+DevicePairI p21 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM1,FMax1};
+DevicePairI p22 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM1,FMax2};
+DevicePairI p23 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM1};
+DevicePairI p24 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM2,FMax1,FMax2};
+DevicePairI p25 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM2,FMax1};
+DevicePairI p26 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM2,FMax2};
+DevicePairI p27 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FIBM2};
+DevicePairI p28 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FMax1,FMax2};
+DevicePairI p29 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FMax1};
+DevicePairI p30 = new DevicePair() with {FPSO1,FPSO2,FTSO1,FMax2};
+DevicePairI p31 = new DevicePair() with {FPSO1,FPSO2,FTSO1};
+DevicePairI p32 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p33 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p34 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p35 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM1,FIBM2};
+DevicePairI p36 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM1,FMax1,FMax2};
+DevicePairI p37 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM1,FMax1};
+DevicePairI p38 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM1,FMax2};
+DevicePairI p39 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM1};
+DevicePairI p40 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM2,FMax1,FMax2};
+DevicePairI p41 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM2,FMax1};
+DevicePairI p42 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM2,FMax2};
+DevicePairI p43 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FIBM2};
+DevicePairI p44 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FMax1,FMax2};
+DevicePairI p45 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FMax1};
+DevicePairI p46 = new DevicePair() with {FPSO1,FPSO2,FTSO2,FMax2};
+DevicePairI p47 = new DevicePair() with {FPSO1,FPSO2,FTSO2};
+DevicePairI p48 = new DevicePair() with {FPSO1,FPSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p49 = new DevicePair() with {FPSO1,FPSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p50 = new DevicePair() with {FPSO1,FPSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p51 = new DevicePair() with {FPSO1,FPSO2,FIBM1,FIBM2};
+DevicePairI p52 = new DevicePair() with {FPSO1,FPSO2,FIBM1,FMax1,FMax2};
+DevicePairI p53 = new DevicePair() with {FPSO1,FPSO2,FIBM1,FMax1};
+DevicePairI p54 = new DevicePair() with {FPSO1,FPSO2,FIBM1,FMax2};
+DevicePairI p55 = new DevicePair() with {FPSO1,FPSO2,FIBM1};
+DevicePairI p56 = new DevicePair() with {FPSO1,FPSO2,FIBM2,FMax1,FMax2};
+DevicePairI p57 = new DevicePair() with {FPSO1,FPSO2,FIBM2,FMax1};
+DevicePairI p58 = new DevicePair() with {FPSO1,FPSO2,FIBM2,FMax2};
+DevicePairI p59 = new DevicePair() with {FPSO1,FPSO2,FIBM2};
+DevicePairI p60 = new DevicePair() with {FPSO1,FPSO2,FMax1,FMax2};
+DevicePairI p61 = new DevicePair() with {FPSO1,FPSO2,FMax1};
+DevicePairI p62 = new DevicePair() with {FPSO1,FPSO2,FMax2};
+DevicePairI p63 = new DevicePair() with {FPSO1,FPSO2};
+DevicePairI p64 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p65 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p66 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p67 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM1,FIBM2};
+DevicePairI p68 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM1,FMax1,FMax2};
+DevicePairI p69 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM1,FMax1};
+DevicePairI p70 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM1,FMax2};
+DevicePairI p71 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM1};
+DevicePairI p72 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM2,FMax1,FMax2};
+DevicePairI p73 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM2,FMax1};
+DevicePairI p74 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM2,FMax2};
+DevicePairI p75 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FIBM2};
+DevicePairI p76 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FMax1,FMax2};
+DevicePairI p77 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FMax1};
+DevicePairI p78 = new DevicePair() with {FPSO1,FTSO1,FTSO2,FMax2};
+DevicePairI p79 = new DevicePair() with {FPSO1,FTSO1,FTSO2};
+DevicePairI p80 = new DevicePair() with {FPSO1,FTSO1,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p81 = new DevicePair() with {FPSO1,FTSO1,FIBM1,FIBM2,FMax1};
+DevicePairI p82 = new DevicePair() with {FPSO1,FTSO1,FIBM1,FIBM2,FMax2};
+DevicePairI p83 = new DevicePair() with {FPSO1,FTSO1,FIBM1,FIBM2};
+DevicePairI p84 = new DevicePair() with {FPSO1,FTSO1,FIBM1,FMax1,FMax2};
+DevicePairI p85 = new DevicePair() with {FPSO1,FTSO1,FIBM1,FMax1};
+DevicePairI p86 = new DevicePair() with {FPSO1,FTSO1,FIBM1,FMax2};
+DevicePairI p87 = new DevicePair() with {FPSO1,FTSO1,FIBM1};
+DevicePairI p88 = new DevicePair() with {FPSO1,FTSO1,FIBM2,FMax1,FMax2};
+DevicePairI p89 = new DevicePair() with {FPSO1,FTSO1,FIBM2,FMax1};
+DevicePairI p90 = new DevicePair() with {FPSO1,FTSO1,FIBM2,FMax2};
+DevicePairI p91 = new DevicePair() with {FPSO1,FTSO1,FIBM2};
+DevicePairI p92 = new DevicePair() with {FPSO1,FTSO1,FMax1,FMax2};
+DevicePairI p93 = new DevicePair() with {FPSO1,FTSO1,FMax1};
+DevicePairI p94 = new DevicePair() with {FPSO1,FTSO1,FMax2};
+DevicePairI p95 = new DevicePair() with {FPSO1,FTSO1};
+DevicePairI p96 = new DevicePair() with {FPSO1,FTSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p97 = new DevicePair() with {FPSO1,FTSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p98 = new DevicePair() with {FPSO1,FTSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p99 = new DevicePair() with {FPSO1,FTSO2,FIBM1,FIBM2};
+DevicePairI p100 = new DevicePair() with {FPSO1,FTSO2,FIBM1,FMax1,FMax2};
+DevicePairI p101 = new DevicePair() with {FPSO1,FTSO2,FIBM1,FMax1};
+DevicePairI p102 = new DevicePair() with {FPSO1,FTSO2,FIBM1,FMax2};
+DevicePairI p103 = new DevicePair() with {FPSO1,FTSO2,FIBM1};
+DevicePairI p104 = new DevicePair() with {FPSO1,FTSO2,FIBM2,FMax1,FMax2};
+DevicePairI p105 = new DevicePair() with {FPSO1,FTSO2,FIBM2,FMax1};
+DevicePairI p106 = new DevicePair() with {FPSO1,FTSO2,FIBM2,FMax2};
+DevicePairI p107 = new DevicePair() with {FPSO1,FTSO2,FIBM2};
+DevicePairI p108 = new DevicePair() with {FPSO1,FTSO2,FMax1,FMax2};
+DevicePairI p109 = new DevicePair() with {FPSO1,FTSO2,FMax1};
+DevicePairI p110 = new DevicePair() with {FPSO1,FTSO2,FMax2};
+DevicePairI p111 = new DevicePair() with {FPSO1,FTSO2};
+DevicePairI p112 = new DevicePair() with {FPSO1,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p113 = new DevicePair() with {FPSO1,FIBM1,FIBM2,FMax1};
+DevicePairI p114 = new DevicePair() with {FPSO1,FIBM1,FIBM2,FMax2};
+DevicePairI p115 = new DevicePair() with {FPSO1,FIBM1,FIBM2};
+DevicePairI p116 = new DevicePair() with {FPSO1,FIBM1,FMax1,FMax2};
+DevicePairI p117 = new DevicePair() with {FPSO1,FIBM1,FMax1};
+DevicePairI p118 = new DevicePair() with {FPSO1,FIBM1,FMax2};
+DevicePairI p119 = new DevicePair() with {FPSO1,FIBM1};
+DevicePairI p120 = new DevicePair() with {FPSO1,FIBM2,FMax1,FMax2};
+DevicePairI p121 = new DevicePair() with {FPSO1,FIBM2,FMax1};
+DevicePairI p122 = new DevicePair() with {FPSO1,FIBM2,FMax2};
+DevicePairI p123 = new DevicePair() with {FPSO1,FIBM2};
+DevicePairI p124 = new DevicePair() with {FPSO1,FMax1,FMax2};
+DevicePairI p125 = new DevicePair() with {FPSO1,FMax1};
+DevicePairI p126 = new DevicePair() with {FPSO1,FMax2};
+DevicePairI p127 = new DevicePair() with {FPSO1};
+DevicePairI p128 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p129 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p130 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p131 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM1,FIBM2};
+DevicePairI p132 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM1,FMax1,FMax2};
+DevicePairI p133 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM1,FMax1};
+DevicePairI p134 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM1,FMax2};
+DevicePairI p135 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM1};
+DevicePairI p136 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM2,FMax1,FMax2};
+DevicePairI p137 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM2,FMax1};
+DevicePairI p138 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM2,FMax2};
+DevicePairI p139 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FIBM2};
+DevicePairI p140 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FMax1,FMax2};
+DevicePairI p141 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FMax1};
+DevicePairI p142 = new DevicePair() with {FPSO2,FTSO1,FTSO2,FMax2};
+DevicePairI p143 = new DevicePair() with {FPSO2,FTSO1,FTSO2};
+DevicePairI p144 = new DevicePair() with {FPSO2,FTSO1,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p145 = new DevicePair() with {FPSO2,FTSO1,FIBM1,FIBM2,FMax1};
+DevicePairI p146 = new DevicePair() with {FPSO2,FTSO1,FIBM1,FIBM2,FMax2};
+DevicePairI p147 = new DevicePair() with {FPSO2,FTSO1,FIBM1,FIBM2};
+DevicePairI p148 = new DevicePair() with {FPSO2,FTSO1,FIBM1,FMax1,FMax2};
+DevicePairI p149 = new DevicePair() with {FPSO2,FTSO1,FIBM1,FMax1};
+DevicePairI p150 = new DevicePair() with {FPSO2,FTSO1,FIBM1,FMax2};
+DevicePairI p151 = new DevicePair() with {FPSO2,FTSO1,FIBM1};
+DevicePairI p152 = new DevicePair() with {FPSO2,FTSO1,FIBM2,FMax1,FMax2};
+DevicePairI p153 = new DevicePair() with {FPSO2,FTSO1,FIBM2,FMax1};
+DevicePairI p154 = new DevicePair() with {FPSO2,FTSO1,FIBM2,FMax2};
+DevicePairI p155 = new DevicePair() with {FPSO2,FTSO1,FIBM2};
+DevicePairI p156 = new DevicePair() with {FPSO2,FTSO1,FMax1,FMax2};
+DevicePairI p157 = new DevicePair() with {FPSO2,FTSO1,FMax1};
+DevicePairI p158 = new DevicePair() with {FPSO2,FTSO1,FMax2};
+DevicePairI p159 = new DevicePair() with {FPSO2,FTSO1};
+DevicePairI p160 = new DevicePair() with {FPSO2,FTSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p161 = new DevicePair() with {FPSO2,FTSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p162 = new DevicePair() with {FPSO2,FTSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p163 = new DevicePair() with {FPSO2,FTSO2,FIBM1,FIBM2};
+DevicePairI p164 = new DevicePair() with {FPSO2,FTSO2,FIBM1,FMax1,FMax2};
+DevicePairI p165 = new DevicePair() with {FPSO2,FTSO2,FIBM1,FMax1};
+DevicePairI p166 = new DevicePair() with {FPSO2,FTSO2,FIBM1,FMax2};
+DevicePairI p167 = new DevicePair() with {FPSO2,FTSO2,FIBM1};
+DevicePairI p168 = new DevicePair() with {FPSO2,FTSO2,FIBM2,FMax1,FMax2};
+DevicePairI p169 = new DevicePair() with {FPSO2,FTSO2,FIBM2,FMax1};
+DevicePairI p170 = new DevicePair() with {FPSO2,FTSO2,FIBM2,FMax2};
+DevicePairI p171 = new DevicePair() with {FPSO2,FTSO2,FIBM2};
+DevicePairI p172 = new DevicePair() with {FPSO2,FTSO2,FMax1,FMax2};
+DevicePairI p173 = new DevicePair() with {FPSO2,FTSO2,FMax1};
+DevicePairI p174 = new DevicePair() with {FPSO2,FTSO2,FMax2};
+DevicePairI p175 = new DevicePair() with {FPSO2,FTSO2};
+DevicePairI p176 = new DevicePair() with {FPSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p177 = new DevicePair() with {FPSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p178 = new DevicePair() with {FPSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p179 = new DevicePair() with {FPSO2,FIBM1,FIBM2};
+DevicePairI p180 = new DevicePair() with {FPSO2,FIBM1,FMax1,FMax2};
+DevicePairI p181 = new DevicePair() with {FPSO2,FIBM1,FMax1};
+DevicePairI p182 = new DevicePair() with {FPSO2,FIBM1,FMax2};
+DevicePairI p183 = new DevicePair() with {FPSO2,FIBM1};
+DevicePairI p184 = new DevicePair() with {FPSO2,FIBM2,FMax1,FMax2};
+DevicePairI p185 = new DevicePair() with {FPSO2,FIBM2,FMax1};
+DevicePairI p186 = new DevicePair() with {FPSO2,FIBM2,FMax2};
+DevicePairI p187 = new DevicePair() with {FPSO2,FIBM2};
+DevicePairI p188 = new DevicePair() with {FPSO2,FMax1,FMax2};
+DevicePairI p189 = new DevicePair() with {FPSO2,FMax1};
+DevicePairI p190 = new DevicePair() with {FPSO2,FMax2};
+DevicePairI p191 = new DevicePair() with {FPSO2};
+DevicePairI p192 = new DevicePair() with {FTSO1,FTSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p193 = new DevicePair() with {FTSO1,FTSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p194 = new DevicePair() with {FTSO1,FTSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p195 = new DevicePair() with {FTSO1,FTSO2,FIBM1,FIBM2};
+DevicePairI p196 = new DevicePair() with {FTSO1,FTSO2,FIBM1,FMax1,FMax2};
+DevicePairI p197 = new DevicePair() with {FTSO1,FTSO2,FIBM1,FMax1};
+DevicePairI p198 = new DevicePair() with {FTSO1,FTSO2,FIBM1,FMax2};
+DevicePairI p199 = new DevicePair() with {FTSO1,FTSO2,FIBM1};
+DevicePairI p200 = new DevicePair() with {FTSO1,FTSO2,FIBM2,FMax1,FMax2};
+DevicePairI p201 = new DevicePair() with {FTSO1,FTSO2,FIBM2,FMax1};
+DevicePairI p202 = new DevicePair() with {FTSO1,FTSO2,FIBM2,FMax2};
+DevicePairI p203 = new DevicePair() with {FTSO1,FTSO2,FIBM2};
+DevicePairI p204 = new DevicePair() with {FTSO1,FTSO2,FMax1,FMax2};
+DevicePairI p205 = new DevicePair() with {FTSO1,FTSO2,FMax1};
+DevicePairI p206 = new DevicePair() with {FTSO1,FTSO2,FMax2};
+DevicePairI p207 = new DevicePair() with {FTSO1,FTSO2};
+DevicePairI p208 = new DevicePair() with {FTSO1,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p209 = new DevicePair() with {FTSO1,FIBM1,FIBM2,FMax1};
+DevicePairI p210 = new DevicePair() with {FTSO1,FIBM1,FIBM2,FMax2};
+DevicePairI p211 = new DevicePair() with {FTSO1,FIBM1,FIBM2};
+DevicePairI p212 = new DevicePair() with {FTSO1,FIBM1,FMax1,FMax2};
+DevicePairI p213 = new DevicePair() with {FTSO1,FIBM1,FMax1};
+DevicePairI p214 = new DevicePair() with {FTSO1,FIBM1,FMax2};
+DevicePairI p215 = new DevicePair() with {FTSO1,FIBM1};
+DevicePairI p216 = new DevicePair() with {FTSO1,FIBM2,FMax1,FMax2};
+DevicePairI p217 = new DevicePair() with {FTSO1,FIBM2,FMax1};
+DevicePairI p218 = new DevicePair() with {FTSO1,FIBM2,FMax2};
+DevicePairI p219 = new DevicePair() with {FTSO1,FIBM2};
+DevicePairI p220 = new DevicePair() with {FTSO1,FMax1,FMax2};
+DevicePairI p221 = new DevicePair() with {FTSO1,FMax1};
+DevicePairI p222 = new DevicePair() with {FTSO1,FMax2};
+DevicePairI p223 = new DevicePair() with {FTSO1};
+DevicePairI p224 = new DevicePair() with {FTSO2,FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p225 = new DevicePair() with {FTSO2,FIBM1,FIBM2,FMax1};
+DevicePairI p226 = new DevicePair() with {FTSO2,FIBM1,FIBM2,FMax2};
+DevicePairI p227 = new DevicePair() with {FTSO2,FIBM1,FIBM2};
+DevicePairI p228 = new DevicePair() with {FTSO2,FIBM1,FMax1,FMax2};
+DevicePairI p229 = new DevicePair() with {FTSO2,FIBM1,FMax1};
+DevicePairI p230 = new DevicePair() with {FTSO2,FIBM1,FMax2};
+DevicePairI p231 = new DevicePair() with {FTSO2,FIBM1};
+DevicePairI p232 = new DevicePair() with {FTSO2,FIBM2,FMax1,FMax2};
+DevicePairI p233 = new DevicePair() with {FTSO2,FIBM2,FMax1};
+DevicePairI p234 = new DevicePair() with {FTSO2,FIBM2,FMax2};
+DevicePairI p235 = new DevicePair() with {FTSO2,FIBM2};
+DevicePairI p236 = new DevicePair() with {FTSO2,FMax1,FMax2};
+DevicePairI p237 = new DevicePair() with {FTSO2,FMax1};
+DevicePairI p238 = new DevicePair() with {FTSO2,FMax2};
+DevicePairI p239 = new DevicePair() with {FTSO2};
+DevicePairI p240 = new DevicePair() with {FIBM1,FIBM2,FMax1,FMax2};
+DevicePairI p241 = new DevicePair() with {FIBM1,FIBM2,FMax1};
+DevicePairI p242 = new DevicePair() with {FIBM1,FIBM2,FMax2};
+DevicePairI p243 = new DevicePair() with {FIBM1,FIBM2};
+DevicePairI p244 = new DevicePair() with {FIBM1,FMax1,FMax2};
+DevicePairI p245 = new DevicePair() with {FIBM1,FMax1};
+DevicePairI p246 = new DevicePair() with {FIBM1,FMax2};
+DevicePairI p247 = new DevicePair() with {FIBM1};
+DevicePairI p248 = new DevicePair() with {FIBM2,FMax1,FMax2};
+DevicePairI p249 = new DevicePair() with {FIBM2,FMax1};
+DevicePairI p250 = new DevicePair() with {FIBM2,FMax2};
+DevicePairI p251 = new DevicePair() with {FIBM2};
+DevicePairI p252 = new DevicePair() with {FMax1,FMax2};
+DevicePairI p253 = new DevicePair() with {FMax1};
+DevicePairI p254 = new DevicePair() with {FMax2};
+	}
+}
+
+{
+   new Application();
+}

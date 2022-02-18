@@ -12,6 +12,9 @@ To compile and test follow the instructions below, to see the flattened code run
 The insurance case study (/examples/VM/Portal.abs) also needs a global product, passed with the parameter `-product=<productname>`.
 The FormbaR study (/examples/VM/formbar) contains both the version with and without variable modules. The given code is a compilable except of the relevant parts from the whole FormbaR code.
 
+To rerun the experiments, build the compiler via `make` and follow the instructions in `examples/readme.txt`.
+
+
 General Information
 -------------------
 

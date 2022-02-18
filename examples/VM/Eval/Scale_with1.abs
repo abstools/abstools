@@ -1,0 +1,15 @@
+module M;
+export *;
+interface A {}
+features F1 with true;
+delta D1;
+modifies interface A{
+    adds Unit m1();
+}
+
+delta D1 when F1;
+module Main;
+import * from M;
+{
+	A with {F1} a0 = null;
+}

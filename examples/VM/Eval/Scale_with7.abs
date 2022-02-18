@@ -1,0 +1,171 @@
+module M;
+export *;
+interface A {}
+features F1,F2,F3,F4,F5,F6,F7 with true;
+delta D1;
+modifies interface A{
+    adds Unit m1();
+}
+delta D2;
+modifies interface A{
+    adds Unit m2();
+}
+delta D3;
+modifies interface A{
+    adds Unit m3();
+}
+delta D4;
+modifies interface A{
+    adds Unit m4();
+}
+delta D5;
+modifies interface A{
+    adds Unit m5();
+}
+delta D6;
+modifies interface A{
+    adds Unit m6();
+}
+delta D7;
+modifies interface A{
+    adds Unit m7();
+}
+
+delta D1 when F1;
+delta D2 when F2;
+delta D3 when F3;
+delta D4 when F4;
+delta D5 when F5;
+delta D6 when F6;
+delta D7 when F7;
+module Main;
+import * from M;
+{
+	A with {F1, F2, F3, F4, F5, F6, F7} a0 = null;
+	A with {F1, F2, F3, F4, F5, F6} a1 = null;
+	A with {F1, F2, F3, F4, F5, F7} a2 = null;
+	A with {F1, F2, F3, F4, F5} a3 = null;
+	A with {F1, F2, F3, F4, F6, F7} a4 = null;
+	A with {F1, F2, F3, F4, F6} a5 = null;
+	A with {F1, F2, F3, F4, F7} a6 = null;
+	A with {F1, F2, F3, F4} a7 = null;
+	A with {F1, F2, F3, F5, F6, F7} a8 = null;
+	A with {F1, F2, F3, F5, F6} a9 = null;
+	A with {F1, F2, F3, F5, F7} a10 = null;
+	A with {F1, F2, F3, F5} a11 = null;
+	A with {F1, F2, F3, F6, F7} a12 = null;
+	A with {F1, F2, F3, F6} a13 = null;
+	A with {F1, F2, F3, F7} a14 = null;
+	A with {F1, F2, F3} a15 = null;
+	A with {F1, F2, F4, F5, F6, F7} a16 = null;
+	A with {F1, F2, F4, F5, F6} a17 = null;
+	A with {F1, F2, F4, F5, F7} a18 = null;
+	A with {F1, F2, F4, F5} a19 = null;
+	A with {F1, F2, F4, F6, F7} a20 = null;
+	A with {F1, F2, F4, F6} a21 = null;
+	A with {F1, F2, F4, F7} a22 = null;
+	A with {F1, F2, F4} a23 = null;
+	A with {F1, F2, F5, F6, F7} a24 = null;
+	A with {F1, F2, F5, F6} a25 = null;
+	A with {F1, F2, F5, F7} a26 = null;
+	A with {F1, F2, F5} a27 = null;
+	A with {F1, F2, F6, F7} a28 = null;
+	A with {F1, F2, F6} a29 = null;
+	A with {F1, F2, F7} a30 = null;
+	A with {F1, F2} a31 = null;
+	A with {F1, F3, F4, F5, F6, F7} a32 = null;
+	A with {F1, F3, F4, F5, F6} a33 = null;
+	A with {F1, F3, F4, F5, F7} a34 = null;
+	A with {F1, F3, F4, F5} a35 = null;
+	A with {F1, F3, F4, F6, F7} a36 = null;
+	A with {F1, F3, F4, F6} a37 = null;
+	A with {F1, F3, F4, F7} a38 = null;
+	A with {F1, F3, F4} a39 = null;
+	A with {F1, F3, F5, F6, F7} a40 = null;
+	A with {F1, F3, F5, F6} a41 = null;
+	A with {F1, F3, F5, F7} a42 = null;
+	A with {F1, F3, F5} a43 = null;
+	A with {F1, F3, F6, F7} a44 = null;
+	A with {F1, F3, F6} a45 = null;
+	A with {F1, F3, F7} a46 = null;
+	A with {F1, F3} a47 = null;
+	A with {F1, F4, F5, F6, F7} a48 = null;
+	A with {F1, F4, F5, F6} a49 = null;
+	A with {F1, F4, F5, F7} a50 = null;
+	A with {F1, F4, F5} a51 = null;
+	A with {F1, F4, F6, F7} a52 = null;
+	A with {F1, F4, F6} a53 = null;
+	A with {F1, F4, F7} a54 = null;
+	A with {F1, F4} a55 = null;
+	A with {F1, F5, F6, F7} a56 = null;
+	A with {F1, F5, F6} a57 = null;
+	A with {F1, F5, F7} a58 = null;
+	A with {F1, F5} a59 = null;
+	A with {F1, F6, F7} a60 = null;
+	A with {F1, F6} a61 = null;
+	A with {F1, F7} a62 = null;
+	A with {F1} a63 = null;
+	A with {F2, F3, F4, F5, F6, F7} a64 = null;
+	A with {F2, F3, F4, F5, F6} a65 = null;
+	A with {F2, F3, F4, F5, F7} a66 = null;
+	A with {F2, F3, F4, F5} a67 = null;
+	A with {F2, F3, F4, F6, F7} a68 = null;
+	A with {F2, F3, F4, F6} a69 = null;
+	A with {F2, F3, F4, F7} a70 = null;
+	A with {F2, F3, F4} a71 = null;
+	A with {F2, F3, F5, F6, F7} a72 = null;
+	A with {F2, F3, F5, F6} a73 = null;
+	A with {F2, F3, F5, F7} a74 = null;
+	A with {F2, F3, F5} a75 = null;
+	A with {F2, F3, F6, F7} a76 = null;
+	A with {F2, F3, F6} a77 = null;
+	A with {F2, F3, F7} a78 = null;
+	A with {F2, F3} a79 = null;
+	A with {F2, F4, F5, F6, F7} a80 = null;
+	A with {F2, F4, F5, F6} a81 = null;
+	A with {F2, F4, F5, F7} a82 = null;
+	A with {F2, F4, F5} a83 = null;
+	A with {F2, F4, F6, F7} a84 = null;
+	A with {F2, F4, F6} a85 = null;
+	A with {F2, F4, F7} a86 = null;
+	A with {F2, F4} a87 = null;
+	A with {F2, F5, F6, F7} a88 = null;
+	A with {F2, F5, F6} a89 = null;
+	A with {F2, F5, F7} a90 = null;
+	A with {F2, F5} a91 = null;
+	A with {F2, F6, F7} a92 = null;
+	A with {F2, F6} a93 = null;
+	A with {F2, F7} a94 = null;
+	A with {F2} a95 = null;
+	A with {F3, F4, F5, F6, F7} a96 = null;
+	A with {F3, F4, F5, F6} a97 = null;
+	A with {F3, F4, F5, F7} a98 = null;
+	A with {F3, F4, F5} a99 = null;
+	A with {F3, F4, F6, F7} a100 = null;
+	A with {F3, F4, F6} a101 = null;
+	A with {F3, F4, F7} a102 = null;
+	A with {F3, F4} a103 = null;
+	A with {F3, F5, F6, F7} a104 = null;
+	A with {F3, F5, F6} a105 = null;
+	A with {F3, F5, F7} a106 = null;
+	A with {F3, F5} a107 = null;
+	A with {F3, F6, F7} a108 = null;
+	A with {F3, F6} a109 = null;
+	A with {F3, F7} a110 = null;
+	A with {F3} a111 = null;
+	A with {F4, F5, F6, F7} a112 = null;
+	A with {F4, F5, F6} a113 = null;
+	A with {F4, F5, F7} a114 = null;
+	A with {F4, F5} a115 = null;
+	A with {F4, F6, F7} a116 = null;
+	A with {F4, F6} a117 = null;
+	A with {F4, F7} a118 = null;
+	A with {F4} a119 = null;
+	A with {F5, F6, F7} a120 = null;
+	A with {F5, F6} a121 = null;
+	A with {F5, F7} a122 = null;
+	A with {F5} a123 = null;
+	A with {F6, F7} a124 = null;
+	A with {F6} a125 = null;
+	A with {F7} a126 = null;
+}
