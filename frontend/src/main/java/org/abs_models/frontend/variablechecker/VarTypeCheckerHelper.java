@@ -24,7 +24,7 @@ public class VarTypeCheckerHelper {
 
 
 
-    public static void typeCheck(ConstructorPattern p, SemanticConditionList e, Type t) {
+    public static void typeCheck(ConstructorPattern p, SemanticConditionList e, Type t, boolean sat) {
         DataConstructor c = p.getDataConstructor();
         if (c == null) {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));

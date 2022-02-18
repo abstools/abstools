@@ -1,3 +1,4 @@
+//Applicability check fails because observable is handled twice and the system so far ignores the order of the deltas
 module Wrapper;
 
 export *;
@@ -36,7 +37,7 @@ unique interface TrackElementI{
   SignalState getState();                       						   			//OK
   String getName();                             						   			//OK
   Information getInfoState();													//OK
-  Unit setState(SignalState state, Time t);
+  Unit setState(SignalState newState, Time t);
 }
 
 interface Specific extends TrackElementI { // this is needed because in some situations we actually need additional exposed methods
@@ -45,6 +46,7 @@ interface Specific extends TrackElementI { // this is needed because in some sit
 
 class TrackElement(Node n, Edge waitTrack, String sigName, String name) implements Specific {
   SignalState state = STOP;
+  Observable s = null;
  {
     logOut("TOWARDS;"+toString(this)+";"+toString(waitTrack));
  }
@@ -79,7 +81,6 @@ modifies interface Specific{
   adds Observable getObservable();												
 }
 modifies class TrackElement {
-  adds Observable s = null;
   adds [Atomic] Unit setObservable(Observable ob){ this.setSignal(ob); }
   adds Observable getObservable(){ return this.s; }
   adds [Atomic] Unit setSignal(Observable sig){
@@ -104,14 +105,13 @@ modifies class TrackElement {
 delta PoV;
 modifies class TrackElement {
   adds SignalState state = STOP;
-  adds Observable s = null;
   modifies Unit register(Train train){
         if(s != null) this.s.setObserver(train);    
   }
   modifies Unit deregister(Train t){
         if(s != null) this.s.setObserver(null);    
   }
-  modifies  List<Transmission> triggerFront(Train train, Time t, Edge e){
+  modifies List<Transmission> triggerFront(Train train, Time t, Edge e){
     Information ret = NoInfo;
     if ( ( ( this.s != null ) && ( this.waitTrack == e ) ) ){
       this.s.setObserver(train);
@@ -121,7 +121,7 @@ modifies class TrackElement {
     //println("TRIGGERED POV");
     return list[See(ret, distance), Pass(StartObserve(s))]; 
   }
-    adds [Atomic] Unit setSignal(Observable sig){
+  adds [Atomic] Unit setSignal(Observable sig){
     this.s = sig;
   }
 }
@@ -132,7 +132,7 @@ modifies interface Specific{
 	adds Edge getWaitTrack();
 }
 modifies class TrackElement {
-  adds Transmission triggerBack(Train train, Time t, Edge e){ 
+  modifies Transmission triggerBack(Train train, Time t, Edge e){ 
     Information ret = NoInfo;
     if (( this.waitTrack == e ) ){
       ret = HsPassed(sigName);
@@ -197,10 +197,10 @@ modifies class TrackElement{
   }
 }
 
+delta Signal when FSignal;
+delta Speed when FSpeed;
+delta PoV when FPoV;
 delta VLimit when Pre && FSpeed;
 delta HLimit when Main && FSpeed;
 delta VS when Pre && FSignal;
 delta HS when Main && FSignal;
-delta PoV when FPoV;
-delta Signal when FSignal;
-delta Speed when FSpeed;

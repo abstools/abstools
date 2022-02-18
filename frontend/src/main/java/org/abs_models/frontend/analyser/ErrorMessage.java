@@ -7,6 +7,9 @@ package org.abs_models.frontend.analyser;
 public enum ErrorMessage {
     EXPORTED_UNKNOWN("Error: Variable Modules do not allow to export unknown name."),
     EXPORTED_REFERENCE("Error: Variable Modules do not allow `from` exports."),
+    EXPORTED_OPEN("Error: Variable modules do not allow to export open products."),
+
+    OTHER("Error: A sanity condition failed."),
 
     UNIQUE_REDUNDANT("Warning: Unique is not needed in non-variable modules."),
     MAIN_BLOCK_MULTI("Error: Variable modules do not allow multiple main blocks."),

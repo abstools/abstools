@@ -17,14 +17,14 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@CommandLine.Command(name = "checkvar",
+@CommandLine.Command(name = "checkvar-nosat",
     description = "Perform software product line static checking for the variability modules",
     abbreviateSynopsis = true,
     sortOptions = false,
     helpCommand = true,
     mixinStandardHelpOptions = true
 )
-public class CheckVarCommand implements Callable<Void> {
+public class NoSatCheckVarCommand implements Callable<Void> {
     @CommandLine.ParentCommand
     private Absc parent;
 
@@ -104,7 +104,7 @@ public class CheckVarCommand implements Callable<Void> {
                 continue; //ignore UMs otherwise
             }
             
-            sanityProductConfigurations(module, e, true);
+            sanityProductConfigurations(module, e);
 
             //SC5 + SC7 Exports correct
             exportCheck(module, e);
@@ -118,13 +118,6 @@ public class CheckVarCommand implements Callable<Void> {
 
         //SC1 and SC4 are part of the standard checker for imports and exports
 
-        //collect all VM references
-        //m.getInterfaceTypeUseAndExpsWithProductDecl();
-
-
-
-        // TODO: (9) Well-defined KEs // Postpone until SAT solver is added
-
 
         // Compute signatures + check type uniformity on the fly
         ModelFamilySignature signature = new ModelFamilySignature(m, e);
@@ -134,7 +127,7 @@ public class CheckVarCommand implements Callable<Void> {
         signature.checkInheritance(e);
 
         // pre typing
-        m.varTypeCheck(e, signature, true);
+        m.varTypeCheck(e, signature, false);
 
         long endPre = System.currentTimeMillis();
         long start = System.currentTimeMillis();
@@ -183,7 +176,7 @@ public class CheckVarCommand implements Callable<Void> {
         return res;
     }
 
-    private void sanityProductConfigurations(ModuleDecl module, SemanticConditionList e, boolean sat) {
+    private void sanityProductConfigurations(ModuleDecl module, SemanticConditionList e) {
         HashSet<Feature> feats = new HashSet<>();
         for(Feature f : module.getProductLine().getFeatures())
             feats.add(f);
@@ -199,8 +192,6 @@ public class CheckVarCommand implements Callable<Void> {
                 ProductExpr body = branch.getbody();
                 // 8-e-i
                 if(!body.onlyNamesFrom(module)) e.add(new SemanticError(module, ErrorMessage.OTHER,""));
-                //8-e-v
-                if(!body.isProperProduct(module)) e.add(new SemanticError(module, ErrorMessage.OTHER,""));
                 HashSet<Feature> inside = getFeats(body);
                 Stream<ModuleDecl> a = inside.stream().map(ASTNode::getModuleDecl);
                 // 8-e-others

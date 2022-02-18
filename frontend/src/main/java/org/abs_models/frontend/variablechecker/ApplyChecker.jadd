@@ -39,7 +39,9 @@ aspect ApplyChecker {
                     d.applyVarCheck(errors, signature, subCons, getName());
                     newPsi = ApplySimplifier.and(newPsi, subCons.getPsi());
                 }
-                AppCond psi = this.getProductLine().getFeatCond().treeCopyNoTransform();
+                AppCond psi = null;
+                if(this.getProductLine().getFeatCond() != null) psi = this.getProductLine().getFeatCond().treeCopyNoTransform();
+                else psi = new AppCondTrue();
                 apps.setPsi(ApplicationConstraints.imply(psi,newPsi));
                 getProductLine().applyVarCheck(errors, signature, apps, getName());
             }

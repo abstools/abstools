@@ -14,6 +14,7 @@ import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInfer
 import org.abs_models.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 
 import org.abs_models.frontend.variablechecker.CheckVarCommand;
+import org.abs_models.frontend.variablechecker.NoSatCheckVarCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -47,7 +48,8 @@ import picocli.CommandLine.RunLast;
          subcommands = {
              // HelpCommand.class, // no need; we have the standard -h / --help options
              CheckSPLCommand.class,
-             CheckVarCommand.class
+             CheckVarCommand.class,
+             NoSatCheckVarCommand.class
          },
          versionProvider = Absc.AbscVersionProvider.class
          )

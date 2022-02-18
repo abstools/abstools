@@ -16,7 +16,7 @@ class User (String n, Int age)implements IUser {
     }
 }
 interface ICompany extends IUser {
-    Int getPrice1(Int dep1);
+    Int getPrice1(Int p1);
     Int getPrice2(String s1);
     Int getPrice3(String s1, Int p1);
     Int getPrice4(Int p1, Int p2, Int p3);
@@ -316,7 +316,7 @@ unique class Management () {
     }
  }
 
-features Gas, Electricity;
+features Gas, Electricity with true;
 
 delta DGas;
 modifies class GEService {
@@ -394,7 +394,7 @@ unique class Management () {
         return True;
     }
  }
-features Internet, Phone, Tv;
+features Internet, Phone, Tv with true;
 delta DInternet;
 modifies class CMedia {
 adds Int speedField = 0;

@@ -15,7 +15,7 @@ public class ClassFamilySignature extends BottomFamilySignature{
     final private HashSet<String> directImplements;
 
     public void addField(FieldDecl field, SemanticConditionList e){
-        if(fields.containsKey(field.getName()) && !fields.get(field.getName()).equals(field.getAccessNoTransform())){
+        if(fields.containsKey(field.getName()) && !fields.get(field.getName()).matches(field.getAccessNoTransform())){
             e.add(new SemanticError(field, ErrorMessage.NOT_TYPE_UNIFORM, ""));
         }
         fields.put(field.getName(), field.getAccessNoTransform());
