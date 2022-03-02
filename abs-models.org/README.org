@@ -9,8 +9,7 @@ containers and at https://abs-models.org/.
 Newer hugo releases might emit warnings or errors for our theme.  In
 that case:
 - remove ~themes/hugo-theme-learn~
-- in ~themes/~, run ~git clone
-https://github.com/matcornic/hugo-theme-learn~
+- in ~themes/~, run =git clone https://github.com/matcornic/hugo-theme-learn=
 - remove the directory ~themes/hugo-theme-learn/.git~
 
 ** Deploying on the website
@@ -28,7 +27,7 @@ To deploy, commit and push the changes in the ~abstools.github.io~ repository.
 
 The ~static/manual/~ subdirectory is updated manually for each release of the
 basic tools.  See https://github.com/abstools/abstools/blob/master/RELEASE.md
-for instructions.
+for instructions on how to update the language manual.
 
 ** Linking to files in tutorials
 
@@ -37,8 +36,8 @@ are automatically installed in the collaboratory and can be linked from tutorial
 site.
 
 To create a link that opens such a file in the collaboratory, use the
-~eifilelink~ shortcode, which opens the specified file in the collaboratory in
-a new tab.  The ~eifilelink~ shortcode comes in two variants, with positional
+=eifilelink= shortcode, which opens the specified file in the collaboratory in
+a new tab.  The =eifilelink= shortcode comes in two variants, with positional
 and named parameters.
 
 With positional parameters, the first parameter gives the relative url of the
@@ -48,9 +47,9 @@ append it to the relative url.
 {{< eifilelink "/collaboratory/hello_world.abs&app=cost" "hello_world.abs" >}}
 #+END_SRC
 
-With named parameters, the ~path~ parameter gives the relative path.  The
-~title~ parameter gives the link text; it is set to the filename if omitted.
-The ~app~ parameter gives the app to select; it can be omitted.
+With named parameters, the =path= parameter gives the relative path.  The
+=title= parameter gives the link text; it is set to the filename if omitted.
+The =app= parameter gives the app to select; it can be omitted.
 #+BEGIN_SRC
 {{< eifilelink path="/collaboratory/hello_world.abs" app="cost" title="The hello world example" >}}
 #+END_SRC
