@@ -154,5 +154,5 @@ in a call to the `getValveAndLevelHistory` method of the water tank.  The return
 
 As mentioned, the code of this example resides at <https://github.com/abstools/absexamples/tree/master/collaboratory/examples/single-watertank/>.  Place the files `Watertank.abs`, `index.html` and `Makefile` into the same directory and run the command `make` to compile and start the model.  Then, connect a browser to the URL `http://localhost:8080/` to see the resulting graph.  The resulting plot shows the water level decreasing when the valve is open, and increasing again when the valve is closed.
 
-![Plot of water level and valve status over time](/images/examples-single-watertank.png)
+![Plot of water level and valve status over time](/images/examples/single-watertank/single-watertank.png)
 

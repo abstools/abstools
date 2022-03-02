@@ -20,7 +20,8 @@ of another core via the main memory. As a consequence, the tasks executed in
 the cores are represented as data access patterns, abstracting from their
 computational content.
 
-The complete code can be found at <https://github.com/abstools/absexamples/tree/master/collaboratory/case_studies/Multicore_Model/>
+The complete code can be found at
+<https://github.com/abstools/absexamples/tree/master/collaboratory/case_studies/Multicore_Model/>
 
 
 | ![Figure cores.png](/images/examples/multicore_memory/cores.png) |
