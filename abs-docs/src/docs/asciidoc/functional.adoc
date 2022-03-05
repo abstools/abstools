@@ -790,7 +790,7 @@ list.
 .Example
 ----
 // Simply applies a function fn to a value.
-def B apply<A, B>(fn)(A value) = fn(a);
+def B apply<A, B>(fn)(A value) = fn(value);
 
 def Int double(Int x) = x * 2;
 
