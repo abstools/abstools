@@ -529,7 +529,6 @@ aspect TypeChecker {
     public void UnknownDecl.typeCheck(SemanticConditionList e) {
     /* nothing to check */ }
 
-
     public void Block.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
         for (Stmt s : getStmts()) {
