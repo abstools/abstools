@@ -15,11 +15,11 @@ class ClientImpl implements Client {
 }
 
 {
-    Connection conn = new local ConnectionImpl();
+    Connection conn = new ConnectionImpl();
 
-    Client c1 = new local ClientImpl();
+    Client c1 = new ClientImpl();
     Client c2 = new ClientImpl();
-    c1.message(c2, "Hello");
+    c1!message(c2, "Hello");
 }
 
 

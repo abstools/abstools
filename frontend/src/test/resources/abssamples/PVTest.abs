@@ -5,7 +5,7 @@ class CC implements CI {
   Bool test() {assert False; /* You forgot to select the product! */ return False; }
 }
 
-{ CI c = new local CC(); Bool testresult = c.test(); }
+{ CI c = new CC(); Bool testresult = await c!test(); }
 
 delta Foo;
 uses BackendTest;

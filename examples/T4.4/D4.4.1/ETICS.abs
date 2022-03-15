@@ -1672,7 +1672,7 @@ implements Tally {
 		SLA(0, 0, 10, ServiceLevel(bronzeSL())),
 		SLA(1, 0, 10, ServiceLevel(silverSL())),
 	    SLA(2, 0, 10, ServiceLevel(goldSL()))];
-	Simulator simulator = new local Simulator(slas);
-	simulator.start();
+	Simulator simulator = new Simulator(slas);
+	await simulator!start();
 	
 }

@@ -67,7 +67,7 @@ class Worker(MapReduce master) implements Worker {
   Unit reduce(OutKeyType key, List<OutValueType> value) {
     // Remove duplicates in occurrence list: convert into set.
     Set<OutValueType> resultset = set(value);
-    while (!(resultset == EmptySet)) {
+    while (!emptySet(resultset)) {
       OutValueType file = take(resultset);
       resultset = remove(resultset, file);
       this.emitReduceResult(file);
@@ -133,7 +133,7 @@ class Worker(MapReduce master) implements Worker {
 // This class contains the MapReduce machinery.  Any deployment
 // decisions (number of machines, etc.) can be customized via deltas.
 class MapReduce implements MapReduce {
-  Set<Worker> workers = EmptySet;
+  Set<Worker> workers = set[];
   Int nWorkers = 0;
 
   // begin customizable section ------------------
@@ -161,9 +161,9 @@ class MapReduce implements MapReduce {
   // end customizable section---------------------
 
   List<Pair<OutKeyType, List<OutValueType>>> mapReduce(List<Pair<InKeyType, InValueType>> items) {
-    Set<Fut<List<Pair<OutKeyType, OutValueType>>>> fMapResults = EmptySet;
-    ABS.StdLib.Map<OutKeyType, List<OutValueType>> intermediates = EmptyMap;
-    Set<Pair<OutKeyType, Fut<List<OutValueType>>>> fReduceResults = EmptySet;
+    Set<Fut<List<Pair<OutKeyType, OutValueType>>>> fMapResults = set[];
+    ABS.StdLib.Map<OutKeyType, List<OutValueType>> intermediates = map[];
+    Set<Pair<OutKeyType, Fut<List<OutValueType>>>> fReduceResults = set[];
     List<Pair<OutKeyType, List<OutValueType>>> result = Nil;
 
     while (!isEmpty(items)) {
@@ -241,7 +241,7 @@ class Client(MapReduce m) {
 
 {
   MapReduce m = new MapReduce();
-  new local Client(m);
+  new Client(m);
 }
 // End Environment
 

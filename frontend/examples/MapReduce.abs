@@ -199,7 +199,7 @@ class Client(MapReduce m) {
 
 {
   MapReduce m = new MapReduce();
-  new local Client(m);
+  new Client(m);
 }
 // End Environment
 
