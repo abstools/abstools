@@ -338,6 +338,11 @@ aspect TypeChecker {
         int nerrors = e.getErrorCount();
         TypeCheckerHelper.typeCheckParamList(e,this);
         getTypeUse().typeCheck(e);
+
+        if (getTypeUse().getType().isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.ANY_AS_RETURN_TYPE, new String[0]));
+        }
+
         if (getFunctionDef() instanceof ExpFunctionDef) {
             ExpFunctionDef def = (ExpFunctionDef)getFunctionDef();
             def.getRhs().typeCheck(e);
@@ -397,7 +402,13 @@ aspect TypeChecker {
         }
     }
 
-    public void PartialFunctionDecl.typeCheck(SemanticConditionList e) {}
+    public void PartialFunctionDecl.typeCheck(SemanticConditionList e) {
+        final Type t = getTypeUse().getType();
+        if (t.isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.ANY_AS_RETURN_TYPE, new String[0]));
+        }
+    }
+
     public void ParFnApp.typeCheck(SemanticConditionList e) {}
 
     public void InterfaceDecl.checkCycle(SemanticConditionList e, InterfaceDecl d) {
@@ -510,6 +521,10 @@ aspect TypeChecker {
 
     public void ConstructorArg.typeCheck(SemanticConditionList e) {
         getTypeUse().typeCheck(e);
+
+        if (getTypeUse().getType().isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.ANY_AS_CONSTRUCTOR_ARG, new String[0]));
+        }
     }
 
     public void ExceptionDecl.typeCheck(SemanticConditionList e) {
@@ -528,7 +543,6 @@ aspect TypeChecker {
 
     public void UnknownDecl.typeCheck(SemanticConditionList e) {
     /* nothing to check */ }
-
 
     public void Block.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
@@ -596,6 +610,10 @@ aspect TypeChecker {
         if (e.getErrorCount() > nerrors) return;
 
         Type t = getTypeUse().getType();
+        if (t.isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.VAR_OF_ANY_TYPE, new String[0]));
+        }
+
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
             if (e.getErrorCount() > nerrors) return;
@@ -613,6 +631,11 @@ aspect TypeChecker {
         if (e.getErrorCount() > nerrors) return;
 
         Type t = getTypeUse().getType();
+
+        if (t.isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.FIELD_OF_ANY_TYPE, new String[0]));
+        }
+
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
             if (e.getErrorCount() > nerrors) return;
@@ -626,6 +649,11 @@ aspect TypeChecker {
 
     public void ParamDecl.typeCheck(SemanticConditionList e) {
         getTypeUse().typeCheck(e);
+
+        final Type t = getTypeUse().getType();
+        if (t.isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.PARAM_OF_ANY_TYPE, new String[0]));
+        }
     }
 
     /**
@@ -871,6 +899,11 @@ aspect TypeChecker {
         e.add(new TypeError(this,ErrorMessage.THIS_STATIC,""));
     }
 
+    public void DestinyExp.typeCheck(SemanticConditionList e) {
+      if (getContextDecl().isUnknown())
+        e.add(new TypeError(this,ErrorMessage.DESTINY_NO_CONTEXT,""));
+    }
+
     public void OriginalCall.typeCheck(SemanticConditionList e) {
         /* We are never typeChecking method bodies within deltas at the moment. #386*/
         e.add(new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""));
@@ -1099,6 +1132,39 @@ aspect TypeChecker {
 
     void ParametricFunctionDecl.typeCheckParams(SemanticConditionList e, FnApp fa) {
         TypeCheckerHelper.typeCheckMatchingParams(e,fa,this);
+
+        // Function return values or parameters may not be Any.
+        // If a type parameter is bound to Any, this is an error
+        final Map<TypeParameter, Type> binding = fa.getTypeParamBindingFromParamDecl(this);
+        {
+            final Type returnType = getTypeUse().getType();
+            if (returnType.isTypeParameter()) {
+                final Type boundReturnType = returnType.applyBinding(binding);
+
+                if (boundReturnType.isAnyType()) {
+                    e.add(new TypeError(fa, ErrorMessage.ANY_BOUND_AS_RETURN_TYPE, new String[] {
+                        returnType.getQualifiedName(),
+                        this.getName()
+                    }));
+                }
+            }
+        }
+
+        for (ParamDecl paramDecl : getParams()) {
+            final Type paramType = paramDecl.getTypeUse().getType();
+
+            if (paramType.isTypeParameter()) {
+                final Type boundParamType = paramType.applyBinding(binding);
+
+                if (boundParamType.isAnyType()) {
+                    e.add(new TypeError(fa, ErrorMessage.ANY_BOUND_AS_PARAM_TYPE, new String[] {
+                        paramType.getQualifiedName(),
+                        paramDecl.getName(),
+                        this.getName()
+                    }));
+                }
+            }
+        }
     }
 
     public Map<TypeParameter, Type> FnApp.getTypeParamBindingFromParamDecl(ParametricFunctionDecl node) {
@@ -1121,6 +1187,26 @@ aspect TypeChecker {
 
             if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
                 TypeCheckerHelper.typeCheckMatchingParams(e,this,c);
+
+                // Constructor parameters may not be Any.
+                // If a type parameter is bound to Any, this is an error
+                final Map<TypeParameter, Type> binding = this.getTypeParamBinding(this, c);
+
+                for (ConstructorArg constructorArg : c.getConstructorArgs()) {
+                    final Type argType = constructorArg.getTypeUse().getType();
+
+                    if (argType.isTypeParameter()) {
+                        final Type boundArgType = argType.applyBinding(binding);
+
+                        if (boundArgType.isAnyType()) {
+                            e.add(new TypeError(this, ErrorMessage.ANY_BOUND_AS_PARAM_TYPE, new String[] {
+                                argType.getQualifiedName(),
+                                constructorArg.getSelectorName().toString(),
+                                c.getName()
+                            }));
+                        }
+                    }
+                }
             } else {
                 TypeCheckerHelper.typeCheckEqual(e,this,c.getTypes());
             }

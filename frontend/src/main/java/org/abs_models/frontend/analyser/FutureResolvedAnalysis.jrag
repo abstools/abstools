@@ -154,5 +154,7 @@ aspect FutureResolvedAnalysis {
 
   eq ThisExp.resolved() = false;
 
+  eq DestinyExp.resolved() = false;
+
   eq Unary.resolved() = false;
 }

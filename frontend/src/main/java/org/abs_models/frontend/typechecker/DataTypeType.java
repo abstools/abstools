@@ -95,7 +95,10 @@ public class DataTypeType extends Type {
      * which would be difficult to handle in aspects (at least declarative ones).
      */
     private boolean hasReferences(Set<DataTypeDecl> checkedDecls) {
-        if (isFutureType()) {
+        if (
+                isFutureType()
+             || isAnyType() // since values typed by Any may be futures
+        ) {
             return true;
         }
 
@@ -174,6 +177,22 @@ public class DataTypeType extends Type {
         for (int i = 0; i < numTypeArgs(); i++) {
             if (!getTypeArg(i).isAssignableTo(dt.getTypeArg(i), true))
                 return false;
+
+            // Except for future types, type arguments of datatypes may not be
+            // upcasted to Any.
+            // I.e. this is not ok:
+            //   List<Int> li = list[42];
+            //   List<Any> la = li; 
+            //
+            // Because then we would indirectly allow comparisons between
+            // different types, e.g.
+            //
+            //   List<Any> li = list[42];
+            //   List<Any> ls = list["Hello"];
+            //   println(toString(li == ls));
+            if (!isFutureType())
+                if (dt.getTypeArg(i).isAnyType() && !this.getTypeArg(i).isAnyType())
+                    return false;
         }
         return true;
     }
@@ -240,6 +259,10 @@ public class DataTypeType extends Type {
 
     public boolean isExceptionType() {
         return decl.getName().equals("Exception");
+    }
+
+    public boolean isAnyType() {
+        return decl.getName().equals("Any");
     }
 
     public String toString() {

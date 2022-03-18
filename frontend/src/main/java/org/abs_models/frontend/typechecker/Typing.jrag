@@ -60,6 +60,7 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
+    syn Type Model.getAnyType() = getStdDataType("Any");
     syn DataTypeType Model.getMaybeType(Type typeArg) = ((DataTypeType)getStdDataType("Maybe")).withTypeArgs(typeArg);
     syn Type Model.getListType() = (DataTypeType)getStdDataType("List");
     syn Type Model.getListType(Type typeArg) = ((DataTypeType)getStdDataType("List")).withTypeArgs(typeArg);
@@ -336,6 +337,8 @@ aspect Typing {
     eq StringLiteral.getType() =  getModel().getStringType();
     eq NullExp.getType() = NullType.INSTANCE;
     eq ThisExp.getType() = getContextDecl().getType();
+    // Due to synchronous calls, the type of the surrounding method may not be the same as the type of destiny!
+    eq DestinyExp.getType() = getModel().getFutType(getModel().getAnyType());
     eq MinusExp.getType() = getOperand().getType();
     eq NegExp.getType() = getModel().getBoolType();
     
@@ -359,7 +362,7 @@ aspect Typing {
     	
     } 
     eq PatternVar.getType() = getInhType();  
-    eq UnderscorePattern.getType() = AnyType.INSTANCE;
+    eq UnderscorePattern.getType() = getCompilationUnit().getModel().getAnyType();
     eq LiteralPattern.getType() = getLiteral().getType();
     
     inh Type Pattern.getInhType();

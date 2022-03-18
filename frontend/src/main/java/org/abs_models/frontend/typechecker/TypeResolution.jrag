@@ -227,7 +227,6 @@ aspect TypeResolution {
     eq CompilationUnit.getModuleDecl().lookupModule(String name) = lookupModule(name);
     eq Model.getCompilationUnit().lookupModule(String name) = lookupModule(name);
 
-
     syn lazy Decl Model.lookup(KindedName name) {
         for (CompilationUnit u : getCompilationUnits()) {
             for (ModuleDecl d : u.getModuleDecls()) {

@@ -393,6 +393,8 @@ aspect Nonnull {
 
   eq ThisExp.nonnull() = true;
 
+  eq DestinyExp.nonnull() = true;
+
   eq Unary.nonnull() = false;
 
   /**
