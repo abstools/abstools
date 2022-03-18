@@ -1182,6 +1182,26 @@ aspect TypeChecker {
 
             if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
                 TypeCheckerHelper.typeCheckMatchingParams(e,this,c);
+
+                // Constructor parameters may not be Any.
+                // If a type parameter is bound to Any, this is an error
+                final Map<TypeParameter, Type> binding = this.getTypeParamBinding(this, c);
+
+                for (ConstructorArg constructorArg : c.getConstructorArgs()) {
+                    final Type argType = constructorArg.getTypeUse().getType();
+
+                    if (argType.isTypeParameter()) {
+                        final Type boundArgType = argType.applyBinding(binding);
+
+                        if (boundArgType.isAnyType()) {
+                            e.add(new TypeError(this, ErrorMessage.ANY_BOUND_AS_PARAM_TYPE, new String[] {
+                                argType.getQualifiedName(),
+                                constructorArg.getSelectorName().toString(),
+                                c.getName()
+                            }));
+                        }
+                    }
+                }
             } else {
                 TypeCheckerHelper.typeCheckEqual(e,this,c.getTypes());
             }

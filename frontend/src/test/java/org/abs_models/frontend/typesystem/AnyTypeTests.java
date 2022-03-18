@@ -107,7 +107,7 @@ public class AnyTypeTests extends FrontendTest {
             )
         );
 
-        // No binding of Any to type parameters
+        // No binding of Any to type parameters of functions
         assertTypeErrors(
             String.join(System.lineSeparator(),
                 "data Wrapper<A> = Wrapper(A unwrap);",
@@ -118,6 +118,19 @@ public class AnyTypeTests extends FrontendTest {
 
                     "Bool x = unwrap(wi) == unwrap(ws);",
                     "println(toString(x));",
+                "}"
+            )
+        );
+
+        // No binding of Any to type parameters of data constructors
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "data Wrapper<T> = Wrapper(T unwrap);",
+                "data WrapperWrapper<T> = WrapperWrapper(Wrapper<T> x, T y);",
+                
+                "{",
+                    "Wrapper<Any> w = Wrapper(10);",
+                    "WrapperWrapper(w, 42);",
                 "}"
             )
         );
