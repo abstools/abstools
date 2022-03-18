@@ -338,6 +338,11 @@ aspect TypeChecker {
         int nerrors = e.getErrorCount();
         TypeCheckerHelper.typeCheckParamList(e,this);
         getTypeUse().typeCheck(e);
+
+        if (getTypeUse().getType().isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.ANY_AS_RETURN_TYPE, new String[0]));
+        }
+
         if (getFunctionDef() instanceof ExpFunctionDef) {
             ExpFunctionDef def = (ExpFunctionDef)getFunctionDef();
             def.getRhs().typeCheck(e);
@@ -397,7 +402,13 @@ aspect TypeChecker {
         }
     }
 
-    public void PartialFunctionDecl.typeCheck(SemanticConditionList e) {}
+    public void PartialFunctionDecl.typeCheck(SemanticConditionList e) {
+        final Type t = getTypeUse().getType();
+        if (t.isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.ANY_AS_RETURN_TYPE, new String[0]));
+        }
+    }
+
     public void ParFnApp.typeCheck(SemanticConditionList e) {}
 
     public void InterfaceDecl.checkCycle(SemanticConditionList e, InterfaceDecl d) {
@@ -510,6 +521,10 @@ aspect TypeChecker {
 
     public void ConstructorArg.typeCheck(SemanticConditionList e) {
         getTypeUse().typeCheck(e);
+
+        if (getTypeUse().getType().isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.ANY_AS_CONSTRUCTOR_ARG, new String[0]));
+        }
     }
 
     public void ExceptionDecl.typeCheck(SemanticConditionList e) {
@@ -595,6 +610,10 @@ aspect TypeChecker {
         if (e.getErrorCount() > nerrors) return;
 
         Type t = getTypeUse().getType();
+        if (t.isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.VAR_OF_ANY_TYPE, new String[0]));
+        }
+
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
             if (e.getErrorCount() > nerrors) return;
@@ -612,6 +631,11 @@ aspect TypeChecker {
         if (e.getErrorCount() > nerrors) return;
 
         Type t = getTypeUse().getType();
+
+        if (t.isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.FIELD_OF_ANY_TYPE, new String[0]));
+        }
+
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
             if (e.getErrorCount() > nerrors) return;
@@ -625,6 +649,11 @@ aspect TypeChecker {
 
     public void ParamDecl.typeCheck(SemanticConditionList e) {
         getTypeUse().typeCheck(e);
+
+        final Type t = getTypeUse().getType();
+        if (t.isAnyType()) {
+            e.add(new TypeError(this, ErrorMessage.PARAM_OF_ANY_TYPE, new String[0]));
+        }
     }
 
     /**
