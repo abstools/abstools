@@ -1127,6 +1127,39 @@ aspect TypeChecker {
 
     void ParametricFunctionDecl.typeCheckParams(SemanticConditionList e, FnApp fa) {
         TypeCheckerHelper.typeCheckMatchingParams(e,fa,this);
+
+        // Function return values or parameters may not be Any.
+        // If a type parameter is bound to Any, this is an error
+        final Map<TypeParameter, Type> binding = fa.getTypeParamBindingFromParamDecl(this);
+        {
+            final Type returnType = getTypeUse().getType();
+            if (returnType.isTypeParameter()) {
+                final Type boundReturnType = returnType.applyBinding(binding);
+
+                if (boundReturnType.isAnyType()) {
+                    e.add(new TypeError(fa, ErrorMessage.ANY_BOUND_AS_RETURN_TYPE, new String[] {
+                        returnType.getQualifiedName(),
+                        this.getName()
+                    }));
+                }
+            }
+        }
+
+        for (ParamDecl paramDecl : getParams()) {
+            final Type paramType = paramDecl.getTypeUse().getType();
+
+            if (paramType.isTypeParameter()) {
+                final Type boundParamType = paramType.applyBinding(binding);
+
+                if (boundParamType.isAnyType()) {
+                    e.add(new TypeError(fa, ErrorMessage.ANY_BOUND_AS_PARAM_TYPE, new String[] {
+                        paramType.getQualifiedName(),
+                        paramDecl.getName(),
+                        this.getName()
+                    }));
+                }
+            }
+        }
     }
 
     public Map<TypeParameter, Type> FnApp.getTypeParamBindingFromParamDecl(ParametricFunctionDecl node) {

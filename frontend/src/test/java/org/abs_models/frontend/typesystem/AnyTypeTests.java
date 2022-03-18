@@ -106,6 +106,21 @@ public class AnyTypeTests extends FrontendTest {
                 "{ }"
             )
         );
+
+        // No binding of Any to type parameters
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "data Wrapper<A> = Wrapper(A unwrap);",
+
+                "{",
+                    "Wrapper<Any> wi = Wrapper(1);",
+                    "Wrapper<Any> ws = Wrapper(\"Hello\");",
+
+                    "Bool x = unwrap(wi) == unwrap(ws);",
+                    "println(toString(x));",
+                "}"
+            )
+        );
     }
 
     /**

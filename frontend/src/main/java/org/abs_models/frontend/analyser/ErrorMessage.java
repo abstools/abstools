@@ -23,6 +23,8 @@ public enum ErrorMessage {
     PARAM_OF_ANY_TYPE("A parameter can not be declared to be of type Any."),
     ANY_AS_RETURN_TYPE("Any can not be used as the return type of a function."),
     ANY_AS_CONSTRUCTOR_ARG("Any can not be used as the type of a constructor argument."),
+    ANY_BOUND_AS_RETURN_TYPE("This call binds Any to %s as the return type of %s. Any can not be used as the return type of a function."),
+    ANY_BOUND_AS_PARAM_TYPE("This call binds Any to %s as the type of parameter %s of %s. Any can not be used as the type of a parameter of a function."),
     EXPECTED_REFERENCE_TYPE("Expected an object reference, but found type %s instead."),
     EXPECTED_FUT_TYPE("Expected a future type, but found type %s instead."),
     EXPECTED_NUMERIC_TYPE("Expected numeric type, but found type %s instead."),
