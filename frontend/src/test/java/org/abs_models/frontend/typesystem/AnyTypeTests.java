@@ -125,12 +125,34 @@ public class AnyTypeTests extends FrontendTest {
         // No binding of Any to type parameters of data constructors
         assertTypeErrors(
             String.join(System.lineSeparator(),
-                "data Wrapper<T> = Wrapper(T unwrap);",
-                "data WrapperWrapper<T> = WrapperWrapper(Wrapper<T> x, T y);",
+                "data Wrapper<T> = Wrapper(Fut<T> x, T unwrap);",
+                
+                "class MyClass {",
+                    "Int m() {",
+                        "return 42;",
+                    "}",
+                    
+                    "Unit run() {",
+                        "Fut<Any> f = this!m();",
+                        
+                        "Wrapper(f, 10);",
+                    "}",
+                "}",
                 
                 "{",
-                    "Wrapper<Any> w = Wrapper(10);",
-                    "WrapperWrapper(w, 42);",
+                    "new MyClass();",
+                "}"
+            )
+        );
+
+        // No upasting of wrapped types to Any
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "{",
+                    "List<Any> li = list[1];",
+                    "List<Any> ls = list[\"Hello\"];",
+
+                    "li == ls;",
                 "}"
             )
         );
