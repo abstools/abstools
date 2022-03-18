@@ -197,7 +197,7 @@ aspect GenerateErlang {
       "ABS.StdLib.float", "ABS.StdLib.rat",
       "ABS.StdLib.floor", "ABS.StdLib.ceil",
       "ABS.StdLib.sqrt", "ABS.StdLib.log", "ABS.StdLib.exp",
-      "ABS.Scheduler.method", "ABS.Scheduler.arrival", "ABS.Scheduler.proc_deadline");
+      "ABS.Scheduler.method", "ABS.Scheduler.destinyOf", "ABS.Scheduler.arrival","ABS.Scheduler.proc_deadline");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean emitBuiltinHeader = false;
@@ -897,6 +897,11 @@ aspect GenerateErlang {
   public void ThisExp.generateErlangCode(CodeStream ecs,Vars vars){
     //Current object reference is always mapped to O
     ecs.print("O");
+  }
+
+  @Override
+  public void DestinyExp.generateErlangCode(CodeStream ecs,Vars vars){
+    ecs.print("((get(task_info))#task_info.destiny)");
   }
 
   @Override

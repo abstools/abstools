@@ -899,6 +899,11 @@ aspect TypeChecker {
         e.add(new TypeError(this,ErrorMessage.THIS_STATIC,""));
     }
 
+    public void DestinyExp.typeCheck(SemanticConditionList e) {
+      if (getContextDecl().isUnknown())
+        e.add(new TypeError(this,ErrorMessage.DESTINY_NO_CONTEXT,""));
+    }
+
     public void OriginalCall.typeCheck(SemanticConditionList e) {
         /* We are never typeChecking method bodies within deltas at the moment. #386*/
         e.add(new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""));

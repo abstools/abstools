@@ -445,6 +445,9 @@ aspect doOutlinePrinter {
     public void ThisExp.doOutlinePrint(PrintWriter stream, String prefix) {
     }
 
+    public void DestinyExp.doOutlinePrint(PrintWriter stream, String prefix) {
+    }
+
     public void MinusExp.doOutlinePrint(PrintWriter stream, String prefix) {
     }
 

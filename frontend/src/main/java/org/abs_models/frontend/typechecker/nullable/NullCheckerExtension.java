@@ -221,6 +221,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
         return !(originatingNode instanceof NullExp)
             && !(originatingNode instanceof ThisExp)
+            && !(originatingNode instanceof DestinyExp)
             && !(originatingNode instanceof NewExp)
             && !(originatingNode instanceof TypeUse)
             && !(originatingNode instanceof Call)

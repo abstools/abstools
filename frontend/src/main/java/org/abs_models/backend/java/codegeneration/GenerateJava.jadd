@@ -1086,6 +1086,10 @@ aspect GenerateJava {
         stream.print("this");
     }
 
+    public void DestinyExp.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
     public void MinusExp.generateJava(PrintStream stream) {
         getOperand().generateJava(stream);
         stream.print(".negate()");
