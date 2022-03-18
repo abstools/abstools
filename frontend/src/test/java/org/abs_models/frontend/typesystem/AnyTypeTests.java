@@ -23,61 +23,237 @@ import org.abs_models.frontend.typechecker.UnionType;
 import org.junit.Test;
 
 public class AnyTypeTests extends FrontendTest {
+    /**
+     * Since comparison across types is not defined in most cases, we forbid the
+     * declaration of variables, parameters, etc. of Any Type
+     **/
     @Test
-    public void testAssignLitToAny() {
-        Model m = assertParse("{ Any x = 42; }");
-        assertEquals(m.getAnyType(), getTypeOfFirstVariableDeclaration(m));
-    }
-
-    @Test
-    public void testAssignAnyToAny() {
-        Model m = assertParse("{ Any x = 42; Any y = x; }");
-
-        assertEquals(m.getAnyType(), getTypeOfNthAssignment(m, 2));
-        assertEquals(m.getAnyType(), getTypeOfNthVariableDeclaration(m, 2));
-    }
-
-    @Test
-    public void testAssignInterfaceToAny() {
-        Model m = assertParse(
-                String.join(System.lineSeparator(),
-                    "interface Foo {}",
-                    "class Bar implements Foo {}",
-
-                    "{",
-                        "Foo x = new Bar();",
-                        "Any y = x;",
-                    "}"
-                )
-            );
-
-        assertEquals(m.getAnyType(), getTypeOfNthVariableDeclaration(m, 2));
-    }
-
-    @Test
-    public void noImplicitDowncastFromAny_DataTypes() {
+    public void invalidAnyTypeUses() throws Exception {
+        // No Any variables
         assertTypeErrors(
                 String.join(System.lineSeparator(),
                     "{",
-                        "Any x = True;",
-                        "Bool y = x;",
+                        "Any x = 42;",
                     "}"
                 )
         );
+
+        // No any constructor args
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "data AnyWrapper = AnyWrapper(Any x);",
+                "",
+                "{",
+                    "AnyWrapper a = AnyWrapper(42);",
+                    "println(`$x(a)$`);",
+                "}"
+            )
+        );
+
+        // No Any constructor args
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "interface BI {",
+                    "Unit m();",
+                "}",
+                "",
+                "class B(Any x) implements BI {",
+                    "Unit m() {",
+                        "println(`$x$`);",
+                    "}",
+                "}",
+                "",
+                "{ }"
+            )
+        );
+
+        // No misuse of any through type aliases
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "type TotallyNotAny = Any;",
+                "",
+                "{",
+                    "TotallyNotAny x = 42;",
+                "}"
+            )
+        );
+
+        // No Any as return type of functions
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "def Any method() = 42;",
+                "",
+                "{",
+                    "println(`$method() == 42$`);",
+                "}"
+            )
+        );
+
+        // No Any as return type of partial functions
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "def Any apply(fn)(Int value) = fn(a);",
+                "",
+                "{ }"
+            )
+        );
+
+        // No Any as return type of parametric partial functions
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "def Any apply<A>(fn)(A value) = fn(a);",
+                "",
+                "{ }"
+            )
+        );
     }
 
-    @Test
-    public void noImplicitDowncastFromAny_InterfaceTypes() {
-        assertTypeErrors(
-                String.join(System.lineSeparator(),
-                    "interface Foo {}",
-                    "class Bar implements Foo {}",
+    /**
+     * Use of Any in futures should be possible
+     */
+    public void anyFutures() throws Exception {
+        // One should be able to declare Fut<Any> variables
+        assertTypeOK(
+            String.join(System.lineSeparator(),
+                "class C {",
+                    "Int myMethod() {",
+                        "return 42;",
+                    "}",
 
-                    "{",
-                        "Any x = new Bar();",
-                        "Foo y = x;",
-                    "}"
-                )
+                    "Unit run() {",
+                        "Fut<Any> f = this!myMethod();",
+                    "}",
+                "}",
+
+                "{",
+                    "new C();",
+                "}"
+            )
+        );
+
+        // And to compare Fut<...> variables across types with any
+        assertTypeOK(
+            String.join(System.lineSeparator(),
+                "class C {",
+                    "Int myMethod() {",
+                        "return 42;",
+                    "}",
+
+                    "Unit run() {",
+                        "Fut<Any> f = this!myMethod();",
+                        "Fut<Int> g = this!myMethod();",
+
+                        "Bool x = f == f && f != g;",
+                        "println(toString(x));",
+                    "}",
+                "}",
+
+                "{",
+                    "new C();",
+                "}"
+            )
+        );
+
+        // It should not be possible to extract and downcast values in Fut<Any>
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "class C {",
+                    "Int myMethod() {",
+                        "return 42;",
+                    "}",
+                    
+                    "Unit run() {",
+                        "Fut<Any> f = this!myMethod();",
+                        
+                        "Int x = f.get;",
+                    "}",
+                "}",
+
+                "{",
+                    "new C();",
+                "}"
+            )
+        );
+
+        // It should also not be possible to extract and store Any values through get
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "class C {",
+                    "Int myMethod() {",
+                        "return 42;",
+                    "}",
+                    
+                    "Unit run() {",
+                        "Fut<Any> f = this!myMethod();",
+                    
+                        "Any x = f.get;",
+                    "}",
+                "}",
+
+                "{",
+                    "new C();",
+                "}"
+            )
+        );
+
+        // Neither should it be possible through await:
+        assertTypeErrors(
+            String.join(System.lineSeparator(),
+                "class C {",
+                    "Int myMethod() {",
+                        "return 42;",
+                    "}",
+                    
+                    "Unit run() {",
+                        "Any x = await this!myMethod();",
+                    "}",
+                "}",
+
+                "{",
+                    "new C();",
+                "}"
+            )
+        );
+
+        // Any as return type of methods should be ok, because it can not be extracted
+        assertTypeOK(
+            String.join(System.lineSeparator(),
+                "class C {",
+                    "Any myMethod() {",
+                        "return 42;",
+                    "}",
+
+                    "Unit run() {",
+                        "Fut<Any> f = this!myMethod();",
+                    "}",
+                "}",
+
+                "{",
+                    "new C();",
+                "}"
+            )
+        );
+
+        // Casting to Any should also work for interface types
+        assertTypeOK(
+            String.join(System.lineSeparator(),
+                "interface Foo {}",
+                "class Bar implements Foo { }",
+                
+                "class MyClass {",
+                    "Foo makeFoo() {",
+                        "return new Bar();",
+                    "}",
+                    
+                    "Unit run() {",
+                        "Fut<Any> f = this!makeFoo();",
+                    "}",
+                "}",
+                
+                "{",
+                    "new MyClass();",
+                "}"
+            )
         );
     }
 }
