@@ -164,6 +164,9 @@ public class DataTypeType extends Type {
         if (!(t instanceof DataTypeType))
             return false;
 
+        if (isFutureType() && t.isDestinyType()) // All future types are assignable to Destiny
+            return true;
+
         DataTypeType dt = (DataTypeType) t;
         if (!dt.decl.equals(this.decl)) {
             // Int can be assigned to Rat
@@ -211,7 +214,7 @@ public class DataTypeType extends Type {
     }
 
     public boolean isFutureType() {
-        return decl.getName().equals("Fut");
+        return decl.getName().equals("Fut") || isDestinyType();
     }
 
     public boolean isBoolType() {
@@ -240,6 +243,11 @@ public class DataTypeType extends Type {
 
     public boolean isExceptionType() {
         return decl.getName().equals("Exception");
+    }
+
+    @Override
+    public boolean isDestinyType() {
+        return decl.getName().equals("Destiny");
     }
 
     public String toString() {

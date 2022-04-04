@@ -26,7 +26,10 @@ public final class AnyType extends Type {
 
     @Override
     public boolean isAssignableTo(Type t) {
-        return true;
+        if (t.isAnyType())
+            return true;
+
+        return false;
     }
 
     public boolean isAnyType() {

@@ -1,7 +1,7 @@
 module ABS.StdLib;
 
 // Scalar datatypes
-export Unit, String, Int, Rat, Float, Bool, Fut, Exception;
+export Destiny, Unit, String, Int, Rat, Float, Bool, Fut, Exception;
 
 // The top interface
 export Object;
@@ -76,6 +76,7 @@ import Cost from ABS.DC;
 
 import * from ABS.StdLib.Exceptions;
 
+data Destiny;                   // builtin
 data Unit = Unit;               // builtin
 data String;                    // builtin
 data Int;                       // builtin
@@ -721,6 +722,7 @@ data Pid;
 data Process;
 
 def String method(Process p) = builtin;
+def Fut<Destiny> destinyOf(Process p) = builtin;
 def Time arrival(Process p) = builtin;
 def Duration cost(Process p) = builtin;
 def Duration proc_deadline(Process p) = builtin;
