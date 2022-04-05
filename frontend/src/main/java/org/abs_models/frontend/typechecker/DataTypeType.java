@@ -95,7 +95,7 @@ public class DataTypeType extends Type {
      * which would be difficult to handle in aspects (at least declarative ones).
      */
     private boolean hasReferences(Set<DataTypeDecl> checkedDecls) {
-        if (isFutureType()) {
+        if (isFutureType() || isDestinyType()) {
             return true;
         }
 
@@ -164,7 +164,7 @@ public class DataTypeType extends Type {
         if (!(t instanceof DataTypeType))
             return false;
 
-        if (isFutureType() && t.isDestinyType()) // All future types are assignable to Destiny
+        if ((isFutureType() || isDestinyType()) && t.isDestinyType()) // All future types are assignable to Destiny
             return true;
 
         DataTypeType dt = (DataTypeType) t;
@@ -214,7 +214,7 @@ public class DataTypeType extends Type {
     }
 
     public boolean isFutureType() {
-        return decl.getName().equals("Fut") || isDestinyType();
+        return decl.getName().equals("Fut");
     }
 
     public boolean isBoolType() {

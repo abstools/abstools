@@ -269,7 +269,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     }
 
     public static boolean shouldHaveNullableType(Type t) {
-        return t.isFutureType() || t.isReferenceType();
+        return t.isFutureType() || t.isDestinyType() || t.isReferenceType();
     }
 
     public static org.abs_models.frontend.ast.List<Annotation> getAnnotations(Type t) {

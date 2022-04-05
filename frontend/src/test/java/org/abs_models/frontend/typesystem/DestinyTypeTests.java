@@ -54,7 +54,7 @@ public class DestinyTypeTests extends FrontendTest {
             )
         );
 
-        // It should not be possible to assign random types to Any even if
+        // It should not be possible to assign random types to Destiny even if
         // wrapped as as a type parameter
         assertTypeErrors(
             String.join(System.lineSeparator(),
@@ -177,7 +177,7 @@ public class DestinyTypeTests extends FrontendTest {
             )
         );
 
-        // Any as return type of methods should be ok
+        // Destiny as return type of methods should be ok
         assertTypeOK(
             String.join(System.lineSeparator(),
                 "class C {",

@@ -576,6 +576,10 @@ aspect GenerateJavaDynamic_Core {
 
     public void GetExp.generateJavaDynamic(PrintStream stream) {
         DataTypeType t = (DataTypeType) getPureExp().getType();
+
+        if (t.isDestinyType())
+            throw new NotImplementedYetException(this, "Get expressions are not yet implemented for expressions directly typed by Destiny for the Java backend");
+
         // assume to be of type Fut<V>
         if (!t.isFutureType() || !t.hasTypeArgs())
             return;
