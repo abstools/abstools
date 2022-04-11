@@ -128,6 +128,21 @@ public class DestinyTypeTests extends FrontendTest {
                 "}"
             )
         );
+
+        // Applying `.get` to `destiny` should give a deadlock warning.
+        assertWarnings(
+            String.join(System.lineSeparator(),
+                "class C {",
+                    "Unit run() {",
+                        "destiny.get;",
+                    "}",
+                "}",
+
+                "{",
+                    "new C();",
+                "}"
+            )
+        );
     }
 
     /**

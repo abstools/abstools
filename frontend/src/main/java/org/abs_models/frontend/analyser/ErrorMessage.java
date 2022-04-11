@@ -17,6 +17,7 @@ public enum ErrorMessage {
     NO_SUBTYPE("Type %s must be a subtype of type %s."),
     CANNOT_ASSIGN("Cannot assign %s to type %s."),
     CANNOT_STORE_DESTINY_GET("Get expressions have no value when applied to expressions of type Destiny. Thus, %s.get can not be assigned to %s."),
+    DESTINY_IN_GETEXP("You are applying `.get` to `destiny`, i.e. you are synchronizing on the future that you are currently computing. This will result in a deadlock."),
     VAR_INIT_REQUIRED("A variable must be initialized if it is not of a reference type."),
     FIELD_INIT_REQUIRED("A field must be initialized if it is not of a reference type."),
     EXPECTED_REFERENCE_TYPE("Expected an object reference, but found type %s instead."),

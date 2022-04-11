@@ -977,6 +977,11 @@ aspect TypeChecker {
     public void GetExp.typeCheck(SemanticConditionList e) {
         int nerrors = e.getErrorCount();
         getPureExp().typeCheck(e);
+
+        if (getPureExp() instanceof DestinyExp) {
+            e.add(new SemanticWarning(this, ErrorMessage.DESTINY_IN_GETEXP, ""));
+        }
+
         if (nerrors == e.getErrorCount()) {
             if (!getPureExp().getType().isFutureType() && !getPureExp().getType().isDestinyType()) {
                 e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType()));
