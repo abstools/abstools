@@ -352,6 +352,68 @@ Int result = await o!add(2, 3); <1>
 ----
 <1> This statement invokes `add`, suspends the current process until the result is available, then stores it in `result`.
 
+[[type-destiny]]
+==== The Destiny Type
+
+NOTE: This feature is only available in the Erlang backend.
+
+The `Destiny` type is the type of the `destiny` expression, see
+<<destiny-expression>>.
+Thus, its values are also futures:
+
+.Example
+[source]
+----
+Unit myMethod() {
+    Destiny x = destiny;
+}
+----
+
+The `Destiny` type is a supertype of all future types.
+For example, values of any future type `Fut<T>` can implicitly be cast to the
+`Destiny` type:
+
+.Example
+[source]
+----
+Destiny f = this!myMethod();
+----
+
+The `Destiny` type supports all boolean comparisons that `Fut<T>` types
+support. Thus, one can use it to compare futures even across different future
+types to identify asynchronous method calls:
+
+.Example
+[source]
+----
+Destiny f = this!myMethod();
+Fut<Int> g = this!myMethod();
+
+assert(f == f && f != g);
+----
+
+The Get-Expression of a `Destiny` value is typed by the internal type `Bottom`
+that has no values.
+Thus, it is permitted to synchronize on a future typed by `Destiny` but one can
+not extract its result:
+
+.Example
+[source]
+----
+Int myMethod() {
+    Destiny f = destiny;
+    f.get; <1>
+    await f?; <2>
+    Int x = f.get; <3>
+
+    return 42;
+}
+----
+
+<1> This is permitted but results in a deadlock, as the method is now synchronizing on its own completion.
+<2> Applying `await` to a `Destiny` value is also permitted but in this case it has the same deadlock problem.
+<3> This will result in a compile-time error.
+
 [[stdlib:predefined-exceptions]]
 === Predefined exceptions in the Standard Library
 
@@ -378,7 +440,6 @@ KeyboardInterruptException::
     The user pressed a key sequence to interrupt the running ABS program
 ObjectDeadException::
     A method was called on a dead (crashed) object
-
 
 [[type-list]]
 === Lists

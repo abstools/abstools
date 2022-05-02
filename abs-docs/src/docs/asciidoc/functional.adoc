@@ -25,6 +25,7 @@ expressions in static analysis tools.
 | _PureExp_ ::= | _SimpleIdentifier_ +
  {vbar} `this` `.` _SimpleIdentifier_ +
  {vbar} `this` +
+ {vbar} `destiny` +
  {vbar} _Literal_ +
  {vbar} _TemplateString_ +
  {vbar} _LetExp_ +
@@ -707,7 +708,66 @@ Fut<A> fx = o!m();
 await fx?;
 ----
 
+[[destiny-expression]]
+=== Destiny (Expression)
 
+NOTE: This feature is only available in the Erlang backend.
+
+The `destiny` expression returns the future of the asynchronous call that is
+currently being executed.
+It returns a value of the `Destiny` type. For more information on how `Destiny`
+values can be used, see <<type-destiny>>.
+
+[frame=topbot, options="noheader", grid=none, caption="", cols=">30,<70"]
+.Syntax
+|====
+| _DestinyExp_ ::= | `destiny`
+|====
+
+[source]
+.Example
+----
+class C {
+    Destiny myMethod() {
+        return destiny;
+    }
+
+    Unit run() {
+        Fut<Destiny> f = this!myMethod();
+        await f?;
+        Destiny g = f.get;
+        assert(f == g); <1>
+    }
+}
+----
+
+<1> the boolean expression will evaluate to `True` since the returned `destiny`
+value is the same as the future of the asynchronous call to `myMethod`. 
+
+If `destiny` is evaluated as part of a synchronous call S then it evaluates to
+the future of the task that is executing S:
+
+[source]
+.Example
+----
+class C {
+    Unit syn(Destiny caller) {
+        assert(destiny == caller);
+    }
+
+    Unit asyn() {
+        this.syn(destiny);
+    }
+
+    Unit run() {
+        this!asyn();
+    }
+}
+----
+
+NOTE: There is also the `destinyOf` built-in function that can retrieve the
+  future of the asynchronous call that is currently being executed by a `Process`,
+  see <<sec:process-attributes>>.
 
 == Function Definitions
 

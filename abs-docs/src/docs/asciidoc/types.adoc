@@ -47,21 +47,22 @@ ABS offers the following built-in datatypes:
 .ABS built-in types
 [options="header"]
 |=====
- | Name      | Description                | Example           | Documentation
- | `Unit`    | The empty (void) type      | `Unit`            | <<type-unit>>
- | `Bool`    | Boolean values             | `True`, `False`   | <<type-bool>>
- | `Int`     | Integers of arbitrary size | `0`, `-15`        | <<type-numbers>>
- | `Rat`     | Rational numbers           | `1/5`, `22/58775` | <<type-numbers>>
- | `Float`  | Floating-point numbers     | `0.5`, `1.0e-15`  | <<type-numbers>>
- | `String`  | Strings                    | `"Hello world\n"` | <<type-string>>
- | `Fut<A>`  | Futures                    | --                | <<type-future>>
- | `Exception` | Exceptions                | `DivisionByZeroException` | <<exception-type>>
- | `List<A>` | Lists of values of type `A` | `list[1, 2, 3]`   | <<type-list>>
- | `Set<A>`  | Sets of values of type `A`  | `set[True, False]` | <<type-set>>
- | `Map<A,B>`| Maps from type `A` to `B` | `map[Pair(1, True)]` | <<type-map>>
- | `Pair<A,B>` | Pairs of values         | `Pair(1, True)`      | <<type-pair>>
- | `Triple<A,B,C>` | Triples of values   | `Triple(1, "hi", True)` | <<type-triple>>
- | `Maybe<A>`   | Optional values        | `Just(True)`, `Nothing` | <<type-optionals>>
+ | Name            | Description                 | Example                   | Documentation
+ | `Unit`          | The empty (void) type       | `Unit`                    | <<type-unit>>
+ | `Bool`          | Boolean values              | `True`, `False`           | <<type-bool>>
+ | `Int`           | Integers of arbitrary size  | `0`, `-15`                | <<type-numbers>>
+ | `Rat`           | Rational numbers            | `1/5`, `22/58775`         | <<type-numbers>>
+ | `Float`         | Floating-point numbers      | `0.5`, `1.0e-15`          | <<type-numbers>>
+ | `String`        | Strings                     | `"Hello world\n"`         | <<type-string>>
+ | `Fut<A>`        | Futures                     | --                        | <<type-future>>
+ | `Destiny`       | Supertype of all futures    | --                        | <<type-destiny>>
+ | `Exception`     | Exceptions                  | `DivisionByZeroException` | <<exception-type>>
+ | `List<A>`       | Lists of values of type `A` | `list[1, 2, 3]`           | <<type-list>>
+ | `Set<A>`        | Sets of values of type `A`  | `set[True, False]`        | <<type-set>>
+ | `Map<A,B>`      | Maps from type `A` to `B`   | `map[Pair(1, True)]`      | <<type-map>>
+ | `Pair<A,B>`     | Pairs of values             | `Pair(1, True)`           | <<type-pair>>
+ | `Triple<A,B,C>` | Triples of values           | `Triple(1, "hi", True)`   | <<type-triple>>
+ | `Maybe<A>`      | Optional values             | `Just(True)`, `Nothing`   | <<type-optionals>>
 |=====
 
 `Int` type is a subtype of `Rat`; this means that `Int` values are assignable
