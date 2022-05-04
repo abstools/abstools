@@ -204,6 +204,111 @@ public class DestinyTests extends ABSTest {
                 "}"
             )
         );
+
+        // A future is generated even when it is not assigned to a variable
+        // and we can synchronize on the destiny of the call
+        driver.assertEvalTrue(
+            String.join(System.lineSeparator(),
+                "module MainMod;",
+                
+                "interface Testable {",
+                  "Bool test();",
+                "}",
+                
+                "class MyClass implements Testable {",
+                    "Destiny f;",
+                    "Bool destinyAssigned = False;",
+                    "Bool testIsWaiting = False;",
+                    "Bool myMethodFinished = False;",
+
+                    "Unit myMethod() {",
+                        "this.f = destiny;",
+                        "destinyAssigned = True;",
+                
+                        "await testIsWaiting;",
+                
+                        "myMethodFinished = True;",
+                    "}",
+
+                    "Bool test() {",
+                        "this!myMethod();",
+                
+                        "await destinyAssigned;",
+                
+                        "testIsWaiting = True;",
+                        "await f?;",
+                
+                        "return myMethodFinished;",
+                    "}",
+                "}",
+                
+                "{",
+                    "Testable t = new MyClass();",
+                    "Bool testresult = await t!test();",
+                "}"
+            )
+        );
+
+        // destiny in a synchronous call resolves to the destiny of the
+        // task who made the call
+        driver.assertEvalTrue(
+            String.join(System.lineSeparator(),
+                "module MainMod;",
+
+                "interface Testable {",
+                  "Bool test();",
+                "}",
+
+                "class C implements Testable {",
+                    "Bool syn(Destiny caller) {",
+                        "return destiny == caller;",
+                    "}",
+
+                    "Bool asyn() {",
+                        "return this.syn(destiny);",
+                    "}",
+
+                    "Bool test() {",
+                        "return await this!asyn();",
+                    "}",
+                "}",
+
+                "{",
+                  "Testable t = new C();",
+                  "Bool testresult = await t!test();",
+                "}"
+            )
+        );
+
+        // destiny resolves to the same future that is returned by the original 
+        // asynchronous call
+        driver.assertEvalTrue(
+            String.join(System.lineSeparator(),
+                "module MainMod;",
+
+                "interface Testable {",
+                  "Bool test();",
+                "}",
+
+                "class C implements Testable {",
+                    "Destiny myMethod() {",
+                        "return destiny;",
+                    "}",
+
+                    "Bool test() {",
+                        "Fut<Destiny> f = this!myMethod();",
+                        "await f?;",
+                        "Destiny g = f.get;",
+                        "return f == g; ",
+                    "}",
+                "}",
+
+                "{",
+                  "Testable t = new C();",
+                  "Bool testresult = await t!test();",
+                "}"
+            )
+        );
     }
 }
 

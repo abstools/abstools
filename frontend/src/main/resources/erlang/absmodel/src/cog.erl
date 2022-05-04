@@ -1,7 +1,7 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(cog).
 -export([start/0,start/1,start/2,start/3,add_main_task/3,add_task/7]).
--export([create_task/6, create_model_api_task/4]).
+-export([create_task/5, create_model_api_task/4]).
 -export([new_object/3,activate_object/2,object_dead/2,object_state_changed/3,get_object_state/2,get_object_state_for_update/2,sync_task_with_object/3]).
 -export([set_dc/2,get_dc_ref/2]).
 %% function informing cog about future state change
@@ -162,18 +162,15 @@ add_main_task(_Cog=#cog{ref=CogRef},Args,Info)->
     gen_statem:call(CogRef, {new_task,main_task,none,null,Args,Info,self(),true,{started, main_task}}).
 
 
-create_task(null,_Method,_Params, _Info, _CallerCog, _Stack) ->
+create_task(null,_Method,_Params, _Info, _CallerCog) ->
     throw(dataNullPointerException);
-create_task(Callee=#object{cog=Cog},Method,Params, Info, CallerCog, ReturnFuture) ->
+create_task(Callee=#object{cog=Cog},Method,Params, Info, CallerCog) ->
     %% Create the schedule event based on the invocation event; this is because
     %% we don't have access to the caller id from the callee.
     #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(CallerCog, Method),
     ScheduleEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=Name},
     NewInfo = Info#task_info{event=ScheduleEvent},
-    {ok, FutureRef} = case ReturnFuture of
-                          true -> gen_statem:start(future,[Params,ScheduleEvent,true], []);
-                          _ -> {ok, null}
-                      end,
+    {ok, FutureRef} = gen_statem:start(future,[Params,ScheduleEvent,true], []),
     _TaskRef=cog:add_task(Cog,async_call_task, FutureRef, Callee, [Method|Params], NewInfo#task_info{this=Callee,destiny=FutureRef}, Params),
     FutureRef.
 
