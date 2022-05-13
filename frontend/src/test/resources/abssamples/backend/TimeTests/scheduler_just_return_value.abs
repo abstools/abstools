@@ -1,0 +1,31 @@
+module BackendTest;
+import * from ABS.Scheduler;
+
+def Maybe<Process> maybeScheduler(List<Process> queue) = Just(head(queue));
+
+interface Testable {
+  Bool test();
+}
+
+[Scheduler: maybeScheduler(queue)]
+class C implements Testable {
+  Int counter = 0;
+
+  Unit inc() {
+    counter = counter + 1;
+  }
+
+  Bool test() {
+    this!inc();
+    this!inc();
+    this!inc();
+    await counter == 3;
+
+    return True;
+  }
+}
+
+{
+  Testable t = new C();
+  Bool testresult = await t!test();
+}
