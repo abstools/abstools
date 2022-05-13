@@ -1,0 +1,23 @@
+module BackendTest;
+
+interface Testable {
+  Bool test();
+}
+
+class C implements Testable {
+    Destiny myMethod() {
+        return destiny;
+    }
+
+    Bool test() {
+        Fut<Destiny> f = this!myMethod();
+        await f?;
+        Destiny g = f.get;
+        return f == g; 
+    }
+}
+
+{
+  Testable t = new C();
+  Bool testresult = await t!test();
+}

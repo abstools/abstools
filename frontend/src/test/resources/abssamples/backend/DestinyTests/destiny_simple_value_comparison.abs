@@ -1,0 +1,24 @@
+module BackendTest;
+
+interface Foo {
+    Unit a();
+    Int b();
+}
+
+class Bar implements Foo {
+    Unit a() {}
+    Int b() { return 42; }
+}
+
+{
+    Foo o = new Bar();
+
+    Fut<Unit> aCall = o!a();
+    Fut<Int> bCall = o!b();
+
+    Destiny futureStore1 = aCall;
+    Destiny futureStore2 = bCall;
+    Destiny futureStore3 = aCall;
+
+    Bool testresult = aCall == futureStore1 && bCall != futureStore1 && futureStore1 != futureStore2 && futureStore1 == futureStore3;
+}

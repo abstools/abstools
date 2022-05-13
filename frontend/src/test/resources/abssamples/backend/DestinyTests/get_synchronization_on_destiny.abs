@@ -1,0 +1,20 @@
+module BackendTest;
+
+interface Testable {
+    Bool test();
+}
+
+class A implements Testable {
+    Bool test() {
+        return True;
+    }
+}
+
+{
+    Testable t = new A();
+    Destiny f = t!test();
+
+    f.get;
+
+    Bool testresult = True;
+}

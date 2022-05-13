@@ -1,0 +1,53 @@
+module BackendTest;
+
+interface Testable {
+    Bool test();
+}
+
+class MyClass implements Testable {
+    Maybe<Destiny> leftDestiny = Nothing;
+    Maybe<Destiny> rightDestiny = Nothing;
+
+    Fut<Int> left;
+    Fut<Int> right;
+
+    Bool done = False;
+    Bool result = False;
+
+    Int m(Bool writeLeft) {
+        if (writeLeft) {
+            leftDestiny = Just(destiny);
+        }
+    
+        else {
+            rightDestiny = Just(destiny);
+        }
+    
+        await done;
+    
+        return 42;
+    }
+
+    Bool test() {
+        this.left = this!m(True);
+        this.right = this!m(False);
+    
+        await isJust(leftDestiny) && isJust(rightDestiny);
+    
+        result =
+            fromJust(this.leftDestiny) == this.left &&
+            fromJust(this.rightDestiny) == this.right &&
+            this.left != this.right &&
+            fromJust(this.leftDestiny) != fromJust(this.rightDestiny);
+    
+        done = True;
+    
+        return result;
+    }
+}
+
+{
+    Testable t = new MyClass();
+
+    Bool testresult = await t!test();
+}
