@@ -44,6 +44,15 @@ take an argument of type `List<Process>` as their first argument.
 
 If `Maybe<Process>` is used as a return type, the user-defined scheduler can
 decide not to schedule any process by returning `Nothing`.
+That is, if a user-defined scheduler returns `Nothing` then the ABS model
+behaves as if there are no processes that can be scheduled for the COG at the
+time.
+In that case, the scheduler will be invoked again if:
+
+* An asynchronous call is performed on an object of the cog, or
+* some future that a process of the cog was awaiting is resolved, or
+* a `duration` or a resource that the cog was waiting for completes / is
+  refilled.
 
 NOTE: The `Maybe<Process>` return type is supported by the Erlang backend only.
 
