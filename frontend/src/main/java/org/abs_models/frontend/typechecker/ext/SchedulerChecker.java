@@ -47,8 +47,23 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
         }
         FunctionDecl sd = (FunctionDecl)s.getDecl();
         // check scheduling function return type
-        boolean schedulerTypeCorrect = scheduler_type.isDataType()
-            && ((DataTypeType)scheduler_type).getQualifiedName().equals("ABS.Scheduler.Process");
+        final boolean schedulerTypeCorrect;
+        if (scheduler_type.isDataType()) {
+            final DataTypeType scheduler_data_type = (DataTypeType) scheduler_type;
+
+            // A sheduler function must either have the return type
+            // ABS.Scheduler.Process, or ABS.StdLib.Maybe<ABS.Scheduler.Process>
+            schedulerTypeCorrect =
+                      scheduler_data_type.getQualifiedName().equals("ABS.Scheduler.Process")
+                ||       scheduler_data_type.getQualifiedName().equals("ABS.StdLib.Maybe")
+                      && scheduler_data_type.numTypeArgs() == 1
+                      && scheduler_data_type.getTypeArgs().get(0).isDataType()
+                      && ((DataTypeType) scheduler_data_type.getTypeArgs().get(0))
+                             .getQualifiedName().equals("ABS.Scheduler.Process");
+        } else {
+            schedulerTypeCorrect = false;
+        }
+
         // check scheduling function first arg, pt.1: are we a list?
         boolean schedulerFunFirstArgCorrect = sd.getNumParam() > 0 &&
             sd.getParam(0).getType().getQualifiedName().equals("ABS.StdLib.List");

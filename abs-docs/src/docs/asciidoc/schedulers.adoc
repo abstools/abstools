@@ -39,8 +39,22 @@ def Process earliest_deadline_scheduler(List<Process> queue) =
 ----
 
 
-All schedulers must have a result type `Process` and must take an argument of
-type `List<Process>` as their first argument.
+All schedulers must have a result type `Process` or `Maybe<Process>` and must
+take an argument of type `List<Process>` as their first argument.
+
+If `Maybe<Process>` is used as a return type, the user-defined scheduler can
+decide not to schedule any process by returning `Nothing`.
+That is, if a user-defined scheduler returns `Nothing` then the ABS model
+behaves as if there are no processes that can be scheduled for the COG at the
+time.
+In that case, the scheduler will be invoked again if:
+
+* An asynchronous call is performed on an object of the cog, or
+* some future that a process of the cog was awaiting is resolved, or
+* a `duration` or a resource that the cog was waiting for completes / is
+  refilled.
+
+NOTE: The `Maybe<Process>` return type is supported by the Erlang backend only.
 
 [[sec:process-attributes]]
 === Processes and Process Attributes
@@ -128,3 +142,56 @@ def Process some_scheduler(List<Process> queue, Bool value) = head(queue); <2>
 <2> The scheduler `some_scheduler` has a second argument of type `Bool`
 <3> The current value of field `flag` will used as the second argument to `some_scheduler`
 
+The `Maybe<Process>` return type of schedulers can be utilized to enforce a
+specific process activation order.
+That is, the class `SharedResourceImpl` in the following example enforces that
+its methods `connect()`, `performAction()`, and `disconnect()` can only ever be
+executed in this order.
+For example, if `connect()` has not run yet, then the scheduler of
+`SharedResourceImpl` will not activate any method execution, until an
+activation for `connect()` is available:
+
+[source]
+.Example
+----
+module MainMod;
+import * from ABS.Scheduler;
+
+def Maybe<Process> resourceScheduler(List<Process> queue, Object connection) =
+  when method(head(queue)) == ".init" then Just(head(queue)) else <1>
+    let List<Process> permittedActivations = filter( <2>
+        (Process p) => 
+          when (connection == null) then
+            method(p) == "connect"
+          else
+            method(p) == "performAction" || method(p) == "disconnect" 
+      )(queue)
+    in
+      case permittedActivations {
+        Nil => Nothing | <3>
+        Cons(p, _) => Just(
+          head(permittedActivations)
+        )
+      };
+
+interface SharedResource {
+  Unit connect();
+  Unit performAction();
+  Unit disconnect();
+}
+
+class Connection {}
+
+[Scheduler: resourceScheduler(queue, connection)]
+class SharedResourceImpl implements SharedResource {
+  Object connection;
+
+  Unit connect() { connection = new Connection(); println("connect"); }
+  Unit performAction()  { println("performAction"); }
+  Unit disconnect() { connection = null; println("disconnect"); }
+}
+----
+<1> `.init` must always be executed first.
+<2> Here, we filter the available `Process` instances for those that can be
+    executed in the current state.
+<3> If no available activation is viable, the scheduler returns `Nothing`.

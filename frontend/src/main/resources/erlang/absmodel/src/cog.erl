@@ -722,7 +722,21 @@ choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, []) ->
                                              end
                                      end,
                                      Arglist) ++ [[]],
-                    #task_info{pid=Chosen}=apply(SchedulerFunction, [#cog{ref=self()} | Args]),
+                    MaybeProcessInfo=apply(SchedulerFunction, [#cog{ref=self()} | Args]),
+                    Chosen=case MaybeProcessInfo of
+                        % Return type was Maybe<Process> and no process can
+                        % continue currently since Nothing was returned
+                        dataNothing ->
+                            none;
+                        % Return type was Maybe<Process> and a process has been
+                        % chosen to be executed (Just(...))
+                        { dataJust, #task_info{pid=JustChosen} } ->
+                            JustChosen;
+                        % Return type was Process and therefore a process must
+                        % have been chosen to be executed
+                        #task_info{pid=JustChosen} ->
+                            JustChosen
+                    end,
                     Chosen
             end
     end.
