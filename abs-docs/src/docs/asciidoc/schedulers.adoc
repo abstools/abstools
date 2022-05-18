@@ -59,12 +59,16 @@ run a certain method.  The following attributes are available:
 |`method` |`String` |Name of the method executed by the process
 |`arrival` |`Time` |Time when method call was issued
 |`proc_deadline` |`Duration` | The (current) deadline value of the process (`InfDuration` if none)
+|`destinyOf` |`Destiny` | The future of the asynchronous call that is currently being executed by the process
 |=======================
 
 NOTE: The attributes `cost`, `start`, `crit` are available in
 the Maude backend only but will be implemented in the Erlang backend as well.
 The attributes `value`, `finish` are under consideration since their
 usefulness is questionable.
+
+NOTE: The attribute `destinyOf` is only available in the Erlang backend.
+
 // Duration cost(Process p) = builtin;
 // Duration proc_deadline(Process p) = builtin;
 // Time start(Process p) = builtin;

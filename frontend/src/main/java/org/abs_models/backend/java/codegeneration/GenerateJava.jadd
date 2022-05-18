@@ -738,6 +738,10 @@ aspect GenerateJava {
 
     public void GetExp.generateJava(PrintStream stream) {
         DataTypeType t = (DataTypeType) getPureExp().getType();
+
+        if (t.isDestinyType())
+            throw new NotImplementedYetException(this, "Get expressions are not yet implemented for expressions directly typed by Destiny for the Java backend");
+
         // assume to be of type Fut<V>
         if (!t.isFutureType() || !t.hasTypeArgs())
             return;
@@ -1084,6 +1088,10 @@ aspect GenerateJava {
 
     public void ThisExp.generateJava(PrintStream stream) {
         stream.print("this");
+    }
+
+    public void DestinyExp.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
     }
 
     public void MinusExp.generateJava(PrintStream stream) {

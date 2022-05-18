@@ -18,6 +18,7 @@ aspect TypeResolution {
     syn boolean Decl.isTypeSyn() = false;
     syn boolean Decl.isTypeParameter() = false;
     syn boolean Decl.isFuture() = false;
+    syn boolean Decl.isDestiny() = false;
     syn boolean Decl.isException() = false;
     syn boolean Decl.isPartialFunction() = false;
     syn boolean Decl.isTrait() = false;
@@ -31,6 +32,8 @@ aspect TypeResolution {
     eq TypeParameterDecl.isTypeParameter() = true;
     eq DataTypeDecl.isFuture() = getType().isFutureType();
     eq TypeSynDecl.isFuture() = getType().isFutureType();
+    eq DataTypeDecl.isDestiny() = getType().isDestinyType();
+    eq TypeSynDecl.isDestiny() = getType().isDestinyType();
     eq ExceptionDecl.isException() = true;
     eq PartialFunctionDecl.isPartialFunction() = true;
     eq TraitDecl.isTrait() = true;

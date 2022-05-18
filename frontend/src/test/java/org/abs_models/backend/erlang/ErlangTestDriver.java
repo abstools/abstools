@@ -6,6 +6,8 @@
 package org.abs_models.backend.erlang;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -79,6 +81,14 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     @Override
     public void assertEvalTrue(String absCode) throws Exception {
         Assert.assertEquals("True", runAndCheck(absCode));
+    }
+
+    public void assertEvalTrue(File f) throws Exception {
+        Model m = ABSTest.assertParseFileOk(f.getPath());
+        assertFalse(m.hasParserErrors());
+        assertFalse(m.hasTypeErrors());
+        assertNotNull(m.lookupModule("BackendTest"));
+        assertEvalTrue(m);
     }
 
     /**

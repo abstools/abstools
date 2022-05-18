@@ -1,0 +1,24 @@
+module BackendTest;
+
+interface Testable {
+  Bool test();
+}
+
+class C implements Testable {
+    Bool syn(Destiny caller) {
+        return destiny == caller;
+    }
+
+    Bool asyn() {
+        return this.syn(destiny);
+    }
+
+    Bool test() {
+        return await this!asyn();
+    }
+}
+
+{
+  Testable t = new C();
+  Bool testresult = await t!test();
+}

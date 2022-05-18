@@ -73,6 +73,24 @@ public class TypeCheckerHelper {
         typeCheckMatchingParamsPattern(e, p, c);
     }
 
+    public static void checkForGetOnDestiny(SemanticConditionList l, ASTNode<?> node, String targetFieldOrVariableName, Exp potentialGetValue) {
+        if (potentialGetValue instanceof GetExp) {
+            final GetExp getValue = (GetExp) potentialGetValue;
+
+            if (getValue.getType().isBottomType()) {
+                l.add(new TypeError(
+                            node,
+                            ErrorMessage.CANNOT_STORE_DESTINY_GET,
+                            new String[] {
+                                getValue.getPureExp().toString(),
+                                targetFieldOrVariableName
+                            }
+                        )
+                );
+            }
+        }
+    }
+
     public static void checkAssignment(SemanticConditionList l, ASTNode<?> n, Type lht, Exp rhte) {
         Type te = rhte.getType();
         if (!te.isAssignableTo(lht)) {

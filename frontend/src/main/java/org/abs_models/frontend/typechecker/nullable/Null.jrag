@@ -283,5 +283,7 @@ aspect Null {
 
   eq ThisExp.isNull() = false;
 
+  eq DestinyExp.isNull() = false;
+
   eq Unary.isNull() = false;
 }

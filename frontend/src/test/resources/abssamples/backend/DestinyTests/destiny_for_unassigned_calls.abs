@@ -1,0 +1,37 @@
+module BackendTest;
+
+interface Testable {
+  Bool test();
+}
+
+class MyClass implements Testable {
+    Destiny f;
+    Bool destinyAssigned = False;
+    Bool testIsWaiting = False;
+    Bool myMethodFinished = False;
+
+    Unit myMethod() {
+        this.f = destiny;
+        destinyAssigned = True;
+
+        await testIsWaiting;
+
+        myMethodFinished = True;
+    }
+
+    Bool test() {
+        this!myMethod();
+
+        await destinyAssigned;
+
+        testIsWaiting = True;
+        await f?;
+
+        return myMethodFinished;
+    }
+}
+
+{
+    Testable t = new MyClass();
+    Bool testresult = await t!test();
+}

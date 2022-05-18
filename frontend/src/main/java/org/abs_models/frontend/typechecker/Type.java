@@ -159,6 +159,10 @@ public abstract class Type {
         return false;
     }
 
+    public boolean isBottomType() {
+        return false;
+    }
+
     public boolean isFutureType() {
         return false;
     }
@@ -199,6 +203,10 @@ public abstract class Type {
         return false;
     }
 
+    public boolean isDestinyType() {
+        return false;
+    }
+
     public boolean isDeploymentComponentType() {
         return false;
     }
@@ -230,11 +238,14 @@ public abstract class Type {
         if (t == null)
             throw new IllegalArgumentException("t is null");
 
-        if (t.isAnyType())
+        if (t.isAnyType()) // every type is a subtype of Any
             return true;
 
         if (this.equals(t))
             return true;
+
+        if (t.isBottomType()) // No type is a subtype of Bottom, except for Bottom itself
+            return false;
 
         if (t.isBoundedType()) {
             BoundedType bt = (BoundedType) t;

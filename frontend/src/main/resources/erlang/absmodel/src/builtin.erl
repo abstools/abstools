@@ -7,7 +7,7 @@
 -export([random/2,truncate/2,numerator/2, denominator/2]).
 -export([float/2, rat/2, floor/2, ceil/2, sqrt/2, log/2, exp/2]).
 
--export([method/2, arrival/2, proc_deadline/2]).
+-export([method/2, destinyOf/2, arrival/2, proc_deadline/2]).
 
 
 lowlevelDeadline(_Cog) ->
@@ -177,6 +177,8 @@ thisDC(#cog{dcobj=DC}) ->
 %% ABS.Scheduler functions
 method(_Cog, #task_info{method=Method}) ->
     Method.
+destinyOf(_Cog, #task_info{destiny=Future}) ->
+    Future.
 arrival(_Cog, #task_info{arrival=Arrival}) ->
     Arrival.
 proc_deadline(_Cog, #task_info{proc_deadline=dataInfDuration}) ->

@@ -597,11 +597,15 @@ aspect TypeChecker {
 
         Type t = getTypeUse().getType();
         if (hasInitExp()) {
-            getInitExp().typeCheck(e);
+            final Exp initExp = getInitExp();
+            initExp.typeCheck(e);
+
+            TypeCheckerHelper.checkForGetOnDestiny(e, this, this.getName(), initExp);
+
             if (e.getErrorCount() > nerrors) return;
             TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
         } else {
-            if (!t.isReferenceType() && !t.isFutureType()) {
+            if (!t.isReferenceType() && !t.isFutureType() && !t.isDestinyType()) {
                 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
             }
         }
@@ -618,7 +622,7 @@ aspect TypeChecker {
             if (e.getErrorCount() > nerrors) return;
             TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
         } else {
-            if (!t.isReferenceType() && !t.isFutureType()) {
+            if (!t.isReferenceType() && !t.isFutureType() && !t.isDestinyType()) {
                 e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));
             }
         }
@@ -669,12 +673,19 @@ aspect TypeChecker {
     public void AssignStmt.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
         int nerrors = e.getErrorCount();
-        getValue().typeCheck(e);
-        getVar().typeCheck(e);
+
+        final Exp value = getValue();
+        value.typeCheck(e);
+
+        final VarOrFieldUse variable = getVar();
+        variable.typeCheck(e);
+
+        TypeCheckerHelper.checkForGetOnDestiny(e, this, variable.getName(), value);
 
         if (e.getErrorCount() > nerrors)
             return;
-        TypeCheckerHelper.checkAssignment(e,this,getVar().getType(),getValue());
+
+        TypeCheckerHelper.checkAssignment(e,this,variable.getType(),value);
     }
 
     public void MoveCogToStmt.typeCheck(SemanticConditionList e) {
@@ -829,7 +840,7 @@ aspect TypeChecker {
     public void ClaimGuard.typeCheck(SemanticConditionList e) {
         getVar().typeCheck(e);
         Type t = getVar().getType();
-        if (!t.isFutureType()) {
+        if (!t.isFutureType() && !t.isDestinyType()) {
             e.add(new TypeError(getVar(),ErrorMessage.EXPECTED_FUT_TYPE, t));
         }
     }
@@ -869,6 +880,11 @@ aspect TypeChecker {
     public void ThisExp.typeCheck(SemanticConditionList e) {
       if (getContextDecl().isUnknown())
         e.add(new TypeError(this,ErrorMessage.THIS_STATIC,""));
+    }
+
+    public void DestinyExp.typeCheck(SemanticConditionList e) {
+      if (getContextDecl().isUnknown())
+        e.add(new TypeError(this,ErrorMessage.DESTINY_NO_CONTEXT,""));
     }
 
     public void OriginalCall.typeCheck(SemanticConditionList e) {
@@ -961,8 +977,13 @@ aspect TypeChecker {
     public void GetExp.typeCheck(SemanticConditionList e) {
         int nerrors = e.getErrorCount();
         getPureExp().typeCheck(e);
+
+        if (getPureExp() instanceof DestinyExp) {
+            e.add(new SemanticWarning(this, ErrorMessage.DESTINY_IN_GETEXP, ""));
+        }
+
         if (nerrors == e.getErrorCount()) {
-            if (!getPureExp().getType().isFutureType()) {
+            if (!getPureExp().getType().isFutureType() && !getPureExp().getType().isDestinyType()) {
                 e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType()));
             }
         }

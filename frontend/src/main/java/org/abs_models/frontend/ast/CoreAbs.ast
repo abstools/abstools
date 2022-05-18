@@ -177,6 +177,7 @@ abstract EffExp: Exp;
 // Side effect free expressions
 NullExp: PureExp;
 ThisExp: PureExp;
+DestinyExp: PureExp;
 // plus *Use-s
 
 abstract LiteralExp: PureExp;
