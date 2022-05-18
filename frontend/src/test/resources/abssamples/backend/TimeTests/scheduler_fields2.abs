@@ -1,0 +1,27 @@
+module BackendTest;
+import * from ABS.Scheduler;
+// https://github.com/abstools/abstools/issues/312
+
+// This user-defined scheduler reads an object field; do not try to "schedule"
+// the init block since at that time the fields are not initialized yet.
+def Process some_scheduler(List<Process> queue, Bool value) =
+  let Unit x = when value then println("flag is set") else println("flag is not set")
+  in head(queue); 
+
+interface Testable {
+    Bool check();
+}
+
+class C implements Testable {
+    Bool flag = True;
+    Bool check() {
+        return flag;
+    }
+}
+
+{
+    Bool testresult = False;
+    [Scheduler: some_scheduler(queue, flag)] Testable t = new C();
+    testresult = await t!check();
+}
+

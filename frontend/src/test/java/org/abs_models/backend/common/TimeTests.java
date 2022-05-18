@@ -63,6 +63,13 @@ public class TimeTests extends SemanticTests {
     }
 
     @Test
+    public void scheduler_fields2() throws Exception {
+        Assume.assumeTrue("Only meaningful with custom scheduler support",
+                          driver.supportsExceptions());
+        assertEvalTrue(new File("abssamples/backend/TimeTests/scheduler_fields2.abs"));
+    }
+
+    @Test
     public void resource_accounting() throws Exception {
         Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue(new File("abssamples/backend/TimeTests/resource_accounting.abs"));

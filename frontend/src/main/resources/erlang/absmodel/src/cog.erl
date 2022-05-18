@@ -690,37 +690,46 @@ choose_runnable_task(Scheduler, Candidates, TaskInfos, ObjectStates, []) ->
     case gb_sets:is_empty(Candidates) of
         true -> none;
         false ->
-            case Scheduler of
-                undefined ->
-                    %% random:uniform is in the range of 1..N
-                    Index=rand:uniform(gb_sets:size(Candidates)) - 1,
-                    Chosen = (fun TakeNth (Iter, 0) ->
-                                      {Elem, _} = gb_sets:next(Iter),
-                                      Elem;
-                                  TakeNth(Iter, N) ->
-                                      {_, Next} = gb_sets:next(Iter),
-                                      TakeNth(Next, N - 1)
-                              end) (gb_sets:iterator(Candidates), Index),
-                    Chosen;
-                {SchedulerFunction, Arglist} ->
-                    MainObjectState=primary_object_state(ObjectStates),
-                    MainObjectClass=object:get_class_from_state(MainObjectState),
-                    %% `CandidateInfos' will be bound to the `queue'
-                    %% parameter.  Note that this code does not assume that
-                    %% `queue' is the first parameter of the scheduler, so
-                    %% we’re ready in case the argument order of schedulers is
-                    %% relaxed.
-                    CandidateInfos = lists:map(fun(C) -> maps:get(C, TaskInfos) end,
-                                               gb_sets:to_list(Candidates)),
-                    Args = lists:map(fun(Arg) ->
-                                             case Arg of
-                                                 queue -> CandidateInfos;
-                                                 _ -> MainObjectClass:get_val_internal(MainObjectState, Arg)
-                                             end
-                                     end,
-                                     Arglist) ++ [[]],
-                    #task_info{pid=Chosen}=apply(SchedulerFunction, [#cog{ref=self()} | Args]),
-                    Chosen
+            %% Special case: Run the init block without further ado, and do
+            %% not try to use custom schedulers on it (bug #312).  Note that
+            %% here we take a shortcut: we depend on no other method call
+            %% arriving before the object is fully initialized.  This is
+            %% currently guaranteed by the implementation of object:new/5.
+            case (MaybeInit=maps:get(gb_sets:smallest(Candidates), TaskInfos))#task_info.method of
+                <<".init">> -> MaybeInit#task_info.pid;
+                _ ->
+                    case Scheduler of
+                        undefined ->
+                            %% random:uniform is in the range of 1..N
+                            Index=rand:uniform(gb_sets:size(Candidates)) - 1,
+                            Chosen = (fun TakeNth (Iter, 0) ->
+                                              {Elem, _} = gb_sets:next(Iter),
+                                              Elem;
+                                          TakeNth(Iter, N) ->
+                                              {_, Next} = gb_sets:next(Iter),
+                                              TakeNth(Next, N - 1)
+                                      end) (gb_sets:iterator(Candidates), Index),
+                            Chosen;
+                        {SchedulerFunction, Arglist} ->
+                            MainObjectState=primary_object_state(ObjectStates),
+                            MainObjectClass=object:get_class_from_state(MainObjectState),
+                            %% `CandidateInfos' will be bound to the `queue'
+                            %% parameter.  Note that this code does not assume that
+                            %% `queue' is the first parameter of the scheduler, so
+                            %% we’re ready in case the argument order of schedulers is
+                            %% relaxed.
+                            CandidateInfos = lists:map(fun(C) -> maps:get(C, TaskInfos) end,
+                                                       gb_sets:to_list(Candidates)),
+                            Args = lists:map(fun(Arg) ->
+                                                     case Arg of
+                                                         queue -> CandidateInfos;
+                                                         _ -> MainObjectClass:get_val_internal(MainObjectState, Arg)
+                                                     end
+                                             end,
+                                             Arglist) ++ [[]],
+                            #task_info{pid=Chosen}=apply(SchedulerFunction, [#cog{ref=self()} | Args]),
+                            Chosen
+                    end
             end
     end.
 
