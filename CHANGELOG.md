@@ -8,7 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- In the Erlang backend, it is now possible to calculate the result of a function from the result of a query to a provided SQLite database.  The preliminary syntax for this is `def List<Int> f(Int x) = builtin(sqlite3, "db.sqlite3", "SELECT i FROM t where i > ?", x);`.  See the manual for more details.
+- Added a new expression `destiny` that evaluates the future of the currently-running task.  Since a synchronous method call does not get a new future but has a different return type, `destiny` is typed with the new type `Destiny`, a supertype of all futures.
+
+- Added a new process attribute `destinyOf`, useful in user-defined schedulers, that returns the future of a given process.
+
+- In the Erlang backend, it is now possible to define functions that read from a provided SQLite database: `def List<Int> f(Int x) = builtin(sqlite3, "db.sqlite3", "SELECT i FROM t where i > ?", x);` will return a list of numbers greater than `x` in table `t` of database file `db.sqlite3`.  See the manual for more details.
 
 - The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 
