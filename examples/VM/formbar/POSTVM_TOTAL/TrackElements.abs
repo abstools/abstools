@@ -24,7 +24,6 @@ interface Observable {}
 interface ZugMelde {}
 interface Signal {} //logical signal group
 
-
 module TrackElements;
 
 export *;
@@ -41,15 +40,18 @@ unique interface TrackElementI{
 }
 
 interface Specific extends TrackElementI { // this is needed because in some situations we actually need additional exposed methods
+   Observed getObserved();
 }
   
+interface Observed extends Specific{ }
 
-class TrackElement(Node n, Edge waitTrack, String sigName, String name) implements Specific {
+class TrackElement(Node n, Edge waitTrack, String sigName, String name) implements Observed {
   SignalState state = STOP;
   Observable s = null;
  {
     logOut("TOWARDS;"+toString(this)+";"+toString(waitTrack));
  }
+  Observed getObserved() { return this; }
   String getName(){ return this.name; }
   Unit register(Train t){ skip; }
   Unit deregister(Train t){ skip; }  
@@ -94,7 +96,7 @@ modifies interface Specific{
 }
 modifies class TrackElement {
   adds Int allowed = allow;
-  modifies SignalState getState(){
+  adds SignalState getState(){
     return NOSIG;
   }
   adds Unit setAllowed(Int i){
@@ -104,8 +106,9 @@ modifies class TrackElement {
 
 delta PoV;
 modifies class TrackElement {
+  adds SignalState state = STOP;
   modifies Unit register(Train t){
-        if(s != null) this.s.setObserver(t);    
+        if(s != null) this.s.setObserver(train);    
   }
   modifies Unit deregister(Train t){
         if(s != null) this.s.setObserver(null);    
@@ -144,7 +147,7 @@ modifies class TrackElement {
   adds Edge getWaitTrack(){ 
   	return this.waitTrack; 
   }
-  modifies Information getInfoState() {
+  adds Information getInfoState() {
   	return HauptSig( this.state , sigName); 
   }
   
@@ -203,3 +206,16 @@ delta VLimit when Pre && FSpeed;
 delta HLimit when Main && FSpeed;
 delta VS when Pre && FSignal;
 delta HS when Main && FSignal;
+
+module Main;
+
+import * from Wrapper;
+import * from TrackElements;
+
+{
+  new TrackElement(null, null, "", "") with {Pre, FSignal};
+  new TrackElement(null, null, "", "") with {Pre, FSpeed};
+  new TrackElement(null, null, "", "") with {Main, FSignal};
+  new TrackElement(null, null, "", "") with {Main, FSpeed};
+  new TrackElement(null, null, "", "") with {FPoV};
+}
