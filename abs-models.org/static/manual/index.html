@@ -2614,22 +2614,22 @@ right-hand side of the first matching pattern.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>CaseExp</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>case</code> <em>PureExp</em> <code>{</code> <em>CaseExpBranch</em> { `</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>case</code> <em>PureExp</em> <code>{</code> <em>CaseExpBranch</em> { <code>|</code> <em>CaseExpBranch</em> } <code>}</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock">` <em>CaseExpBranch</em> } <code>}</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>CaseExpBranch</em> ::=</p></td>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>CaseExpBranch</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Pattern</em> <code>=&gt;</code> <em>PureExp</em></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Pattern</em> <code>=&gt;</code> <em>PureExp</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Pattern</em> ::=</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><code>_</code><br>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>Pattern</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>_</code><br>
                  | <em>SimpleIdentifier</em><br>
                  | <em>Literal</em><br>
                  | <em>ConstrPattern</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>ConstrPattern</em> ::=</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>ConstrPattern</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>TypeIdentifier</em> [ <code>(</code> [ <em>Pattern</em> { <code>,</code> <em>Pattern</em> }  ] <code>)</code> ]</p></td>
 </tr>
 </tbody>
 </table>
