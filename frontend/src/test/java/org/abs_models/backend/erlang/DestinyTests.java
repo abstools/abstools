@@ -55,6 +55,12 @@ public class DestinyTests extends ABSTest {
             new File("abssamples/backend/DestinyTests/call_future_is_same_as_destiny2.abs")
         );
     }
+
+    @Test
+    public void destinyOfRunMethodIsValid() throws Exception {
+        // https://github.com/abstools/abstools/issues/313
+        // destiny was null inside a run method
+        driver.assertEvalTrue(
+            new File("abssamples/backend/DestinyTests/destiny_of_run_is_not_null.abs"));
+    }
 }
-
-

@@ -1,0 +1,30 @@
+module BackendTest;
+
+// bug #313: destiny of a run method is null
+
+interface Testable {
+    Bool test();
+}
+
+class MyClass implements Testable {
+
+    Bool completed = False;
+    Bool result = False;
+
+    Unit run() {
+        result = toString(destiny) != "null";
+        completed = True;
+    }
+
+    Bool test() {
+        await this.completed == True;
+        return result;
+    }
+}
+
+{
+    Testable t = new MyClass();
+
+    Bool testresult = await t!test();
+    println(`testresult: $testresult$`);
+}

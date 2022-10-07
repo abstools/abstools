@@ -137,17 +137,10 @@ public class ClassGenerator {
             classDecl.getInitBlock().generateErlangCode(ecs, vars);
             ecs.println(",");
         }
-        if (classDecl.isActiveClass()) {
-            ecs.println("cog:task_is_blocked_for_gc(Cog, self(), get(task_info), get(this)),");
-            ecs.print("cog:add_task(Cog,active_object_task,null,O,[],#task_info{event=#event{type=schedule, local_id=run}, method= <<\"run\"/utf8>>,this=O,destiny=null},");
-            ecs.print(vars.toStack());
-            ecs.println("),");
-            ecs.println("cog:task_is_runnable(Cog,self()),");
-            ecs.print("task:wait_for_token(Cog,");
-            ecs.print(vars.toStack());
-            ecs.println("),");
-        }
         ecs.println("gc:register_object(O),");
+        if (classDecl.isActiveClass()) {
+            ecs.println("cog:create_task(O,'m_run',[[]],#task_info{method= <<\"run\"/utf8>>, creation={dataTime,builtin:currentms(Cog)}, proc_deadline=dataInfDuration},Cog),");
+        }
         ecs.println("O.");
         ecs.decIndent();
     }
