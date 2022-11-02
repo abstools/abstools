@@ -122,7 +122,7 @@ This page links ABS workshops, as well as selected research papers on the develo
 - E. Giachino, C. Laneve, and M. Lienhardt.  
   *A Framework for Deadlock Detection in ABS.*  
   Journal of Software and Systems Modeling, Volume 15(4), Springer, 2015.  
-  DOI: [10.1007/s10270-014-0444-y](http://dx.doi.org/10.1007/s10270-014-0444-y). Download a [preprint](http://df4abs.nws.cs.unibo.it/longDF4ABS.pdf).
+  DOI: [10.1007/s10270-014-0444-y](http://dx.doi.org/10.1007/s10270-014-0444-y).
 
 ## Code Generation from ABS
 
