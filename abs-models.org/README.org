@@ -4,6 +4,10 @@ This is the source code for the abs-models.org website.  The site is
 built using [[https://gohugo.io/][Hugo]], and deployed both inside collaboratory docker
 containers and at https://abs-models.org/.
 
+** Testing changes
+
+Run =hugo server= and open a browser at ~localhost:1313~ to test changes locally.
+
 ** Updating the theme
 
 Newer hugo releases might emit warnings or errors for our theme.  In

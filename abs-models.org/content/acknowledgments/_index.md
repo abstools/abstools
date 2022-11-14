@@ -6,15 +6,14 @@ weight: 6
 
 ## Projects
 
-The development of the ABS language and tools has been supported by a number of European FP7 and H2020 research projects.
+The development of the ABS language and tools has been supported by a number of research projects supported by the European Commission and the Research Council of Norway:
 
-- [HATS](https://web.archive.org/web/20181127101833/http://www.hats-project.eu/): Highly Adaptive and Trustworthy Software using Formal Methods
-
+![HATS](/images/hats-logo.jpg?width=5pc)![Envisage](/images/envisage-logo.jpg?width=5pc)![HyVar](/images/hyvar-logo.png?width=5pc)![Sirius](/images/sirius-logo.png?width=5pc)
+- [HATS](https://web.archive.org/web/20181127101833/http://www.hats-project.eu/): Highly Adaptive and Trustworthy Software using Formal Methods 
 - [Envisage](http://envisage-project.eu): Engineering Virtualized Services
-
 - [HyVar](http://hyvar-project.eu/hyvar/): Scalable Hybrid Variability
+- [SIRIUS](https://sirius-labs.no): Enabling digitalization in and beyond the oil and gas industry
 
-![HATS](/images/hats-logo.jpg?width=5pc) ![Envisage](/images/envisage-logo.jpg?width=5pc) ![HyVar](/images/hyvar-logo.png?width=5pc)
 
 ## Contributors
 
