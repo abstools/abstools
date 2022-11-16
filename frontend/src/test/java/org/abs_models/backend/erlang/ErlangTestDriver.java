@@ -391,6 +391,10 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
                     return val;
                 }
             }
+            // We didn't find the test result--print all erlang output
+            for (String line : output) {
+                System.out.println(line);
+            }
             return null;
         }
     }
