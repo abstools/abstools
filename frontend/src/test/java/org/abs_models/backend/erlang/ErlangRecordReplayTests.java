@@ -1,23 +1,21 @@
 package org.abs_models.backend.erlang;
 
-import java.io.File;
-import java.util.List;
-
-import com.google.common.io.Files;
-
 import org.abs_models.ABSTest;
 import org.abs_models.frontend.ast.Model;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.File;
+import java.util.List;
 
 public class ErlangRecordReplayTests extends ABSTest {
 
     ErlangTestDriver driver = new ErlangTestDriver();
 
     private boolean recordMatchesReplay(final String name) {
-        final File f = Files.createTempDir();
-        f.deleteOnExit();
         try {
+            final File f = java.nio.file.Files.createTempDirectory(null).toFile();
+            f.deleteOnExit();
             final Model m = assertParseFileOk(name, Config.WITHOUT_MODULE_NAME);
             final String mainModule = driver.genCode(m, f, false);
             final List<String> recordOutput = driver.runCompiledModel(f, mainModule, "-t", "trace.json");

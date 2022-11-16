@@ -117,7 +117,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     public void generateAndCompile(Model model) throws Exception {
         File f = null;
         try {
-            f = Files.createTempDir();
+            f = java.nio.file.Files.createTempDirectory(null).toFile();
             f.deleteOnExit();
             genCode(model, f, false);
         } finally {
@@ -399,7 +399,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     public void assertEvalTrue(Model model) throws Exception {
         File f = null;
         try {
-            f = Files.createTempDir();
+            f = java.nio.file.Files.createTempDirectory(null).toFile();
             f.deleteOnExit();
             String mainModule = genCode(model, f, true);
             assertEquals("True",runAndCheck(f, mainModule));
@@ -416,7 +416,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     public void assertEvalTrueWithTestfiles(Model m, File... f) throws Exception {
         File dir = null;
         try {
-            dir = Files.createTempDir();
+            dir = java.nio.file.Files.createTempDirectory(null).toFile();
             dir.deleteOnExit();
             // implementation-specific location for static files; the erlang
             // backend expects e.g. index.html, database files there

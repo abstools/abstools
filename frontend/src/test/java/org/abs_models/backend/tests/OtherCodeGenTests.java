@@ -4,15 +4,16 @@
  */
 package org.abs_models.backend.tests;
 
-import static org.junit.Assert.*;
-
-import java.io.*;
-import java.util.EnumSet;
-
 import org.abs_models.backend.erlang.ErlApp;
 import org.abs_models.backend.erlang.ErlangBackend;
 import org.abs_models.frontend.typesystem.CaseStudyTypeChecking;
-import org.junit.*;
+import org.junit.Test;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.util.EnumSet;
 
 public class OtherCodeGenTests extends CaseStudyTypeChecking {
 
@@ -41,10 +42,7 @@ public class OtherCodeGenTests extends CaseStudyTypeChecking {
     @Test
     public void testErlang() throws Exception {
         super.test();
-        File tmpD = new File(System.getProperty("java.io.tmpdir"));
-        assertTrue(tmpD.exists() && tmpD.canWrite());
-        File tmp = new File(tmpD,"tmp_erl");
-        tmp.mkdir();
+        File tmp = java.nio.file.Files.createTempDirectory("tmp_erl").toFile();
         tmp.deleteOnExit();
         ErlApp ea = new ErlApp(tmp, null, null);
         m.generateErlangCode(ea, EnumSet.noneOf(ErlangBackend.CompileOptions.class));

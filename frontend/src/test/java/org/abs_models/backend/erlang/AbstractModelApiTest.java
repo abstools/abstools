@@ -52,7 +52,7 @@ public abstract class AbstractModelApiTest extends ABSTest {
     }
     
     protected static void startModelApiServer(File file) throws IOException, WrongProgramArgumentException, InternalBackendException, InterruptedException {
-        File tmpdir = Files.createTempDir();
+        File tmpdir = java.nio.file.Files.createTempDirectory(null).toFile();
         tmpdir.deleteOnExit();
         Model model = ABSTest.assertParseFileOk(file.getPath(), Config.TYPE_CHECK, Config.WITHOUT_MODULE_NAME);
         assertFalse(model.hasParserErrors());
