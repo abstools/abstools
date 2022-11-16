@@ -58,11 +58,26 @@ public class ErlApp {
         this.destDir = destDir;
         this.destCodeDir = new File(destDir, "absmodel/src/");
         this.destIncludeDir = new File(destDir, "absmodel/include/");
+
+        // Note we do not clean up contents of destDir:
+        // https://github.com/abstools/abstools/issues/294
         if (!destDir.mkdirs() && !destDir.isDirectory()) {
-            throw new IOException("Could not create directory " + destDir.toString());
+            // Why "&&"?  If mkdirs() returns false, we couldn't create
+            // destDir--but if it's already a directory that's ok.
+            throw new IOException("Could not create directory " + destCodeDir.toString());
         }
-        FileUtils.cleanDirectory(destDir);
-        // new File(destDir, "absmodel/ebin").mkdir();
+        // On the other hand, to avoid stale files we do remove contents of
+        // the code and include directories where our own code resides.
+        if (!destCodeDir.mkdirs() && !destCodeDir.isDirectory()) {
+            throw new IOException("Could not create directory " + destCodeDir.toString());
+        } else {
+            FileUtils.cleanDirectory(destCodeDir);
+        }
+        if (!destIncludeDir.mkdirs() && !destIncludeDir.isDirectory()) {
+            throw new IOException("Could not create directory " + destIncludeDir.toString());
+        } else {
+            FileUtils.cleanDirectory(destIncludeDir);
+        }
         index_file = http_index_file;
         static_dir = http_static_dir;
         if (static_dir != null && !static_dir.isDirectory()) {
@@ -177,6 +192,7 @@ public class ErlApp {
         try {
             // new File(destDir + "/absmodel/ebin").mkdirs();
             if (resource instanceof JarURLConnection) {
+                // normal path: backend files are stored in absfrontend.jar
                 for (String f : RUNTIME_FILES) {
                     if (f.endsWith("/*")) {
                         String dirname = f.substring(0, f.length() - 2);
@@ -202,9 +218,9 @@ public class ErlApp {
                 }
             }
             else if (resource.getURL().getProtocol().equals("file")) {
-                /* stolz: This at least works for the unit tests from within Eclipse */
+                // we're executing unit tests: copy backend files from filesystem
                 File file = new File("build/resources/main/erlang/");
-                assert file.exists();
+                assert file.exists() && file.isDirectory();
                 FileUtils.copyDirectory(file, destDir);
             } else {
                 throw new UnsupportedOperationException("File type: "+resource);

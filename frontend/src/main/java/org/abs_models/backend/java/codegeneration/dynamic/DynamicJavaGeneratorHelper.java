@@ -412,8 +412,8 @@ public class DynamicJavaGeneratorHelper {
      * @param code
      * @throws IOException
      */
-    public static void cleanGenFolder(JavaCode code) throws IOException {
-        JavaGeneratorHelper.cleanGenFolder(code);
+    public static void createGenFolder(JavaCode code) throws IOException {
+        JavaGeneratorHelper.createGenFolder(code);
     }
 
     public static void printEscapedString(PrintStream stream, String content) {

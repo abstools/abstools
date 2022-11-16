@@ -423,9 +423,11 @@ public class JavaGeneratorHelper {
      * @param code
      * @throws IOException
      */
-    public static void cleanGenFolder(JavaCode code) throws IOException {
+    public static void createGenFolder(JavaCode code) throws IOException {
         File genDir = code.getSrcDir();
-        FileUtils.deleteDirectory(genDir);
+        // We used to call FileUtils.deleteDirectory here but don't anymore
+        // because of https://github.com/abstools/abstools/issues/294
+        genDir.mkdirs();
     }
 
     public static void printEscapedString(PrintStream stream, String content) {

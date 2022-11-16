@@ -17,7 +17,7 @@ aspect GenerateJava {
 
     public void Model.generateJavaCode(JavaCode code, boolean includeDebug) throws IOException, JavaCodeGenerationException {
         this.includeDebug = includeDebug;
-        JavaGeneratorHelper.cleanGenFolder(code);
+        JavaGeneratorHelper.createGenFolder(code);
         for (ModuleDecl decl : getModuleDecls()) {
             try {
                 decl.generateJavaCode(code);
