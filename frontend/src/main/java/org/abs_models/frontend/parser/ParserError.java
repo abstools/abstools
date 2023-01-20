@@ -26,7 +26,7 @@ public class ParserError extends CompilerCondition {
      * @return the line number of the error, or -1 if unavailable.
      */
     @Override
-    public int getLine() {
+    public int getStartLine() {
         return line;
     }
 
@@ -34,7 +34,7 @@ public class ParserError extends CompilerCondition {
      * @return the column number of the error, or -1 if unavailable.
      */
     @Override
-    public int getColumn() {
+    public int getStartColumn() {
         return column;
     }
 
