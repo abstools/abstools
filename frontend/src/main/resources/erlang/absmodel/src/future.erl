@@ -74,9 +74,13 @@ await(Future, Cog, Stack) ->
     gen_statem:call(Future, {done_waiting, Cog}).
 
 get_for_rest(Future) ->
-    register_waiting_process(Future, self()),
-    receive {value_present, Future} -> ok end,
-    confirm_wait_unblocked(Future, self()),
+    case register_waiting_process(Future, self()) of
+        unresolved ->
+            receive {value_present, Future} ->
+                    confirm_wait_unblocked(Future, self())
+            end;
+        completed -> ok
+    end,
     Result=case gen_statem:call(Future, {get, modelapi}) of
                %% Explicitly re-export internal representation since it's
                %% deconstructed by modelapi_v2:handle_object_call
