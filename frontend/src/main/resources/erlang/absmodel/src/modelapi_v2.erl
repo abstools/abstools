@@ -185,9 +185,6 @@ handle_object_call([Objectname, Methodname], Parameters, Req) ->
     end.
 
 decode_parameters(URLParameters, ParamDecls, Body) ->
-    %% TODO: There could be better error reporting here:
-    %% - check for well-formed JSON body (needs to be a list)
-    %% - When parameter missing: report its name
     try
         BodyValues = jsx:decode(Body),
         Parameters = maps:merge(
@@ -197,7 +194,9 @@ decode_parameters(URLParameters, ParamDecls, Body) ->
                                decode_parameter(maps:get(Name, Parameters), Type, TypeArgs)
                        end, ParamDecls)}
     catch _:_ ->
-            {error, <<"Error during parameter decoding">>}
+            {error, iolist_to_binary(
+                      [<<"Error during parameter decoding of body ">>, io_lib:format("~tp", [Body]),
+                       <<" and URL values ">>, io_lib:format("~tp", [URLParameters])])}
     end.
 
 decode_parameter(Value, Type, TypeArgs) ->
