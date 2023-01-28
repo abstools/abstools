@@ -235,6 +235,7 @@ public class TypeCheckerHelper {
                         AttrAssignment aa = f.getAttrAssignment(i);
                         for (DeltaClause dc : dcs) {
                             DeltaDecl dd = m.findDelta(dc.getDeltaspec().getDeltaID());
+                            if (dd == null) throw new TypeCheckerException(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, dc.getDeltaspec().getDeltaID()));
                             DeltaParamDecl dp = dd.getParam(i);
                             // FIXME: we assumed here that delta
                             // parameters and feature parameters have
