@@ -1,5 +1,6 @@
 %%This file is licensed under the terms of the Modified BSD License.
 -module(future).
+-export([new/3]).
 -export([get_after_await/2,get_blocking/3,await/3,has_value/1,die/2,value_available/6]).
 -export([task_started/3]).
 -export([get_for_rest/1]).
@@ -22,16 +23,28 @@
 
 -record(data, {calleetask,
                calleecog,
-               references=[],
-               value=none,
+               references = [] :: list(any()),
+               value = none :: 'none' | abs_value(),
                %% Three different things can be waiting: tasks, cogs, and
                %% "bare" pids (for calls coming from the model api).  See
                %% `notify_completion/1', `confirm_wait_unblocked/2'.
-               waiting_tasks=ordsets:new(),
-               cookie=none,
-               register_in_gc=true,
-               event=undefined
+               waiting_tasks = ordsets:new() :: ordsets:ordset(any()),
+               cookie = none :: any(),
+               register_in_gc = true :: boolean(),
+               event
               }).
+
+%% Creating a future
+
+%% @doc Create a new future.
+-spec new(any(), any(), boolean()) ->
+          abs_future().
+new(Params, ScheduleEvent, RegisterInGC) ->
+    %% Replace third parameter to `gen_statem:start` with `[{debug, [trace]}]`
+    %% to turn on state machine tracing (warning: produces huge amounts of
+    %% output)
+    {ok, Future}=gen_statem:start(future, [Params, ScheduleEvent, RegisterInGC], []),
+    Future.
 
 %% Interacting with a future caller-side
 

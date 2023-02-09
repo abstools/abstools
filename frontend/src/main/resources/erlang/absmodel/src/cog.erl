@@ -97,7 +97,7 @@
          %% Map from pid to polling state: either true, false or crashed.
          polling_states=#{},
          %% increasing count of objects; also generator of unique id
-         object_counter=0,
+         object_counter = 0 :: non_neg_integer(),
          %% Map with all object states
          object_states=#{ null => {state, none} },
          %% Uninitialized objects and the tasks trying to run on them
@@ -170,17 +170,19 @@ create_task(Callee=#object{cog=Cog},Method,Params, Info, CallerCog) ->
     #event{caller_id=Cid, local_id=Lid, name=Name} = cog:register_invocation(CallerCog, Method),
     ScheduleEvent = #event{type=schedule, caller_id=Cid, local_id=Lid, name=Name},
     NewInfo = Info#task_info{event=ScheduleEvent},
-    {ok, FutureRef} = gen_statem:start(future,[Params,ScheduleEvent,true], []),
+    FutureRef=future:new(Params, ScheduleEvent, true),
     _TaskRef=cog:add_task(Cog,async_call_task, FutureRef, Callee, [Method|Params], NewInfo#task_info{this=Callee,destiny=FutureRef}, Params),
     FutureRef.
 
 create_model_api_task(Callee=#object{cog=Cog}, Method, Params, Info) ->
     ScheduleEvent = #event{type=schedule, caller_id=modelapi, local_id={Method, Params}, name=Method},
     NewInfo = Info#task_info{event=ScheduleEvent},
-    {ok, FutureRef} = gen_statem:start(future,[Params,ScheduleEvent,false], []),
+    FutureRef=future:new(Params, ScheduleEvent, false),
     _TaskRef=cog:add_task(Cog,async_call_task, FutureRef, Callee, [Method|Params], NewInfo#task_info{this=Callee,destiny=FutureRef}, Params),
     FutureRef.
 
+-spec new_object(abs_cog(), atom(), any()) ->
+          abs_object().
 new_object(Cog=#cog{ref=CogRef}, Class, ObjectState) ->
     Oid=gen_statem:call(CogRef, {new_object_state, ObjectState}),
     case Class of

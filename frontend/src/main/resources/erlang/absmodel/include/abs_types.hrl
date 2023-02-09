@@ -1,26 +1,26 @@
 %%This file is licensed under the terms of the Modified BSD License.
 
--type abs_value() :: atom()             % Booleans, null, ADTs without constructor argument
-                   | float()            % Float
-                   | integer()          % Int
-                   | tuple()            % Rat, ADTs with constructor arguments
-                   | binary()           % String
-                   | pid()              % Future
-                   | list(abs_value())  % List
-                     .
+-record(object,
+        {
+         oid :: non_neg_integer(),
+         cog :: abs_cog()
+        }).
 
--record(object,{oid,cog}).
--record(cog,{ref,dcobj}).
+-record(cog,
+        {ref :: pid(),
+         dcobj :: abs_object()
+        }).
+
 -record(task_info, % use `get(task_info)' in a task to get this structure
        {
         %% filled in at creation time with self()
-        pid=undefined,
+        pid=undefined :: undefined | pid(),
         %% pid of the task's object (`null` for main task)
-        this=null,
+        this=null :: null | pid(),
         %% pid of the task's future (`null` for main task and init task)
-        destiny=null,
+        destiny=null :: null | pid(),
         %% name of the running method (compile-time constant)
-        method= <<"">> ,
+        method= <<"">> :: binary(),
         %% filled in when added to cog
         event=undefined,
         %% filled in at point of async call
@@ -35,7 +35,7 @@
         %% filled in by cog upon first scheduling
         start={dataTime, -1},
         %% filled in via annotation
-        crit=false,
+        crit=false :: boolean(),
         %% Flag used by the cog to determine which action(s) to take when
         %% scheduling a task.  Can be `none', `{waiting_on_clock, Min, Max}',
         %% or `{waiting_on_future, Future}'.  Set and used internally by the
@@ -65,3 +65,27 @@
         }).
 
 -record(db_trace, {trace, status=unexplored}).
+
+%% Types
+
+-type abs_object() :: % An ABS object
+        #object{}
+      | 'null'
+        .
+
+-type abs_cog() :: % An ABS cog
+        #cog{}.
+
+-type abs_future() :: % An ABS future reference
+        pid().
+
+-type abs_value() :: % Any ABS value
+        atom()             % Booleans, null, ADTs without constructor argument
+      | float()            % Float
+      | integer()          % Int
+      | tuple()            % Rat, ADTs with constructor arguments
+      | binary()           % String
+      | abs_object()       % Object reference
+      | abs_future()       % Future
+      | list(abs_value())  % List
+        .
