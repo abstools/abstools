@@ -15,9 +15,9 @@
        {
         %% filled in at creation time with self()
         pid=undefined :: undefined | pid(),
-        %% pid of the task's object (`null` for main task)
+        %% pid of the task's object (`null' for main task)
         this=null :: null | pid(),
-        %% pid of the task's future (`null` for main task and init task)
+        %% pid of the task's future (`null' for main task and init task)
         destiny=null :: null | pid(),
         %% name of the running method (compile-time constant)
         method= <<"">> :: binary(),

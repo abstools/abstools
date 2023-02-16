@@ -68,7 +68,7 @@ new_local(Creator, Cog,Class,Args)->
     cog:activate_object(Cog, O),
     O.
 
--spec new(abs_cog(), atom(), any(), abs_cog(), any()) ->
+-spec new(Cog :: abs_cog(), Class :: atom(), Args :: list(), CreatorCog :: abs_cog(), Stack :: any()) ->
           abs_object().
 new(Cog,Class,Args,CreatorCog,Stack)->
     State=Class:init_internal(),

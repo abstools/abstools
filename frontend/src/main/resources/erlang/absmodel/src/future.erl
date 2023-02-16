@@ -40,7 +40,7 @@
 -spec new(any(), any(), boolean()) ->
           abs_future().
 new(Params, ScheduleEvent, RegisterInGC) ->
-    %% Replace third parameter to `gen_statem:start` with `[{debug, [trace]}]`
+    %% Replace third parameter to `gen_statem:start' with `[{debug, [trace]}]'
     %% to turn on state machine tracing (warning: produces huge amounts of
     %% output)
     {ok, Future}=gen_statem:start(future, [Params, ScheduleEvent, RegisterInGC], []),

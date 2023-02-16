@@ -181,7 +181,8 @@ create_model_api_task(Callee=#object{cog=Cog}, Method, Params, Info) ->
     _TaskRef=cog:add_task(Cog,async_call_task, FutureRef, Callee, [Method|Params], NewInfo#task_info{this=Callee,destiny=FutureRef}, Params),
     FutureRef.
 
--spec new_object(abs_cog(), atom(), any()) ->
+%% @doc Create a new object in the cog, given its class and initial state.
+-spec new_object(Cog :: abs_cog(), Class :: atom(), ObjectState :: any()) ->
           abs_object().
 new_object(Cog=#cog{ref=CogRef}, Class, ObjectState) ->
     Oid=gen_statem:call(CogRef, {new_object_state, ObjectState}),
@@ -1188,7 +1189,7 @@ task_running(cast, stop_world, Data=#data{running_task=R,gc_waiting_to_start=fal
      Data#data{next_state_after_gc=task_running, gc_waiting_to_start=true}};
 task_running(cast, {consume_resource_on_dc, _DCRef, _DCOid, _ConsumingCog, _ConsumingTask, _Resourcetype, _Amount_raw}, _Data) ->
     %% This event is only sent to cogs who contain a DC object ()as
-    %% its sole object, since DCs can't be created via `new_local`.
+    %% its sole object, since DCs can't be created via `new_local'.
     %% We need to modify the dc object's state, so postpone resource
     %% consumption until the running process (who will have the dc
     %% object state checked out) has finished.  Note that all methods
