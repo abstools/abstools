@@ -60,32 +60,34 @@ gcstats(Log, Statistics) ->
         _ -> ok
     end.
 
-
+-spec register_future(abs_future()) -> _ .
 register_future(FutRef) ->
-    %% Fut is the plain pid of the Future process
     gen_statem:cast({global, gc}, {register_future, FutRef, self()}).
 
+-spec unroot_future(abs_future()) -> _ .
 unroot_future(FutRef) ->
-    %% Fut is the plain pid of the Future process
     gen_statem:cast({global, gc}, {unroot_future, FutRef}).
 
+-spec register_cog(pid()) -> _ .
 register_cog(CogRef) ->
     gen_statem:call({global, gc}, {register_cog, CogRef}).
 
-unregister_cog(#cog{ref=CogRef}) ->
-    gen_statem:cast({global, gc}, {unregister_cog, CogRef});
+-spec unregister_cog(pid()) -> _ .
 unregister_cog(CogRef) ->
     gen_statem:cast({global, gc}, {unregister_cog, CogRef}).
 
-cog_stopped(#cog{ref=CogRef}) ->
-    gen_statem:cast({global, gc}, {cog_stopped, CogRef});
+-spec cog_stopped(pid()) -> _ .
 cog_stopped(CogRef) ->
     gen_statem:cast({global, gc}, {cog_stopped, CogRef}).
 
-register_object(Object=#object{oid=_Oid}) ->
+-spec register_object(abs_object()) -> _ .
+register_object(null) -> ok;                    % shouldn't happen
+register_object(Object) ->
     gen_statem:cast({global, gc}, {register_object, Object}).
 
-unregister_object(Object=#object{oid=_Oid}) ->
+-spec unregister_object(abs_object()) -> _ .
+unregister_object(null) -> ok;                  % shouldn't happen
+unregister_object(Object) ->
     gen_statem:cast({global, gc}, {unregister_object, Object}).
 
 %% gen_statem callback functions

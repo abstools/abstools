@@ -812,7 +812,7 @@ send_token(Token, Task, TaskInfos, ObjectStates) ->
 
 %% Wait until we get the nod from the garbage collector
 cog_starting(cast, stop_world, Data=#data{dc=DC})->
-    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+    gc:cog_stopped(self()),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
 cog_starting(cast, acknowledged_by_gc, Data)->
     {next_state, no_task_schedulable, Data};
@@ -934,7 +934,7 @@ no_task_schedulable(cast, {future_is_ready, FutureRef},
                        recorded=NewRecorded, replaying=NewReplaying}}
     end;
 no_task_schedulable(cast, stop_world, Data=#data{dc=DC}) ->
-    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+    gc:cog_stopped(self()),
     {next_state, in_gc, Data#data{next_state_after_gc=no_task_schedulable}};
 no_task_schedulable(EventType, Event, Data) ->
     handle_event(EventType, Event, no_task_schedulable, Data).
@@ -1019,7 +1019,7 @@ task_running({call, From}, {token, R, TaskState, TaskInfo, ObjectState},
                                recorded=NewRecorded2, replaying=NewReplaying}}
             end;
         true ->
-            gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+            gc:cog_stopped(self()),
             case gb_sets:is_empty(NewRunnable) and gb_sets:is_empty(New) of
                 %% Note that in contrast to `cog_active()', `cog_idle()'
                 %% cannot be called multiple times "just in case" since the
@@ -1104,7 +1104,7 @@ task_running(cast, {task_blocked_for_resource,
              Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos,
                        next_stable_id=N+1, recorded=[Event | Recorded]}};
         true ->
-            gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+            gc:cog_stopped(self()),
             {next_state, in_gc,
              Data#data{next_state_after_gc=task_blocked,
                        object_states=NewObjectStates, task_infos=NewTaskInfos,
@@ -1132,7 +1132,7 @@ task_running(cast, {task_blocked_for_future, TaskRef, TaskInfo, ObjectState, _Fu
                      Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}}
             end;
         true ->
-            gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+            gc:cog_stopped(self()),
             case NewTaskState of
                 runnable ->
                     {next_state, in_gc,
@@ -1161,7 +1161,7 @@ task_running(cast, {task_blocked_for_clock, TaskRef, TaskInfo, ObjectState,
             {next_state, task_blocked,
              Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}};
         true ->
-            gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+            gc:cog_stopped(self()),
             {next_state, in_gc,
              Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates, task_infos=NewTaskInfos}}
     end;
@@ -1179,7 +1179,7 @@ task_running(cast, {task_blocked_for_gc, TaskRef, TaskInfo, ObjectState},
             {next_state, task_blocked,
              Data#data{object_states=NewObjectStates, task_infos=NewTaskInfos}};
         true ->
-            gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+            gc:cog_stopped(self()),
             {next_state, in_gc,
              Data#data{next_state_after_gc=task_blocked,object_states=NewObjectStates, task_infos=NewTaskInfos}}
     end;
@@ -1259,7 +1259,7 @@ task_running(info, {'EXIT',TaskRef,_Reason},
             end;
         true ->
             case RunningTaskFinished of
-                true -> gc:cog_stopped(#cog{ref=self(), dcobj=DC});
+                true -> gc:cog_stopped(self());
                 false -> ok
             end,
             NextState=case RunningTaskFinished of
@@ -1314,7 +1314,7 @@ task_blocked(cast, {task_runnable, TaskRef, ConfirmTask},
                runnable_tasks=gb_sets:add_element(TaskRef, Run),
                new_tasks=gb_sets:del_element(TaskRef, New)}};
 task_blocked(cast, stop_world, Data=#data{dc=DC}) ->
-    gc:cog_stopped(#cog{ref=self(), dcobj=DC}),
+    gc:cog_stopped(self()),
     {next_state, in_gc, Data#data{next_state_after_gc=task_blocked}};
 task_blocked(EventType, Event, Data) ->
     handle_event(EventType, Event, task_blocked, Data).
@@ -1384,7 +1384,7 @@ in_gc(cast, resume_world, Data=#data{running_task=RunningTask,
                                      recorded=Recorded,replaying=Replaying}) ->
     case maps:size(ObjectStates) > 0 of
         false -> dc:cog_died(DCRef, self(), Recorded),
-                 gc:unregister_cog(#cog{ref=self(), dcobj=DC}),
+                 gc:unregister_cog(self()),
                  {stop, normal, Data};
         true ->
             case NextState of
