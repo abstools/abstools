@@ -18,9 +18,7 @@ implementation-oriented languages
 [\[25\]](http://dx.doi.org/10.1007/978-3-642-25271-6_8) For trying out
 the examples provided in this tutorial you will need the ABS Eclipse
 plugin. To install it, follow the simple instructions at
-[http://tools.](http://tools.hats-project.eu/eclipseplugin/installation.html
-"http://tools.hats-project.eu/eclipseplugin/installation.html")
-[hats-project.eu/eclipseplugin/installation.html](http://tools.hats-project.eu/eclipseplugin/installation.html
+[http://tools.hats-project.eu/eclipseplugin/installation.html](http://tools.hats-project.eu/eclipseplugin/installation.html
 "http://tools.hats-project.eu/eclipseplugin/installation.html").  You
 will need at least Eclipse version 3.6.2 and it is recommended to work
 with a clean installation. The example project used throughout this
@@ -40,8 +38,7 @@ object-oriented, built from components, and highly reusable. To achieve
 the latter, we follow the arguably most successful software reuse
 methodology in practice: *software product families or software product
 lines* [\[35\]](http://dx.doi.org/10.1007/3-540-28901-1), see also the
-[Product Line Hall of](http://splc.net/fame.html "Product Hall of Fame")
-[Fame](http://splc.net/fame.html "Product Hall of Fame"). To this end,
+[Product Line Hall of Fame](http://splc.net/fame.html "Product Hall of Fame"). To this end,
 ABS supports the modeling of variability in terms of feature models as a
 *first-class language concept*. As shown in Sect. 8, ABS thus provides
 language-based support for *product line engineering* (PLE). As an
@@ -55,13 +52,13 @@ introductory tutorial, but is covered in detail in the chapter by
 Johnsen in this volume
 [\[24\]](http://dx.doi.org/10.1007/978-3-642-40615-7). ABS is not merely
 a modeling notation, but it arrives with an integrated tool set that
-helps to *automate the software engineering process*. Tools are use-
-less, however, unless they ensure *predictability of results,
+helps to *automate the software engineering process*. Tools are useless,
+however, unless they ensure *predictability of results,
 interoperability*, and *usability*. A fundamental requirement for the
 first two criteria is a uniform, formal semantics. But
 interoperability also involves the capability to connect with other
-notations than ABS. This is ensured by providing numerous language in-
-terfaces from and to ABS as shown in below. These are
+notations than ABS. This is ensured by providing numerous language interfaces
+from and to ABS as shown in below. These are
 realized by various import, export, and code generation tools, several
 of which are discussed below.
 
@@ -152,8 +149,8 @@ that no premature decision on the properties of datatypes is enforced,
 which helps to create implementation-independent models. Second,
 functions on datatypes can be *underspecified*. The modeler has the
 alternative to return abstract values or to leave case distinctions
-incomplete. The latter may result in runtime errors, but is nev-
-ertheless useful for simulation, test generation or verification
+incomplete. The latter may result in runtime errors, but is nevertheless
+useful for simulation, test generation or verification
 scenarios. Third, the scheduling of concurrent tasks as well as the
 order of queuing messages is non-deterministic. Of course, one might
 want to give full implementation details at some time. This is possible
@@ -232,8 +229,8 @@ and, at the same time, create a *type synonym*:
 type CustomerList = List<Customer>;
 ```
 
-Type synonyms do not add new types or functionality, but can greatly en-
-hance readability.
+Type synonyms do not add new types or functionality, but can greatly enhance
+readability.
 
 ### 4.2 Functions
 
@@ -440,8 +437,8 @@ recommend this, however, because it dilutes the programming to
 interfaces discipline. It is suggested to use a base name for the
 interface and derive class names by appending "Impl" or similar. A class
 may implement multiple interfaces. Class constructors are not declared
-explicitly, instead, class declarations are equipped with parameter dec-
-larations that implicitly define corresponding fields and a constructor.
+explicitly, instead, class declarations are equipped with parameter declarations
+that implicitly define corresponding fields and a constructor.
 Class definitions then consist of field declarations, followed by an
 initialization block and method implementations. Any of these elements
 may be missing. Hence, we can continue the example as follows:
@@ -1044,8 +1041,8 @@ from TVL in that (i) attribute types that are not needed are omitted and
 model orthogonal variability in product lines. Let us build a product
 line based on the Account interface from Sect. 6.4. Assume we want to
 distinguish between checking and saving accounts. The latter may pay
-interest, whereas the former usually don't. Optionally, a checking ac-
-count (but not a saving account) may permit an overdraft or incur fees
+interest, whereas the former usually don't. Optionally, a checking account
+(but not a saving account) may permit an overdraft or incur fees
 for transactions. A graphical representation of the Account feature
 model is in [Fig. 12](fig12.png). The textual rendering in μTVL looks as
 follows:
