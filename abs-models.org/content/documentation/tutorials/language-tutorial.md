@@ -18,9 +18,7 @@ implementation-oriented languages
 [\[25\]](http://dx.doi.org/10.1007/978-3-642-25271-6_8) For trying out
 the examples provided in this tutorial you will need the ABS Eclipse
 plugin. To install it, follow the simple instructions at
-[http://tools.](http://tools.hats-project.eu/eclipseplugin/installation.html
-"http://tools.hats-project.eu/eclipseplugin/installation.html")
-[hats-project.eu/eclipseplugin/installation.html](http://tools.hats-project.eu/eclipseplugin/installation.html
+[http://tools.hats-project.eu/eclipseplugin/installation.html](http://tools.hats-project.eu/eclipseplugin/installation.html
 "http://tools.hats-project.eu/eclipseplugin/installation.html").  You
 will need at least Eclipse version 3.6.2 and it is recommended to work
 with a clean installation. The example project used throughout this
@@ -40,8 +38,7 @@ object-oriented, built from components, and highly reusable. To achieve
 the latter, we follow the arguably most successful software reuse
 methodology in practice: *software product families or software product
 lines* [\[35\]](http://dx.doi.org/10.1007/3-540-28901-1), see also the
-[Product Line Hall of](http://splc.net/fame.html "Product Hall of Fame")
-[Fame](http://splc.net/fame.html "Product Hall of Fame"). To this end,
+[Product Line Hall of Fame](http://splc.net/fame.html "Product Line Hall of Fame"). To this end,
 ABS supports the modeling of variability in terms of feature models as a
 *first-class language concept*. As shown in Sect. 8, ABS thus provides
 language-based support for *product line engineering* (PLE). As an
@@ -55,13 +52,13 @@ introductory tutorial, but is covered in detail in the chapter by
 Johnsen in this volume
 [\[24\]](http://dx.doi.org/10.1007/978-3-642-40615-7). ABS is not merely
 a modeling notation, but it arrives with an integrated tool set that
-helps to *automate the software engineering process*. Tools are use-
-less, however, unless they ensure *predictability of results,
+helps to *automate the software engineering process*. Tools are useless,
+however, unless they ensure *predictability of results,
 interoperability*, and *usability*. A fundamental requirement for the
 first two criteria is a uniform, formal semantics. But
 interoperability also involves the capability to connect with other
-notations than ABS. This is ensured by providing numerous language in-
-terfaces from and to ABS as shown in below. These are
+notations than ABS. This is ensured by providing numerous language interfaces
+from and to ABS as shown in below. These are
 realized by various import, export, and code generation tools, several
 of which are discussed below.
 
@@ -104,8 +101,8 @@ realize the ABS
 ![Architecture of the ABS language](/images/tutorials/language-tutorial/fig4.png "Architecture of the ABS language")
 
 *Modeling Perspective* (see [Fig.
-2](ABSModelingPerspective.jpg)) and the *ABS Debug Perspective* (see
-[Fig. 8](ABSDebugPerspective.jpg)), which provide the same functionality
+2](/images/tutorials/language-tutorial/ABSModelingPerspective.jpg)) and the *ABS Debug Perspective* (see
+[Fig. 8](/images/tutorials/language-tutorial/ABSDebugPerspective.jpg)), which provide the same functionality
 as their Java counterparts, that is, parsing, syntax highlighting, parse
 error location, symbol lookup, compilation, building, runtime
 configurations, interactive debugging, etc. In addition to these
@@ -118,7 +115,7 @@ ABS tool suite is given in
 ## 3 Architecture of ABS
 
 The architecture of ABS has been organized as a stack of clearly
-separated layers as illustrated in [Fig. 4](fig4.png). In the design we
+separated layers as illustrated in [Fig. 4](/images/tutorials/language-tutorial/fig4.png). In the design we
 strove for
 
 1.  an attractive, easy-to-learn language with a syntax that is familiar
@@ -152,8 +149,8 @@ that no premature decision on the properties of datatypes is enforced,
 which helps to create implementation-independent models. Second,
 functions on datatypes can be *underspecified*. The modeler has the
 alternative to return abstract values or to leave case distinctions
-incomplete. The latter may result in runtime errors, but is nev-
-ertheless useful for simulation, test generation or verification
+incomplete. The latter may result in runtime errors, but is nevertheless
+useful for simulation, test generation or verification
 scenarios. Third, the scheduling of concurrent tasks as well as the
 order of queuing messages is non-deterministic. Of course, one might
 want to give full implementation details at some time. This is possible
@@ -232,8 +229,8 @@ and, at the same time, create a *type synonym*:
 type CustomerList = List<Customer>;
 ```
 
-Type synonyms do not add new types or functionality, but can greatly en-
-hance readability.
+Type synonyms do not add new types or functionality, but can greatly enhance
+readability.
 
 ### 4.2 Functions
 
@@ -313,7 +310,7 @@ Set<Int> s = set[1,2,3];
 
 If you tried to type in the previous examples into the ABS Eclipse
 editor you got parser errors despite the definitions being syntactically
-correct (similarly as in [Fig. 5](ABSProblemReporting.jpg)). This is,
+correct (similarly as in [Fig. 5](/images/tutorials/language-tutorial/ABSProblemReporting.jpg)). This is,
 because any ABS definition must be contained in exactly one *module*.
 ABS is equipped with a simple syntactic module system that is inspired
 by that of Haskell [\[33\]](http://haskell.org/). To make the examples
@@ -440,8 +437,8 @@ recommend this, however, because it dilutes the programming to
 interfaces discipline. It is suggested to use a base name for the
 interface and derive class names by appending "Impl" or similar. A class
 may implement multiple interfaces. Class constructors are not declared
-explicitly, instead, class declarations are equipped with parameter dec-
-larations that implicitly define corresponding fields and a constructor.
+explicitly, instead, class declarations are equipped with parameter declarations
+that implicitly define corresponding fields and a constructor.
 Class definitions then consist of field declarations, followed by an
 initialization block and method implementations. Any of these elements
 may be missing. Hence, we can continue the example as follows:
@@ -627,7 +624,7 @@ from the modeling language Creol
 An ABS Concurrent Object Group (COG) is a collection of tasks with
 shared memory and processor. This means that exactly one task is active
 at any given time and tasks can cross-reference each other. The
-situation can be visualized as in [Fig. 6](fig6.png). Within a COG,
+situation can be visualized as in [Fig. 6](/images/tutorials/language-tutorial/fig6.png). Within a COG,
 synchronous as well as asynchronous method calls are permitted. For
 the former, we use the standard syntax
 **target.method(arg1,arg2,\...)**. *Synchronous method calls* within
@@ -724,12 +721,12 @@ tasks. The syntax for unconditional scheduling statements in ABS is
 In the previous section we discussed the fundamental concurrency model
 of ABS, which is based on COGs. Whenever we create an object with the
 **new** statement, it is by default created in the same COG as the
-current task (see upper part of [Fig. 7](fig7.png)). This is not
+current task (see upper part of [Fig. 7](/images/tutorials/language-tutorial/fig7.png)). This is not
 adequate for modeling *distributed computing*, where each node has its
 own computing resources (processor) and nodes are loosely coupled. In an
 ABS model of a distributed scenario we associate one COG with each node.
 New COGs are implicitly created when specifying the **cog** keyword at
-object creation (see lower part of [Fig. 7](fig7.png)): this creates a
+object creation (see lower part of [Fig. 7](/images/tutorials/language-tutorial/fig7.png)): this creates a
 new COG and places the new object inside it. At the moment, COGs are not
 first-class objects in ABS and are accessible only implicitly through
 their objects.(Foot: There is an extension for ABS runtime objects that
@@ -776,7 +773,7 @@ the results is safe. It is possible to *visualize* the execution of ABS
 code in two ways. To start the graphical ABS Debugger, simply right
 click on the file with the **Account** module in the explorer and select
 **Run As\|ABS Java Backend (Debug)**. This will automatically switch to
-the ABS Debug Perspective (see [Fig. 8](ABSDebugPerspective.jpg)) and
+the ABS Debug Perspective (see [Fig. 8](/images/tutorials/language-tutorial/ABSDebugPerspective.jpg)) and
 start the Eclipse debugger.
 
 ![Sequence diagram generated from an ABS simulation](/images/tutorials/language-tutorial/ABSSequenceDiagram.jpg "Sequence diagram generated from an ABS simulation")
@@ -787,7 +784,7 @@ state inspection, etc. If instead, the backend **Run As\|ABS Java
 Backend (Debug with Sequence Diagram)** is chosen, then in addition a
 UML sequence diagram that has a lifeline for each created COG is created
 and dynamically updated after each debugger step, see [Fig.
-9](ABSSequenceDiagram.jpg). Synchronous method calls to targets not in
+9](/images/tutorials/language-tutorial/ABSSequenceDiagram.jpg). Synchronous method calls to targets not in
 the current COG make no sense and are forbidden. For example, if we
 replace one of the asynchronous calls above with **a.deposit(17)**, a
 runtime error results. One possibility to avoid this is to *annotate*
@@ -980,7 +977,7 @@ One of the aims of ABS is to provide a uniform and formal framework for
 product line engineering (PLE)
 [\[35\]](http://dx.doi.org/10.1007/3-540-28901-1), a practically highly
 successful software reuse methodology. In PLE one distinguishes two
-separate development phases (see [Fig. 11](fig11.png)). During family
+separate development phases (see [Fig. 11](/images/tutorials/language-tutorial/fig11.png)). During family
 engineering one attempts to distill the commonality among different
 products into a set of reusable artifacts. At the same time, the
 variability of the product line is carefully planned. This is typically
@@ -1044,10 +1041,10 @@ from TVL in that (i) attribute types that are not needed are omitted and
 model orthogonal variability in product lines. Let us build a product
 line based on the Account interface from Sect. 6.4. Assume we want to
 distinguish between checking and saving accounts. The latter may pay
-interest, whereas the former usually don't. Optionally, a checking ac-
-count (but not a saving account) may permit an overdraft or incur fees
+interest, whereas the former usually don't. Optionally, a checking account
+(but not a saving account) may permit an overdraft or incur fees
 for transactions. A graphical representation of the Account feature
-model is in [Fig. 12](fig12.png). The textual rendering in μTVL looks as
+model is in [Fig. 12](/images/tutorials/language-tutorial/fig12.png). The textual rendering in μTVL looks as
 follows:
 
 ```
@@ -1111,10 +1108,10 @@ delta modules (or deltas, for short), a variant of delta-oriented
 programming (DOP). This constitutes the main reuse principle of ABS and
 replaces other mechanisms such as code inheritance, traits, or mixins.
 In delta modeling we assume that one outcome of the family engineering
-phase (see [Fig. 11](fig11.png)) is a core or base product with minimal
+phase (see [Fig. 11](/images/tutorials/language-tutorial/fig11.png)) is a core or base product with minimal
 functionality. Product variants with additional features are obtained
 from it by applying one or more deltas that realize the desired
-features, as illustrated in [Fig. 13](fig13.png). In ABS, deltas have
+features, as illustrated in [Fig. 13](/images/tutorials/language-tutorial/fig13.png). In ABS, deltas have
 the following capabilities:
 
 - Delta modules may add, remove or modify classes and interfaces
@@ -1195,7 +1192,7 @@ Of course, we assume here that the interest field has been added in the
 first place in the earlier delta DType. This requires to specify and
 check temporal constraints on the application of deltas as we shall see
 in the following section. Application of a concrete delta is illustrated
-with DSave in [Fig. 14](fig14.png). Syntax and parse error highlighting
+with DSave in [Fig. 14](/images/tutorials/language-tutorial/fig14.png). Syntax and parse error highlighting
 for delta modules works as usual. Automatic completion works as well,
 but it is only done relative to the base product.
 
@@ -1217,7 +1214,7 @@ and the delta model, that is, the feature implementation. Unlike any
 other formalism we are aware of, in ABS we can make a formal connection
 between these. This is the key to being able to analyze whole product
 lines and not merely individual products. In ABS, the connection between
-features and their realization (illustrated in [Fig. 15](fig15.png)) is
+features and their realization (illustrated in [Fig. 15](/images/tutorials/language-tutorial/fig15.png)) is
 done in a dedicated product line configuration file. This makes
 debugging easy, because all information about the realization of a given
 feature model is collected in one place. To establish a connection
@@ -1234,7 +1231,7 @@ three things:
 We can illustrate all three aspects with our running example. The
 following file (again, use file extension .abs) defines a product line
 named Accounts based on the five features of the feature model in [Fig.
-12](fig12.png).
+12](/images/tutorials/language-tutorial/fig12.png).
 
 ```
 productline Accounts;
@@ -1334,7 +1331,7 @@ formal semantics and covers the whole spectrum from feature modeling to
 the generation of executable code in Java. Development of ABS models is
 supported by an Eclipse plugin. A very important point is that ABS
 offers a wide variety of modeling options in a uniform, homogeneous
-framework, see [Fig. 17](fig17.png). This allows to select an
+framework, see [Fig. 17](/images/tutorials/language-tutorial/fig17.png). This allows to select an
 appropriate modeling style for each modeled artifact. It also supports
 rapid prototyping and design-time analysis, because ADT-based models can
 be refined later (dashed arrow). Of course, as any other formalism, ABS
