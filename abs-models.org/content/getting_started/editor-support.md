@@ -25,5 +25,7 @@ instructions.
 
 ## Visual Studio Code
 
-ABS editing support for [Visual Studio Code](https://code.visualstudio.com "Visual Studio Code homepage") is at https://github.com/abstools/abs-vs-code.  It currently has to be installed manually; see the above page for instructions.
-
+ABS editing support for [Visual Studio Code](https://code.visualstudio.com
+"Visual Studio Code homepage") can be installed as a `.vsix` file from [the
+latest release](https://github.com/abstools/abs-vs-code/releases/latest), see
+https://github.com/abstools/abs-vs-code for detailed instructions.
