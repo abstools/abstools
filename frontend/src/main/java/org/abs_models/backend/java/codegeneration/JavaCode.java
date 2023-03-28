@@ -72,10 +72,13 @@ public class JavaCode {
                       		"Please try to use a different name.");
             }
             File file = new File(packageDir, name + ".java");
-            addFile(file);
-            if (!file.createNewFile()) {
-                throw new IOException("File already exists: " + file.toString());
+            if (file.exists()) {
+                file.delete();
             }
+            if (!file.createNewFile()) {
+                throw new IOException("Could not create Java file " + file.toString());
+            }
+            files.add(file);
             return file;
         }
 
