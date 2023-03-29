@@ -761,12 +761,19 @@ aspect TypeChecker {
     public void ForeachStmt.typeCheck(SemanticConditionList e) {
         super.typeCheck(e);
 
+        int errorCount = e.getErrorCount();
         getListExp().typeCheck(e);
-        // assertHasType() is too specific -- we need to check that ListExp is
-        // a list, not its specific type (List<Int>)
+        if (e.getErrorCount() > errorCount) {
+            // Only continue typechecking if list expression doesn't have an
+            // error: https://github.com/abstools/abstools/issues/323
+            return;
+        }
+        // We can't use `assertHasType()` since it's too specific -- we need
+        // to check that ListExp is a list, not its specific type (e.g.,
+        // List<Int>)
         if (!getListExp().getType().isUnknownType()
             && !getListExp().getType().getDecl().getQualifiedName()
-                .equals(getModel().getListType().getDecl().getQualifiedName())) {
+            .equals(getModel().getListType().getDecl().getQualifiedName())) {
             e.add(new TypeError(getListExp(), ErrorMessage.EXPECTED_TYPE,
                                 getModel().getListType().getDecl().getQualifiedName(),
                                 getListExp().getType().getDecl().getQualifiedName()));

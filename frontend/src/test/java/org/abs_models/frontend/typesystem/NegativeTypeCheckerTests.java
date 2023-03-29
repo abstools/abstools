@@ -749,4 +749,10 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 	// wrong arguments: wrong query parameter type
 	assertTypeErrors("def List<Int> query() = builtin(sqlite3, `test.db`, `select * from table`, Unit);");
     }
+
+    @Test
+    public void bug323() {
+        // https://github.com/abstools/abstools/issues/323
+        assertTypeErrors("{ foreach (string in snd(entries)) skip; }");
+    }
 }
