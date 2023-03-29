@@ -157,6 +157,9 @@ clean {
     delete fileTree('src/main/resources/erlang') {
         include '**/*.beam'
         include '**/.rebar/'
+        // for esqlite
+        include '**/*.o'
+        include '**/*.so'
     }
 }
 jar.dependsOn 'compileErlangBackend'
