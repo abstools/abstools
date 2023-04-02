@@ -27,22 +27,19 @@ public abstract class CompilerCondition {
             helpMessage.append(getFileName() + ":");
         }
 
-        helpMessage.append(getStartLine() + ":" + getStartColumn());
-        if (!(getEndLine() == getStartLine() && getEndColumn() == getStartColumn())) {
-            helpMessage.append("-" + getEndLine() + ":" + getEndColumn());
-        }
-        helpMessage.append(":" + getMessage());
+        helpMessage.append(getLine() + ":" + getColumn() + ":" + getMessage());
+
         final String sourceLine = getSourceLine();
         if (sourceLine != null) {
 
             final String lineWithoutTabs = replaceTabs(sourceLine);
             helpMessage.append("\n" + lineWithoutTabs + "\n");
 
-            for (int c = 0; c < getStartColumn() - 1; c++) {
+            for (int c = 0; c < getColumn() - 1; c++) {
                 helpMessage.append('-');
             }
 
-            int ntabs = countTabs(sourceLine, getStartColumn());
+            int ntabs = countTabs(sourceLine, getColumn());
             for (int i = 0; i < ntabs; i++) {
                 helpMessage.append("---");
             }
@@ -120,7 +117,7 @@ public abstract class CompilerCondition {
         try {
             BufferedReader reader = new BufferedReader(r);
             String res = null;
-            for (int i = 0; i < getStartLine(); i++) {
+            for (int i = 0; i < getLine(); i++) {
                 res = reader.readLine();
             }
             return res;
@@ -145,13 +142,9 @@ public abstract class CompilerCondition {
 
     public abstract String getMessage();
 
-    public abstract int getStartColumn();
+    public abstract int getColumn();
 
-    public abstract int getStartLine();
-
-    public int getEndColumn() { return getStartColumn(); }
-
-    public int getEndLine() { return getStartLine(); }
+    public abstract int getLine();
 
     public abstract boolean isError();
 
@@ -162,10 +155,8 @@ public abstract class CompilerCondition {
         StringBuffer buf = new StringBuffer();
         // Surprise: according to the docs, new StringBuffer(null) is different from new StringBuffer().append(null)
         buf.append(getFileName());
-        buf.append(':');
-        buf.append(getStartLine());
-        buf.append(':');
-        buf.append(getStartColumn());
+        buf.append('@');
+        buf.append(getLine());
         buf.append(':');
         buf.append(getMessage());
         return buf.toString();

@@ -100,7 +100,7 @@ public class DeltaSamplesTest extends FrontendTest {
         assertThat(errs.getFirstError(), instanceOf(TypeError.class));
         TypeError te = (TypeError) errs.getFirstError();
         Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
-        Assert.assertEquals(10, te.getStartLine());
+        Assert.assertEquals(10, te.getLine());
     }
 
     @Test

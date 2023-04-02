@@ -27,23 +27,13 @@ public abstract class SemanticCondition extends CompilerCondition {
     }
 
     @Override
-    public int getStartLine() {
+    public int getLine() {
         return node.getStartLine();
     }
 
     @Override
-    public int getStartColumn() {
+    public int getColumn() {
         return node.getStartColumn();
-    }
-
-    @Override
-    public int getEndLine() {
-        return node.getEndLine();
-    }
-
-    @Override
-    public int getEndColumn() {
-        return node.getEndColumn();
     }
 
     public ASTNode<?> getNode() {
@@ -67,7 +57,7 @@ public abstract class SemanticCondition extends CompilerCondition {
         int prevIndex = 0;
         int endIndex = -1;
         endIndex = absCode.indexOf('\n', prevIndex);
-        for (int l = 1; l < getStartLine() && endIndex != -1; l++) {
+        for (int l = 1; l < getLine() && endIndex != -1; l++) {
             prevIndex = endIndex;
             endIndex = absCode.indexOf('\n', prevIndex);
         }
@@ -77,7 +67,7 @@ public abstract class SemanticCondition extends CompilerCondition {
         else
             line = absCode.substring(prevIndex, endIndex);
         StringBuffer lineHint = new StringBuffer();
-        for (int c = 0; c < getStartColumn() - 1; c++) {
+        for (int c = 0; c < getColumn() - 1; c++) {
             lineHint.append('-');
         }
         lineHint.append('^');
