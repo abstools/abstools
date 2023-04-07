@@ -4,18 +4,18 @@
  */
 package org.abs_models.backend.java.codegeneration;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import org.abs_models.backend.java.JavaBackend;
 import org.apache.commons.io.FileUtils;
 
+import javax.tools.*;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class JavaCode {
     private final File srcDir;
@@ -30,10 +30,6 @@ public class JavaCode {
         this.srcDir = srcDir;
     }
 
-    public void addFile(File file) {
-        files.add(file);
-    }
-
     public String[] getFileNames() {
         String[] res = new String[files.size()];
         int i = 0;
@@ -41,6 +37,10 @@ public class JavaCode {
             res[i++] = f.getAbsolutePath();
         }
         return res;
+    }
+
+    public List<File> getFiles() {
+        return files;
     }
 
     public Package createPackage(String packageName) throws IOException {
@@ -95,19 +95,52 @@ public class JavaCode {
         FileUtils.deleteDirectory(srcDir);
     }
 
-    public void compile() throws JavaCodeGenerationException {
-        compile(srcDir);
+    public void compile() throws JavaCodeGenerationException, IOException {
+        compile(srcDir, "-classpath", System.getProperty("java.class.path"));
     }
 
-    public void compile(File destDir) throws JavaCodeGenerationException {
-        compile("-classpath", System.getProperty("java.class.path"), "-d", destDir.getAbsolutePath());
+    public void compile(File directory, String... compiler_args)
+        throws JavaCodeGenerationException, IOException
+    {
+        List<File> files_in_directory = new ArrayList<File>();
+        try (Stream<Path> paths = Files.walk(Paths.get(directory.toString()))) {
+            files_in_directory = paths.filter(Files::isRegularFile)
+                .filter(p -> p.toString().endsWith(".java"))
+                .map(Path::toFile)
+                .collect(Collectors.toList());
+        }
+        compile(files_in_directory, compiler_args);
     }
 
-    public void compile(String... args) throws JavaCodeGenerationException {
-        ArrayList<String> args2 = new ArrayList<>();
-        args2.addAll(Arrays.asList(args));
-        args2.addAll(Arrays.asList(getFileNames()));
-        JavaCompiler.compile(args2.toArray(new String[0]));
+    public void compile(List<File> files, String... compiler_args)
+        throws JavaCodeGenerationException, IOException
+    {
+        javax.tools.JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+        StandardJavaFileManager fileManager
+            = compiler.getStandardFileManager(diagnostics, null, JavaBackend.CHARSET);
+        // TODO (rudi): check whether compiler_args / options is necessary
+        // "-classpath", System.getProperty("java.class.path"), 
+        List<String> optionList = new ArrayList<String>();
+        optionList.add("-classpath");
+        optionList.add(System.getProperty("java.class.path"));
+        javax.tools.JavaCompiler.CompilationTask task
+            = compiler.getTask(null, fileManager, diagnostics, optionList, null,
+                               fileManager.getJavaFileObjectsFromFiles(files));
+        if (!task.call()) {
+            StringBuilder s = new StringBuilder();
+            for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+                s.append(String.format("%s:%d:%d: %s%n",
+                                       diagnostic.getSource(),
+                                       diagnostic.getLineNumber(),
+                                       diagnostic.getColumnNumber(),
+                                       diagnostic.getMessage(null)));
+            }
+
+            throw new JavaCodeGenerationException("There seems to be a bug in the ABS Java backend. " +
+                                                  "The generated code contains errors:\n" + s.toString());
+        }
+        fileManager.close();
     }
 
     public String getFirstMainClass() {

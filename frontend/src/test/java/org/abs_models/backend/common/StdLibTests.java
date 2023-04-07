@@ -22,6 +22,13 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void testNestedParametricDataType() throws Exception {
+        // Code generation fails on Java backend; related to
+        // https://github.com/abstools/abstools/issues/324
+        assertEvalTrue("{ List<List<Int>> l = Cons(Nil,Nil); Bool testresult = True; }");
+    }
+
+    @Test
     public void setElements() throws Exception {
         assertEvalTrue("{ Set<Int> s = set[1, 2, 3]; Bool testresult = elements(s) == list[1, 2, 3]; }");
     }

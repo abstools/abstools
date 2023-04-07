@@ -18,7 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- The toolchain now requires Erlang >= 23 and a C compiler.
+- The toolchain now requires Erlang >= 25 and a C compiler.
+
+- The Java backend now requires the full JDK (Java Development Kit) to be installed when compiling ABS models; previously it was possible to run the tool chain after installing only the JRE (Java Runtime Environment).  (Note that the JDK was always required to compile the toolchain itself.)
+
+- The Java backend now compiles generated files with the same version of the Java compiler that the backend itself was compiled with; previously, the Java backend was hardcoded to use Java 1.5 as compilation target.
 
 ### Removed
 

@@ -184,6 +184,7 @@ public class ClassDeclGenerator {
                 stream.print(" = ");
                 f.getInitExp().generateJava(stream);
                 stream.print(";");
+                stream.println();
             }
         }
 

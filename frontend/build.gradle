@@ -35,7 +35,6 @@ dependencies {
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'com.google.guava:guava:31.1-jre'
     implementation files('lib/choco-solver-2.1.1.jar')
-    implementation 'org.eclipse.jdt:ecj:3.32.0'
     implementation 'org.apfloat:apfloat:1.10.1'
     // our code fails to compile with newer versions of sat4j; leaving this at
     // version 2.3.0 for now.

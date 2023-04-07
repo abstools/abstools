@@ -92,6 +92,9 @@ public class JavaBackend extends Main {
         if (!arguments.destDir.mkdirs() && !arguments.destDir.isDirectory()) {
             throw new IOException("Could not create directory " + arguments.destDir.toString());
         }
+        // TODO(rudi): clean destination directory?  Note that we do not want
+        // to remove the destination directory outright, since the user can
+        // provide arbitrary paths via the `-d` command-line parameter.
         if (!arguments.destDir.canWrite()) {
             throw new InternalBackendException("Destination directory " + arguments.destDir.getAbsolutePath() + " cannot be written to!");
         }
@@ -175,15 +178,6 @@ public class JavaBackend extends Main {
                 sb.append(">");
             }
             return getQualifiedString(dt.getDecl()) + sb.toString();
-            /*
-             * if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs()))
-             * {
-             *
-             * sb.append("<"); boolean first = true; for (Type t :
-             * dt.getTypeArgs()) { if (first) first = false; else
-             * sb.append(','); sb.append(getQualifiedString(t)); }
-             * sb.append(">"); }
-             */
         } else if (absType.isInterfaceType()) {
             InterfaceType it = (InterfaceType) absType;
             return getQualifiedString(it.getDecl());

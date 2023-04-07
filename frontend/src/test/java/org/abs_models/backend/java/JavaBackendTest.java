@@ -6,7 +6,6 @@ package org.abs_models.backend.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -67,7 +66,7 @@ public class JavaBackendTest extends ABSTest {
 
     public static void assertValidJava(JavaCode javaCode) throws IOException {
         try {
-            javaCode.compile("-classpath", LIB_CLASSPATH, "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
+            javaCode.compile(javaCode.getSrcDir(), "-classpath", LIB_CLASSPATH);
         } catch (JavaCodeGenerationException e) {
             System.out.println(javaCode);
             fail();
@@ -100,8 +99,8 @@ public class JavaBackendTest extends ABSTest {
         }
         JavaCode javaCode = getJavaCode(absCode.toString());
         try {
-            String genDir = javaCode.getSrcDir().getAbsolutePath()+"/gen/test";
-            javaCode.compile("-classpath", LIB_CLASSPATH, "-d", genDir);
+            File genDir = javaCode.getSrcDir();
+            javaCode.compile(genDir, "-classpath", LIB_CLASSPATH);
             final ABSRuntime r = makeAbsRuntime();
             r.enableDebugging(true);
             final boolean[] finished = new boolean[] {false};
@@ -129,7 +128,7 @@ public class JavaBackendTest extends ABSTest {
                 public void newCOGCreated(COGView cog, ObjectView initialObject) {
                 }
             });
-            r.start(new File(genDir), "Test.Main");
+            r.start(genDir, "Test.Main");
 
             while (!finished[0]) {
                 synchronized (finished) {
@@ -159,12 +158,16 @@ public class JavaBackendTest extends ABSTest {
 
     protected StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws Exception {
         StringBuffer output = new StringBuffer();
-        javaCode.compile("-classpath", LIB_CLASSPATH, "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
+        javaCode.compile(javaCode.getSrcDir(), "-classpath", LIB_CLASSPATH);
 
         ArrayList<String> args = new ArrayList<>();
         args.add("java");
         args.addAll(Arrays.asList(jvmargs));
-        args.addAll(Arrays.asList("-cp", "dist/absfrontend.jar" + File.pathSeparator + javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
+        args.addAll(Arrays.asList("-cp",
+                                  "dist/absfrontend.jar"
+                                  + File.pathSeparator
+                                  + javaCode.getSrcDir().getAbsolutePath(),
+                                  javaCode.getFirstMainClass()));
         args.addAll(absArgs);
         ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
         pb.redirectErrorStream(true);

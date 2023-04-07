@@ -46,8 +46,8 @@ import org.abs_models.frontend.ast.TypedVarOrFieldDecl;
 import org.abs_models.frontend.ast.VarDecl;
 import org.abs_models.frontend.ast.VarOrFieldDecl;
 import org.abs_models.frontend.ast.VarUse;
+import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.Type;
-import org.apache.commons.io.FileUtils;
 
 public class JavaGeneratorHelper {
 
@@ -419,14 +419,18 @@ public class JavaGeneratorHelper {
     }
 
     /**
-     * removes the gen folder and all its contents
-     * @param code
+     * Ensures that the folder for generated source exists.
+     *
+     * We used to delete this directory, but do not anymore because of
+     * https://github.com/abstools/abstools/issues/294
+     *
+     * @param code the `JavaCode` object
      * @throws IOException
      */
     public static void createGenFolder(JavaCode code) throws IOException {
         File genDir = code.getSrcDir();
-        // We used to call FileUtils.deleteDirectory here but don't anymore
-        // because of https://github.com/abstools/abstools/issues/294
+        // TODO (rudi): clean up Java files below genDir/, maybe only when it's
+        // located below the current directory
         genDir.mkdirs();
     }
 
