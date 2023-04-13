@@ -68,7 +68,35 @@ Tree attributes and aspects (for type checking, code generation etc.) are added 
 
 Code below `frontend/src/main/java/org/abs_models/frontend/typechecker/`.
 
-Note the possibility to write type checker extensions; see the `ext/` subdirectory.  The mechanism for type checker extensions needs to be documented.
+Type checking is done in
+`org.abs_models.frontend.parser:analyzeFlattenAndRewriteModel`, which should
+be called by all backends.  For historical reasons, there are two passes of
+type checking: `Model.getErrors` and `Main.typeCheckModel`.  The latter method
+relies on some errors not being present that are detected by the former one,
+so they should always be called in the same sequence as in
+`analyzeFlattenAndRewriteModel`.
+
+Types are represented as their own class hierarchy, separate from the AST node
+classes.  See
+`frontend/src/main/java/org/abs_models/frontend/typechecker/Type.java` and its
+subclasses.
+
+Many AST nodes can calculate information about their type, via the `getType`
+method that returns a `Type` object.  This is implemented in
+`frontend/src/main/java/org/abs_models/frontend/typechecker/Typing.jrag`
+
+Type checking itself uses `Type` objects and the `getType` method to collect
+type errors.  The methods `typeCheck` fill a `SemanticConditionList` with
+`SemanticCondition` objects.
+
+==== Type checker extensions
+
+Note the possibility to write type checker extensions; see the `frontend/src/main/java/org/abs_models/frontend/typechecker/ext/` directory.
+
+To implement a new type system extension, inherit from
+`DefaultTypeSystemExtension` and override some of its methods.  Then, register
+the extension by adding it to the `registerDefaultExtensions` method of the
+`TypeExtensionHelper` class.
 
 === Backends and code generation
 
