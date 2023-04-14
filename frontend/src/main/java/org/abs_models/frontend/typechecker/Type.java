@@ -220,6 +220,8 @@ public abstract class Type {
             return false;
         if (!(o instanceof Type))
             return false;
+        // BUG(rudi): This obviously wrong thing is, sadly, "load-bearing" in the
+        // sense that the unit tests fail if we change this.
         System.err.println(this+":"+o);
         return true;
     }
