@@ -201,12 +201,17 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     @Override public void exitDatatype_decl(ABSParser.Datatype_declContext ctx) {
-        ParametricDataTypeDecl d = setV(ctx, new ParametricDataTypeDecl(ctx.n.getText(), l(ctx.c), v(ctx.annotations()),
-            new List<>()));
-        for (Token t : ctx.p) {
-            TypeParameterDecl tpd = new TypeParameterDecl(t.getText());
-            setASTNodePosition(t, tpd);
-            d.addTypeParameter(tpd);
+        if (ctx.p != null && !ctx.p.isEmpty()) {
+            ParametricDataTypeDecl d
+                = setV(ctx, new ParametricDataTypeDecl(ctx.n.getText(), l(ctx.c), v(ctx.annotations()),
+                                                       new List<>()));
+            for (Token t : ctx.p) {
+                TypeParameterDecl tpd = new TypeParameterDecl(t.getText());
+                setASTNodePosition(t, tpd);
+                d.addTypeParameter(tpd);
+            }
+        } else {
+            setV(ctx, new DataTypeDecl(ctx.n.getText(), v(ctx.annotations()), l(ctx.c)));
         }
     }
 
