@@ -131,7 +131,7 @@ public class JavaCode {
             StringBuilder s = new StringBuilder();
             for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
                 s.append(String.format("%s:%d:%d: %s%n",
-                                       diagnostic.getSource(),
+                                       diagnostic.getSource().getName(),
                                        diagnostic.getLineNumber(),
                                        diagnostic.getColumnNumber(),
                                        diagnostic.getMessage(null)));

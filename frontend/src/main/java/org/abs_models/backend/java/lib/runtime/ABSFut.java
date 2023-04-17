@@ -68,7 +68,6 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
      * @throws TimeoutException
      * @throws InterruptedException
      */
-
     public V get(long timeout, TimeUnit unit) throws TimeoutException, InterruptedException {
         long timeoutMs = unit.toMillis(timeout);
         long startTime = System.currentTimeMillis();
