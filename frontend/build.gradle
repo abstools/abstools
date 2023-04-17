@@ -195,6 +195,7 @@ shadowJar {
 // this is necessary for the `absc` scripts
 task plainJar(type: Copy, dependsOn: shadowJar) {
     description 'Copies the combined jar into its documented location.'
+    group 'build'
     from shadowJar.archiveFile
     into 'dist'
     rename '(.*).jar', 'absfrontend.jar'
