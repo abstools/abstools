@@ -11,7 +11,7 @@ public class ABSInitObjectCall<T extends ABSObject> extends AbstractAsyncCall<T>
     }
 
     @Override
-    public Object execute() {
+    public Object call() {
         target.__ABS_init();
         return null;
     }

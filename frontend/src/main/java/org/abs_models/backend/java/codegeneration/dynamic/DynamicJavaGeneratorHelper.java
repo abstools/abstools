@@ -216,7 +216,7 @@ public class DynamicJavaGeneratorHelper {
 
         stream.println("public java.lang.String methodName() { return \"" + method + "\"; }");
 
-        stream.print("public Object execute() {");
+        stream.print("public Object call() {");
         stream.print(" return ((" + ABSDynamicObject.class.getName() + ")target).dispatch(");
         generateArgStringList(stream, "\"" + method + "\"", paramTypes.size());
         stream.println("); }");

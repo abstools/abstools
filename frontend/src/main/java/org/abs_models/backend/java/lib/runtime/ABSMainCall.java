@@ -11,7 +11,7 @@ public class ABSMainCall extends AbstractAsyncCall<ABSObject> {
     }
 
     @Override
-    public Object execute() {
+    public Object call() {
         target.run(); 
         return null;
     }

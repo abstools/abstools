@@ -289,7 +289,7 @@ public class JavaGeneratorHelper {
         stream.println("return \"" + sig.getName() + "\";");
         stream.println("}");
 
-        stream.println("public Object execute() {");
+        stream.println("public Object call() {");
         stream.print("return target." + JavaBackend.getMethodName(sig.getName()) + "(");
         for (i = 0; i < paramTypes.size(); i++) {
             if (i > 0) stream.print(",");

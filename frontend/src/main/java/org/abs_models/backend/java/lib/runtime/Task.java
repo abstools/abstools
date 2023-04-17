@@ -18,7 +18,7 @@ import org.abs_models.backend.java.observing.TaskObserver;
 import org.abs_models.backend.java.observing.TaskStackView;
 import org.abs_models.backend.java.observing.TaskView;
 
-public class Task<T extends ABSRef> {
+public class Task<T extends ABSRef> implements Runnable {
     private final ABSFut<? super ABSValue> future;
     private final int id;
     private Thread executingThread;
@@ -187,7 +187,7 @@ public class Task<T extends ABSRef> {
 
 
         try {
-            ABSValue res = (ABSValue) call.execute();
+            ABSValue res = (ABSValue) call.call();
             future.resolve(res);
         } catch (ABSException e) {
             this.exception = e;
