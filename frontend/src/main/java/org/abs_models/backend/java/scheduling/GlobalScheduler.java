@@ -182,7 +182,7 @@ public class GlobalScheduler {
         // note that this code does only work in the presence of global
         // scheduling,
         // otherwise it would not be thread-safe
-        if (fut.isResolved()) {
+        if (fut.isDone()) {
             return;
         }
 

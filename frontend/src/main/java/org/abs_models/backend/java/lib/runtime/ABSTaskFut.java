@@ -27,7 +27,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
     @Override
     public V get() {
         synchronized (this) {
-            if (!isResolved() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
+            if (!isDone() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
                 throw new ABSDeadlockException();
         }
 
@@ -56,7 +56,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
 
     @Override
     public synchronized String toString() {
-        return "Future of " + resolvingTask + " (" + (isResolved ? value : "unresolved") + ")";
+        return "Future of " + resolvingTask + " (" + (isDone ? value : "unresolved") + ")";
     }
 
     public Task<?> getResolvingTask() {

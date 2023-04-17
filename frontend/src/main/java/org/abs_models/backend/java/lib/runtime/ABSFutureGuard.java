@@ -18,7 +18,7 @@ public class ABSFutureGuard extends ABSGuard {
 
     @Override
     public boolean isTrue() {
-        return fut.isResolved();
+        return fut.isDone();
     }
 
     @Override

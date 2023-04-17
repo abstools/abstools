@@ -4,11 +4,6 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
-
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSBuiltInDataType;
 import org.abs_models.backend.java.lib.types.ABSValue;
@@ -17,13 +12,23 @@ import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.TaskView;
 import org.abs_models.backend.java.scheduling.GuardWaiter;
 
-public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
+
+public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
+    implements Future<V>
+{
     protected static final Logger log = Logger.getLogger(ABSRuntime.class.getName());
     private static final AtomicInteger counter = new AtomicInteger();
     private final int id = counter.incrementAndGet();
     protected V value;
     protected ABSException exception;
-    protected boolean isResolved;
+    protected boolean isDone;
 
     protected ABSFut() {
         super("Fut");
@@ -33,23 +38,72 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         return id;
     }
 
+    /**
+     * Minimal implementation of java.concurrent.Future interface.
+     *
+     * @param _mayInterruptIfRunning {@code true} if the thread executing this
+     * task should be interrupted; otherwise, in-progress tasks are allowed
+     * to complete
+     * @return always false since we currently can't cancel ABS processes.
+     */
+    public boolean cancel(boolean _mayInterruptIfRunning) {
+        return false;
+    }
+
+    /**
+     * Minimal implementation of java.concurrent.Future interface.
+     * @return always false
+     */
+    public boolean isCancelled() {
+        return false;
+    }
 
     public abstract V get();
+
+    /**
+     * Minimal implementation of java.concurrent.Future interface.  Currently untested.
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @return the value of the future.
+     * @throws TimeoutException
+     * @throws InterruptedException
+     */
+
+    public V get(long timeout, TimeUnit unit) throws TimeoutException, InterruptedException {
+        long timeoutMs = unit.toMillis(timeout);
+        long startTime = System.currentTimeMillis();
+        synchronized (this) {
+            // WARNING (rudi): this has not been audited wrt deadlocks against
+            // the rest of the Java runtime
+            while (!isDone) {
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                long remainingTime = timeoutMs - elapsedTime;
+                if (remainingTime <= 0) {
+                    throw new TimeoutException();
+                }
+                this.wait(remainingTime);
+            }
+            // if (isCancelled) {
+            //     throw new CancellationException();
+            // }
+            return value;
+        }
+    }
 
     public synchronized V getValue() {
         return value;
     }
 
-    public synchronized boolean isResolved() {
-        return isResolved;
+    public synchronized boolean isDone() {
+        return isDone;
     }
 
     public synchronized void await() {
         log.finest("awaiting future");
 
-        while (!isResolved) {
+        while (!isDone) {
             try {
-                wait();
+                this.wait();
             } catch (InterruptedException e) {
                 log.finest("was interruped during await");
                 Thread.currentThread().interrupt();
@@ -71,15 +125,15 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
 
     protected void resolve(final V o, final ABSException e) {
         synchronized (this) {
-            if (isResolved)
+            if (isDone)
                 throw new IllegalStateException("Future is already resolved");
 
             log.finest(this + " is resolved to " + o);
 
             value = o;
             exception = e;
-            isResolved = true;
-            notifyAll();
+            isDone = true;
+            this.notifyAll();
         }
 
         informWaitingThreads();
@@ -156,11 +210,11 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
 
     @Override
     public synchronized String toString() {
-        return "Future (" + (isResolved ? value : "unresolved") + ")";
+        return "Future (" + (isDone ? value : "unresolved") + ")";
     }
 
     public synchronized boolean addWaitingThread(GuardWaiter thread) {
-        if (isResolved) {
+        if (isDone) {
             log.fine("===== "+this+" is already resolved");
             return false;
         }
@@ -208,7 +262,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
 
         @Override
         public boolean isResolved() {
-            return ABSFut.this.isResolved();
+            return ABSFut.this.isDone();
         }
 
         @Override
