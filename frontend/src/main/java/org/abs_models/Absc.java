@@ -107,7 +107,8 @@ public class Absc implements Callable<Integer> {
 
     // Code generation options
     @Option(names = { "-o", "--output-file"},
-            description = "for single-file backends: compile to @|italic file|@ (default: standard output)",
+            description = {"for single-file backends: compile to @|italic file|@ (default: standard output)",
+                "@|bold Java backend:|@ the name of a jar file containing the compiled model."},
             paramLabel = "file")
     public File outputfile;
     @Option(names = { "-d", "--directory"},
@@ -115,7 +116,7 @@ public class Absc implements Callable<Integer> {
             paramLabel = "directory")
     public File destDir = new File("gen/");
     @Option(names = { "--debuginfo" },
-            description = {"@|bold Java backend:|@ generate code with listener / debugger support (increases code size)",
+            description = {"@|bold Java backend:|@ generate code with listener / debugger support (increases code size and decreases speed)",
                            "@|bold Erlang backend:|@ generate code with execution coverage recording"})
     public boolean debug_generated_code = false;
 

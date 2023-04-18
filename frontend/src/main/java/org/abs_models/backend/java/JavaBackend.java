@@ -99,12 +99,12 @@ public class JavaBackend extends Main {
             throw new InternalBackendException("Destination directory " + arguments.destDir.getAbsolutePath() + " cannot be written to!");
         }
 
-        compile(model, arguments.destDir);
+        compile(model, arguments.destDir, arguments.outputfile);
         return 0;
     }
 
-    private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
-        JavaCode javaCode = new JavaCode(destDir);
+    private void compile(Model m, File destDir, File output_jar) throws IOException, JavaCodeGenerationException {
+        JavaCode javaCode = new JavaCode(destDir, output_jar);
         if (this.untypedJavaGen) {
             if (arguments.verbose) System.out.println("Generating dynamic Java code...");
             m.generateJavaCodeDynamic(javaCode, arguments.debug_generated_code);

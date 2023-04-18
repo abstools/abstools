@@ -13,21 +13,40 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.jar.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JavaCode {
     private final File srcDir;
+    private final File output_jar;
     private final List<File> files = new ArrayList<>();
     private final List<String> mainClasses = new ArrayList<>();
 
+    /**
+     * The set of class prefixes to include in generated jar file.  When
+     * running the Java model, we include the whole `absfrontend.jar` in the
+     * class path ("java -cp <path>/absfrontend.jar gen/Module/Main.class").
+     * This set specifies which parts of `absfrontend.jar` to include when
+     * packing up the compiled model in its own jar.
+     */
+    private static final Set<String> INCLUDE_PREFIXES
+        = Set.of("org/abs_models/backend/java",
+                 "org/apfloat"
+    );
+
+
     public JavaCode() throws IOException {
         srcDir = Files.createTempDirectory("absjavabackend").toFile();
+        output_jar = null;
     }
 
-    public JavaCode(File srcDir) {
+    public JavaCode(File srcDir, File output_jar) {
         this.srcDir = srcDir;
+        this.output_jar = output_jar;
     }
 
     public String[] getFileNames() {
@@ -96,10 +115,10 @@ public class JavaCode {
     }
 
     public void compile() throws JavaCodeGenerationException, IOException {
-        compile(srcDir, "-classpath", System.getProperty("java.class.path"));
+        compile(srcDir, output_jar, "-classpath", System.getProperty("java.class.path"));
     }
 
-    public void compile(File directory, String... compiler_args)
+    public void compile(File directory, File output_jar, String... compiler_args)
         throws JavaCodeGenerationException, IOException
     {
         List<File> files_in_directory = new ArrayList<File>();
@@ -109,10 +128,10 @@ public class JavaCode {
                 .map(Path::toFile)
                 .collect(Collectors.toList());
         }
-        compile(files_in_directory, compiler_args);
+        compile(files_in_directory, output_jar, compiler_args);
     }
 
-    public void compile(List<File> files, String... compiler_args)
+    public void compile(List<File> files, File output_jar, String... compiler_args)
         throws JavaCodeGenerationException, IOException
     {
         javax.tools.JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -141,8 +160,60 @@ public class JavaCode {
                                                   "The generated code contains errors:\n" + s.toString());
         }
         fileManager.close();
+        if (output_jar != null) {
+            String[] classPath = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
+            if (classPath.length != 1 || !classPath[0].endsWith(".jar")) {
+                throw new JavaCodeGenerationException("Could not create jar " + output_jar
+                    + " because classpath contains more than absfrontend.jar");
+            }
+            File absfrontend_jarfile = new File(classPath[0]);
+            Manifest manifest = new Manifest();
+            manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+            manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_TITLE, "ABS model");
+            manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH,
+                                             "." + File.pathSeparator + "./absfrontend.jar");
+            if (hasMainClasses()) {
+                manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, getFirstMainClass());
+            }
+
+            JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(output_jar), manifest);
+            JarFile absfrontend_jar = new JarFile(absfrontend_jarfile);
+            for (Iterator<JarEntry> it = absfrontend_jar.entries().asIterator(); it.hasNext(); ) {
+                JarEntry entry = it.next();
+                if (!entry.isDirectory()
+                    && !entry.getName().equals("META-INF/MANIFEST.MF")
+                    && INCLUDE_PREFIXES.stream().anyMatch(entry.getName()::startsWith))
+                {
+                    jarOutputStream.putNextEntry(entry);
+                    absfrontend_jar.getInputStream(entry).transferTo(jarOutputStream);
+                    jarOutputStream.closeEntry();
+                }
+            }
+            absfrontend_jar.close();
+
+            jarOutputStream.putNextEntry(new JarEntry(absfrontend_jarfile.getName()));
+            Files.copy(absfrontend_jarfile.toPath(), jarOutputStream);
+            jarOutputStream.closeEntry();
+            Path compiledFilesPath = Paths.get(srcDir.toURI());
+            Files.walk(compiledFilesPath)
+                .filter(path -> !Files.isDirectory(path))
+                .forEach(path -> {
+                    String entryName = compiledFilesPath.relativize(path).toString().replace('\\', '/');
+                    JarEntry entry = new JarEntry(entryName);
+                    try {
+                        jarOutputStream.putNextEntry(entry);
+                        Files.copy(path, jarOutputStream);
+                        jarOutputStream.closeEntry();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error while creating jar " + output_jar);                    }
+                });
+            jarOutputStream.close();
+        }
     }
 
+    public boolean hasMainClasses() {
+        return !mainClasses.isEmpty();
+    }
     public String getFirstMainClass() {
         if (mainClasses.isEmpty())
             throw new IllegalStateException("There is no main class");

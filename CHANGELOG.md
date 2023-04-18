@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 
+- The java backend can now optionally generate a jar file that can run the compiled model stand-alone:
+  - Use the `-o` option to create a jar file, e.g., `absc -j model.abs -o model.jar` (by default, no jar file is generated).
+  - To run the generated jar file, use `java -jar model.jar`.
+  - Regardless of the presence of this option, the Java backend will always generate Java source and class files in the `gen/` subdirectory (or the directory specified via `-d`).
+
 ### Changed
 
 - The toolchain now requires Erlang >= 25 and a C compiler.

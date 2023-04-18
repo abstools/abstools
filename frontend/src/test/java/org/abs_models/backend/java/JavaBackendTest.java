@@ -66,7 +66,7 @@ public class JavaBackendTest extends ABSTest {
 
     public static void assertValidJava(JavaCode javaCode) throws IOException {
         try {
-            javaCode.compile(javaCode.getSrcDir(), "-classpath", LIB_CLASSPATH);
+            javaCode.compile(javaCode.getSrcDir(), null, "-classpath", LIB_CLASSPATH);
         } catch (JavaCodeGenerationException e) {
             System.out.println(javaCode);
             fail();
@@ -100,7 +100,7 @@ public class JavaBackendTest extends ABSTest {
         JavaCode javaCode = getJavaCode(absCode.toString());
         try {
             File genDir = javaCode.getSrcDir();
-            javaCode.compile(genDir, "-classpath", LIB_CLASSPATH);
+            javaCode.compile(genDir, null, "-classpath", LIB_CLASSPATH);
             final ABSRuntime r = makeAbsRuntime();
             r.enableDebugging(true);
             final boolean[] finished = new boolean[] {false};
@@ -158,7 +158,7 @@ public class JavaBackendTest extends ABSTest {
 
     protected StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws Exception {
         StringBuffer output = new StringBuffer();
-        javaCode.compile(javaCode.getSrcDir(), "-classpath", LIB_CLASSPATH);
+        javaCode.compile(javaCode.getSrcDir(), null, "-classpath", LIB_CLASSPATH);
 
         ArrayList<String> args = new ArrayList<>();
         args.add("java");
