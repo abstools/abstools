@@ -191,9 +191,6 @@ public class JavaCode {
             }
             absfrontend_jar.close();
 
-            jarOutputStream.putNextEntry(new JarEntry(absfrontend_jarfile.getName()));
-            Files.copy(absfrontend_jarfile.toPath(), jarOutputStream);
-            jarOutputStream.closeEntry();
             Path compiledFilesPath = Paths.get(srcDir.toURI());
             Files.walk(compiledFilesPath)
                 .filter(path -> !Files.isDirectory(path))
