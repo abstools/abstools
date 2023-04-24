@@ -5,7 +5,7 @@ package org.abs_models.backend.erlang;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -156,7 +156,7 @@ public class ClassGenerator {
             for (CaseBranchStmt b : classDecl.getRecoverBranchs()) {
                 Vars v = vars.pass();
                 StringWriter sw = new StringWriter();
-                CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+                CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),"");
                 b.getLeft().generateErlangCode(ecs, buffer, v);
                 buffer.setIndent(ecs.getIndent());
                 buffer.println("->");

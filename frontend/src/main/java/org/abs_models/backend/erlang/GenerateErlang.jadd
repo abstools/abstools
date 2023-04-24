@@ -13,7 +13,7 @@ import java.util.EnumSet;
 import org.abs_models.backend.erlang.ErlUtil.Mask;
 import org.abs_models.backend.erlang.ErlangBackend.CompileOptions;
 import org.apache.commons.io.output.WriterOutputStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -331,7 +331,7 @@ aspect GenerateErlang {
   public void VarDecl.generateErlangCode(CodeStream ecs,Vars vars, List<Annotation> annotations) {
     if(getTypeUse() instanceof TypeParameterUse || getTypeUse() instanceof InterfaceTypeUse|| getTypeUse() instanceof DataTypeUse){
       StringWriter sw = new StringWriter();
-      CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+      CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),ecs.getIndent());
       if(hasInitExp()){
         getInitExp().generateErlangCode(buffer,vars);
       } else {
@@ -356,7 +356,7 @@ aspect GenerateErlang {
   @Override
   public void AssignStmt.generateErlangCode(CodeStream ecs,Vars vars) {
     StringWriter sw = new StringWriter();
-    CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+    CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),ecs.getIndent());
     String varExp = "";
     getValue().generateErlangCode(buffer,vars);
     buffer.close();
@@ -465,7 +465,7 @@ aspect GenerateErlang {
       // Need to generate code for right-hand side before creating new
       // variable
       StringWriter sw = new StringWriter();
-      CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+      CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),ecs.getIndent());
       getExp().generateErlangCode(buffer,vars);
       buffer.close();
       String exp = sw.toString().substring(ecs.getIndent().length());
@@ -656,7 +656,7 @@ aspect GenerateErlang {
     Vars left=vars.pass();
     Vars right=vars.pass();
     StringWriter sw = new StringWriter();
-    CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+    CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),ecs.getIndent());
     ecs.print("case ");
     getCondition().generateErlangCode(ecs,vars);
     ecs.println(" of");
@@ -912,7 +912,7 @@ aspect GenerateErlang {
       for (CaseBranchStmt b : getBranchs()) {
           Vars v = vars.pass();
           StringWriter sw = new StringWriter();
-          CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+          CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),"");
           b.getLeft().generateErlangCode(ecs, buffer, v);
           buffer.setIndent(ecs.getIndent());
           buffer.println("->");
@@ -958,7 +958,7 @@ aspect GenerateErlang {
       for (CaseBranchStmt b : getCatchs()) {
           Vars v = vars.pass();
           StringWriter sw = new StringWriter();
-          CodeStream buffer = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+          CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),"");
           buffer.print("_:");
           b.getLeft().generateErlangCode(ecs, buffer, v);
           buffer.setIndent(ecs.getIndent());
@@ -1001,7 +1001,7 @@ aspect GenerateErlang {
     external.println("begin");
     external.incIndent();
     StringWriter sw = new StringWriter();
-    CodeStream ecs = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),"");
+    CodeStream ecs = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),"");
     ecs.print("case ");
     ecs.setIndent(external.getIndent());
     getExpr().generateErlangCode(ecs, vars);
@@ -1154,7 +1154,7 @@ aspect GenerateErlang {
   }
   public void AwaitStmt.generateErlangCode(CodeStream ecs,Vars vars){
     StringWriter sw = new StringWriter();
-    CodeStream after = new CodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")), "");
+    CodeStream after = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8), "");
     if(getGuard().hasPoll()){
         String fieldNames = getGuard().getFields().fields.stream()
             .map(gf -> String.format("object:field_with_oid(%s, Oid)", gf.getName()))
