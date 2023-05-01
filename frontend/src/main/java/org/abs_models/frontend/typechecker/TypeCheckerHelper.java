@@ -614,6 +614,7 @@ public class TypeCheckerHelper {
 
     public static void checkDataTypeUse(SemanticConditionList e, DataTypeUse use) {
         Type type = use.getType();
+        // FIXME (rudi): check if we should use DataTypeDecl instead of ParametricDataTypeDecl
         if (type.getDecl() instanceof ParametricDataTypeDecl) {
             DataTypeType t = (DataTypeType) type;
             int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
