@@ -229,16 +229,13 @@ public class JavaCode {
     }
 
     private void append(StringBuilder res, File f) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(f));
+        try (BufferedReader reader = new BufferedReader(new FileReader(f))) {
             try {
                 while (reader.ready()) {
                     res.append(reader.readLine() + "\n");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                reader.close();
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();

@@ -53,9 +53,7 @@ aspect GenerateJava {
             String mainName = JavaBackend.getJavaNameForMainBlock();
             generatedJavaPackage.addMainClass(mainName);
             File file = generatedJavaPackage.createJavaFile(mainName);
-            PrintStream stream = null;
-            try {
-                stream = JavaCodeStream.from(file);
+            try (PrintStream stream = JavaCodeStream.from(file)) {
                 stream.println("package " + generatedJavaPackage.packageName + ";");
                 //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
 
@@ -74,11 +72,7 @@ aspect GenerateJava {
                 stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
                 stream.println("}");
                 stream.println("}");
-            } finally {
-                if (stream != null)
-                    stream.close();
             }
-
         }
 
 

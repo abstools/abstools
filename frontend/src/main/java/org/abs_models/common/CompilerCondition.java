@@ -95,21 +95,14 @@ public abstract class CompilerCondition {
     }
 
     private String readLineFromFile() {
-        Reader r = null;
-        try {
-            r = new FileReader(file);
+        try (Reader r = new FileReader(file)) {
             return readLineFromReader(r);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return null;
-        } finally {
-            if (r != null) {
-                try {
-                    r.close();
-                } catch (IOException e) {
-                    // ignore since we opened the file read-only
-                }
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

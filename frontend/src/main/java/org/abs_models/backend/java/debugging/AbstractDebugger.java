@@ -31,15 +31,13 @@ public abstract class AbstractDebugger implements Debugger {
 
         FileContent(File file) {
             this.file = file;
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(file));
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 while (reader.ready()) {
                     String line = reader.readLine();
                     if (line == null)
                         break;
                     lines.add(line);
                 }
-                reader.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {

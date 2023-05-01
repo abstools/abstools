@@ -413,8 +413,7 @@ public class Main {
     }
 
     private static void parseABSPackageFile(java.util.List<CompilationUnit> units, File file, boolean verbose) throws IOException {
-        ABSPackageFile jarFile = new ABSPackageFile(file);
-        try {
+        try (ABSPackageFile jarFile = new ABSPackageFile(file)) {
             if (!jarFile.isABSPackage())
                 return;
             Enumeration<JarEntry> e = jarFile.entries();
@@ -426,8 +425,6 @@ public class Main {
                     }
                 }
             }
-        } finally {
-            jarFile.close();
         }
     }
 
