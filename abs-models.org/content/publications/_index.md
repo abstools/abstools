@@ -124,6 +124,13 @@ This page links ABS workshops, as well as selected research papers on the develo
   Journal of Software and Systems Modeling, Volume 15(4), Springer, 2015.  
   DOI: [10.1007/s10270-014-0444-y](http://dx.doi.org/10.1007/s10270-014-0444-y).
 
+## ABS Tools
+
+- Rudolf Schlatte, Einar Broch Johnsen, Eduard Kamburjan and S. Lizeth Tapia Tarifa  
+  *The ABS simulator toolchain*
+  Science of Computer Programming. Volume 233. Elsevier, 2022.  
+  DOI: [10.1016/j.scico.2022.102861](https://doi.org/10.1016/j.scico.2022.102861).
+
 ## Code Generation from ABS
 
 - B. Nobakht and F. S. de Boer.  
