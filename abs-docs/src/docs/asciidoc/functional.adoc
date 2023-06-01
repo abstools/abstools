@@ -957,8 +957,8 @@ Built-in functions in the standard library include:
 
 === Embedded SQLite Database Queries
 
-The Erlang backend can read from a relational database and convert the
-result into ABS lists.  Currently only SQLite databases are supported.
+The Erlang and Java backends can read from a relational database and convert
+the result into ABS lists.  Currently only SQLite databases are supported.
 
 A SQLite database is queried by writing a function with a `builtin` body with
 three or more arguments: a literal `sqlite3`, the name of the database file,
@@ -981,13 +981,14 @@ be:
   row returned by the query.
 
 Query parameters are written as `?` in the SQL query string.  Each of these
-parameters must be supplied with a value.  ABS values are converted into SQL
-values as follows:
+parameters must be supplied with a value.  ABS query parameters are converted
+into SQL values (see https://www.sqlite.org/datatype3.html) as follows:
 
-- `Int` values are converted into integers;
-- `Float`, `Rat` values are converted into floating-point numbers;
+- `Int` values are converted into `INTEGER`;
+- `Float` values are converted into `REAL`;
+- `Rat` values are converted into floating-point numbers before passing them to the query function;
 - `Bool` values are converted into `0` and `1` (note that SQLite treats all non-zero values as true; consider directly using a query parameter of type `Int` instead);
-- `String` values are converted to strings.
+- `String` values are converted into `STRING`.
 
 [source]
 .Example: creating a database
@@ -1054,13 +1055,13 @@ def List<RowResult> ftuple_with_params(String str, Rat rat) = builtin(sqlite3,
 }
 ----
 <1> A `builtin` function with first argument `sqlite3` takes two or more additional arguments: the name of the database, a SQL query string, and the query parameters.
-<2> SQL float values are converted to ABS rational values
+<2> SQL `REAL` values are converted to ABS rational values
 <3> SQL query results with more than one column are converted into ABS user-defined datatypes. The data constructor of the result datatype has to take the same number of arguments as the `SELECT` returns, and the datatypes must be compatible.
 <4> Query parameters in SQLite are written as plain `?` in the query string.
 <5> For each parameter in the SQL query, a value must be supplied.
 
-NOTE: When the database file (the second argument to the `builtin` expression)
-does not contain a path, the model will look for it in the `priv` directory of
-the compiled model.  That directory is the value of the erlang function
-`code:priv_dir(absmodel)`, typically
+NOTE: For the Erlang backend only, when the database file (the second argument
+to the `builtin` expression) does not contain a path, the model will look for
+it in the `priv` directory of the compiled model.  That directory is the value
+of the erlang function `code:priv_dir(absmodel)`, typically
 `gen/erl/absmodel/_build/default/lib/absmodel/priv/`.

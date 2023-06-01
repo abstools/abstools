@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -163,13 +165,16 @@ public class JavaBackendTest extends ABSTest {
         ArrayList<String> args = new ArrayList<>();
         args.add("java");
         args.addAll(Arrays.asList(jvmargs));
+        // The current directory when tests are run is abstools/frontend/
+        Path frontend_jar = Paths.get("dist/absfrontend.jar").toAbsolutePath();
         args.addAll(Arrays.asList("-cp",
-                                  "dist/absfrontend.jar"
+                                  frontend_jar.toString()
                                   + File.pathSeparator
                                   + javaCode.getSrcDir().getAbsolutePath(),
                                   javaCode.getFirstMainClass()));
         args.addAll(absArgs);
         ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
+        pb.directory(javaCode.getSrcDir());
         pb.redirectErrorStream(true);
         Process p = pb.start();
         BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));

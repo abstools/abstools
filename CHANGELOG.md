@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added a new process attribute `destinyOf`, useful in user-defined schedulers, that returns the future of a given process.
 
-- In the Erlang backend, it is now possible to define functions that read from a provided SQLite database: `def List<Int> f(Int x) = builtin(sqlite3, "db.sqlite3", "SELECT i FROM t where i > ?", x);` will return a list of numbers greater than `x` in table `t` of database file `db.sqlite3`.  See the manual for more details.
+- In the Erlang and Java backends, it is now possible to define functions that read from a provided SQLite database: `def List<Int> f(Int x) = builtin(sqlite3, "db.sqlite3", "SELECT i FROM t where i > ?", x);` will return a list of numbers greater than `x` in table `t` of database file `db.sqlite3`.  See the manual for more details.
 
 - The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 

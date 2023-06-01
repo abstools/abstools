@@ -15,7 +15,11 @@ import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.java.JavaBackendConstants;
 import org.abs_models.backend.java.lib.runtime.*;
 import org.abs_models.backend.java.lib.types.ABSBool;
+import org.abs_models.backend.java.lib.types.ABSFloat;
+import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
+import org.abs_models.backend.java.lib.types.ABSRational;
+import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
 import org.abs_models.common.Constants;
@@ -26,7 +30,10 @@ import org.abs_models.frontend.ast.Annotation;
 import org.abs_models.frontend.ast.AsyncCall;
 import org.abs_models.frontend.ast.AwaitAsyncCall;
 import org.abs_models.frontend.ast.AwaitStmt;
+import org.abs_models.frontend.ast.BuiltinFunctionDef;
 import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.DataConstructor;
+import org.abs_models.frontend.ast.DataTypeDecl;
 import org.abs_models.frontend.ast.Decl;
 import org.abs_models.frontend.ast.ExpGuard;
 import org.abs_models.frontend.ast.FnApp;
@@ -40,6 +47,7 @@ import org.abs_models.frontend.ast.NewExp;
 import org.abs_models.frontend.ast.ParamDecl;
 import org.abs_models.frontend.ast.PureExp;
 import org.abs_models.frontend.ast.ReturnStmt;
+import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.ast.ThisExp;
 import org.abs_models.frontend.ast.TypeParameterDecl;
 import org.abs_models.frontend.ast.TypedVarOrFieldDecl;
@@ -152,23 +160,142 @@ public class JavaGeneratorHelper {
     public static void generateBuiltInFnApp(PrintStream stream, FnApp app) {
         FunctionDecl d = (FunctionDecl) app.getDecl();
         String name = builtInFunctionJavaName(d.getName());
-        if (name == null) {
-            throw new NotImplementedYetException(app, "The built in function '" + d.getName() + "' is not implemented in the Java backend.");
+        if (name != null) {
+
+            // if builtin function returns a non-builtin type, cast the returned value to that type
+            boolean returnsGeneratedDataType = ! JavaBackend.isBuiltinDataType(app.getType());
+            if (returnsGeneratedDataType)
+                stream.print("((" + JavaBackend.getQualifiedString(app.getType()) +  ")");
+
+            stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
+            String firstArgs = null;
+            if (Constants.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name)){
+                firstArgs = generateFunctionalBreakPointArgs(app);
+            }
+            generateArgs(stream, firstArgs, app.getParams(), d.getTypes());
+
+            if (returnsGeneratedDataType)
+                stream.print(")");
+        } else {
+            // We're (hopefully) an SQLite query; optimistically emit a call
+            stream.print(JavaBackend.getQualifiedString(d) + ".");
+            Type declaredResultType = d.getTypeUse().getType();
+            stream.print("apply");
+            JavaGeneratorHelper.generateArgs(stream, app.getParams(), d.getTypes());
         }
+    }
 
-        // if builtin function returns a non-builtin type, cast the returned value to that type
-        boolean returnsGeneratedDataType = ! JavaBackend.isBuiltinDataType(app.getType());
-        if (returnsGeneratedDataType)
-            stream.print("((" + JavaBackend.getQualifiedString(app.getType()) +  ")");
+    public static void generateSqlite3Body(PrintStream stream, BuiltinFunctionDef body) {
 
-        stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
-        String firstArgs = null;
-        if (Constants.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name))
-            firstArgs = generateFunctionalBreakPointArgs(app);
-        generateArgs(stream, firstArgs, app.getParams(), d.getTypes());
+        String dbname = ((StringLiteral)body.getArgument(1)).getContent();
+        String query = ((StringLiteral)body.getArgument(2)).getContent()
+            .replaceAll("[\r\n]+\\s*", " ")
+            .replaceAll("\"", "\\\"");
+        FunctionDecl decl = body.closestParent(FunctionDecl.class);
+        // Type checking ensures that decl has a type `List<X>'; get the X
+        Type query_type = ((DataTypeType)decl.getType()).getTypeArg(0);
 
-        if (returnsGeneratedDataType)
-            stream.print(")");
+        stream.println("if (!java.nio.file.Files.isReadable(java.nio.file.Paths.get(\"" + dbname + "\"))) {");
+        stream.println("throw new RuntimeException(\"Database file " + dbname + " not found\");");
+        stream.println("}");
+        stream.println("// Not all databases support reading a resultset in reverse, use accumulator to preserve row order");
+        stream.println("java.util.List<org.abs_models.backend.java.lib.types.ABSValue> acc = new java.util.ArrayList<>();");
+        stream.println("ABS.StdLib.List result = new ABS.StdLib.List_Nil();");
+        stream.println("String connection_string = \"jdbc:sqlite:" + dbname + "\";");
+        stream.println("try (java.sql.Connection connection = java.sql.DriverManager.getConnection(connection_string);");
+        stream.println("java.sql.PreparedStatement statement = connection.prepareStatement(\"" + query + "\")) {");
+        for (int i = 3; i < body.getNumArgument(); i++) {
+            PureExp e = body.getArgument(i);
+            Type t = e.getType();
+            if (t.isBoolType()) {
+                stream.print("statement.setInt(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println(").toBoolean() ? 1 : 0);");
+            } else if (t.isIntType()) {
+                stream.print("statement.setBigDecimal(" + (i - 2) + ", new java.math.BigDecimal((");
+                e.generateJava(stream);
+                stream.println(").getBigInteger()));");
+            } else if (t.isRatType()) {
+                stream.print("statement.setDouble(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println(").toDouble());");
+            } else if (t.isFloatType()) {
+                stream.print("statement.setDouble(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println(").getDouble());");
+            } else if (t.isStringType()) {
+                stream.print("statement.setString(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println(").getString());");
+            } else {
+                // unreachable because of type checking:
+                // Typecheckerhelper.isValidSQLite3ArgumentType won't let us
+                // proceed to code generation
+            }
+        }
+        // Note that ResultSet objects are closed together with their issuing
+        // Statement, and statement is auto-closed already.
+        stream.println("java.sql.ResultSet rs = statement.executeQuery();");
+        stream.println("while (rs.next()) {");
+        if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType())
+        {
+            // handle singleton return value
+            stream.print("acc.add(0, ");
+            if (query_type.isBoolType()) {
+                stream.print("rs.getBoolean(1) ? " + ABSBool.class.getName() + ".TRUE : " + ABSBool.class.getName() + ".FALSE");
+            } else if (query_type.isIntType()) {
+                stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(1).toBigInteger())");
+            } else if (query_type.isFloatType()) {
+                stream.print(ABSFloat.class.getName() + ".fromDouble(rs.getDouble(1))");
+            } else if (query_type.isRatType()) {
+                stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(1))");
+            } else if (query_type.isStringType()) {
+                stream.print(ABSString.class.getName() + ".fromString(rs.getString(1))");
+            } else {
+                // unreachable: query result is type-checked before code
+                // generation starts
+            }
+            stream.println(");");
+        } else {
+            // We're a datatype with suitable arguments - the type checker
+            // makes sure of this.  For now, we arbitrarily pick the first
+            // constructor.
+            DataTypeDecl cdecl = ((DataTypeType)query_type).getDecl();
+            DataConstructor c = cdecl.getDataConstructor(0);
+            java.util.List<Type> args = c.getTypes();
+            stream.print(JavaBackend.getQualifiedString(query_type));
+            stream.print(" row = new " + JavaBackend.getQualifiedString(c) + "(");
+            String comma = "";
+            for (int i = 1; i <= args.size(); i++) {
+                stream.print(comma);
+                comma = ", ";
+                // ResultSet is 1-indexed, args is 0-indexed
+                Type t = args.get(i-1);
+                if (t.isBoolType()) {
+                    stream.print("rs.getBoolean(" + i + ") ? " + ABSBool.class.getName() + ".TRUE : " + ABSBool.class.getName() + ".FALSE");
+                } else if (t.isIntType()) {
+                    stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(" + i + ").toBigInteger())");
+                } else if (t.isFloatType()) {
+                    stream.print(ABSFloat.class.getName() + ".fromDouble(rs.getDouble(" + i + "))");
+                } else if (t.isRatType()) {
+                    stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(" + i + "))");
+                } else if (t.isStringType()) {
+                    stream.print(ABSString.class.getName() + ".fromString(rs.getString(" + i + "))");
+                } else {
+                    // unreachable because of type checking
+                }
+            }
+            stream.println(");");
+            stream.println("acc.add(0, row);");
+        }
+        stream.println("}");
+        stream.println("} catch (java.sql.SQLException e) {");
+        stream.println("// TODO");
+        stream.println("}");
+        stream.println("for (org.abs_models.backend.java.lib.types.ABSValue row : acc) {");
+        stream.println("result = new ABS.StdLib.List_Cons(row, result);");
+        stream.println("}");
+        stream.println("return result;");
     }
 
     private static String generateFunctionalBreakPointArgs(FnApp app) {

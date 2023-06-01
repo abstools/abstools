@@ -114,9 +114,6 @@ aspect GenerateErlang {
   }
   @Override
   public  void BuiltinFunctionDef.generateErlangCode(CodeStream ecs,Vars vars) throws IOException {
-      boolean isSQLiteQuery = getNumArgument() >= 3
-          && getArgument(0) instanceof VarUse
-          && ((VarUse)getArgument(0)).getName().equals("sqlite3");
       if (isSQLite3Query()) {
           // See
           // https://github.com/mmzeeman/esqlite/blob/master/test/esqlite_test.erl

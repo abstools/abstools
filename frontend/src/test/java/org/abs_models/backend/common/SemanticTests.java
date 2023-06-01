@@ -87,6 +87,17 @@ public abstract class SemanticTests {
         driver.assertEvalTrue(m);
     }
 
+    /**
+     * Runs the given test case, with the named files accessible from the model.
+     *
+     * The test runner will look for the files below the path
+     * `frontend/src/test/resources/`.  Within the ABS test case, the files
+     * named by f should be used without a directory prefix, since they will
+     * all be copied to the same backend-specific location.
+     *
+     * @param model The file containing the ABS test case.
+     * @param f The files to be made accessible.
+     */
     public void assertEvalTrueWithTestfiles(File model, File ...f) throws Exception {
         Model m = ABSTest.assertParseFileOk(model.getPath());
         assertFalse(m.hasParserErrors());

@@ -345,9 +345,18 @@ aspect GenerateJava {
     }
 
     public void FunctionDecl.generateJava(PrintStream stream) {
-        if (getFunctionDef() instanceof BuiltinFunctionDef)
-            return;
-
+        if (getFunctionDef() instanceof BuiltinFunctionDef){
+            // There are two cases here at the moment:
+            // - "really" builtin functions. These occur only in the standard
+            //   library and are known at compile-time (see class
+            //   ABSBuiltInFunctions).
+            // - SQLite queries; for these, we need to generate a body that
+            //   runs the query.
+            BuiltinFunctionDef b = (BuiltinFunctionDef)getFunctionDef();
+            if (!b.isSQLite3Query()) {
+                return;
+            }
+        }
         JavaGeneratorHelper.generateHelpLine(this,stream);
 
         String className = JavaBackend.getFunctionName(getName());
@@ -361,10 +370,16 @@ aspect GenerateJava {
         stream.print(" apply");
         JavaGeneratorHelper.generateParams(stream,getParams());
         stream.println(" {");
-        stream.print("return (");
-        getFunctionDef().generateJava(stream);
-        stream.print(")");
-        stream.println(";");
+        if (getFunctionDef() instanceof BuiltinFunctionDef) {
+            // Can currently only be an SQLite query; let it emit a function
+            // body instead of a single expression.
+            getFunctionDef().generateJava(stream);
+        } else {
+            stream.print("return (");
+            getFunctionDef().generateJava(stream);
+            stream.print(")");
+            stream.println(";");
+        }
         stream.println("}");
         stream.println("}");
     }
@@ -382,7 +397,13 @@ aspect GenerateJava {
     }
 
     public void BuiltinFunctionDef.generateJava(PrintStream stream) {
-        stream.print("null");
+        // See FunctionDecl.generateJava: here we emit a series of statements
+        // including a return statement instead of just an expression.
+        if (isSQLite3Query()) {
+            JavaGeneratorHelper.generateSqlite3Body(stream, this);
+        } else {
+            stream.println("return null;");
+        }
     }
 
     public void TypeParameterDecl.generateJava(PrintStream stream) {
@@ -926,45 +947,15 @@ aspect GenerateJava {
         // compiler that generates wrong code otherwise.
         FunctionDecl d = (FunctionDecl)getDecl();
 
-
         if (d.getFunctionDef() instanceof BuiltinFunctionDef) {
+            // This handles both StdLib functions and sqlite queries
             JavaGeneratorHelper.generateBuiltInFnApp(stream,this);
-            return;
+        } else {
+            stream.print(JavaBackend.getQualifiedString(d) + ".");
+            Type declaredResultType = d.getTypeUse().getType();
+            stream.print("apply");
+            JavaGeneratorHelper.generateArgs(stream,getParams(), d.getTypes());
         }
-
-        stream.print(JavaBackend.getQualifiedString(d) + ".");
-        Type declaredResultType = d.getTypeUse().getType();
-        if (d instanceof ParametricFunctionDecl) {
-            ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
-            Map<TypeParameter, Type> typeBinding = getTypeParamBindingFromParamDecl(funDecl);
-
-            /*
-         StringBuffer buf = new StringBuffer();
-         buf.append("<");
-         boolean first = true;
-         for (TypeParameterDecl tp : funDecl.getTypeParameters()) {
-             Type t = typeBinding.get((TypeParameter)tp.getType());
-             if (first) first = false;
-             else buf.append(",");
-             if (t == null) {
-                 buf = null;
-                 break;
-             } else if (t.isBoundedType() && !((BoundedType)t).hasBoundType()) {
-                 buf = null;
-                 break;
-             } else {
-                 buf.append(JavaBackend.getQualifiedString(t));
-             }
-         }
-
-         if (buf != null) {
-             stream.print(buf.toString());
-             stream.print(">");
-         }*/
-        }
-
-        stream.print("apply");
-        JavaGeneratorHelper.generateArgs(stream,getParams(), d.getTypes());
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {

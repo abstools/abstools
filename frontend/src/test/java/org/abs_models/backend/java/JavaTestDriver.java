@@ -8,12 +8,14 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
+import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.java.codegeneration.JavaCode;
-import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 
-public class JavaTestDriver implements BackendTestDriver {
+import org.apache.commons.io.FileUtils;
+
+public class JavaTestDriver extends ABSTest implements BackendTestDriver {
 
     final JavaBackendTest javaTest;
 
@@ -28,7 +30,6 @@ public class JavaTestDriver implements BackendTestDriver {
     /**
      * Used by JUnit.
      */
-    @Override
     public String toString() {
         return "JavaBackend"+ ( javaTest.seed == JavaBackendTest.seed_UNUSED ?  "" : (" seed="+Long.toString(javaTest.seed)));
     }
@@ -50,14 +51,20 @@ public class JavaTestDriver implements BackendTestDriver {
 
     @Override
     public void assertEvalTrue(Model m) throws Exception {
-        JavaCode javaCode = javaTest.getJavaCode(m);
+        JavaCode javaCode = JavaBackendTest.getJavaCode(m);
         boolean res = javaTest.runJavaAndTestResult(javaCode, false);
         assertEquals(true, res);
     }
 
     @Override
     public void assertEvalTrueWithTestfiles(Model m, File ...f) throws Exception {
-        throw new Exception("Auxiliary files not supported in Java test backend.");
+        JavaCode javaCode = JavaBackendTest.getJavaCode(m);
+        for (File auxfile : f) {
+            File rf = new File(resolveFileName(auxfile.toString()));
+            FileUtils.copyFileToDirectory(rf, javaCode.getSrcDir());
+        }
+        boolean res = javaTest.runJavaAndTestResult(javaCode, false);
+        assertEquals(true, res);
     }
 
     @Override
@@ -78,5 +85,5 @@ public class JavaTestDriver implements BackendTestDriver {
     public boolean supportsDowncasting() { return false; }
 
     @Override
-    public boolean supportsSQLite() { return false; }
+    public boolean supportsSQLite() { return true; }
 }
