@@ -5,6 +5,7 @@
 package org.abs_models.backend.java.lib.types;
 
 import java.math.BigInteger;
+import java.math.BigDecimal;
 
 import org.apfloat.Apfloat;
 import org.apfloat.Apint;
@@ -119,21 +120,34 @@ public class ABSRational extends ABSBuiltInDataType {
     }
 
     public static ABSRational fromDouble(double v) {
+        // This method is a bit baroque;
+        // http://apfloat.org/apfloat_java/docs/org/apfloat/Aprational.html#%3Cinit%3E(double)
+        // "new Aprational(0.1) won't result in 1/10" -- but we do want to go
+        // via the printed representation
 
         if (v == 0.0) { return ZERO; }
         if (v == 1.0) { return ONE; }
-        String doubles = ABSFloat.fromDouble(v).toString();
-        if (doubles.endsWith(".0")) {
-            return fromLong(Math.round(v));
+        if (v == Math.rint(v)) {
+            // https://docs.oracle.com/javase/8/docs/api/java/lang/Math.html#rint-double-
+            // "If the argument value is already equal to a mathematical
+            // integer, then the result is the same as the argument."
+            return new ABSRational(new Aprational(v));
         }
+        String doubles = new Apfloat(v).toString(true);
         long length_of_fraction = doubles.length() - (doubles.indexOf('.') + 1);
         Apint den = ApintMath.pow(new Apint(10), length_of_fraction);
-        Apint num = new Apfloat(v).multiply(den).truncate();
+        // multiply by `den` by removing decimal point from string representation
+        String nums = doubles.replace(".", "");
+        Apint num = new Apint(nums);
         return new ABSRational(new Aprational(num, den));
     }
 
     public int toInt() {
         return value.intValue();
+    }
+
+    public double toDouble() {
+        return value.doubleValue();
     }
 
     @Override

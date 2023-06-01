@@ -101,6 +101,8 @@ public class ABSFloat extends ABSBuiltInDataType {
 
     @Override
     public String toString() {
+        // Do not use Double.toString since we want fixed-point notation in
+        // all cases
         return new Apfloat(this.value).toString(true);
     }
 }
