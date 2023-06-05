@@ -334,7 +334,15 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
-    public void stringToString() throws Exception {
+    public void ratToFloat() throws Exception {
+        // Note that this will not be true for all numbers / backends.  E.g.,
+        // this test fails for 13.53 == 1353/100 on the Java backend, but not
+        // the Erlang backend
+        assertEvalTrue("{ Bool testresult = rat(13.5) == 27/2; }");
+    }
+
+     @Test
+     public void stringToString() throws Exception {
 	assertEvalTrue("{ Bool testresult = toString(\"Hello\") == \"Hello\"; }");
     }
 }
