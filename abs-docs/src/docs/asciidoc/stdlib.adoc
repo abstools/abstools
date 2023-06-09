@@ -110,6 +110,10 @@ Converts an integer or rational number into a floating-point number.
 Float float(Rat a)
 ----
 
+CAUTION: Very large integers and some rational numbers cannot be converted
+exactly into floating-point numbers.  More in general, `rat(float(x)) == x`
+might not be true.
+
 .rat
 
 Converts  a floating-point number into a rational number.
@@ -118,6 +122,9 @@ Converts  a floating-point number into a rational number.
 ----
 Rat rat(Float f)
 ----
+
+CAUTION: Conversion from floating-point to rational numbers is inexact and
+backend-specific.  In general, `float(rat(x)) == x` might not be true.
 
 .floor
 
