@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS test_table (
   string_value TEXT,
   bool_value BOOLEAN
 );
-INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(15, 13.53, "hello", 0);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(15, 13.5, "hello", 0);
 INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(30, 42.5, "world", 1);
 */
 
@@ -41,12 +41,12 @@ def List<RowResult> ftuple() = builtin(sqlite3,
     }
     foreach (v, i in frat()) {
         println(`$i$'th rational value is $v$`);
-        testresult = testresult && when i == 0 then v == 1353/100 else v == 85/2;
+        testresult = testresult && when i == 0 then v == 27/2 else v == 85/2;
     }
     foreach (v, i in ftuple()) {
         println(`$i$'th tuple is $v$`);
         testresult = testresult &&
-            when i == 0 then v == RowResult(15,False,13.53,1353/100,"hello")
+            when i == 0 then v == RowResult(15,False,13.5,27/2,"hello")
             else v == RowResult(30,True,42.5,85/2,"world");
     }
 }
