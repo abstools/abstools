@@ -34,8 +34,17 @@ public class JavaCode {
      * packing up the compiled model in its own jar.
      */
     private static final Set<String> INCLUDE_PREFIXES
-        = Set.of("org/abs_models/backend/java",
-                 "org/apfloat"
+        = Set.of(
+                 // Our own support libraries
+                 "org/abs_models/backend/java",
+                 // Rational numbers support library
+                 "org/apfloat",
+                 // SQLite driver
+                 "org/sqlite",
+                 "META-INF/maven/org.xerial",
+                 "META-INF/native-image",
+                 "META-INF/services",
+                 "META-INF/versions/9/org/sqlite"
     );
 
 

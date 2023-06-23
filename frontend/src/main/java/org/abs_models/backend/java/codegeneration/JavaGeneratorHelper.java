@@ -204,6 +204,9 @@ public class JavaGeneratorHelper {
         stream.println("String connection_string = \"jdbc:sqlite:" + dbname + "\";");
         stream.println("try (java.sql.Connection connection = java.sql.DriverManager.getConnection(connection_string);");
         stream.println("java.sql.PreparedStatement statement = connection.prepareStatement(\"" + query + "\")) {");
+        stream.println("if (!connection.isValid(0)) {");
+        stream.println("throw new java.sql.SQLException(\"Could not get valid connection to " + dbname + " \");");
+        stream.println("}");
         for (int i = 3; i < body.getNumArgument(); i++) {
             PureExp e = body.getArgument(i);
             Type t = e.getType();
@@ -290,7 +293,8 @@ public class JavaGeneratorHelper {
         }
         stream.println("}");
         stream.println("} catch (java.sql.SQLException e) {");
-        stream.println("// TODO");
+        stream.println("System.err.println(e);");
+        stream.println("System.exit(1);");
         stream.println("}");
         stream.println("for (org.abs_models.backend.java.lib.types.ABSValue row : acc) {");
         stream.println("result = new ABS.StdLib.List_Cons(row, result);");
