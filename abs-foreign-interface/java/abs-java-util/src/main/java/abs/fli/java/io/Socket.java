@@ -50,8 +50,8 @@ public class Socket extends Socket_c {
 	}
 	
 	private void setupStream() {
-		this.input = InputStream_c.createNewCOG(); 
-		this.output = OutputStream_c.createNewCOG();
+		this.input = InputStream_c.createNewCogObject();
+		this.output = OutputStream_c.createNewCogObject();
 	}
 
 	@Override

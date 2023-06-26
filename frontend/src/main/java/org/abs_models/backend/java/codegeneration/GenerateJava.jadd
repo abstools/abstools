@@ -787,7 +787,7 @@ aspect GenerateJava {
             if (scheduler != null) {
                 strategy = JavaGeneratorHelper.generateUserSchedulingStrategy(this, scheduler);
             }
-            stream.print(className + ".__ABS_createNewCOG");
+            stream.print(className + ".__ABS_createNewCogObject");
 
             if (strategy != null)
                 JavaGeneratorHelper.generateArgs(stream, "this, new " + strategy + "(), " + dc_exp, getParams(), decl.getTypes());
@@ -795,7 +795,7 @@ aspect GenerateJava {
                 JavaGeneratorHelper.generateArgs(stream, "this, null, " + dc_exp, getParams(), decl.getTypes());
 
         } else {
-            stream.print(className + ".__ABS_createNewObject");
+            stream.print(className + ".__ABS_createNewLocalObject");
             JavaGeneratorHelper.generateArgs(stream, "this", getParams(), decl.getTypes());
         }
     }

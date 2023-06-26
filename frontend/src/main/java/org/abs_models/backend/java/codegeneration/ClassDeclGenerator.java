@@ -68,15 +68,15 @@ public class ClassDeclGenerator {
 
     private void generateNewObjectMethods() {
         // Convenience method for new C
-        stream.print("public static final <T extends " + className + "> T createNewObject");
+        stream.print("public static final <T extends " + className + "> T createNewLocalObject");
         JavaGeneratorHelper.generateParams(stream, decl.getParams());
         stream.print(" { return (T)");
-        stream.print(className + ".__ABS_createNewObject");
+        stream.print(className + ".__ABS_createNewLocalObject");
         JavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
         stream.println("; }");
 
         // static constructor method for new C
-        stream.print("public static final <T extends " + className + "> T __ABS_createNewObject");
+        stream.print("public static final <T extends " + className + "> T __ABS_createNewLocalObject");
         JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
         stream.println(" {");
         generateObjectConstruction(ABSRuntime.class.getName() + ".getCurrentRuntime()");
@@ -91,18 +91,18 @@ public class ClassDeclGenerator {
 
     private void generateCreateNewCOGMethod() {
         // Convenience method for new cog C
-        stream.print("public static final <T extends " + className + "> T createNewCOG");
+        stream.print("public static final <T extends " + className + "> T createNewCogObject");
         JavaGeneratorHelper.generateParams(stream, decl.getParams());
         stream.print(" { ");
         stream.print("return (T)");
-        stream.print(className + ".__ABS_createNewCOG");
-        // FIXME: does createNewCog() need the DC argument?  Who calls this
+        stream.print(className + ".__ABS_createNewCogObject");
+        // FIXME: does createNewCOGObject() need the DC argument?  Who calls this
         // method?
         JavaGeneratorHelper.generateParamArgs(stream, "null, null, null", decl.getParams());
         stream.println("; }");
 
         // static constructor method for new cog C
-        stream.print("public static final <T extends " + className + "> T __ABS_createNewCOG");
+        stream.print("public static final <T extends " + className + "> T __ABS_createNewCogObject");
         JavaGeneratorHelper.generateParams(stream,
                 ABSObject.class.getName() + " __ABS_source, "
                 + UserSchedulingStrategy.class.getName() + " Strategy, "
@@ -118,7 +118,6 @@ public class ClassDeclGenerator {
         stream.println("try {");
         generateObjectConstruction("__ABS_runtime");
 
-        stream.println(";");
         stream.println("__ABS_runtime.cogCreated(__ABS_result);");
         stream.println("__ABS_cog.getScheduler().addTask(new " + Task.class.getName() + "(new " +
                 ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");

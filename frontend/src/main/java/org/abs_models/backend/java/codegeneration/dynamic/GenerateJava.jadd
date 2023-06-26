@@ -602,7 +602,7 @@ aspect GenerateJavaDynamic_Core {
             if (scheduler != null) {
                 strategy = DynamicJavaGeneratorHelper.generateUserSchedulingStrategy(this, scheduler);
             }
-            stream.print(className + ".__ABS_createNewCOG");
+            stream.print(className + ".__ABS_createNewCogObject");
             if (strategy != null)
                 // FIXME: include userScheduler
                 DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
@@ -610,7 +610,7 @@ aspect GenerateJavaDynamic_Core {
                 DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
 
         } else {
-            stream.print(className + ".__ABS_createNewObject");
+            stream.print(className + ".__ABS_createNewLocalObject");
             DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
         }
     }

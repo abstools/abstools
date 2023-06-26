@@ -40,6 +40,11 @@ import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
 import org.abs_models.backend.java.scheduling.TotalSchedulingStrategy;
 import org.abs_models.backend.java.scheduling.UsesRandomSeed;
 
+/**
+ * Singleton runtime class.
+ *
+ * The single instance is generated in {@link Startup#startup(String[], Class<?>)}.
+ */
 public class ABSRuntime {
     private static final String ABS_RUNSINOWNPROCESS_PROPERTY = "abs.runsinownprocess";
 

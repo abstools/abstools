@@ -116,16 +116,16 @@ public class ClassDeclGenerator {
 
     private void generateNewObjectMethods() {
         // Convenience method for new C
-        stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T createNewObject");
+        stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T createNewLocalObject");
         DynamicJavaGeneratorHelper.generateParams(stream, decl.getParams());
         stream.print("{ ");
         stream.print("return (T)");
-        stream.print(className + ".__ABS_createNewObject");
+        stream.print(className + ".__ABS_createNewLocalObject");
         DynamicJavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
         stream.println("; }");
 
         // static constructor method for new C
-        stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T __ABS_createNewObject");
+        stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T __ABS_createNewLocalObject");
         DynamicJavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
         stream.println(" {");
         stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getCurrentRuntime();");
@@ -143,16 +143,16 @@ public class ClassDeclGenerator {
 
     private void generateCreateNewCOGMethod() {
         // Convenience method for new cog C
-        stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T createNewCOG");
+        stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T createNewCogObject");
         DynamicJavaGeneratorHelper.generateParams(stream, decl.getParams());
         stream.println(" {");
-        stream.print("return (T)" + className + ".__ABS_createNewCOG");
+        stream.print("return (T)" + className + ".__ABS_createNewCogObject");
         DynamicJavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
         stream.println(";");
         stream.println("}");
 
         // static constructor method for new cog C
-        stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T __ABS_createNewCOG");
+        stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T __ABS_createNewCogObject");
         DynamicJavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
         stream.println(" {");
         stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getCurrentRuntime();");

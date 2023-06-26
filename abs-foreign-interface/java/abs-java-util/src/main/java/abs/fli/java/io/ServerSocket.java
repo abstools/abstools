@@ -50,7 +50,7 @@ public class ServerSocket extends ServerSocket_c {
     public Feedback<Socket_i> fli_accept() {
         try {
             java.net.Socket s = socket.accept();
-            Socket fli_s = Socket_c.createNewCOG(); 
+            Socket fli_s = Socket_c.createNewCogObject(); 
             fli_s.setSocket(s);
             return new Feedback_Result<Socket_i>(fli_s);
         } catch (IOException e) {

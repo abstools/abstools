@@ -230,6 +230,10 @@ public class JavaBackend extends Main {
         for (Method m : ABSObject.class.getMethods()) {
             JAVA_RESERVED_WORDS.add(m.getName());
         }
+        // Defined per class in {@link ClassDeclGenerator#generateNewObjectMethods}
+        JAVA_RESERVED_WORDS.add("createNewLocalObject");
+        // Defined per class in {@link ClassDeclGenerator#generateNewCOGMethod}
+        JAVA_RESERVED_WORDS.add("createNewCogObject");
         // the run method is special, because it can be overridden
         JAVA_RESERVED_WORDS.remove("run");
     }
