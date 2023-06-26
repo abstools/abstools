@@ -30,8 +30,8 @@ import org.abs_models.backend.java.observing.SystemObserver;
 import org.abs_models.backend.java.scheduling.DefaultTaskScheduler;
 import org.abs_models.backend.java.scheduling.GlobalScheduler;
 import org.abs_models.backend.java.scheduling.GlobalSchedulingStrategy;
-import org.abs_models.backend.java.scheduling.ScheduableTasksFilter;
-import org.abs_models.backend.java.scheduling.ScheduableTasksFilterDefault;
+import org.abs_models.backend.java.scheduling.SchedulableTasksFilter;
+import org.abs_models.backend.java.scheduling.SchedulableTasksFilterDefault;
 import org.abs_models.backend.java.scheduling.ScheduleAction;
 import org.abs_models.backend.java.scheduling.SimpleTaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskScheduler;
@@ -69,7 +69,7 @@ public class ABSRuntime {
      * Java class is found for a class annotated with [Foreign] */
     private boolean ignoreMissingFLIClasses = false;
 
-    private ScheduableTasksFilter scheduableTasksFilter = new ScheduableTasksFilterDefault();
+    private SchedulableTasksFilter schedulableTasksFilter = new SchedulableTasksFilterDefault();
 
     /**
      * Starts a new ABS program by giving a generated Main class
@@ -304,12 +304,12 @@ public class ABSRuntime {
     }
 
     public TaskScheduler createTaskScheduler(COG cog) {
-        return taskSchedulerFactory.createTaskScheduler(this, cog, threadManager, scheduableTasksFilter);
+        return taskSchedulerFactory.createTaskScheduler(this, cog, threadManager, schedulableTasksFilter);
     }
 
     public SimpleTaskScheduler createUserTaskScheduler(COG cog, TaskSchedulingStrategy strategy) {
         // Bypass the scheduler factory, as we specifically want a SimpleTaskScheduler
-        return new SimpleTaskScheduler(cog, strategy, this, threadManager, scheduableTasksFilter);
+        return new SimpleTaskScheduler(cog, strategy, this, threadManager, schedulableTasksFilter);
     }
 
     public ABSThreadManager getThreadManager() {
@@ -559,8 +559,8 @@ public class ABSRuntime {
         this.ignoreMissingFLIClasses = ignoreMissingFLIClasses;
     }
 
-    public void setScheduableTasksFilter(ScheduableTasksFilter filter) {
-        scheduableTasksFilter = filter;
+    public void setSchedulableTasksFilter(SchedulableTasksFilter filter) {
+        schedulableTasksFilter = filter;
     }
 
     public boolean getTerminateOnException() {

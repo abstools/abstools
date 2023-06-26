@@ -434,7 +434,7 @@ public class JavaGeneratorHelper {
             JavaGeneratorHelper.generateArgs(stream,args, paramTypes);
         else
             JavaGeneratorHelper.generateParamArgs(stream, params);
-        stream.println(")");
+        stream.print(")");
     }
 
     public static void generateAwaitAsyncCall(PrintStream stream, AwaitAsyncCall call) {

@@ -42,13 +42,13 @@ public class Config {
         loadTaskSchedulingStrategy();
         loadGlobalSchedulingStrategy();
         loadSchedulerFactory();
-        loadScheduableTasksFilter();
+        loadSchedulableTasksFilter();
     }
 
-    private void loadScheduableTasksFilter() {
-        if (options.scheduableTasksFilter.wasSet) {
-            ScheduableTasksFilter filter = loadClassByName(ScheduableTasksFilter.class, options.scheduableTasksFilter.stringValue());;
-            runtime.setScheduableTasksFilter(filter);
+    private void loadSchedulableTasksFilter() {
+        if (options.schedulableTasksFilter.wasSet) {
+            SchedulableTasksFilter filter = loadClassByName(SchedulableTasksFilter.class, options.schedulableTasksFilter.stringValue());;
+            runtime.setSchedulableTasksFilter(filter);
         }
     }
 

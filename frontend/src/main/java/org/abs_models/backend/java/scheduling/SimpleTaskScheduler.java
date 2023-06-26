@@ -36,7 +36,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     private final AtomicLong idCounter = new AtomicLong();
     static Logger logger = Logging.getLogger("scheduler");
     private final ABSThreadManager threadManager;
-    private final ScheduableTasksFilter scheduableTasksFilter;
+    private final SchedulableTasksFilter schedulableTasksFilter;
 
     public class TaskInfo {
         /**
@@ -114,7 +114,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     protected final COG cog;
     private final ABSRuntime runtime;
 
-    public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat, ABSRuntime runtime, ABSThreadManager m, ScheduableTasksFilter filter) {
+    public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat, ABSRuntime runtime, ABSThreadManager m, SchedulableTasksFilter filter) {
         this.threadManager = m;
         this.cog = cog;
         if (strat != null) {
@@ -129,7 +129,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
         logger.config("TaskSchedulingStrategy: " + this.schedulingStrategy.getClass().getName());
         this.runtime = runtime;
-        this.scheduableTasksFilter = filter;
+        this.schedulableTasksFilter = filter;
     }
 
     protected void taskDeadlocked() {
@@ -356,7 +356,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
         List<TaskInfo> choices = new ArrayList<>(readyTasks);
         choices.addAll(suspendedTasksWithSatisfiedGuards);
-        List<TaskInfo> choicesFiltered = scheduableTasksFilter.filter(choices);
+        List<TaskInfo> choicesFiltered = schedulableTasksFilter.filter(choices);
         return choicesFiltered;
     }
 
@@ -463,7 +463,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
-            public TaskScheduler createTaskScheduler(ABSRuntime runtime, COG cog, ABSThreadManager m, ScheduableTasksFilter filter) {
+            public TaskScheduler createTaskScheduler(ABSRuntime runtime, COG cog, ABSThreadManager m, SchedulableTasksFilter filter) {
                 return new SimpleTaskScheduler(cog, null, runtime, m, filter);
             }
         };

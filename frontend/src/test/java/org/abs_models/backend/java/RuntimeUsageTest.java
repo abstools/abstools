@@ -54,8 +54,8 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
         }
 
         @Override
-        public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
-            return scheduableTasks.get(0);
+        public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+            return schedulableTasks.get(0);
         }
         
     }

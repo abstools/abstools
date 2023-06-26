@@ -6,8 +6,8 @@ package org.abs_models.backend.java.scheduling;
 
 import java.util.List;
 
-public interface ScheduableTasksFilter {
+public interface SchedulableTasksFilter {
     
-    List<SimpleTaskScheduler.TaskInfo> filter(List<SimpleTaskScheduler.TaskInfo> scheduableTasks);
+    List<SimpleTaskScheduler.TaskInfo> filter(List<SimpleTaskScheduler.TaskInfo> schedulableTasks);
     
 }

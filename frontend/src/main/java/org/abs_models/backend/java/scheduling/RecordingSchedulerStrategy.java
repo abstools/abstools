@@ -15,22 +15,22 @@ public class RecordingSchedulerStrategy implements TaskSchedulingStrategy {
     }
 
     @Override
-    public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
+    public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
         int cogId = scheduler.getCOG().getID();
 
-        SimpleTaskScheduler.TaskInfo choosenTask = schedulingStrat.schedule(scheduler, scheduableTasks);
+        SimpleTaskScheduler.TaskInfo choosenTask = schedulingStrat.schedule(scheduler, schedulableTasks);
         long taskId = choosenTask.id;
-        String suff = scheduableTasks.size() == 1 ? " (NO CHOICE)" : "";
+        String suff = schedulableTasks.size() == 1 ? " (NO CHOICE)" : "";
 
         System.out.println("COG " + cogId + " (" + scheduler.getCOG().getInitialClass().getName()
-                + "): Scheduled task " + taskId + " from {" + tasksToStringList(cogId, scheduableTasks) + "}" + suff);
+                + "): Scheduled task " + taskId + " from {" + tasksToStringList(cogId, schedulableTasks) + "}" + suff);
         return choosenTask;
     }
 
-    private String tasksToStringList(int cogid, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
+    private String tasksToStringList(int cogid, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
         StringBuilder res = new StringBuilder();
         boolean first = true;
-        for (SimpleTaskScheduler.TaskInfo info : scheduableTasks) {
+        for (SimpleTaskScheduler.TaskInfo info : schedulableTasks) {
             if (first)
                 first = false;
             else

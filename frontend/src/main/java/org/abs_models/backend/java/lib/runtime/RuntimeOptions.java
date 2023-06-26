@@ -122,8 +122,8 @@ public class RuntimeOptions {
         addOption(STRING, "loglevel", "sets the logging level", "warning");
     public final Option loggedClasses =
         addOption(CLASSLIST, "loggedClasses", "comma-separated list of classes to be logged", new String[0]);
-    public final Option scheduableTasksFilter =
-            addOption(CLASS, "scheduableTasksFilter", "sets a filter class for scheduable tasks", null);
+    public final Option schedulableTasksFilter =
+            addOption(CLASS, "schedulableTasksFilter", "sets a filter class for schedulable tasks", null);
     public final Option dynamicUpdates =
             addOption(BOOLEAN, "dynamic", "enables dynamic program updates", false);
 

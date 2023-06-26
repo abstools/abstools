@@ -9,16 +9,16 @@ import java.util.List;
 
 import org.abs_models.backend.java.lib.runtime.COG;
 
-public class ScheduableTasksFilterFifo implements ScheduableTasksFilter {
+public class SchedulableTasksFilterFifo implements SchedulableTasksFilter {
 
     @Override
-    public List<SimpleTaskScheduler.TaskInfo> filter(List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
-          List<SimpleTaskScheduler.TaskInfo> result = new ArrayList<>(scheduableTasks.size());
+    public List<SimpleTaskScheduler.TaskInfo> filter(List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+          List<SimpleTaskScheduler.TaskInfo> result = new ArrayList<>(schedulableTasks.size());
 
           with_next_task :
-          for (SimpleTaskScheduler.TaskInfo task : scheduableTasks) {
+          for (SimpleTaskScheduler.TaskInfo task : schedulableTasks) {
               if (!task.hasBeenActivated) {
-                  for (SimpleTaskScheduler.TaskInfo otherTask : scheduableTasks) {
+                  for (SimpleTaskScheduler.TaskInfo otherTask : schedulableTasks) {
                       if (otherTask.id < task.id
                               && !otherTask.hasBeenActivated
                               && getSourceCog(otherTask) == getSourceCog(task)

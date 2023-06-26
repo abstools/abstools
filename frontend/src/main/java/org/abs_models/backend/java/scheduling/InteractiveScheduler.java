@@ -126,15 +126,15 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
     }
 
     @Override
-    public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
+    public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
 
         TotalSchedulingStrategy ds = getDirectScheduler();
         SimpleTaskScheduler.TaskInfo task = null;
 
         if (ds != null) {
-            task = ds.schedule(scheduler, scheduableTasks);
+            task = ds.schedule(scheduler, schedulableTasks);
         } else {
-            guiSwingWrapper.chooseTask(scheduler, scheduableTasks);
+            guiSwingWrapper.chooseTask(scheduler, schedulableTasks);
             task = awaitGUITaskChoose();
         }
         obs.activatedTask(task);
@@ -169,7 +169,7 @@ interface SchedulerGUISwing {
 
     void showOptions(ScheduleOptions options);
 
-    void chooseTask(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> scheduableTasks);
+    void chooseTask(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks);
 
 }
 
@@ -215,15 +215,15 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
             layout.setConstraints(btn, c);
         }
 
-        public void setScheduleTaskBtns(List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
+        public void setScheduleTaskBtns(List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
             enableBtns(false);
-            taskBtnFrame = new TaskBtnDialog(scheduableTasks);
+            taskBtnFrame = new TaskBtnDialog(schedulableTasks);
             taskBtnFrame.setVisible(true);
         }
 
         class TaskBtnDialog extends JDialog {
 
-            public TaskBtnDialog(List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
+            public TaskBtnDialog(List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
                 super(frame, "Schedule Task of COG " + cog.getID(), false);
                 setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 GridBagLayout layout = new GridBagLayout();
@@ -234,7 +234,7 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
                 c.gridx = 0;
 
                 // btn.setVisible(false);
-                for (SimpleTaskScheduler.TaskInfo i : scheduableTasks) {
+                for (SimpleTaskScheduler.TaskInfo i : schedulableTasks) {
                     ChooseTaskBtn btn = new ChooseTaskBtn(i);
                     add(btn);
                     layout.setConstraints(btn, c);
@@ -339,12 +339,12 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
     }
 
     @Override
-    public void chooseTask(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
-        if (scheduableTasks.size() == 1) {
-            this.scheduler.setNextTask(scheduableTasks.get(0));
+    public void chooseTask(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+        if (schedulableTasks.size() == 1) {
+            this.scheduler.setNextTask(schedulableTasks.get(0));
         } else {
             BtnLine l = btnLines.get(scheduler.getCOG());
-            l.setScheduleTaskBtns(scheduableTasks);
+            l.setScheduleTaskBtns(schedulableTasks);
         }
     }
 
@@ -540,20 +540,20 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     }
 
     @Override
-    public void chooseTask(TaskScheduler s, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
-        SimpleTaskScheduler.TaskInfo i = getNextTask(scheduableTasks);
+    public void chooseTask(TaskScheduler s, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+        SimpleTaskScheduler.TaskInfo i = getNextTask(schedulableTasks);
         if (i != null)
             scheduler.setNextTask(i);
     }
 
-    private SimpleTaskScheduler.TaskInfo getNextTask(List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
+    private SimpleTaskScheduler.TaskInfo getNextTask(List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
         if (!history.isEmpty()) {
             try {
                 HistoryItem at = history.remove(0);
                 if (at.action != HistoryAction.ACTIVATE)
                     throw new IllegalStateException("Task action action expected!");
 
-                for (SimpleTaskScheduler.TaskInfo i : scheduableTasks) {
+                for (SimpleTaskScheduler.TaskInfo i : schedulableTasks) {
                     if (i.task.getID() == at.taskid && i.task.getCOG().getID() == at.cogId) {
 
                         return i;
@@ -578,9 +578,9 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     }
 
     @Override
-    public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler taskScheduler, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
+    public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler taskScheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
 
-        SimpleTaskScheduler.TaskInfo i = getNextTask(scheduableTasks);
+        SimpleTaskScheduler.TaskInfo i = getNextTask(schedulableTasks);
         if (history.isEmpty()) {
             scheduler.setDirectScheduler(null);
         }
@@ -745,8 +745,8 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     }
 
     @Override
-    public synchronized void chooseTask(TaskScheduler s, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
-        nextTask = taskStrat.schedule(s, scheduableTasks);
+    public synchronized void chooseTask(TaskScheduler s, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+        nextTask = taskStrat.schedule(s, schedulableTasks);
         scheduler.setNextTask(nextTask);
     }
 
@@ -761,8 +761,8 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     }
 
     @Override
-    public synchronized SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
-        return taskStrat.schedule(scheduler, scheduableTasks);
+    public synchronized SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+        return taskStrat.schedule(scheduler, schedulableTasks);
     }
 }
 
@@ -860,8 +860,8 @@ class SchedulerGUI implements SchedulerGUISwing, SchedulingObserver {
     }
 
     @Override
-    public void chooseTask(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
-        currentScheduler.chooseTask(scheduler, scheduableTasks);
+    public void chooseTask(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+        currentScheduler.chooseTask(scheduler, schedulableTasks);
     }
 }
 

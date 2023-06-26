@@ -6,11 +6,11 @@ package org.abs_models.backend.java.scheduling;
 
 import java.util.List;
 
-public class ScheduableTasksFilterDefault implements ScheduableTasksFilter {
+public class SchedulableTasksFilterDefault implements SchedulableTasksFilter {
 
     @Override
-    public List<SimpleTaskScheduler.TaskInfo> filter(List<SimpleTaskScheduler.TaskInfo> scheduableTasks) {
-        return scheduableTasks;
+    public List<SimpleTaskScheduler.TaskInfo> filter(List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+        return schedulableTasks;
     }
 
 }
