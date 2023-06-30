@@ -50,7 +50,7 @@ manual:				## Build the ABS manual
 	@echo "PDF: abs-docs/build/asciidoc/pdf/index.pdf"
 
 docker:				## Build docker images for collaboratory and absc
-	$(DOCKER) pull erlang:24-alpine
+	$(DOCKER) pull erlang:25-alpine
 	$(DOCKER) pull php:7.4-apache-buster
 	$(DOCKER) build -t abslang/collaboratory -f docker/collaboratory.Dockerfile $(ROOT_DIR)
 	$(DOCKER) build -t abslang/absc -f docker/absc.Dockerfile $(ROOT_DIR)
