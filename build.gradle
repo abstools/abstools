@@ -8,9 +8,9 @@
 // Make sure all subprojects use the same plugin versions; see
 // https://docs.gradle.org/current/userguide/plugins.html#sec:subprojects_plugins_dsl
 plugins {
-    id 'com.github.johnrengelman.shadow' version '7.1.2' apply false
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
     // ./gradlew dependencyUpdates to check for library updates
-    id "com.github.ben-manes.versions" version "0.42.0"
+    id "com.github.ben-manes.versions" version "0.47.0"
 }
 
 // https://stackoverflow.com/questions/15061277/how-can-i-get-the-current-git-branch-in-gradle/36760102#36760102
