@@ -52,7 +52,7 @@ dpkg -i erlang-solutions_1.0_all.deb
 rm erlang-solutions_1.0_all.deb
 apt-get -y update
 mkdir -p /usr/share/man/man1
-apt-get -y install apt-utils default-jre-headless erlang-base erlang-nox gawk git graphviz libgl1 netcat-openbsd python-dev python-pip unzip wget
+apt-get -y install apt-utils default-jre-headless erlang-base erlang-nox gawk git graphviz libgl1 netcat-openbsd unzip
 rm -rf /var/lib/apt/lists/*
 git clone https://github.com/abstools/absexamples.git /var/www/absexamples
 chmod -R 755 /var/www/absexamples
@@ -110,26 +110,30 @@ EOF
 ###############
 # SmartDeployer installation
 ###############
-RUN pip install antlr4-python2-runtime toposort psutil click
-COPY --from=jacopomauro/abs_deployer:v0.4.1 /tool /tool
-ENV PATH "$PATH:/tool/MiniZincIDE/bin"
-ENV LD_LIBRARY_PATH "$LD_LIBRARY_PATH:/tool/MiniZincIDE/lib"
-ENV PYTHONPATH "$PYTHONPATH:/tool/z3/install/lib/python-2/site-packages"
-ENV PATH "$PATH:/tool/z3/install/bin"
-ENV CLASSPATH "$CLASSPATH:/tool/fzn2smt:/tool/fzn2smt/antlr-runtime-3.2.jar"
-ENV PATH "$PATH:/tool/or-tools/bin"
-ENV PATH "/tool/abs_deployer:$PATH"
-ENV CLASSPATH "/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH"
-RUN pip install -e /tool/zephyrus2
+    # Skip for now; see https://github.com/abstools/abstools/issues/322
+RUN rm -rf /var/www/easyinterface/server/bin/envisage/smart_deployer /var/www/easyinterface/server/config/envisage/smart_deployer
+RUN sed -i "/smartdeployer/d" /var/www/easyinterface/server/config/envisage/apps.cfg
+# RUN apt-get install python-dev python-pip
+# RUN pip install antlr4-python2-runtime toposort psutil click
+# COPY --from=jacopomauro/abs_deployer:v0.4.1 /tool /tool
+# ENV PATH "$PATH:/tool/MiniZincIDE/bin"
+# ENV LD_LIBRARY_PATH "$LD_LIBRARY_PATH:/tool/MiniZincIDE/lib"
+# ENV PYTHONPATH "$PYTHONPATH:/tool/z3/install/lib/python-2/site-packages"
+# ENV PATH "$PATH:/tool/z3/install/bin"
+# ENV CLASSPATH "$CLASSPATH:/tool/fzn2smt:/tool/fzn2smt/antlr-runtime-3.2.jar"
+# ENV PATH "$PATH:/tool/or-tools/bin"
+# ENV PATH "/tool/abs_deployer:$PATH"
+# ENV CLASSPATH "/usr/local/lib/frontend/dist/absfrontend.jar:$CLASSPATH"
+# RUN pip install -e /tool/zephyrus2
 
-RUN echo "\
-# set corresponding paths in easyinterface\n\
-#\n\
-# path to SmartDeployer\n\
-EC_SMARTDEPLOYERHOME=\"/tool\"\n\
-# path to minizinc\n\
-#\n\
-EC_PATH=\"\$EC_PATH::/tool/MiniZincIDE/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
+# RUN echo "\
+# # set corresponding paths in easyinterface\n\
+# #\n\
+# # path to SmartDeployer\n\
+# EC_SMARTDEPLOYERHOME=\"/tool\"\n\
+# # path to minizinc\n\
+# #\n\
+# EC_PATH=\"\$EC_PATH::/tool/MiniZincIDE/bin\"\n" >> /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 
 
 
