@@ -38,7 +38,7 @@ public class ABSInteger extends ABSRational {
     }
 
     public ABSRational divide(ABSInteger i) {
-        return ABSRational.fromBigInt(this.value).divide(i);
+        return ABSRational.fromAprational(this.value).divide(i);
     }
 
     public ABSInteger mod(ABSInteger i) {

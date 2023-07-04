@@ -5,7 +5,6 @@
 package org.abs_models.backend.java.lib.types;
 
 import java.math.BigInteger;
-import java.math.BigDecimal;
 
 import org.apfloat.Apfloat;
 import org.apfloat.Apint;
@@ -36,27 +35,27 @@ public class ABSRational extends ABSBuiltInDataType {
     }
 
     public ABSRational add(ABSRational i) {
-        return fromBigInt(this.value.add(i.value));
+        return fromAprational(this.value.add(i.value));
     }
 
     public ABSRational subtract(ABSRational i) {
-        return fromBigInt(this.value.subtract(i.value));
+        return fromAprational(this.value.subtract(i.value));
     }
 
     public ABSRational multiply(ABSRational i) {
-        return fromBigInt(this.value.multiply(i.value));
+        return fromAprational(this.value.multiply(i.value));
     }
 
     public ABSRational divide(ABSRational i) {
-        return fromBigInt(this.value.divide(i.value));
+        return fromAprational(this.value.divide(i.value));
     }
 
     public ABSRational mod(ABSRational i) {
-        return fromBigInt(this.value.mod(i.value));
+        return fromAprational(this.value.mod(i.value));
     }
 
     public ABSRational negate() {
-        return fromBigInt(this.value.negate());
+        return fromAprational(this.value.negate());
     }
 
     @Override
@@ -90,11 +89,7 @@ public class ABSRational extends ABSBuiltInDataType {
         return this.eq(o).or(this.lt(o));
     }
 
-    public static ABSRational fromBigInt(BigInteger i) {
-        return new ABSRational(new Apint(i));
-    }
-
-    public static ABSRational fromBigInt(Aprational i) {
+    public static ABSRational fromAprational(Aprational i) {
         return new ABSRational(i);
     }
 
@@ -109,14 +104,14 @@ public class ABSRational extends ABSBuiltInDataType {
         case 1:
             return ONE;
         default:
-            return fromBigInt(new Apint(i));
+            return fromAprational(new Apint(i));
         }
     }
 
     public static ABSRational fromLong(long l) {
         if (l == 0) return ZERO;
         if (l == 1) return ONE;
-        return fromBigInt(new Apint(l));
+        return fromAprational(new Apint(l));
     }
 
     public static ABSRational fromDouble(double v) {

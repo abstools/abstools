@@ -46,7 +46,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSRational currentms() {
-        return ABSRational.fromBigInt(new Aprational(new Apint(System.currentTimeMillis()), new Apint(1000)));
+        return ABSRational.fromAprational(new Aprational(new Apint(System.currentTimeMillis()), new Apint(1000)));
     }
 
     public static ABSInteger ms_since_model_start() {
