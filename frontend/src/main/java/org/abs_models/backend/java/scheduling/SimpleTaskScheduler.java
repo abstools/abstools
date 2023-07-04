@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.abs_models.backend.java.lib.runtime.ABSAndGuard;
+import org.abs_models.backend.java.lib.runtime.ABSDurationGuard;
 import org.abs_models.backend.java.lib.runtime.ABSFutureGuard;
 import org.abs_models.backend.java.lib.runtime.ABSGuard;
 import org.abs_models.backend.java.lib.runtime.ABSInitObjectCall;
@@ -34,7 +35,7 @@ import org.abs_models.backend.java.observing.TaskView;
  */
 public class SimpleTaskScheduler implements TaskScheduler {
     private final AtomicLong idCounter = new AtomicLong();
-    static Logger logger = Logging.getLogger("scheduler");
+    static Logger logger = Logging.getLogger(SimpleTaskScheduler.class.getName());
     private final ABSThreadManager threadManager;
     private final SchedulableTasksFilter schedulableTasksFilter;
 
@@ -162,7 +163,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
 
     @Override
-    public synchronized void addTask(final Task<?> task) {
+    public synchronized void addTaskToScheduler(final Task<?> task) {
 
         readyTasks.add(new TaskInfo(task));
         if (view != null)
@@ -287,6 +288,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
                 ABSFutureGuard fg = (ABSFutureGuard) g;
                 wasAdded = fg.fut.addWaitingThread(this);
                 logger.finest(executingTask + " was "+(wasAdded ? "" :"NOT ")+"added to " + fg.fut);
+            } else if (g instanceof ABSDurationGuard) {
+                // XXX register in Runtime?  Have runtime have priority queue?
             } else if (g instanceof ABSAndGuard) {
                 ABSAndGuard ag = (ABSAndGuard) g;
                 wasAdded = registerAtThreads(ag.getLeftGuard());

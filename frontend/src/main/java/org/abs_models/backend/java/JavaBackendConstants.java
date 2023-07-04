@@ -5,6 +5,7 @@
 package org.abs_models.backend.java;
 
 import org.abs_models.backend.java.lib.runtime.ABSAndGuard;
+import org.abs_models.backend.java.lib.runtime.ABSDurationGuard;
 import org.abs_models.backend.java.lib.runtime.ABSExpGuard;
 import org.abs_models.backend.java.lib.runtime.ABSFutureGuard;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
@@ -20,6 +21,7 @@ public class JavaBackendConstants {
     public final static String ANDGUARD = ABSAndGuard.class.getName();
     public final static String CLAIMGUARD = ABSFutureGuard.class.getName();
     public final static String EXPGUARD = ABSExpGuard.class.getName();
+    public final static String DURATIONGUARD = ABSDurationGuard.class.getName();
 
     // Package names for generated products, deltas
     public final static String LIB_RDM_PACKAGE = "rdm";

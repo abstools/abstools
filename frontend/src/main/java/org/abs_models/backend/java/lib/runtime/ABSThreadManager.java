@@ -10,7 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ABSThreadManager {
-    private static Logger logger = Logging.getLogger(ABSThread.class.getName());
+    private static Logger logger = Logging.getLogger(ABSThreadManager.class.getName());
     private final List<ABSThread> threads = new ArrayList<>();
     private final ABSRuntime runtime;
     ABSThreadManager(ABSRuntime r) {

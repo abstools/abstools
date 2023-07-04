@@ -4,21 +4,34 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
+/**
+ * A guard that suspends until the value of its future becomes available.
+ */
 public class ABSFutureGuard extends ABSGuard {
     public final ABSFut<?> fut;
+    private boolean isDone;
 
     public ABSFutureGuard(ABSFut<?> f) {
         this.fut = f;
+        this.isDone = f.isDone();
     }
 
-    public boolean await() {
-        fut.await();
-        return false;
+    public boolean await(COG cog) {
+        if (!isDone) {
+            fut.await(cog);
+            isDone = true;
+        }
+        return true;
     }
 
     @Override
     public boolean isTrue() {
         return fut.isDone();
+    }
+
+    @Override
+    public boolean staysTrue() {
+        return true;
     }
 
     @Override

@@ -40,7 +40,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
             ABSRuntime.getRuntime().getGlobalScheduler().handleGet(this);
         }
 
-        await();
+        await(ABSRuntime.getCurrentCOG());
         log.finest("future awaited");
 
         if (t != null) {

@@ -663,10 +663,11 @@ aspect GenerateJava {
     }
 
     public void DurationGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
-        stream.print("new " + JavaBackendConstants.EXPGUARD+
-                "() { public " + ABSBool.class.getName()+
-                " evaluateExp() { return " +
-                ABSBool.class.getName() + ".TRUE; }}");
+        stream.print("new " + JavaBackendConstants.DURATIONGUARD + "(");
+        getMin().generateJava(stream);
+        stream.print(", ");
+        getMax().generateJava(stream);
+        stream.print(")");
     }
 
     /*

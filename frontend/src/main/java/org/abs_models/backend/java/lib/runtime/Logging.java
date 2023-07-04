@@ -36,7 +36,6 @@ public class Logging {
         @Override
         public String format(LogRecord record) {
             return record.getLevel()
-                + " " + record.getLoggerName()
                 + " [" + record.getSourceClassName()
                 + " " + record.getSourceMethodName()
                 + " " + record.getThreadID()

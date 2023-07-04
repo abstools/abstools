@@ -16,9 +16,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,10 +42,13 @@ import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
 import org.abs_models.backend.java.scheduling.TotalSchedulingStrategy;
 import org.abs_models.backend.java.scheduling.UsesRandomSeed;
 
+import org.apfloat.Aprational;
+
 /**
- * Singleton runtime class.
- *
- * The single instance is generated in {@link Startup#startup(String[], Class<?>)}.
+ * The singleton runtime class.
+ * <p>
+ * The single instance of this class or one of its subclasses is generated in
+ * {@link StartUp#startup}.
  */
 public class ABSRuntime {
     private static final String ABS_RUNSINOWNPROCESS_PROPERTY = "abs.runsinownprocess";
@@ -52,25 +57,60 @@ public class ABSRuntime {
 
     private static final String ABSFLI_PROPERTIES = "absfli.properties";
 
-    private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
+    private static final Logger log = Logging.getLogger(ABSRuntime.class.getName());
 
     private static final boolean DEBUG_FLI = Boolean.parseBoolean(System.getProperty("abs.fli.debug", "false"));
 
     /**
-     * The singleton runtime instance.  Can be ABSRuntime or a subclass
-     * thereof, depending on which class's `getRuntime()` method is called.
+     * The singleton runtime instance, set by {@see #getRuntime}.  The value in
+     * this field can be of class {@code ABSRuntime} or a subclass thereof, depending
+     * on which class's {@code getRuntime} method is called.
      */
     protected static ABSRuntime runtimeSingleton = null;
     private final ABSThreadManager threadManager = new ABSThreadManager(this);
     private final AtomicInteger cogCounter = new AtomicInteger();
     private final AtomicInteger taskCounter = new AtomicInteger();
+    /**
+     * The number of active cogs in the system.
+     */
+    private long nActiveCogs = 0;
 
-    /** classloader for loading the translated code and FLI classes */
+    /**
+     * The current clock value.
+     */
+    private Aprational clock = new Aprational(0);
+    /**
+     * The current time to advance to if the system ran to completion on the
+     * current time. This is the minimum of the maxima of all guards in the
+     * {@see #duration_guards} queue and is calculated every time we add a duration
+     * guard to the queue, or increment the clock.  Its value is only
+     * meaningful when {@code duration_guards} is non-empty.
+     * <p>
+     * NOTE: For safe access to this field, use {@ocde synchronized(duration_guards)}.
+     */
+    private Aprational wake_time = new Aprational(0);
+    /**
+     * Queue of all guards waiting on the clock, ordered by minimum duration.
+     * This means when advancing the clock, we can pop elements in order until
+     * the first element's minimum wakeup time is greater than the current
+     * clock.
+     * <p>
+     * NOTE: Protect all access to this field with {@code synchronized(duration_guards)}.
+     */
+    private final PriorityQueue<ABSDurationGuard> duration_guards
+        = new PriorityQueue<>(Comparator.comparing(ABSDurationGuard::getMinTime));
+
+
+    /**
+     * classloader for loading the translated code and FLI classes
+     */
     private ClassLoader classLoader = ABSRuntime.class.getClassLoader();
 
 
-    /** URIs for loading foreign classes */
-    private List<URL> classPath = new ArrayList<>();
+    /**
+     * URIs for loading foreign classes
+     */
+    private final List<URL> classPath = new ArrayList<>();
 
     private PrintStream outStream = System.out;
     private PrintStream errStream = System.err;
@@ -96,13 +136,7 @@ public class ABSRuntime {
             cogCreated(mainObject);
             asyncCall(new ABSMainCall(mainObject));
             doNextStep();
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }
@@ -160,15 +194,12 @@ public class ABSRuntime {
     }
 
     /**
-     * Get the singleton runtime.
-     *
-     * Note that subclasses can override this method to instantiate a subclass
-     * instead; that object will then be returned by all calls to
-     * `getRuntime()`, regardless on which class.  Therefore, the first call
-     * to this method should be in a place that can decide which class the
-     * global runtime should be.
-     *
-     * @see StartUp.startup
+     * Get the singleton runtime.  Note that subclasses can override this
+     * method to instantiate a subclass instead; that object will then be
+     * returned by all calls to this method, regardless on which class.
+     * Therefore, the first call to this method should be in a place that can
+     * decide which class the global runtime should be, typically {@link
+     * StartUp#startup}}.
      *
      * @return the runtime singleton
      */
@@ -212,7 +243,7 @@ public class ABSRuntime {
     public synchronized void setRandomSeed(long seed) {
         randomSeed = seed;
         random = new Random(seed);
-        logger.config("New Random Seed: " + randomSeed);
+        log.config("New Random Seed: " + randomSeed);
 
         if (globalSchedulingStrategy instanceof UsesRandomSeed) {
             ((UsesRandomSeed)globalSchedulingStrategy).setRandom(random);
@@ -245,7 +276,7 @@ public class ABSRuntime {
     public synchronized void setGlobalSchedulingStrategy(GlobalSchedulingStrategy strat) {
         globalSchedulingStrategy = strat;
         if (strat != null) {
-            logger.config("Using global scheduling strategy defined by class "
+            log.config("Using global scheduling strategy defined by class "
                     + strat.getClass().getName());
             globalScheduler = new GlobalScheduler(this, strat);
         } else {
@@ -371,10 +402,16 @@ public class ABSRuntime {
     }
 
     public COG createCOG(Class<?> clazz, ABSInterface dc) {
+        // NOTE: we don't increase `nActiveCogs` here, since the running task
+        // (who created the fresh object and cog) will schedule an
+        // initialization task immediately.
         return new COG(this, clazz, dc);
     }
 
     public COG createCOG(Class<?> clazz, ABSInterface dc, TaskSchedulingStrategy strategy) {
+        // NOTE: we don't increase `nActiveCogs` here, since the running task
+        // (who created the fresh object and cog) will schedule an
+        // initialization task immediately.
         return new COG(this, clazz, dc, strategy);
     }
 
@@ -474,8 +511,7 @@ public class ABSRuntime {
         }
 
         try {
-            Class<?> result = classLoader.loadClass(className);
-            return result;
+            return classLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
             if (!ignoreMissingFLIClasses) {
                 errStream.println("Could not load foreign class for " + name + "!");
@@ -534,7 +570,7 @@ public class ABSRuntime {
 
     /**
      * Defines what to do in case an ABSException is thrown in a task
-     * @param task the task that throwed the exception
+     * @param task the task that threw the exception
      * @param e the exception that was thrown
      */
     public void handleABSException(Task<?> task, ABSException e) {
@@ -591,4 +627,80 @@ public class ABSRuntime {
         return terminateOnException;
     }
 
+    /**
+     * Return the current value of the global clock.  This is an absolute time,
+     * increasing from 0.
+     */
+    public Aprational getClock() {
+        return clock;
+    }
+
+    /**
+     * Advances the clock to the current value of {@link #wake_time}.  Must only be
+     * called when all threads are waiting, and signals all waiting guards
+     * whose minimum wakeup time is less or equal than the new value of the
+     * clock.
+     */
+    public void advanceClock() {
+        synchronized(duration_guards) {
+            if (duration_guards.isEmpty()) {
+                log.finest(() -> "No duration guards waiting on clock, nothing to advance.");
+            } else {
+                clock = wake_time;
+                log.finest(() -> "Advancing clock to " + wake_time + ", waking up waiting threads");
+                while (!duration_guards.isEmpty()
+                       && wake_time.compareTo(duration_guards.peek().getMinTime()) <= 0)
+                {
+                    ABSDurationGuard guard = duration_guards.remove();
+                    synchronized(guard) {
+                        guard.notify();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Add a duration guard to the list of guards waiting for time to advance.
+     *
+     * @param guard The duration guard.
+     */
+    public void addDurationGuard (ABSDurationGuard guard) {
+        Aprational guard_max_time = guard.getMaxTime();
+        if (guard_max_time.compareTo(clock) <= 0) {
+            // Can't happen: this is called from DurationGuards after checking
+            // for current time, and time is advanced only when all cogs are
+            // idle.
+            throw new RuntimeException("Trying to wait for a time that is less than or equal to current clock");
+        }
+        synchronized(duration_guards) {
+            if (duration_guards.isEmpty()) {
+                wake_time = guard_max_time;
+            } else {
+                wake_time = guard_max_time.compareTo(wake_time) < 0 ? guard_max_time : wake_time;
+            }
+            duration_guards.add(guard);
+        }
+    }
+    
+    public void notifyCogActive() {
+        synchronized(this) {
+            nActiveCogs++;
+        }
+        log.finest(() -> nActiveCogs + " active cogs.");
+    }
+
+    public void notifyCogInactive() {
+        synchronized(this) {
+            nActiveCogs--;
+        }
+        if (nActiveCogs == 0) {
+            log.finest(() -> "No active cogs.");
+            advanceClock();
+        } else if (nActiveCogs > 0) {
+            log.finest(() -> nActiveCogs + " active cogs.");
+        } else {
+            log.severe(() -> "Count of active cogs became negative (" + nActiveCogs + "), this should never happen");
+        }
+    }
 }

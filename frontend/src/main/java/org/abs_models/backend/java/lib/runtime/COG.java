@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSInterface;
@@ -19,10 +20,20 @@ import org.abs_models.backend.java.scheduling.TaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
 
 public class COG implements ABSValue {
+    protected static final Logger log = Logging.getLogger(COG.class.getName());
+
     private final TaskScheduler scheduler;
     private final Class<?> initialClass;
     private final int id;
-    private ABSInterface dc;
+    private final ABSInterface dc;
+    /**
+     * The number of active threads, incremented and decremented by schedulers
+     * running on this cog.  This is used to detect when all schedulers on
+     * this cog have gone idle, and hence, time could be incremented.
+     * <p>
+     * NOTE: all access to this field must be synchronized
+     */
+    private int activeThreads = 0;
 
     public COG(ABSRuntime runtime, Class<?> clazz, ABSInterface dc) {
         initialClass = clazz;
@@ -51,7 +62,64 @@ public class COG implements ABSValue {
     }
 
     public void addTask(Task<?> task) {
-        scheduler.addTask(task);
+        synchronized(this) {
+            if (activeThreads == 0) {
+                log.finest(() -> "Notifying runtime that we became active");
+                ABSRuntime.getRuntime().notifyCogActive();
+            }
+            activeThreads++;
+        }
+        log.finest(() -> this + " now has " + activeThreads + " active threads.");
+        scheduler.addTaskToScheduler(task);
+    }
+
+    /**
+     * Notify the cog that a guard is awaiting and will suspend the thread.
+     * If the guard evaluates to true, this method should not be called (e.g.,
+     * if a DurationGuard awaits on t=0).
+     */
+    public synchronized void notifyAwait() {
+        activeThreads--;
+        if (activeThreads < 0) {
+            log.severe(() -> this + " reached negative value for activeThreads (" + activeThreads + "), this should never happen");
+            throw new IllegalStateException("activeThreads counter reached negative value; this should never happen");
+        } else {
+            log.finest(() -> this + " now has " + activeThreads + " active threads.");
+        }
+        if (activeThreads == 0) {
+            log.finest(() -> "Notifying runtime that we became inactive");
+            ABSRuntime.getRuntime().notifyCogInactive();
+        }
+    }
+
+    /**
+     * Notify the cog that a guard has finished awaiting and the thread is
+     * runnable again.
+     * <p>
+     * If the guard did not actually suspend the task, this method should not
+     * be called (e.g., if a DurationGuard awaited on t=0).
+     */
+    public synchronized void notifyWakeup() {
+        if (activeThreads == 0) {
+            log.finest(() -> "Notifying runtime that we became active");
+            ABSRuntime.getRuntime().notifyCogActive();
+        }
+        activeThreads++;
+        log.finest(() -> this + " now has " + activeThreads + " active threads.");
+    }
+
+    public synchronized void notifyEnded() {
+        activeThreads--;
+        if (activeThreads < 0) {
+            log.severe(() -> this + " reached negative value for activeThreads (" + activeThreads + "), this should never happen");
+            throw new IllegalStateException("activeThreads counter reached negative value; this should never happen");
+        } else {
+            log.finest(() -> this + " now has " + activeThreads + " active threads.");
+        }
+        if (activeThreads == 0) {
+            log.finest(() -> "Notifying runtime that we became inactive");
+            ABSRuntime.getRuntime().notifyCogInactive();
+        }
     }
 
     public int getID() {
@@ -131,11 +199,8 @@ public class COG implements ABSValue {
                 creationClassListeners = new HashMap<>();
             }
 
-            List<ObjectCreationObserver> list = creationClassListeners.get(className);
-            if (list == null) {
-                list = new ArrayList<>(1);
-                creationClassListeners.put(className, list);
-            }
+            List<ObjectCreationObserver> list
+                = creationClassListeners.computeIfAbsent(className, k -> new ArrayList<>(1));
             list.add(e);
         }
 

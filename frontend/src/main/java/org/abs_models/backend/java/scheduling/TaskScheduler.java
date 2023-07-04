@@ -23,17 +23,20 @@ public interface TaskScheduler {
 
 
     /**
-     * Adds a task to the task queue of this task scheduler
-     * 
+     * Adds a task to the task queue of this task scheduler.
+     *
+     * NOTE: since the cog does some additional bookkeeping, this method
+     * should only be called by this scheduler's cog.
+     *
      * @param task the task to be added
      */
-    void addTask(Task<?> task);
+    void addTaskToScheduler(Task<?> task);
 
     TaskSchedulerView getView();
 
     /**
      * Returns the currently executing task.
-     * 
+     *
      * @return null if no task is executing
      */
     Task<?> getActiveTask();
@@ -41,7 +44,7 @@ public interface TaskScheduler {
     /**
      * Called by the thread that is executing the currently active task, when
      * hitting an await statement with a guard.
-     * 
+     *
      * @param g the guard
      */
     void await(ABSGuard g);

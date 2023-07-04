@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
     implements Future<V>
 {
-    protected static final Logger log = Logger.getLogger(ABSRuntime.class.getName());
+    protected static final Logger log = Logging.getLogger(ABSFut.class.getName());
     private static final AtomicInteger counter = new AtomicInteger();
     private final int id = counter.incrementAndGet();
     protected V value;
@@ -97,8 +97,14 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         return isDone;
     }
 
-    public synchronized void await() {
+    public synchronized void await(COG cog) {
         log.finest("awaiting future");
+
+        boolean needsSuspend = !isDone;
+
+        if (needsSuspend) {
+            cog.notifyAwait();
+        }
 
         while (!isDone) {
             try {
@@ -110,11 +116,14 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
             }
         }
 
+        log.finest("future ready");
+
+        if (needsSuspend) {
+            cog.notifyWakeup();
+        }
 
         if (exception != null)
             throw exception;
-
-        log.finest("future ready");
     }
 
     private List<GuardWaiter> waitingThreads;

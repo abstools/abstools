@@ -56,7 +56,7 @@ import org.abs_models.backend.java.lib.runtime.Logging;
 import org.abs_models.backend.java.utils.ColorUtils;
 
 public class InteractiveScheduler implements TotalSchedulingStrategy {
-    private static final Logger log = Logging.getLogger(ABSRuntime.class.getName());
+    private static final Logger log = Logging.getLogger(InteractiveScheduler.class.getName());
 
     private final SchedulerGUI gui;
     private final SchedulerGUISwing guiSwingWrapper;

@@ -18,15 +18,36 @@ import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.observing.TaskSchedulerView;
 import org.abs_models.backend.java.observing.TaskView;
 
+/**
+ * The default task scheduler class.  Each cog has a `TaskScheduler` instance
+ * that it delegates task scheduling to; this is the default class.
+ * <p>
+ * This class creates an instance of the `SchedulerThread` inner class for
+ * each running task.  Instances of `SchedulerThread` are re-used since they
+ * will pick up a fresh task after their current task ends; if no incoming
+ * task is waiting, the thread terminates.
+ */
 public class DefaultTaskScheduler implements TaskScheduler {
-    private static final Logger log = Logging.getLogger(ABSRuntime.class.getName());
+    private static final Logger log = Logging.getLogger(DefaultTaskScheduler.class.getName());
 
+    /**
+     * Incoming tasks added via addTask.  Each task is consumed and handled by
+     * either a fresh `SchedulerThread`, or by a `SchedulerThread` that
+     * finished its previous task.
+     */
     private final List<Task<?>> newTasks = new LinkedList<>();
-    private final List<SchedulerThread> suspendedTasks = new LinkedList<>();
-    private Task<?> activeTask;
-    private volatile SchedulerThread thread;
+    /**
+     * The currently executing thread.  This field serves as the cog-wide
+     * mutex, ensuring that only one SchedulerThread executes its task.  All
+     * access must be protected by `synchronized`.
+     */
+    private volatile SchedulerThread runningThread;
     private final COG cog;
     private final ABSThreadManager threadManager;
+
+    // Only used in view
+    private Task<?> activeTask;
+    private volatile View view;
 
     public DefaultTaskScheduler(COG cog, ABSThreadManager m) {
         this.cog = cog;
@@ -34,20 +55,30 @@ public class DefaultTaskScheduler implements TaskScheduler {
     }
 
     @Override
-    public synchronized void addTask(Task<?> task) {
+    public synchronized void addTaskToScheduler(Task<?> task) {
         newTasks.add(task);
         if (view != null)
             view.taskAdded(task.getView());
-        log.finest(task + " ADDED TO QUEUE");
+        log.finest(() -> task + " ADDED TO QUEUE");
 
-        if (thread == null) {
-            thread = new SchedulerThread();
-            thread.start();
+        if (runningThread == null) {
+            // We're idle and/or all threads are suspended waiting:
+            // SchedulerThread#init will pick up a task from `newTasks`.
+            runningThread = new SchedulerThread();
+            runningThread.start();
         } else {
+            // Some thread is running, don't start a new thread since the new
+            // task will be picked up when the task of the running thread
+            // suspends or finishes.
+            //
+            // TODO: figure out why we wake up all suspended threads here
             notifyAll();
         }
     }
 
+    /**
+     * The (Java) thread executing one (ABS) task.
+     */
     class SchedulerThread extends ABSThread {
         private Task<?> runningTask;
 
@@ -60,34 +91,44 @@ public class DefaultTaskScheduler implements TaskScheduler {
         @Override
         public void run() {
             try {
-            loop:
-            while (!shutdown) {
-                synchronized (DefaultTaskScheduler.this) {
-                    activeTask = null;
-                    if (newTasks.isEmpty()) {
-                        thread = null;
-                        DefaultTaskScheduler.this.notifyAll();
-                        break loop;
+                // We have:
+                // - runningThread (field of scheduler)
+                //   - set by scheduler in `addTask`, or by another thread in
+                //     suspend
+                //   -  cleared by thread when shutting down itself, or by
+                //     thread when suspending its task
+                // - runningTask (local field of thread)
+                //
+                // The `loop` loop makes this thread pick up a new task from
+                // `newTasks` after finishing our current task; note that
+                // `addTask` only creates a fresh thread if `runningThread` is
+                // null.
+                loop:
+                while (!shutdown) {
+                    synchronized (DefaultTaskScheduler.this) {
+                        activeTask = null;
+                        if (newTasks.isEmpty()) {
+                            runningThread = null;
+                            DefaultTaskScheduler.this.notifyAll();
+                            break loop;
+                        }
+
+                        activeTask = newTasks.remove(0);
+                        runningTask = activeTask;
+                        setName("ABS Scheduler Thread executing " + activeTask.toString());
                     }
 
-                    activeTask = newTasks.remove(0);
-                    runningTask = activeTask;
-                    setName("ABS Scheduler Thread executing " + activeTask.toString());
+                    log.finest(() -> "Executing " + runningTask);
+                    try {
+                        runningTask.run();
+                        cog.notifyEnded();
+                        log.finest(() -> "Task " + runningTask + " FINISHED");
+
+                    } catch (Exception e) {
+                        log.finest(() -> "EXCEPTION in Task " + runningTask);
+                        e.printStackTrace();
+                    }
                 }
-
-                View v = view;
-
-                log.finest("Executing " + runningTask);
-                try {
-                    runningTask.run();
-                    v = view;
-                    log.finest("Task " + runningTask + " FINISHED");
-
-                } catch (Exception e) {
-                    log.finest("EXCEPTION in Task " + runningTask);
-                    e.printStackTrace();
-                }
-            }
             } finally {
                 finished();
             }
@@ -95,20 +136,21 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
         // assume called in synchronized block
         public void suspendTask(ABSGuard g) {
-            log.finest(runningTask + " on " + g + " SUSPENDING");
             synchronized (DefaultTaskScheduler.this) {
                 activeTask = null;
-                thread = null;
+                runningThread = null;
                 if (!newTasks.isEmpty()) {
-                    log.finest(runningTask + " on " + g + " Starting new Scheduler Thread");
-
-                    thread = new SchedulerThread();
-                    thread.start();
+                    // A new method call came in while we were running: create
+                    // its thread
+                    log.finest(() -> runningTask + " on " + g + " Starting new Scheduler Thread");
+                    runningThread = new SchedulerThread();
+                    runningThread.start();
                 } else {
+                    // Start a scheduling round: we set `runningThread` to
+                    // null, so someone else can grab it
                     DefaultTaskScheduler.this.notifyAll();
                 }
-                log.finest(runningTask + " on " + g + " SUSPENDING");
-                suspendedTasks.add(this);
+                log.finest(() -> runningTask + " on " + g + " SUSPENDING");
             }
 
             View v = view;
@@ -116,52 +158,50 @@ public class DefaultTaskScheduler implements TaskScheduler {
                 v.taskSuspended(runningTask.getView(), g);
             }
 
-            log.finest(runningTask + " AWAITING " + g);
-            boolean couldBecomeFalse = g.await();
+            log.finest(() -> runningTask + " AWAITING " + g);
+            boolean taskReady = g.await(cog); // Note that this might suspend the thread
             if (Thread.interrupted()) {
                 return;
             }
-
-            if (!couldBecomeFalse) {
-                log.finest(runningTask + " " + g + " READY");
+            if (taskReady && g.staysTrue()) {
+                log.finest(() -> runningTask + " " + g + " READY");
                 if (v != null)
                     v.taskReady(runningTask.getView());
             }
 
             synchronized (DefaultTaskScheduler.this) {
-                while (!(g.isTrue() && thread == null)) {
+                while (runningThread != null || !g.await(cog)) {
+                    // Sleep when someone else is running, or our guard
+                    // evalutes to false
                     try {
-                        log.finest(runningTask + " " + g + " WAITING FOR WAKE UP");
+                        log.finest(() -> runningTask + " " + g + " WAITING FOR WAKE UP");
                         DefaultTaskScheduler.this.wait();
-                        log.finest(runningTask + " WOKE UP...");
+                        log.finest(() -> runningTask + " WOKE UP...");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         break;
                     }
                 }
-                thread = this;
+                runningThread = this;
                 activeTask = runningTask;
-                suspendedTasks.remove(this);
             }
 
             if (v != null)
                 v.taskResumed(runningTask.getView(), g);
 
-            log.finest(runningTask + " " + g + " ACTIVE");
+            log.finest(() -> runningTask + " " + g + " ACTIVE");
         }
     }
 
     @Override
     public void await(ABSGuard g) {
-        thread.suspendTask(g);
+        runningThread.suspendTask(g);
     }
 
     @Override
     public synchronized Task<?> getActiveTask() {
         return activeTask;
     }
-
-    private volatile View view;
 
     @Override
     public synchronized TaskSchedulerView getView() {

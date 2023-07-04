@@ -4,6 +4,10 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
+/**
+ * A guard that composes two guards.  It is enabled whenever both its
+ * constituent guards are enabled.
+ */
 public class ABSAndGuard extends ABSGuard {
     public final ABSGuard left;
     public final ABSGuard right;
@@ -35,10 +39,17 @@ public class ABSAndGuard extends ABSGuard {
         return right;
     }
 
-    public boolean await() {
-        boolean b = left.await();
-        boolean b2 = right.await();
-        return b || b2;
+    public boolean await(COG cog) {
+        // We don't ourselves notify the cog about idleness; the nested guards
+        // will take care of it sequentially.  (I.e., we only call right.await
+        // after left.await is done.)
+
+        // FIXME: this is wrong in general; if both guards are of type
+        // DurationGuard, we need to unify their intervals, *not* execute them
+        // sequentially.
+        boolean b = left.await(cog);
+        boolean b2 = right.await(cog);
+        return b && b2;
 
     }
 

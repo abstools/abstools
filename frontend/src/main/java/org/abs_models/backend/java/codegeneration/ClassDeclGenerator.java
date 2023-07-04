@@ -127,7 +127,7 @@ public class ClassDeclGenerator {
         generateObjectConstruction("__ABS_runtime");
 
         stream.println("__ABS_runtime.cogCreated(__ABS_result);");
-        stream.println("__ABS_cog.getScheduler().addTask(new " + Task.class.getName() + "(new " +
+        stream.println("__ABS_cog.addTask(new " + Task.class.getName() + "(new " +
                 ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");
 
         if (decl.isActiveClass()) {

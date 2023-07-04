@@ -4,10 +4,23 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
+/**
+ * A guard that never suspends.
+ */
 public class ABSTrueGuard extends ABSGuard {
 
     @Override
     public boolean isTrue() {
+        return true;
+    }
+
+    @Override
+    public boolean staysTrue() {
+        return true;
+    }
+
+    @Override
+    public boolean await(COG cog) {
         return true;
     }
 
