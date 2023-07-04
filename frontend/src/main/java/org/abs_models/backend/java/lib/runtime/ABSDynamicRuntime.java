@@ -22,6 +22,21 @@ import org.abs_models.backend.java.JavaBackendConstants;
 
 public class ABSDynamicRuntime extends ABSRuntime {
 
+    private ABSDynamicRuntime() {
+        super();
+    }
+
+    public static ABSDynamicRuntime getRuntime() {
+        if (runtimeSingleton == null) {
+            synchronized(ABSRuntime.class) {
+                if (runtimeSingleton == null) {
+                    runtimeSingleton = new ABSDynamicRuntime();
+                }
+            }
+        }
+        return (ABSDynamicRuntime)runtimeSingleton;
+    }
+
     /*
      * Object roster maintains a list of objects in the system
      *
@@ -71,18 +86,6 @@ public class ABSDynamicRuntime extends ABSRuntime {
     public ABSDynamicProductLine getDSPL() {
         return dspl;
     }
-
-    public static ABSDynamicRuntime getCurrentRuntime() {
-        ABSRuntime rt = ABSRuntime.getCurrentRuntime();
-        if (rt == null) {
-            System.out.println("Runtime is null");
-        } else {
-            System.out.println("Got runtime.");
-        }
-        return (ABSDynamicRuntime) rt;
-    }
-
-
 
     /*
      * The Open Adaptivity Interface

@@ -12,7 +12,7 @@ import org.abs_models.backend.java.lib.types.ABSString;
 public class FLIHelper {
     
     public static void print(String msg) {
-        ABSRuntime.getCurrentRuntime().getOutStream().print(msg);
+        ABSRuntime.getRuntime().getOutStream().print(msg);
     }
     
     public static void print(ABSString msg) {

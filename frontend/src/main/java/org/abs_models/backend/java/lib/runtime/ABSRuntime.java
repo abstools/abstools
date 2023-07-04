@@ -56,6 +56,11 @@ public class ABSRuntime {
 
     private static final boolean DEBUG_FLI = Boolean.parseBoolean(System.getProperty("abs.fli.debug", "false"));
 
+    /**
+     * The singleton runtime instance.  Can be ABSRuntime or a subclass
+     * thereof, depending on which class's `getRuntime()` method is called.
+     */
+    protected static ABSRuntime runtimeSingleton = null;
     private final ABSThreadManager threadManager = new ABSThreadManager(this);
     private final AtomicInteger cogCounter = new AtomicInteger();
     private final AtomicInteger taskCounter = new AtomicInteger();
@@ -150,9 +155,32 @@ public class ABSRuntime {
 
     private volatile boolean isShutdown;
 
-
-    public ABSRuntime() {
+    protected ABSRuntime() {
         setRandomSeed(System.nanoTime());
+    }
+
+    /**
+     * Get the singleton runtime.
+     *
+     * Note that subclasses can override this method to instantiate a subclass
+     * instead; that object will then be returned by all calls to
+     * `getRuntime()`, regardless on which class.  Therefore, the first call
+     * to this method should be in a place that can decide which class the
+     * global runtime should be.
+     *
+     * @see StartUp.startup
+     *
+     * @return the runtime singleton
+     */
+    public static ABSRuntime getRuntime() {
+        if (runtimeSingleton == null) {
+            synchronized(ABSRuntime.class) {
+                if (runtimeSingleton == null) {
+                    runtimeSingleton = new ABSRuntime();
+                }
+            }
+        }
+        return runtimeSingleton;
     }
 
     public void addSystemObserver(SystemObserver t) {
@@ -323,15 +351,6 @@ public class ABSRuntime {
 
     public TaskSchedulingStrategy getTaskSchedulingStrategy() {
         return taskSchedulingStrategy;
-    }
-
-
-    public static ABSRuntime getCurrentRuntime() {
-        if (getCurrentCOG() != null) {
-            return getCurrentCOG().getRuntime();
-        } else {
-            return null;
-        }
     }
 
     public static Task<?> getCurrentTask() {

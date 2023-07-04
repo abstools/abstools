@@ -62,7 +62,7 @@ public class ABSBuiltInFunctions {
             throw new UnmatchedCaseException("Random function called with non positive upper bound " + i);
         }
         BigInteger n = i.getBigInteger();
-        Random rand = ABSRuntime.getCurrentRuntime().getRandom();
+        Random rand = ABSRuntime.getRuntime().getRandom();
 
         BigInteger result = new BigInteger(n.bitLength(), rand);
         while (result.compareTo(n) >= 0) {
@@ -187,7 +187,7 @@ public class ABSBuiltInFunctions {
      * method and the according built-in function defined in abslang.abs.
      */
     public static <A extends ABSValue, B extends ABSValue> A watchEx(String fileName, int line, A val, B info) {
-        ABSRuntime runtime = ABSRuntime.getCurrentRuntime();
+        ABSRuntime runtime = ABSRuntime.getRuntime();
         if (runtime.debuggingEnabled()) {
             Task<?> task = ABSRuntime.getCurrentTask();
             task.newStackFrame(null, "$watch");
@@ -200,7 +200,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static <A extends ABSValue> A watch(String fileName, int line, A val) {
-        ABSRuntime runtime = ABSRuntime.getCurrentRuntime();
+        ABSRuntime runtime = ABSRuntime.getRuntime();
         if (runtime.debuggingEnabled()) {
             Task<?> task = ABSRuntime.getCurrentTask();
             task.newStackFrame(null, "$watch");

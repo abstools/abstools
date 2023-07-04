@@ -36,8 +36,8 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
             t.calledGetOnFut(this);
         }
 
-        if (ABSRuntime.getCurrentRuntime().hasGlobalScheduler()) {
-            ABSRuntime.getCurrentRuntime().getGlobalScheduler().handleGet(this);
+        if (ABSRuntime.getRuntime().hasGlobalScheduler()) {
+            ABSRuntime.getRuntime().getGlobalScheduler().handleGet(this);
         }
 
         await();

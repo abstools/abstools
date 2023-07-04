@@ -22,12 +22,10 @@ public class COG implements ABSValue {
     private final TaskScheduler scheduler;
     private final Class<?> initialClass;
     private final int id;
-    private final ABSRuntime runtime;
     private ABSInterface dc;
 
     public COG(ABSRuntime runtime, Class<?> clazz, ABSInterface dc) {
         initialClass = clazz;
-        this.runtime = runtime;
         scheduler = runtime.createTaskScheduler(this);
         id = runtime.freshCOGID();
         this.dc = dc;
@@ -35,14 +33,9 @@ public class COG implements ABSValue {
 
     public COG(ABSRuntime runtime, Class<?> clazz, ABSInterface dc, TaskSchedulingStrategy schedulingStrategy) {
         initialClass = clazz;
-        this.runtime = runtime;
         scheduler = runtime.createUserTaskScheduler(this, schedulingStrategy);
         id = runtime.freshCOGID();
         this.dc = dc;
-    }
-
-    public ABSRuntime getRuntime() {
-        return runtime;
     }
 
     public Class<?> getInitialClass() {

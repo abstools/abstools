@@ -79,11 +79,11 @@ public class ClassDeclGenerator {
         stream.print("public static final <T extends " + className + "> T __ABS_createNewLocalObject");
         JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
         stream.println(" {");
-        generateObjectConstruction(ABSRuntime.class.getName() + ".getCurrentRuntime()");
+        generateObjectConstruction(ABSRuntime.class.getName() + ".getRuntime()");
         stream.println("__ABS_result.__ABS_init();");
         if (decl.isActiveClass()) {
             stream.println("final " + Task.class.getName() + " __ABS_sendingTask = " + ABSRuntime.class.getName() + ".getCurrentTask();");
-            stream.println(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(new " + ABSRunMethodCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
+            stream.println(ABSRuntime.class.getName() + ".getRuntime().asyncCall(new " + ABSRunMethodCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
         stream.println("return (T)__ABS_result;");
         stream.println("}");
@@ -109,7 +109,7 @@ public class ClassDeclGenerator {
                 + "ABS.DC.DeploymentComponent_i DC",
                 decl.getParams());
         stream.println(" {");
-        stream.println("final " + ABSRuntime.class.getName() + " __ABS_runtime = " + ABSRuntime.class.getName() + ".getCurrentRuntime();");
+        stream.println("final " + ABSRuntime.class.getName() + " __ABS_runtime = " + ABSRuntime.class.getName() + ".getRuntime();");
         stream.println("final " + COG.class.getName() + " __ABS_cog = Strategy == null ? __ABS_runtime.createCOG(" + className + ".class, DC) : __ABS_runtime.createCOG(" + className + ".class, DC, Strategy);");
         stream.println("final " + ABSThread.class.getName() + " __ABS_thread = " + ABSRuntime.class.getName() + ".getCurrentThread();");
         stream.println("final " + COG.class.getName() + " __ABS_oldCOG = " + ABSRuntime.class.getName() + ".getCurrentCOG();");

@@ -16,11 +16,11 @@ public class StartUp {
         if (options.useNet.isTrue()) {
             NetworkImpl network = new NetworkImpl();
             network.addNode(new NodeImpl(0));
-            runtime = new ABSNetRuntime(network);
+            runtime = ABSNetRuntime.getRuntime(network);
         } else if (options.dynamicUpdates.isTrue()) {
-            runtime = new ABSDynamicRuntime();
+            runtime = ABSDynamicRuntime.getRuntime();
         } else {
-            runtime = new ABSRuntime();
+            runtime = ABSRuntime.getRuntime();
         }
         ABSRuntime.setRunsInOwnProcess(true);
         new Config(runtime, options);

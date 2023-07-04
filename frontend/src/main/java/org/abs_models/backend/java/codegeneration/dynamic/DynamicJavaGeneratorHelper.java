@@ -199,7 +199,7 @@ public class DynamicJavaGeneratorHelper {
             final java.util.List<Type> paramTypes,
             final String method)
     {
-        stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
+        stream.print(ABSRuntime.class.getName() + ".getRuntime().asyncCall(");
         stream.print("new " + AbstractAsyncCall.class.getName() + "<" + ABSDynamicObject.class.getName() + ">(thisP, ");
         stream.print("(" + ABSDynamicObject.class.getName() + ")" + ABSRuntime.class.getName() + ".checkForNull(");
         if (calleeString != null)

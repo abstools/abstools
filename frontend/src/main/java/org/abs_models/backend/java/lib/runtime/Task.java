@@ -192,7 +192,7 @@ public class Task<T extends ABSRef> implements Runnable {
         } catch (ABSException e) {
             this.exception = e;
             future.smash(e);
-            getCOG().getRuntime().handleABSException(this,e);
+            ABSRuntime.getRuntime().handleABSException(this,e);
         } catch (SystemTerminatedException e) {
 
         } catch (Exception e) {
@@ -201,7 +201,7 @@ public class Task<T extends ABSRef> implements Runnable {
                         "Unexpected exception: " + e);
             // TODO new subclass for internal error
             absException.setStackTrace(e.getStackTrace());
-            getCOG().getRuntime().handleABSException(this, absException );
+            ABSRuntime.getRuntime().handleABSException(this, absException );
         }
 
         synchronized (this) {

@@ -67,7 +67,7 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
         try {
             for (int i = 0; i < 2; i++) {
                 RuntimeUsageTest t = new RuntimeUsageTest("System "+i);
-                ABSRuntime r = new ABSRuntime();
+                ABSRuntime r = ABSRuntime.getRuntime();
                 r.addSystemObserver(t);
                 r.setTotalSchedulingStrategy(t.getScheduler(r));
                 r.enableDebugging(true);

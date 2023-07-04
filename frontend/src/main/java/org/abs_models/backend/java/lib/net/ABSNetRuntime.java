@@ -23,9 +23,23 @@ public class ABSNetRuntime extends ABSRuntime {
     
     private final Network network;
 
-    public ABSNetRuntime(Network network) {
+    private ABSNetRuntime(Network network) {
+        super();
         this.network = network;
     }
+
+    public static ABSNetRuntime getRuntime(Network network) {
+        if (runtimeSingleton == null) {
+            synchronized(ABSRuntime.class) {
+                if (runtimeSingleton == null) {
+                    runtimeSingleton = new ABSNetRuntime(network);
+                }
+            }
+        }
+        return (ABSNetRuntime)runtimeSingleton;
+    }
+
+
 
     @Override
     public void doNextStep() {

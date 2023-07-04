@@ -378,7 +378,7 @@ public class JavaGeneratorHelper {
             final List<Annotation> annotations) {
 
         final java.util.List<Type> paramTypes = sig.getTypes();
-        stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
+        stream.print(ABSRuntime.class.getName() + ".getRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
         stream.println("new " + AbstractAsyncCallRT.class.getName() + "<" + targetType + ">(");
         stream.println("this,");

@@ -27,11 +27,6 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
     }
     
     @Override
-    protected ABSRuntime makeAbsRuntime() {
-        return new ABSDynamicRuntime();
-    }
-
-    @Override
     protected JavaCode getJavaCode(String absCode, Config... config) throws Exception {
         Model model = null;
         String code = null;

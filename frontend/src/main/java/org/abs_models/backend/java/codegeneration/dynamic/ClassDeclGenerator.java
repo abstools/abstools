@@ -128,12 +128,12 @@ public class ClassDeclGenerator {
         stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T __ABS_createNewLocalObject");
         DynamicJavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
         stream.println(" {");
-        stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getCurrentRuntime();");
-        generateObjectConstruction(ABSRuntime.class.getName() + ".getCurrentRuntime()");
+        stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getRuntime();");
+        generateObjectConstruction(ABSDynamicRuntime.class.getName() + ".getRuntime()");
         stream.println("__ABS_result.__ABS_init();");
         if (decl.isActiveClass()) {
             stream.println("final " + Task.class.getName() + " __ABS_sendingTask = " + ABSRuntime.class.getName() + ".getCurrentTask();");
-            stream.println(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(new "
+            stream.println(ABSDynamicRuntime.class.getName() + ".getRuntime().asyncCall(new "
                     + ABSRunMethodCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
         stream.println("__ABS_runtime.registerObject((T)__ABS_result);");
@@ -155,7 +155,7 @@ public class ClassDeclGenerator {
         stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T __ABS_createNewCogObject");
         DynamicJavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
         stream.println(" {");
-        stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getCurrentRuntime();");
+        stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getRuntime();");
         stream.println("final " + COG.class.getName() + " __ABS_cog = __ABS_runtime.createCOG(" + className + ".class);");
         stream.println("final " + ABSThread.class.getName() + " __ABS_thread = " + ABSRuntime.class.getName() + ".getCurrentThread();");
         stream.println("final " + COG.class.getName() + " __ABS_oldCOG = " + ABSRuntime.class.getName() + ".getCurrentCOG();");

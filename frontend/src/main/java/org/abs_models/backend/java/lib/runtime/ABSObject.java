@@ -49,7 +49,7 @@ public abstract class ABSObject implements ABSRef {
     public abstract String getClassName();
 
     public ABSRuntime __ABS_getRuntime() {
-        return getCOG().getRuntime();
+        return getRuntime();
     }
     
     public final COG getCOG() {

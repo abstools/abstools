@@ -57,11 +57,6 @@ public class JavaBackendTest extends ABSTest {
         seed = randomSeed;
     }
 
-    // factory method for creating the ABSRuntime
-    protected ABSRuntime makeAbsRuntime() {
-        return new ABSRuntime();
-    }
-
     void assertValid(String absCode) throws Exception {
         assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, Config.WITHOUT_MODULE_NAME));
     }
@@ -103,7 +98,7 @@ public class JavaBackendTest extends ABSTest {
         try {
             File genDir = javaCode.getSrcDir();
             javaCode.compile(genDir, null, "-classpath", LIB_CLASSPATH);
-            final ABSRuntime r = makeAbsRuntime();
+            final ABSRuntime r = ABSRuntime.getRuntime();
             r.enableDebugging(true);
             final boolean[] finished = new boolean[] {false};
             final List<ABSException> exceptions = Collections.synchronizedList(new ArrayList<ABSException>());
