@@ -46,15 +46,23 @@ public class ClassDeclGenerator {
     private void generateClassBody() {
         stream.println(" {");
 
+        stream.println();
         generateFieldNamesMethod();
+        stream.println();
         generateFields();
+        if (decl.hasParam() || decl.hasField()) {
+            stream.println();
+        }
         generateConstructor();
+        stream.println();
         generateGetFieldValueMethod();
-
+        stream.println();
         stream.println("public final java.lang.String getClassName() { return \"" + decl.getName() + "\"; }");
-
+        stream.println();
         generateCreateNewCOGMethod();
+        stream.println();
         generateNewObjectMethods();
+        stream.println();
         generateMethods();
         stream.println("}");
     }
