@@ -24,6 +24,7 @@ public class Logging {
         Level level = LOGLEVEL;
 
         Handler h = new ConsoleHandler();
+        h.setFormatter(new MyFormatter());
         h.setLevel(level);
         logger.addHandler(h);
         logger.setLevel(level);
@@ -34,7 +35,13 @@ public class Logging {
 
         @Override
         public String format(LogRecord record) {
-            return record.getLoggerName() + " [" + record.getThreadID() + "]:" + record.getMessage();
+            return record.getLevel()
+                + " " + record.getLoggerName()
+                + " [" + record.getSourceClassName()
+                + " " + record.getSourceMethodName()
+                + " " + record.getThreadID()
+                + "]: " + record.getMessage()
+                + "\n";
         }
 
     }
