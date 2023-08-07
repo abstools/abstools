@@ -66,7 +66,12 @@ This page links ABS workshops, as well as selected research papers on the develo
 - E. B. Johnsen, R. Schlatte, and S. L. Tapia Tarifa.  
   *Integrating Deployment Architecture and Resource Consumption in Timed Object-Oriented Models.*  
   Journal of Logical and Algebraic Methods in Programming 84(1): 67-91, 2015.  
-  DOI: [10.1016/j.jlamp.2014.07.001](http://dx.doi.org/10.1016/j.jlamp.2014.07.001). Download a [preprint](https://ebjohnsen.org/publication/15-jlamp1/15-jlamp1.pdf).
+  DOI: [10.1016/j.jlamp.2014.07.001](http://dx.doi.org/10.1016/j.jlamp.2014.07.001).  Download a [preprint](https://ebjohnsen.org/publication/15-jlamp1/15-jlamp1.pdf).
+
+- Joakim Bjørk, Frank S. de Boer, Einar Broch Johnsen, Rudolf Schlatte, and S. L. Tapia Tarifa.  
+  *User-defined schedulers for real-time concurrent objects.*  
+  Innovations Syst Softw Eng 9(1): 29-43 (2013).  
+  DOI: [10.1007/s11334-012-0184-5](https://doi.org/10.1007/s11334-012-0184-5).  Download a [preprint](https://ebjohnsen.org/publication/13-isse/13-isse.pdf).
 
 - F. Damiani, R. Hähnle, E. Kamburjan, M. Lienhardt.  
   *A Unified and Formal Programming Model for Deltas and Traits.*  
