@@ -53,8 +53,20 @@ public class ABSBuiltInFunctions {
         return ABSInteger.fromLong(System.currentTimeMillis() - ms_at_model_start);
     }
 
-    public static ABSInteger lowlevelDeadline() {
-        return ABSInteger.fromInt(-1);
+    public static ABSRational lowlevelDeadline() {
+        Aprational deadline_t = ABSRuntime.getCurrentTask().getDeadlineAbsolute();
+        if (deadline_t.signum() >= 0) {
+            Aprational clock = ABSRuntime.getRuntime().getClock();
+            Aprational deadline_r = deadline_t.subtract(clock);
+            if (deadline_r.signum() < 0) {
+                // deadline expired; clamp to 0
+                return ABSRational.ZERO;
+            } else {
+                return ABSRational.fromAprational(deadline_r);
+            }
+        } else {
+            return ABSRational.fromLong(-1);
+        }
     }
 
     public static ABSInteger random(ABSInteger i) {
@@ -97,22 +109,23 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSDataType cost(ABSProcess p) {
-        if (p.getCost() == -1) {
+        if (p.getCost().signum() == -1) {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
             return DynamicClassUtils.instance(type);
         } else {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_Duration");
-            return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getCost()));
+            return DynamicClassUtils.instance(type, ABSRational.fromAprational(p.getCost()));
         }
     }
 
     public static ABSDataType proc_deadline(ABSProcess p) {
-        if (p.getDeadline() == -1) {
+        if (p.getDeadlineAbsolute().signum() == -1) {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
             return DynamicClassUtils.instance(type);
         } else {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_Duration");
-            return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getDeadline()));
+            return DynamicClassUtils.instance(type, ABSRational.fromAprational(p.getDeadlineAbsolute()
+                                                                               .subtract(ABSRuntime.getRuntime().getClock())));
         }
     }
 

@@ -18,6 +18,8 @@ import org.abs_models.backend.java.observing.TaskObserver;
 import org.abs_models.backend.java.observing.TaskStackView;
 import org.abs_models.backend.java.observing.TaskView;
 
+import org.apfloat.Aprational;
+
 public class Task<T extends ABSRef> implements Runnable {
     private final ABSFut<? super ABSValue> future;
     private final int id;
@@ -31,8 +33,12 @@ public class Task<T extends ABSRef> implements Runnable {
      * Real time attributes
      */
     private final long arrival;
-    private final long cost;
-    private final long deadline;
+    private final Aprational cost;
+    /**
+     * The deadline, as an absolute clock value.  Note that we convert from
+     * relative values (in ABS code) to absolute (during runtime).
+     */
+    private final Aprational deadline_t;
     private final boolean critical;
     private final int value;
     private long start;
@@ -54,11 +60,11 @@ public class Task<T extends ABSRef> implements Runnable {
         if (call instanceof AbstractAsyncCallRT) {
             AbstractAsyncCallRT<?> callRT = (AbstractAsyncCallRT<?>)call;
             this.cost = callRT.getCost();
-            this.deadline = callRT.getDeadline();
+            this.deadline_t = callRT.getDeadlineAbsolute();
             this.critical = callRT.isCritical();
         } else {
-            this.cost = -1;
-            this.deadline = -1;
+            this.cost = new Aprational(-1);
+            this.deadline_t = new Aprational(-1);
             this.critical = false;
         }
         this.start = -1;         // TODO set to time when task is first scheduled
@@ -74,12 +80,12 @@ public class Task<T extends ABSRef> implements Runnable {
         return arrival;
     }
 
-    public long getCost() {
+    public Aprational getCost() {
         return cost;
     }
 
-    public long getDeadline() {
-        return deadline;
+    public Aprational getDeadlineAbsolute() {
+        return deadline_t;
     }
 
     public long getStart() {

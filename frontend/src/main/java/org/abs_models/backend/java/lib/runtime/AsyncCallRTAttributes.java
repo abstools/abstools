@@ -4,8 +4,10 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
+import org.apfloat.Aprational;
+
 public interface AsyncCallRTAttributes {
-    long getDeadline();
-    long getCost();
+    Aprational getDeadlineAbsolute();
+    Aprational getCost();
     boolean isCritical();
 }

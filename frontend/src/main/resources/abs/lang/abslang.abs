@@ -587,11 +587,9 @@ def Bool durationLessThan(Duration d1, Duration d2) =
 
 // negative if no (i.e. infinite) deadline
 def Rat lowlevelDeadline() = builtin;
-def Duration deadline() = 
-  case lowlevelDeadline() < 0 {
-      True => InfDuration;
-      False => Duration(lowlevelDeadline());
-  };
+def Duration deadline() =
+    let Rat lld = lowlevelDeadline() in
+    when lld < 0 then InfDuration else Duration(lld);
 
 def Duration subtractFromDuration(Duration d, Rat v) =
   case d {

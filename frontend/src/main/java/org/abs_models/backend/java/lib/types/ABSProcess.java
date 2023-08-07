@@ -4,6 +4,8 @@
  */
 package org.abs_models.backend.java.lib.types;
 
+import org.apfloat.Aprational;
+
 public class ABSProcess extends ABSBuiltInDataType {
 
     // set: pid, method, arrival, cost, deadline, start, finish, critical, value
@@ -11,8 +13,8 @@ public class ABSProcess extends ABSBuiltInDataType {
     private int pid;
     private String methodName;
     private long arrivalTime;
-    private long cost;
-    private long deadline;
+    private Aprational cost;
+    private Aprational deadline_t;
     private long startTime;
     private long finishTime;
     private boolean critical;
@@ -22,13 +24,13 @@ public class ABSProcess extends ABSBuiltInDataType {
         super("ABSProcess");
     }
 
-    public ABSProcess(int pid, String method, long arrival, long cost, long deadline, long start, long finish, boolean crit, int value) {
+    public ABSProcess(int pid, String method, long arrival, Aprational cost, Aprational deadline_t, long start, long finish, boolean crit, int value) {
         super("ABSProcess");
         this.pid = pid;
         this.methodName = method;
         this.arrivalTime = arrival;
         this.cost = cost;
-        this.deadline = deadline;
+        this.deadline_t = deadline_t;
         this.startTime = start;
         this.finishTime = finish;
         this.critical = crit;
@@ -44,11 +46,11 @@ public class ABSProcess extends ABSBuiltInDataType {
     public long getArrivalTime() {
         return arrivalTime;
     }
-    public long getCost() {
+    public Aprational getCost() {
         return cost;
     }
-    public long getDeadline() {
-        return deadline;
+    public Aprational getDeadlineAbsolute() {
+        return deadline_t;
     }
     public long getStartTime() {
         return startTime;
@@ -65,7 +67,7 @@ public class ABSProcess extends ABSBuiltInDataType {
     
     public String toString() {
         return String.format("%1$s: %2$d,%3$s,%4$d,%5$d,%6$d,%7$d,%8$d,%9$b,%10$d", 
-                getConstructorName(), pid, methodName, arrivalTime, cost, deadline, startTime, finishTime, critical, value);
+                getConstructorName(), pid, methodName, arrivalTime, cost, deadline_t, startTime, finishTime, critical, value);
     }
     
     public ABSBool gt(ABSValue o) {

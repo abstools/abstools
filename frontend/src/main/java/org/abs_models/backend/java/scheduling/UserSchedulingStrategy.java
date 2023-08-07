@@ -36,7 +36,7 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
                     taskInfo.task.getCall().methodName(),
                     taskInfo.task.getArrival(),
                     taskInfo.task.getCost(),
-                    taskInfo.task.getDeadline(),
+                    taskInfo.task.getDeadlineAbsolute(),
                     taskInfo.task.getStart(),
                     taskInfo.task.getFinish(),
                     taskInfo.task.isCritical(),

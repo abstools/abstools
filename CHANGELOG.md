@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The Java backend now implements the `await duration()` guard, and the logical clock as documented in the manual.
 
+- The Java backend now implements `deadline()` in terms of the logical clock.
+
 - The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 
 - The java backend can now optionally generate a jar file that can run the compiled model stand-alone:

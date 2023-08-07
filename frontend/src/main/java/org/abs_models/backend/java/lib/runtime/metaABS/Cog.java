@@ -22,6 +22,8 @@ import org.abs_models.backend.java.scheduling.SimpleTaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
 
+import org.apfloat.Aprational;
+
 public class Cog {
     private final static Logger logger = Logging.getLogger(Cog.class.getName());
     private static ABSDynamicClass thisClass;
@@ -102,7 +104,7 @@ public class Cog {
                             ABSProcess proc = new ABSProcess(
                                     task.task.getID(),
                                     task.task.getCall().methodName(),
-                                    0,0,0,0,0,false,0);
+                                    0, new Aprational(-1), new Aprational(-1),0,0,false,0);
 
                             processes.add(proc);
                             System.out.println("\t" + proc.toString());
