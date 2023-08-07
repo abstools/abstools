@@ -8,6 +8,8 @@ current state of the implementation on the Erlang backend.
 All identifiers introduced in this section reside in the `ABS.Scheduler`
 module, which is not imported by default.
 
+See https://doi.org/10.1007/s11334-012-0184-5 for a discussion of ABS user-defined
+schedulers and process attributes.
 
 === Defining Schedulers
 
@@ -69,7 +71,7 @@ usefulness is questionable.
 
 NOTE: The attribute `destinyOf` is only available in the Erlang backend.
 
-// Duration cost(Process p) = builtin;
+// Duration cost(Process p) = builtin;  // method annotation for worst-case execution time; unused
 // Duration proc_deadline(Process p) = builtin;
 // Time start(Process p) = builtin;
 // Time finish(Process p) = builtin;
