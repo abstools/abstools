@@ -72,7 +72,7 @@ Type checking is done in
 `org.abs_models.frontend.parser:analyzeFlattenAndRewriteModel`, which should
 be called by all backends.  For historical reasons, there are two passes of
 type checking: `Model.getErrors` and `Main.typeCheckModel`.  The latter method
-relies on some errors not being present that are detected by the former one,
+nrelies on some errors not being present that are detected by the former one,
 so they should always be called in the same sequence as in
 `analyzeFlattenAndRewriteModel`.
 
@@ -110,3 +110,59 @@ The `gen/erl/` directory is pre-populated with the contents of `frontend/src/mai
 
 === The Runtime System
 
+== The Java backend
+
+=== Code Generation
+
+=== The Runtime System
+
+A running ABS model has a singleton class of type
+`org.abs_models.backend.java.lib.runtime.ABSRuntime` or one of its subclasses.
+
+Each cog is an instance of `org.abs_models.backend.java.lib.runtime.COG`.
+Each cog has one associated instance of type
+`org.abs_models.backend.java.scheduling.TaskScheduler`, by default this is
+`org.abs_models.backend.java.scheduling.DefaultTaskScheduler` but this is customizable by the user.
+
+In the following, we describe the behavior of `DefaultTaskScheduler`;
+reverse-engineering `SimpleTaskScheduler` remains to be done.
+
+`DefaultTaskScheduler` contains an inner class `SchedulerThread`.  Instances
+of this class run ABS tasks, each running ABS process is handled by a Java
+thread of this class.  `SchedulerThread` instances are re-used: if a thread
+terminates, it checks for fresh tasks (in field `newTasks`) and starts running
+one; if there are no new tasks available, the thread terminates.
+
+A `SchedulerThread` instance is created either by the method
+`SchedulerThread.addTask` (if no task is running), or by a running
+`SchedulerThread` when the running thread suspends.  The running thread will
+not create a fresh thread when its task terminates; instead, it will pick up a
+waiting task and execute it.
+
+The "token" or lock of the cog is the field `runningThread`.  This field
+contains the running thread, or `null` if the cog has no running thread.  When
+encountering a scheduling point, the running thread sets this field to `null`
+and notifies all threads, which race to check if the lock `runningThread` is
+available and their guard evaluates to `true`.
+
+==== Timed Semantics
+
+Each cog contains a counter `activeThreads` that is increased and decreased as
+processes suspend and wake up via the cog methods `notifyAwait`,
+`notifyWakeup`.  A guard's `await` method will call these methods let the cog
+know about the task's status (runnable or not).  Care must be taken to only
+call `await` on a guard when actually awaiting for the purpose of making a
+scheduling decision, and call the method `isTrue` when checking for a guard's
+status outside of scheduling.
+
+When a cog's activity counter reaches `0`, the cog will signal the
+`ABSRuntime` singleton via the methods `notifyCogActive`, `notifyCogInactive`.
+The runtime keeps track of the amount to increase the clock in the variable
+`wake_time`.  When the number of active cogs reaches zero, the runtime will
+try to increase the clock; this happens only when one or more
+`ABSDurationGuard` guards have registered themselves via `addDurationGuard`.
+If so, the runtime increases the clock and notifies (as with `Object.notify`)
+the guards whose `min_time` is less than or equal to the current clock.  A
+duration guard, once notified, will notify its cog that the task is ready to
+run and return from its `await` method (which was called from the
+`SchedulerThread` running the ABS task).
