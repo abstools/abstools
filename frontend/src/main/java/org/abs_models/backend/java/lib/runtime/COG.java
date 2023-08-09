@@ -64,7 +64,7 @@ public class COG implements ABSValue {
     public void addTask(Task<?> task) {
         synchronized(this) {
             if (activeThreads == 0) {
-                log.finest(() -> "Notifying runtime that we became active");
+                log.finest(() -> this + " notifying runtime that it became active");
                 ABSRuntime.getRuntime().notifyCogActive();
             }
             activeThreads++;
@@ -87,7 +87,7 @@ public class COG implements ABSValue {
             log.finest(() -> this + " now has " + activeThreads + " active threads.");
         }
         if (activeThreads == 0) {
-            log.finest(() -> "Notifying runtime that we became inactive");
+            log.finest(() -> this + " notifying runtime that it became inactive");
             ABSRuntime.getRuntime().notifyCogInactive();
         }
     }
@@ -101,7 +101,7 @@ public class COG implements ABSValue {
      */
     public synchronized void notifyWakeup() {
         if (activeThreads == 0) {
-            log.finest(() -> "Notifying runtime that we became active");
+            log.finest(() -> this + " notifying runtime that it became active");
             ABSRuntime.getRuntime().notifyCogActive();
         }
         activeThreads++;
@@ -117,7 +117,7 @@ public class COG implements ABSValue {
             log.finest(() -> this + " now has " + activeThreads + " active threads.");
         }
         if (activeThreads == 0) {
-            log.finest(() -> "Notifying runtime that we became inactive");
+            log.finest(() -> this + " notifying runtime that it became inactive");
             ABSRuntime.getRuntime().notifyCogInactive();
         }
     }

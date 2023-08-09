@@ -41,7 +41,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
         }
 
         await(ABSRuntime.getCurrentCOG());
-        log.finest("future awaited");
+        log.finest(() -> "future " + this + " awaited");
 
         if (t != null) {
             t.futureReady(this);
