@@ -19,12 +19,12 @@ public class ABSThreadManager {
 
     public synchronized void addThread(ABSThread t) {
         threads.add(t);
-        if (logger.isLoggable(Level.FINEST)) logger.finest("Added thread "+t);
+        logger.finest(() -> "Added thread " + t);
     }
 
     public synchronized void removeThread(ABSThread t) {
         threads.remove(t);
-        if (logger.isLoggable(Level.FINEST)) logger.finest("Removed thread "+t);
+        logger.finest(() -> "Removed thread " + t);
         if (threads.isEmpty()) {
             runtime.systemFinished();
         }

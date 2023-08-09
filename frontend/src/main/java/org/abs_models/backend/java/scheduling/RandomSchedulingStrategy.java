@@ -44,7 +44,7 @@ public class RandomSchedulingStrategy implements TotalSchedulingStrategy, UsesRa
     public synchronized ScheduleAction choose(ScheduleOptions options) {
         ScheduleAction a = options.allOptions().get(random.nextInt(options.numOptions()));
         String suff = options.numOptions() == 1 ? " (NO CHOICE)" : "";
-        logger.finest("Choosing " + a.shortString() + " from " + shortStringList(options.allOptions()) + suff);
+        logger.finest(() -> "Choosing " + a.shortString() + " from " + shortStringList(options.allOptions()) + suff);
         return a;
     }
 

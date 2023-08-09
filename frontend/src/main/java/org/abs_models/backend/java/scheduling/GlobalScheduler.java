@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.abs_models.backend.java.lib.runtime.ABSDeadlockException;
@@ -43,12 +44,12 @@ public class GlobalScheduler {
     public void doNextScheduleStep() {
         if (isShutdown) return;
         int i = counter.incrementAndGet();
-        logger.finest("==="+i+": Do next step...");
+        logger.finest(() -> "===" + i + ": Do next step...");
         ScheduleAction next = null;
         synchronized (this) {
             if (nextStepWaitStack.size() > 0) {
                 SimpleLock l = nextStepWaitStack.remove(nextStepWaitStack.size()-1);
-                logger.finest("==="+i+": Ignored step, awaking thread ");
+                logger.finest(() -> "===" + i + ": Ignored step, awaking thread ");
                 l.unlock();
                 return;
             }
@@ -89,20 +90,18 @@ public class GlobalScheduler {
 
             totalNumChoices += options.numOptions() - 1;
 
-            logger.finest("==="+i+" Choose next action...");
+            logger.finest(() -> "===" + i + " Choose next action...");
             next = strategy.choose(options);
-            logger.finest("==="+i+" Action " + next + " choosen");
+            if (logger.isLoggable(Level.FINEST)) logger.finest("===" + i + " Action " + next + " chosen");
             options.removeOption(next);
-            logger.finest("==="+i+" Executing Action " + next);
-
-
+            if (logger.isLoggable(Level.FINEST)) logger.finest("===" + i + " Executing Action " + next);
         }
         if (isShutdown) return;
         int j = counter.intValue();
         if (i != j)
-            logger.warning("#### Interleaving detected "+i+" != "+j);
+            logger.warning(() -> "#### Interleaving detected " + i + " != " + j);
         next.execute();
-        logger.finest("==="+i+" Action " + next + " was executed.");
+        if (logger.isLoggable(Level.FINEST)) logger.finest("===" + i + " Action " + next + " was executed.");
     }
 
     public void stepTask(Task<?> task) throws InterruptedException {

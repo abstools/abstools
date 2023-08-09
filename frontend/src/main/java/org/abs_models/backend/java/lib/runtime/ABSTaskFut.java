@@ -47,7 +47,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
             t.futureReady(this);
         }
 
-        log.finest("continue after get");
+        log.finest(() -> this + " continue after get");
 
         if (exception != null)
             throw exception;

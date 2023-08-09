@@ -55,7 +55,7 @@ public class Config {
     public void loadSystemObserver() {
         if (options.systemObserver.wasSet()) {
             for (String s : options.systemObserver.stringArrayValue()) {
-                logger.finest("adding systemobserver "+s);
+                logger.finest(() -> "adding systemobserver " + s);
                 runtime.addSystemObserver(loadClassByName(SystemObserver.class,s));
             }
         }

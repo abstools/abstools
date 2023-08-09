@@ -91,7 +91,7 @@ public class ABSDurationGuard extends ABSGuard {
                 this.wait();
             } catch (InterruptedException e) {
                 // This code copied over from ABSFut#await
-                log.finest("was interruped during await");
+                log.finest(() -> this + " was interruped during await");
                 Thread.currentThread().interrupt();
                 break;
             }

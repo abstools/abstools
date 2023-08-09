@@ -98,7 +98,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
     }
 
     public synchronized void await(COG cog) {
-        log.finest("awaiting future");
+        log.finest(() -> this + "awaiting");
 
         boolean needsSuspend = !isDone;
 
@@ -110,13 +110,13 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
             try {
                 this.wait();
             } catch (InterruptedException e) {
-                log.finest("was interruped during await");
+                log.finest(() -> this + " was interruped during await");
                 Thread.currentThread().interrupt();
                 break;
             }
         }
 
-        log.finest("future ready");
+        log.finest(() -> this + " ready");
 
         if (needsSuspend) {
             cog.notifyWakeup();

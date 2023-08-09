@@ -55,10 +55,10 @@ public abstract class ABSExpGuard extends ABSGuard {
     public boolean await(COG cog) {
         boolean isTrue = isTrue();
         if (!isTrue && wasPreviouslyTrue) {
-            log.finest("Condition is false and was true previously; telling cog we can't run...");
+            log.finest(() -> "Condition of " + this + " changed from true to false; telling cog we can't run...");
             cog.notifyAwait();
         } else if (isTrue && !wasPreviouslyTrue) {
-            log.finest("Condition is true and was false previously; telling cog we can run...");
+            log.finest(() -> "Condition of " + this + " changed from false to true; telling cog we can run...");
             cog.notifyWakeup();
         }
         wasPreviouslyTrue = isTrue;
