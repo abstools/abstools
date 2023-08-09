@@ -14,8 +14,8 @@ import org.abs_models.backend.java.lib.runtime.metaABS.ObjectMirror;
 import org.abs_models.backend.java.lib.runtime.metaABS.ProductLine;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.utils.DynamicClassUtils;
-import org.apfloat.Apint;
 import org.apfloat.Aprational;
+import org.apfloat.AprationalMath;
 
 import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
 import org.abs_models.backend.java.lib.types.ABSBool;
@@ -58,12 +58,8 @@ public class ABSBuiltInFunctions {
         if (deadline_t.signum() >= 0) {
             Aprational clock = ABSRuntime.getRuntime().getClock();
             Aprational deadline_r = deadline_t.subtract(clock);
-            if (deadline_r.signum() < 0) {
-                // deadline expired; clamp to 0
-                return ABSRational.ZERO;
-            } else {
-                return ABSRational.fromAprational(deadline_r);
-            }
+            // We clamp the deadline at 0, since lowlevelDeadline() < 0 means no deadline given.
+            return ABSRational.fromAprational(AprationalMath.max(deadline_r, Aprational.ZERO));
         } else {
             return ABSRational.fromLong(-1);
         }
