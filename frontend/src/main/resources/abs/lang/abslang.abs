@@ -847,8 +847,8 @@ interface CloudProvider {
     // name could not be found.  The resulting deployment components are then
     // handled as normal (acquire/release/kill).
     [Atomic] Unit setInstanceDescriptions(Map<String, Map<Resourcetype, Rat>> instanceDescriptions);
-		[Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription);
-		[Atomic] Unit removeInstanceDescription(String instanceDescriptionName);
+    [Atomic] Unit addInstanceDescription(Pair<String, Map<Resourcetype, Rat>> instanceDescription);
+    [Atomic] Unit removeInstanceDescription(String instanceDescriptionName);
     [Atomic] Map<String, Map<Resourcetype, Rat>> getInstanceDescriptions();
     [Nullable] DeploymentComponent prelaunchInstanceNamed(String instancename);
     [Nullable] DeploymentComponent launchInstanceNamed(String instancename);
@@ -1006,7 +1006,9 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
 }
 
 
-// KLUDGE: if extending / renaming the interface, adapt
+// NOTE: This class is referenced in various ways from both the type-checker
+// and the backends, so should not be renamed or otherwise redefined without
+// extensive tests.  E.g., if extending / renaming the interface, adapt
 // frontend/typechecker/InterfaceType.java:isDeploymentComponentType()
 class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
 implements DeploymentComponentForCloudProvider {
@@ -1029,9 +1031,9 @@ implements DeploymentComponentForCloudProvider {
     // self-refresh; memory doesn't.)  Do not rename.  Do not assign in ABS
     // code.  Writes to these fields from ABS code might be overwritten by the
     // backend.
-    [Final] Rat cpuconsumed = 0;
-    [Final] Rat bwconsumed = 0;
-    [Final] Rat memoryconsumed = 0;
+    Rat cpuconsumed = 0;
+    Rat bwconsumed = 0;
+    Rat memoryconsumed = 0;
 
     // Creation time and shutdown time are used by (at least) the
     // visualization backend.  Do not rename.
@@ -1096,7 +1098,7 @@ implements DeploymentComponentForCloudProvider {
         }
         return result;
     }
-    
+
     // Transfer resources between deployment components.
     // FIXME: load calculation will be invalid if resource totals have
     // been changed in the specified interval.
@@ -1188,6 +1190,54 @@ implements DeploymentComponentForCloudProvider {
     }
 
     [Atomic, Readonly] Rat getNumberOfCores() { return numberOfCores; }
+
+    // Methods for the Java backend, which cannot easily modify object state
+    // 
+    // Consume CPU in Java backend; return the amount actually consumed.
+    // 
+    // - NOTE: this method is only called from the Java backend during time
+    //   advance, where we know there are no concurrent mutators.
+    // 
+    // - NOTE: for the time being, we only implement Speed (CPU) resource
+    //   consumption here so we don't have to mirror the Resource datatype
+    //   Java-side.
+    Rat consumeCost(Rat amount) {
+        Rat result = 0;
+        amount = max(amount, 0); // don't consume negative values
+        if (cpu == InfRat) {
+            cpuconsumed = cpuconsumed + amount;
+            result = amount;
+        } else {
+            Rat cputotal = finvalue(cpu);
+            Rat to_consume = min(cputotal - cpuconsumed, amount); // consume only what we have
+            cpuconsumed = cpuconsumed + to_consume;
+            result = to_consume;
+        }
+        return result;
+    }
+    // Update DC state for time advance by one tick: update history and total
+    // history, update available resources and refresh all consumable
+    // resources.
+    //
+    // The Erlang and Maude backends open-code this, but we implement it
+    // ABS-side for the Java backend.
+    Unit advanceTimeBy1Tick() {
+        // Update histories
+        cpuhistory = Cons(cpuconsumed, cpuhistory);
+        cpuhistorytotal = when cpu != InfRat then Cons(finvalue(cpu), cpuhistorytotal) else cpuhistorytotal;
+        bwhistory = Cons(bwconsumed, bwhistory);
+        bwhistorytotal = when bw != InfRat then Cons(finvalue(bw), bwhistorytotal) else bwhistorytotal;
+        memoryhistory = Cons(memoryconsumed, memoryhistory);
+        memoryhistorytotal = when memory != InfRat then Cons(finvalue(memory), memoryhistorytotal) else memoryhistorytotal;
+        // Update per-interval ocunters.  NOTE: do not update memory since it
+        // doesn't auto-refresh.
+        cpuconsumed = 0;
+        bwconsumed = 0;
+        // Update available totals
+        cpu = cpunext;
+        bw = bwnext;
+        memory = memorynext;
+    }
 }
 
 // abbreviation for [DC: foo] annotations

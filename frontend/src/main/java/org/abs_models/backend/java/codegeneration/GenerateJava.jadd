@@ -68,6 +68,9 @@ aspect GenerateJava {
 
                 // main block
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
+                stream.println("// Create initial DC, hook it up to the initial cog");
+                stream.println(ABSInterface.class.getName() + " __main_block_dc = ABS.DC.DeploymentComponent_c.createNewLocalObject(" + ABSString.class.getName() + ".fromString(\"Initial DC\"), ABS.StdLib.map_f.apply(new ABS.StdLib.List_Nil<>()));");
+                stream.println(ABSRuntime.class.getName() + ".getCurrentCOG().setDCfromMainBlock(__main_block_dc);");
                 block.generateJava(stream);
                 stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
                 stream.println("}");
@@ -439,6 +442,12 @@ aspect GenerateJava {
         }
 
         for (Stmt stmt : getStmts()) {
+            PureExp cost = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
+            if (cost != null) {
+                stream.print("new " + ABSResourceGuard.class.getName() + "(");
+                cost.generateJava(stream);
+                stream.println(").await(" + ABSRuntime.class.getName() + ".getCurrentCOG(), " + ABSRuntime.class.getName() + ".getCurrentTask());");
+            }
             stmt.generateJava(stream);
         }
 
@@ -566,12 +575,18 @@ aspect GenerateJava {
 
     public void DurationStmt.generateJava(PrintStream stream) {
         super.generateJava(stream);
+        stream.print("new " + ABSDurationGuard.class.getName() + "(");
+        getMin().generateJava(stream);
+        stream.print(", ");
+        getMax().generateJava(stream);
+        stream.println(").await(" + ABSRuntime.class.getName() + ".getCurrentCOG(), " + ABSRuntime.class.getName() + ".getCurrentTask());");
         stream.println(";");
     }
 
     public void MoveCogToStmt.generateJava(PrintStream stream) {
         super.generateJava(stream);
         stream.println(";");
+        throw new NotImplementedYetException(this);
     }
 
     public void SuspendStmt.generateJava(PrintStream stream) {

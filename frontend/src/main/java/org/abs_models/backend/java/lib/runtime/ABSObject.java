@@ -27,6 +27,13 @@ public abstract class ABSObject implements ABSRef {
     protected COG __cog;
     protected final long __id;
 
+    /**
+     * Flag to turn off cross-cog calls. Currently used by the runtime to call
+     * methods on ABS.DC.DeploymentComponent instances during known-safe
+     * states (during time advance, i.e., all threads are awaiting).
+     */
+    public boolean __checkSameCog = true;
+
     public ABSObject() {
         this(getCurrentCOG());
     }
@@ -74,7 +81,7 @@ public abstract class ABSObject implements ABSRef {
     }
 
     public final void __ABS_checkSameCOG() {
-        if (__cog != getCurrentCOG()) {
+        if (__checkSameCog && __cog != getCurrentCOG()) {
             throw new ABSIllegalSynchronousCallException();
         }
     }

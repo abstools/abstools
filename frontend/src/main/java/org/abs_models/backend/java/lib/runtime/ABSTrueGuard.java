@@ -20,7 +20,7 @@ public class ABSTrueGuard extends ABSGuard {
     }
 
     @Override
-    public boolean await(COG cog) {
+    public boolean await(COG cog, Task<?> task) {
         return true;
     }
 

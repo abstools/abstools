@@ -26,9 +26,9 @@ code from ABS.
 
 | Real-Time ABS
 | yes
-| yes (deadline implementation missing)
+| yes
 | -
-| -
+| yes
 
 | User-defined Schedulers
 | yes
@@ -40,13 +40,13 @@ code from ABS.
 | yes
 | yes
 | -
-| -
+| yes
 
 | Deployment
 | -
 | -
 | yes
-| ?
+| yes
 
 | FLI
 | -

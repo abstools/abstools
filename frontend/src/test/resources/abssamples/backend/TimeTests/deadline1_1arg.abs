@@ -15,9 +15,4 @@ class C implements I {
     I i = new C();
     [Deadline: Duration(20)] Rat rest = await i!m(1/2);
     Bool testresult = rest == 20 - 1/2;
-    testresult;
 }
-
-// Local Variables:
-// abs-target-language: erlang
-// End:

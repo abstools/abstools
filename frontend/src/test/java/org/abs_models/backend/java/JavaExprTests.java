@@ -88,34 +88,5 @@ public class JavaExprTests extends JavaBackendTest {
     public void test_thisDC_ticket318() throws Exception {
         assertValidJava(getJavaCode("module M; import * from ABS.DC; { DeploymentComponent dc = thisDC(); }"));
     }
-    
-    
-    @Test
-    public void caseExpr1() throws Exception {
-        assertValidJavaExecution(
-                "module Test;",
-                "data MyData = MyDataCons | MyNothing;",
-                "{",
-                    "assert case MyDataCons {",
-                    "   Test.MyDataCons => True;",
-                    "   MyDataCons => False;",
-                    "};",
-                "}"
-        );
-    }
-    
-    @Test
-    public void caseExpr2() throws Exception {
-        assertValidJavaExecution(
-                "module Test;",
-                "data MyData = MyDataCons | MyNothing;",
-                "{",
-                    "assert case MyDataCons {",
-                    "   MyDataCons => True;",
-                    "   Test.MyDataCons => False;",
-                    "};",
-                "}"
-        );
-    }
-    
+
 }

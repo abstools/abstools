@@ -16,9 +16,9 @@ public class ABSFutureGuard extends ABSGuard {
         this.isDone = f.isDone();
     }
 
-    public boolean await(COG cog) {
+    public boolean await(COG cog, Task<?> task) {
         if (!isDone) {
-            fut.await(cog);
+            fut.await(cog, task);
             isDone = true;
         }
         return true;

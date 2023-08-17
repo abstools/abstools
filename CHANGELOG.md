@@ -14,9 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - In the Erlang and Java backends, it is now possible to define functions that read from a provided SQLite database: `def List<Int> f(Int x) = builtin(sqlite3, "db.sqlite3", "SELECT i FROM t where i > ?", x);` will return a list of numbers greater than `x` in table `t` of database file `db.sqlite3`.  See the manual for more details.
 
-- The Java backend now implements the `await duration()` guard, and the logical clock as documented in the manual.
+- The Java backend now supports Timed ABS, as documented in Chapter 13 of the manual.
 
-- The Java backend now implements `deadline()` in terms of the logical clock.
+- The Java backend now supports deployment and resource modeling, as documented in Chapter 15 of the manual.
 
 - The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 
@@ -37,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- Removed the one-minute timeout for the Model API (calls to the Model API used to abort with a 5xx error code after one minute).
+- Removed the one-minute timeout for the Model API (calls to the Model API used to abort with a 5xx error code after one minute, no matter whether the associated task was still running and would have completed successfully).
 
 ## [1.9.3] - 2021-05-18
 

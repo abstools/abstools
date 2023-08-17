@@ -1,0 +1,39 @@
+module BackendTest;
+// Check time-blocking behavior of multiple tasks in one cog.  We create a
+// number of tasks in `PodObject` such that all of them are runnable, and one
+// of them at a time blocks for time advance.
+interface Pod {
+    Unit test();
+    Unit sync();
+}
+class PodObject(Int n_tasks) implements Pod {
+    Int running_tasks = 0;
+    Unit processTask(Int n) {
+        // println(`processTask $n$ blocking for time at $now()$...`);
+        duration(1);
+        // println(`processTask $n$ unblocked at $now()$...`);
+        running_tasks = running_tasks - 1;
+    }
+    Unit test() {
+        Int ctr = n_tasks;
+        while (ctr > 0) {
+            this!processTask(ctr);
+            running_tasks = running_tasks + 1;
+            ctr = ctr - 1;
+        }
+        // println("PodObject created 50 tasks");
+    }
+    Unit sync() {
+        await running_tasks == 0;
+    }
+}
+
+{
+    Bool testresult = False;
+    Pod p = new PodObject(50);
+    await p!test();
+    // println(`All tasks started at $now()$, waiting for finish`);
+    await p!sync();
+    // println(`All tasks finished at $now()$`);
+    testresult = timeValue(now()) == 50;
+}

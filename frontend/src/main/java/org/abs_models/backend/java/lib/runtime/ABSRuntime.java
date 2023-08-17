@@ -26,8 +26,11 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import org.abs_models.backend.java.JavaBackendException;
 import org.abs_models.backend.java.lib.types.ABSInterface;
+import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSRef;
+import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.SystemObserver;
 import org.abs_models.backend.java.scheduling.DefaultTaskScheduler;
 import org.abs_models.backend.java.scheduling.GlobalScheduler;
@@ -43,6 +46,7 @@ import org.abs_models.backend.java.scheduling.TotalSchedulingStrategy;
 import org.abs_models.backend.java.scheduling.UsesRandomSeed;
 
 import org.apfloat.Aprational;
+import org.apfloat.AprationalMath;
 
 /**
  * The singleton runtime class.
@@ -80,15 +84,19 @@ public class ABSRuntime {
      */
     private Aprational clock = new Aprational(0);
     /**
-     * The current time to advance to if the system ran to completion on the
-     * current time. This is the minimum of the maxima of all guards in the
-     * {@see #duration_guards} queue and is calculated every time we add a duration
-     * guard to the queue, or increment the clock.  Its value is only
+     * The current time to advance to, as needed by the currently waiting
+     * duration guards. This is the minimum of the maxima of all guards in the
+     * {@see #duration_guards} queue and is calculated every time we add a
+     * duration guard to the queue, or increment the clock.  Its value is only
      * meaningful when {@code duration_guards} is non-empty.
      * <p>
-     * NOTE: For safe access to this field, use {@ocde synchronized(duration_guards)}.
+     * Note that the clock might be incremented to less than this time point
+     * if there are also resource guards waiting.
+     * <p>
+     * NOTE: For safe access to this field, use {@ocde
+     * synchronized(duration_guards)}.
      */
-    private Aprational wake_time = new Aprational(0);
+    private Aprational wake_time_for_duration_guards = new Aprational(0);
     /**
      * Queue of all guards waiting on the clock, ordered by minimum duration.
      * This means when advancing the clock, we can pop elements in order until
@@ -100,6 +108,21 @@ public class ABSRuntime {
     private final PriorityQueue<ABSDurationGuard> duration_guards
         = new PriorityQueue<>(Comparator.comparing(ABSDurationGuard::getMinTime));
 
+    /**
+     * All deployment components in the system.  Upon time advance, we need to
+     * update resources and resource histories for all DCs, so we keep them
+     * referenced here.
+     */
+    private final List<ABSDCMirror> deployment_components = new ArrayList<>();
+
+    /**
+     * Queue of all pending resource requests.
+     *
+     * TODO: figure out locking scheme for this; it will be used from both
+     * advanceClock and addResourceGuard.
+     */
+    private final Map<ABSInterface, List<ABSResourceGuard>> resource_guards
+        = new HashMap<>();
 
     /**
      * classloader for loading the translated code and FLI classes
@@ -134,6 +157,9 @@ public class ABSRuntime {
             Constructor<?> constr = mainClass.getConstructor(COG.class);
             ABSObject mainObject = (ABSObject) constr.newInstance(cog);
             cogCreated(mainObject);
+            // Note that here, the DC of `cog` is still null; we set up the
+            // global DC from the generated code--its constructor needs to run
+            // inside an ABS task since it calls `getCurrentCog()`.
             asyncCall(new ABSMainCall(mainObject));
             doNextStep();
         } catch (SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException e) {
@@ -627,6 +653,10 @@ public class ABSRuntime {
         return terminateOnException;
     }
 
+    public synchronized void registerDC(ABSInterface dc) {
+        deployment_components.add(new ABSDCMirror(dc));
+    }
+
     /**
      * Return the current value of the global clock.  This is an absolute time,
      * increasing from 0.
@@ -636,27 +666,115 @@ public class ABSRuntime {
     }
 
     /**
-     * Advances the clock to the current value of {@link #wake_time}.  Must only be
-     * called when all threads are waiting, and signals all waiting guards
-     * whose minimum wakeup time is less or equal than the new value of the
-     * clock.
+     * Pass resources from DCs to waiting resource guards, and wake up tasks
+     * if their resource requests are fulfilled.  Remove entries from the
+     * {@code resource_guards} map if no guards are left waiting for the
+     * specified DC.
+     * <p>
+     * NOTE: this method is supposed to be called during clock advance only.
+     *
+     * @return true if at least one guard was woken, false otherwise.
      */
-    public void advanceClock() {
-        synchronized(duration_guards) {
-            if (duration_guards.isEmpty()) {
-                log.finest(() -> "No duration guards waiting on clock, nothing to advance.");
-            } else {
-                clock = wake_time;
-                log.finest(() -> "Advancing clock to " + wake_time + ", waking up waiting threads");
-                while (!duration_guards.isEmpty()
-                       && wake_time.compareTo(duration_guards.peek().getMinTime()) <= 0)
-                {
-                    ABSDurationGuard guard = duration_guards.remove();
+    protected synchronized boolean handResourcesToWaitingGuards() {
+        boolean woke_up_a_guard = false;
+        log.finest("Handing out resources to waiting tasks");
+        var iterator = resource_guards.entrySet().iterator();
+        while (iterator.hasNext()) {
+            // we iterate through (dc, guards), so this loop is executed once
+            // per dc that has resource requests.  If a dc fulfills all
+            // requests, we remove its entry from `resource_guards`.
+            Map.Entry<ABSInterface, List<ABSResourceGuard>> entry = iterator.next();
+            var dc = new ABSDCMirror(entry.getKey());
+            var guards = entry.getValue();
+            log.finest(() -> "Processing " + dc.getWrappedDC() + " with " + guards.size() + " waiting guards");
+            guard_loop:
+            while (!guards.isEmpty()) {
+                ABSResourceGuard guard = guards.get(0);
+                Aprational needed = guard.getResourcesNeeded();
+                Aprational consumed = dc.consumeCPU(needed);
+                if (consumed.signum() == 0) {
+                    // The DC ran out of resources; don't try to give
+                    // any to the next entry
+                    break guard_loop;
+                }
+                guard.consumeResources(consumed);
+                log.finest(() -> guard + " consumed " + consumed + " of " + needed + " resources from DC " + dc.getWrappedDC() + "; guard is finished: " + guard.isTrue());
+                if (guard.isTrue()) {
+                    guards.remove(0);
                     synchronized(guard) {
                         guard.notify();
                     }
+                    woke_up_a_guard = true;
+                } else {
+                    // We got some resources but not everything the
+                    // current guard wanted; next call to
+                    // `dc.consumeCPU` will return consumed==0 so we
+                    // might as well exit the loop here already
+                    break guard_loop;
                 }
             }
+            if (guards.isEmpty()) {
+                log.finest(() -> dc.getWrappedDC() + " has no more guards waiting; removing from to-do list");
+                iterator.remove();
+            }
+        }
+        return woke_up_a_guard;
+    }
+
+    /**
+     * Hand out resources and optionally advance the clock until one or more
+     * processes waiting for either the clock or some resource become
+     * runnable.  This method must only be called when all threads are
+     * waiting, and updates the resource amounts and histories of all
+     * deployment components as the clock advances.
+     */
+    protected synchronized void maybeAdvanceClock() {
+        // We do not try to calculate the clock increase in advance, because
+        // the time when a task becomes active depends on resource allocation
+        // strategies when two or more tasks try to get resources from the
+        // same deployment component.  Instead, we increment the clock to
+        // where either a duration guard wakes up or a resource boundary
+        // occurs (and hence, a resource guard might receive enough resources
+        // to unblock), whichever comes earlier.
+        log.finest("Starting resource allocation and clock advance");
+        if (duration_guards.isEmpty() && resource_guards.isEmpty()) {
+            log.finest("Trying to advance the clock when no guard is waiting for a duration or resource");
+            return;
+        }
+        boolean woke_up_a_guard = handResourcesToWaitingGuards();
+        while (!woke_up_a_guard) {
+            boolean woke_up_a_duration_guard = false;
+            boolean woke_up_a_resource_guard = false;
+            Aprational next_integer = clock.isInteger()
+                ? clock.add(Aprational.ONE)
+                : clock.ceil();
+            if (duration_guards.isEmpty()) {
+                // If no duration guards are waiting, do not consider
+                // `wake_time_for_duration_guards`
+                clock = next_integer;
+            } else {
+                clock = AprationalMath.min(wake_time_for_duration_guards, next_integer);
+            }
+            log.finest(() -> "Clock advanced to " + clock);
+            if (clock.compareTo(next_integer) == 0) {
+                deployment_components.forEach(ABSDCMirror::advanceTimeBy1Tick);
+                woke_up_a_resource_guard = handResourcesToWaitingGuards();
+            }
+            log.finest("Checking for threads to wake that are waiting on duration guards");
+            while (!duration_guards.isEmpty() && clock.compareTo(duration_guards.peek().getMinTime()) >= 0) {
+                ABSDurationGuard guard = duration_guards.remove();
+                synchronized(guard) {
+                    guard.notify();
+                }
+                woke_up_a_duration_guard = true;
+            }
+            if (woke_up_a_duration_guard && !duration_guards.isEmpty()) {
+                wake_time_for_duration_guards =
+                    duration_guards.stream()
+                    .map(ABSDurationGuard::getMaxTime)
+                    .reduce(duration_guards.peek().getMaxTime(), (t1, t2) -> t1.compareTo(t2) < 0 ? t1 : t2);
+            }
+            woke_up_a_guard = woke_up_a_resource_guard || woke_up_a_duration_guard;
         }
     }
 
@@ -675,14 +793,24 @@ public class ABSRuntime {
         }
         synchronized(duration_guards) {
             if (duration_guards.isEmpty()) {
-                wake_time = guard_max_time;
+                wake_time_for_duration_guards = guard_max_time;
             } else {
-                wake_time = guard_max_time.compareTo(wake_time) < 0 ? guard_max_time : wake_time;
+                wake_time_for_duration_guards = guard_max_time.compareTo(wake_time_for_duration_guards) < 0 ? guard_max_time : wake_time_for_duration_guards;
             }
             duration_guards.add(guard);
         }
     }
-    
+
+    /**
+     * Add a resource guard that waits for a resource, together with the
+     * deployment component that shall provide it.
+     */
+    public void addResourceGuard(ABSResourceGuard guard, ABSInterface dc) {
+        synchronized(resource_guards) {
+            resource_guards.computeIfAbsent(dc, k -> new ArrayList<>()).add(guard);
+        }
+    }
+
     public void notifyCogActive() {
         synchronized(this) {
             nActiveCogs++;
@@ -696,7 +824,7 @@ public class ABSRuntime {
         }
         if (nActiveCogs == 0) {
             log.finest(() -> "No active cogs.");
-            advanceClock();
+            maybeAdvanceClock();
         } else if (nActiveCogs > 0) {
             log.finest(() -> nActiveCogs + " active cogs.");
         } else {

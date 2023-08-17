@@ -39,7 +39,7 @@ public class ABSAndGuard extends ABSGuard {
         return right;
     }
 
-    public boolean await(COG cog) {
+    public boolean await(COG cog, Task<?> task) {
         // We don't ourselves notify the cog about idleness; the nested guards
         // will take care of it sequentially.  (I.e., we only call right.await
         // after left.await is done.)
@@ -47,8 +47,8 @@ public class ABSAndGuard extends ABSGuard {
         // FIXME: this is wrong in general; if both guards are of type
         // DurationGuard, we need to unify their intervals, *not* execute them
         // sequentially.
-        boolean b = left.await(cog);
-        boolean b2 = right.await(cog);
+        boolean b = left.await(cog, task);
+        boolean b2 = right.await(cog, task);
         return b && b2;
 
     }

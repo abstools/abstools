@@ -20,18 +20,21 @@ public class TimeTests extends SemanticTests {
 
     @Test
     public void ticket258() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue("{ Bool testresult = True; await duration(1,1); }");
         assertEvalTrue("{ Bool testresult = True; await duration(1); }");
     }
 
     @Test
     public void duration1() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue("{ Bool testresult = True; duration(1,1); }");
         assertEvalTrue("{ Bool testresult = True; duration(1); }");
     }
 
     @Test
     public void costStmtBug160() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue(new File("abssamples/backend/TimeTests/bug160.abs"));
     }
 
@@ -117,6 +120,18 @@ public class TimeTests extends SemanticTests {
     }
 
     @Test
+    public void time_advance_multiple_duration() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
+        assertEvalTrue(new File("abssamples/backend/TimeTests/time_advance_multiple_duration.abs"));
+    }
+
+    @Test
+    public void time_advance_future_get() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
+        assertEvalTrue(new File("abssamples/backend/TimeTests/time_advance_future_get.abs"));
+    }
+
+    @Test
     public void bug274() throws Exception {
         Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue(new File("abssamples/backend/TimeTests/resource_and_time_advance.abs"));
@@ -130,6 +145,13 @@ public class TimeTests extends SemanticTests {
 
     @Test
     public void bug276() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue(new File("abssamples/backend/TimeTests/bug276.abs"));
+    }
+
+    @Test
+    public void dc_in_main() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
+        assertEvalTrue("{ [Cost: 10] Bool testresult = timeValue(now()) == 0; }");
     }
 }

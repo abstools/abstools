@@ -76,7 +76,10 @@ public class JavaTestDriver extends ABSTest implements BackendTestDriver {
     public boolean supportsCustomSchedulers() { return false; }
 
     @Override
-    public boolean supportsTimedAbs() { return false; }
+    public boolean supportsTimedAbs() {
+        // Timed ABS currently doesn't work with non-standard scheduling strategies
+        return javaTest.seed == JavaBackendTest.seed_UNUSED;
+    }
 
     @Override
     public boolean supportsExceptions() { return false; }

@@ -116,6 +116,22 @@ The `gen/erl/` directory is pre-populated with the contents of `frontend/src/mai
 
 === The Runtime System
 
+==== ABS Classes, Datatypes in Java
+
+The ABS standard library pre-defines various functions, classes,
+datatypes etc.  Depending on the usage pattern, there are various ways of
+making them available to the Java backend at compile time.
+
+- Built-in functions: These functions must be defined per backend.  The Java
+  backend defines these functions in the file `ABSBuiltInFunctions.java`.
+- Primitive datatypes: These are subclasses of `ABSBuiltInDataType.java`.  The
+  types defined in `abslang.abs` (e.g., `Bool`, `Rat`, `String`) are generated
+  but never used.
+- Using other ABS functions, datatypes, classes etc. from Java: This can be
+  done via reflection; see `ABSDCMirror.java` for an example.
+
+==== Task Scheduling and Execution
+
 A running ABS model has a singleton class of type
 `org.abs_models.backend.java.lib.runtime.ABSRuntime` or one of its subclasses.
 
@@ -155,14 +171,18 @@ call `await` on a guard when actually awaiting for the purpose of making a
 scheduling decision, and call the method `isTrue` when checking for a guard's
 status outside of scheduling.
 
-When a cog's activity counter reaches `0`, the cog will signal the
-`ABSRuntime` singleton via the methods `notifyCogActive`, `notifyCogInactive`.
-The runtime keeps track of the amount to increase the clock in the variable
-`wake_time`.  When the number of active cogs reaches zero, the runtime will
-try to increase the clock; this happens only when one or more
-`ABSDurationGuard` guards have registered themselves via `addDurationGuard`.
-If so, the runtime increases the clock and notifies (as with `Object.notify`)
-the guards whose `min_time` is less than or equal to the current clock.  A
-duration guard, once notified, will notify its cog that the task is ready to
-run and return from its `await` method (which was called from the
-`SchedulerThread` running the ABS task).
+A cog deems itself to be inactive in two cases when receiving `notifyAwait`:
+- Its `activeThreads` counter is `0` (all tasks are suspended)
+- Its scheduler returns non-`null` from `getActiveTask` (the active task is
+  blocked).
+
+Upon becoming inactive, the cog will signal the `ABSRuntime` singleton via the
+methods `notifyCogActive`, `notifyCogInactive`.  The runtime keeps track of
+the amount to increase the clock in the variable `wake_time`.  When the number
+of active cogs reaches zero, the runtime will try to increase the clock; this
+happens only when one or more `ABSDurationGuard` guards have registered
+themselves via `addDurationGuard`.  If so, the runtime increases the clock and
+notifies (as with `Object.notify`) the guards whose `min_time` is less than or
+equal to the current clock.  A duration guard, once notified, will notify its
+cog that the task is ready to run and return from its `await` method (which
+was called from the `SchedulerThread` running the ABS task).

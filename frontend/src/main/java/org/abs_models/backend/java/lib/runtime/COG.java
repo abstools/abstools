@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.abs_models.backend.java.JavaBackendException;
+
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSValue;
@@ -25,7 +27,7 @@ public class COG implements ABSValue {
     private final TaskScheduler scheduler;
     private final Class<?> initialClass;
     private final int id;
-    private final ABSInterface dc;
+    private ABSInterface dc;
     /**
      * The number of active threads, incremented and decremented by schedulers
      * running on this cog.  This is used to detect when all schedulers on
@@ -61,6 +63,20 @@ public class COG implements ABSValue {
         return dc;
     }
 
+    /**
+     * Set the deployment component of this cog.  NOTE: this method should
+     * never be called, except to set the deployment component of the
+     * primordial cog in the generated code of a module's main block.
+     *
+     * @param dc The deployment component of the cog.
+     */
+    public void setDCfromMainBlock(ABSInterface dc) {
+        if (this.dc != null) {
+            throw new JavaBackendException("Trying to override the deployment component of a cog");
+        }
+        this.dc = dc;
+    }
+
     public void addTask(Task<?> task) {
         synchronized(this) {
             if (activeThreads == 0) {
@@ -78,7 +94,7 @@ public class COG implements ABSValue {
      * If the guard evaluates to true, this method should not be called (e.g.,
      * if a DurationGuard awaits on t=0).
      */
-    public synchronized void notifyAwait() {
+    public synchronized void notifyAwait(Task<?> task) {
         activeThreads--;
         if (activeThreads < 0) {
             log.severe(() -> this + " reached negative value for activeThreads (" + activeThreads + "), this should never happen");
@@ -87,7 +103,12 @@ public class COG implements ABSValue {
             log.finest(() -> this + " now has " + activeThreads + " active threads.");
         }
         if (activeThreads == 0) {
-            log.finest(() -> this + " notifying runtime that it became inactive");
+            log.finest(() -> this + " notifying runtime that it became inactive -- all tasks suspended");
+            ABSRuntime.getRuntime().notifyCogInactive();
+        } else if (scheduler.getActiveTask() == task) {
+            // If we await, the active task is either null or another task; if
+            // we block, the active task is the one calling `notifyAwait`.
+            log.finest(() -> this + " notifying runtime that it became inactive -- active task is blocked");
             ABSRuntime.getRuntime().notifyCogInactive();
         }
     }
@@ -99,8 +120,10 @@ public class COG implements ABSValue {
      * If the guard did not actually suspend the task, this method should not
      * be called (e.g., if a DurationGuard awaited on t=0).
      */
-    public synchronized void notifyWakeup() {
-        if (activeThreads == 0) {
+    public synchronized void notifyWakeup(Task<?> task) {
+        if (activeThreads == 0 || scheduler.getActiveTask() == task) {
+            // If we just woke up but are already the active task, we were the
+            // task that blocked.
             log.finest(() -> this + " notifying runtime that it became active");
             ABSRuntime.getRuntime().notifyCogActive();
         }
@@ -217,7 +240,10 @@ public class COG implements ABSValue {
     }
 
     public void register(ABSObject absObject) {
-        // nothing to do
+        if (ABSDCMirror.CLASS_DC.isInstance(absObject)) {
+            log.finest(() -> "registering fresh DC " + absObject + " with runtime");
+            ABSRuntime.getRuntime().registerDC((ABSInterface)absObject);
+        }
     }
 
     @Override

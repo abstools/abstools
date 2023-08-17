@@ -52,14 +52,14 @@ public abstract class ABSExpGuard extends ABSGuard {
      * communicates readiness changes to the runtime.  Call {@link #isTrue}
      * instead to print or otherwise display the guard's status.
      */
-    public boolean await(COG cog) {
+    public boolean await(COG cog, Task<?> task) {
         boolean isTrue = isTrue();
         if (!isTrue && wasPreviouslyTrue) {
             log.finest(() -> "Condition of " + this + " changed from true to false; telling cog we can't run...");
-            cog.notifyAwait();
+            cog.notifyAwait(task);
         } else if (isTrue && !wasPreviouslyTrue) {
             log.finest(() -> "Condition of " + this + " changed from false to true; telling cog we can run...");
-            cog.notifyWakeup();
+            cog.notifyWakeup(task);
         }
         wasPreviouslyTrue = isTrue;
         return isTrue;

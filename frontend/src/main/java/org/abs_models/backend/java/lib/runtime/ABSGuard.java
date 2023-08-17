@@ -51,12 +51,13 @@ public abstract class ABSGuard {
      * <p>
      * All implementations of this method must inform the cog about their
      * status via the methods {@link COG#notifyAwait} and {@link
-     * COG#notifyWakeup()}.
+     * COG#notifyWakeup}.
      *
      * @param cog the cog of the task that might be suspended.
+     * @param task the task to be suspended.
      * @return the status of the guard (true if runnable, false if not).
      */
-    public abstract boolean await(COG cog);
+    public abstract boolean await(COG cog, Task<?> task);
 
     private GuardView view;
 

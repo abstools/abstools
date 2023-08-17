@@ -74,8 +74,8 @@ public class ABSDurationGuard extends ABSGuard {
      * the clock advances to this guard's minimum wakeup time.
      */
     @Override
-    public synchronized boolean await(COG cog) {
-        log.finest(() -> "Awaiting duration " + getMinTime() + " / " + getMaxTime());
+    public synchronized boolean await(COG cog, Task<?> task) {
+        log.finest(() -> "Awaiting until time between " + getMinTime() + " and " + getMaxTime());
 
         boolean mustSuspend = !isTrue();
 
@@ -84,7 +84,7 @@ public class ABSDurationGuard extends ABSGuard {
             // case everyone's idle the runtime will already know it needs to
             // wake us.
             ABSRuntime.getRuntime().addDurationGuard(this);
-            cog.notifyAwait();
+            cog.notifyAwait(task);
         }
         while (!isTrue()) {
             try {
@@ -97,7 +97,7 @@ public class ABSDurationGuard extends ABSGuard {
             }
         }
         if (mustSuspend) {
-            cog.notifyWakeup();
+            cog.notifyWakeup(task);
         }
         // we only reach this point once we became true
         return true;

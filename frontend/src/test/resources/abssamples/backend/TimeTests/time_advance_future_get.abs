@@ -1,0 +1,48 @@
+module BackendTest;
+// Check whether time advances when a cog is blocking with multiple runnable
+// tasks.  We create a number of tasks in `PodObject` such that all of them
+// are runnable at once and one of them blocks the cog while time advances in
+// the `Delayer` object.
+interface Delayer {
+    Unit delay();
+}
+class Delayer implements Delayer {
+    Unit delay() {
+        await duration(1);
+    }
+}
+interface Pod {
+    Unit test();
+    Unit sync();
+}
+class PodObject(Delayer d, Int n_tasks) implements Pod {
+    Int running_tasks = 0;
+    Unit processTask(Int n) {
+        // println(`processTask $n$ blocking on future at $now()$...`);
+        Fut<Unit> f = d!delay();
+        f.get;
+        // println(`processTask $n$ got future at $now()$...`);
+        running_tasks = running_tasks - 1;
+    }
+    Unit test() {
+        Int ctr = n_tasks;
+        while (ctr > 0) {
+            this!processTask(ctr);
+            running_tasks = running_tasks + 1;
+            ctr = ctr - 1;
+        }
+    }
+    Unit sync() {
+        await running_tasks == 0;
+    }
+}
+
+{
+    Bool testresult = False;
+    Delayer d = new Delayer();
+    Pod p = new PodObject(d, 50);
+    await p!test();
+    await p!sync();
+    // println(`Main block finished at $now()$...`);
+    testresult = timeValue(now()) == 50;
+}

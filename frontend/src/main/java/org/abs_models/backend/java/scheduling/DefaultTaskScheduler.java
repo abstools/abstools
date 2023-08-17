@@ -45,8 +45,14 @@ public class DefaultTaskScheduler implements TaskScheduler {
     private final COG cog;
     private final ABSThreadManager threadManager;
 
-    // Only used in view
-    private Task<?> activeTask;
+    /**
+     * The currently active task, or {@ocde null} if idle.  Note that this
+     * field is very much linked to {@code runningThread}, and must be updated
+     * at the same time.  We store this as a member because the cog will call
+     * {@code getActiveTask} to determine if the current thread has given up
+     * the lock.
+     */
+    private Task<?> activeTask; // TODO: check if we can replace it with runningThread.runningTask
     private volatile View view;
 
     public DefaultTaskScheduler(COG cog, ABSThreadManager m) {
@@ -80,6 +86,9 @@ public class DefaultTaskScheduler implements TaskScheduler {
      * The (Java) thread executing one (ABS) task.
      */
     class SchedulerThread extends ABSThread {
+        /**
+         * The task currently being handled by this thread instance.
+         */
         private Task<?> runningTask;
 
         public SchedulerThread() {
@@ -106,15 +115,15 @@ public class DefaultTaskScheduler implements TaskScheduler {
                 loop:
                 while (!shutdown) {
                     synchronized (DefaultTaskScheduler.this) {
-                        activeTask = null;
+                        DefaultTaskScheduler.this.activeTask = null;
                         if (newTasks.isEmpty()) {
-                            runningThread = null;
+                            DefaultTaskScheduler.this.runningThread = null; // release cog token
                             DefaultTaskScheduler.this.notifyAll();
                             break loop;
                         }
 
-                        activeTask = newTasks.remove(0);
-                        runningTask = activeTask;
+                        DefaultTaskScheduler.this.activeTask = newTasks.remove(0);
+                        runningTask = DefaultTaskScheduler.this.activeTask;
                         setName("ABS Scheduler Thread executing " + activeTask.toString());
                     }
 
@@ -137,8 +146,8 @@ public class DefaultTaskScheduler implements TaskScheduler {
         // assume called in synchronized block
         public void suspendTask(ABSGuard g) {
             synchronized (DefaultTaskScheduler.this) {
-                activeTask = null;
-                runningThread = null;
+                DefaultTaskScheduler.this.activeTask = null; // mark inactive: we're not blocking
+                DefaultTaskScheduler.this.runningThread = null; // release token
                 if (!newTasks.isEmpty()) {
                     // A new method call came in while we were running: create
                     // its thread
@@ -146,8 +155,8 @@ public class DefaultTaskScheduler implements TaskScheduler {
                     runningThread = new SchedulerThread();
                     runningThread.start();
                 } else {
-                    // Start a scheduling round: we set `runningThread` to
-                    // null, so someone else can grab it
+                    // Start a scheduling round: we already set
+                    // `runningThread` to null, so someone else can grab it
                     DefaultTaskScheduler.this.notifyAll();
                 }
                 log.finest(() -> runningTask + " on " + g + " SUSPENDING");
@@ -159,7 +168,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
             }
 
             log.finest(() -> runningTask + " AWAITING " + g);
-            boolean taskReady = g.await(cog); // Note that this might suspend the thread
+            boolean taskReady = g.await(cog, runningTask); // Note that this might suspend the thread
             if (Thread.interrupted()) {
                 return;
             }
@@ -170,7 +179,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
             }
 
             synchronized (DefaultTaskScheduler.this) {
-                while (runningThread != null || !g.await(cog)) {
+                while (runningThread != null || !g.await(cog, runningTask)) {
                     // Sleep when someone else is running, or our guard
                     // evalutes to false
                     try {
@@ -182,8 +191,8 @@ public class DefaultTaskScheduler implements TaskScheduler {
                         break;
                     }
                 }
-                runningThread = this;
-                activeTask = runningTask;
+                runningThread = this; // grab lock
+                activeTask = runningTask; // let scheduler know which task is running
             }
 
             if (v != null)

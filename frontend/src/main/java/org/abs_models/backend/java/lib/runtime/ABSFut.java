@@ -97,13 +97,13 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         return isDone;
     }
 
-    public synchronized void await(COG cog) {
-        log.finest(() -> this + "awaiting");
+    public synchronized void await(COG cog, Task<?> task) {
+        log.finest(() -> this + " awaiting");
 
         boolean needsSuspend = !isDone;
 
         if (needsSuspend) {
-            cog.notifyAwait();
+            cog.notifyAwait(task);
         }
 
         while (!isDone) {
@@ -119,7 +119,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         log.finest(() -> this + " ready");
 
         if (needsSuspend) {
-            cog.notifyWakeup();
+            cog.notifyWakeup(task);
         }
 
         if (exception != null)
@@ -159,7 +159,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
 
     private void informWaitingThreads() {
-        log.finest(this + " inform awaiting threads...");
+        log.finest(this + " inform awaiting threads");
 
         ArrayList<GuardWaiter> copy = null;
         synchronized (this) {
