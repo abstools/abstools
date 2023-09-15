@@ -221,15 +221,21 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         return "Future (" + (isDone ? value : "unresolved") + ")";
     }
 
-    public synchronized boolean addWaitingThread(GuardWaiter thread) {
+    public boolean addWaitingThread(GuardWaiter thread) {
         if (isDone) {
             log.fine("===== "+this+" is already resolved");
             return false;
         }
-        if (waitingThreads == null)
-            waitingThreads = new ArrayList<>(1);
-        waitingThreads.add(thread);
-        return true;
+        synchronized(this) {
+            if (isDone) {
+                log.fine("===== "+this+" is already resolved");
+                return false;
+            }
+            if (waitingThreads == null)
+                waitingThreads = new ArrayList<>(1);
+            waitingThreads.add(thread);
+            return true;
+        }
     }
 
 
