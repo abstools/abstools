@@ -6,7 +6,6 @@ SOURCES = abs-functional-syntax.ott abs-functional-typing.ott \
 	  abs-runtime-typing.ott abs-runtime-evaluation.ott \
 	  abs-runtime-semantics.ott
 SOURCES_COQ = core-abs-simplified.ott
-OTT_COQ_DIR = coq/
 OTT = ott
 PDFLATEX = pdflatex
 
@@ -20,7 +19,7 @@ all: pdf coq			## Create both pdf and coq
 
 pdf: core-abs.pdf core-abs-coq.pdf ## Type-set ABS semantic rules (default)
 
-coq: core_abs.vo		## Generate coq proof
+coq: core_abs.v		## Generate coq proof
 
 core-abs.pdf: core-abs.tex core-abs_included.tex
 	$(PDFLATEX) core-abs.tex
@@ -44,15 +43,7 @@ core_abs.v: $(SOURCES_COQ)
 	       -coq_expand_list_types false \
 	       $(SOURCES_COQ)
 
-core_abs.vo: Makefile.coq
-	make -C coq
-	make -f Makefile.coq
-
-Makefile.coq: core_abs.v _CoqProject
-	coq_makefile -f _CoqProject -I $(realpath $(OTT_COQ_DIR)) core_abs.v -o Makefile.coq
-
 clean:				## Remove intermediate and output files
-	make -C coq clean
 	rm -f *.aux *.log core-abs.pdf core-abs-coq.pdf core-abs_included.tex core-abs-coq.tex core_abs.v core_abs.vo core_abs.v.d core_abs.glob Makefile.coq Makefile.coq.conf
 
 help:
