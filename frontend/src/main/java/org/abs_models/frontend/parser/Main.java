@@ -20,6 +20,7 @@ import java.util.jar.JarEntry;
 
 import org.abs_models.Absc;
 import org.abs_models.backend.autodeploy.Tester;
+import org.abs_models.backend.c.CBackend;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.coreabs.CoreAbsBackend;
 import org.abs_models.backend.erlang.ErlangBackend;
@@ -99,6 +100,10 @@ public class Main {
                 }
                 if (arguments.backend.prolog) {
                     result = Math.max(result, PrologBackend.doMain(arguments));
+                    done = true;
+                }
+                if(arguments.backend.c) {
+                    result = Math.max(result, CBackend.doMain(arguments));
                     done = true;
                 }
                 if (arguments.backend.coreabs) {
