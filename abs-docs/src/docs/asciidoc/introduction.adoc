@@ -116,7 +116,7 @@ given value.  Exceptions can also be thrown by the modeler via the `throw`
 statement: <<throw-statement>>.  Exceptions thrown implicitly or explicitly
 are propagated and handled in the same way.
 
-The modeler can define new exceptions; see <<exception-type>>.
+The modeler can define new exceptions; see <<sec:exception-types>>.
 
 Exceptions can be caught and handled locally, i.e., in a lexically enclosing
 `try`-`catch`-`finally` block in the same method (see <<try-catch-finally-stmt>>).

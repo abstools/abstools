@@ -56,7 +56,7 @@ ABS offers the following built-in datatypes:
  | `String`        | Strings                     | `"Hello world\n"`         | <<type-string>>
  | `Fut<A>`        | Futures                     | --                        | <<type-future>>
  | `Destiny`       | Supertype of all futures    | --                        | <<type-destiny>>
- | `Exception`     | Exceptions                  | `DivisionByZeroException` | <<exception-type>>
+ | `Exception`     | Exceptions                  | `DivisionByZeroException` | <<sec:exception-types>>
  | `List<A>`       | Lists of values of type `A` | `list[1, 2, 3]`           | <<type-list>>
  | `Set<A>`        | Sets of values of type `A`  | `set[True, False]`        | <<type-set>>
  | `Map<A,B>`      | Maps from type `A` to `B`   | `map[Pair(1, True)]`      | <<type-map>>
