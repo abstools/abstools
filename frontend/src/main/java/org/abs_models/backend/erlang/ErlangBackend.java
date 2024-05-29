@@ -161,7 +161,7 @@ public class ErlangBackend extends Main {
 
         Process p = Runtime.getRuntime().exec(compile_command.toArray(new String[0]));
         if (options.contains(CompileOptions.VERBOSE)) IOUtils.copy(p.getInputStream(), System.out);
-        else IOUtils.copy(p.getInputStream(), new NullOutputStream());
+        else IOUtils.copy(p.getInputStream(), NullOutputStream.INSTANCE);
         p.waitFor();
         if (p.exitValue() != 0) {
             String message = "Compilation of generated erlang code failed with exit value " + p.exitValue();

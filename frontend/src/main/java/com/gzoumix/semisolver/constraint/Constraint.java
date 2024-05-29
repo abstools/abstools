@@ -159,7 +159,7 @@ public class Constraint {
 
     if ((t1 != null) && (!t1.hasNull())) {
       if ((t2 != null) && (!t2.hasNull())) {
-        Integer i = new Integer(semiCounter);
+        Integer i = Integer.valueOf(semiCounter);
         semiCounter += 1;
         addEdge(new SemiEdge(info, t1, i, t2));
       } else throw new NullPointerException("Constraint.addSemiEquation: The second term contains a forbidden null pointer");
@@ -290,7 +290,7 @@ public class Constraint {
     Map<EquivClass, Integer> m = new HashMap<EquivClass, Integer>();
     Set<EquivClass> tmp = this.getEquivClass();
     for(EquivClass eq : tmp) { 
-        m.put(eq, new Integer(id)); id += 1; 
+      m.put(eq, Integer.valueOf(id)); id += 1; 
     }
  
     res = res + "  Equivalence Classes = "; 

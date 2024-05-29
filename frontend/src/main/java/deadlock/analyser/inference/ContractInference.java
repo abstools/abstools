@@ -241,7 +241,7 @@ public class ContractInference {
 
         // 2. parameters, result record, and put the resulting Function
         // Interface in the typing environment
-        List<Term> l = new LinkedList();
+        List<Term> l = new LinkedList<>();
         for (ParamDecl pd : decl.getParamList()) {
             TypeUse a = pd.getTypeUse(); // get the type of the parameter
             l.add(expandArgs(a, typeParameterMap));

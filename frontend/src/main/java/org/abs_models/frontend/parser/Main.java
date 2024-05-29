@@ -52,10 +52,10 @@ import org.abs_models.frontend.ast.ProductLine;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.delta.DeltaModellingException;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
-import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeInferenceExtension;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
@@ -625,7 +625,7 @@ public class Main {
     {
 	try {
 	    SyntaxErrorCollector errorlistener = new SyntaxErrorCollector(file);
-	    ANTLRInputStream input = new ANTLRInputStream(reader);
+            CharStream input = CharStreams.fromReader(reader);
 	    ABSLexer lexer = new ABSLexer(input);
 	    lexer.removeErrorListeners();
 	    lexer.addErrorListener(errorlistener);

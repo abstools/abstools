@@ -53,7 +53,7 @@ dependencies {
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0-M2")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
     testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
-    testImplementation 'org.hamcrest:hamcrest-core:2.2'
+    testImplementation 'org.hamcrest:hamcrest:2.2'
 
     jastadd2 'org.jastadd:jastadd:2.3.6'
     antlr 'org.antlr:antlr4:4.13.1'
