@@ -6,7 +6,6 @@ package org.abs_models.frontend.typechecker;
 
 import java.util.*;
 
-import org.abs_models.common.Constants;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticError;
 import org.abs_models.frontend.analyser.SemanticWarning;
@@ -14,8 +13,6 @@ import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.Main;
-import org.abs_models.frontend.parser.SourcePosition;
-import com.google.common.collect.ImmutableSet;
 
 public class TypeCheckerHelper {
 
@@ -23,7 +20,7 @@ public class TypeCheckerHelper {
     // their module (used in DataConstructorExp.typeCheck() defined in
     // TypeChecker.jadd)
     public static Set<String> deprecatedConstructors
-        = ImmutableSet.of("ABS.StdLib.Set", "ABS.StdLib.EmptySet", "ABS.StdLib.Insert",
+        = Set.of("ABS.StdLib.Set", "ABS.StdLib.EmptySet", "ABS.StdLib.Insert",
                           "ABS.StdLib.Map", "ABS.StdLib.EmptyMap", "ABS.StdLib.InsertAssoc");
 
 

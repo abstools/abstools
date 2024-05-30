@@ -1,5 +1,3 @@
-import com.google.common.collect.ImmutableList;
-
 aspect ProgramAbstractionBuilder {
 
     /*******************************************************************************************************

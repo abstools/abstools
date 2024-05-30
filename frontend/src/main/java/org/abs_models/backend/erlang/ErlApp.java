@@ -25,10 +25,8 @@ import org.apache.commons.io.FileUtils;
 
 import org.abs_models.backend.common.CodeStream;
 import org.abs_models.backend.common.InternalBackendException;
-import org.abs_models.common.CompilerUtils;
 import org.abs_models.frontend.analyser.AnnotationHelper;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
@@ -120,7 +118,7 @@ public class ErlApp {
         funMod.clear();
     }
 
-    private static final Set<String> RUNTIME_FILES = ImmutableSet.of(
+    private static final Set<String> RUNTIME_FILES = Set.of(
             "absmodel/src/*",
             "absmodel/include/*",
             "absmodel/_build/default/lib/absmodel/priv/*",
@@ -174,7 +172,7 @@ public class ErlApp {
             "bin/*",
             "link_sources"
             );
-    private static final Set<String> EXEC_FILES = ImmutableSet.of(
+    private static final Set<String> EXEC_FILES = Set.of(
             "bin/rebar3",
             "run",
             "start_console",

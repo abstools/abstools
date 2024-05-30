@@ -107,11 +107,11 @@ aspect SimpleName {
 // qualify node names with the name of the module where they were defined
 aspect QualifiedName {
     public String Decl.getQualifiedName() {
-        return StringUtils.joinNames(moduleName(), getName());
+        return moduleName() + "." + getName();
     }
-    
+
     public String ModuleModifier.getQualifiedName() {
-        return StringUtils.joinNames(getModuleName(), getSimpleName());
+        return getModuleName() + "." + getSimpleName();
     }
 }
 

@@ -4,9 +4,9 @@
  */
 package org.abs_models.common;
 
+import java.util.Arrays;
 import java.util.Collection;
-
-import com.google.common.base.Joiner;
+import java.util.stream.Collectors;
 
 public class StringUtils {
 
@@ -29,22 +29,16 @@ public class StringUtils {
      * Join the given array of names using an arbitrary string j
      */
     public static final String join(String j, String... names) {
-        Joiner joiner = Joiner.on(j).skipNulls();
-        return joiner.join(names);
+        return join(j, Arrays.asList(names));
     }
 
     /**
      * Join the given String Collection using an arbitrary string j
      */
     public static String join(String j, Collection<String> strings) {
-        return join(j, strings.toArray(new String[strings.size()]));
-    }
-
-    /**
-     * Join the given array of names using a dot "."
-     */
-    public static final String joinNames(String... names) {
-        return join(".", names);
+        return strings.stream()
+            .filter(s -> s != null)
+            .collect(Collectors.joining(j));
     }
 
 }

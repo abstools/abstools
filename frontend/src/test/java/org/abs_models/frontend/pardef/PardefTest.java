@@ -3,13 +3,12 @@ package org.abs_models.frontend.pardef;
 import static org.junit.Assert.assertFalse;
 
 import org.abs_models.backend.prettyprint.DefaultABSFormatter;
+import org.abs_models.common.StringUtils;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.FnApp;
 import org.abs_models.frontend.ast.FunctionDecl;
 import org.abs_models.frontend.ast.Model;
-import com.google.common.base.Joiner;
-
 import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +41,7 @@ public abstract class PardefTest extends FrontendTest {
         for (FunctionDecl fun : functions) {
             reversedNames.addFirst(fun.getName());
         }
-        return '[' + Joiner.on(", ").join(reversedNames) + ']';
+        return '[' + StringUtils.join(", ", reversedNames) + ']';
     }
 
     protected final FunctionDecl getFunction(Model model, Pattern regex) {

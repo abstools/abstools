@@ -2,7 +2,7 @@
 import java.io.PrintWriter;
 import org.abs_models.backend.prettyprint.*;
 import java.util.stream.Collectors;
-import com.google.common.collect.Streams;
+import java.util.stream.StreamSupport;
 
 aspect doPrettyPrinter {
 
@@ -818,7 +818,10 @@ aspect doPrettyPrinter {
         stream.print("interface ");
         stream.print(getName());
 	/* Filter `extends ABS.StdLib.Object, ...` by way of streams. */
-	String s = Streams.stream(getExtendedInterfaceUses()).filter(i -> !i.getName().equals(Constants.STDLIB_NAME+".Object")).map(tu -> tu.getName()).collect(Collectors.joining(", "));
+	    String s = StreamSupport.stream(getExtendedInterfaceUses().spliterator(), false)
+            .filter(i -> !i.getName().equals(Constants.STDLIB_NAME+".Object"))
+            .map(tu -> tu.getName())
+            .collect(Collectors.joining(", "));
         if (s.length() > 0) {
             stream.print(" extends ");
             stream.print(s);

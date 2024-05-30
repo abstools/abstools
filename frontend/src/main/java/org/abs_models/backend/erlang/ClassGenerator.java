@@ -3,8 +3,8 @@
  */
 package org.abs_models.backend.erlang;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,7 +24,6 @@ import org.abs_models.frontend.ast.ParamDecl;
 import org.abs_models.frontend.ast.TypedVarOrFieldDecl;
 import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.Type;
-import org.apache.commons.io.output.WriterOutputStream;
 
 /**
  * Generates the Erlang module for one class
@@ -155,8 +154,8 @@ public class ClassGenerator {
             java.util.List<String> branches = new java.util.LinkedList<>();
             for (CaseBranchStmt b : classDecl.getRecoverBranchs()) {
                 Vars v = vars.pass();
-                StringWriter sw = new StringWriter();
-                CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),"");
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                CodeStream buffer = new CodeStream(out,"");
                 b.getLeft().generateErlangCode(ecs, buffer, v);
                 buffer.setIndent(ecs.getIndent());
                 buffer.println("->");
@@ -167,7 +166,7 @@ public class ClassGenerator {
                 buffer.decIndent();
                 buffer.close();
                 branches_vars.add(v);
-                branches.add(sw.toString());
+                branches.add(out.toString(StandardCharsets.UTF_8));
                 vars.updateTemp(v);
             }
             ErlUtil.functionHeader(ecs, "recover", ErlUtil.Mask.none, generatorClassMatcher(), "Exception");

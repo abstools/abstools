@@ -20,8 +20,6 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.Optional;
 
-import com.google.common.io.Files;
-
 import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.common.InternalBackendException;

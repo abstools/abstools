@@ -12,15 +12,13 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
-import com.google.common.base.Strings;
-
 import org.abs_models.backend.java.JavaBackend;
 
 public class JavaCodeStream extends PrintStream {
 
     private static final String LINE_SEPARATOR_PROPERTY = "line.separator";
     private static final int INDENT_LENGTH = 4;
-    private static final String INDENT1 = Strings.repeat(" ", INDENT_LENGTH);
+    private static final String INDENT1 = "".repeat(INDENT_LENGTH);
 
     private Boolean startNewLine = true;
     private String indent = "";

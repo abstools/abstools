@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Strings;
-
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.DeltaDecl;
 import org.abs_models.frontend.ast.Product;
@@ -144,7 +142,7 @@ public class DeltaTrie {
         }
 
         protected void traversePreorder(StringBuilder s, int level) {
-            s.append(Strings.repeat("|   ", level));
+            s.append("|   ".repeat(level));
             s.append("|---");
             s.append(getDeltaID() + (isValidProduct() ? "\u2713" : "") + "\n");
             for (Node child : getChildren().values())

@@ -12,9 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.google.common.annotations.VisibleForTesting;
 
 import org.abs_models.Absc;
@@ -22,7 +19,6 @@ import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 

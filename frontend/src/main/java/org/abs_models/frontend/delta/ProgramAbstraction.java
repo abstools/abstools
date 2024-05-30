@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.google.common.collect.ImmutableList;
-
 import org.abs_models.common.StringUtils;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticConditionList;
@@ -136,7 +134,7 @@ public class ProgramAbstraction {
     }
 
     public void classFieldAdd(String className, String name, String type) {
-        classes.get(className).get("fields").put(name, ImmutableList.of(type));
+        classes.get(className).get("fields").put(name, java.util.List.of(type));
     }
 
     public void classFieldRemove(String className, RemoveFieldModifier node) {
@@ -193,7 +191,7 @@ public class ProgramAbstraction {
                     // TODO add " at file:line" with location of original definition
                     ""));
         else
-            classes.get(className).get("interfaces").put(name, ImmutableList.<String>of());
+            classes.get(className).get("interfaces").put(name, java.util.List.<String>of());
     }
 
     public void classInterfaceRemove(String className, InterfaceTypeUse node) {
@@ -298,7 +296,7 @@ public class ProgramAbstraction {
         for (ParamDecl par : sig.getParams()) {
             types.add(par.getTypeUse().toString());
         }
-        return ImmutableList.copyOf(types);
+        return java.util.List.copyOf(types);
     }
 
     public static String getVarType(TypedVarOrFieldDecl var) {

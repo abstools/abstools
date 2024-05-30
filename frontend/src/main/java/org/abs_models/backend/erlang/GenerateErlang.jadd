@@ -12,11 +12,8 @@ import java.util.EnumSet;
 
 import org.abs_models.backend.erlang.ErlUtil.Mask;
 import org.abs_models.backend.erlang.ErlangBackend.CompileOptions;
-import org.apache.commons.io.output.WriterOutputStream;
 import java.nio.charset.StandardCharsets;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+
 aspect GenerateErlang {
 
     public boolean Model.generate_erlang_coverage = false;
@@ -70,21 +67,20 @@ aspect GenerateErlang {
   }
 
   private final static Map<String, String> FunctionDecl.ERLANG_OVERRIDES
-      =ImmutableMap.<String, String>builder()
-      .put("ABS.StdLib.length", "'f_length'(_, V_list, _) -> length(V_list).")
-      .put("ABS.StdLib.isEmpty", "'f_isEmpty'(_, V_list, _) -> V_list == [].")
-      .put("ABS.StdLib.nth", "'f_nth'(_, V_list, N, _) -> try\n"
-           // Erlang nth is 1-based, abs nth is zero-based
-           + "    lists:nth(N + 1, V_list)\n"
-           // it will be a `function_clause' going beyond the end of `V_list'
-           + "  catch _:_ -> exit(dataPatternMatchFailException)\n"
-           + "end.")
-      .put("ABS.StdLib.concatenate", "'f_concatenate'(_, V_list1, V_list2, _) ->  V_list1 ++ V_list2.")
-      .put("ABS.StdLib.appendright", "'f_appendright'(_, V_list, V_p, _) ->  V_list ++ [V_p].")
-      .put("ABS.StdLib.reverse", "'f_reverse'(_, V_list, _) ->  lists:reverse(V_list).")
-      .put("ABS.StdLib.copy", "'f_copy'(_, V_p, N, _) ->  lists:duplicate(N, V_p).")
-      .put("ABS.StdLib.without", "'f_without'(_, V_list, V_p, _) -> lists:filter(fun (X) -> not cmp:eq(X, V_p) end, V_list).")
-      .build();
+      = Map.ofEntries(
+          Map.entry("ABS.StdLib.length", "'f_length'(_, V_list, _) -> length(V_list)."),
+          Map.entry("ABS.StdLib.isEmpty", "'f_isEmpty'(_, V_list, _) -> V_list == []."),
+          Map.entry("ABS.StdLib.nth", "'f_nth'(_, V_list, N, _) -> try\n"
+                                      // Erlang nth is 1-based, abs nth is zero-based
+                                      + "    lists:nth(N + 1, V_list)\n"
+                                      // it will be a `function_clause' going beyond the end of `V_list'
+                                      + "  catch _:_ -> exit(dataPatternMatchFailException)\n"
+                                      + "end."),
+          Map.entry("ABS.StdLib.concatenate", "'f_concatenate'(_, V_list1, V_list2, _) ->  V_list1 ++ V_list2."),
+          Map.entry("ABS.StdLib.appendright", "'f_appendright'(_, V_list, V_p, _) ->  V_list ++ [V_p]."),
+          Map.entry("ABS.StdLib.reverse", "'f_reverse'(_, V_list, _) ->  lists:reverse(V_list)."),
+          Map.entry("ABS.StdLib.copy", "'f_copy'(_, V_p, N, _) ->  lists:duplicate(N, V_p)."),
+          Map.entry("ABS.StdLib.without", "'f_without'(_, V_list, V_p, _) -> lists:filter(fun (X) -> not cmp:eq(X, V_p) end, V_list)."));
 
   @Override
   public void FunctionDecl.generateErlangCode(ErlApp ea) throws IOException{
@@ -185,7 +181,7 @@ aspect GenerateErlang {
   }
 
   // These are the builtin functions from the standard library.
-  private final static Set<String> FnApp.ERLANG_BUILTINS=ImmutableSet.of(
+  private final static Set<String> FnApp.ERLANG_BUILTINS=Set.of(
       "ABS.StdLib.currentms", "ABS.StdLib.ms_since_model_start", "ABS.Meta.getProductLine",
       "ABS.StdLib.lowlevelDeadline", "ABS.StdLib.print", "ABS.StdLib.println",
       "ABS.StdLib.random", "ABS.StdLib.strlen", "ABS.StdLib.substr",
@@ -327,15 +323,15 @@ aspect GenerateErlang {
 
   public void VarDecl.generateErlangCode(CodeStream ecs,Vars vars, List<Annotation> annotations) {
     if(getTypeUse() instanceof TypeParameterUse || getTypeUse() instanceof InterfaceTypeUse|| getTypeUse() instanceof DataTypeUse){
-      StringWriter sw = new StringWriter();
-      CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),ecs.getIndent());
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      CodeStream buffer = new CodeStream(out, ecs.getIndent());
       if(hasInitExp()){
         getInitExp().generateErlangCode(buffer,vars);
       } else {
         buffer.print("null");
       }
       buffer.close();
-      ecs.format("put(vars, (get(vars))#{'%s' => %s})",  this.getName(), sw.toString().substring(ecs.getIndent().length()));
+      ecs.format("put(vars, (get(vars))#{'%s' => %s})",  this.getName(), out.toString(StandardCharsets.UTF_8).substring(ecs.getIndent().length()));
       if (getInitExp() instanceof NewExp) {
           PureExp restname = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.StdLib.HTTPName");
           if (restname != null) {
@@ -352,8 +348,8 @@ aspect GenerateErlang {
 
   @Override
   public void AssignStmt.generateErlangCode(CodeStream ecs,Vars vars) {
-    StringWriter sw = new StringWriter();
-    CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),ecs.getIndent());
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    CodeStream buffer = new CodeStream(out, ecs.getIndent());
     String varExp = "";
     getValue().generateErlangCode(buffer,vars);
     buffer.close();
@@ -362,15 +358,15 @@ aspect GenerateErlang {
         VarUse v = (VarUse)getVar();
         if (v.isVarUseContextImperative()) {
             // created by VarDecl or method parameter
-            ecs.format("put(vars, (get(vars))#{'%s' := %s})", v.getName(), sw.toString().substring(ecs.getIndent().length()));
+            ecs.format("put(vars, (get(vars))#{'%s' := %s})", v.getName(), out.toString(StandardCharsets.UTF_8).substring(ecs.getIndent().length()));
         } else {
             // created via let, case, catch
             String varName = vars.inc(v.getName());
-            ecs.format("%s = %s", varName, sw.toString().substring(ecs.getIndent().length()));
+            ecs.format("%s = %s", varName, out.toString(StandardCharsets.UTF_8).substring(ecs.getIndent().length()));
         }
     } else if(getVar() instanceof FieldUse) {
       varExp = "C:get_val_internal(get(this), '"+ getVar().getName() +"')";
-      ecs.format("put(this, C:set_val_internal(get(this), '%s',%s))", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
+      ecs.format("put(this, C:set_val_internal(get(this), '%s',%s))", getVar().getName(),out.toString(StandardCharsets.UTF_8).substring(ecs.getIndent().length()));
     } else {
       throw new NotImplementedYetException(this);
     }
@@ -461,11 +457,11 @@ aspect GenerateErlang {
       PureExp restname = AnnotationHelper.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
       // Need to generate code for right-hand side before creating new
       // variable
-      StringWriter sw = new StringWriter();
-      CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),ecs.getIndent());
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      CodeStream buffer = new CodeStream(out,ecs.getIndent());
       getExp().generateErlangCode(buffer,vars);
       buffer.close();
-      String exp = sw.toString().substring(ecs.getIndent().length());
+      String exp = out.toString(StandardCharsets.UTF_8).substring(ecs.getIndent().length());
       String varName = vars.getTemp();
       ecs.print(varName + " = " + exp);
       if (getExp() instanceof NewExp && restname != null) {
@@ -652,8 +648,8 @@ aspect GenerateErlang {
     //Parse if to case, needs to branch and merge variable scoops
     Vars left=vars.pass();
     Vars right=vars.pass();
-    StringWriter sw = new StringWriter();
-    CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),ecs.getIndent());
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    CodeStream buffer = new CodeStream(out, ecs.getIndent());
     ecs.print("case ");
     getCondition().generateErlangCode(ecs,vars);
     ecs.println(" of");
@@ -664,12 +660,12 @@ aspect GenerateErlang {
       getElse().generateErlangCode(buffer,right);
     else
       buffer.print("ok");
-    java.util.List<String> mergeLines = vars.merge(Lists.newArrayList(left,right));
+    java.util.List<String> mergeLines = vars.merge(new ArrayList(Arrays.asList(left, right)));
     ecs.print(mergeLines.get(0));
     ecs.println(";");
     ecs.print("false -> ");
     buffer.close();
-    ecs.print(sw);
+    ecs.print(out.toString(StandardCharsets.UTF_8));
     ecs.println(mergeLines.get(1));
     ecs.decIndent();
     ecs.print("end");
@@ -908,8 +904,8 @@ aspect GenerateErlang {
       java.util.List<String> branches = new LinkedList<String>();
       for (CaseBranchStmt b : getBranchs()) {
           Vars v = vars.pass();
-          StringWriter sw = new StringWriter();
-          CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),"");
+          ByteArrayOutputStream out = new ByteArrayOutputStream();
+          CodeStream buffer = new CodeStream(out,"");
           b.getLeft().generateErlangCode(ecs, buffer, v);
           buffer.setIndent(ecs.getIndent());
           buffer.println("->");
@@ -918,7 +914,7 @@ aspect GenerateErlang {
           buffer.decIndent().decIndent();
           buffer.close();
           branches_vars.add(v);
-          branches.add(sw.toString());
+          branches.add(out.toString(StandardCharsets.UTF_8));
           vars.updateTemp(v);
       }
       ecs.print("case ");
@@ -954,8 +950,8 @@ aspect GenerateErlang {
       ecs.incIndent();
       for (CaseBranchStmt b : getCatchs()) {
           Vars v = vars.pass();
-          StringWriter sw = new StringWriter();
-          CodeStream buffer = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),"");
+          ByteArrayOutputStream out = new ByteArrayOutputStream();
+          CodeStream buffer = new CodeStream(out,"");
           buffer.print("_:");
           b.getLeft().generateErlangCode(ecs, buffer, v);
           buffer.setIndent(ecs.getIndent());
@@ -965,7 +961,7 @@ aspect GenerateErlang {
           buffer.decIndent();
           buffer.close();
           branches_vars.add(v);
-          branches.add(sw.toString());
+          branches.add(out.toString(StandardCharsets.UTF_8));
           vars.updateTemp(v);
       }
       // Now print statements and mergelines for each branch.
@@ -997,8 +993,8 @@ aspect GenerateErlang {
     //Needs this external stream
     external.println("begin");
     external.incIndent();
-    StringWriter sw = new StringWriter();
-    CodeStream ecs = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8),"");
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    CodeStream ecs = new CodeStream(out,"");
     ecs.print("case ");
     ecs.setIndent(external.getIndent());
     getExpr().generateErlangCode(ecs, vars);
@@ -1028,7 +1024,7 @@ aspect GenerateErlang {
     ecs.decIndent();
     ecs.print("end");
     ecs.close();
-    external.println(sw.toString());
+    external.println(out.toString(StandardCharsets.UTF_8));
     external.decIndent();
     external.print("end");
   }
@@ -1150,8 +1146,8 @@ aspect GenerateErlang {
     ecs.print(")");
   }
   public void AwaitStmt.generateErlangCode(CodeStream ecs,Vars vars){
-    StringWriter sw = new StringWriter();
-    CodeStream after = new CodeStream(new WriterOutputStream(sw, StandardCharsets.UTF_8), "");
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    CodeStream after = new CodeStream(out, "");
     if(getGuard().hasPoll()){
         String fieldNames = getGuard().getFields().fields.stream()
             .map(gf -> String.format("object:field_with_oid(%s, Oid)", gf.getName()))
@@ -1163,7 +1159,7 @@ aspect GenerateErlang {
       ecs.println("put(vars, Vars),");
       ecs.pf("ReadSet=[%s],", fieldNames);
       ecs.println("Result=try");
-      ecs.incIndent().pf("%s", sw);
+      ecs.incIndent().pf("%s", out.toString(StandardCharsets.UTF_8));
       ecs.decIndent().println("catch");
       ecs.incIndent().println("_:Exception -> {crashed, Exception}");
       ecs.println("%% Exception will be re-thrown manually below");

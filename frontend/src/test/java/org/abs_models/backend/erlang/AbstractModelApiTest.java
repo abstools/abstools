@@ -20,8 +20,6 @@ import java.util.stream.Collectors;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-import com.google.common.io.Files;
-
 import org.abs_models.ABSTest;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.WrongProgramArgumentException;

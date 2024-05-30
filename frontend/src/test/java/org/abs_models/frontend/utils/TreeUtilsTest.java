@@ -14,8 +14,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.collect.ImmutableList;
-
 import org.abs_models.common.TreeUtilsHelper;
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.ast.ASTNode;
@@ -108,7 +106,7 @@ public class TreeUtilsTest extends FrontendTest {
         Integer i = 1;
         Double d = 0.0;
 
-        Function<Object, Number> numberCast = TreeUtilsHelper.cast(ImmutableList.of(Integer.class, Double.class));
+        Function<Object, Number> numberCast = TreeUtilsHelper.cast(List.of(Integer.class, Double.class));
         assertNull(numberCast.apply(s));
         assertSame(i, numberCast.apply(i));
         assertSame(d, numberCast.apply(d));
@@ -119,7 +117,7 @@ public class TreeUtilsTest extends FrontendTest {
         Integer i = 1;
         Double d = 0.0;
 
-        Predicate<Number> numberPredicate = TreeUtilsHelper.recurse(ImmutableList.of(Double.class));
+        Predicate<Number> numberPredicate = TreeUtilsHelper.recurse(List.of(Double.class));
         assertTrue(numberPredicate.test(d));
         assertFalse(numberPredicate.test(i));
     }
@@ -131,7 +129,7 @@ public class TreeUtilsTest extends FrontendTest {
         assertEquals("test", functionDecl.getName());
         FunctionDef def = functionDecl.getFunctionDef();
 
-        Stream<PureExp> children = def.findChildren(cast(ImmutableList.of(FnApp.class, IntLiteral.class)), n -> true);
+        Stream<PureExp> children = def.findChildren(cast(List.of(FnApp.class, IntLiteral.class)), n -> true);
         assertNotNull(children);
         List<PureExp> result = children.distinct().collect(Collectors.toList());
         assertEquals(2, result.size());
