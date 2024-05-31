@@ -1007,6 +1007,17 @@ The function `fromJust` returns the wrapped value of a `Maybe`.  It is an error 
 def A fromJust<A>(Maybe<A> m);
 ----
 
+.fromJustDefault
+
+The function `fromJustDefault` returns the wrapped value of the first
+argument, or the second argument if the first argument is `Nothing`.
+
+[source]
+----
+def A fromJustDefault<A>(Maybe<A> m, A default);
+----
+
+
 [[stdlib-others]]
 === Others
 

@@ -1480,10 +1480,6 @@ type ClientId = Int;
 // For Java method com.fredhopper.replication.server.item.SearchReplicationDirectory.isValid(String, long)
 type CheckPoint = Int;
 
-// Function on Maybe
-def A fromJustDefault<A>(Maybe<A> m, A a) =
-	case m { Just(j) => j; Nothing => a; };
-
 // Functions on set of pairs
 def Set<A> fsts<A, B>(Set<Pair<A, B>> ps) =
   case takeMaybe(ps) {

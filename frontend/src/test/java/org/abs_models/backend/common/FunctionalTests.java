@@ -178,6 +178,12 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void testMaybeDefaultDataType() throws Exception {
+        assertEvalTrue("{ Bool testresult = fromJustDefault(Nothing, 1) == 1 && fromJustDefault(Just(2), 1) == 2; }");
+    }
+
+
+    @Test
     public void dataTypeSelector() throws Exception {
         assertEvalTrue("data Foo = Bar(Bool isTrue); " +
         		"{ Bool testresult = False; " +

@@ -20,7 +20,7 @@ export sqrt, log, exp;
 export numerator, denominator;
 
 // Basic utility datatypes
-export Maybe, Nothing, Just, isJust, fromJust;
+export Maybe, Nothing, Just, isJust, fromJust, fromJustDefault;
 export Either, Left, Right, left, right, isLeft, isRight;
 export Pair, fst, snd;
 export Triple, fstT, sndT, trdT, trd;
@@ -169,18 +169,21 @@ def Int denominator(Rat a) = builtin;
 
 data Maybe<A> = Nothing | Just(A fromJust);
 
-def Bool isJust<A>(Maybe<A> a) = 
+def Bool isJust<A>(Maybe<A> a) =
     case a { Just(j) => True; Nothing => False; };
+
+def A fromJustDefault<A>(Maybe<A> m, A default) =
+    case m { Just(j) => j | Nothing => default };
 
 data Either<A, B> = Left(A left) | Right(B right);
 
-def Bool isLeft<A,B>(Either<A, B> val) = 
+def Bool isLeft<A,B>(Either<A, B> val) =
     case val { Left(x) => True; _ => False; };
-    
+
 def Bool isRight<A,B>(Either<A, B> val) = !isLeft(val);
 
 
-data Pair<A, B> = Pair(A fst, B snd); 
+data Pair<A, B> = Pair(A fst, B snd);
 
 data Triple<A, B, C> = Triple(A fstT, B sndT, C trdT);
 
@@ -197,10 +200,10 @@ def C trd<A, B, C>(Triple<A, B, C> t) = case t {
 data Set<A> = EmptySet | Insert(A, Set<A>);
 
 // set constructor helper
-def Set<A> set<A>(List<A> l) = 
-    case l { 
-       Nil => EmptySet; 
-       Cons(x,xs) => insertElement(set(xs), x); 
+def Set<A> set<A>(List<A> l) =
+    case l {
+       Nil => EmptySet;
+       Cons(x,xs) => insertElement(set(xs), x);
     };
 
 /**
@@ -212,19 +215,19 @@ def Bool contains<A>(Set<A> ss, A e) =
     Insert(e, _) => True;
     Insert(x, xs) => when x > e then False else contains(xs, e);
   };
-  
+
 /**
  * Returns True if set 'xs' is empty, False  otherwise.
  */
-def Bool emptySet<A>(Set<A> xs) = (xs == EmptySet); 
+def Bool emptySet<A>(Set<A> xs) = (xs == EmptySet);
 
 /**
  * Returns the size of set 'xs'.
  */
-def Int size<A>(Set<A> xs) = 
+def Int size<A>(Set<A> xs) =
    case xs {
-      EmptySet => 0 ; 
-      Insert(s, ss) => 1 + size(ss); 
+      EmptySet => 0 ;
+      Insert(s, ss) => 1 + size(ss);
    };
 
 /**
@@ -250,7 +253,7 @@ def Set<A> union<A>(Set<A> set1, Set<A> set2) =
             then Insert(e1, union(ss1, set2))
             else Insert(e2, union(set1, ss2));
       };
-   }; 
+   };
 
 /**
  * Returns the intersection of sets 'set1' and 'set2'.
@@ -310,7 +313,7 @@ def Set<A> insertElement<A>(Set<A> xs, A e) =
 /**
  * Returns a set with all elements of set 'xs' except element 'e'.
  */
-def Set<A> remove<A>(Set<A> xs, A e) = 
+def Set<A> remove<A>(Set<A> xs, A e) =
   case xs {
      EmptySet => EmptySet ;
      Insert(e, ss) => ss;
@@ -339,12 +342,12 @@ def Maybe<A> takeMaybe<A>(Set<A> ss) =
 
 
 // checks whether the input set has more elements to be iterated.
-def Bool hasNext<A>(Set<A> s) = ! emptySet(s); 
+def Bool hasNext<A>(Set<A> s) = ! emptySet(s);
 
 // Partial function to iterate over a set.
-def Pair<Set<A>,A> next<A>(Set<A> s) = 
-   case s { 
-      Insert(e, set2) => Pair(set2,e); 
+def Pair<Set<A>,A> next<A>(Set<A> s) =
+   case s {
+      Insert(e, set2) => Pair(set2,e);
    };
 
 // Lists
@@ -355,10 +358,10 @@ def List<A> list<A>(List<A> l) = l; // list constructor helper
 /**
  * Returns the length of list 'list'.
  */
-def Int length<A>(List<A> list) = 
-   case list { 
-      Nil => 0 ; 
-      Cons(p, l) => 1 + length(l) ; 
+def Int length<A>(List<A> list) =
+   case list {
+      Nil => 0 ;
+      Cons(p, l) => 1 + length(l) ;
    };
 
 /**
@@ -369,12 +372,12 @@ def Bool isEmpty<A>(List<A> list) = list == Nil;
 /**
  * Returns element 'n' of list 'list'.
  */
-def A nth<A>(List<A> list, Int n) = 
-  case n { 
-    0 => head(list) ; 
-    _ => nth(tail(list), n-1); 
+def A nth<A>(List<A> list, Int n) =
+  case n {
+    0 => head(list) ;
+    _ => nth(tail(list), n-1);
   };
-  
+
 /**
  * Returns a list where all occurrences of a have been removed
  */
@@ -383,37 +386,37 @@ def List<A> without<A>(List<A> list, A a) =
      Nil => Nil;
      Cons(a, tail) => without(tail,a);
      Cons(x, tail) => Cons(x, without(tail,a));
-  };  
-  
+  };
+
 /**
  * Returns a list containing all elements of list 'list1'
  * followed by all elements of list 'list2'.
  */
 def List<A> concatenate<A>(List<A> list1, List<A> list2) =
-  case list1 { 
-    Nil => list2 ; 
-    Cons(head, tail) =>  Cons(head, concatenate(tail, list2)); 
+  case list1 {
+    Nil => list2 ;
+    Cons(head, tail) =>  Cons(head, concatenate(tail, list2));
   };
-  
+
 /**
  * Returns a list containing all elements of list 'list' followed by 'p'.
  */
-def List<A> appendright<A>(List<A> list, A p) = 
+def List<A> appendright<A>(List<A> list, A p) =
     concatenate(list, Cons(p, Nil));
 
 /**
  * Returns a list containing all elements of 'list' in reverse order.
  */
 def List<A> reverse<A>(List<A> list) =
-  case list { 
-     Cons(hd, tl) => appendright(reverse(tl), hd); 
-     Nil => Nil; 
+  case list {
+     Cons(hd, tl) => appendright(reverse(tl), hd);
+     Nil => Nil;
   };
-  
+
 /**
  * Returns a list of length 'n' containing 'p' n times.
  */
-def List<A> copy<A>(A p, Int n) = 
+def List<A> copy<A>(A p, Int n) =
    case n { 0 => Nil; m => Cons(p,copy(p,m-1)); };
 
 
@@ -423,9 +426,9 @@ def List<A> copy<A>(A p, Int n) =
 data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
  // map constructor helper (does not preserve injectivity)
 def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
-  case l { 
-     Nil => EmptyMap; 
-     Cons(hd, tl) => InsertAssoc(hd, map(tl)); 
+  case l {
+     Nil => EmptyMap;
+     Cons(hd, tl) => InsertAssoc(hd, map(tl));
   };
 
 /**
@@ -435,11 +438,11 @@ def Bool emptyMap<A, B>(Map<A, B> map) = (map == EmptyMap);
 
 def Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
   case map {
-  	EmptyMap => map;
+        EmptyMap => map;
     InsertAssoc(Pair(key, _), m) => m;
     InsertAssoc(pair, tail) => InsertAssoc(pair, removeKey(tail, key));
   };
-    
+
 
 def List<B> values<A, B>(Map<A, B> map) =
   case map {
@@ -451,9 +454,9 @@ def List<B> values<A, B>(Map<A, B> map) =
  * Returns a set containing all keys of map 'map'.
  */
 def Set<A> keys<A, B>(Map<A, B> map) =
-  case map { 
+  case map {
     EmptyMap => EmptySet ;
-    InsertAssoc(Pair(a, _), tail) => insertElement(keys(tail), a); 
+    InsertAssoc(Pair(a, _), tail) => insertElement(keys(tail), a);
   };
 
 /**
@@ -486,7 +489,7 @@ def Maybe<B> lookupMaybe<A, B>(Map<A, B> ms, A k) = lookup(ms, k);
  */
 def B lookupUnsafe<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   fromJust(lookup(ms,k));
-  
+
 /**
  * Returns the value associated with key 'k' in map 'ms', or the value 'd'
  * if 'k' has no entry in 'ms'.
@@ -507,7 +510,7 @@ def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
 /**
  * Returns a map with all entries of 'ms' plus an entry mapping 'k' to 'v',
  * minus the first entry already mapping 'k' to a value.
- */  
+ */
 def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) =
   case ms {
     EmptyMap => InsertAssoc(Pair(k, v),EmptyMap);
@@ -527,10 +530,10 @@ def String intToString(Int n) = toString(n);
 /**
  * Returns a substring of string str of the given length starting from start (inclusive)
  * Where the first character has index 0
- * 
+ *
  * Example:
  *    substr("abcde",1,3) => "bcd"
- *     
+ *
  */
 def String substr(String str, Int start, Int length) = builtin;
 
@@ -567,7 +570,7 @@ def Bool timeLessThan(Time t1, Time t2) = // TODO: remove this, use <
   timeValue(t1) < timeValue(t2);
 
 data Duration = Duration(Rat durationValue) | InfDuration;
-def Bool isDurationInfinite(Duration d) = 
+def Bool isDurationInfinite(Duration d) =
   case d { Duration(_) => False; InfDuration => True; };
 
 def Time addDuration(Time t, Duration d) =
@@ -579,7 +582,7 @@ def Time subtractDuration(Time t, Duration d) =
 def Bool durationLessThan(Duration d1, Duration d2) =
   case d1 {
       Duration(v1) => case d2 {
-          Duration(v2) => v1 < v2; 
+          Duration(v2) => v1 < v2;
           InfDuration => True; };
       // If d1 and d2 are infinite, this function is not antisymmetric
       InfDuration => False;
@@ -612,14 +615,14 @@ type Critical = Bool;
  * Annotation data type to define the type of annotations
  * currently only TypeAnnotation exists
  */
-data Annotation = TypeAnnotation; 
- 
+data Annotation = TypeAnnotation;
+
 [TypeAnnotation]
 data LocationType = Far | Near | Somewhere | Infer;
 
 [TypeAnnotation]
 data NullableType = Nonnull | Nullable;
- 
+
 /**
  * Can be used to annotated classes and to ensure that
  * classes are always instantiated in the right way.
@@ -662,8 +665,8 @@ def List<B> map<A, B>(f)(List<A> list) = case list {
 };
 
 def List<T> filter<T>(predicate)(List<T> list) = case list {
-	Nil => Nil;
-	Cons(x1111111111, xs1111111111) => let (List<T> filtered) = filter(xs1111111111) in when (predicate(x1111111111)) then Cons(x1111111111, filtered) else filtered;
+        Nil => Nil;
+        Cons(x1111111111, xs1111111111) => let (List<T> filtered) = filter(xs1111111111) in when (predicate(x1111111111)) then Cons(x1111111111, filtered) else filtered;
 };
 
 def B foldl<A, B>(f)(List<A> list, B val) = case list {
@@ -714,7 +717,7 @@ import * from ABS.StdLib;
 data Scheduler;
 
 // The Process datatype, passed to custom schedulers.
-// 
+//
 // Pid, Process have no constructor, so this datastructure can't be generated within Abs
 data Pid;
 data Process;
@@ -742,7 +745,7 @@ export *;
 data FLIAnnotation = Foreign;
 
 
-/** 
+/**
  * Deployment components
  * Used to model aspects of hardware configurations and deployment.
  */
@@ -1056,7 +1059,7 @@ implements DeploymentComponentForCloudProvider {
     InfRat memory = case lookup(initconfig, Memory) {
       Nothing => InfRat; Just(m) => Fin(m); };
     InfRat memorynext = memory;
-    Int paymentInterval = 
+    Int paymentInterval =
         case lookup(initconfig, PaymentInterval) {
             Nothing => 1; Just(n) => truncate(n); };
     Rat costPerInterval = lookupDefault(initconfig, CostPerInterval, 0/1);
@@ -1192,12 +1195,12 @@ implements DeploymentComponentForCloudProvider {
     [Atomic, Readonly] Rat getNumberOfCores() { return numberOfCores; }
 
     // Methods for the Java backend, which cannot easily modify object state
-    // 
+    //
     // Consume CPU in Java backend; return the amount actually consumed.
-    // 
+    //
     // - NOTE: this method is only called from the Java backend during time
     //   advance, where we know there are no concurrent mutators.
-    // 
+    //
     // - NOTE: for the time being, we only implement Speed (CPU) resource
     //   consumption here so we don't have to mirror the Resource datatype
     //   Java-side.
@@ -1259,7 +1262,7 @@ type CogLocation = String;
 
 /**
  * The ABS.SmartDeploy Module contains the data definitions for the annotations
-   and interfaces used by the tool that generates automatically the Main block 
+   and interfaces used by the tool that generates automatically the Main block
  */
 module ABS.SmartDeploy;
 export *;
@@ -1269,16 +1272,16 @@ import * from ABS.StdLib;
 // These are now deprecated
 data DeployParamSpecification = Req | List(Int) | Default(String) | User | OptList(String) ;
 data DeployScenarioElement = MaxUse(Int) |
-	Cost(String, Int) |
-	Param(String, DeployParamSpecification) |
-	Name(String);
+        Cost(String, Int) |
+        Param(String, DeployParamSpecification) |
+        Name(String);
 type Deploy = List<DeployScenarioElement> ;
 
 
 // definition for the annotation used to define a SmartDeploy task. The string
 // is intended to be a json object
 type SmartDeploy = String;
-// definition for the annotation used to define the cloud provider for 
+// definition for the annotation used to define the cloud provider for
 // SmartDeploy task. The string is intended to be a json object
 type SmartDeployCloudProvider = String;
 // definition for the annotation used to define a DeployCost task. The string
@@ -1318,12 +1321,12 @@ interface ObjectMirror {
     String getClassName();
     [Nullable] Class getClass();
     Unit setClass([Nullable] Class c);
-    
+
     [Nullable] Object getFieldValue();
     Unit setFieldValue([Nullable] Object val);
     [Atomic, Nullable] Cog getCog();
     Unit setCog([Nullable] Cog c);
-    
+
     Bool respondsTo(String name);
 //    Object send(Method m, List<T>);
 }
