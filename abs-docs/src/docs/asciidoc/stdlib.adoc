@@ -895,6 +895,29 @@ contain an entry with key `k`.
 def B lookupUnsafe<A, B>(Map<A, B> ms, A k);
 ----
 
+.lookupReverse
+
+If there is an entry `k,v` in the map, return its key `Just(k)`.
+Otherwise, return `Nothing`.
+
+[source]
+----
+def Maybe<A> lookupReverse<A, B>(Map<A, B> ms, B v);
+----
+
+.lookupReverseDefault
+
+If there is an entry `k,v` in the map, return its key `Just(k)`.
+Otherwise, return the value `d`.
+
+[source]
+----
+def A lookupReverseDefault<A, B>(Map<A, B> ms, B v, A d);
+----
+
+NOTE: If you need to know whether the map contains an entry with value
+`v`, use the function `lookupReverse` instead.
+
 
 .insert
 

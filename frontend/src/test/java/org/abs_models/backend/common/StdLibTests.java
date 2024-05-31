@@ -81,8 +81,23 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
-    public void mapLookup() throws Exception {
+    public void mapLookup1() throws Exception {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookup(map, 3) == Just(300); }");
+    }
+
+    @Test
+    public void mapLookup2() throws Exception {
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookup(map, 5) == Nothing; }");
+    }
+
+    @Test
+    public void mapReverseLookup1() throws Exception {
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookupReverse(map, 300) == Just(3); }");
+    }
+
+    @Test
+    public void mapReverseLookup2() throws Exception {
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookupReverse(map, 500) == Nothing; }");
     }
 
     @Test
@@ -94,6 +109,17 @@ public class StdLibTests extends SemanticTests {
     public void mapLookupDefault2() throws Exception {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookupDefault(map, 5, -1) == -1; }");
     }
+
+    @Test
+    public void mapReverseLookupDefault1() throws Exception {
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookupReverseDefault(map, 300, -1) == 3; }");
+    }
+
+    @Test
+    public void mapReverseLookupDefault2() throws Exception {
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookupReverseDefault(map, 500, -1) == -1; }");
+    }
+
 
     @Test
     public void mapPut1() throws Exception {

@@ -39,7 +39,8 @@ export length, isEmpty, nth, without, concatenate, appendright, reverse, copy;
 export Map, EmptyMap, InsertAssoc, map; // TODO: don't export EmptyMap, InsertAssoc
 
 export emptyMap, removeKey, values, keys, entries,
-  lookup, lookupMaybe, lookupUnsafe, lookupDefault, insert, put;
+    lookup, lookupMaybe, lookupUnsafe, lookupDefault, insert, put,
+    lookupReverse, lookupReverseDefault;
 
 // String functions
 export toString, intToString, substr, strlen;
@@ -500,6 +501,28 @@ def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
      InsertAssoc(_, tm) => lookupDefault(tm, k, d);
      EmptyMap => d;
   };
+
+/**
+ * Returns the key associated with 'value' in map 'ms', or 'Nothing'.
+ */
+def Maybe<A> lookupReverse<A, B>(Map<A, B> ms, B value) =
+    case ms {
+        InsertAssoc(Pair(key, value), _) => Just(key)
+      | InsertAssoc(_, tm) => lookupReverse(tm, value)
+      | EmptyMap => Nothing;
+  };
+
+/**
+ * Returns the key associated with 'value' in map 'ms', or 'default'
+ * if there is no entry with 'value'.
+ */
+def A lookupReverseDefault<A, B>(Map<A, B> ms, B value, A default) =
+  case ms {
+        InsertAssoc(Pair(key, value), _) => key
+     | InsertAssoc(_, tm) => lookupReverseDefault(tm, value, default)
+     | EmptyMap => default
+  };
+
 
 /**
  * Returns a map with all entries of 'map' plus an entry 'p',

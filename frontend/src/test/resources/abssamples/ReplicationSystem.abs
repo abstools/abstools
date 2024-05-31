@@ -1502,16 +1502,6 @@ def Bool isAppendCommand(Command c) =
 		_ => False;
 	};
 
-def Maybe<Int> hasValue(Map<Int,Command> m, Command b) =
-	case m {
-		EmptyMap => Nothing ;
-    	InsertAssoc(Pair(x,y), tail) =>
-    		case y == b {
-    			True => Just(x);
-    			False => hasValue(tail,b);
-    		};
-	};
-
 def Map<Int,Command> commandMap() =
 	map [
 		Pair(200,ContinueFile),
@@ -1525,7 +1515,7 @@ def Map<Int,Command> commandMap() =
 
 // convert a command to its corresponding integer	
 def Int cmdToint(Command command) = 
-	fromJust(hasValue(commandMap(),command));
+        fromJust(lookupReverse(commandMap(),command));
 
 // convert an integer to its corresponding command
 def Command intTocmd(Int i) = lookupUnsafe(commandMap(),i);
