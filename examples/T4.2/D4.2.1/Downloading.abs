@@ -23,9 +23,9 @@ interface Server {
 }
 
 class Server(Set<Chunk> chunks) implements Server {
-    Map<Handset, Int> bandwidths = EmptyMap;
-    Map<Handset, Set<Chunk>> tosend = EmptyMap;
-    
+    Map<Handset, Int> bandwidths = map[];
+    Map<Handset, Set<Chunk>> tosend = map[];
+
     Unit notifyBandwidth(Handset handset, Int bandwidth) {
         bandwidths = put(bandwidths, handset, bandwidth);
         if (!(contains(keys(tosend), handset))) {
@@ -35,8 +35,8 @@ class Server(Set<Chunk> chunks) implements Server {
     }
 
     Unit handle(Handset handset) {
-        Set<Chunk> chunks = lookupDefault(tosend, handset, EmptySet);
-        while (chunks != EmptySet) {
+        Set<Chunk> chunks = lookupDefault(tosend, handset, set[]);
+        while (!emptySet(chunks)) {
             // TODO: look up bandwidth, choose right chunk to send
             Chunk chunk = take(chunks);
             await handset!receiveChunk(chunk);
