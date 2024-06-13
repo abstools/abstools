@@ -7,9 +7,9 @@ EOF
 WORKDIR /abs-models.org
 RUN hugo -e collaboratory
 
-FROM erlang:25-alpine AS jdk-erlang
+FROM erlang:26-alpine AS jdk-erlang
 RUN <<EOF
-apk --update add bash nss openjdk11-jdk gcc libc-dev git
+apk --update add bash nss openjdk21-jdk gcc libc-dev git
 rm -rf /var/cache/apk/*
 EOF
 

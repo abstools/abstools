@@ -50,7 +50,7 @@ manual:				## Build the ABS manual
 	@echo "PDF: abs-docs/build/asciidoc/pdf/index.pdf"
 
 docker:				## Build docker images for collaboratory and absc
-	$(DOCKER) pull erlang:25-alpine
+	$(DOCKER) pull erlang:26-alpine
 	$(DOCKER) pull php:7.4-apache-buster
 	$(DOCKER) build -t abslang/collaboratory -f docker/collaboratory.Dockerfile $(ROOT_DIR)
 	$(DOCKER) build -t abslang/absc -f docker/absc.Dockerfile $(ROOT_DIR)
@@ -63,7 +63,7 @@ run-collaboratory:		## Run the collaboratory on port 8080
 server:				## Deploy development environment on Debian-based server
 	@:$(call check_defined, SERVER, server name or address as accepted by ssh)
 	ssh $(SERVER) sudo apt-get -y update
-	ssh $(SERVER) sudo apt-get -y install make openjdk-11-jdk openjdk-11-jre erlang maude emacs git
+	ssh $(SERVER) sudo apt-get -y install make openjdk-21-jdk openjdk-21-jre erlang maude emacs git
 	ssh $(SERVER) git clone https://github.com/abstools/abstools
 	ssh $(SERVER) make -f "~/abstools/Makefile" frontend
 	ssh $(SERVER) 'echo "PATH=\$$HOME/abstools/frontend/bin/bash:\$$PATH" >> ~/.bashrc'

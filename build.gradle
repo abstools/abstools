@@ -43,6 +43,6 @@ subprojects {
 }
 
 configure(subprojects.findAll { it.getPluginManager().hasPlugin('java') }) {
-    toolchain.languageVersion = JavaLanguageVersion.of(11)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 

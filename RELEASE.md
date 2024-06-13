@@ -1,7 +1,11 @@
-# Release Checklist
+# Release Process
 
-If possible, perform the release using Java 11, since jars generated with
-later versions (e.g., Java 16) cannot be used with earlier versions.
+- If possible, perform the release using the recommended Java version
+  (currently 21), since jars generated with later versions cannot be
+  used with earlier versions.
+
+- Docker image creation might fail on non-Intel machines; use an Intel
+  machine for now.
 
 ## Pre-release checks
 

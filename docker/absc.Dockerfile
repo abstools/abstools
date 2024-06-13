@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.3-labs
-FROM erlang:25-alpine AS jdk-erlang
+FROM erlang:26-alpine AS jdk-erlang
 RUN <<EOF
-apk --update add bash nss openjdk11-jdk gcc libc-dev git
+apk --update add bash nss openjdk21-jdk gcc libc-dev git
 rm -rf /var/cache/apk/*
 EOF
 
@@ -15,28 +15,28 @@ EOF
 
 # A dockerfile for running the `absc` command-line compiler and the analysis
 # tools `apet`, `cofloco`, `costabs`, `maypar`, `pubs` and `syco`.
-# 
+#
 # To build the image, cd to the abstools root directory and run:
-# 
+#
 # : docker build -t abslang/absc -f docker/absc.Dockerfile .
-# 
+#
 # To compile an abs model `file.abs' in the current directory:
-# 
+#
 # : docker run --rm -v "$PWD":/usr/src -w /usr/src abslang/absc:latest --erlang file.abs
-# 
+#
 # To run a compiled abs model:
-# 
+#
 # : docker run --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /usr/src/gen/erl/run abslang/absc
-# 
+#
 # To run a different tool than `absc`, for example `costabs':
-# 
+#
 # : docker run --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /usr/local/bin/costabs abslang/absc:latest file.abs
-# 
+#
 # To get a command-line inside the container for the current directory
 # (e.g., to run a model via `gen/erl/run' inside the container):
-# 
+#
 # : docker run -it --rm -v "$PWD":/usr/src -w /usr/src --entrypoint /bin/sh abslang/absc
-# 
+#
 # Note that if you have installed erlang on the host, you do not need
 # to run the model inside the container, since the compiled files will
 # be in your current directory.
