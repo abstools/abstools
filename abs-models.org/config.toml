@@ -3,7 +3,7 @@ languageCode = "en-us"
 title = "The ABS Modeling Language"
 
 # Change the default theme to be use when building the site with Hugo
-theme = "hugo-theme-learn"
+theme = "hugo-theme-relearn"
 
 [blackfriday]
   # auto-detection of fractions messes up DOIs in the publication page
@@ -11,7 +11,7 @@ theme = "hugo-theme-learn"
 
 # For search functionnality
 [outputs]
-  home = [ "HTML", "RSS", "JSON"]
+  home = [ "html", "rss", "search", "searchpage" ]
 
 [params]
   themeVariant = "abs"
