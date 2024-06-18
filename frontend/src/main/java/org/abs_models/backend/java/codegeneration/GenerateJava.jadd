@@ -881,35 +881,24 @@ aspect GenerateJava {
         int i = 0;
         for (CaseBranch b : getBranchs()) {
             String bindingName = "__ABS_binding" + i;
-            stream.print("final " + PatternBinding.class.getName() + " " + bindingName + " = ");
             Pattern pattern = b.getLeft();
+            java.util.List<PatternVar> freeVars = pattern.getFreePatternVars();
+            stream.print("final " + PatternBinding.class.getName() + " " + bindingName + " = ");
             pattern.generateJava(stream);
             stream.println(".match(__ABS_value);");
-            stream.print("if (" + bindingName + " != null) ");
-            stream.println("return new Object() {");
-            stream.print("public " + expType + " execute(");
-            java.util.List<PatternVar> freeVars = pattern.getFreePatternVars();
-            boolean first = true;
-            for (PatternVar var : freeVars) {
-                if (first) first = false;
-                else stream.print(", ");
-                stream.print("final " + JavaBackend.getQualifiedString(var.getType()));
-                stream.print(" " + JavaBackend.getVariableName(var.getVar().getName()));
-            }
-            stream.print(") { return ");
-            b.getRight().generateJava(stream);
-            stream.println("; }");
-            stream.print("}.execute(");
-            first = true;
+            stream.println("if (" + bindingName + " != null) {");
             for (int j = 0; j < freeVars.size(); j++) {
-                if (first) first = false;
-                else stream.print(",");
-                stream.print("(");
-                stream.print(JavaBackend.getQualifiedString(freeVars.get(j).getType()));
-                stream.print(") ");
-                stream.print(bindingName + ".getBinding(" + j + ")");
+                PatternVar var = freeVars.get(j);
+                stream.println("final " + JavaBackend.getQualifiedString(var.getType())
+                               + " " + JavaBackend.getVariableName(var.getVar().getName())
+                               + " = "
+                               + "(" + JavaBackend.getQualifiedString(var.getType()) + ")"
+                               + bindingName + ".getBinding(" + j + ");");
             }
-            stream.println(");");
+            stream.print("return ");
+            b.getRight().generateJava(stream);
+            stream.println(";");
+            stream.println("}");
             i++;
         }
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
