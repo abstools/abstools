@@ -25,17 +25,22 @@ public class Config {
     private final ABSRuntime runtime;
     private final RuntimeOptions options;
 
-    public Config(ABSRuntime runtime, RuntimeOptions options) {
-        this.runtime = runtime;
-        this.options = options;
-        if (options.help.isTrue()) {
-            printHelp();
+    public static Config initRuntimeFromOptions(ABSRuntime runtime, RuntimeOptions options) {
+        Config config = new Config(runtime, options);
+        if (config.options.help.isTrue()) {
+            config.printHelp();
             System.exit(1);
         }
-        configureRuntime();
+        config.configureRuntime();
+        return config;
     }
 
-    public void configureRuntime() {
+    private Config(ABSRuntime runtime, RuntimeOptions options) {
+        this.runtime = runtime;
+        this.options = options;
+    }
+
+    private void configureRuntime() {
         setSimpleOptions();
         loadSystemObserver();
         loadTotalSchedulingStrategy();
@@ -52,7 +57,7 @@ public class Config {
         }
     }
 
-    public void loadSystemObserver() {
+    private void loadSystemObserver() {
         if (options.systemObserver.wasSet()) {
             for (String s : options.systemObserver.stringArrayValue()) {
                 logger.finest(() -> "adding systemobserver " + s);
@@ -61,7 +66,7 @@ public class Config {
         }
     }
 
-    public void setSimpleOptions() {
+    private void setSimpleOptions() {
         runtime.enableDebugging(options.debug.isTrue());
         runtime.terminateOnException(options.terminateOnException.isTrue());
 
@@ -86,10 +91,18 @@ public class Config {
         }
     }
 
-    public void printHelp() {
+    public static String getVersion() {
+        String version = Config.class.getPackage().getImplementationVersion();
+        if (version == null)
+            return "HEAD";
+        else
+            return version;
+    }
+
+    private void printHelp() {
         System.err.println(" ABS Java Backend - Runtime Configuration Options");
         System.err.println(" ================================================");
-        System.err.println(" Toolchain version " + Main.getVersion() + "." + Main.getGitVersion());
+        System.err.println(" Toolchain version " + getVersion());
         System.err.println();
         for (RuntimeOptions.Option o : options.options) {
             if (o.type != RuntimeOptions.OptionType.BOOLEAN) {
@@ -120,7 +133,7 @@ public class Config {
         return null;
     }
 
-    public void loadTotalSchedulingStrategy() {
+    private void loadTotalSchedulingStrategy() {
         if (options.totalScheduler.wasSet()) {
             TotalSchedulingStrategy strat = loadClassByName(TotalSchedulingStrategy.class, options.totalScheduler.stringValue(), runtime.getRandom());
 
@@ -133,7 +146,7 @@ public class Config {
         }
     }
 
-    public void loadTaskSchedulingStrategy() {
+    private void loadTaskSchedulingStrategy() {
         if (options.taskSchedulerStrategy.wasSet()) {
             TaskSchedulingStrategy strat = loadClassByName(TaskSchedulingStrategy.class, options.taskSchedulerStrategy.stringValue());
             if (strat == null) {
@@ -156,7 +169,7 @@ public class Config {
         }
     }
 
-    public void loadGlobalSchedulingStrategy() {
+    private void loadGlobalSchedulingStrategy() {
         if (options.globalScheduler.wasSet()) {
             GlobalSchedulingStrategy strat = loadClassByName(GlobalSchedulingStrategy.class, options.globalScheduler.stringValue());
             if (strat != null)

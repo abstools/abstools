@@ -179,8 +179,8 @@ public class JavaCode {
             Manifest manifest = new Manifest();
             manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
             manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_TITLE, "ABS model");
-            manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH,
-                                             "." + File.pathSeparator + "./absfrontend.jar");
+            manifest.getMainAttributes().put(Attributes.Name.CLASS_PATH, "." + File.pathSeparator + "./absfrontend.jar");
+            manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VERSION, org.abs_models.frontend.parser.Main.getVersion());
             if (hasMainClasses()) {
                 manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, getFirstMainClass());
             }

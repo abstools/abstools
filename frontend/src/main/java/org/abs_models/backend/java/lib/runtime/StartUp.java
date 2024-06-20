@@ -23,7 +23,7 @@ public class StartUp {
             runtime = ABSRuntime.getRuntime();
         }
         ABSRuntime.setRunsInOwnProcess(true);
-        new Config(runtime, options);
+        Config.initRuntimeFromOptions(runtime, options);
         runtime.start(mainClass);
     }
 }

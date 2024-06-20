@@ -225,7 +225,7 @@ public class ABSRuntime {
      * returned by all calls to this method, regardless on which class.
      * Therefore, the first call to this method should be in a place that can
      * decide which class the global runtime should be, typically {@link
-     * StartUp#startup}}.
+     * StartUp#startup}.
      *
      * @return the runtime singleton
      */
