@@ -230,6 +230,9 @@ test {
     maxParallelForks=project.gradle.startParameter.maxWorkerCount
     testLogging.showStandardStreams = true
 
+    // Temporary workaround for old choco-solver-2.1.1
+    jvmArgs '--add-opens', 'java.base/sun.security.action=ALL-UNNAMED'
+
     // Allow dynamic exclusion of tests (based on https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)
     // Usage: gradle test -PexcludeTests='**/ErlangModelApiTests*,**/ErlangExamplesTests*'
     if (project.hasProperty('excludeTests')) {

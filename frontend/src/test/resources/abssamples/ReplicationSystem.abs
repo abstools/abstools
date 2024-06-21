@@ -1692,7 +1692,7 @@ def Set<FileId> getFileIdFromEntries1(FileEntry fe) =
         EmptyMap => set[];
         InsertAssoc(Pair(i,c),fs) =>
             when isFile(c)
-            then insertElement(getFileIdFromEntries1(fs), i);
+            then insertElement(getFileIdFromEntries1(fs), i)
             else union(getFileIdFromEntries(i,dir_entries(c)),getFileIdFromEntries1(fs));
     };
 
