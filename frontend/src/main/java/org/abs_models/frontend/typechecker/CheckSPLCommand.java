@@ -109,7 +109,7 @@ public class CheckSPLCommand implements Callable<Void> {
                     System.out.println("Searching for maximum solutions of "+maximise+" for the feature model...");
                 ChocoSolver s = m.instantiateCSModel();
                 //System.out.print(s.maximiseToInt(product));
-                s.addConstraint(ChocoSolver.eqeq(s.vars.get(maximise), s.maximiseToInt(maximise)));
+                s.addConstraint(ChocoSolver.eqeq(s.getVars().get(maximise), s.maximiseToInt(maximise)));
                 ChocoSolver s1 = m.instantiateCSModel();
                 int i=1;
                 while(s1.solveAgain()) {
@@ -135,7 +135,7 @@ public class CheckSPLCommand implements Callable<Void> {
                         System.out.println("Searching for solution that includes " + solveWithProduct + "...");
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<>();
-                    solveWithDecl.getProduct().getProdConstraints(s.vars, newcs);
+                    solveWithDecl.getProduct().getProdConstraints(s.getVars(), newcs);
                     for (Constraint c: newcs)
                         s.addConstraint(c);
                     System.out.println("checking solution:\n" + s.getSolutionsAsString());
@@ -156,7 +156,7 @@ public class CheckSPLCommand implements Callable<Void> {
                     ChocoSolver s = m.instantiateCSModel();
                     HashSet<Constraint> newcs = new HashSet<>();
                     s.addIntVar("difference", 0, 50);
-                    m.getDiffConstraints(minWithDecl.getProduct(), s.vars, newcs, "difference");
+                    m.getDiffConstraints(minWithDecl.getProduct(), s.getVars(), newcs, "difference");
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: " + s.minimiseToString("difference"));
                 } else {
@@ -170,7 +170,7 @@ public class CheckSPLCommand implements Callable<Void> {
                 ChocoSolver s = m.instantiateCSModel();
                 HashSet<Constraint> newcs = new HashSet<>();
                 s.addIntVar("noOfFeatures", 0, 50);
-                if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
+                if (m.getMaxConstraints(s.getVars(),newcs, "noOfFeatures")) {
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
                 }

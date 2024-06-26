@@ -239,7 +239,7 @@ public class ProductLineAnalysisHelper {
             // Find a solution to the feature model that satisfies the product feature selection
             ChocoSolver s = m.instantiateCSModel();
             HashSet<Constraint> newcs = new HashSet<>();
-            product.getProdConstraints(s.vars, newcs);
+            product.getProdConstraints(s.getVars(), newcs);
             for (Constraint c: newcs)
                 s.addConstraint(c);
 

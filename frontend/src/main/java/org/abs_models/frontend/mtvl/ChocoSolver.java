@@ -32,32 +32,28 @@ import choco.kernel.solver.ContradictionException;
 
 public class ChocoSolver {
 
-    public final CPModel cpmodel;
-    public final CPSolver solver;
-    public boolean solved = false;
-    public boolean newsol = false;
-    public final Map<String, IntegerVariable> vars;
-    public final Map<String, Integer> defaultvals;
-    // private boolean debug = false;
+    private final CPModel cpmodel = new CPModel();
+    private final CPSolver solver = new CPSolver();
+    private boolean solved = false;
+    private boolean newsol = false;
+    private final Map<String, IntegerVariable> vars = new HashMap<>();
+    private final Map<String, Integer> defaultvals = new HashMap<>();
     private List<Constraint> constraints = new ArrayList<>();
-    private Model absmodel = new Model();
-
-    public ChocoSolver() {
-        // Build the model
-        cpmodel = new CPModel();
-        solver = new CPSolver();
-        ChocoLogging.setVerbosity(Verbosity.SILENT);
-        vars = new HashMap<>();
-        defaultvals = new HashMap<>();
-        ChocoLogging.setVerbosity(Verbosity.OFF);
-    }
+    private final Model absmodel;
 
     public ChocoSolver(Model m) {
-        this();
+        absmodel = m;
         if (m.debug)
             ChocoLogging.setVerbosity(Verbosity.DEFAULT);
-        absmodel = m;
+        else
+            ChocoLogging.setVerbosity(Verbosity.OFF);
     }
+
+    /** The variables added to the model.
+     */
+    public Map<String, IntegerVariable> getVars() {
+        return vars;
+    };
 
 
     /**
@@ -82,40 +78,6 @@ public class ChocoSolver {
         // to be solved.
     }
 
-    public void addIntVar(String name, int fromto, boolean from) {
-        IntegerVariable v = Choco.makeIntVar(name);
-        if (from)
-            addConstraint(Choco.geq(v, fromto));
-        else
-            addConstraint(Choco.leq(v, fromto));
-        vars.put(name, v);
-        defaultvals.put(name, fromto);
-        if (absmodel.debug)
-            absmodel.println("  adding Int var '" + name + "' (default -> " + fromto + ")");
-        // m.addVariable(v); // not needed, since v is used in the constraints
-    }
-
-    public void addIntVar(String name, int[] vals) {
-        IntegerVariable v = Choco.makeIntVar(name, vals);
-        vars.put(name, v);
-        defaultvals.put(name, vals[0]); // vals has at least 1 element! (by the
-        // parser constraints)
-        if (absmodel.debug)
-            absmodel.println("  adding Int var '" + name + "' (default -> " + vals[0] + ")");
-        cpmodel.addVariable(v); // needed to include the variable in the constraints
-        // to be solved.
-    }
-
-    public void addIntVar(String name) {
-        IntegerVariable v = Choco.makeIntVar(name);
-        vars.put(name, v);
-        defaultvals.put(name, 0);
-        if (absmodel.debug)
-            absmodel.println("  adding Int var '" + name + "' (default -> 0)");
-        // m.addVariable(v); // not needed - if variable is not constrained in
-        // any way, it should not be considered when solving.
-    }
-
     public void addBoolVar(String name) {
         IntegerVariable v = Choco.makeBooleanVar(name);
         vars.put(name, v);
@@ -128,12 +90,34 @@ public class ChocoSolver {
 
     public void addBoundedVar(String name, BoundaryInt b1, BoundaryInt b2) {
         if (b1 instanceof Limit)
-            if (b2 instanceof Limit)
-                addIntVar(name);
-            else
-                addIntVar(name,((BoundaryVal) b2).getValue(), false);
-        else if (b2 instanceof Limit)
-            addIntVar(name,((BoundaryVal) b1).getValue(), true);
+            if (b2 instanceof Limit) {
+                IntegerVariable v = Choco.makeIntVar(name);
+                vars.put(name, v);
+                defaultvals.put(name, 0);
+                if (absmodel.debug)
+                    absmodel.println("  adding Int var '" + name + "' (default -> 0)");
+                // m.addVariable(v); // not needed - if variable is not constrained in
+                // any way, it should not be considered when solving.
+            } else {
+                IntegerVariable v = Choco.makeIntVar(name);
+                int b = ((BoundaryVal) b2).getValue();
+                addConstraint(Choco.leq(v, b));
+                vars.put(name, v);
+                defaultvals.put(name, b);
+                if (absmodel.debug)
+                    absmodel.println("  adding Int var '" + name + "' (default -> " + b + ")");
+                // m.addVariable(v); // not needed, since v is used in the constraints
+            }
+        else if (b2 instanceof Limit) {
+            IntegerVariable v = Choco.makeIntVar(name);
+            int b = ((BoundaryVal) b2).getValue();
+            addConstraint(Choco.geq(v, b));
+            vars.put(name, v);
+            defaultvals.put(name, b);
+            if (absmodel.debug)
+                absmodel.println("  adding Int var '" + name + "' (default -> " + b + ")");
+            // m.addVariable(v); // not needed, since v is used in the constraints
+            }
         else
             addIntVar(name, ((BoundaryVal) b1).getValue(), ((BoundaryVal) b2).getValue());
     }
@@ -147,9 +131,14 @@ public class ChocoSolver {
         for (int i=0; i < bsize; i++) {
             vals[i] = ((BoundaryVal) bs[i+1]).getValue(); // drop first value - repeated
         }
-        addIntVar(name,vals);
+        IntegerVariable v = Choco.makeIntVar(name, vals);
+        vars.put(name, v);
+        defaultvals.put(name, vals[0]); // vals has at least 1 element! (by the
+        // parser constraints)
+        if (absmodel.debug)
+            absmodel.println("  adding Int var '" + name + "' (default -> " + vals[0] + ")");
+        cpmodel.addVariable(v); // needed to include the variable in the constraints to be solved.
     }
-
 
     /** set a bool variable to true **/
     public void forceTrue(String name) {
@@ -169,7 +158,7 @@ public class ChocoSolver {
         return vars.get(var);
     }
 
-    public boolean solve() {
+    private boolean solve() {
         // add the constraints
         if (!solved) {
             for (Constraint c : constraints)
@@ -195,7 +184,7 @@ public class ChocoSolver {
         return newsol;
     }
 
-    public boolean optimise(String var, Boolean minimise) {
+    private boolean optimise(String var, Boolean minimise) {
         // add the constraints
         if (!solved) {
             for (Constraint c : constraints)
@@ -353,7 +342,7 @@ public class ChocoSolver {
         return result.toString();
     }
 
-    public int maxValue(String optVar) {
+    private int maxValue(String optVar) {
         if (!solved)
             solve();
 
@@ -388,27 +377,6 @@ public class ChocoSolver {
         optimise(var, false);
         return maxValue(var);
     }
-
-    public boolean checkSolution(Map<String, Integer> solution) {
-        return checkSolution(solution, null);
-    }
-
-    // public boolean checkSolution(Map<String,Integer> solution, Model model) {
-    // boolean res = true;
-    // for (Constraint c: constraints) {
-    // CPModel m = new CPModel();
-    // m.addConstraint(c);
-    // boolean csol = checkSolution(solution,model,m);
-    // res = res & csol;
-    // //if (debug)
-    // if (!csol) ast.println("Constraint failed: "+prettyConst(c));
-    // }
-    //
-    // return res;
-    // for (Constraint c: constraints)
-    // m.addConstraint(c);
-    // return checkSolution(solution,model,m);
-    // }
 
     public List<String> checkSolutionWithErrors(Map<String, Integer> solution, Model model) {
         List<String> res = new ArrayList<>();
@@ -511,7 +479,7 @@ public class ChocoSolver {
         return v.pretty();
     }
 
-    public boolean checkSolution(Map<String, Integer> solution, Model model, CPModel m) {
+    private boolean checkSolution(Map<String, Integer> solution, Model model, CPModel m) {
         // Read the model
         CPSolver s = new CPSolver();
         s.read(m);
@@ -628,9 +596,5 @@ public class ChocoSolver {
 
     public static Constraint isTrue(IntegerExpressionVariable v1) {
         return Choco.eq(v1, 1);
-    }
-
-    public CPSolver getCPSolver() {
-        return solver;
     }
 }
