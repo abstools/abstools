@@ -17,4 +17,6 @@ else
     exit 1
 fi
 
-java -Xmx512m -jar "$ABSFRONTENDJAR" "$@"
+# This `--add-opens` is necessary until choco-solver is updated; see
+# https://github.com/abstools/abstools/issues/334
+java --add-opens java.base/sun.security.action=ALL-UNNAMED -jar "$ABSFRONTENDJAR" "$@"
