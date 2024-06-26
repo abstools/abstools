@@ -9,8 +9,16 @@ import java.util.logging.Logger;
 
 import org.abs_models.backend.java.debugging.GraphicalDebugger;
 import org.abs_models.backend.java.observing.SystemObserver;
-import org.abs_models.backend.java.scheduling.*;
-import org.abs_models.frontend.parser.Main;
+import org.abs_models.backend.java.scheduling.DefaultTaskScheduler;
+import org.abs_models.backend.java.scheduling.GlobalSchedulingStrategy;
+import org.abs_models.backend.java.scheduling.InteractiveScheduler;
+import org.abs_models.backend.java.scheduling.RandomSchedulingStrategy;
+import org.abs_models.backend.java.scheduling.RecordingSchedulerStrategy;
+import org.abs_models.backend.java.scheduling.SchedulableTasksFilter;
+import org.abs_models.backend.java.scheduling.SimpleTaskScheduler;
+import org.abs_models.backend.java.scheduling.TaskSchedulerFactory;
+import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
+import org.abs_models.backend.java.scheduling.TotalSchedulingStrategy;
 
 /**
  * Evaluates system properties
@@ -106,10 +114,14 @@ public class Config {
         System.err.println();
         for (RuntimeOptions.Option o : options.options) {
             if (o.type != RuntimeOptions.OptionType.BOOLEAN) {
-                System.err.println(String.format("%36s\t%s", "-"+o.name + "=<"
-                    + o.type.toString().toLowerCase() + ">", o.description));
+                System.err.println(String.format("%36s\t%s",
+                    String.join(", ", o.options)
+                    + "=<" + o.type.toString().toLowerCase() + ">",
+                    o.description));
             } else {
-                System.err.println(String.format("%36s\t%s", "-"+o.name, o.description));
+                System.err.println(String.format("%36s\t%s",
+                    String.join(", ", o.options),
+                    o.description));
             }
         }
     }

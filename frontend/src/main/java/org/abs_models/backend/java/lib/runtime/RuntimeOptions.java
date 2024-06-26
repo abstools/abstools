@@ -7,6 +7,8 @@ package org.abs_models.backend.java.lib.runtime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+
 import static org.abs_models.backend.java.lib.runtime.RuntimeOptions.OptionType.*;
 
 public class RuntimeOptions {
@@ -27,22 +29,29 @@ public class RuntimeOptions {
     }
 
     static class Option {
-        final String name;
+        final String propertyName;
+        final Set<String> options;
         final String description;
         Object value;
         final OptionType type;
         boolean wasSet;
-        Option(OptionType type, String name, String description, Object defaultValue) {
+        Option(OptionType type, String propertyName, Set<String> options, String description, Object defaultValue) {
+            this.propertyName = propertyName;
             this.type = type;
-            this.name = name;
+            this.options = options;
             this.description = description;
             this.value = defaultValue;
         }
+        Option(OptionType type, String propertyName, String option, String description, Object defaultValue) {
+            this(type, propertyName, Set.of(option), description, defaultValue);
+        }
         boolean parseCommandLineArg(String arg) {
-            if (arg.equals("-"+name)) {
+            if (options.contains(arg)) {
+                // boolean argument
                 setValue(true);
-            } else if (arg.startsWith("-"+name+"=")) {
-                setValue(type.parseValue(arg.split("=")[1]));
+            } else if (options.stream().anyMatch((name) -> arg.startsWith(name + "="))) {
+                // argument with value
+                setValue(type.parseValue(arg.substring(arg.indexOf("=") + 1)));
             } else {
                 return false;
             }
@@ -54,7 +63,7 @@ public class RuntimeOptions {
             wasSet = true;
         }
         void readSystemProperty() {
-            String s = System.getProperty("abs."+name);
+            String s = System.getProperty("abs." + propertyName);
             if (s != null) {
                 setValue(type.parseValue(s));
             }
@@ -91,41 +100,41 @@ public class RuntimeOptions {
     final List<Option> options = new ArrayList<>();
 
     public final Option help =
-        addOption(BOOLEAN, "help", "shows help information", false);
+        addOption(BOOLEAN, "help", Set.of("-h", "--help"), "shows help information", false);
     public final Option useNet =
-        addOption(BOOLEAN, "net", "enables the use of ABS-NET", false);
+        addOption(BOOLEAN, "net", "--net", "enables the use of ABS-NET", false);
     public final Option debug =
-        addOption(BOOLEAN, "debug", "enables debugging", false);
+        addOption(BOOLEAN, "debug", "--debug", "enables debugging", false);
     public final Option graphicalDebug =
-        addOption(BOOLEAN, "gdebug", "starts the graphical debugger", false);
+        addOption(BOOLEAN, "gdebug", "--gdebug", "starts the graphical debugger", false);
     public final Option terminateOnException =
-        addOption(BOOLEAN, "terminateOnException", "terminates the system when an exception occurs", false);
+        addOption(BOOLEAN, "terminateOnException", "--terminateOnException", "terminates the system when an exception occurs", false);
     public final Option systemObserver =
-        addOption(CLASSLIST, "systemobserver", "comma-separated list of system observer classes", new String[0]);
+        addOption(CLASSLIST, "systemobserver", "--systemobserver", "comma-separated list of system observer classes", new String[0]);
     public final Option totalScheduler =
-        addOption(CLASS, "totalscheduler", "sets a total scheduler class", null);
+        addOption(CLASS, "totalscheduler", "--totalscheduler", "sets a total scheduler class", null);
     public final Option globalScheduler =
-        addOption(CLASS, "globalscheduler", "sets a global scheduler class", null);
+        addOption(CLASS, "globalscheduler", "--globalscheduler", "sets a global scheduler class", null);
     public final Option taskSchedulerStrategy =
-        addOption(CLASS, "taskschedulerstrategy", "sets a task scheduler strategy class", null);
+        addOption(CLASS, "taskschedulerstrategy", "--taskschedulerstrategy", "sets a task scheduler strategy class", null);
     public final Option taskScheduler =
-        addOption(STRING, "taskscheduler", "sets the task scheduler to be used", "default");
+        addOption(STRING, "taskscheduler", "--taskscheduler", "sets the task scheduler to be used", "default");
     public final Option recordTaskScheduler =
-        addOption(BOOLEAN, "recordtaskscheduler", "enables recording of task scheduling", false);
+        addOption(BOOLEAN, "recordtaskscheduler", "--recordtaskscheduler", "enables recording of task scheduling", false);
     public final Option randomSeed =
-        addOption(LONG, "randomseed", "set the random seed used by schedulers", System.nanoTime());
+        addOption(LONG, "randomseed", "--randomseed", "set the random seed used by schedulers", System.nanoTime());
     public final Option useRandomScheduler =
-        addOption(BOOLEAN, "useRandomScheduler", "sets the random scheduler as the total scheduler", false);
+        addOption(BOOLEAN, "useRandomScheduler", "--useRandomScheduler", "sets the random scheduler as the total scheduler", false);
     public final Option printRandomSeed =
-        addOption(BOOLEAN, "printrandomseed", "prints that used random seed to stdout", false);
+        addOption(BOOLEAN, "printrandomseed", "--printrandomseed", "prints that used random seed to stdout", false);
     public final Option logLevel =
-        addOption(STRING, "loglevel", "sets the logging level", "warning");
+        addOption(STRING, "loglevel", "--loglevel", "sets the logging level", "warning");
     public final Option loggedClasses =
-        addOption(CLASSLIST, "loggedClasses", "comma-separated list of classes to be logged", new String[0]);
+        addOption(CLASSLIST, "loggedClasses", "--loggedClasses", "comma-separated list of classes to be logged", new String[0]);
     public final Option schedulableTasksFilter =
-            addOption(CLASS, "schedulableTasksFilter", "sets a filter class for schedulable tasks", null);
+        addOption(CLASS, "schedulableTasksFilter", "--schedulableTasksFilter", "sets a filter class for schedulable tasks", null);
     public final Option dynamicUpdates =
-            addOption(BOOLEAN, "dynamic", "enables dynamic program updates", false);
+        addOption(BOOLEAN, "dynamic", "--dynamic", "enables dynamic program updates (not supported)", false);
 
     public RuntimeOptions(String[] args) {
         evaluateSystemProperties();
@@ -138,9 +147,15 @@ public class RuntimeOptions {
         }
     }
 
-    private Option addOption(OptionType b, String string, String string2, Object defaultValue) {
-        Option o = new Option(b,string,string2,defaultValue);
-        options.add(o);
+    private Option addOption(OptionType b, String name, String option, String description, Object defaultValue) {
+        Option o = new Option(b, name, option, description, defaultValue);
+        this.options.add(o);
+        return o;
+    }
+
+    private Option addOption(OptionType b, String name, Set<String> options, String description, Object defaultValue) {
+        Option o = new Option(b, name, options, description, defaultValue);
+        this.options.add(o);
         return o;
     }
 
