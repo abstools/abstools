@@ -12,6 +12,7 @@ build/
 out/
 /log/
 /frontend/dist/
+/frontend/bin/
 /abs-docs/**/*.aux
 /abs-docs/**/*.bbl
 /abs-docs/**/*.blg
