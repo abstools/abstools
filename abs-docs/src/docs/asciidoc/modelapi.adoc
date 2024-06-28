@@ -9,24 +9,28 @@ they are returned from such methods.
 
 The model API is supported by the Erlang backend.
 
-NOTE: The Model API accepts connections only from local (loopback) addresses,
-i.e., from the same machine.
+NOTE: The Model API might accept connections only from local
+(loopback) addresses, i.e., from the same machine.
 
-NOTE: All queries in this section can be prepended with a `/v2/` prefix, i.e.,
-`http://localhost:8080/v2/call` instead of `http://localhost:8080/call`.  In
-case incompatible changes have to be introduced to the Model API in the
-future, the semantics of invocations of queries with prefix `/v2/` will be
-preserved.
+NOTE: All queries in this section can be prepended with a `/v2/`
+prefix, i.e., `http://localhost:8080/v2/call` instead of
+`http://localhost:8080/call`.  In case incompatible changes have to be
+introduced to the Model API in the future, the semantics of
+invocations of queries with prefix `/v2/` will be preserved.  This
+prefix is only implemented on the Erlang backend; patches are welcome.
 
 
 === Starting the Model API
 
-When an ABS model compiled with the Erlang backend is started with the `-p`
-parameter naming a port number, the model will listen on the specified port
-for requests.  In the following example, we compile a model `my-model.abs` and
-start the model API on port 8080:
+When an ABS model is started with the `-p` parameter naming a port
+number, the model will listen on the specified port for requests.  In
+the following example, we compile a model `my-model.abs` and start the
+model API on port 8080:
 
 ----
+$ absc --java my-model.abs -o my-model.jar
+$ java -jar my-model.jar -p 8080
+# alternatively:
 $ absc --erlang my-model.abs
 $ gen/erl/run -p 8080
 ----
@@ -43,11 +47,13 @@ will terminate a model running on port 8080:
 
 ----
 $ curl localhost:8080/quit
-curl: (52) Empty reply from server
 ----
 
 
 === Exposing objects
+
+The Model API can be used to access objects of the running model, if
+these models are exposed.
 
 Objects are exposed via a `HTTPName` annotation.  In the following example,
 two objects of class `C` are exposed with the names `C1` and `C2`
@@ -60,6 +66,12 @@ variable declarations and `new` expression statements.
 ----
 
 === Exposing methods
+
+The Model API can be used to call methods of exposed objects, if those
+methods are exposed in their interface definition.  Exposed methods
+have some restrictions for which arguments they can accept, because
+their argument values need to be serialized via JSON or URL
+parameters when called via the Model API.
 
 In an interface declaration, a `HTTPCallable` annotation exposes the annotated
 method such that it is callable from outside, given an exposed object that implements that interface.
@@ -163,6 +175,9 @@ not be contained in the JSON object.
 
 === Querying object state
 
+The Model API can inspect the state of exposed objects, i.e., the
+names and values of the object's fields.
+
 The following query returns the names of all exposed objects.
 
 ----
@@ -187,15 +202,8 @@ GET http://localhost:8080/o/C1/field
 When querying for an unknown object or an unknown field, the HTTP request will
 produce a 404 response code.
 
-NOTE: All queries in this section can be prepended with a `/v2/` prefix, i.e.,
-`http://localhost:8080/v2/o`.  In case incompatible changes are introduced
-to the Model API in the future, for example by introducing new return value
-encodings, reasonable effort will be made to keep the semantics of invocations
-of queries with prefix `/v2/` unchanged.
 
-
-
-=== Querying exported methods of an object
+=== Listing the exposed methods of an object
 
 The following query returns, for an object exposed as `C1`, a JSON array of
 objects with metadata about callable functions.
@@ -215,7 +223,7 @@ keys:
 - `return`: return type of the method
 
 
-=== Invoking methods
+=== Calling exposed methods
 
 Exposed methods are called by querying a URL of the form
 
@@ -242,7 +250,10 @@ $ curl http://localhost:8080/call/C1/method?param1=value\&param2=50
 $ curl -d "{ 'param1': 'value', 'param2': 50 }" http://localhost:8080/call/C1/method
 ----
 
-The following example shows how to call a method that takes a `List<Int>` called `mylist` from Javascript using the JQuery library:
+Of course, the Model API can not only be invoked via `curl` but also
+from other programs.  The following example shows how to call a method
+`testConfig` that takes an argument `mylist` of type `List<Int>` from
+Javascript using the JQuery library:
 
 [source, javascript]
 ----
@@ -285,7 +296,7 @@ GET http://localhost:8080/clock/now
 The result is a JSON object with a key `'result'` mapping to the
 current value of the clock.
 
-When the model was started with a clock limit (see
+If the model was started with a clock limit (see
 <<timed-abs-and-model-api>>), the limit can be increased via a request
 like the following:
 
@@ -302,6 +313,8 @@ even if the clock had not yet reached the previous limit.  I.e., when
 the same as when the clock was already stopped at the limit of 20 when
 the call was received by the Model API.
 
+Note that increasing the clock limit if the model was not started with
+an initial limit has no effect.
 
 === Customizing the Browser-Based Visualization
 
@@ -310,7 +323,7 @@ web browser.  The `--modelapi-index-file` command-line switch is used
 to supply an `index.html` file at compile-time:
 
 ----
-$ absc --erlang --modelapi-index-file ./index.html *.abs
+$ absc --java --modelapi-index-file ./index.html *.abs
 ----
 
 When running a model on port 8080 and accessing
@@ -323,7 +336,7 @@ directory can be added to the model via the `--modelapi-static-dir`
 command-line switch:
 
 ----
-$ absc --erlang --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs
+$ absc --java --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs
 ----
 
 The contents of the given directory are copied at compile-time.  The
@@ -337,6 +350,9 @@ will be accessible as `http://localhost:8080/static/js/d3.js`, and can be referr
 
 [[customizing-url-prefixes]]
 === Customizing the Model API URL
+
+NOTE: This functionality is only available in the Erlang backend;
+patches are welcome.
 
 It is sometimes necessary to change the url under which the model publishes
 the given `index.html` file and static files.  When starting a model, the

@@ -76,4 +76,9 @@ public class MaudeTestDriver implements BackendTestDriver {
 
     @Override
     public boolean supportsSQLite() { return false; }
+
+    @Override
+    public boolean supportsModelApi() {
+        return false;
+    }
 }

@@ -7,22 +7,38 @@ package org.abs_models.backend.java.codegeneration;
 import org.abs_models.backend.java.JavaBackend;
 import org.apache.commons.io.FileUtils;
 
-import javax.tools.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.jar.*;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
 
 public class JavaCode {
     private final File srcDir;
     private final File output_jar;
+    private final File httpIndexFile;
+    private final File httpStaticDir;
     private final List<File> files = new ArrayList<>();
     private final List<String> mainClasses = new ArrayList<>();
 
@@ -35,27 +51,30 @@ public class JavaCode {
      */
     private static final Set<String> INCLUDE_PREFIXES
         = Set.of(
-                 // Our own support libraries
-                 "org/abs_models/backend/java",
-                 // Rational numbers support library
-                 "org/apfloat",
-                 // SQLite driver
-                 "org/sqlite",
-                 "META-INF/maven/org.xerial",
-                 "META-INF/native-image",
-                 "META-INF/services",
-                 "META-INF/versions/9/org/sqlite"
+            // Our own support libraries
+            "org/abs_models/backend/java",
+            // Rational numbers support library
+            "org/apfloat",
+            // SQLite driver
+            "org/sqlite",
+            // JSON support for Model API
+            "com/fasterxml/jackson",
+            "META-INF/maven/org.xerial",
+            "META-INF/native-image",
+            "META-INF/services",
+            "META-INF/versions/9/org/sqlite"
     );
 
 
     public JavaCode() throws IOException {
-        srcDir = Files.createTempDirectory("absjavabackend").toFile();
-        output_jar = null;
+        this(Files.createTempDirectory("absjavabackend").toFile(), null, null, null);
     }
 
-    public JavaCode(File srcDir, File output_jar) {
+    public JavaCode(File srcDir, File output_jar, File http_index_file, File http_static_dir) {
         this.srcDir = srcDir;
         this.output_jar = output_jar;
+        this.httpIndexFile = http_index_file;
+	this.httpStaticDir = http_static_dir;
     }
 
     public String[] getFileNames() {
@@ -141,20 +160,23 @@ public class JavaCode {
     }
 
     public void compile(List<File> files, File output_jar, String... compiler_args)
-        throws JavaCodeGenerationException, IOException
-    {
+        throws JavaCodeGenerationException, IOException {
+
+        String[] classPath = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
+        boolean absfrontendJarfileValid = classPath.length == 1 || classPath[0].endsWith(".jar");
+        File absfrontend_jarfile = new File(classPath[0]);
         javax.tools.JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
         StandardJavaFileManager fileManager
             = compiler.getStandardFileManager(diagnostics, null, JavaBackend.CHARSET);
         // TODO (rudi): check whether compiler_args / options is necessary
-        // "-classpath", System.getProperty("java.class.path"), 
+        // "-classpath", System.getProperty("java.class.path"),
         List<String> optionList = new ArrayList<String>();
         optionList.add("-classpath");
         optionList.add(System.getProperty("java.class.path"));
         javax.tools.JavaCompiler.CompilationTask task
             = compiler.getTask(null, fileManager, diagnostics, optionList, null,
-                               fileManager.getJavaFileObjectsFromFiles(files));
+                fileManager.getJavaFileObjectsFromFiles(files));
         if (!task.call()) {
             StringBuilder s = new StringBuilder();
             diagnostics.getDiagnostics().forEach(d -> s.append(d.toString() + "\n"));
@@ -163,13 +185,47 @@ public class JavaCode {
                                                   "The generated code contains errors:\n" + s.toString());
         }
         fileManager.close();
-        if (output_jar != null) {
-            String[] classPath = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
-            if (classPath.length != 1 || !classPath[0].endsWith(".jar")) {
-                throw new JavaCodeGenerationException("Could not create jar " + output_jar
-                    + " because classpath contains more than absfrontend.jar");
+        // ------------------------------
+        // Create Model API entries
+        File targetHttpIndexFile = new File(srcDir, "java/modelapi/index.html".replace('/', File.separatorChar));
+        File targetHttpStaticDir = new File(srcDir, "java/modelapi/static".replace('/', File.separatorChar));
+        if (!targetHttpStaticDir.mkdirs() && !targetHttpStaticDir.isDirectory()) {
+            throw new IOException("Could not create directory " + targetHttpStaticDir.toString());
+        }
+        // We first copy the "standard" modelapi files if we can reach
+        // them, then overwrite with the user-specified ones, if any.
+        if (absfrontendJarfileValid) {
+            try (JarFile absfrontend_jar = new JarFile(absfrontend_jarfile)) {
+                for (Iterator<JarEntry> it = absfrontend_jar.entries().asIterator(); it.hasNext();) {
+                    JarEntry entry = it.next();
+                    if (!entry.isDirectory() && entry.getName().startsWith("java/modelapi")) {
+                        new File(srcDir, entry.getName()).getParentFile().mkdirs();
+                        Files.copy(absfrontend_jar.getInputStream(entry),
+                            new File(srcDir, entry.getName()).toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    }
+                }
             }
-            File absfrontend_jarfile = new File(classPath[0]);
+        } else {
+            // TODO: we could figure out how to iterate through
+            // the source directory in case someone wants to run
+            // the compiler that way
+            System.err.println("Warning: could not copy model api static dir (can only be done when running compiler from jar file)");
+        }
+        if (this.httpIndexFile != null) {
+            Files.copy(this.httpIndexFile.toPath(), targetHttpIndexFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        if (this.httpStaticDir != null) {
+            FileUtils.copyDirectory(httpStaticDir, targetHttpStaticDir);
+        }
+
+        // ------------------------------
+        // Create jar file, if wanted
+        if (output_jar != null) {
+            if (!absfrontendJarfileValid) {
+                throw new JavaCodeGenerationException("Could not create jar " + output_jar
+                                                      + " because classpath contains more than absfrontend.jar");
+            }
             Manifest manifest = new Manifest();
             manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
             manifest.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_TITLE, "ABS model");
@@ -179,35 +235,34 @@ public class JavaCode {
                 manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, getFirstMainClass());
             }
 
-            JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(output_jar), manifest);
-            JarFile absfrontend_jar = new JarFile(absfrontend_jarfile);
-            for (Iterator<JarEntry> it = absfrontend_jar.entries().asIterator(); it.hasNext(); ) {
-                JarEntry entry = it.next();
-                if (!entry.isDirectory()
-                    && !entry.getName().equals("META-INF/MANIFEST.MF")
-                    && INCLUDE_PREFIXES.stream().anyMatch(entry.getName()::startsWith))
-                {
-                    jarOutputStream.putNextEntry(entry);
-                    absfrontend_jar.getInputStream(entry).transferTo(jarOutputStream);
-                    jarOutputStream.closeEntry();
+            try (JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(output_jar), manifest);
+                 JarFile absfrontend_jar = new JarFile(absfrontend_jarfile)) {
+                for (Iterator<JarEntry> it = absfrontend_jar.entries().asIterator(); it.hasNext(); ) {
+                    JarEntry entry = it.next();
+                    if (!entry.isDirectory()
+                        && !entry.getName().equals("META-INF/MANIFEST.MF")
+                        && INCLUDE_PREFIXES.stream().anyMatch(entry.getName()::startsWith))
+                        {
+                            jarOutputStream.putNextEntry(entry);
+                            absfrontend_jar.getInputStream(entry).transferTo(jarOutputStream);
+                            jarOutputStream.closeEntry();
+                        }
                 }
+                Path compiledFilesPath = Paths.get(srcDir.toURI());
+                Files.walk(compiledFilesPath)
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        String entryName = compiledFilesPath.relativize(path).toString().replace('\\', '/');
+                        JarEntry entry = new JarEntry(entryName);
+                        try {
+                            jarOutputStream.putNextEntry(entry);
+                            Files.copy(path, jarOutputStream);
+                            jarOutputStream.closeEntry();
+                        } catch (IOException e) {
+                            throw new RuntimeException("Error while creating jar " + output_jar);
+                        }
+                    });
             }
-            absfrontend_jar.close();
-
-            Path compiledFilesPath = Paths.get(srcDir.toURI());
-            Files.walk(compiledFilesPath)
-                .filter(path -> !Files.isDirectory(path))
-                .forEach(path -> {
-                    String entryName = compiledFilesPath.relativize(path).toString().replace('\\', '/');
-                    JarEntry entry = new JarEntry(entryName);
-                    try {
-                        jarOutputStream.putNextEntry(entry);
-                        Files.copy(path, jarOutputStream);
-                        jarOutputStream.closeEntry();
-                    } catch (IOException e) {
-                        throw new RuntimeException("Error while creating jar " + output_jar);                    }
-                });
-            jarOutputStream.close();
         }
     }
 

@@ -41,7 +41,7 @@ import org.abs_models.backend.java.scheduling.TaskSchedulerFactory;
 import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
 import org.abs_models.backend.java.scheduling.TotalSchedulingStrategy;
 import org.abs_models.backend.java.scheduling.UsesRandomSeed;
-
+import org.apfloat.Apint;
 import org.apfloat.Aprational;
 import org.apfloat.AprationalMath;
 
@@ -112,6 +112,8 @@ public class ABSRuntime {
      */
     private final List<ABSDCMirror> deployment_components = new ArrayList<>();
 
+    public List<ABSDCMirror> getDeploymentComponents() { return deployment_components; }
+
     /**
      * Queue of all pending resource requests.
      *
@@ -135,19 +137,33 @@ public class ABSRuntime {
     private PrintStream outStream = System.out;
     private PrintStream errStream = System.err;
 
-    /** whether to output an error message when no
-     * Java class is found for a class annotated with [Foreign] */
+    /** whether to output an error message when no Java class is found
+     * for a class annotated with [Foreign] */
     private boolean ignoreMissingFLIClasses = false;
 
     private SchedulableTasksFilter schedulableTasksFilter = new SchedulableTasksFilterDefault();
+
+    /** The port to run the Model API on, or {@code null} if API
+     * should not be started. */
+    private Long modelApiPort = null;
+
+    /**
+     * The clock time limit, as given initially by the command line,
+     * or {@code null} if time should advance without limit.
+     */
+    private Apint clockLimit = null;
 
     /**
      * Starts a new ABS program by giving a generated Main class
      * @param mainClass the Main class to be used
      * @throws InstantiationException if the Main class could not be instantiated
      * @throws IllegalAccessException if the Main class could not be accessed
+     * @throws IOException if the Model API could not be started
      */
-    public void start(Class<?> mainClass) throws InstantiationException, IllegalAccessException {
+    public void start(Class<?> mainClass) throws InstantiationException, IllegalAccessException, IOException {
+        if (modelApiPort != null) {
+            ModelApi.startModelApi(modelApiPort.intValue());
+        }
         systemStarted();
         COG cog = createCOG(mainClass, null);
         try {
@@ -183,8 +199,9 @@ public class ABSRuntime {
      * @throws ClassNotFoundException
      * @throws IllegalAccessException
      * @throws InstantiationException
+     * @throws IOException if Model API could not be started
      */
-    public void start(File targetDir, String mainClassName) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public void start(File targetDir, String mainClassName) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
         if (!targetDir.canRead()) {
             throw new IllegalArgumentException("Directory "+targetDir+" cannot be read");
         }
@@ -622,6 +639,10 @@ public class ABSRuntime {
         schedulableTasksFilter = filter;
     }
 
+    public void setModelApiPort(Long modelApiPort) {
+        this.modelApiPort = modelApiPort;
+    }
+
     public boolean getTerminateOnException() {
         return terminateOnException;
     }
@@ -638,6 +659,34 @@ public class ABSRuntime {
         return clock;
     }
 
+    public Apint getClockLimit() {
+        return clockLimit;
+    }
+
+    public void initializeClockLimit(Long amount) {
+        if (amount != null) clockLimit = new Apint(amount);
+    }
+
+    /**
+     * Add to current clock limit, if non-null, and return new limit.
+     */
+    public Long addToClockLimit(Long amount) {
+        if (clockLimit == null) return null;
+        log.finest(() -> "Adding to clock limit: " + amount);
+        synchronized(this) {
+            // Note: we can do exact comparison here, since the clock
+            // will always jump to the nearest integer since
+            // deployment components update on integer boundaries.
+            boolean wasAtLimit = clock.compareTo(clockLimit) == 0;
+            clockLimit = clockLimit.add(new Apint(amount));
+            if (wasAtLimit && nActiveCogs == 0) {
+                log.finest(() -> "Clock limit increased and no active cogs, trying to advance clock.");
+                maybeAdvanceClock();
+            }
+        }
+        return clockLimit.toBigInteger().longValue();
+    }
+
     /**
      * Pass resources from DCs to waiting resource guards, and wake up tasks
      * if their resource requests are fulfilled.  Remove entries from the
@@ -649,6 +698,10 @@ public class ABSRuntime {
      * @return true if at least one guard was woken, false otherwise.
      */
     protected synchronized boolean handResourcesToWaitingGuards() {
+        if (resource_guards.isEmpty()) {
+            log.finest("No tasks waiting for resources");
+            return false;
+        }
         boolean woke_up_a_guard = false;
         log.finest("Handing out resources to waiting tasks");
         var iterator = resource_guards.entrySet().iterator();
@@ -709,13 +762,16 @@ public class ABSRuntime {
         // where either a duration guard wakes up or a resource boundary
         // occurs (and hence, a resource guard might receive enough resources
         // to unblock), whichever comes earlier.
-        log.finest("Starting resource allocation and clock advance");
+        log.finest(() -> "Starting resource allocation and clock advance: clock = "
+                         + clock + ", clockLimit = " + (clockLimit == null ? "none" : clockLimit)
+                         + ", durationGuards: " + duration_guards.size()
+                         + ", resourceGuards: " + resource_guards.size());
         if (duration_guards.isEmpty() && resource_guards.isEmpty()) {
-            log.finest("Trying to advance the clock when no guard is waiting for a duration or resource");
+            log.finest("Trying to advance the clock but no task is waiting for a duration or resource, exiting");
             return;
         }
         boolean woke_up_a_guard = handResourcesToWaitingGuards();
-        while (!woke_up_a_guard) {
+        while (!woke_up_a_guard && (clockLimit == null ? true : clock.compareTo(clockLimit) < 0)) {
             boolean woke_up_a_duration_guard = false;
             boolean woke_up_a_resource_guard = false;
             Aprational next_integer = clock.isInteger()

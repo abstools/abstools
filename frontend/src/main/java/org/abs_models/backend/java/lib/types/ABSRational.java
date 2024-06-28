@@ -169,4 +169,9 @@ public class ABSRational extends ABSBuiltInDataType {
     public ABSFloat toFloat() {
         return ABSFloat.fromDouble(value.doubleValue());
     }
+
+    public Object toJson() {
+        return toDouble();
+    }
+
 }

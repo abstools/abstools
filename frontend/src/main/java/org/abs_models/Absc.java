@@ -108,7 +108,7 @@ public class Absc implements Callable<Integer> {
     // Code generation options
     @Option(names = { "-o", "--output-file"},
             description = {"for single-file backends: compile to @|italic file|@ (default: standard output)",
-                "@|bold Java backend:|@ the name of a jar file containing the compiled model."},
+                "@|bold Java backend:|@ generate a jar file @|italic file|@ containing the compiled model."},
             paramLabel = "file")
     public File outputfile;
     @Option(names = { "-d", "--directory"},
@@ -122,11 +122,11 @@ public class Absc implements Callable<Integer> {
 
     // Erlang options
     @Option(names = { "--modelapi-index-file" },
-            description = "@|bold Erlang backend:|@ display @|italic file|@ when accessing the Model API with a web browser",
+        description = "display @|italic file|@ when accessing @|bold /index.html|@ in a web browser in Model API",
             paramLabel = "file")
     public File http_index_file;
     @Option(names = { "--modelapi-static-dir" },
-            description = "@|bold Erlang backend:|@ make contents of @|italic dir|@ accessible below @|bold /static/|@ in Model API",
+        description = "make contents of @|italic dir|@ accessible below @|bold /static/|@ in Model API",
             paramLabel = "dir")
     public File http_static_dir;
 

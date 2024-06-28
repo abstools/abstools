@@ -21,4 +21,6 @@ public interface ABSValue extends ABSType {
 
     boolean isReference();
 
+    java.lang.Object toJson();
+
 }

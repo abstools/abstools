@@ -4,6 +4,7 @@
  */
 package org.abs_models.backend.java;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -73,11 +74,7 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
                 r.enableDebugging(true);
                 r.start(new File("javatest"), "LeaderElection.Main");
             }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IOException e) {
             e.printStackTrace();
         }
     }

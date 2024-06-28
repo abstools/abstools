@@ -5,6 +5,7 @@
 package org.abs_models.backend.java.lib.runtime;
 
 import java.util.List;
+import java.util.Map;
 
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSRef;
@@ -222,4 +223,14 @@ public abstract class ABSObject implements ABSRef {
 
     public abstract List<String> getFieldNames();
 
+    // Return value is serializable by the Jackson JSON library
+    public abstract List<Map<String, Object>> getHttpCallableMethodInfo();
+
+    public Object toJson() {
+        return ABSBuiltInFunctions.toString(this).getString();
+    }
+
+    public ABSFut<? extends ABSValue> invokeMethod(String name, List<ABSValue> arguments) {
+        return null;
+    }
 }

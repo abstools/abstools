@@ -105,4 +105,8 @@ public class ABSFloat extends ABSBuiltInDataType {
         // all cases
         return new Apfloat(this.value).toString(true);
     }
+
+    public Object toJson() {
+        return getDouble();
+    }
 }

@@ -68,4 +68,8 @@ public class ABSBool extends ABSBuiltInDataType {
             return FALSE;
     }
 
+    public Object toJson() {
+        return toBoolean();
+    }
+
 }

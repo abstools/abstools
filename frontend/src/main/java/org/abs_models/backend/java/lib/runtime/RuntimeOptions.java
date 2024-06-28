@@ -160,7 +160,7 @@ public class RuntimeOptions {
             return (String[]) value;
         }
 
-        public long longValue() {
+        public Long longValue() {
             return (Long) value;
         }
         public void appendStringValue(String name) {
@@ -176,6 +176,12 @@ public class RuntimeOptions {
 
     public final Option help =
         addOption(BOOLEAN, "help", Set.of("-h", "--help"), "shows help information", false);
+    // We only call getLongValue() after checking wasSet(), so we get
+    // away with a `null` default value
+    public final Option modelapiPort =
+        addOption(LONG, "modelapiPort", Set.of("-p", "--port"), "turns on the Model API on the given port", null);
+    public final Option clockLimit =
+        addOption(LONG, "timelimit", Set.of("-l", "--clock-limit"), "set the limit for the model clock", null);
     public final Option useNet =
         addOption(BOOLEAN, "net", "--net", "enables the use of ABS-NET", false);
     public final Option debug =
@@ -203,7 +209,7 @@ public class RuntimeOptions {
     public final Option printRandomSeed =
         addOption(BOOLEAN, "printrandomseed", "--printrandomseed", "prints that used random seed to stdout", false);
     public final Option logLevel =
-        addOption(STRING, "loglevel", "--loglevel", "sets the logging level", "warning");
+        addOption(STRING, "loglevel", "--loglevel", "sets the logging level (severe, warning, info, config, fine, finer, finest)", "warning");
     public final Option loggedClasses =
         addOption(CLASSLIST, "loggedClasses", "--loggedClasses", "comma-separated list of classes to be logged", new String[0]);
     public final Option schedulableTasksFilter =

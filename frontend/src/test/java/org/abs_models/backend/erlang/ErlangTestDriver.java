@@ -14,16 +14,25 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.backend.common.SemanticTests;
+import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.ast.AddAddExp;
 import org.abs_models.frontend.ast.ExpressionStmt;
 import org.abs_models.frontend.ast.FnApp;
@@ -32,6 +41,7 @@ import org.abs_models.frontend.ast.MainBlock;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.ast.VarUse;
+import org.abs_models.frontend.delta.DeltaModellingException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -460,6 +470,103 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
     @Override
     public boolean supportsSQLite() { return true; }
+
+    @Override
+    public boolean supportsModelApi() {
+        return true;
+    }
+    // --------------------------------------------------
+    // Model API stuff
+    // --------------------------------------------------
+    private enum RequestType {
+        GET, POST;
+    }
+    private Process modelApiServerProcess;
+    private int modelApiPort = -1;
+
+    public void startModelApi(File file) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException, InterruptedException {
+        File tmpdir = java.nio.file.Files.createTempDirectory(null).toFile();
+        tmpdir.deleteOnExit();
+        Model model = ABSTest.assertParseFileOk(file.getPath(), Config.TYPE_CHECK, Config.WITHOUT_MODULE_NAME);
+        assertFalse(model.hasParserErrors());
+        assertFalse(model.hasTypeErrors());
+        String mainModule = genCode(model, tmpdir, false);
+        File runFile = new File(tmpdir, "run");
+
+        // initialize with port number = 0 to get a random port
+        ProcessBuilder pb = new ProcessBuilder(runFile.getAbsolutePath(), mainModule, "-p", "0", "-v");
+        pb.directory(tmpdir);
+        pb.redirectErrorStream(true);
+        modelApiServerProcess = pb.start();
+
+        modelApiPort = extractPortNoFromProcess(modelApiServerProcess);
+        // give the server time to get started; this hopefully eliminates
+        // spurious test failures
+        Thread.sleep(2000);
+    }
+    public void shutdownModelApi() {
+        if (modelApiPort != -1) {
+            if(modelApiServerProcess == null || !modelApiServerProcess.isAlive()) {
+                throw new IllegalStateException("Server is not running");
+            }
+
+            modelApiServerProcess.destroy();
+            modelApiPort = -1;
+        }
+    }
+    public String sendGetRequest(String request, int expectedResponseCode) throws IOException, URISyntaxException {
+        return sendRequest(request, RequestType.GET, null, expectedResponseCode);
+    }
+
+    public String sendPostRequest(String request, String jsonPayload, int expectedResponseCode) throws IOException, URISyntaxException {
+        return sendRequest(request, RequestType.POST, jsonPayload, expectedResponseCode);
+    }
+
+    private int extractPortNoFromProcess(Process process) throws IOException {
+        final Pattern portnr_pattern = Pattern.compile("Starting server on port (\\d+), abort with Ctrl-C");
+        String line = "";
+        String port_nr_s = null;
+        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        while (port_nr_s == null) {
+            line = in.readLine();
+            System.out.println(line);
+            Matcher matcher = portnr_pattern.matcher(line);
+            if (matcher.find()) {
+                port_nr_s = matcher.group(1);
+            }
+        }
+        return Integer.parseInt(port_nr_s);
+    }
+
+    private String sendRequest(String request, RequestType requestType, String payload, int expected_response) throws IOException, URISyntaxException {
+        URL obj = new URI("http://localhost:" + Integer.toString(modelApiPort) + request).toURL();
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setRequestMethod(requestType.toString());
+        con.setRequestProperty("Accept", "application/json");
+        if(RequestType.POST == requestType) {
+            con.setDoOutput(true);
+            con.setDoInput(true);
+            con.setRequestProperty("Content-Type", "application/json");
+            try (OutputStreamWriter wr = new OutputStreamWriter(con.getOutputStream())) {
+                wr.write(payload);
+                wr.flush();
+            }
+        }
+        con.setConnectTimeout(10000);
+        con.connect();
+
+        if (con.getResponseCode() != expected_response) {
+            Assert.fail("Expected response code " + expected_response + ", "
+                        + "got " + con.getResponseCode() + " "
+                        + "for " + requestType.toString() + " "
+                        + "to " + con.getURL().toString());
+        }
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String response = in.lines().collect(Collectors.joining());
+        in.close();
+        return response;
+    }
+
 }
 
 class TimeoutThread implements Runnable {

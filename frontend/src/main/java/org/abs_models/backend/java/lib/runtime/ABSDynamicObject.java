@@ -165,4 +165,12 @@ public class ABSDynamicObject extends ABSObject {
 
     }
 
+    public List<Map<String, Object>> getHttpCallableMethodInfo() {
+	throw new UnsupportedOperationException("Unimplemented method 'getHttpCallableMethodInfo'");
+    }
+
+    public ABSFut<? extends ABSValue> invokeMethod(String name, List<ABSValue> arguments) {
+	throw new UnsupportedOperationException("Unimplemented method 'invokeMethod'");
+    }
+
 }

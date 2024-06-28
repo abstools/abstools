@@ -65,6 +65,7 @@ aspect GenerateJava {
                 stream.println("public java.lang.String getClassName() { return \"Main\"; }");
                 stream.println("public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
                 stream.println("public " + mainName + "(" + COG.class.getName() + " cog) { super(cog); }");
+                stream.println("public java.util.List<java.util.Map<java.lang.String, java.lang.Object>> getHttpCallableMethodInfo() { throw new UnsupportedOperationException(\"method 'getHttpCallableMethodInfo' cannot be called on Main block\");} ");
 
                 // main block
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
@@ -182,7 +183,10 @@ aspect GenerateJava {
         }
         stream.println("return true;");
         stream.println("}");
+        stream.println();
 
+        // toJSON method
+        JavaGeneratorHelper.generateDataTypeConstructorToJsonMethod(stream, this);
 
         stream.println("}");
     }
@@ -265,6 +269,8 @@ aspect GenerateJava {
         stream.println("return true;");
         stream.println("}");
 
+        // toJSON method
+        JavaGeneratorHelper.generateDataTypeConstructorToJsonMethod(stream, this);
 
         stream.println("}");
     }
@@ -486,6 +492,19 @@ aspect GenerateJava {
             stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
             stream.print(ABSThread.class.getName() + ".getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
         }
+        if (getInitExp() instanceof NewExp) {
+            VarDeclStmt stmt = closestParent(VarDeclStmt.class);
+            if (stmt != null) {
+                List<Annotation> annotations = stmt.getAnnotations();
+                PureExp restname = AnnotationHelper.getAnnotationValueFromName(annotations, "ABS.StdLib.HTTPName");
+                if (restname instanceof StringLiteral) {
+                    stream.println();
+                    stream.print(ModelApi.class.getName() + ".registerObject("
+                                 + "\""+ ((StringLiteral)restname).getContent() + "\", "
+                                 + "(" + ABSObject.class.getName() + ")" + name + ");");
+                }
+            }
+        }
     }
 
 
@@ -522,7 +541,15 @@ aspect GenerateJava {
                 stream.print(");");
             }
         }
-
+        if (getValue() instanceof NewExp) {
+            PureExp restname = AnnotationHelper.getAnnotationValueFromName(getAnnotations(), "ABS.StdLib.HTTPName");
+            if (restname != null && restname instanceof StringLiteral) {
+                stream.println();
+                stream.print(ModelApi.class.getName() + ".registerObject("
+                             + "\""+ ((StringLiteral)restname).getContent() + "\", "
+                             + "(" + ABSObject.class.getName() + ")" + JavaBackend.getVariableName(getVar().getName()) + ");");
+            }
+        }
     }
 
     public void AwaitStmt.generateJava(PrintStream stream) {

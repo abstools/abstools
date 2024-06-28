@@ -88,5 +88,7 @@ public class ABSProcess extends ABSBuiltInDataType {
         }
     }
 
-
+    public Object toJson() {
+        throw new RuntimeException("Trying to serialize a process object, this should never happen");
+    }
 }
