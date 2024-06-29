@@ -7,6 +7,7 @@ package org.abs_models.backend.java.lib.runtime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 
 import static org.abs_models.backend.java.lib.runtime.RuntimeOptions.OptionType.*;
@@ -16,15 +17,25 @@ public class RuntimeOptions {
         BOOLEAN, STRING, CLASSLIST, CLASS, LONG;
 
         Object parseValue(String s) {
-            switch (this) {
-            case BOOLEAN: return Boolean.parseBoolean(s);
-            case STRING: return s;
-            case CLASSLIST: return s.split(",");
-            case CLASS: return s;
-            case LONG: return Long.parseLong(s);
+                switch (this) {
+                    case BOOLEAN: {
+                            if (s.equals("true")) return Boolean.TRUE;
+                            else if (s.equals("false")) return Boolean.FALSE;
+                            else return null;
+                        }
+                    case STRING: return s;
+                    case CLASSLIST: return s.split(",");
+                    case CLASS: return s;
+                    case LONG: {
+                            try {
+                                return Long.parseLong(s);
+                            } catch (NumberFormatException e) {
+                                return null;
+                            }
+                        }
+                }
+                return null;
             }
-            return null;
-        }
 
     }
 
@@ -45,17 +56,81 @@ public class RuntimeOptions {
         Option(OptionType type, String propertyName, String option, String description, Object defaultValue) {
             this(type, propertyName, Set.of(option), description, defaultValue);
         }
-        boolean parseCommandLineArg(String arg) {
-            if (options.contains(arg)) {
-                // boolean argument
-                setValue(true);
-            } else if (options.stream().anyMatch((name) -> arg.startsWith(name + "="))) {
-                // argument with value
-                setValue(type.parseValue(arg.substring(arg.indexOf("=") + 1)));
-            } else {
+        /**
+         * Try to parse the option obtained by calling {@code
+         * arglist.next()}.  If unsuccessful, call {@code
+         * arglist.previous()}, i.e., reset the cursor.  Otherwise,
+         * remove option from {@code arglist}.  If a parameter is
+         * required, (try to) read the next string from {@code
+         * arglist} as well, and remove it if successful.
+         *
+         * @param arglist the list of all arguments, with iterator at
+         *  the position that should be read.
+         * @return true if option and its parameter (if applicable)
+         *  could be read; false otherwise.
+         */
+        // This is a long method, but on the other hand we avoid
+        // integrating some third-party parameter parsing library into
+        // the compiled model.
+        boolean parseCommandLineArg(ListIterator<String> arglist) {
+            String option = arglist.next();
+            if (!options.contains(option)) {
+                // not us; put it back
+                arglist.previous();
                 return false;
+            } else {
+                if (type == BOOLEAN) {
+                    if (!arglist.hasNext()) {
+                        setValue(Boolean.TRUE);
+                        // remove option
+                        arglist.remove();
+                        return true;
+                    } else {
+                        String argument = arglist.next();
+                        Object value = type.parseValue(argument);
+                        if (value == null) {
+                            // wasn't a boolean, put it back
+                            arglist.previous();
+                            // move back to option and remove it
+                            arglist.previous(); arglist.remove();
+                            setValue(Boolean.TRUE);
+                            return true;
+                        } else {
+                            // was a boolean, remove it
+                            arglist.remove();
+                            // move back to option and remove it too
+                            arglist.previous(); arglist.remove();
+                            setValue(value);
+                            return true;
+                        }
+                    }
+                } else {
+                    // Not a Boolean, so the argument is mandatory
+                    if (!arglist.hasNext()) {
+                        // Note that we do not call `arglist.remove()`
+                        // here since we want the "leftover" option in
+                        // the error message
+                        return false;
+                    } else {
+                        String argument = arglist.next();
+                        Object value = type.parseValue(argument);
+                        if (value != null) {
+                            arglist.remove();
+                            // move back to option and remove it too
+                            arglist.previous(); arglist.remove();
+                            setValue(value);
+                            return true;
+                        } else {
+                            // parse failure; put not-argument back
+                            arglist.previous();
+                            // Note that we do not call `arglist.remove()`
+                            // here since we want the "leftover" option in
+                            // the error message
+                            return false;
+                        }
+                    }
+                }
             }
-            return true;
         }
 
         void setValue(Object o) {
@@ -160,19 +235,33 @@ public class RuntimeOptions {
     }
 
     void parseCommandLineArgs(String[] args) {
-        List<Option> configuredOptions = new ArrayList<>(options);
+        ArrayList<String> arguments = new ArrayList<>(Arrays.asList(args));
+        ListIterator<String> argslist = arguments.listIterator();
+        ArrayList<Option> remainingOptions = new ArrayList<>(options);
 
-        for (String arg : args) {
-            Option usedOption = null;
-            for (Option o : configuredOptions) {
-                if (o.parseCommandLineArg(arg)) {
-                    usedOption = o;
+        while (argslist.hasNext()) {
+            boolean success = false;
+            for (Option o : remainingOptions) {
+                if (o.parseCommandLineArg(argslist)) {
+                    success = true;
+                    // If we remove the next line, "last option wins";
+                    // otherwise, duplicate options are ignored
+                    remainingOptions.remove(o);
+                    break;
+                } else if (!argslist.hasNext()) {
+                    // Corner case: missing argument for the last option
                     break;
                 }
             }
-            if (usedOption != null)
-                configuredOptions.remove(usedOption);
-
+            if (!success && argslist.hasNext()) {
+                argslist.next();
+            }
+        }
+        if (arguments.size() > 0) {
+            System.err.print("The following arguments could not be parsed:");
+            arguments.forEach(s -> System.err.print(" " + s));
+            System.err.println();
+            System.exit(1);
         }
     }
 }

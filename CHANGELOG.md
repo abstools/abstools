@@ -33,6 +33,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The Java backend now compiles generated files with the same version of the Java compiler that the backend itself was compiled with; previously, the Java backend was hardcoded to use Java 1.5 as compilation target.
 
+- The syntax for command-line options was changed for models generated via the Java backend: instead of, e.g., `--randomseed=1234` use `--randomseed 1234`.
+
 ### Removed
 
 ### Fixed

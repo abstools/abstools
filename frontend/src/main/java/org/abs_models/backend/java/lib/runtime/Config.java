@@ -116,7 +116,7 @@ public class Config {
             if (o.type != RuntimeOptions.OptionType.BOOLEAN) {
                 System.err.println(String.format("%36s\t%s",
                     String.join(", ", o.options)
-                    + "=<" + o.type.toString().toLowerCase() + ">",
+                    + " <" + o.type.toString().toLowerCase() + ">",
                     o.description));
             } else {
                 System.err.println(String.format("%36s\t%s",
