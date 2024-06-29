@@ -37,7 +37,7 @@ public class Config {
         Config config = new Config(runtime, options);
         if (config.options.help.isTrue()) {
             config.printHelp();
-            System.exit(1);
+            System.exit(0);
         }
         config.configureRuntime();
         return config;
