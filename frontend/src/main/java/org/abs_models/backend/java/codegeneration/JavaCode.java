@@ -157,13 +157,7 @@ public class JavaCode {
                                fileManager.getJavaFileObjectsFromFiles(files));
         if (!task.call()) {
             StringBuilder s = new StringBuilder();
-            for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-                s.append(String.format("%s:%d:%d: %s%n",
-                                       diagnostic.getSource().getName(),
-                                       diagnostic.getLineNumber(),
-                                       diagnostic.getColumnNumber(),
-                                       diagnostic.getMessage(null)));
-            }
+            diagnostics.getDiagnostics().forEach(d -> s.append(d.toString()));
 
             throw new JavaCodeGenerationException("There seems to be a bug in the ABS Java backend. " +
                                                   "The generated code contains errors:\n" + s.toString());
