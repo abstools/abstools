@@ -6,6 +6,7 @@ package org.abs_models.backend.java.codegeneration;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.java.lib.runtime.ABSInitObjectCall;
@@ -31,13 +32,18 @@ public class ClassDeclGenerator {
     private final String className;
     protected final PrintStream stream;
 
-    public ClassDeclGenerator(PrintStream stream, ClassDecl decl) {
+    public static void generate(PrintStream stream, ClassDecl decl) {
+        ClassDeclGenerator gen = new ClassDeclGenerator(stream, decl);
+        gen.generate();
+    }
+
+    private ClassDeclGenerator(PrintStream stream, ClassDecl decl) {
         this.stream = stream;
         this.decl = decl;
         className = JavaBackend.getClassName(decl.getName());
     }
 
-    public void generate() {
+    private void generate() {
         JavaGeneratorHelper.generateHelpLine(decl, stream);
         generateClassHeader();
         generateClassBody();
@@ -158,11 +164,11 @@ public class ClassDeclGenerator {
     private void generateGetFieldValueMethod() {
         stream.println("protected final " + ABSValue.class.getName() + " getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
         for (ParamDecl p : decl.getParams()) {
-            stream.println("if (\"" + p.getName() + "\".equals(__ABS_fieldName)) return " + JavaBackend.getVariableName(p.getName()) + ";");
+            stream.println("if (__ABS_fieldName.equals(\"" + p.getName() + "\")) return " + JavaBackend.getVariableName(p.getName()) + ";");
         }
 
         for (FieldDecl f : decl.getFields()) {
-            stream.println("if (\"" + f.getName() + "\".equals(__ABS_fieldName)) return " + JavaBackend.getVariableName(f.getName()) + ";");
+            stream.println("if (__ABS_fieldName.equals(\"" + f.getName() + "\")) return " + JavaBackend.getVariableName(f.getName()) + ";");
         }
         stream.println("return super.getFieldValue(__ABS_fieldName);");
 
@@ -219,17 +225,13 @@ public class ClassDeclGenerator {
     private void generateFieldNamesMethod() {
         java.util.List<String> fieldNames = getFieldNames();
 
-        stream.print("private static final java.lang.String[] __fieldNames = new java.lang.String[] { ");
+        stream.print("private static final java.util.List<java.lang.String> __fieldNames = java.util.List.of(");
+        stream.print(fieldNames.stream()
+            .map(name -> "\"" + name + "\"")
+            .collect(Collectors.joining(", ")));
+        stream.println(");");
 
-        boolean first = true;
-        for (String fieldName : fieldNames) {
-            if (first) first = false;
-            else stream.print(", ");
-            stream.print("\"" + fieldName + "\"");
-        }
-        stream.println(" };");
-
-        stream.println("public final java.util.List<java.lang.String> getFieldNames() { return java.util.Arrays.asList(__fieldNames); }");
+        stream.println("public final java.util.List<java.lang.String> getFieldNames() { return __fieldNames; }");
     }
 
     private java.util.List<String> getFieldNames() {
@@ -237,7 +239,6 @@ public class ClassDeclGenerator {
         for (ParamDecl p : decl.getParams()) {
             fieldNames.add(p.getName());
         }
-
         for (FieldDecl f : decl.getFields()) {
             fieldNames.add(f.getName());
         }

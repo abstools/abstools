@@ -79,6 +79,6 @@ aspect NodePositions {
     public String ASTNode.getPositionString() {
         String filename = getFileName();
         if (filename.equals("")) filename = "<unkown>";
-        return filename + ":" + getStartLine() + ":" + getStartColumn() + ": ";
+        return filename + ":" + getStartLine() + ":" + getStartColumn();
     }
 }

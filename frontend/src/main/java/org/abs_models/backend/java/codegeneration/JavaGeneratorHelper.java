@@ -83,8 +83,6 @@ public class JavaGeneratorHelper {
             if (!first)
                 stream.print(", ");
             e.generateJava(stream);
-            if (types.get(i).isIntType() && e.getType().isRatType())
-                stream.print(".truncate()");
             first = false;
         }
         stream.print(")");
@@ -359,6 +357,7 @@ public class JavaGeneratorHelper {
             new List<>());
         stream.println(";");
         stream.println("}");
+        ((JavaCodeStream)stream).decIndent(); // KLUDGE: somehow the indenter becomes confused after each method.  Hotfix it here
     }
 
 
@@ -378,7 +377,7 @@ public class JavaGeneratorHelper {
             final List<Annotation> annotations) {
 
         final java.util.List<Type> paramTypes = sig.getTypes();
-        stream.print(ABSRuntime.class.getName() + ".getRuntime().asyncCall(");
+        stream.println(ABSRuntime.class.getName() + ".getRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
         stream.println("new " + AbstractAsyncCallRT.class.getName() + "<" + targetType + ">(");
         stream.println("this,");
@@ -406,7 +405,8 @@ public class JavaGeneratorHelper {
         rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Critical");
         if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream);
 
-        stream.println(") {");
+        stream.println(")");
+        stream.println("{");
         int i = 0;
         for (Type t : paramTypes) {
             stream.println(JavaBackend.getQualifiedString(t) + " arg" + i + ";");
@@ -424,8 +424,7 @@ public class JavaGeneratorHelper {
         stream.print("return target." + JavaBackend.getMethodName(sig.getName()) + "(");
         for (i = 0; i < paramTypes.size(); i++) {
             if (i > 0) stream.print(",");
-            stream.println("arg" + i);
-            if (paramTypes.get(i).isIntType()) stream.print(".truncate()");
+            stream.print("arg" + i);
         }
         stream.println(");");
         stream.println("}");
@@ -480,9 +479,9 @@ public class JavaGeneratorHelper {
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
         stream.println("public java.util.List<" + ABSValue.class.getName() + "> getArgs() {");
-        stream.println("return java.util.Arrays.asList(new " + ABSValue.class.getName() + "[] {");
+        stream.print("return java.util.List.of(");
         generateArgStringList(stream, n);
-        stream.println("});");
+        stream.println(");");
         stream.println("}");
     }
 
@@ -495,7 +494,7 @@ public class JavaGeneratorHelper {
 
 
     public static void generateClassDecl(PrintStream stream, final ClassDecl decl) {
-        new ClassDeclGenerator(stream, decl).generate();
+        ClassDeclGenerator.generate(stream, decl);
     }
 
     public static void generateMethodImpl(PrintStream stream, final MethodImpl m) {

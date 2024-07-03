@@ -519,7 +519,7 @@ aspect GenerateJavaDynamic_Core {
         getCondition().generateJavaDynamic(stream);
         stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
         DynamicJavaGeneratorHelper.printEscapedString(stream, getPositionString());
-        stream.println(" Assertion failed\");");
+        stream.println(": Assertion failed\");");
     }
 
     /*
@@ -717,7 +717,7 @@ aspect GenerateJavaDynamic_Core {
         }
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
         DynamicJavaGeneratorHelper.printEscapedString(stream, getPositionString());
-        stream.println(" value \" + __ABS_value + \" did not match any pattern.\");");
+        stream.println(": value \" + __ABS_value + \" did not match any pattern.\");");
         stream.println("}");
         stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {
