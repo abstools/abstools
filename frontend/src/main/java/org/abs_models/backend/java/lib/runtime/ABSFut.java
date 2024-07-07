@@ -121,7 +121,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         if (needsSuspend) {
             cog.notifyWakeup(task);
         }
-
+        // TODO: fix this; exceptions should be thrown by get, not by await
         if (exception != null)
             throw exception;
     }

@@ -157,7 +157,7 @@ public class JavaCode {
                                fileManager.getJavaFileObjectsFromFiles(files));
         if (!task.call()) {
             StringBuilder s = new StringBuilder();
-            diagnostics.getDiagnostics().forEach(d -> s.append(d.toString()));
+            diagnostics.getDiagnostics().forEach(d -> s.append(d.toString() + "\n"));
 
             throw new JavaCodeGenerationException("There seems to be a bug in the ABS Java backend. " +
                                                   "The generated code contains errors:\n" + s.toString());
