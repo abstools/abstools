@@ -12,7 +12,7 @@ jobs:
       uses: actions/setup-java@v2
       with:
         distribution: 'adopt'
-        java-version: '11'
+        java-version: '21'
     - name: Install Erlang
       uses: erlef/setup-beam@v1
       with:
