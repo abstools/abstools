@@ -47,13 +47,16 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     public static long test_timeout = 120000;
 
     public static boolean checkErlang() {
-        /* TODO: Should be checked earlier instead, before configuring the JUnit suites. */
         String doAbs = System.getProperty("abs.junit.erlang");
         Assume.assumeFalse("Erlang tests disabled via -Dabs.junit.erlang", "0".equals(doAbs));
+        if ("0".equals(doAbs)) return false;
         if (SemanticTests.checkProg("erl")) {
             try {
                 Assume.assumeTrue("Need Erlang R" + Integer.toString(ErlangBackend.minErlangVersion) + " or later.",
                                   ErlangBackend.getErlangVersion() >= ErlangBackend.minErlangVersion);
+                if (ErlangBackend.getErlangVersion() < ErlangBackend.minErlangVersion){
+                    return false;
+                }
             } catch (IOException e) {
                 return false;
             } catch (InterruptedException e) {

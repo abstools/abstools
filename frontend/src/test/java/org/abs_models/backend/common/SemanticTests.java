@@ -62,15 +62,12 @@ public abstract class SemanticTests {
          */
         data.add(new Object[] { new JavaTestDriver() });
         data.add(new Object[] { new JavaTestDriver(1) });
-        /* XXX [stolz] Disabled due to non-deterministic test-runs.
-         * Switch back on when Radu comes back.
-         */
-        // data.add(new Object[] { new JavaDynamicTestDriver() });
+        /* TODO: Mark Maude tests as ignored instead of just missing them */
         // if (checkMaude()) {
         //     data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.RL) });
         //     data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.EQ_TIMED) });
         // }
-        if (checkErlang()) {
+        if (ErlangTestDriver.checkErlang()) {
             data.add(new Object[] { new ErlangTestDriver() });
         }
         // FIXME: enable after #302 is done, {new

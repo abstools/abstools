@@ -8,7 +8,9 @@ import org.abs_models.frontend.typesystem.ExamplesTypeChecking;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 
+@EnabledIf("checkRequired")
 public class ErlangExamplesTests extends ExamplesTypeChecking {
 
     public ErlangExamplesTests(String input, String product) {

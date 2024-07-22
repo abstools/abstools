@@ -232,6 +232,8 @@ test {
 
     // Temporary workaround for old choco-solver-2.1.1
     jvmArgs '--add-opens', 'java.base/sun.security.action=ALL-UNNAMED'
+    // Usage: ./gradlew test -Dabs.junit.erlang=0 skips (most) erlang tests
+    systemProperty 'abs.junit.erlang', System.getProperty('abs.junit.erlang')
 
     // Allow dynamic exclusion of tests (based on https://blog.jdriven.com/2017/10/run-one-or-exclude-one-test-with-gradle/)
     // Usage: gradle test -PexcludeTests='**/ErlangModelApiTests*,**/ErlangExamplesTests*'
