@@ -41,8 +41,3 @@ subprojects {
     group = 'org.abs_models'
     version = gitVersion()
 }
-
-configure(subprojects.findAll { it.getPluginManager().hasPlugin('java') }) {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
-}
-
