@@ -369,7 +369,7 @@ aspect GenerateJavaDynamic_Core {
             String name = "init block";
             if (this instanceof MainBlock)
                 name = "main block";
-            stream.println("thisP.__ABS_getRuntime().getCurrentTask().newStackFrame(thisP,\"" + name + "\");");
+            stream.println(ABSThread.class.getName() + ".getCurrentTask().newStackFrame(thisP,\"" + name + "\");");
         }
 
         for (Stmt stmt : getStmts()) {
@@ -389,7 +389,7 @@ aspect GenerateJavaDynamic_Core {
                 stream.println(DynamicJavaGeneratorHelper.getDebugString(this, this.getEndLine()));
 
                 stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
-                stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
+                stream.println(ABSThread.class.getName() + ".getCurrentTask().popStackFrame();");
             }
 
             stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
@@ -427,7 +427,7 @@ aspect GenerateJavaDynamic_Core {
         stream.println(";");
 
         stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
-        stream.println("thisP.__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
+        stream.println(ABSThread.class.getName() + ".getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
     }
 
 
@@ -482,8 +482,8 @@ aspect GenerateJavaDynamic_Core {
 
     public void ReturnStmt.generateJavaDynamic(PrintStream stream) {
         super.generateJavaDynamic(stream);
-        stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");      
-        stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
+        stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+        stream.println(ABSThread.class.getName() + ".getCurrentTask().popStackFrame();");
 
         stream.print("return ");
         getRetExp().generateJavaDynamic(stream);

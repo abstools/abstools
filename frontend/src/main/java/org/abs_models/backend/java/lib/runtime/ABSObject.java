@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.abs_models.backend.java.lib.runtime;
@@ -15,11 +15,9 @@ import org.abs_models.backend.java.observing.ClassView;
 import org.abs_models.backend.java.observing.ObjectObserver;
 import org.abs_models.backend.java.observing.ObjectView;
 
-import static org.abs_models.backend.java.lib.runtime.ABSRuntime.*;
-
 /**
  * The super class of all ABS classes
- * 
+ *
  * @author Jan Schäfer
  *
  */
@@ -35,7 +33,7 @@ public abstract class ABSObject implements ABSRef {
     public boolean __checkSameCog = true;
 
     public ABSObject() {
-        this(getCurrentCOG());
+        this(ABSThread.getCurrentCOG());
     }
 
     protected ABSObject(COG cog) {
@@ -56,9 +54,9 @@ public abstract class ABSObject implements ABSRef {
     public abstract String getClassName();
 
     public ABSRuntime __ABS_getRuntime() {
-        return getRuntime();
+        return ABSRuntime.getRuntime();
     }
-    
+
     public final COG getCOG() {
         return __cog;
     }
@@ -68,7 +66,7 @@ public abstract class ABSObject implements ABSRef {
      */
     protected void __ABS_init() {
     }
-    
+
     /**
      * Represents an optional run method
      */
@@ -77,11 +75,11 @@ public abstract class ABSObject implements ABSRef {
     }
 
     public final boolean  __ABS_isSameCOG() {
-        return __cog == getCurrentCOG();
+        return __cog == ABSThread.getCurrentCOG();
     }
 
     public final void __ABS_checkSameCOG() {
-        if (__checkSameCog && __cog != getCurrentCOG()) {
+        if (__checkSameCog && __cog != ABSThread.getCurrentCOG()) {
             throw new ABSIllegalSynchronousCallException();
         }
     }
@@ -100,7 +98,7 @@ public abstract class ABSObject implements ABSRef {
     public ABSBool gt(ABSValue other) {
         if (other instanceof ABSObject) {
             ABSObject o = (ABSObject)other;
-            int comp = getClassName().compareTo(o.getClassName()); 
+            int comp = getClassName().compareTo(o.getClassName());
             if (comp == 0) return ABSBool.fromBoolean(this.__id > ((ABSObject)other).getView().getID());
             else return ABSBool.fromBoolean(comp > 0);
         } else if (other == null) {
@@ -115,7 +113,7 @@ public abstract class ABSObject implements ABSRef {
     public ABSBool lt(ABSValue other) {
         if (other instanceof ABSObject) {
             ABSObject o = (ABSObject)other;
-            int comp = getClassName().compareTo(o.getClassName()); 
+            int comp = getClassName().compareTo(o.getClassName());
             if (comp == 0) return ABSBool.fromBoolean(this.__id < ((ABSObject)other).getView().getID());
             else return ABSBool.fromBoolean(comp < 0);
         } else if (other == null) {
@@ -227,7 +225,5 @@ public abstract class ABSObject implements ABSRef {
     }
 
     public abstract List<String> getFieldNames();
-    
-    
-   
+
 }

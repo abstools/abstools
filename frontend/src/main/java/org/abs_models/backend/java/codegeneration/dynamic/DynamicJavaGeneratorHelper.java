@@ -376,7 +376,7 @@ public class DynamicJavaGeneratorHelper {
 //            stream.println(";");
         } else {
             stream.println("if (thisP.__ABS_getRuntime().debuggingEnabled()) {");
-            stream.println(Task.class.getName() + "<?> __ABS_currentTask = thisP.__ABS_getRuntime().getCurrentTask();");
+            stream.println(Task.class.getName() + "<?> __ABS_currentTask = ABSThread.getCurrentTask();");
             stream.println("__ABS_currentTask.newStackFrame(thisP, \"" + m.getMethodSig().getName() + "\");");
             for (ParamDecl d : m.getMethodSig().getParams()) {
                 stream.print("__ABS_currentTask.setLocalVariable(");
@@ -527,7 +527,7 @@ public class DynamicJavaGeneratorHelper {
 
         if (assign.getVar() instanceof VarUse) {
             stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
-            stream.print("thisP.__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + assign.getVar().getName() + "\", ");
+            stream.print("ABSThread.getCurrentTask().setLocalVariable(\"" + assign.getVar().getName() + "\", ");
             assign.getVar().generateJavaDynamic(stream);
             stream.println(");");
         }

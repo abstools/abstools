@@ -54,7 +54,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSRational lowlevelDeadline() {
-        Aprational deadline_t = ABSRuntime.getCurrentTask().getDeadlineAbsolute();
+        Aprational deadline_t = ABSThread.getCurrentTask().getDeadlineAbsolute();
         if (deadline_t.signum() >= 0) {
             Aprational clock = ABSRuntime.getRuntime().getClock();
             Aprational deadline_r = deadline_t.subtract(clock);
@@ -80,7 +80,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSInterface thisDC() {
-        return ABSRuntime.getCurrentCOG().getDC();
+        return ABSThread.getCurrentCOG().getDC();
     }
 
     public static <T> ABSString toString(T t) {
@@ -198,7 +198,7 @@ public class ABSBuiltInFunctions {
     public static <A extends ABSValue, B extends ABSValue> A watchEx(String fileName, int line, A val, B info) {
         ABSRuntime runtime = ABSRuntime.getRuntime();
         if (runtime.debuggingEnabled()) {
-            Task<?> task = ABSRuntime.getCurrentTask();
+            Task<?> task = ABSThread.getCurrentTask();
             task.newStackFrame(null, "$watch");
             task.setLocalVariable("$watchValue", val);
             task.setLocalVariable("$watchInfo", info);
@@ -211,7 +211,7 @@ public class ABSBuiltInFunctions {
     public static <A extends ABSValue> A watch(String fileName, int line, A val) {
         ABSRuntime runtime = ABSRuntime.getRuntime();
         if (runtime.debuggingEnabled()) {
-            Task<?> task = ABSRuntime.getCurrentTask();
+            Task<?> task = ABSThread.getCurrentTask();
             task.newStackFrame(null, "$watch");
             task.setLocalVariable("$watchValue", val);
             runtime.nextStep(fileName, line);

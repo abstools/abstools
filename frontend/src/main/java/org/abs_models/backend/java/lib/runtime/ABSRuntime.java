@@ -26,11 +26,8 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
-import org.abs_models.backend.java.JavaBackendException;
 import org.abs_models.backend.java.lib.types.ABSInterface;
-import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSRef;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.SystemObserver;
 import org.abs_models.backend.java.scheduling.DefaultTaskScheduler;
 import org.abs_models.backend.java.scheduling.GlobalScheduler;
@@ -333,12 +330,12 @@ public class ABSRuntime {
             return;
 
         if (debugging) {
-            getCurrentTask().nextStep(fileName, line);
+            ABSThread.getCurrentTask().nextStep(fileName, line);
         }
 
         if (hasGlobalScheduler()) {
             try {
-                globalScheduler.stepTask(getCurrentTask());
+                globalScheduler.stepTask(ABSThread.getCurrentTask());
             } catch (InterruptedException e) {
                 if (!isShutdown)
                     e.printStackTrace();
@@ -410,21 +407,13 @@ public class ABSRuntime {
         return taskSchedulingStrategy;
     }
 
-    public static Task<?> getCurrentTask() {
-        if (getCurrentCOG() != null) {
-            return getCurrentCOG().getScheduler().getActiveTask();
-        } else {
-            return null;
-        }
-    }
-
     public static void suspend() {
-        getCurrentCOG().getScheduler().await(new ABSTrueGuard());
+        ABSThread.getCurrentCOG().getScheduler().await(new ABSTrueGuard());
     }
 
     public static void await(ABSGuard g) {
         if (g.isTrue()) return; // special case in the semantics
-        getCurrentCOG().getScheduler().await(g);
+        ABSThread.getCurrentCOG().getScheduler().await(g);
     }
 
     public COG createCOG(Class<?> clazz, ABSInterface dc) {
@@ -439,22 +428,6 @@ public class ABSRuntime {
         // (who created the fresh object and cog) will schedule an
         // initialization task immediately.
         return new COG(this, clazz, dc, strategy);
-    }
-
-    public static COG getCurrentCOG() {
-        final ABSThread thread = getCurrentThread();
-        if (thread != null)
-            return thread.getCOG();
-        else
-            return null;
-    }
-
-    public static ABSThread getCurrentThread() {
-        Thread currentThread = Thread.currentThread();
-        if (currentThread instanceof ABSThread)
-            return (ABSThread) currentThread;
-        else
-            return null;
     }
 
     public <T extends ABSRef> ABSFut<?> asyncCall(AsyncCall<T> call) {

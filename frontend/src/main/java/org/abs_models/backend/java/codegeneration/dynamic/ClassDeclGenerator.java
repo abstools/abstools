@@ -132,7 +132,7 @@ public class ClassDeclGenerator {
         generateObjectConstruction(ABSDynamicRuntime.class.getName() + ".getRuntime()");
         stream.println("__ABS_result.__ABS_init();");
         if (decl.isActiveClass()) {
-            stream.println("final " + Task.class.getName() + " __ABS_sendingTask = " + ABSRuntime.class.getName() + ".getCurrentTask();");
+            stream.println("final " + Task.class.getName() + " __ABS_sendingTask = " + ABSThread.class.getName() + ".getCurrentTask();");
             stream.println(ABSDynamicRuntime.class.getName() + ".getRuntime().asyncCall(new "
                     + ABSRunMethodCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
@@ -157,9 +157,9 @@ public class ClassDeclGenerator {
         stream.println(" {");
         stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getRuntime();");
         stream.println("final " + COG.class.getName() + " __ABS_cog = __ABS_runtime.createCOG(" + className + ".class);");
-        stream.println("final " + ABSThread.class.getName() + " __ABS_thread = " + ABSRuntime.class.getName() + ".getCurrentThread();");
-        stream.println("final " + COG.class.getName() + " __ABS_oldCOG = " + ABSRuntime.class.getName() + ".getCurrentCOG();");
-        stream.println("final " + Task.class.getName() + " __ABS_sendingTask = " + ABSRuntime.class.getName() + ".getCurrentTask();");
+        stream.println("final " + ABSThread.class.getName() + " __ABS_thread = " + ABSThread.class.getName() + ".getCurrentThread();");
+        stream.println("final " + COG.class.getName() + " __ABS_oldCOG = " + ABSThread.class.getName() + ".getCurrentCOG();");
+        stream.println("final " + Task.class.getName() + " __ABS_sendingTask = " + ABSThread.class.getName() + ".getCurrentTask();");
         stream.println("__ABS_thread.setCOG(__ABS_cog);");
         stream.println("try {");
         generateObjectConstruction("__ABS_runtime");

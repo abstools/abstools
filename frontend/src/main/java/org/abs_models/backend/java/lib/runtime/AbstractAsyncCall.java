@@ -17,7 +17,7 @@ public abstract class AbstractAsyncCall<T extends ABSRef> implements AsyncCall<T
     protected final Task<?> sender;
 
     public AbstractAsyncCall(ABSObject source, T target) {
-        this(ABSRuntime.getCurrentTask(),source,target);
+        this(ABSThread.getCurrentTask(),source,target);
     }
     
     public AbstractAsyncCall(Task<?> sender, ABSObject source, T target) {

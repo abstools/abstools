@@ -99,6 +99,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
         @Override
         public void run() {
+            super.run();
             try {
                 // We have:
                 // - runningThread (field of scheduler)
@@ -200,6 +201,9 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
             log.finest(() -> runningTask + " " + g + " ACTIVE");
         }
+
+	@Override
+	public void checkGuard() { }
     }
 
     @Override

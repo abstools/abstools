@@ -7,6 +7,7 @@ package org.abs_models.backend.java.lib.net;
 import org.abs_models.backend.java.lib.net.msg.CallMsg;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
+import org.abs_models.backend.java.lib.runtime.ABSThread;
 import org.abs_models.backend.java.lib.runtime.AsyncCall;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.types.ABSRef;
@@ -67,7 +68,7 @@ public class ABSNetRuntime extends ABSRuntime {
     }
     
     public NetCOG getCurrentNetCOG() {
-        return (NetCOG) getCurrentCOG();
+        return (NetCOG) ABSThread.getCurrentCOG();
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })

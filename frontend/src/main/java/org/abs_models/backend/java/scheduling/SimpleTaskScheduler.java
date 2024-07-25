@@ -216,6 +216,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         @Override
         public void run() {
+            super.run();
             try {
                 active = true;
                 executingTask.task.run();

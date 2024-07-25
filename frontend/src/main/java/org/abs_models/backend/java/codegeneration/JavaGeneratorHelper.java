@@ -530,7 +530,7 @@ public class JavaGeneratorHelper {
             stream.println(";");
         } else {
             stream.println("if (__ABS_getRuntime().debuggingEnabled()) {");
-            stream.println(Task.class.getName() + "<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
+            stream.println(Task.class.getName() + "<?> __ABS_currentTask = " + ABSThread.class.getName() + ".getCurrentTask();");
             stream.println("__ABS_currentTask.newStackFrame(this, \"" + m.getMethodSig().getName() + "\");");
             for (ParamDecl d : m.getMethodSig().getParams()) {
                 stream.print("__ABS_currentTask.setLocalVariable(");

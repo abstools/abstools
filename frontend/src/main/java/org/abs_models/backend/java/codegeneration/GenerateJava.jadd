@@ -70,7 +70,7 @@ aspect GenerateJava {
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
                 stream.println("// Create initial DC, hook it up to the initial cog");
                 stream.println(ABSInterface.class.getName() + " __main_block_dc = ABS.DC.DeploymentComponent_c.createNewLocalObject(" + ABSString.class.getName() + ".fromString(\"Initial DC\"), ABS.StdLib.map_f.apply(new ABS.StdLib.List_Nil<>()));");
-                stream.println(ABSRuntime.class.getName() + ".getCurrentCOG().setDCfromMainBlock(__main_block_dc);");
+                stream.println(ABSThread.class.getName() + ".getCurrentCOG().setDCfromMainBlock(__main_block_dc);");
                 block.generateJava(stream);
                 stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
                 stream.println("}");
@@ -434,11 +434,11 @@ aspect GenerateJava {
 
         super.generateJava(stream);
         if (getModel().includeDebug && (this instanceof MainBlock || this instanceof InitBlock)) {
-            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
+            stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
             String name = "init block";
             if (this instanceof MainBlock)
                 name = "main block";
-            stream.println("__ABS_getRuntime().getCurrentTask().newStackFrame(this,\"" + name + "\");");
+            stream.println(ABSThread.class.getName() + ".getCurrentTask().newStackFrame(this,\"" + name + "\");");
         }
 
         for (Stmt stmt : getStmts()) {
@@ -446,7 +446,7 @@ aspect GenerateJava {
             if (cost != null) {
                 stream.print("new " + ABSResourceGuard.class.getName() + "(");
                 cost.generateJava(stream);
-                stream.println(").await(" + ABSRuntime.class.getName() + ".getCurrentCOG(), " + ABSRuntime.class.getName() + ".getCurrentTask());");
+                stream.println(").await(" + ABSThread.class.getName() + ".getCurrentCOG(), " + ABSThread.class.getName() + ".getCurrentTask());");
             }
             stmt.generateJava(stream);
         }
@@ -462,8 +462,8 @@ aspect GenerateJava {
         if (addReturn) {
             if (getModel().includeDebug) {
                 stream.println(JavaGeneratorHelper.getDebugString(this, getEndLine()));
-                stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
-                stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+                stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
+                stream.println(ABSThread.class.getName() + ".getCurrentTask().popStackFrame();");
             }
 
             stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
@@ -483,8 +483,8 @@ aspect GenerateJava {
         }
         stream.println(";");
         if (getModel().includeDebug) {
-            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
-            stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
+            stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
+            stream.print(ABSThread.class.getName() + ".getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
         }
     }
 
@@ -516,8 +516,8 @@ aspect GenerateJava {
 
         if (getVar() instanceof VarUse) {
             if (getModel().includeDebug) {
-                stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
-                stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getVar().getName() + "\", ");
+                stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
+                stream.print(ABSThread.class.getName() + ".getCurrentTask().setLocalVariable(\"" + getVar().getName() + "\", ");
                 getVar().generateJava(stream);
                 stream.print(");");
             }
@@ -559,8 +559,8 @@ aspect GenerateJava {
         }
         boolean needConversion = lht.isIntType() && getRetExp().getType().isRatType();
         if (getModel().includeDebug) {
-            stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
-            stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+            stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
+            stream.println(ABSThread.class.getName() + ".getCurrentTask().popStackFrame();");
         }
 
         stream.print("return ");
@@ -579,7 +579,7 @@ aspect GenerateJava {
         getMin().generateJava(stream);
         stream.print(", ");
         getMax().generateJava(stream);
-        stream.println(").await(" + ABSRuntime.class.getName() + ".getCurrentCOG(), " + ABSRuntime.class.getName() + ".getCurrentTask());");
+        stream.println(").await(" + ABSThread.class.getName() + ".getCurrentCOG(), " + ABSThread.class.getName() + ".getCurrentTask());");
         stream.println(";");
     }
 
@@ -793,7 +793,7 @@ aspect GenerateJava {
             String strategy = null;
             PureExp scheduler = getInheritedAnnotationValue("Scheduler");
             PureExp dc = getInheritedAnnotationValue("DC");
-            String dc_exp = "(ABS.DC.DeploymentComponent_i)(__ABS_getRuntime().getCurrentCOG().getDC())";
+            String dc_exp = "(ABS.DC.DeploymentComponent_i)(" + ABSThread.class.getName() + ".getCurrentCOG().getDC())";
             if (dc != null) {
                 ByteArrayOutputStream output = new ByteArrayOutputStream();
                 PrintStream s = new PrintStream(output);

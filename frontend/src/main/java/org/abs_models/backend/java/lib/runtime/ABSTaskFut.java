@@ -27,11 +27,11 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
     @Override
     public V get() {
         synchronized (this) {
-            if (!isDone() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
+            if (!isDone() && resolvingTask.getCOG() == ABSThread.getCurrentCOG())
                 throw new ABSDeadlockException();
         }
 
-        final Task<?> t = ABSRuntime.getCurrentTask();
+        final Task<?> t = ABSThread.getCurrentTask();
         if (t != null) {
             t.calledGetOnFut(this);
         }
@@ -40,7 +40,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
             ABSRuntime.getRuntime().getGlobalScheduler().handleGet(this);
         }
 
-        await(ABSRuntime.getCurrentCOG(), ABSRuntime.getCurrentTask());
+        await(ABSThread.getCurrentCOG(), ABSThread.getCurrentTask());
         log.finest(() -> "future " + this + " awaited");
 
         if (t != null) {
