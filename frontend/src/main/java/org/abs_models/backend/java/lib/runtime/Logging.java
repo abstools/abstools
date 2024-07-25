@@ -38,7 +38,7 @@ public class Logging {
             return record.getLevel()
                 + " [" + record.getSourceClassName()
                 + " " + record.getSourceMethodName()
-                + " " + record.getThreadID()
+                + " " + record.getLongThreadID()
                 + "]: " + record.getMessage()
                 + "\n";
         }

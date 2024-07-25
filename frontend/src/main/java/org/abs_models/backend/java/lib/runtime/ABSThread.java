@@ -60,7 +60,7 @@ public class ABSThread extends Thread {
     }
     
     public synchronized void shutdown() {
-        logger.fine("Thread "+this.getId()+" received shutdown signal");
+        logger.fine("Thread "+this.threadId()+" received shutdown signal");
         shutdown = true;
         this.interrupt();
     }

@@ -14,17 +14,18 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.JarURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -210,7 +211,7 @@ class SourceView extends JPanel implements DebugModelListener {
         }
 
         try {
-            final URL jarURL = new URL(fileName);
+            final URL jarURL = new URI(fileName).toURL();
 
             final JarURLConnection connection =
                 (JarURLConnection) jarURL.openConnection();
@@ -225,20 +226,12 @@ class SourceView extends JPanel implements DebugModelListener {
 
             tmp.deleteOnExit();
 
-            final OutputStream output = new FileOutputStream(tmp);
-            int read = 0;
-            byte[] bytes = new byte[1024];
-            while ((read = input.read(bytes)) != -1) {
-                output.write(bytes, 0, read);
-            }
-            input.close();
-            output.flush();
-            output.close();
+            Files.copy(input, tmp.toPath());
+
             return tmp;
-        } catch (Exception e) {
+        } catch (URISyntaxException | IOException e) {
             throw new IllegalStateException(e);
         }
-
     }
 
     private void createHighlightPainters() {
