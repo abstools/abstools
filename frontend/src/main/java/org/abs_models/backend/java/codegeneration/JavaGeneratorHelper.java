@@ -323,7 +323,7 @@ public class JavaGeneratorHelper {
 
     public static String getDebugString(ASTNode<?> node, int line) {
         String fileName = node.getCompilationUnit().getFileName().replace("\\", "\\\\");
-        return "if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep(\""
+        return "if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) " + ABSRuntime.class.getName() + ".getRuntime().nextStep(\""
             + fileName + "\"," + line + ");";
     }
 
@@ -529,7 +529,7 @@ public class JavaGeneratorHelper {
             JavaGeneratorHelper.generateParamArgs(stream, m.getMethodSig().getParams());
             stream.println(";");
         } else {
-            stream.println("if (__ABS_getRuntime().debuggingEnabled()) {");
+            stream.println("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) {");
             stream.println(Task.class.getName() + "<?> __ABS_currentTask = " + ABSThread.class.getName() + ".getCurrentTask();");
             stream.println("__ABS_currentTask.newStackFrame(this, \"" + m.getMethodSig().getName() + "\");");
             for (ParamDecl d : m.getMethodSig().getParams()) {

@@ -4,12 +4,15 @@
  */
 package org.abs_models.backend.java.lib.runtime.metaABS;
 
+import org.abs_models.backend.java.codegeneration.dynamic.DynamicException;
 import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicProduct;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicProductLine;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicReconfiguration;
+import org.abs_models.backend.java.lib.runtime.ABSDynamicRuntime;
+import org.abs_models.backend.java.lib.runtime.ABSRuntime;
 import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
@@ -28,6 +31,12 @@ public class ProductLine {
         return thisClass;
     }
 
+    private static ABSDynamicRuntime getDynamicRuntime() {
+        ABSRuntime runtime = ABSRuntime.getRuntime();
+        if (runtime instanceof ABSDynamicRuntime dr) return dr;
+        else throw new DynamicException("Dynamic ABS Java code detected. Please run with -dynamic switch.");
+    }
+
     private static void setupAPI() {
         thisClass.setName("ProductLine");
         
@@ -38,7 +47,7 @@ public class ProductLine {
         thisClass.addMethod(/*ABSDynamicProduct*/ "getCurrentProduct", new ABSClosure() {
             @Override
             public ABSDynamicProduct exec(ABSDynamicObject t, ABSValue... params) {
-                ABSDynamicProduct currentProd = t.__ABS_getRuntime().getDSPL().getCurrentProduct();
+                ABSDynamicProduct currentProd = getDynamicRuntime().getDSPL().getCurrentProduct();
                 return currentProd;
             }
         });
@@ -47,7 +56,7 @@ public class ProductLine {
             @Override
             public ABSDynamicProduct exec(ABSDynamicObject t, ABSValue... params) {
                 ABSString name = (ABSString)params[0];
-                ABSDynamicProduct product = t.__ABS_getRuntime().getDSPL().getProduct(name.getString());
+                ABSDynamicProduct product = getDynamicRuntime().getDSPL().getProduct(name.getString());
                 return product;
             }
         });
@@ -56,7 +65,7 @@ public class ProductLine {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct targetProd = (ABSDynamicProduct)params[0];
-                ABSDynamicProductLine pl = t.__ABS_getRuntime().getDSPL();
+                ABSDynamicProductLine pl = getDynamicRuntime().getDSPL();
                 pl.reconfigure(targetProd);
                 return ABSUnit.UNIT;
             }
@@ -66,7 +75,7 @@ public class ProductLine {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct product = (ABSDynamicProduct)params[0];
-                t.__ABS_getRuntime().getDSPL().addProduct(product);
+                getDynamicRuntime().getDSPL().addProduct(product);
                 return ABSUnit.UNIT;
             }
         });
@@ -75,7 +84,7 @@ public class ProductLine {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct product = (ABSDynamicProduct)params[0];
-                t.__ABS_getRuntime().getDSPL().removeProduct(product);
+                getDynamicRuntime().getDSPL().removeProduct(product);
                 return ABSUnit.UNIT;
             }
         });
@@ -84,7 +93,7 @@ public class ProductLine {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicReconfiguration recf = (ABSDynamicReconfiguration)params[0];
-                t.__ABS_getRuntime().getDSPL().addReconfiguration(recf);
+                getDynamicRuntime().getDSPL().addReconfiguration(recf);
                 return ABSUnit.UNIT;
             }
         });
@@ -93,7 +102,7 @@ public class ProductLine {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicReconfiguration recf = (ABSDynamicReconfiguration)params[0];
-                t.__ABS_getRuntime().getDSPL().removeReconfiguration(recf);
+                getDynamicRuntime().getDSPL().removeReconfiguration(recf);
                 return ABSUnit.UNIT;
             }
         });

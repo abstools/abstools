@@ -44,7 +44,7 @@ public abstract class ABSObject implements ABSRef {
 
 
     private long getFreshID() {
-        return __ABS_getRuntime().getFreshObjectID(this.getClass());
+        return ABSRuntime.getRuntime().getFreshObjectID(this.getClass());
     }
 
     public String toString() {
@@ -52,10 +52,6 @@ public abstract class ABSObject implements ABSRef {
     }
 
     public abstract String getClassName();
-
-    public ABSRuntime __ABS_getRuntime() {
-        return ABSRuntime.getRuntime();
-    }
 
     public final COG getCOG() {
         return __cog;

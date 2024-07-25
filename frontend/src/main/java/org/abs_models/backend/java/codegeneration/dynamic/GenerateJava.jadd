@@ -89,9 +89,9 @@ aspect GenerateJavaDynamic_Core {
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
                 stream.println("final " + ABSDynamicObject.class.getName() + " thisP = this;");
                 if (getModel().getProductName().equals("core")) {
-                    stream.println("thisP.__ABS_getRuntime().initDSPL(new " + ABSDynamicProductCore.class.getName() + "());");
+                    stream.println("" + ABSRuntime.class.getName() + ".getRuntime().initDSPL(new " + ABSDynamicProductCore.class.getName() + "());");
                 } else {
-                    stream.println("thisP.__ABS_getRuntime().initDSPL(" 
+                    stream.println("" + ABSRuntime.class.getName() + ".getRuntime().initDSPL(" 
                             + JavaBackendConstants.LIB_RDM_PACKAGE + "." 
                             + JavaBackend.getProductName(getModel().getProductName()) + ".singleton());");
                 }
@@ -365,7 +365,7 @@ aspect GenerateJavaDynamic_Core {
 
         super.generateJavaDynamic(stream);
         if (this instanceof MainBlock || this instanceof InitBlock) {
-            stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+            stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
             String name = "init block";
             if (this instanceof MainBlock)
                 name = "main block";
@@ -388,7 +388,7 @@ aspect GenerateJavaDynamic_Core {
             if (getModel().includeDebug) {
                 stream.println(DynamicJavaGeneratorHelper.getDebugString(this, this.getEndLine()));
 
-                stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+                stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
                 stream.println(ABSThread.class.getName() + ".getCurrentTask().popStackFrame();");
             }
 
@@ -426,7 +426,7 @@ aspect GenerateJavaDynamic_Core {
         }
         stream.println(";");
 
-        stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+        stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
         stream.println(ABSThread.class.getName() + ".getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
     }
 
@@ -482,7 +482,7 @@ aspect GenerateJavaDynamic_Core {
 
     public void ReturnStmt.generateJavaDynamic(PrintStream stream) {
         super.generateJavaDynamic(stream);
-        stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+        stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
         stream.println(ABSThread.class.getName() + ".getCurrentTask().popStackFrame();");
 
         stream.print("return ");

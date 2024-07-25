@@ -54,15 +54,6 @@ public class ABSDynamicObject extends ABSObject {
 //        }
     }
 
-    @Override
-    public final ABSDynamicRuntime __ABS_getRuntime() {
-        ABSRuntime runtime = super.__ABS_getRuntime();
-        if (runtime instanceof ABSDynamicRuntime)
-            return (ABSDynamicRuntime)super.__ABS_getRuntime();
-        else
-            throw new DynamicException("Dynamic ABS Java code detected. Please run with -dynamic switch.");
-    }
-
     public String getClassName() {
         return getClazz().getName();
     }

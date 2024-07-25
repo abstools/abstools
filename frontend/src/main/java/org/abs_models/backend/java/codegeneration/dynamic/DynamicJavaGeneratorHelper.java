@@ -147,7 +147,7 @@ public class DynamicJavaGeneratorHelper {
 
     public static String getDebugString(Stmt stmt, int line) {
         String fileName = stmt.getCompilationUnit().getFileName().replace("\\", "\\\\");
-        return "if (thisP.__ABS_getRuntime().debuggingEnabled()) thisP.__ABS_getRuntime().nextStep(\""
+        return "if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) " + ABSRuntime.class.getName() + ".getRuntime().nextStep(\""
         + fileName + "\"," + line + ");";
     }
 
@@ -375,7 +375,7 @@ public class DynamicJavaGeneratorHelper {
 //            DynamicJavaGeneratorHelper.generateParamArgs(stream, m.getMethodSig().getParams());
 //            stream.println(";");
         } else {
-            stream.println("if (thisP.__ABS_getRuntime().debuggingEnabled()) {");
+            stream.println("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) {");
             stream.println(Task.class.getName() + "<?> __ABS_currentTask = ABSThread.getCurrentTask();");
             stream.println("__ABS_currentTask.newStackFrame(thisP, \"" + m.getMethodSig().getName() + "\");");
             for (ParamDecl d : m.getMethodSig().getParams()) {
@@ -526,7 +526,7 @@ public class DynamicJavaGeneratorHelper {
         }
 
         if (assign.getVar() instanceof VarUse) {
-            stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+            stream.print("if (" + ABSRuntime.class.getName() + ".getRuntime().debuggingEnabled()) ");
             stream.print("ABSThread.getCurrentTask().setLocalVariable(\"" + assign.getVar().getName() + "\", ");
             assign.getVar().generateJavaDynamic(stream);
             stream.println(");");

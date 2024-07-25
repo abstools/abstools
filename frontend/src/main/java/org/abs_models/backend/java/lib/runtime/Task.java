@@ -48,7 +48,7 @@ public class Task<T extends ABSRef> implements Runnable {
     public Task(AsyncCall<T> call) {
         this.call = call;
         future = new ABSTaskFut(this);
-        ABSRuntime runtime = ((ABSObject)call.getTarget()).__ABS_getRuntime();
+        ABSRuntime runtime = ABSRuntime.getRuntime();
         id = runtime.freshTaskID();
         if (runtime.debuggingEnabled()) {
             stack = new TaskStack(this);
