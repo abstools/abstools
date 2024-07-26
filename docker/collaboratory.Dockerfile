@@ -1,17 +1,14 @@
 # syntax=docker/dockerfile:1.3-labs
-FROM jojomi/hugo AS abs-models-site
+FROM alpine:3.20 AS abs-models-site
 RUN <<EOF
-apk --update add git
-git clone https://github.com/abstools/abs-models.org.git /abs-models.org
+    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community hugo git
+    git clone https://github.com/abstools/abs-models.org.git /abs-models.org
 EOF
 WORKDIR /abs-models.org
 RUN hugo -e collaboratory
 
 FROM erlang:26-alpine AS jdk-erlang
-RUN <<EOF
-apk --update add bash nss openjdk21-jdk gcc libc-dev git
-rm -rf /var/cache/apk/*
-EOF
+RUN apk --update --no-cache add bash nss openjdk21-jdk gcc libc-dev git
 
 FROM jdk-erlang AS builder
 COPY ./ /appSrc/
