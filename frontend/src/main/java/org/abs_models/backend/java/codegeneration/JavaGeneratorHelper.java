@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.util.stream.StreamSupport;
 
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.java.JavaBackendConstants;
@@ -23,7 +24,6 @@ import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
 import org.abs_models.common.Constants;
-import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.ast.ASTNode;
 import org.abs_models.frontend.ast.Annotation;
@@ -32,6 +32,7 @@ import org.abs_models.frontend.ast.AwaitAsyncCall;
 import org.abs_models.frontend.ast.AwaitStmt;
 import org.abs_models.frontend.ast.BuiltinFunctionDef;
 import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.ConstructorArg;
 import org.abs_models.frontend.ast.DataConstructor;
 import org.abs_models.frontend.ast.DataTypeDecl;
 import org.abs_models.frontend.ast.Decl;
@@ -298,6 +299,105 @@ public class JavaGeneratorHelper {
         stream.println("result = new ABS.StdLib.List_Cons(row, result);");
         stream.println("}");
         stream.println("return result;");
+    }
+
+    /**
+     * Convert data types to something that can be JSONified by the
+     * Jackson library for the Model API.  There are three cases:<p>
+     *
+     * <ul>
+
+     * <li> One of the standard library datatypes (List, Set, Map):
+     *      these get hardcoded behavior.
+
+     * <li> A constructor that has accessor functions and/or {@code
+     *      HTTPName} annotations: these are returned as maps
+     *
+     * <li> Any other constructor: return the value of calling {@code ABS StdLib.toString} on it.
+     * </ul>
+     *
+     * @return A Java object that can be handled by the Jackson library
+     */
+    public static void generateDataTypeConstructorToJsonMethod(PrintStream stream, DataConstructor c) {
+        String qualifiedName = JavaBackend.getQualifiedString(c);
+        boolean useToString = StreamSupport.stream(c.getConstructorArgs().spliterator(), false)
+            .noneMatch(
+                ca -> ca.hasSelectorName()
+                      || AnnotationHelper.getAnnotationValueFromName(
+                          ca.getTypeUse().getAnnotations(),
+                          "ABS.StdLib.HTTPName")
+                         != null);
+        stream.println("public java.lang.Object toJson() {");
+        if (qualifiedName.equals("ABS.StdLib.List_Cons")) {
+            stream.println(
+                """
+                java.lang.String className = this.getClass().getName();
+                java.util.ArrayList<Object> result = new java.util.ArrayList<>();
+                org.abs_models.backend.java.lib.types.ABSDataType value = this;
+                while (className.equals("ABS.StdLib.List_Cons")) {
+                    result.addLast(org.abs_models.backend.java.lib.runtime.ModelApi.absToJson(value.getArg(0)));
+                    value = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(1);
+                    className = value.getClass().getName();
+                }
+                return result;
+                """);
+        } else if (qualifiedName.equals("ABS.StdLib.List_Nil")) {
+            stream.println("return java.util.List.of();");
+        } else if (qualifiedName.equals("ABS.StdLib.Set_Insert")) {
+            stream.println(
+                """
+                java.lang.String className = this.getClass().getName();
+                java.util.ArrayList<Object> result = new java.util.ArrayList<>();
+                org.abs_models.backend.java.lib.types.ABSDataType value = this;
+                while (className.equals("ABS.StdLib.Set_Insert")) {
+                    result.addLast(org.abs_models.backend.java.lib.runtime.ModelApi.absToJson(value.getArg(0)));
+                    value = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(1);
+                    className = value.getClass().getName();
+                }
+                return result;
+                """);
+        } else if (qualifiedName.equals("ABS.StdLib.Set_EmptySet")) {
+            stream.println("return java.util.List.of();");
+        } else if (qualifiedName.equals("ABS.StdLib.Map_InsertAssoc")) {
+            stream.println(
+                """
+                java.lang.String className = this.getClass().getName();
+                java.util.HashMap<java.lang.String, Object> result = new java.util.HashMap<>();
+                org.abs_models.backend.java.lib.types.ABSDataType value = this;
+                while (className.equals("ABS.StdLib.Map_InsertAssoc")) {
+                    org.abs_models.backend.java.lib.types.ABSDataType entry = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(0); // guaranteed to be Pair
+                    result.putIfAbsent(org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions.toString(entry.getArg(0)).getString(),
+                        org.abs_models.backend.java.lib.runtime.ModelApi.absToJson(entry.getArg(1)));
+                    value = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(1);
+                    className = value.getClass().getName();
+                }
+                return result;
+                """);
+        } else if (qualifiedName.equals("ABS.StdLib.Map_EmptyMap")) {
+            stream.println("return java.util.Map.of();");
+        } else if (useToString) {
+            // no accessors or HTTPName annotations
+            stream.println("return " + ABSBuiltInFunctions.class.getName() + ".toString(this).getString();");
+        } else {
+            stream.println("java.util.HashMap<java.lang.String, java.lang.Object> result = new java.util.HashMap<>();");
+            for (int elem = 0; elem < c.getNumConstructorArg(); elem++) {
+                ConstructorArg ca = c.getConstructorArg(elem);
+                List<Annotation> ann = ca.getTypeUse().getAnnotations();
+                String key = null;
+                PureExp keyann = AnnotationHelper.getAnnotationValueFromName(ann, "ABS.StdLib.HTTPName");
+                if (keyann != null && keyann instanceof StringLiteral) {
+                    key = ((StringLiteral)keyann).getContent();
+                } else if (ca.hasSelectorName()) {
+                    key = ca.getSelectorName().toString();
+                }
+                if (key != null) {
+                    stream.println("result.put(\"" + key + "\", "
+                                   +  "this.arg" + elem + ".toJson());");
+                }
+            }
+            stream.println("return result;");
+        }
+        stream.println("}");
     }
 
     private static String generateFunctionalBreakPointArgs(FnApp app) {

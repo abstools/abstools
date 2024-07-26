@@ -18,4 +18,8 @@ public class ABSUnit extends ABSBuiltInDataType {
     public ABSBool lt(ABSValue o) {
         return ABSBool.FALSE;
     }
+
+    public Object toJson() {
+        return "Unit";
+    }
 }

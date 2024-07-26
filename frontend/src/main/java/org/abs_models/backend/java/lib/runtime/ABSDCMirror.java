@@ -2,10 +2,15 @@ package org.abs_models.backend.java.lib.runtime;
 
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSRational;
+import org.abs_models.backend.java.lib.types.ABSValue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apfloat.Aprational;
 
@@ -69,18 +74,90 @@ public class ABSDCMirror {
         }
     }
 
+    private Double getCreationTime() {
+        ABSValue creationTimeRaw;
+	try {
+	    creationTimeRaw = (ABSValue)GET_FIELD_VALUE.invoke(dc, "creationTime");
+	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+	}
+        @SuppressWarnings("rawtypes")
+	    Map m = (Map)creationTimeRaw.toJson();
+        Double result = (Double)m.get("timeValue");
+        return result;
+    }
+
+    private List<Number> getCpuHistory() {
+        ABSValue cpuHistoryRaw;
+	try {
+	    cpuHistoryRaw = (ABSValue)GET_FIELD_VALUE.invoke(dc, "cpuhistory");
+	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+	}
+        @SuppressWarnings("rawtypes")
+            List<Number> result = (List)cpuHistoryRaw.toJson();
+        return result.reversed();
+    }
+
+    private List<Number> getCpuTotalsHistory() {
+        ABSValue cpuTotalsHistoryRaw;
+	try {
+	    cpuTotalsHistoryRaw = (ABSValue)GET_FIELD_VALUE.invoke(dc, "cpuhistorytotal");
+	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+	}
+        @SuppressWarnings("rawtypes")
+            List<Number> result = (List)cpuTotalsHistoryRaw.toJson();
+        return result.reversed();
+    }
+
+    /**
+     * Get CPU history as a list of lists.  Each sublist contains two
+     * or three elements: the time of recording the value (starting
+     * with the creation time of the deployment component and
+     * increasing by 1), the consumed CPU in that time slot, and (if
+     * applicable), the total available CPU in that time slot.
+     */
+    public List<List<Number>> getCpuHistories() {
+        Double ct = getCreationTime();
+        List<Number> cpuHistory = getCpuHistory();
+        List<Number> cpuTotalsHistory = getCpuTotalsHistory();
+        List<List<Number>> result = IntStream
+            .range(0, cpuHistory.size())
+            .mapToObj(i -> (cpuTotalsHistory.isEmpty()
+                ? List.of(ct + i, cpuHistory.get(i))
+                : List.of(ct + i, cpuHistory.get(i), cpuTotalsHistory.get(i))))
+            .collect(Collectors.toList());
+        return result;
+    }
+
+    public String getDescription() {
+        ABSValue descriptionRaw;
+	try {
+	    descriptionRaw = (ABSValue)GET_FIELD_VALUE.invoke(dc, "description");
+	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+	}
+        // this is slightly baroque but doesn't require any casts
+        return descriptionRaw.toJson().toString();
+    }
+
     // Find class ABS.DC.DeploymentComponent and needed methods, and the
     // InfRat datatype.
     static Class<?> CLASS_DC;      // ABS.DC.DeploymentComponent
     static Field DC_CHECK_SAME_COG; // ABS.DC.DeploymentComponent.__checkSameCog
     static Method DC_CONSUME_COST; // ABS.DC.DeploymentComponent#consumeCost
     static Method DC_ADVANCE_TIME_BY_1_TICK; // ABS.DC.DeploymentComponent#advanceTimeBy1Tick
+    static Method GET_FIELD_VALUE;           // ABS.DC.DeploymentComponent#getFieldValue
     static {
         try {
             CLASS_DC = Class.forName("ABS.DC.DeploymentComponent_c");
             DC_CHECK_SAME_COG = ABSObject.class.getDeclaredField("__checkSameCog");
             DC_CONSUME_COST = CLASS_DC.getDeclaredMethod("consumeCost", ABSRational.class);
             DC_ADVANCE_TIME_BY_1_TICK = CLASS_DC.getDeclaredMethod("advanceTimeBy1Tick");
+            GET_FIELD_VALUE = CLASS_DC.getDeclaredMethod("getFieldValue", java.lang.String.class);
+            GET_FIELD_VALUE.setAccessible(true); // override `protected` flag
         } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException e) {
             throw new RuntimeException("Failed to find something from the ABS standard library: " + e.getMessage());
         }

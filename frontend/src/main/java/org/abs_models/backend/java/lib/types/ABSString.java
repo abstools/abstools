@@ -87,4 +87,8 @@ public class ABSString extends ABSBuiltInDataType {
     public String toString() {
         return value;
     }
+
+    public Object toJson() {
+        return getString();
+    }
 }

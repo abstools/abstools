@@ -34,17 +34,31 @@ distributions {
 }
 
 dependencies {
-    // https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_plugin_and_dependency_management
+    // General-purpose utility libraries; these could be replaced with
+    // Java 21 standard library built-ins, if possible.
     implementation 'commons-io:commons-io:2.16.1'
     implementation 'com.google.guava:guava:33.2.0-jre'
-    implementation files('lib/choco-solver-2.1.1.jar')
-    implementation 'org.apfloat:apfloat:1.14.0'
-    implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
+    // Command-line parser library
+    implementation 'info.picocli:picocli:4.7.6'
+    // Parser library
+    antlr 'org.antlr:antlr4:4.13.1'
+    // AST definition and rewriting library
+    jastadd2 'org.jastadd:jastadd:2.3.6'
+
     implementation 'org.sat4j:org.sat4j.core:2.3.1'
     implementation 'org.sat4j:org.sat4j.pb:2.3.1'
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.1'
-
-    implementation 'info.picocli:picocli:4.7.6'
+    // Outdated version of choco-solver for μTVL; note that there does
+    // not seem to be source code available anymore for this library.
+    // Should be replaced by more up-to-date version of choco-solver,
+    // or JSR331
+    implementation files('lib/choco-solver-2.1.1.jar')
+    // Rational numbers for the Java backend
+    implementation 'org.apfloat:apfloat:1.14.0'
+    // SQLite library for the Java backend
+    implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
+    // JSON library for the Java backend Model API
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
@@ -55,11 +69,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0-M2")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
-    testImplementation 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
     testImplementation 'org.hamcrest:hamcrest:2.2'
 
-    jastadd2 'org.jastadd:jastadd:2.3.6'
-    antlr 'org.antlr:antlr4:4.13.1'
 }
 
 // JastAdd

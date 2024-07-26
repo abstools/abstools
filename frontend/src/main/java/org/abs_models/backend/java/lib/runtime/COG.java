@@ -306,4 +306,8 @@ public class COG implements ABSValue {
         return true;
     }
 
+    public Object toJson() {
+        throw new RuntimeException("Trying to serialize a Cog; this should never happen");
+    }
+
 }

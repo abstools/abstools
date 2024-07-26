@@ -104,7 +104,7 @@ public class JavaBackend extends Main {
     }
 
     private void compile(Model m, File destDir, File output_jar) throws IOException, JavaCodeGenerationException {
-        JavaCode javaCode = new JavaCode(destDir, output_jar);
+        JavaCode javaCode = new JavaCode(destDir, output_jar, arguments.http_index_file, arguments.http_static_dir);
         if (this.untypedJavaGen) {
             if (arguments.verbose) System.out.println("Generating dynamic Java code...");
             m.generateJavaCodeDynamic(javaCode, arguments.debug_generated_code);

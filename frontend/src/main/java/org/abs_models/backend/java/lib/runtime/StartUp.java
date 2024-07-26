@@ -4,12 +4,14 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
+import java.io.IOException;
+
 import org.abs_models.backend.java.lib.net.ABSNetRuntime;
 import org.abs_models.backend.java.lib.net.NetworkImpl;
 import org.abs_models.backend.java.lib.net.NodeImpl;
 
 public class StartUp {
-    public static void startup(String[] args, Class<?> mainClass) throws InstantiationException, IllegalAccessException {
+    public static void startup(String[] args, Class<?> mainClass) throws InstantiationException, IllegalAccessException, IOException {
         RuntimeOptions options = new RuntimeOptions(args);
         Logging.setLogLevel(options.logLevel.stringValue());
         final ABSRuntime runtime;

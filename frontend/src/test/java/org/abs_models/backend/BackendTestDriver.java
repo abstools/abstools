@@ -5,8 +5,13 @@
 package org.abs_models.backend;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
+import org.abs_models.backend.common.InternalBackendException;
+import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.delta.DeltaModellingException;
 
 public interface BackendTestDriver {
 
@@ -19,9 +24,9 @@ public interface BackendTestDriver {
     public abstract boolean supportsTimedAbs();
 
     public abstract boolean supportsCustomSchedulers();
-    
+
     public abstract boolean supportsExceptions();
-    
+
     public abstract boolean supportsDowncasting();
 
     public abstract boolean supportsSQLite();
@@ -42,4 +47,10 @@ public interface BackendTestDriver {
      * @see org.abs_models.backend.common.SemanticTests#assertEvalTrueWithTestfiles(File, File...)
      */
     public abstract void assertEvalTrueWithTestfiles(Model m, File ...f) throws Exception;
+
+    public abstract boolean supportsModelApi();
+    default void startModelApi(File file) throws IOException, DeltaModellingException, WrongProgramArgumentException, InternalBackendException, InterruptedException { }
+    default void shutdownModelApi() { }
+    default String sendGetRequest(String request, int expectedResponseCode) throws IOException, URISyntaxException { return null; }
+    default String sendPostRequest(String request, String jsonPayload, int expectedResponseCode) throws IOException, URISyntaxException { return null; }
 }

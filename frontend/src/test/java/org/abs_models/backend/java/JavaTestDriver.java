@@ -89,4 +89,9 @@ public class JavaTestDriver extends ABSTest implements BackendTestDriver {
 
     @Override
     public boolean supportsSQLite() { return true; }
+
+    @Override
+    public boolean supportsModelApi() {
+        return true;
+    }
 }

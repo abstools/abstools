@@ -50,12 +50,19 @@ public class Config {
 
     private void configureRuntime() {
         setSimpleOptions();
+        loadModelApi();
         loadSystemObserver();
         loadTotalSchedulingStrategy();
         loadTaskSchedulingStrategy();
         loadGlobalSchedulingStrategy();
         loadSchedulerFactory();
         loadSchedulableTasksFilter();
+    }
+
+    private void loadModelApi() {
+        if (options.modelapiPort.wasSet) {
+            runtime.setModelApiPort(options.modelapiPort.longValue());
+        }
     }
 
     private void loadSchedulableTasksFilter() {
@@ -83,7 +90,9 @@ public class Config {
             options.totalScheduler.setValue(InteractiveScheduler.class.getName());
             options.systemObserver.appendStringValue(GraphicalDebugger.class.getName());
         }
-
+        if (options.clockLimit.wasSet()) {
+            runtime.initializeClockLimit(options.clockLimit.longValue());
+        }
         loadRandomSeed();
     }
 

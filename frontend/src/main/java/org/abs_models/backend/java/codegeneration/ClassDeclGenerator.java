@@ -6,7 +6,10 @@ package org.abs_models.backend.java.codegeneration;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.java.lib.runtime.ABSInitObjectCall;
@@ -19,10 +22,12 @@ import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.types.ABSClass;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
+import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.FieldDecl;
 import org.abs_models.frontend.ast.InterfaceTypeUse;
 import org.abs_models.frontend.ast.MethodImpl;
+import org.abs_models.frontend.ast.MethodSig;
 import org.abs_models.frontend.ast.ParamDecl;
 import org.abs_models.frontend.typechecker.InterfaceType;
 
@@ -31,6 +36,8 @@ public class ClassDeclGenerator {
     private final ClassDecl decl;
     private final String className;
     protected final PrintStream stream;
+    // All method signatures of all our interfaces
+    private HashMap<String, MethodSig> implementedSignatures = new HashMap<>();
 
     public static void generate(PrintStream stream, ClassDecl decl) {
         ClassDeclGenerator gen = new ClassDeclGenerator(stream, decl);
@@ -40,6 +47,10 @@ public class ClassDeclGenerator {
     private ClassDeclGenerator(PrintStream stream, ClassDecl decl) {
         this.stream = stream;
         this.decl = decl;
+        // Note that we re-use / abuse a typechecking method here to
+        // fill `sigs`; would be nice to have a method in the AST
+        // since the Erlang backend needs the same information
+        decl.addAllMethodSigs(implementedSignatures, new SemanticConditionList());
         className = JavaBackend.getClassName(decl.getName());
     }
 
@@ -54,6 +65,10 @@ public class ClassDeclGenerator {
 
         stream.println();
         generateFieldNamesMethod();
+        stream.println();
+        generateHttpCallableMethodInfoMethod();
+        stream.println();
+        generateHttpCallableMethods();
         stream.println();
         generateFields();
         if (decl.hasParam() || decl.hasField()) {
@@ -71,6 +86,70 @@ public class ClassDeclGenerator {
         stream.println();
         generateMethods();
         stream.println("}");
+    }
+
+    private void generateHttpCallableMethods() {
+        if (implementedSignatures.values().stream().noneMatch(MethodSig::isHTTPCallable)) return;
+        stream.println("private static final java.util.Map<java.lang.String, java.lang.invoke.MethodHandle> __modelApiMethodCache = new java.util.HashMap<>();");
+        stream.println();
+        stream.println("public org.abs_models.backend.java.lib.runtime.ABSFut invokeMethod(java.lang.String name, java.util.List<org.abs_models.backend.java.lib.types.ABSValue> arguments) {");
+        stream.println("java.lang.invoke.MethodHandle handle = __modelApiMethodCache.get(name);");
+        stream.println("if (handle == null) return null;");
+        stream.println("else  try {");
+        stream.println("return (org.abs_models.backend.java.lib.runtime.ABSFut)handle.bindTo(this).invokeWithArguments(arguments);");
+        stream.println("} catch (java.lang.Throwable t) {");
+        stream.println("return null;");
+        stream.println("}");
+        stream.println("}");
+        stream.println();
+        stream.println("static {");
+        stream.println("final java.lang.invoke.MethodHandles.Lookup lookup = java.lang.invoke.MethodHandles.lookup();");
+        stream.println("try {");
+        for (MethodSig sig : implementedSignatures.values()) {
+            if (!sig.isHTTPCallable()) continue;
+            String name = sig.getName();
+            stream.print("__modelApiMethodCache.put(");
+            stream.print("\"" + name + "\", ");
+            stream.print("lookup.findVirtual(" + className + ".class, ");
+            stream.println("\"async_" + JavaBackend.getMethodName(name) + "\",");
+            stream.print(" java.lang.invoke.MethodType.methodType(org.abs_models.backend.java.lib.runtime.ABSFut.class");
+            for (ParamDecl d : sig.getParams()) {
+                String javaTypeName = JavaBackend.getQualifiedString(d.getTypeUse().getType());
+                if (javaTypeName.indexOf('<') != -1) {
+                    javaTypeName = javaTypeName.substring(0, javaTypeName.indexOf('<'));
+                }
+                stream.print(", ");
+                stream.print(javaTypeName + ".class");
+            }
+            stream.println(")));");
+        }
+        stream.println("} catch (NoSuchMethodException | IllegalAccessException e) {");
+        stream.println("            throw new ExceptionInInitializerError(e);");
+        stream.println("}");
+        stream.println("}");
+    }
+
+    private void generateHttpCallableMethodInfoMethod() {
+        String separator = "";
+        stream.print ("private static final java.util.List<java.util.Map<java.lang.String, java.lang.Object>> __callableMethods = java.util.List.of(");
+        for (Map.Entry<String, MethodSig> entry : implementedSignatures.entrySet()) {
+            MethodSig sig = entry.getValue();
+            if (sig.isHTTPCallable()) {
+                stream.println(separator); separator = ",";
+                stream.println("java.util.Map.of(");
+                stream.println("\"name\", \"" + sig.getName() + "\",");
+                stream.print("\"parameters\", java.util.List.of(");
+                stream.print(StreamSupport.stream(sig.getParamList().spliterator(), false)
+                    .map(param -> "java.util.Map.of(\"name\", \"" + param.getName() + "\","
+                                  + "\"type\", \"" + param.getType().toString() + "\")")
+                    .collect(Collectors.joining(",")));
+                stream.println("),");
+                stream.println("\"return\", \"" + sig.getReturnType().getType().toString() + "\"");
+                stream.print(")");
+            }
+        }
+        stream.println(");");
+        stream.println("public java.util.List<java.util.Map<java.lang.String, java.lang.Object>> getHttpCallableMethodInfo() { return __callableMethods; }");
     }
 
     private void generateMethods() {

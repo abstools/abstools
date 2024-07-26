@@ -97,6 +97,22 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         return isDone;
     }
 
+    public synchronized void awaitForModelApi() {
+        log.finest(() -> this + " awaiting for Model API");
+
+        while (!isDone) {
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                log.finest(() -> this + " was interruped during await");
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        log.finest(() -> this + " ready for Model API");
+    }
+
     public synchronized void await(COG cog, Task<?> task) {
         log.finest(() -> this + " awaiting");
 
@@ -296,4 +312,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
     }
 
+    public Object toJson() {
+        return this.toString();
+    }
 }

@@ -113,4 +113,8 @@ public class ABSInteger extends ABSRational {
     public static ABSInteger ceil(ABSFloat f) {
         return new ABSInteger(new Apfloat(f.getDouble()).ceil());
     }
+
+    public Object toJson() {
+        return getBigInteger();
+    }
 }

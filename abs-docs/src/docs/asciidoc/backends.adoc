@@ -58,7 +58,7 @@ code from ABS.
 | -
 | yes
 | -
-| -
+| yes
 
 |===
 
@@ -175,10 +175,6 @@ the directory `gen/erl/absmodel` after the simulation finishes.
 
 The Java backend runs ABS models on the JVM by translating them into Java and
 combining them with a runtime library implementing key ABS concepts.
-
-The Java backend currently implements Core ABS, but does not implement
-Real-Time ABS or resource modeling.  The Java backend currently does not
-implement the Model API or SQLite connections.
 
 ==== How to run the Java backend
 
