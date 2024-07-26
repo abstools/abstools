@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The Java backend now supports deployment and resource modeling, as documented in Chapter 15 of the manual.
 
+- The Java backend now supports the Model API, as documented in Chapter 12 of the manual.
+
 - The scripts `absc` and `absc.bat` to invoke the compiler are now located in `frontend/bin/`.  For backwards compatibility, the old script locations still work.
 
 - The java backend can now optionally generate a jar file that can run the compiled model stand-alone:
