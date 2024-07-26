@@ -5,7 +5,7 @@ plugins {
     id 'application'
 
     id 'antlr'
-    id "com.github.spotbugs" version "6.0.15"
+    id "com.github.spotbugs" version "6.0.19"
     id 'com.github.johnrengelman.shadow'
 }
 
@@ -37,7 +37,7 @@ dependencies {
     // General-purpose utility libraries; these could be replaced with
     // Java 21 standard library built-ins, if possible.
     implementation 'commons-io:commons-io:2.16.1'
-    implementation 'com.google.guava:guava:33.2.0-jre'
+    implementation 'com.google.guava:guava:33.2.1-jre'
     // Command-line parser library
     implementation 'info.picocli:picocli:4.7.6'
     // Parser library
@@ -58,7 +58,7 @@ dependencies {
     // SQLite library for the Java backend
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     // JSON library for the Java backend Model API
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
@@ -69,8 +69,6 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0-M2")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
-    testImplementation 'org.hamcrest:hamcrest:2.2'
-
 }
 
 // JastAdd
