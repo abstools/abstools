@@ -18,9 +18,7 @@ chmod +x gradlew
 ./gradlew --no-daemon frontend:assemble
 EOF
 
-FROM php:7.4-apache-buster
-# docker build -t abslang/collaboratory -f docker/collaboratory.Dockerfile ..
-# docker run -d -p 8080:80 --name easyinterface abslang/collaboratory
+FROM php:8.3.9-apache-bookworm
 
 COPY <<EASYINTERFACE_SITE_CONF /etc/apache2/sites-available/easyinterface-site.conf
 Alias /ei "/var/www/easyinterface"
@@ -39,28 +37,53 @@ Alias /absexamples "/var/www/absexamples"
    Require all granted
     </Directory>
 EASYINTERFACE_SITE_CONF
-# The mkdir below due to https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
+
 RUN <<EOF
-apt-get -y update
-apt-get -y install gnupg
-rm -rf /var/lib/apt/lists/*
-curl https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb -\# -o erlang-solutions_1.0_all.deb
-dpkg -i erlang-solutions_1.0_all.deb
-rm erlang-solutions_1.0_all.deb
-apt-get -y update
-mkdir -p /usr/share/man/man1
-apt-get -y install apt-utils default-jre-headless erlang-base erlang-nox gawk git graphviz libgl1 netcat-openbsd unzip
-rm -rf /var/lib/apt/lists/*
-git clone https://github.com/abstools/absexamples.git /var/www/absexamples
-chmod -R 755 /var/www/absexamples
-git clone https://github.com/abstools/easyinterface.git /var/www/easyinterface
-bash /var/www/easyinterface/server/config/envisage/offlineabsexamples.sh /var/www/absexamples > /var/www/easyinterface/server/config/envisage/examples.cfg
-cp /var/www/easyinterface/server/config/envisage.cfg /var/www/easyinterface/server/config/eiserver.cfg
-cp /var/www/easyinterface/clients/web/envisage.cfg /var/www/easyinterface/clients/web/webclient.cfg
-chmod -R 755 /var/www/easyinterface
-a2ensite easyinterface-site
-a2enmod headers
+    apt-get -y update
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
+    mkdir -p /usr/share/man/man1
+    apt-get -y install apt-utils gawk git graphviz libgl1 netcat-openbsd unzip
+    git clone https://github.com/abstools/absexamples.git /var/www/absexamples
+    chmod -R 755 /var/www/absexamples
+    git clone https://github.com/abstools/easyinterface.git /var/www/easyinterface
+    bash /var/www/easyinterface/server/config/envisage/offlineabsexamples.sh /var/www/absexamples > /var/www/easyinterface/server/config/envisage/examples.cfg
+    cp /var/www/easyinterface/server/config/envisage.cfg /var/www/easyinterface/server/config/eiserver.cfg
+    cp /var/www/easyinterface/clients/web/envisage.cfg /var/www/easyinterface/clients/web/webclient.cfg
+    chmod -R 755 /var/www/easyinterface
+    a2ensite easyinterface-site
+    a2enmod headers
+    # Installation of erlang 26, which is not in unstable yet as of
+    # 2024-07-29, so we follow
+    # https://www.rabbitmq.com/docs/install-debian#apt-cloudsmith
+    apt-get -y install curl gnupg apt-transport-https
+    ## Team RabbitMQ's main signing key
+    curl -1sLf "https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA" | gpg --dearmor | tee /usr/share/keyrings/com.rabbitmq.team.gpg > /dev/null
+    ## Community mirror of Cloudsmith: modern Erlang repository
+    curl -1sLf https://github.com/rabbitmq/signing-keys/releases/download/3.0/cloudsmith.rabbitmq-erlang.E495BB49CC4BBE5B.key | gpg --dearmor | tee /usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg > /dev/null
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa1.novemberain.com/rabbitmq/rabbitmq-erlang/deb/debian bookworm main" >> /etc/apt/sources.list.d/rabbitmq.list
+    echo "deb-src [signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa1.novemberain.com/rabbitmq/rabbitmq-erlang/deb/debian bookworm main" >> /etc/apt/sources.list.d/rabbitmq.list
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa2.novemberain.com/rabbitmq/rabbitmq-erlang/deb/debian bookworm main" >> /etc/apt/sources.list.d/rabbitmq.list
+    echo "deb-src [signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa2.novemberain.com/rabbitmq/rabbitmq-erlang/deb/debian bookworm main" >> /etc/apt/sources.list.d/rabbitmq.list
+    apt-get -y update
+    ## Install Erlang packages
+    apt-get install -y erlang-base erlang-nox
+
+    rm -rf /var/lib/apt/lists/*
 EOF
+
+COPY <<DEBIAN_BACKPORTS /etc/apt/sources.list.d/bookworm-backports.list
+deb http://deb.debian.org/debian bookworm-backports main
+DEBIAN_BACKPORTS
+COPY <<DEBIAN_UNSTABLE /etc/apt/sources.list.d/unstable.list
+deb http://ftp.de.debian.org/debian sid main
+DEBIAN_UNSTABLE
+# Java 21 is currently (as of 2024-07-29) not in bookworm-backports,
+# so we fall back to unstable temporarily
+RUN <<EOF
+    apt-get -y update
+    apt-get -y install -t unstable openjdk-21-jdk-headless
+EOF
+
 COPY <<ENVISAGE_CONFIG_FILE /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
 # path to saco
 EC_SACOHOME="/usr/local/lib/saco/"
@@ -75,6 +98,7 @@ EC_APETHOME="/usr/local/lib/apet"
 # path to SYCO
 EC_SYCOHOME="/usr/local/lib/apet"
 ENVISAGE_CONFIG_FILE
+
 COPY --from=abs-models-site /abs-models.org/collaboratory/ /var/www/html/
 RUN <<EOF
 curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip
@@ -96,6 +120,7 @@ sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSF
 sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/apet/bin/generateProlog
 mkdir -p /usr/local/lib/frontend
 EOF
+
 COPY --from=builder /appSrc/frontend/bin/ /usr/local/lib/frontend/bin
 COPY --from=builder /appSrc/frontend/dist/absfrontend.jar /usr/local/lib/frontend/dist/absfrontend.jar
 RUN <<EOF
