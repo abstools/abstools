@@ -43,26 +43,38 @@ public class JavaCode {
     private final List<String> mainClasses = new ArrayList<>();
 
     /**
-     * The set of class prefixes to include in generated jar file.  When
-     * running the Java model, we include the whole `absfrontend.jar` in the
-     * class path ("java -cp <path>/absfrontend.jar gen/Module/Main.class").
-     * This set specifies which parts of `absfrontend.jar` to include when
-     * packing up the compiled model in its own jar.
+     * The set of files from {@code absfrontend.jar} to include in a
+     * generated jar file.  When running the Java model from a
+     * compiled subdirectory, we include the whole `absfrontend.jar`
+     * in the class path ({@code java -cp <path>/absfrontend.jar
+     * gen/Module/Main.class}).  This field specifies which parts of
+     * `absfrontend.jar` to include in the compiled model's jar file
+     * when compiling via {@code absc model.abs -j -o model.jar}.
      */
     private static final Set<String> INCLUDE_PREFIXES
         = Set.of(
-            // Our own support libraries
+            // Our own support classes
             "org/abs_models/backend/java",
             // Rational numbers support library
             "org/apfloat",
-            // SQLite driver
+            // SQLite driver.
+            //
+            // Note that some of the files below might be unnecessary
+            // in the generated jar file.  The symptom of including
+            // too little is an error message `java.sql.SQLException:
+            // No suitable driver found for jdbc:sqlite:test.sqlite3`
+            // when starting a sqlite-querying model compiled as a jar
+            // file.
             "org/sqlite",
+            "sqlite-jdbc.properties",
+            "META-INF/maven/",
+            "META-INF/native-image/",
+            "META-INF/services/",
+            "META-INF/versions/",
+            "META-INF/proguard/",
+            "org/slf4j",
             // JSON support for Model API
-            "com/fasterxml/jackson",
-            "META-INF/maven/org.xerial",
-            "META-INF/native-image",
-            "META-INF/services",
-            "META-INF/versions/9/org/sqlite"
+            "com/fasterxml/jackson"
     );
 
 
