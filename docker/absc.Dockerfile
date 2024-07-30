@@ -42,31 +42,22 @@ EOF
 # be in your current directory.
 FROM jdk-erlang
 LABEL maintainer="Rudolf Schlatte <rudi@ifi.uio.no>"
+COPY --from=builder /appSrc/binaries /binaries
+COPY --from=builder /appSrc/frontend/bin/bash/absc /usr/local/bin/absc
+COPY --from=builder /appSrc/frontend/dist/absfrontend.jar /usr/local/lib/absfrontend.jar
 RUN <<EOF
-wget http://costa.fdi.ucm.es/download/saco.colab.zip -O saco.colab.zip
-unzip saco.colab.zip -d /usr/local/lib
-rm saco.colab.zip
+unzip /binaries/saco.colab.zip -d /usr/local/lib
 ln -s ../lib/saco/bin/costabs /usr/local/bin/
 ln -s ../lib/saco/bin/deco /usr/local/bin/
 ln -s ../lib/saco/bin/generateProlog /usr/local/bin/
 ln -s ../lib/saco/bin/maypar /usr/local/bin/
 ln -s ../lib/saco/bin/pubs /usr/local/bin/
-wget http://costa.fdi.ucm.es/download/cofloco.colab.zip -O cofloco.colab.zip
-unzip cofloco.colab.zip -d /usr/local/lib
-rm cofloco.colab.zip
+unzip /binaries/cofloco.colab.zip -d /usr/local/lib
 ln -s ../lib/cofloco/bin/cofloco /usr/local/bin/
-wget http://costa.fdi.ucm.es/download/sra.colab.zip -O sra.colab.zip
-unzip sra.colab.zip -d /usr/local/lib
-rm sra.colab.zip
-wget http://costa.fdi.ucm.es/download/apet.colab.zip -O apet.colab.zip
-unzip apet.colab.zip -d /usr/local/lib
-rm apet.colab.zip
+unzip /binaries/sra.colab.zip -d /usr/local/lib
+unzip /binaries/apet.colab.zip -d /usr/local/lib
 ln -s ../lib/apet/bin/apet /usr/local/bin/
 ln -s ../lib/apet/bin/syco /usr/local/bin/
-EOF
-COPY --from=builder /appSrc/frontend/bin/bash/absc /usr/local/bin/absc
-COPY --from=builder /appSrc/frontend/dist/absfrontend.jar /usr/local/lib/absfrontend.jar
-RUN <<EOF
 sed -i 's|java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend|java -jar /usr/local/lib/absfrontend.jar --prolog|g' /usr/local/lib/saco/bin/generateProlog
 sed -i 's|java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend|java -jar /usr/local/lib/absfrontend.jar --prolog|g' /usr/local/lib/apet/bin/generateProlog
 EOF

@@ -4,6 +4,7 @@
 !abs-docs/
 !build.gradle
 !frontend/
+!binaries/
 !gradle/
 !gradlew
 !settings.gradle

@@ -19,6 +19,7 @@ chmod +x gradlew
 EOF
 
 FROM php:8.3.9-apache-bookworm
+LABEL maintainer="Rudolf Schlatte <rudi@ifi.uio.no>"
 
 COPY <<EASYINTERFACE_SITE_CONF /etc/apache2/sites-available/easyinterface-site.conf
 Alias /ei "/var/www/easyinterface"
@@ -100,25 +101,20 @@ EC_SYCOHOME="/usr/local/lib/apet"
 ENVISAGE_CONFIG_FILE
 
 COPY --from=abs-models-site /abs-models.org/collaboratory/ /var/www/html/
+COPY ./binaries/ /binaries/
 RUN <<EOF
-curl http://costa.fdi.ucm.es/download/saco.colab.zip -\# -o saco.colab.zip
-unzip saco.colab.zip -d /usr/local/lib
-rm saco.colab.zip
-curl http://costa.fdi.ucm.es/download/cofloco.colab.zip -\# -o cofloco.colab.zip
-unzip cofloco.colab.zip -d /usr/local/lib
-rm cofloco.colab.zip
-curl http://costa.fdi.ucm.es/download/sra.colab.zip -\# -o sra.colab.zip
-unzip sra.colab.zip -d /usr/local/lib
-rm sra.colab.zip
-curl http://costa.fdi.ucm.es/download/apet.colab.zip -\# -o apet.colab.zip
-unzip apet.colab.zip -d /usr/local/lib
-rm apet.colab.zip
+set -e
+unzip /binaries/saco.colab.zip -d /usr/local/lib
+unzip /binaries/cofloco.colab.zip -d /usr/local/lib
+unzip /binaries/sra.colab.zip -d /usr/local/lib
+unzip /binaries/apet.colab.zip -d /usr/local/lib
 # patch scripts until fixed upstream
 sed -i 's/ -outline / --outline /g' /var/www/easyinterface/server/bin/envisage/outline/absoutline.sh
 sed -i 's/ -erlang / --erlang /g' /var/www/easyinterface/server/bin/envisage/simulator/erlangbackend.sh
 sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/saco/bin/generateProlog
 sed -i 's/java -cp $ABSFRONTEND abs.backend.prolog.PrologBackend/java -jar $ABSFRONTEND --prolog/g' /usr/local/lib/apet/bin/generateProlog
 mkdir -p /usr/local/lib/frontend
+rm -r /binaries
 EOF
 
 COPY --from=builder /appSrc/frontend/bin/ /usr/local/lib/frontend/bin
