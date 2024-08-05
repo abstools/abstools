@@ -20,15 +20,33 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+/**
+ * The ABS Future datatype.
+ */
 public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
     implements Future<V>
 {
     protected static final Logger log = Logging.getLogger(ABSFut.class.getName());
     private static final AtomicInteger counter = new AtomicInteger();
     private final int id = counter.incrementAndGet();
-    protected V value;
-    protected ABSException exception;
-    protected boolean isDone;
+    /**
+     * True if the future is resolved, false if not.
+     */
+    protected boolean isDone = false;
+    /**
+     * The value of the resolved future.  Not used if the future was resolved
+     * via an exception.
+     */
+    protected V value = null;
+    /**
+     * The exception that was returned instead of a value.  Not used if the
+     * future was resolved normally.
+     */
+    protected ABSException exception = null;
+    /**
+     * List of guards waiting for the future to be resolved.
+     */
+    private List<GuardWaiter> waitingThreads;
 
     protected ABSFut() {
         super("Fut");
@@ -142,7 +160,6 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
             throw exception;
     }
 
-    private List<GuardWaiter> waitingThreads;
     public void resolve(final V o) {
         resolve(o,null);
     }
@@ -152,7 +169,9 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
             if (isDone)
                 throw new IllegalStateException("Future is already resolved");
 
-            log.finest(this + " is resolved to " + o);
+            log.finest(() -> this + (e == null
+                ? (" is resolved to value " + o)
+                : (" is resolved to exception " + e)));
 
             value = o;
             exception = e;
@@ -175,7 +194,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
 
     private void informWaitingThreads() {
-        log.finest(this + " inform awaiting threads");
+        log.finest(() -> this + " inform awaiting threads");
 
         ArrayList<GuardWaiter> copy = null;
         synchronized (this) {
@@ -239,17 +258,18 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
     public boolean addWaitingThread(GuardWaiter thread) {
         if (isDone) {
-            log.fine("===== "+this+" is already resolved");
+            log.finest(() -> this + " is already resolved");
             return false;
         }
         synchronized(this) {
             if (isDone) {
-                log.fine("===== "+this+" is already resolved");
+                log.finest(() -> this + " is already resolved");
                 return false;
             }
             if (waitingThreads == null)
                 waitingThreads = new ArrayList<>(1);
             waitingThreads.add(thread);
+            log.finest(() -> "Added guard to queue of " + this);
             return true;
         }
     }
