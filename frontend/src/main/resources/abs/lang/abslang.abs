@@ -930,9 +930,9 @@ class CloudProvider(String name) implements CloudProviderForDeploymentComponent 
         if (isJust(mconfig)) {
             Map<Resourcetype, Rat> config = fromJust(mconfig);
             dc = this.createInstance(name + "-" + instancename, config);
+            Rat startup_duration = await dc!getStartupDuration();
+            await duration(startup_duration, startup_duration);
         }
-        Rat startup_duration = await dc!getStartupDuration();
-        await duration(startup_duration, startup_duration);
         return dc;
     }
 
