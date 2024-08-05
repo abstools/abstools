@@ -71,10 +71,12 @@ public class ABSRuntime {
     private final ABSThreadManager threadManager = new ABSThreadManager(this);
     private final AtomicInteger cogCounter = new AtomicInteger();
     private final AtomicInteger taskCounter = new AtomicInteger();
-    /**
-     * The number of active cogs in the system.
-     */
+
+    /** The number of currently active cogs in the system. */
     private long nActiveCogs = 0;
+
+    /** The number of cogs that need to wake up before the next clock advance. */
+    private long nWakingCogs = 0;
 
     /**
      * The current clock value.
@@ -697,14 +699,14 @@ public class ABSRuntime {
      * <p>
      * NOTE: this method is supposed to be called during clock advance only.
      *
-     * @return true if at least one guard was woken, false otherwise.
+     * @return the number of guards woken
      */
-    protected synchronized boolean handResourcesToWaitingGuards() {
+    protected synchronized int handResourcesToWaitingGuards() {
         if (resource_guards.isEmpty()) {
             log.finest("No tasks waiting for resources");
-            return false;
+            return 0;
         }
-        boolean woke_up_a_guard = false;
+        int guardsWoken = 0;
         log.finest("Handing out resources to waiting tasks");
         var iterator = resource_guards.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -732,7 +734,7 @@ public class ABSRuntime {
                     synchronized(guard) {
                         guard.notify();
                     }
-                    woke_up_a_guard = true;
+                    guardsWoken = guardsWoken + 1;
                 } else {
                     // We got some resources but not everything the
                     // current guard wanted; next call to
@@ -746,7 +748,7 @@ public class ABSRuntime {
                 iterator.remove();
             }
         }
-        return woke_up_a_guard;
+        return guardsWoken;
     }
 
     /**
@@ -764,18 +766,22 @@ public class ABSRuntime {
         // where either a duration guard wakes up or a resource boundary
         // occurs (and hence, a resource guard might receive enough resources
         // to unblock), whichever comes earlier.
-        log.finest(() -> "Starting resource allocation and clock advance: clock = "
-                         + clock + ", clockLimit = " + (clockLimit == null ? "none" : clockLimit)
-                         + ", durationGuards: " + duration_guards.size()
-                         + ", resourceGuards: " + resource_guards.size());
+        if (nWakingCogs > 0) {
+            log.finest(() -> "Not advancing clock before " + nWakingCogs + " more cogs have woken up");
+            return;
+        }
         if (duration_guards.isEmpty() && resource_guards.isEmpty()) {
             log.finest("Trying to advance the clock but no task is waiting for a duration or resource, exiting");
             return;
         }
-        boolean woke_up_a_guard = handResourcesToWaitingGuards();
-        while (!woke_up_a_guard && (clockLimit == null ? true : clock.compareTo(clockLimit) < 0)) {
-            boolean woke_up_a_duration_guard = false;
-            boolean woke_up_a_resource_guard = false;
+        log.finest(() -> "Starting resource allocation and clock advance: clock = "
+                         + clock + ", clockLimit = " + (clockLimit == null ? "none" : clockLimit)
+                         + ", durationGuards: " + duration_guards.size()
+                         + ", resourceGuards: " + resource_guards.size());
+        int guardsWoken = handResourcesToWaitingGuards();
+        while (guardsWoken == 0 && (clockLimit != null ? clock.compareTo(clockLimit) < 0 : true)) {
+            int durationGuardsWoken = 0;
+            int resourceGuardsWoken = 0;
             Aprational next_integer = clock.isInteger()
                 ? clock.add(Aprational.ONE)
                 : clock.ceil();
@@ -789,7 +795,7 @@ public class ABSRuntime {
             log.fine(() -> "Clock advanced to " + clock);
             if (clock.compareTo(next_integer) == 0) {
                 deployment_components.forEach(ABSDCMirror::advanceTimeBy1Tick);
-                woke_up_a_resource_guard = handResourcesToWaitingGuards();
+                resourceGuardsWoken = resourceGuardsWoken + handResourcesToWaitingGuards();
             }
             log.finest("Checking for threads to wake that are waiting on duration guards");
             while (!duration_guards.isEmpty() && clock.compareTo(duration_guards.peek().getMinTime()) >= 0) {
@@ -797,16 +803,17 @@ public class ABSRuntime {
                 synchronized(guard) {
                     guard.notify();
                 }
-                woke_up_a_duration_guard = true;
+                durationGuardsWoken = durationGuardsWoken + 1;
             }
-            if (woke_up_a_duration_guard && !duration_guards.isEmpty()) {
+            if (durationGuardsWoken > 0 && !duration_guards.isEmpty()) {
                 wake_time_for_duration_guards =
                     duration_guards.stream()
                     .map(ABSDurationGuard::getMaxTime)
                     .reduce(duration_guards.peek().getMaxTime(), (t1, t2) -> t1.compareTo(t2) < 0 ? t1 : t2);
             }
-            woke_up_a_guard = woke_up_a_resource_guard || woke_up_a_duration_guard;
+            guardsWoken = guardsWoken + resourceGuardsWoken + durationGuardsWoken;
         }
+        this.nWakingCogs = guardsWoken;
     }
 
     /**
@@ -845,8 +852,14 @@ public class ABSRuntime {
     public void notifyCogActive() {
         synchronized(this) {
             nActiveCogs++;
+            // Note that this is still kind of an approximation: when we
+            // signal all guards after clock advance, in theory one cog could
+            // wake up, go to sleep, wake up, go to sleep before the other cog
+            // has woken up a first time, which would result in a spurious
+            // clock advance.
+            nWakingCogs = Math.max(0, nWakingCogs - 1);
         }
-        log.finest(() -> nActiveCogs + " active cogs.");
+        log.finest(() -> "Cog became active, now " + nActiveCogs + " active cogs.");
     }
 
     public void notifyCogInactive() {
@@ -854,10 +867,14 @@ public class ABSRuntime {
             nActiveCogs--;
         }
         if (nActiveCogs == 0) {
-            log.finest(() -> "No active cogs.");
-            maybeAdvanceClock();
+            log.finest(() -> "Cog became inactive, no active cogs left.");
+            if (nWakingCogs > 0) {
+                log.finest(() -> "Waiting for " + nWakingCogs + " more cogs to wake before trying clock advance.");
+            } else {
+                maybeAdvanceClock();
+            }
         } else if (nActiveCogs > 0) {
-            log.finest(() -> nActiveCogs + " active cogs.");
+            log.finest(() -> "Cog became inactive, now " + nActiveCogs + " active cogs.");
         } else {
             log.severe(() -> "Count of active cogs became negative (" + nActiveCogs + "), this should never happen");
         }
