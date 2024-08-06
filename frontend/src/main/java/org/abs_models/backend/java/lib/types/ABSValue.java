@@ -17,10 +17,6 @@ public interface ABSValue extends ABSType {
 
     ABSBool ltEq(ABSValue other);
 
-    boolean isDataType();
-
-    boolean isReference();
-
     java.lang.Object toJson();
 
 }

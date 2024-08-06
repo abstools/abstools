@@ -296,16 +296,6 @@ public class COG implements ABSValue {
         }
     }
 
-    @Override
-    public boolean isDataType() {
-        return false;
-    }
-
-    @Override
-    public boolean isReference() {
-        return true;
-    }
-
     public Object toJson() {
         throw new RuntimeException("Trying to serialize a Cog; this should never happen");
     }

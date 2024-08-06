@@ -220,14 +220,4 @@ public class ABSDynamicClass implements ABSClass {
         }
     }
 
-    @Override
-    public boolean isDataType() {
-        return false;
-    }
-
-    @Override
-    public boolean isReference() {
-        return true;
-    }
-
 }

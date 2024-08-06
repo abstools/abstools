@@ -20,14 +20,4 @@ public abstract class ABSForeignObject implements ABSRef {
         return eq(o).negate();
     }
 
-    @Override
-    public final boolean isDataType() {
-        return false;
-    }
-
-    @Override
-    public final boolean isReference() {
-        return true;
-    }
-    
 }

@@ -145,16 +145,6 @@ public abstract class ABSObject implements ABSRef {
         }
     }
 
-    @Override
-    public final boolean isDataType() {
-        return false;
-    }
-
-    @Override
-    public final boolean isReference() {
-        return true;
-    }
-
     protected volatile ObjectView __view;
 
     public synchronized ObjectView getView() {

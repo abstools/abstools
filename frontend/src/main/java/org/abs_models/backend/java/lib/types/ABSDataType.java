@@ -138,14 +138,4 @@ public abstract class ABSDataType implements ABSValue {
         }
     }
 
-    @Override
-    public boolean isDataType() {
-        return true;
-    }
-
-    @Override
-    public boolean isReference() {
-        return false;
-    }
-
 }
