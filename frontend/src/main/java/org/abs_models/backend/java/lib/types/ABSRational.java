@@ -4,8 +4,7 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-import java.math.BigInteger;
-
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.apfloat.Apfloat;
 import org.apfloat.Apint;
 import org.apfloat.ApintMath;
@@ -56,37 +55,6 @@ public class ABSRational extends ABSBuiltInDataType {
 
     public ABSRational negate() {
         return fromAprational(this.value.negate());
-    }
-
-    @Override
-    public ABSBool eq(ABSValue o) {
-        if (o == null) return ABSBool.FALSE;
-        if (!(o instanceof ABSRational)) return ABSBool.FALSE;
-        ABSRational oi = (ABSRational) o;
-        return ABSBool.fromBoolean(oi.value.compareTo(this.value) == 0);
-    }
-
-    public ABSBool gt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!(o instanceof ABSRational)) return ABSBool.FALSE;
-        ABSRational oi = (ABSRational) o;
-        return ABSBool.fromBoolean(this.value.compareTo(oi.value) > 0);
-    }
-
-    public ABSBool lt(ABSValue o) {
-        if (o == null) return ABSBool.FALSE;
-        if (!(o instanceof ABSRational)) return ABSBool.FALSE;
-        ABSRational oi = (ABSRational) o;
-        return ABSBool.fromBoolean(this.value.compareTo(oi.value) < 0);
-    }
-
-    public ABSBool gtEq(ABSValue o) {
-        return this.eq(o).or(this.gt(o));
-    }
-
-    public ABSBool ltEq(ABSValue o) {
-        return this.eq(o).or(this.lt(o));
     }
 
     public static ABSRational fromAprational(Aprational i) {

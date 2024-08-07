@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
@@ -210,7 +211,7 @@ public class ModelApi {
                             } catch (ParameterConversionException e) {
                                 sendResponse(exchange, 400, "text/json", errorResponse);
                             }
-                            if (by.lt(ABSInteger.ZERO).toBoolean()) {
+                            if (BinOp.lt(by, ABSInteger.ZERO).toBoolean()) {
                                 sendResponse(exchange, 400, "text/json", errorResponse);
                                 return;
                             }

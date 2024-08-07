@@ -16,7 +16,7 @@ import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.utils.DynamicClassUtils;
 import org.apfloat.Aprational;
 import org.apfloat.AprationalMath;
-
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSDataType;
@@ -66,7 +66,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSInteger random(ABSInteger i) {
-        if (i.ltEq(ABSInteger.ZERO).toBoolean()) {
+        if (BinOp.ltEq(i, ABSInteger.ZERO).toBoolean()) {
             throw new UnmatchedCaseException("Random function called with non positive upper bound " + i);
         }
         BigInteger n = i.getBigInteger();

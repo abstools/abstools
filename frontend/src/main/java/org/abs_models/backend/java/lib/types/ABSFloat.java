@@ -43,50 +43,6 @@ public class ABSFloat extends ABSBuiltInDataType {
         return fromDouble(- this.value);
     }
 
-    @Override
-    public ABSBool eq(ABSValue o) {
-        if (!super.eq(o).toBoolean())
-            return ABSBool.FALSE;
-        ABSFloat s = (ABSFloat) o;
-        return ABSBool.fromBoolean(this.value == s.value);
-    }
-
-    public ABSBool gt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSFloat.class))
-            return ABSBool.FALSE;
-        ABSFloat oi = (ABSFloat) o;
-        return ABSBool.fromBoolean(this.value > oi.value);
-    }
-
-    public ABSBool lt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSFloat.class))
-            return ABSBool.FALSE;
-        ABSFloat oi = (ABSFloat) o;
-        return ABSBool.fromBoolean(this.value < oi.value);
-    }
-
-    public ABSBool gtEq(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSFloat.class))
-            return ABSBool.FALSE;
-        ABSFloat oi = (ABSFloat) o;
-        return ABSBool.fromBoolean(this.value >= oi.value);
-    }
-
-    public ABSBool ltEq(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSFloat.class))
-            return ABSBool.FALSE;
-        ABSFloat oi = (ABSFloat) o;
-        return ABSBool.fromBoolean(this.value <= oi.value);
-    }
-
     public static ABSFloat fromString(String value) {
         return new ABSFloat(Double.parseDouble(value));
     }

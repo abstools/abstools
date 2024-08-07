@@ -162,6 +162,7 @@ Cons(1, _) < Cons(2, _)
   be stable between two invocations of a program.  If ABS ever develops object
   serialization, care must be taken to uphold any datatype invariants across
   program invocations, e.g., when reading back an ordered list of objects.]
+  The value `null` compares less than any other object reference.
 
 
 === Let

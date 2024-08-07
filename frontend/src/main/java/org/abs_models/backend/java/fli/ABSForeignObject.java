@@ -4,20 +4,7 @@
  */
 package org.abs_models.backend.java.fli;
 
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSRef;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public abstract class ABSForeignObject implements ABSRef {
-
-    @Override
-    public final ABSBool eq(ABSValue o) {
-        return ABSBool.fromBoolean(this == o);
-    }
-
-    @Override
-    public final ABSBool notEq(ABSValue o) {
-        return eq(o).negate();
-    }
-
 }

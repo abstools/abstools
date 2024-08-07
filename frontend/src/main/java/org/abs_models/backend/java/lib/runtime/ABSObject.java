@@ -7,6 +7,7 @@ package org.abs_models.backend.java.lib.runtime;
 import java.util.List;
 import java.util.Map;
 
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSRef;
 import org.abs_models.backend.java.lib.types.ABSUnit;
@@ -78,70 +79,6 @@ public abstract class ABSObject implements ABSRef {
     public final void __ABS_checkSameCOG() {
         if (__checkSameCog && __cog != ABSThread.getCurrentCOG()) {
             throw new ABSIllegalSynchronousCallException();
-        }
-    }
-
-    @Override
-    public final ABSBool eq(ABSValue o) {
-        return ABSBool.fromBoolean(this == o);
-    }
-
-    @Override
-    public final ABSBool notEq(ABSValue o) {
-        return eq(o).negate();
-    }
-
-    @Override
-    public ABSBool gt(ABSValue other) {
-        if (other instanceof ABSObject) {
-            ABSObject o = (ABSObject)other;
-            int comp = getClassName().compareTo(o.getClassName());
-            if (comp == 0) return ABSBool.fromBoolean(this.__id > ((ABSObject)other).getView().getID());
-            else return ABSBool.fromBoolean(comp > 0);
-        } else if (other == null) {
-            return ABSBool.TRUE;
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool lt(ABSValue other) {
-        if (other instanceof ABSObject) {
-            ABSObject o = (ABSObject)other;
-            int comp = getClassName().compareTo(o.getClassName());
-            if (comp == 0) return ABSBool.fromBoolean(this.__id < ((ABSObject)other).getView().getID());
-            else return ABSBool.fromBoolean(comp < 0);
-        } else if (other == null) {
-            return ABSBool.FALSE;
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool gtEq(ABSValue other) {
-        if (other instanceof ABSObject) {
-            return eq(other).or(gt(other));
-        } else if (other == null) {
-            return ABSBool.TRUE;
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool ltEq(ABSValue other) {
-        if (other instanceof ABSObject) {
-            return eq(other).or(lt(other));
-        } else if (other == null) {
-            return ABSBool.FALSE;
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
         }
     }
 

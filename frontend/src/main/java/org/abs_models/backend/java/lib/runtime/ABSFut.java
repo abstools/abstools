@@ -4,6 +4,7 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSBuiltInDataType;
 import org.abs_models.backend.java.lib.types.ABSValue;
@@ -208,48 +209,6 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
             s.checkGuard();
         }
     }
-
-
-    @Override
-    public ABSBool eq(ABSValue other) {
-        return ABSBool.fromBoolean(other == this);
-    }
-
-
-    @Override
-    public ABSBool gt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!(o instanceof ABSFut))
-            return ABSBool.FALSE;
-        return ABSBool.fromBoolean(getID() > ((ABSFut)o).getID());
-    }
-
-    @Override
-    public ABSBool lt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!(o instanceof ABSFut))
-            return ABSBool.FALSE;
-        return ABSBool.fromBoolean(getID() < ((ABSFut)o).getID());
-    }
-
-    @Override
-    public ABSBool gtEq(ABSValue o) {
-        if (this.eq(o).toBoolean())
-            return ABSBool.TRUE;
-        else
-            return this.gt(o);
-    }
-
-    @Override
-    public ABSBool ltEq(ABSValue o) {
-        if (this.eq(o).toBoolean())
-            return ABSBool.TRUE;
-        else
-            return this.lt(o);
-    }
-
 
     @Override
     public synchronized String toString() {

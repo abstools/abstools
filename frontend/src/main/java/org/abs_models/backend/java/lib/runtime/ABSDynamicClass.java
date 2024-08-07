@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.abs_models.backend.java.codegeneration.dynamic.DynamicException;
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSClass;
 import org.abs_models.backend.java.lib.types.ABSValue;
@@ -165,59 +166,6 @@ public class ABSDynamicClass implements ABSClass {
             fields.put(name, new ABSField());
         }
 
-    }
-
-    @Override
-    public ABSBool eq(ABSValue o) {
-        if (o instanceof ABSDynamicClass)
-            return ABSBool.fromBoolean(name.equals(((ABSDynamicClass)o).getName()));
-        else
-            return ABSBool.FALSE;
-    }
-
-    @Override
-    public ABSBool notEq(ABSValue o) {
-        return eq(o).negate();
-    }
-
-    @Override
-    public ABSBool gt(ABSValue other) {
-        if (other.getClass() == ABSDynamicClass.class) {
-            return ABSBool.fromBoolean(this.name.compareTo(((ABSDynamicClass)other).getName()) > 0);
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool lt(ABSValue other) {
-        if (other.getClass() == ABSDynamicClass.class) {
-            return ABSBool.fromBoolean(this.name.compareTo(((ABSDynamicClass)other).getName()) < 0);
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool gtEq(ABSValue other) {
-        if (other.getClass() == ABSDynamicClass.class) {
-            return eq(other).or(gt(other));
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool ltEq(ABSValue other) {
-        if (other.getClass() == ABSDynamicClass.class) {
-            return eq(other).or(lt(other));
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
     }
 
 }

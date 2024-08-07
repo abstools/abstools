@@ -15,36 +15,6 @@ public class ABSBool extends ABSBuiltInDataType {
         this.value = v;
     }
 
-    @Override
-    public ABSBool eq(ABSValue o) {
-        return ABSBool.fromBoolean(o == this);
-    }
-
-    @Override
-    public ABSBool notEq(ABSValue o) {
-        return ABSBool.fromBoolean(o != this);
-    }
-
-    public ABSBool gt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSBool.class))
-            return ABSBool.FALSE;
-        ABSBool oi = (ABSBool) o;
-        // True > False
-        return this.and(oi.negate());
-    }
-
-    public ABSBool lt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSBool.class))
-            return ABSBool.FALSE;
-        ABSBool oi = (ABSBool) o;
-        // False < True
-        return oi.and(this.negate());
-    }
-
     public ABSBool negate() {
         return fromBoolean(!value);
     }
@@ -62,10 +32,7 @@ public class ABSBool extends ABSBuiltInDataType {
     }
 
     public static ABSBool fromBoolean(boolean b) {
-        if (b)
-            return TRUE;
-        else
-            return FALSE;
+        return b ? TRUE : FALSE;
     }
 
     public Object toJson() {

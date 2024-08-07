@@ -25,6 +25,18 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
+    public void nullCompare2() throws Exception {
+        assertEvalTrue("""
+            interface I {}
+            class C implements I {}
+            {
+                I o = new C();
+                Bool testresult = o > null;
+            }
+            """);
+    }
+
+    @Test
     public void refEq() throws Exception {
         assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); Bool testresult = i1 == i1; }");
     }

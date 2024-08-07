@@ -69,24 +69,6 @@ public class ABSProcess extends ABSBuiltInDataType {
         return String.format("%1$s: %2$d,%3$s,%4$d,%5$d,%6$d,%7$d,%8$d,%9$b,%10$d", 
                 getConstructorName(), pid, methodName, arrivalTime, cost, deadline_t, startTime, finishTime, critical, value);
     }
-    
-    public ABSBool gt(ABSValue o) {
-        if (o.getClass() == ABSProcess.class) {
-            return ABSBool.fromBoolean(this.pid > ((ABSProcess)o).getPid());
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    public ABSBool lt(ABSValue o) {
-        if (o.getClass() == ABSProcess.class) {
-            return ABSBool.fromBoolean(this.pid < ((ABSProcess)o).getPid());
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
 
     public Object toJson() {
         throw new RuntimeException("Trying to serialize a process object, this should never happen");

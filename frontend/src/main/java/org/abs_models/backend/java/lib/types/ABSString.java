@@ -18,53 +18,6 @@ public class ABSString extends ABSBuiltInDataType {
         return fromString(value + s.value);
     }
 
-    @Override
-    public ABSBool eq(ABSValue o) {
-        if (!super.eq(o).toBoolean())
-            return ABSBool.FALSE;
-        ABSString s = (ABSString) o;
-        return ABSBool.fromBoolean(this.value.equals(s.value));
-    }
-
-    public ABSBool gt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSString.class))
-            return ABSBool.FALSE;
-        ABSString oi = (ABSString) o;
-        return ABSBool.fromBoolean(this.value.compareTo(oi.value) > 0);
-    }
-
-    public ABSBool lt(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSString.class))
-            return ABSBool.FALSE;
-        ABSString oi = (ABSString) o;
-        return ABSBool.fromBoolean(this.value.compareTo(oi.value) < 0);
-    }
-
-    public ABSBool gtEq(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSString.class))
-            return ABSBool.FALSE;
-        ABSString oi = (ABSString) o;
-        int res = this.value.compareTo(oi.value);
-        return ABSBool.fromBoolean(res == 0 || res == 1);
-    }
-
-    public ABSBool ltEq(ABSValue o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSString.class))
-            return ABSBool.FALSE;
-        ABSString oi = (ABSString) o;
-        int res = this.value.compareTo(oi.value);
-        return ABSBool.fromBoolean(res == 0 || res == -1);
-    }
-
-
     public static ABSString fromString(String s) {
         if (s.isEmpty())
             return EMPTY;

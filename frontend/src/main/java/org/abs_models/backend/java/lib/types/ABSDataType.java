@@ -9,73 +9,6 @@ import org.abs_models.backend.java.lib.expr.PatternConstructor;
 
 public abstract class ABSDataType implements ABSValue {
 
-    public ABSBool eq(ABSValue other) {
-        if (other == null || other.getClass() != this.getClass())
-            return ABSBool.FALSE;
-        return ABSBool.TRUE;
-    }
-
-    public ABSBool notEq(ABSValue other) {
-        return this.eq(other).negate();
-    }
-
-    public ABSBool gtEq(ABSValue o) {
-        if (this.eq(o).toBoolean())
-            return ABSBool.TRUE;
-        else
-            return this.gt(o);
-    }
-
-    public ABSBool ltEq(ABSValue o) {
-        if (this.eq(o).toBoolean())
-            return ABSBool.TRUE;
-        else
-            return this.lt(o);
-    }
-
-    public ABSBool gt(ABSValue o) {
-        if (o instanceof ABSDataType) {
-            ABSDataType other = (ABSDataType)o;
-            int constructorComparison = this.getConstructorName().compareTo(other.getConstructorName());
-            if (constructorComparison > 0) {
-                return ABSBool.TRUE;
-            } else if (constructorComparison == 0) {
-                for (int i = 0; i < getNumArgs(); i++) {
-                    if (getArg(i).gt(other.getArg(i)).equals(ABSBool.TRUE))
-                        return ABSBool.TRUE;
-                }
-                return ABSBool.FALSE;
-            } else {
-                return ABSBool.FALSE;
-            }
-            // return ABSBool.fromBoolean(this.pid > ((ABSProcess)o).getPid());
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    public ABSBool lt(ABSValue o) {
-        if (o instanceof ABSDataType) {
-            ABSDataType other = (ABSDataType)o;
-            int constructorComparison = this.getConstructorName().compareTo(other.getConstructorName());
-            if (constructorComparison > 0) {
-                return ABSBool.FALSE;
-            } else if (constructorComparison == 0) {
-                for (int i = 0; i < getNumArgs(); i++) {
-                    if (getArg(i).lt(other.getArg(i)).equals(ABSBool.TRUE))
-                        return ABSBool.TRUE;
-                }
-                return ABSBool.FALSE;
-            } else {
-                return ABSBool.TRUE;
-            }
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
     public abstract boolean match(PatternConstructor p, PatternBinding b);
 
     private static final ABSValue[] NO_ARGS = new ABSValue[0];
@@ -101,13 +34,6 @@ public abstract class ABSDataType implements ABSValue {
      */
     public int getNumArgs() {
        return getArgs().length;
-    }
-
-    /**
-     * Whether this data type is a built-in data type
-     */
-    public boolean isBuiltIn() {
-        return false;
     }
 
     public String getConstructorName() {

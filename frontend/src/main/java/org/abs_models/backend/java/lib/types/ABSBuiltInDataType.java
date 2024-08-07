@@ -4,6 +4,7 @@
  */
 package org.abs_models.backend.java.lib.types;
 
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.expr.PatternBinding;
 import org.abs_models.backend.java.lib.expr.PatternConstructor;
 
@@ -25,11 +26,6 @@ public abstract class ABSBuiltInDataType extends ABSDataType {
         } else {
             return false;
         }
-    }
-
-    @Override
-    public boolean isBuiltIn() {
-        return true;
     }
 
 }

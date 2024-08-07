@@ -166,7 +166,7 @@ aspect GenerateJava {
 
         i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
-            stream.println("if (!this.arg" + i + ".eq(other.arg" + i + ").toBoolean()) return " + ABSBool.class.getName() + ".FALSE;");
+        stream.println("if (!" + BinOp.class.getName() + ".eq(this.arg" + i + ", other.arg" + i + ").toBoolean()) return " + ABSBool.class.getName() + ".FALSE;");
             i++;
         }
 
@@ -251,7 +251,7 @@ aspect GenerateJava {
 
         i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
-            stream.println("if (!this.arg" + i + ".eq(other.arg" + i + ").toBoolean()) return " + ABSBool.class.getName() + ".FALSE;");
+        stream.println("if (!" + BinOp.class.getName() + ".eq(this.arg" + i + ", other.arg" + i + ").toBoolean()) return " + ABSBool.class.getName() + ".FALSE;");
             i++;
         }
 

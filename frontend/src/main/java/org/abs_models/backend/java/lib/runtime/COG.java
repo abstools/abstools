@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.abs_models.backend.java.JavaBackendException;
-
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSValue;
@@ -243,56 +243,6 @@ public class COG implements ABSValue {
         if (ABSDCMirror.CLASS_DC.isInstance(absObject)) {
             log.finest(() -> "registering fresh DC " + absObject + " with runtime");
             ABSRuntime.getRuntime().registerDC((ABSInterface)absObject);
-        }
-    }
-
-    @Override
-    public ABSBool eq(ABSValue o) {
-        return ABSBool.fromBoolean(this.equals(o));
-    }
-
-    @Override
-    public ABSBool notEq(ABSValue o) {
-        return eq(o).negate();
-    }
-
-    @Override
-    public ABSBool gt(ABSValue other) {
-        if (other.getClass() == COG.class) {
-            return ABSBool.fromBoolean(this.id > ((COG)other).getID());
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool lt(ABSValue other) {
-        if (other.getClass() == COG.class) {
-            return ABSBool.fromBoolean(this.id < ((COG)other).getID());
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool gtEq(ABSValue other) {
-        if (other.getClass() == COG.class) {
-            return eq(other).or(gt(other));
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
-        }
-    }
-
-    @Override
-    public ABSBool ltEq(ABSValue other) {
-        if (other.getClass() == COG.class) {
-            return eq(other).or(lt(other));
-        } else {
-            // type error, not reached
-            return ABSBool.FALSE;
         }
     }
 
