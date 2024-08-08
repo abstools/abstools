@@ -35,8 +35,4 @@ public class ABSBool extends ABSBuiltInDataType {
         return b ? TRUE : FALSE;
     }
 
-    public Object toJson() {
-        return toBoolean();
-    }
-
 }

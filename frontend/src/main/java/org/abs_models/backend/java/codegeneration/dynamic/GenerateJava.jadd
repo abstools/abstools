@@ -281,7 +281,7 @@ aspect GenerateJavaDynamic_Core {
         stream.print("public abstract class " + getName());
         DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, true);
 
-        stream.println(" extends " + ABSDataType.class.getName() + " {");
+        stream.println(" extends " + ABSAlgebraicDataType.class.getName() + " {");
 
         for (DataConstructor c : getDataConstructors()) {
             stream.println("public final boolean is" + c.getName()

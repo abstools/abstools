@@ -70,7 +70,4 @@ public class ABSProcess extends ABSBuiltInDataType {
                 getConstructorName(), pid, methodName, arrivalTime, cost, deadline_t, startTime, finishTime, critical, value);
     }
 
-    public Object toJson() {
-        throw new RuntimeException("Trying to serialize a process object, this should never happen");
-    }
 }

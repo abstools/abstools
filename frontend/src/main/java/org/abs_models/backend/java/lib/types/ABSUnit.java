@@ -11,7 +11,4 @@ public class ABSUnit extends ABSBuiltInDataType {
         super("Unit");
     }
 
-    public Object toJson() {
-        return "Unit";
-    }
 }

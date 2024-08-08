@@ -4,8 +4,4 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-public interface ABSClass extends ABSRef {
-    default Object toJson() {
-        throw new RuntimeException("Trying to serialize a class object, this should never happen");
-    }
-}
+public interface ABSClass extends ABSRef { }

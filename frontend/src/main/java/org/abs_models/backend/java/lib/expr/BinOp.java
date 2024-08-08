@@ -8,8 +8,8 @@ import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.COG;
+import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSBool;
-import org.abs_models.backend.java.lib.types.ABSDataType;
 import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSRational;
@@ -54,10 +54,8 @@ public class BinOp {
                     return ABSBool.fromBoolean(s1.getString().equals(s2.getString()));
                 }
                 break;
-            case ABSDataType t1:
-                // Note: Take care to handle all ABSBuiltInDataType subclasses
-                // before this branch
-                if (v2 instanceof ABSDataType t2) {
+            case ABSAlgebraicDataType t1:
+                if (v2 instanceof ABSAlgebraicDataType t2) {
                     if (!t1.getConstructorName().equals(t2.getConstructorName())) return ABSBool.FALSE;
                     for (int i = 0; i < t1.getNumArgs(); i++) {
                         if (!BinOp.eq(t1.getArg(i), t2.getArg(i)).toBoolean())
@@ -133,8 +131,8 @@ public class BinOp {
                     return ABSBool.fromBoolean(s1.getString().compareTo(s2.getString()) > 0);
                 }
                 break;
-            case ABSDataType t1:
-                if (v2 instanceof ABSDataType t2) {
+            case ABSAlgebraicDataType t1:
+                if (v2 instanceof ABSAlgebraicDataType t2) {
                     int constructorComparison = t1.getConstructorName().compareTo(t2.getConstructorName());
                     if (constructorComparison == 0) {
                         for (int i = 0; i < t1.getNumArgs(); i++) {

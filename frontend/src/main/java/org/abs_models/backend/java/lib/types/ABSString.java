@@ -41,7 +41,4 @@ public class ABSString extends ABSBuiltInDataType {
         return value;
     }
 
-    public Object toJson() {
-        return getString();
-    }
 }

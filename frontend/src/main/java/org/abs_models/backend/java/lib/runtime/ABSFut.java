@@ -291,7 +291,4 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
     }
 
-    public Object toJson() {
-        return this.toString();
-    }
 }

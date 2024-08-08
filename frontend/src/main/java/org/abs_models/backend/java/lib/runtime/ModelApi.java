@@ -21,11 +21,13 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import org.abs_models.backend.java.lib.expr.BinOp;
+import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSString;
+import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -187,7 +189,7 @@ public class ModelApi {
                 String response = "Now: " + now.toString()  + "\n";
                 sendResponse(exchange, 200, "text/plain", response);
             } else if (paths.size() == 2 && "now".equals(paths.get(1))) {
-                String response = mapper.writeValueAsString(Map.of("result", now.toJson()));
+                String response = mapper.writeValueAsString(Map.of("result", absToJson(now)));
                 sendResponse(exchange, 200, "text/json", response);
             } else if (paths.size() == 2 && "advance".equals(paths.get(1))) {
                 // decode an Int in the `by` URL parameter
@@ -364,7 +366,7 @@ public class ModelApi {
                 } else {
                     f.awaitForModelApi();
                     ABSValue result = f.get();
-                    Object jsonResult = result == null ? null : result.toJson();
+                    Object jsonResult = absToJson(result);
                     sendResponse(exchange, 200, "text/json",
                         // note that `null` is a valid ABSValue :-)
                         mapper.writeValueAsString(Map.of("result", jsonResult)));
@@ -553,7 +555,21 @@ public class ModelApi {
     }
 
     public static Object absToJson(ABSValue value) {
-        if (value == null) return null;
-        else return value.toJson();
+        switch (value) {
+            case null: return null;
+            case ABSObject o: return o.toString();
+            case ABSFut<?> f: return f.toString();
+            case ABSUnit u: return "Unit";
+            case ABSBool b: return b.toBoolean();
+            case ABSString s: return s.getString();
+            case ABSInteger i: return i.getBigInteger();
+            case ABSRational r: return r.toDouble();
+            case ABSFloat f: return f.getDouble();
+            case ABSAlgebraicDataType d:
+                return d.toJson();
+            default:
+                throw new RuntimeException("Trying to serialize a value of type " + value.getClass().getName() + "; this should never happen");
+        }
     }
+
 }

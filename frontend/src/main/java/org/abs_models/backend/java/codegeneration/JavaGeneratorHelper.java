@@ -327,7 +327,7 @@ public class JavaGeneratorHelper {
                           ca.getTypeUse().getAnnotations(),
                           "ABS.StdLib.HTTPName")
                          != null);
-        stream.println("public java.lang.Object toJson() {");
+        stream.println("@Override public java.lang.Object toJson() {");
         if (qualifiedName.equals("ABS.StdLib.List_Cons")) {
             stream.println(
                 """
@@ -392,7 +392,7 @@ public class JavaGeneratorHelper {
                 }
                 if (key != null) {
                     stream.println("result.put(\"" + key + "\", "
-                                   +  "this.arg" + elem + ".toJson());");
+                                   + ModelApi.class.getName() + ".absToJson(this.arg" + elem + "));");
                 }
             }
             stream.println("return result;");

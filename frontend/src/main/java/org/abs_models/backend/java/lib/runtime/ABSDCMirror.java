@@ -1,7 +1,10 @@
 package org.abs_models.backend.java.lib.runtime;
 
+import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
+import org.abs_models.backend.java.lib.types.ABSDataType;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSRational;
+import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSValue;
 
 import java.lang.reflect.Field;
@@ -75,9 +78,9 @@ public class ABSDCMirror {
     }
 
     private Double getCreationTime() {
-        ABSValue creationTimeRaw;
+        ABSAlgebraicDataType creationTimeRaw;
 	try {
-	    creationTimeRaw = (ABSValue)GET_FIELD_VALUE.invoke(dc, "creationTime");
+	    creationTimeRaw = (ABSAlgebraicDataType)GET_FIELD_VALUE.invoke(dc, "creationTime");
 	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
 	}
@@ -88,9 +91,9 @@ public class ABSDCMirror {
     }
 
     private List<Number> getCpuHistory() {
-        ABSValue cpuHistoryRaw;
+        ABSAlgebraicDataType cpuHistoryRaw;
 	try {
-	    cpuHistoryRaw = (ABSValue)GET_FIELD_VALUE.invoke(dc, "cpuhistory");
+	    cpuHistoryRaw = (ABSAlgebraicDataType)GET_FIELD_VALUE.invoke(dc, "cpuhistory");
 	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
 	}
@@ -100,9 +103,9 @@ public class ABSDCMirror {
     }
 
     private List<Number> getCpuTotalsHistory() {
-        ABSValue cpuTotalsHistoryRaw;
+        ABSAlgebraicDataType cpuTotalsHistoryRaw;
 	try {
-	    cpuTotalsHistoryRaw = (ABSValue)GET_FIELD_VALUE.invoke(dc, "cpuhistorytotal");
+	    cpuTotalsHistoryRaw = (ABSAlgebraicDataType)GET_FIELD_VALUE.invoke(dc, "cpuhistorytotal");
 	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
 	}
@@ -132,15 +135,14 @@ public class ABSDCMirror {
     }
 
     public String getDescription() {
-        ABSValue descriptionRaw;
+        ABSString descriptionRaw;
 	try {
-	    descriptionRaw = (ABSValue)GET_FIELD_VALUE.invoke(dc, "description");
+	    descriptionRaw = (ABSString)GET_FIELD_VALUE.invoke(dc, "description");
 	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
 	}
-        // this is slightly baroque but doesn't require any casts
-        return descriptionRaw.toJson().toString();
+        return descriptionRaw.getString();
     }
 
     // Find class ABS.DC.DeploymentComponent and needed methods, and the

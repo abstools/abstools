@@ -153,10 +153,6 @@ public abstract class ABSObject implements ABSRef {
     // Return value is serializable by the Jackson JSON library
     public abstract List<Map<String, Object>> getHttpCallableMethodInfo();
 
-    public Object toJson() {
-        return ABSBuiltInFunctions.toString(this).getString();
-    }
-
     public ABSFut<? extends ABSValue> invokeMethod(String name, List<ABSValue> arguments) {
         return null;
     }

@@ -4,7 +4,6 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.expr.PatternBinding;
 import org.abs_models.backend.java.lib.expr.PatternConstructor;
 
