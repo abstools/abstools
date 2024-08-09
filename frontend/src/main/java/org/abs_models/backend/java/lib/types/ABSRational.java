@@ -4,7 +4,6 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-import org.abs_models.backend.java.lib.expr.BinOp;
 import org.apfloat.Apfloat;
 import org.apfloat.Apint;
 import org.apfloat.ApintMath;

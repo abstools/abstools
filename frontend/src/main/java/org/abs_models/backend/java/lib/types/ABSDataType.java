@@ -4,12 +4,7 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-import org.abs_models.backend.java.lib.expr.PatternBinding;
-import org.abs_models.backend.java.lib.expr.PatternConstructor;
-
 public abstract class ABSDataType implements ABSValue {
-
-    public abstract boolean match(PatternConstructor p, PatternBinding b);
 
     private static final ABSValue[] NO_ARGS = new ABSValue[0];
 

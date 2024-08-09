@@ -4,7 +4,8 @@
  */
 package org.abs_models.backend.java.lib.expr;
 
-import org.abs_models.backend.java.lib.types.ABSDataType;
+import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
+import org.abs_models.backend.java.lib.types.ABSBuiltInDataType;
 import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class PatternConstructor extends Pattern {
@@ -17,11 +18,20 @@ public class PatternConstructor extends Pattern {
     }
 
     @Override
-    public boolean match(ABSValue dt, PatternBinding b) {
-        if (dt instanceof ABSDataType) {
-            return ((ABSDataType) dt).match(this, b);
-        } else {
-            return false;
+    public boolean match(ABSValue value, PatternBinding b) {
+        switch (value) {
+            case ABSBuiltInDataType bt:
+                return constructorClass.getSimpleName().endsWith(bt.getConstructorName());
+            case ABSAlgebraicDataType dt:
+                if (!constructorClass.equals(dt.getClass()))
+                    return false;
+                else {
+                    for (int i = 0; i < dt.getNumArgs(); i++) {
+                        if (!subpattern[i].match(dt.getArg(i), b)) return false;
+                    }
+                    return true;
+                }
+            default: return false;
         }
     }
 

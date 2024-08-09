@@ -173,18 +173,6 @@ aspect GenerateJava {
         stream.println("return " + ABSBool.class.getName() + ".TRUE;");
         stream.println("}");
 
-        // match method
-        stream.println("public boolean match(" + PatternConstructor.class.getName() + " c, " + PatternBinding.class.getName() + " b) {");
-        stream.println("if (!c.constructorClass.equals(this.getClass())) return false;");
-        i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            stream.println("if (!c.subpattern[" + i + "].match(this.arg" + i + ", b)) return false;");
-            i++;
-        }
-        stream.println("return true;");
-        stream.println("}");
-        stream.println();
-
         // toJSON method
         JavaGeneratorHelper.generateDataTypeConstructorToJsonMethod(stream, this);
 
@@ -256,17 +244,6 @@ aspect GenerateJava {
         }
 
         stream.println("return " + ABSBool.class.getName() + ".TRUE;");
-        stream.println("}");
-
-        // match method
-        stream.println("public boolean match(" + PatternConstructor.class.getName() + " c, " + PatternBinding.class.getName() + " b) {");
-        stream.println("if (!c.constructorClass.equals(this.getClass())) return false;");
-        i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            stream.println("if (!c.subpattern[" + i + "].match(this.arg" + i + ", b)) return false;");
-            i++;
-        }
-        stream.println("return true;");
         stream.println("}");
 
         // toJSON method
