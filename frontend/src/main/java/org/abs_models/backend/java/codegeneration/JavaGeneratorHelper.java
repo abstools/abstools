@@ -392,7 +392,7 @@ public class JavaGeneratorHelper {
                 }
                 if (key != null) {
                     stream.println("result.put(\"" + key + "\", "
-                                   + ModelApi.class.getName() + ".absToJson(this.arg" + elem + "));");
+                                   + ModelApi.class.getName() + ".absToJson(this.allArgs[" + elem + "]));");
                 }
             }
             stream.println("return result;");

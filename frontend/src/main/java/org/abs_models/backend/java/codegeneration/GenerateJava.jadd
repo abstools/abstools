@@ -119,17 +119,11 @@ aspect GenerateJava {
 
         stream.println(" {");
 
-        int i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            stream.print("public final ");
-            stream.println(JavaBackend.getJavaType(u) + " arg" + i + ";");
-            stream.println("public " + JavaBackend.getJavaType(u) + " getArg" + i + "() { return arg" + i + "; }");
-            i++;
-        }
+        stream.println("public final " + ABSValue.class.getName() + "[] allArgs;");
 
         stream.print("public " + constructorClassName + "(");
         boolean first = true;
-        i = 0;
+        int i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
             if (first)
                 first = false;
@@ -140,22 +134,18 @@ aspect GenerateJava {
             i++;
         }
         stream.println(") {");
-        i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            stream.println("this.arg" + i + " = arg" + i + ";");
-            i++;
-        }
-        stream.println("}");
-
-        stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return new " + ABSValue.class.getName() + "[] { ");
+        stream.print("allArgs = new " + ABSValue.class.getName() + "[] { ");
         i=0;
         for (ConstructorArg u : getConstructorArgs()) {
             if (i > 0)
                 stream.print(", ");
-            stream.print("this.arg" + i);
+            stream.print("arg" + i);
             i++;
         }
-        stream.println(" }; }");
+        stream.println(" };");
+        stream.println("}");
+
+        stream.println("protected " + ABSValue.class.getName() + "[] getArgs() { return allArgs; }");
 
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";}");
 
@@ -163,15 +153,10 @@ aspect GenerateJava {
         stream.println("public " + ABSBool.class.getName() + " eq(" + ABSValue.class.getName() + " o) {");
         stream.println("if (! (o instanceof " + constructorClassName + ")) return " + ABSBool.class.getName() + ".FALSE;");
         stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
-
-        i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-        stream.println("if (!" + BinOp.class.getName() + ".eq(this.arg" + i + ", other.arg" + i + ").toBoolean()) return " + ABSBool.class.getName() + ".FALSE;");
-            i++;
-        }
-
-        stream.println("return " + ABSBool.class.getName() + ".TRUE;");
+        stream.println("boolean allEqual = java.util.stream.IntStream.range(0, allArgs.length).allMatch(i -> " + BinOp.class.getName() + ".eq(allArgs[i], other.allArgs[i]).toBoolean());");
+        stream.println("return "  + ABSBool.class.getName() + ".fromBoolean(allEqual);");
         stream.println("}");
+        stream.println();
 
         // toJSON method
         JavaGeneratorHelper.generateDataTypeConstructorToJsonMethod(stream, this);
@@ -192,17 +177,11 @@ aspect GenerateJava {
 
         stream.println(" {");
 
-        int i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            stream.print("public final ");
-            stream.println(JavaBackend.getJavaType(u) + " arg" + i + ";");
-            stream.println("public " + JavaBackend.getJavaType(u) + " getArg" + i + "() { return arg" + i + "; }");
-            i++;
-        }
+        stream.println("public final " + ABSValue.class.getName() + "[] allArgs;");
 
         stream.print("public " + constructorClassName + "(");
         boolean first = true;
-        i = 0;
+        int i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
             if (first)
                 first = false;
@@ -213,11 +192,15 @@ aspect GenerateJava {
             i++;
         }
         stream.println(") {");
-        i = 0;
+        stream.print("allArgs = new " + ABSValue.class.getName() + "[] { ");
+        i=0;
         for (ConstructorArg u : getConstructorArgs()) {
-            stream.println("this.arg" + i + " = arg" + i + ";");
+            if (i > 0)
+                stream.print(", ");
+            stream.print("arg" + i);
             i++;
         }
+        stream.println(" };");
         stream.println("}");
 
         stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return new " + ABSValue.class.getName() + "[] { ");
@@ -236,14 +219,8 @@ aspect GenerateJava {
         stream.println("public " + ABSBool.class.getName() + " eq(" + ABSValue.class.getName() + " o) {");
         stream.println("if (! (o instanceof " + constructorClassName + ")) return " + ABSBool.class.getName() + ".FALSE;");
         stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
-
-        i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-        stream.println("if (!" + BinOp.class.getName() + ".eq(this.arg" + i + ", other.arg" + i + ").toBoolean()) return " + ABSBool.class.getName() + ".FALSE;");
-            i++;
-        }
-
-        stream.println("return " + ABSBool.class.getName() + ".TRUE;");
+        stream.println("boolean allEqual = java.util.stream.IntStream.range(0, allArgs.length).allMatch(i -> " + BinOp.class.getName() + ".eq(allArgs[i], other.allArgs[i]).toBoolean());");
+        stream.println("return "  + ABSBool.class.getName() + ".fromBoolean(allEqual);");
         stream.println("}");
 
         // toJSON method
