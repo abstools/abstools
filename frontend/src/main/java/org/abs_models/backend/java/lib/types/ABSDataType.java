@@ -37,11 +37,6 @@ public abstract class ABSDataType implements ABSValue {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        toStringBuilder(sb);
-        return sb.toString();
-    }
-
-    private void toStringBuilder(StringBuilder sb) {
         sb.append(getConstructorName());
         ABSValue[] args = getArgs();
         if (args.length > 0) {
@@ -51,12 +46,14 @@ public abstract class ABSDataType implements ABSValue {
                 if (i > 0) {
                     sb.append(',');
                 }
-
-                sb.append(v.toString());
+                sb.append(switch (v) {
+                    case ABSString s -> "\"" + s.toString() + "\"";
+                    default -> v.toString();
+                });
                 i++;
             }
             sb.append(')');
         }
+        return sb.toString();
     }
-
 }

@@ -37,6 +37,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The syntax for command-line options was changed for models generated via the Java backend: instead of, e.g., `--randomseed=1234` use `--randomseed 1234`.
 
+- Minor incompatible change: the built-in function `toString` now encloses String arguments for user-defined datatypes in quotes.  I.e., for a datatype `data Person = Person(String, Int);`, the expression `toString(Person("Joe", 20))` produces `Person("Joe",20)` instead of `Person(Joe,20)`.  For string values, `toString` produces the string without quotes as before.
+
 ### Removed
 
 ### Fixed

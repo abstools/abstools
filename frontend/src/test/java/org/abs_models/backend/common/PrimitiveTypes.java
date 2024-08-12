@@ -345,4 +345,14 @@ public class PrimitiveTypes extends SemanticTests {
      public void stringToString() throws Exception {
 	assertEvalTrue("{ Bool testresult = toString(\"Hello\") == \"Hello\"; }");
     }
+
+    @Test
+    public void datatypeToString() throws Exception {
+        assertEvalTrue("""
+            data Person = Person(String, Int);
+            {
+                Bool testresult = toString(Person("Joe", 20)) == `Person("Joe",20)`;
+            }
+            """);
+    }
 }
