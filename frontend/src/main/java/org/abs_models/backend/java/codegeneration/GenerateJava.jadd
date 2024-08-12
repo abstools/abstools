@@ -203,15 +203,7 @@ aspect GenerateJava {
         stream.println(" };");
         stream.println("}");
 
-        stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return new " + ABSValue.class.getName() + "[] { ");
-        i=0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            if (i > 0)
-                stream.print(", ");
-            stream.print("this.arg" + i);
-            i++;
-        }
-        stream.println(" }; }");
+        stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return allArgs; }");
 
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";} ");
 

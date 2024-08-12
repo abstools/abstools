@@ -193,7 +193,16 @@ public class FunctionalTests extends SemanticTests {
     
     @Test
     public void exceptionDataType() throws Exception {
-        assertEvalTrue("exception MyE(Bool); { Bool testresult = False; MyE e = MyE(True); switch (e) { MyE(value) => testresult = value; } }");
+        assertEvalTrue("""
+            exception MyE(Bool);
+            {
+                Bool testresult = False;
+                MyE e = MyE(True);
+                switch (e) {
+                    MyE(value) => testresult = value;
+                }
+            }
+            """);
     }
     
     @Test
