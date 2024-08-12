@@ -35,10 +35,6 @@ public abstract class SemanticTests {
         return checkProg("maude");
     }
 
-    public static boolean checkErlang() {
-        return checkProg("erl");
-    }
-
     public static boolean checkProg(String... prog) {
         ProcessBuilder pb = new ProcessBuilder();
         pb.command(prog);
