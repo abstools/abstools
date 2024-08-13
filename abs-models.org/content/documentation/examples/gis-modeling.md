@@ -90,6 +90,8 @@ function createMap() {
 
 ## Running the Example
 
+
+
 Since the model includes a custom html page and support library, the
 compiler needs to run with the `--modelapi-index-file` and
 `--modelapi-static-dir` arguments.  See the
@@ -98,3 +100,5 @@ for the commands to compile and run the example on the Erlang or Java backend.
 
 After starting the model, the map can be accessed at
 `http://localhost:8080`.
+
+![A map of Oslo with two points of interest](/images/examples/geo-abs.png)
