@@ -5,8 +5,8 @@
 package org.abs_models.backend.java.lib.runtime;
 
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -32,6 +32,8 @@ public class ABSBuiltInFunctions {
 
     static long ms_at_model_start = System.currentTimeMillis();
 
+    private static final PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+
     public static ABSInteger strlen(ABSString s) {
         return s.strlen();
     }
@@ -41,7 +43,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSUnit print(ABSString s) {
-        System.out.print(s.getString());
+        out.print(s.getString());
         return ABSUnit.UNIT;
     }
 
@@ -171,22 +173,15 @@ public class ABSBuiltInFunctions {
      * Convenience functions, to be removed
      */
     public static ABSUnit println(ABSString s) {
-        try {
-            PrintStream out = new PrintStream(System.out, true, "UTF-8");
-            out.println(s.getString());
-        } catch (UnsupportedEncodingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        // System.out.println(s.getString());
+        out.println(s.getString());
         return ABSUnit.UNIT;
     }
 
     public static ABSString readln() {
-        Scanner scanner = new Scanner(System.in);
-        String line = scanner.nextLine();
-        //scanner.close();
-        return ABSString.fromString(line.trim());
+        try (Scanner scanner = new Scanner(System.in)) {
+	    String line = scanner.nextLine();
+	    return ABSString.fromString(line.trim());
+	}
     }
 
     /*
