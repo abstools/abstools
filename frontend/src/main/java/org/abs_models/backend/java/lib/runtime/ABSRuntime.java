@@ -173,6 +173,7 @@ public class ABSRuntime {
             // Note that here, the DC of `cog` is still null; we set up the
             // global DC from the generated code--its constructor needs to run
             // inside an ABS task since it calls `getCurrentCog()`.
+            log.fine("Starting Main block.");
             asyncCall(new ABSMainCall(mainObject));
             doNextStep();
         } catch (SecurityException | NoSuchMethodException | IllegalArgumentException | InvocationTargetException e) {
@@ -450,6 +451,7 @@ public class ABSRuntime {
     public <T extends ABSRef> ABSFut<?> asyncCall(AsyncCall<T> call) {
         Task<T> task = new Task<>(call);
         task.schedule();
+        log.fine(() -> "Asynccall " + call.methodName() + " from " + call.getSource() + " to " + call.getTarget() + " (" + task + ")");
         return task.getFut();
     }
 
@@ -784,7 +786,7 @@ public class ABSRuntime {
             } else {
                 clock = AprationalMath.min(wake_time_for_duration_guards, next_integer);
             }
-            log.finest(() -> "Clock advanced to " + clock);
+            log.fine(() -> "Clock advanced to " + clock);
             if (clock.compareTo(next_integer) == 0) {
                 deployment_components.forEach(ABSDCMirror::advanceTimeBy1Tick);
                 woke_up_a_resource_guard = handResourcesToWaitingGuards();

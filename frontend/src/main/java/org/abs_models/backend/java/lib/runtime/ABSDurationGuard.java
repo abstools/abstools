@@ -103,6 +103,10 @@ public class ABSDurationGuard extends ABSGuard {
         return true;
     }
 
+    public String toString() {
+        return "ABSDurationGuard(" + getMinTime() + "," + getMaxTime() + ")";
+    }
+
     @Override
     public String toABSString() {
         return "wakeup at " + getMinTime() + " to " + getMaxTime();

@@ -118,7 +118,7 @@ public class ModelApi {
                 return t;
             }));
         server.start();
-        log.info(() -> "ModelApi server started on port " + port);
+        log.config(() -> "ModelApi server started on port " + port);
     }
 
     /**

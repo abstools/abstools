@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.abs_models.backend.java.JavaBackendException;
-import org.abs_models.backend.java.lib.expr.BinOp;
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
@@ -140,7 +138,7 @@ public class COG implements ABSValue {
             log.finest(() -> this + " now has " + activeThreads + " active threads.");
         }
         if (activeThreads == 0) {
-            log.finest(() -> this + " notifying runtime that it became inactive");
+            log.finest(() -> this + " notifying runtime that it became inactive -- last task finished");
             ABSRuntime.getRuntime().notifyCogInactive();
         }
     }
@@ -154,11 +152,13 @@ public class COG implements ABSValue {
     }
 
     public void objectCreated(ABSObject absObject) {
+        log.fine(() -> "Object created: " + absObject);
         if (view != null)
             view.objectCreated(absObject);
     }
 
     public void objectInitialized(ABSObject absObject) {
+        log.finer(() -> "Object initialized: " + absObject);
         if (view != null)
             view.objectInitialized(absObject);
     }

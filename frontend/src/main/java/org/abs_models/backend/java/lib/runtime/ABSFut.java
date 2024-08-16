@@ -4,8 +4,6 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
-import org.abs_models.backend.java.lib.expr.BinOp;
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSBuiltInDataType;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.FutObserver;
@@ -133,11 +131,12 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
     }
 
     public synchronized void await(COG cog, Task<?> task) {
-        log.finest(() -> this + " awaiting");
+        log.fine(() -> this + (isDone ? " ready, skipping await" : " awaiting."));
 
-        boolean needsSuspend = !isDone;
+        boolean neededSuspend = !isDone;
 
-        if (needsSuspend) {
+        if (neededSuspend) {
+            log.finest(() -> this + " notifying COG: will suspend.");
             cog.notifyAwait(task);
         }
 
@@ -151,9 +150,8 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
             }
         }
 
-        log.finest(() -> this + " ready");
-
-        if (needsSuspend) {
+        if (neededSuspend) {
+            log.finest(() -> this + " notifying COG: became ready.");
             cog.notifyWakeup(task);
         }
         // TODO: fix this; exceptions should be thrown by get, not by await
@@ -195,7 +193,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
 
     private void informWaitingThreads() {
-        log.finest(() -> this + " inform awaiting threads");
+        log.finest(() -> this + " informing awaiting threads");
 
         ArrayList<GuardWaiter> copy = null;
         synchronized (this) {
