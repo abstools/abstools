@@ -79,6 +79,7 @@ public class ClassDeclGenerator {
         generateGetFieldValueMethod();
         stream.println();
         stream.println("public final java.lang.String getClassName() { return \"" + decl.getName() + "\"; }");
+        stream.println("public final java.lang.String toString() { return \"" + decl.getModuleDecl().getName() + "." +  decl.getName() + "(\" + __id + \")\"; }");
         stream.println();
         generateCreateNewCOGMethod();
         stream.println();

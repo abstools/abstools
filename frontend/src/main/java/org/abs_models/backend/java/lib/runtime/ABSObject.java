@@ -7,8 +7,6 @@ package org.abs_models.backend.java.lib.runtime;
 import java.util.List;
 import java.util.Map;
 
-import org.abs_models.backend.java.lib.expr.BinOp;
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSRef;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
@@ -47,10 +45,6 @@ public abstract class ABSObject implements ABSRef {
 
     private long getFreshID() {
         return ABSRuntime.getRuntime().getFreshObjectID(this.getClass());
-    }
-
-    public String toString() {
-        return getClassName() + " " + __id;
     }
 
     public abstract String getClassName();
