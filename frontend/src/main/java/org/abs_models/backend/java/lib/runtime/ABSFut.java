@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -43,9 +44,17 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
      */
     protected ABSException exception = null;
     /**
-     * List of guards waiting for the future to be resolved.
+     * List of guards waiting for the future to be resolved.  Note: not used
+     * in all schedulers.
      */
-    private List<GuardWaiter> waitingThreads;
+    private List<GuardWaiter> waitingThreads = null;
+
+    /**
+     * Tri-state flag: null if no thread is waiting, false when at least one
+     * thread is inside `wait`, true if at least one thread has woken up (and
+     * signaled its cog).
+     */
+    protected AtomicBoolean taskHasWokenUp = null;
 
     protected ABSFut() {
         super("Fut");
@@ -79,6 +88,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
     /**
      * Minimal implementation of java.concurrent.Future interface.  Currently untested.
+     *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
      * @return the value of the future.
@@ -136,6 +146,9 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         boolean neededSuspend = !isDone;
 
         if (neededSuspend) {
+            if (taskHasWokenUp == null) {
+                taskHasWokenUp = new AtomicBoolean(false);
+            }
             log.finest(() -> this + " notifying COG: will suspend.");
             cog.notifyAwait(task);
         }
@@ -153,6 +166,8 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         if (neededSuspend) {
             log.finest(() -> this + " notifying COG: became ready.");
             cog.notifyWakeup(task);
+            taskHasWokenUp.set(true);
+            this.notify();
         }
         // TODO: fix this; exceptions should be thrown by get, not by await
         if (exception != null)
@@ -164,26 +179,35 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
     }
 
     protected void resolve(final V o, final ABSException e) {
+        if (isDone)
+            throw new IllegalStateException("Future is already resolved");
         synchronized (this) {
             if (isDone)
                 throw new IllegalStateException("Future is already resolved");
-
-            log.finest(() -> this + (e == null
-                ? (" is resolved to value " + o)
-                : (" is resolved to exception " + e)));
-
             value = o;
             exception = e;
             isDone = true;
             this.notifyAll();
+            if (taskHasWokenUp != null) {
+                log.finest(() -> this + " waiting for at least one awaiting task to wake up");
+                while (!taskHasWokenUp.get()) {
+                    try {
+			this.wait();
+		    } catch (InterruptedException e1) {
+                        log.finest(() -> this + " was interruped during await");
+                        Thread.currentThread().interrupt();
+		    }
+                }
+            }
         }
-
+        log.finest(() -> this + (e == null
+            ? (" is resolved to value " + o)
+            : (" is resolved to exception " + e)));
         informWaitingThreads();
 
         View v = view;
         if (v != null)
             v.onResolved(o);
-
     }
 
     public void smash(ABSException e) {
@@ -193,16 +217,18 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
 
     private void informWaitingThreads() {
-        log.finest(() -> this + " informing awaiting threads");
-
-        ArrayList<GuardWaiter> copy = null;
+        final ArrayList<GuardWaiter> copy;
         synchronized (this) {
             if (waitingThreads == null)
+            {
+                log.finest(() -> this + ": no threads waiting for result");
                 return;
+            }
             copy = new ArrayList<>(waitingThreads);
             waitingThreads.clear();
         }
 
+        log.finest(() -> this + " informing " + copy.size() + " awaiting thread(s)");
         for (GuardWaiter s : copy) {
             s.checkGuard();
         }
@@ -214,6 +240,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
     }
 
     public boolean addWaitingThread(GuardWaiter thread) {
+        // NOTE: this method is not used in the default scheduler.
         if (isDone) {
             log.finest(() -> this + " is already resolved");
             return false;
@@ -226,9 +253,9 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
             if (waitingThreads == null)
                 waitingThreads = new ArrayList<>(1);
             waitingThreads.add(thread);
-            log.finest(() -> "Added guard to queue of " + this);
-            return true;
         }
+        log.finest(() -> "Added guard to queue of " + this);
+        return true;
     }
 
 
