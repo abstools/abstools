@@ -192,11 +192,11 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
                 log.finest(() -> this + " waiting for at least one awaiting task to wake up");
                 while (!taskHasWokenUp.get()) {
                     try {
-			this.wait();
-		    } catch (InterruptedException e1) {
+                        this.wait();
+                    } catch (InterruptedException e1) {
                         log.finest(() -> this + " was interruped during await");
                         Thread.currentThread().interrupt();
-		    }
+                    }
                 }
             }
         }

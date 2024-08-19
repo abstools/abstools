@@ -5,7 +5,7 @@ plugins {
     id 'application'
 
     id 'antlr'
-    id "com.github.spotbugs" version "6.0.19"
+    id "com.github.spotbugs" version "6.0.20"
     id 'com.github.johnrengelman.shadow'
 }
 
@@ -37,11 +37,11 @@ dependencies {
     // General-purpose utility libraries; these could be replaced with
     // Java 21 standard library built-ins, if possible.
     implementation 'commons-io:commons-io:2.16.1'
-    implementation 'com.google.guava:guava:33.2.1-jre'
+    implementation 'com.google.guava:guava:33.3.0-jre'
     // Command-line parser library
     implementation 'info.picocli:picocli:4.7.6'
     // Parser library
-    antlr 'org.antlr:antlr4:4.13.1'
+    antlr 'org.antlr:antlr4:4.13.2'
     // AST definition and rewriting library
     jastadd2 'org.jastadd:jastadd:2.3.6'
 
@@ -56,7 +56,7 @@ dependencies {
     // Rational numbers for the Java backend
     implementation 'org.apfloat:apfloat:1.14.0'
     // SQLite library for the Java backend
-    implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
+    implementation 'org.xerial:sqlite-jdbc:3.46.1.0'
     // Logging backend used by SQLite library
     implementation 'org.slf4j:slf4j-jdk14:1.7.36'
     // JSON library for the Java backend Model API
@@ -65,12 +65,12 @@ dependencies {
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0-M2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
     // Executes JUnit4 tests, see
     // https://github.com/junit-team/junit5-samples/tree/main/junit5-migration-gradle
     testImplementation("junit:junit:4.13.2")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0-M2")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
 }
 
 // JastAdd
