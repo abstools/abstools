@@ -21,8 +21,9 @@ public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyn
      */
     private Aprational deadline_t;
     /**
-     * The worst-case execution time (probably), as given as a method
-     * annotation, or {@code -1} if no cost annotation on the method..
+     * The computation time, as given as an annotation at the method
+     * definition, or {@code -1} if no cost annotation present at the method
+     * definition.
      */
     private Aprational cost;
     /**
@@ -65,7 +66,7 @@ public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyn
             return new Aprational(-1);
         } else {
             // should never happen
-            throw new JavaBackendException("Argument is not of type ABS.StdLib.Duration");
+            throw new JavaBackendException("Argument is not of type ABS.StdLib.Duration: " + duration);
         }
     }
 

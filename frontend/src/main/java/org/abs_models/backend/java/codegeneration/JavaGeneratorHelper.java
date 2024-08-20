@@ -499,8 +499,11 @@ public class JavaGeneratorHelper {
         rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Deadline");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream);
         stream.println(",");
-        rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Cost");
-        if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream);
+        // TODO: read Cost annotation of the method definition here, if any --
+        // but process execution cost is not used in the Real-Time ABS
+        // semantics anyway.  It's a modeling device; we have duration
+        // statements in the method bodies instead.
+        stream.print("new ABS.StdLib.Duration_InfDuration()");
         stream.println(",");
         rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Critical");
         if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream);

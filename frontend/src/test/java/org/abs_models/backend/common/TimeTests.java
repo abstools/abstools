@@ -154,4 +154,21 @@ public class TimeTests extends SemanticTests {
         Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
         assertEvalTrue("{ [Cost: 10] Bool testresult = timeValue(now()) == 0; }");
     }
+
+    @Test
+    public void cost_on_methodcall() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs());
+        // Checks for a code generation error in the Java backend
+        assertEvalTrue("""
+            interface I { Unit doit(); }
+            class C implements I {
+                Unit doit() { println("done"); }
+            }
+            {
+                I o = new C();
+                [Cost: 5] await o!doit();
+                Bool testresult = True;
+            }
+            """);
+    }
 }

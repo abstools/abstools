@@ -29,10 +29,11 @@ public class Task<T extends ABSRef> implements Runnable {
     private final TaskStack stack;
     private final AsyncCall<T> call;
 
-    /**
-     * Real time attributes
-     */
+    // Real-time task attributes
+
+    // Arrival time (set at runtime)
     private final long arrival;
+    // Cost (taken from method definition annotation) (currently unused)
     private final Aprational cost;
     /**
      * The deadline, as an absolute clock value.  Note that we convert from
