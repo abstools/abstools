@@ -115,7 +115,7 @@
     }
 
     $(document).ready(() => {
-        $.when($.getJSON("/dcs/cpu/data.json"))
+        $.when($.getJSON("/dcs"))
             .done(cpudata => {
                 generateCpuGraphs('#graphs', cpudata);
             });
