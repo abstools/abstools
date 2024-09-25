@@ -68,6 +68,9 @@ aspect AwaitAsyncCallExpander {
         // The annotations on an "await o!m();"-containing statement need to
         // end up on the fresh "o!m()"; move them there
         List<Annotation> annotations = stmt.getAnnotationList().treeCopyNoTransform();
+        // Remove the annotations from the original statement
+        // (https://github.com/abstools/abstools/issues/337)
+        stmt.setAnnotationList(new List<Annotation>());
         final TypeUse du = a.getType().toUse();
         // TODO: The typechecker will assert that/if the name is free, but in
         // freak chances it may not.
