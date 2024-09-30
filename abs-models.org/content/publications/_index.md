@@ -16,7 +16,11 @@ This page links ABS workshops, as well as selected research papers on the develo
 
 - **2021**  Fourth International ABS Workshop: August 26--August 27, 2021, Virtual.  https://formbar.raillab.de/en/abs-workshop-2021/
 
-- **2022**  Fifth International ABS Workshop: TBA
+- **2023** Fifth International ABS Workshop: October 04-06, 2023, Lyon,
+  France. https://edkamb.github.io/ABS_23/
+
+- **2024** APM Workshop 2024: October 02-04, 2024, Turin,
+  Italy. https://edkamb.github.io/APM_24/
 
 ## Case Studies
 
