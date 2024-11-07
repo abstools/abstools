@@ -5,7 +5,7 @@ plugins {
     id 'application'
 
     id 'antlr'
-    id "com.github.spotbugs" version "6.0.20"
+    id "com.github.spotbugs" version "6.0.26"
     id 'com.github.johnrengelman.shadow'
     // add jshell support (https://github.com/mrsarm/jshell-plugin):
     // rlwrap ./gradlew --console plain jshell
@@ -39,8 +39,8 @@ distributions {
 dependencies {
     // General-purpose utility libraries; these could be replaced with
     // Java 21 standard library built-ins, if possible.
-    implementation 'commons-io:commons-io:2.16.1'
-    implementation 'com.google.guava:guava:33.3.0-jre'
+    implementation 'commons-io:commons-io:2.17.0'
+    implementation 'com.google.guava:guava:33.3.1-jre'
     // Command-line parser library
     implementation 'info.picocli:picocli:4.7.6'
     // Parser library
@@ -59,21 +59,21 @@ dependencies {
     // Rational numbers for the Java backend
     implementation 'org.apfloat:apfloat:1.14.0'
     // SQLite library for the Java backend
-    implementation 'org.xerial:sqlite-jdbc:3.46.1.0'
+    implementation 'org.xerial:sqlite-jdbc:3.47.0.0'
     // Logging backend used by SQLite library
-    implementation 'org.slf4j:slf4j-jdk14:1.7.36'
+    implementation 'org.slf4j:slf4j-jdk14:2.0.16'
     // JSON library for the Java backend Model API
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.1'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
     // Executes JUnit4 tests, see
     // https://github.com/junit-team/junit5-samples/tree/main/junit5-migration-gradle
     testImplementation("junit:junit:4.13.2")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.0")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.3")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
 }
 
 // JastAdd

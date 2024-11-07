@@ -51,7 +51,7 @@ manual:				## Build the ABS manual
 
 docker:				## Build docker images for collaboratory and absc
 	$(DOCKER) pull erlang:26-alpine
-	$(DOCKER) pull php:7.4-apache-buster
+	$(DOCKER) pull php:8.3.9-apache-bookworm
 	$(DOCKER) build -t abslang/collaboratory -f docker/collaboratory.Dockerfile $(ROOT_DIR)
 	$(DOCKER) build -t abslang/absc -f docker/absc.Dockerfile $(ROOT_DIR)
 	@echo "Finished."
