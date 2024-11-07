@@ -14,7 +14,7 @@ asciidoctor {
         }
     }
     options doctype: 'book'
-    attributes 'revnumber': project.version,
+    attributes 'revnumber': project.version.tokenize('-').first(),
         'toc-position': "right",
         toc2: "true",
         numbered: "true",
