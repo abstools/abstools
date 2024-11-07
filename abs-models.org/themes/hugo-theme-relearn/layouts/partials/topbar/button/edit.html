@@ -2,15 +2,17 @@
 {{- $onwidthm := cond (isset . "onwidthm") .onwidthm "show" }}
 {{- $onwidthl := cond (isset . "onwidthl") .onwidthl "show" }}
 {{- with .page }}
-	{{- $format := partial "get-format.hugo" . }}
-	{{- $outputFormat := partial "output-format.hugo" (dict "page" . "format" $format) }}
-	{{- if and (eq $outputFormat "html") .File }}
+	{{- $show := .File }}
+	{{- if $show }}
+		{{- $show = not (partial "_relearn/pageIsSpecial.gotmpl" .) }}
+	{{- end }}
+	{{- if $show }}
 		{{- $filePath := printf "%s%s" (strings.TrimLeft "/" (replace .File.Dir "\\" "/")) .File.LogicalName }}
 		{{- $href := "" }}
 		{{- if .Site.Params.editURL }}
 			{{- $href = .Site.Params.editURL }}
 			{{- if not (strings.Contains $href "${FilePath}") }}
-				{{ $href = printf "%s%s" $href "${FilePath}" }}
+				{{- $href = printf "%s%s" $href "${FilePath}" }}
 			{{- end }}
 		{{- end }}
 		{{- if isset .Params "editurl" }}

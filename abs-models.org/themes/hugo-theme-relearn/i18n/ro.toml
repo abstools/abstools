@@ -46,7 +46,7 @@ other = "Tipărește întregul capitol"
 [More-action]
 other = "Mai mult"
 
-[Shortcuts-Title]
+[shortcuts-menuTitle]
 other = "Mai mult"
 
 [Expand-title]
@@ -67,11 +67,17 @@ other = "KB"
 [Megabyte-symbol]
 other = "MB"
 
-[note]
-other = "Notă"
+[caution]
+other = "Atenție"
+
+[important]
+other = "Important"
 
 [info]
 other = "Info"
+
+[note]
+other = "Notă"
 
 [tip]
 other = "Sfat"

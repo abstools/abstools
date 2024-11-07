@@ -46,7 +46,7 @@ other = "打印整章"
 [More-action]
 other = "更多"
 
-[Shortcuts-Title]
+[shortcuts-menuTitle]
 other = "更多"
 
 [Expand-title]
@@ -67,11 +67,17 @@ other = "KB"
 [Megabyte-symbol]
 other = "MB"
 
-[note]
-other = "注释"
+[caution]
+other = "注意事项"
+
+[important]
+other = "重要"
 
 [info]
 other = "信息"
+
+[note]
+other = "注释"
 
 [tip]
 other = "提示"

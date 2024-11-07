@@ -46,7 +46,7 @@ other = "طباعة الفصل بأكمله"
 [More-action]
 other = "المزيد"
 
-[Shortcuts-Title]
+[shortcuts-menuTitle]
 other = "المزيد"
 
 [Expand-title]
@@ -67,14 +67,20 @@ other = "KB"
 [Megabyte-symbol]
 other = "MB"
 
-[note]
-other = "ملاحظه"
+[caution]
+other = "الحذر"
+
+[important]
+other = "مهم"
 
 [info]
 other = "معلومات"
 
+[note]
+other = "ملاحظة"
+
 [tip]
-other = "بقشيش"
+other = "نصيحة"
 
 [warning]
 other = "تحذير"
@@ -83,13 +89,13 @@ other = "تحذير"
 other = "نسخ إلى الحافظة"
 
 [Copied-to-clipboard]
-other = "نسخت إلى الحافظة!"
+other = "نسخ إلى الحافظة!"
 
 [Copy-link-to-clipboard]
 other = "نسخ الرابط إلى الحافظة"
 
 [Link-copied-to-clipboard]
-other = "رابط نسخت إلى الحافظة!"
+other = "تم نسخ الرابط إلى الحافظة!"
 
 [Chapter]
 other = "{{.}} الفصل"
@@ -110,7 +116,7 @@ other = "{{.}} الأقسام الفرعية"
 other = "الكلمات الدالة"
 
 [tag]
-other = "كلمة رئيسية"
+other = "وسم"
 
 [categories]
 other = "فئات"

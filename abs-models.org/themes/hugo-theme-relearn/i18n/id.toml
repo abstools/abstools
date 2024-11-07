@@ -46,7 +46,7 @@ other = "Mencetak seluruh bab"
 [More-action]
 other = "Lainnya"
 
-[Shortcuts-Title]
+[shortcuts-menuTitle]
 other = "Lainnya"
 
 [Expand-title]
@@ -67,11 +67,17 @@ other = "KB"
 [Megabyte-symbol]
 other = "MB"
 
-[note]
-other = "Nota"
+[caution]
+other = "Perhatian"
+
+[important]
+other = "Penting"
 
 [info]
 other = "Info"
+
+[note]
+other = "Nota"
 
 [tip]
 other = "Ujung"

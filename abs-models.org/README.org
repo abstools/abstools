@@ -14,7 +14,8 @@ Newer hugo releases might emit warnings or errors for our theme.  In
 that case:
 - remove ~themes/hugo-theme-relearn~
 - in ~themes/~, run =git clone https://github.com/McShelby/hugo-theme-relearn=
-- remove the directory ~themes/hugo-theme-relearn/.git~
+- in ~themes/hugo-theme-relearn~, remove the directories .git,
+  .githooks, .github, exampleSite
 
 ** Deploying on the website
 

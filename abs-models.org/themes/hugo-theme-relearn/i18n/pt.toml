@@ -46,7 +46,7 @@ other = "Imprimir capítulo inteiro"
 [More-action]
 other = "Mais"
 
-[Shortcuts-Title]
+[shortcuts-menuTitle]
 other = "Mais"
 
 [Expand-title]
@@ -67,11 +67,17 @@ other = "KB"
 [Megabyte-symbol]
 other = "MB"
 
-[note]
-other = "Nota"
+[caution]
+other = "Cuidado"
+
+[important]
+other = "Important"
 
 [info]
 other = "Informação"
+
+[note]
+other = "Nota"
 
 [tip]
 other = "Dica"

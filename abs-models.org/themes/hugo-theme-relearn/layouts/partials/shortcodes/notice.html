@@ -1,35 +1,62 @@
 {{- $page := .page }}
 {{- if and (not $page) .context }}
   {{- $page = .context }}
-  {{- warnf "%q: DEPRECATED parameter 'context' for shortcode 'notice' found, use 'page' instead; see https://mcshelby.github.io/hugo-theme-relearn/basics/migration#5180" $page.File.Filename }}
+  {{- warnf "%q: DEPRECATED parameter 'context' for shortcode 'notice' found, use 'page' instead; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/5/#5-18-0" $page.File.Filename }}
 {{- end }}
+{{- $class := .class | default "notices" }}
+{{- $containerstyle := .containerstyle | default "div" }}
+{{- $containerclass := .containerclass | default slice | append "box-content" }}
 {{- $color := .color | default "" }}
-{{- $content := .content }}
+{{- $content := trim .content "\n\r\t " }}
+{{- $hasContent := ne (strings.TrimLeft "<p>" $content) "" }}
+{{- if not (hasPrefix $content "<") }}
+  {{- $content = printf "<p>\n%s" $content }}
+{{- end }}
 {{- $style := .style | default "default" }}
-{{- $title := .title }}
-{{- if not $title }}
-  {{- if eq $style "info" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "warning" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "note" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "tip" }}{{ $title = $style | T }}{{ end }}
-{{- end }}
-{{- $title = trim $title " " }}
-{{- $icon := .icon | default "" }}
-{{- if and (not $icon) (eq (len $icon) 0) }}
-  {{- if eq $style "info" }}{{ $icon = default "info-circle" }}{{ end }}
-  {{- if eq $style "warning" }}{{ $icon = default "exclamation-triangle" }}{{ end }}
-  {{- if eq $style "note" }}{{ $icon = default "exclamation-circle" }}{{ end }}
-  {{- if eq $style "tip" }}{{ $icon = default "lightbulb" }}{{ end }}
-{{- end }}
-{{- $icon = trim $icon " " }}
+{{- $boxStyle := partial "_relearn/boxStyle.gotmpl" (dict "style" $style "title" .title "icon" .icon) }}
+{{- $title := trim ($boxStyle.title) " " }}
+{{- $icon := trim ($boxStyle.icon) " " }}
 {{- if and $icon (not (findRE ".*?\\bfa-\\w.*?" $icon)) }}
   {{- $icon = printf "fa-fw fas fa-%s" $icon }}
 {{- end }}
+{{- $expander := false }}
+{{- $expanded := .expanded | default "" }}
+{{- if $hasContent }}
+  {{- if eq (printf "%T" $expanded) "string" }}
+    {{- if ne (trim $expanded " ") "" }}
+      {{- $expander = true }}
+      {{- $expanded = (eq $expanded "true") }}
+    {{- end }}
+  {{- else }}
+    {{- $expander = true }}
+  {{- end }}
+{{- end }}
+{{- $id := cond (or (eq .id nil) (eq .id "")) (partial "_relearn/makeRandomMd5.gotmpl" $page) .id }}
+{{- $idattribute := "" }}
+{{- if $expander }}
+  {{- $containerclass = $containerclass | append "expand-content" }}
+  {{- $idattribute = printf ` id="R-expandcontent-%s"` $id }}
+{{- end }}
 {{- with $page }}
-<div class="box notices cstyle {{ $style }}"{{ if $color }} style="--VARIABLE-BOX-color: {{ $color }};"{{ end }}>
-  <div class="box-label">{{ if $icon }}<i class="{{ $icon }}"></i>{{ end }}{{ if and $icon $title }} {{ end }}{{ $title | .RenderString }}</div>
-  <div class="box-content">
-{{ if ne "<" (substr (strings.TrimLeft " \n\r\t" $content) 0 1) }}<p>{{ end }}<!-- we add a DOM element here if there is none to make collapsing marings work -->
-{{ $content | safeHTML }}</div><!-- no line break allowed here because of awkward behavior of Hugo 110 or this theme when tag shortcode is called standalone outside of tags shortcode ? -->
+  {{- if or $icon $title $hasContent -}}
+<div class="{{ if $expander }}expand {{ end }}box {{ $class }} cstyle {{ $style }}"{{ if $color }} style="--VARIABLE-BOX-color: {{ $color }};"{{ end }}>
+    {{- if $expander }}
+  <input type="checkbox" id="R-expand-{{ $id }}" aria-controls="R-expandcontent-{{ $id }}"{{ if $expanded }} checked{{ end }}>
+  <label class="expand-label box-label" for="R-expand-{{ $id }}">
+    <i class="expander-icon fa-fw fas fa-chevron-down"></i>
+    <i class="expander-icon fa-fw fas fa-chevron-right"></i> {{ if $icon }}<i class="{{ $icon }}"></i>{{ end }}{{ if and $icon $title }} {{ end }}{{ $title | .RenderString }}
+  </label>
+  <div class="box-spacer"></div>
+    {{- else if or $icon $title }}
+  <div class="box-label">
+    {{ if $icon }}<i class="{{ $icon }}"></i>{{ end }}{{ if and $icon $title }} {{ end }}{{ $title | .RenderString }}
+  </div>
+    {{- end }}
+    {{- if $hasContent }}
+{{ printf "  <%s%s class=\"%s\">" $containerstyle $idattribute (delimit $containerclass " ") | safeHTML }}
+{{ $content | safeHTML }}
+{{ printf "  </%s>" $containerstyle | safeHTML }}
+    {{- end }}
 </div>
+  {{- end }}
 {{- end }}

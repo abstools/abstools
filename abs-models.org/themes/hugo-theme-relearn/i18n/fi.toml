@@ -46,7 +46,7 @@ other = "Tulosta koko luku"
 [More-action]
 other = "Lisää"
 
-[Shortcuts-Title]
+[shortcuts-menuTitle]
 other = "Lisää"
 
 [Expand-title]
@@ -67,11 +67,17 @@ other = "KT"
 [Megabyte-symbol]
 other = "MT"
 
-[note]
-other = "Huom"
+[caution]
+other = "Varoitus"
+
+[important]
+other = "Tärkeä"
 
 [info]
 other = "Info"
+
+[note]
+other = "Huom"
 
 [tip]
 other = "Vihje"

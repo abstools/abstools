@@ -1,3 +1,5 @@
 .DS_Store
 /public/
 /collaboratory/
+/themes/hugo-theme-relearn/exampleSite/
+/.hugo_build.lock

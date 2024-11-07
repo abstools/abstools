@@ -1,60 +1,71 @@
 {{- $page := .page }}
 {{- if and (not $page) .context }}
   {{- $page = .context }}
-  {{- warnf "%q: DEPRECATED parameter 'context' for shortcode 'resources' found, use 'page' instead; see https://mcshelby.github.io/hugo-theme-relearn/basics/migration#5180" $page.File.Filename }}
+  {{- warnf "%q: DEPRECATED parameter 'context' for shortcode 'resources' found, use 'page' instead; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/5/#5-18-0" $page.File.Filename }}
 {{- end }}
 {{- $color := .color | default "" }}
-{{- $content := .content }}
 {{- $style := .style | default "default" }}
 {{- if and (not $color) (eq (len $color) 0) }}
   {{- $style = .style | default "transparent" }}
 {{- end }}
-{{- $title := .title }}
-{{- if not $title }}
-  {{- if eq $style "info" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "warning" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "note" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "tip" }}{{ $title = $style | T }}{{ end }}
-{{- end }}
-{{- $title = trim ($title | default ("Attachments-label" | T)) " " }}
-{{- $icon := .icon | default "" }}
-{{- if and (not $icon) (eq (len $icon) 0) }}
-  {{- $icon = "paperclip" }}
-  {{- if eq $style "info" }}{{ $icon = default "info-circle" }}{{ end }}
-  {{- if eq $style "warning" }}{{ $icon = default "exclamation-triangle" }}{{ end }}
-  {{- if eq $style "note" }}{{ $icon = default "exclamation-circle" }}{{ end }}
-  {{- if eq $style "tip" }}{{ $icon = default "lightbulb" }}{{ end }}
-{{- end }}
-{{- $icon = trim $icon " " }}
+{{- $boxStyle := partial "_relearn/boxStyle.gotmpl" (dict "style" $style "title" .title "icon" .icon) }}
+{{- $title := trim ($boxStyle.title | default ("Attachments-label" | T)) " " }}
+{{- $icon := trim ($boxStyle.icon | default "paperclip") " " }}
 {{- if and $icon (not (findRE ".*?\\bfa-\\w.*?" $icon)) }}
   {{- $icon = printf "fa-fw fas fa-%s" $icon }}
 {{- end }}
+{{- $expander := false }}
+{{- $expanded := .expanded | default "" }}
+{{- if eq (printf "%T" $expanded) "string" }}
+  {{- if ne (trim $expanded " ") "" }}
+    {{- $expander = true }}
+    {{- $expanded = (eq $expanded "true") }}
+  {{- end }}
+{{- else }}
+  {{- $expander = true }}
+{{- end }}
 {{- $sort := .sort | default "asc" }}
 {{- $pattern := .pattern | default "" }}
-{{- with $page }}
-{{- if eq .BundleType "" }}
+{{- if eq $page.BundleType "" }}
   {{- warnf "%q: UNSUPPORTED usage of 'resources' shortcode found, use a page bundle instead; see https://mcshelby.github.io/hugo-theme-relearn/shortcodes/resources" $page.File.Filename }}
 {{- end }}
-<div class="box attachments cstyle {{ $style }}"{{ if $color }} style="--VARIABLE-BOX-color: {{ $color }};"{{ end }}>
-  <div class="box-label">{{ if $icon }}<i class="{{ $icon }}"></i>{{ end }}{{ if and $icon $title }} {{ end }}{{ $title | .RenderString }}</div>
-  <ul class="box-content attachments-files">
-{{- range sort .Resources "Name" $sort }}
-  {{- if findRE $pattern .Name }}
-    {{- $size := len .Content }}
-    {{- $unit := "Byte-symbol" }}
-    {{- if ge $size 1024 }}
-      {{- $size = div $size 1024 }}
-      {{- $unit = "Kilobyte-symbol" }}
+{{- $content := partial "inline/resource-list" (dict
+  "page"     $page
+  "sort"     $sort
+  "pattern"  $pattern
+) }}
+{{- partial "shortcodes/notice.html" (dict
+  "page"     $page
+  "class"    "attachments"
+  "containerstyle" "ul"
+  "containerclass" (slice "attachments-files")
+  "color"    $color
+  "content"  $content
+  "expanded" $expanded
+  "icon"     $icon
+  "style"    $style
+  "title"    $title
+) }}
+
+{{- define "partials/inline/resource-list" }}
+  {{- $sort := .sort }}
+  {{- $pattern := .pattern }}
+  {{- with .page }}
+    {{- range sort .Resources "Name" $sort }}
+      {{- if findRE $pattern .Name }}
+        {{- $size := len .Content }}
+        {{- $unit := "Byte-symbol" }}
+        {{- if ge $size 1024 }}
+          {{- $size = div $size 1024 }}
+          {{- $unit = "Kilobyte-symbol" }}
+        {{- end }}
+        {{- if ge $size 1024 }}
+          {{- $size = div $size 1024 }}
+          {{- $unit = "Megabyte-symbol" }}
+        {{- end }}
+        {{- $unitsymbol := $unit | T }}
+<li><a href="{{ .RelPermalink }}">{{.Name}}</a> ({{$size}} {{$unitsymbol}})</li>
+      {{- end }}
     {{- end }}
-    {{- if ge $size 1024 }}
-      {{- $size = div $size 1024 }}
-      {{- $unit = "Megabyte-symbol" }}
-    {{- end }}
-    {{- $unitsymbol := $unit | T }}
-    <li><a href="{{ .RelPermalink }}">{{.Name}}</a> ({{$size}} {{$unitsymbol}})</li>
   {{- end }}
-{{- end }}
-  </ul>
-  {{- $content }}
-</div>
 {{- end }}

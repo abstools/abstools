@@ -1,27 +1,14 @@
 {{- $page := .page }}
 {{- if and (not $page) .context }}
   {{- $page = .context }}
-  {{- warnf "%q: DEPRECATED parameter 'context' for shortcode 'badge' found, use 'page' instead; see https://mcshelby.github.io/hugo-theme-relearn/basics/migration#5180" $page.File.Filename }}
+  {{- warnf "%q: DEPRECATED parameter 'context' for shortcode 'badge' found, use 'page' instead; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/5/#5-18-0" $page.File.Filename }}
 {{- end }}
 {{- $color := .color | default "" }}
 {{- $content := .content }}
 {{- $style := .style | default "default" }}
-{{- $title := .title }}
-{{- if not $title }}
-  {{- if eq $style "info" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "warning" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "note" }}{{ $title = $style | T }}{{ end }}
-  {{- if eq $style "tip" }}{{ $title = $style | T }}{{ end }}
-{{- end }}
-{{- $title = trim $title " " }}
-{{- $icon := .icon | default "" }}
-{{- if and (not $icon) (eq (len $icon) 0) }}
-  {{- if eq $style "info" }}{{ $icon = default "info-circle" }}{{ end }}
-  {{- if eq $style "warning" }}{{ $icon = default "exclamation-triangle" }}{{ end }}
-  {{- if eq $style "note" }}{{ $icon = default "exclamation-circle" }}{{ end }}
-  {{- if eq $style "tip" }}{{ $icon = default "lightbulb" }}{{ end }}
-{{- end }}
-{{- $icon = trim $icon " " }}
+{{- $boxStyle := partial "_relearn/boxStyle.gotmpl" (dict "style" $style "title" .title "icon" .icon) }}
+{{- $title := trim ($boxStyle.title) " " }}
+{{- $icon := trim ($boxStyle.icon) " " }}
 {{- if and $icon (not (findRE ".*?\\bfa-\\w.*?" $icon)) }}
   {{- $icon = printf "fa-fw fas fa-%s" $icon }}
 {{- end }}

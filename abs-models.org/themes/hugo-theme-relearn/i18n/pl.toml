@@ -46,7 +46,7 @@ other = "Drukowanie całego rozdziału"
 [More-action]
 other = "Więcej"
 
-[Shortcuts-Title]
+[shortcuts-menuTitle]
 other = "Więcej"
 
 [Expand-title]
@@ -67,11 +67,17 @@ other = "KB"
 [Megabyte-symbol]
 other = "MB"
 
-[note]
-other = "Uwaga"
+[caution]
+other = "Ostrożność"
+
+[important]
+other = "Ważne"
 
 [info]
 other = "Info"
+
+[note]
+other = "Uwaga"
 
 [tip]
 other = "Porada"

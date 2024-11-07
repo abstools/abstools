@@ -1,10 +1,30 @@
+      {{- if not .Site.Params.disableSearch }}
+        {{- $assetBusting := partialCached "assetbusting.gotmpl" . }}
         {{- $link := "" }}
         {{- with .Site.Home.OutputFormats.Get "json" }}
-          {{- warnf "UNSUPPORTED usage of 'json' output format found, use 'search' instead; see https://mcshelby.github.io/hugo-theme-relearn/basics/migration#600" }}
+          {{- warnf "UNSUPPORTED usage of 'json' output format found, remove it from your config; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/7/#7-0-0" }}
         {{- end }}
-        {{- if .Site.Home.OutputFormats.Get "search" }}
-          {{- with .Site.Home.OutputFormats.Get "searchpage" }}
-            {{- $link = partial "relLangPrettyUglyURL.hugo" (dict "to" .) }}
+        {{- with .Site.Home.OutputFormats.Get "search" }}
+          {{- warnf "UNSUPPORTED usage of 'search' output format found, remove it from your config; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/7/#7-0-0" }}
+        {{- end }}
+        {{- with .Site.Home.OutputFormats.Get "searchpage" }}
+          {{- warnf "UNSUPPORTED usage of 'searchpage' output format found, remove it from your config; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/7/#7-0-0" }}
+        {{- end }}
+        {{- if not .Site.Params.disableSearchIndex }}
+          {{- $url := trim (or .Site.Params.searchIndexURL "searchindex.js") "/" }}
+          {{- $url = path.Join (path.Dir $url) (print (path.BaseName $url) "." .Language.Lang (path.Ext $url)) }}
+          {{- if .IsHome }}
+            {{- $templateres := resources.Get "_relearn_searchindex.js" }}
+            {{- $resultres := $templateres | resources.ExecuteAsTemplate $url .Site.Home }}
+            {{- /* the following code causes Hugo to generate our file - although it is in comments */}}<!-- {{ $resultres.RelPermalink }} -->
+          {{- end }}
+        <script>
+          window.index_js_url={{ (printf "%s%s" $url $assetBusting) | relURL }};
+        </script>
+          {{- if not .Site.Params.disableSearchPage }}
+            {{- with .Site.GetPage "_relearn_searchpage" }}
+              {{- $link = partial "permalink.gotmpl" (dict "to" .) }}
+            {{- end }}
           {{- end }}
         {{- end }}
         <search>{{ if $link }}<form action="{{ $link }}" method="get">{{ end }}
@@ -15,14 +35,13 @@
             <button class="search-clear" type="button" data-search-clear="" title="{{ T "Clear-search" }}"><i class="fas fa-times" title="{{ T "Clear-search" }}"></i></button>
           </div>
         {{ if $link }}</form>{{ end }}</search>
-        {{- $assetBusting := not .Site.Params.disableAssetsBusting }}
         {{- $pageBaseLang := replaceRE "([a-z]+).*" "${1}" .Page.Language.LanguageCode }}
         {{- $contentlangs := (union (slice | append (.Site.Params.additionalContentLanguage | default slice)) (slice $pageBaseLang)) }}
         {{- $quotedcontentlangs := slice }}
         {{- $missingcontentlangs := slice }}
         {{- range $contentlangs }}
           {{- $f := printf "/static/js/lunr/lunr.%s.min.js" . }}
-          {{- if partialCached "fileExists.hugo" $f $f }}
+          {{- if partialCached "_relearn/fileExists.gotmpl" $f $f }}
             {{- $quotedcontentlangs = $quotedcontentlangs | append (printf "'%s'" .) }}
           {{- else }}
             {{- $missingcontentlangs = $missingcontentlangs | append . }}
@@ -32,22 +51,23 @@
         <script>
           var contentLangs=[{{ delimit $quotedcontentlangs ", " | safeJS }}];
         </script>
-        <script src="{{"js/auto-complete.js" | relURL}}{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" defer></script>
-        <script src="{{"js/lunr/lunr.min.js" | relURL}}{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" defer></script>
-        <script src="{{"js/lunr/lunr.stemmer.support.min.js" | relURL}}{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" defer></script>
-        <script src="{{"js/lunr/lunr.multi.min.js" | relURL}}{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" defer></script>
+        <script src="{{"js/auto-complete.js" | relURL}}{{ $assetBusting }}" defer></script>
+        <script src="{{"js/lunr/lunr.min.js" | relURL}}{{ $assetBusting }}" defer></script>
+        <script src="{{"js/lunr/lunr.stemmer.support.min.js" | relURL}}{{ $assetBusting }}" defer></script>
+        <script src="{{"js/lunr/lunr.multi.min.js" | relURL}}{{ $assetBusting }}" defer></script>
         {{- $tinyseg := false }}
         {{- $wordcut := false }}
         {{- range $contentlangs }}
           {{- if and (not $tinyseg) (or (eq . "ja")) }}
             {{- $tinyseg = true }}
-        <script src="{{"js/lunr/tinyseg.js" | relURL}}{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" defer></script>
+        <script src="{{"js/lunr/tinyseg.js" | relURL}}{{ $assetBusting }}" defer></script>
           {{- end }}
           {{- if and (not $wordcut) (or (eq . "hi") (eq . "th")) }}
             {{- $wordcut = true }}
-        <script src="{{"js/lunr/wordcut.js" | relURL}}{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" defer></script>
+        <script src="{{"js/lunr/wordcut.js" | relURL}}{{ $assetBusting }}" defer></script>
           {{- end }}
           {{- $file := (printf "js/lunr/lunr.%s.min.js" .) }}
-        <script src="{{ $file | relURL}}{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" defer></script>
+        <script src="{{ $file | relURL}}{{ $assetBusting }}" defer></script>
         {{- end }}
-        <script src="{{ "js/search.js" | relURL }}{{ if $assetBusting }}?{{ now.Unix }}{{ end }}" defer></script>
+        <script src="{{ "js/search.js" | relURL }}{{ $assetBusting }}" defer></script>
+      {{- end }}
