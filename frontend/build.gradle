@@ -194,11 +194,10 @@ jar {
     manifest {
         attributes 'Main-Class': 'org.abs_models.Absc',
             'Implementation-Title': 'ABS Frontend',
-            //'Implementation-Version': project.version.tokenize('-').first(),
-            'Bundle-Version': project.version,
-            // This is wrong, but we use it anyway for the detailed
-            // version string (java.lang.Package only has methods
-            // getVersion and getSpecificationVersion)
+            'Implementation-Version': project.version.tokenize('-').first(),
+            // We store complete version information in this attribute
+            // since java.lang.Package only has methods getVersion and
+            // getSpecificationVersion.
             'Specification-Version': project.version
     }
 }
