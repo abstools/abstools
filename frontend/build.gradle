@@ -7,6 +7,9 @@ plugins {
     id 'antlr'
     id "com.github.spotbugs" version "6.0.20"
     id 'com.github.johnrengelman.shadow'
+    // add jshell support (https://github.com/mrsarm/jshell-plugin):
+    // rlwrap ./gradlew --console plain jshell
+    id "com.github.mrsarm.jshell.plugin" version "1.2.1"
 }
 
 configurations {
