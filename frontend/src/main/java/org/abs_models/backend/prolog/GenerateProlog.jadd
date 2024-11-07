@@ -29,12 +29,14 @@ aspect GenerateProlog {
      *   "data('List',['Nil','Cons'('Int','List')])"
      */
     public void DataTypeDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        //the standard behavior should work
-        super.generateProlog(s,reachInfo);
-    }
-    public void ExceptionDecl.generateProlog(PrintStream s, ReachabilityInformation reachInfo) {
-        // exception declarations are generated as constructions for
-        // the datatype "ABS.StdLib.Exception"
+        s.print("data(" + quote(getName()) + ",[");
+        List<DataConstructor> cs = getDataConstructorList();
+        int n = cs.getNumChild();
+        for (int i = 0; i < n; i++){
+            cs.getChild(i).generateProlog(s,reachInfo); // cons here is a DataConstructor
+            if (i != n-1) s.print(",");
+        }
+        s.println("],[]).");
     }
 
     public void ParametricDataTypeDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
@@ -484,8 +486,14 @@ aspect GenerateProlog {
     }
 
     public void TypeUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        //implementation for the subclasses DataTypeUse,InterfaceTypeUse,TypeParameterUse,UnresolvedTypeUse
+        //implementation for the subclasses InterfaceTypeUse,TypeParameterUse,UnresolvedTypeUse
         s.print(quote(getName()));
+    }
+    public void DataTypeUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
+        //generates "parametricType(typeName,[])", keeping backwards
+        //compability with previous ABS versions where every data type
+        //used the Parametric variant in the AST.
+        s.print("parametricType(" + quote(getName()) + ",[])");
     }
     public void ParametricDataTypeUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates "parametricType(typeName,parametersList)"
