@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.10.0] - 2024-11-07
+
+### Added
+
 - Added a new expression `destiny` that evaluates the future of the currently-running task.  Since a synchronous method call does not get a new future but has a different return type, `destiny` is typed with the new type `Destiny`, a supertype of all futures.
 
 - Added a new process attribute `destinyOf`, useful in user-defined schedulers, that returns the future of a given process.
@@ -38,8 +48,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The syntax for command-line options was changed for models generated via the Java backend: instead of, e.g., `--randomseed=1234` use `--randomseed 1234`.
 
 - Minor incompatible change: the built-in function `toString` now encloses String arguments for user-defined datatypes in quotes.  I.e., for a datatype `data Person = Person(String, Int);`, the expression `toString(Person("Joe", 20))` produces `Person("Joe",20)` instead of `Person(Joe,20)`.  For string values, `toString` produces the string without quotes as before.
-
-### Removed
 
 ### Fixed
 
@@ -451,7 +459,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.9.3...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/abstools/abstools/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/abstools/abstools/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/abstools/abstools/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/abstools/abstools/compare/v1.9.0...v1.9.1
