@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.10">
+<meta name="generator" content="Asciidoctor 2.0.18">
 <meta name="keywords" content="ABS, manual, modeling languages, programming languages">
 <meta name="author" content="ABS Development Team">
 <meta name="copyright" content="CC-BY-SA 3.0">
@@ -746,7 +746,7 @@ p { margin-bottom: 1.25rem; }
 <h1>ABS Documentation</h1>
 <div class="details">
 <span id="author" class="author">ABS Development Team</span><br>
-<span id="revnumber">version v1.9.3</span>
+<span id="revnumber">version v1.10.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -780,14 +780,31 @@ p { margin-bottom: 1.25rem; }
 </li>
 <li><a href="#-expressions">4. Expressions</a>
 <ul class="sectlevel2">
-<li><a href="#sec:pure-expressions">4.1. Pure Expressions</a></li>
-<li><a href="#sec:side-effect-expressions">4.2. Expressions with Side Effects</a></li>
+<li><a href="#-literals">4.1. Literals</a></li>
+<li><a href="#-template-strings">4.2. Template Strings</a></li>
+<li><a href="#-operator-expressions">4.3. Operator Expressions</a></li>
+<li><a href="#-let">4.4. Let</a></li>
+<li><a href="#-data-constructor-expressions">4.5. Data Constructor Expressions</a></li>
+<li><a href="#-function-calls">4.6. Function Calls</a></li>
+<li><a href="#-partially-defined-function-calls">4.7. Partially-Defined-Function Calls</a></li>
+<li><a href="#-conditional-expressions">4.8. Conditional Expressions</a></li>
+<li><a href="#case-expression">4.9. Case</a></li>
+<li><a href="#typecheck-expression">4.10. Type-Check Expressions</a></li>
+<li><a href="#typecast-expression">4.11. Type-Cast Expressions</a></li>
+<li><a href="#-new">4.12. New</a></li>
+<li><a href="#-synchronous-method-calls">4.13. Synchronous Method Calls</a></li>
+<li><a href="#async-call-expression">4.14. Asynchronous Method Calls</a></li>
+<li><a href="#get-expression">4.15. Get</a></li>
+<li><a href="#await-expression">4.16. Await (Expression)</a></li>
+<li><a href="#destiny-expression">4.17. Destiny (Expression)</a></li>
 </ul>
 </li>
 <li><a href="#-function-definitions">5. Function Definitions</a>
 <ul class="sectlevel2">
 <li><a href="#sec:partially-defined-functions">5.1. Partial Function Definitions</a></li>
 <li><a href="#sec:anonymous-functions">5.2. Anonymous Functions</a></li>
+<li><a href="#-built-in-functions">5.3. Built-In Functions</a></li>
+<li><a href="#-embedded-sqlite-database-queries">5.4. Embedded SQLite Database Queries</a></li>
 </ul>
 </li>
 <li><a href="#-statements">6. Statements</a>
@@ -797,7 +814,7 @@ p { margin-bottom: 1.25rem; }
 <li><a href="#-assignment">6.3. Assignment</a></li>
 <li><a href="#-expressions-as-statements">6.4. Expressions as Statements</a></li>
 <li><a href="#-assertions">6.5. Assertions</a></li>
-<li><a href="#await-stmt">6.6. Await Statement</a></li>
+<li><a href="#await-stmt">6.6. Await (Statement)</a></li>
 <li><a href="#suspend-stmt">6.7. Unconditional Release: Suspend</a></li>
 <li><a href="#-return">6.8. Return</a></li>
 <li><a href="#throw-statement">6.9. Throw</a></li>
@@ -851,8 +868,8 @@ p { margin-bottom: 1.25rem; }
 <li><a href="#-exposing-objects">12.3. Exposing objects</a></li>
 <li><a href="#-exposing-methods">12.4. Exposing methods</a></li>
 <li><a href="#-querying-object-state">12.5. Querying object state</a></li>
-<li><a href="#-querying-exported-methods-of-an-object">12.6. Querying exported methods of an object</a></li>
-<li><a href="#-invoking-methods">12.7. Invoking methods</a></li>
+<li><a href="#-listing-the-exposed-methods-of-an-object">12.6. Listing the exposed methods of an object</a></li>
+<li><a href="#-calling-exposed-methods">12.7. Calling exposed methods</a></li>
 <li><a href="#-the-model-api-and-timed-abs">12.8. The Model API and Timed ABS</a></li>
 <li><a href="#-customizing-the-browser-based-visualization">12.9. Customizing the Browser-Based Visualization</a></li>
 <li><a href="#customizing-url-prefixes">12.10. Customizing the Model API URL</a></li>
@@ -870,7 +887,7 @@ p { margin-bottom: 1.25rem; }
 <li><a href="#sec:schedulers">14. User-Defined Schedulers</a>
 <ul class="sectlevel2">
 <li><a href="#-defining-schedulers">14.1. Defining Schedulers</a></li>
-<li><a href="#-processes-and-process-attributes">14.2. Processes and Process Attributes</a></li>
+<li><a href="#sec:process-attributes">14.2. Processes and Process Attributes</a></li>
 <li><a href="#-using-schedulers">14.3. Using Schedulers</a></li>
 </ul>
 </li>
@@ -893,7 +910,8 @@ p { margin-bottom: 1.25rem; }
 <ul class="sectlevel2">
 <li><a href="#-maude-backend">17.1. Maude Backend</a></li>
 <li><a href="#sec:erlang-backend">17.2. Erlang Backend</a></li>
-<li><a href="#-haskell-backend">17.3. Haskell Backend</a></li>
+<li><a href="#-java-backend">17.3. Java Backend</a></li>
+<li><a href="#-haskell-backend">17.4. Haskell Backend</a></li>
 </ul>
 </li>
 </ul>
@@ -1010,9 +1028,9 @@ value.  P1’s cog then reactivates P1 to continue execution.</p>
 </div>
 <div class="paragraph">
 <p>The paragraph above elides some details.  An asynchronous method call (see
-<a href="#async-call-expression">Asynchronous Call Expression</a>) produces a <em>future variable</em>, which is used both to
-synchronize with the callee process (see <a href="#await-stmt">Await Statement</a>) and to get the result
-(see <a href="#get-expression">Get Expression</a>).  Future variables are first-class objects that can
+<a href="#async-call-expression">Asynchronous Method Calls</a>) produces a <em>future variable</em>, which is used both to
+synchronize with the callee process (see <a href="#await-stmt">Await (Statement)</a>) and to get the result
+(see <a href="#get-expression">Get</a>).  Future variables are first-class objects that can
 be passed along, so multiple processes can synchronize on the same future.</p>
 </div>
 <div class="paragraph">
@@ -1022,7 +1040,7 @@ within the scope of the target object.  Objects are grouped into COGs
 processes on different cogs run in parallel, as shown in Figure
 <a href="#fig-cog-scheduling">Processes running inside their cogs</a>.  This means that each cog is a <strong>unit of concurrency</strong>
 and is in charge of scheduling the processes running on its objects.  Each
-process runs until it suspends itself (see <a href="#await-stmt">Await Statement</a> and
+process runs until it suspends itself (see <a href="#await-stmt">Await (Statement)</a> and
 <a href="#suspend-stmt">Unconditional Release: Suspend</a>) or terminates, at which point the cog chooses the next
 process to run.</p>
 </div>
@@ -1068,7 +1086,7 @@ statement: <a href="#throw-statement">Throw</a>.  Exceptions thrown implicitly o
 are propagated and handled in the same way.</p>
 </div>
 <div class="paragraph">
-<p>The modeler can define new exceptions; see <a href="#exception-type">[exception-type]</a>.</p>
+<p>The modeler can define new exceptions; see <a href="#sec:exception-types">Exceptions</a>.</p>
 </div>
 <div class="paragraph">
 <p>Exceptions can be caught and handled locally, i.e., in a lexically enclosing
@@ -1151,7 +1169,7 @@ following EBNF conventions for specifying the syntax of ABS elements.</p>
 <div class="paragraph">
 <p>Line terminators and white spaces are defined as in Java.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -1177,7 +1195,7 @@ following EBNF conventions for specifying the syntax of ABS elements.</p>
 <div class="paragraph">
 <p>An end-of-line comment starts with two slashes, e.g., <code>// text</code>. All text that follows <code>//</code> until the end of the line is treated as a comment.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -1236,7 +1254,7 @@ constructors, deltas and products.</p>
 <p>Identifiers can be <em>qualified</em> with a module name (see <a href="#sec:modules">Modules</a>) or
 <em>simple</em> (without module name prefix).</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -1367,7 +1385,7 @@ as <code>\n</code>, carriage return as <code>\r</code>.</p>
 <div class="paragraph">
 <p>The null literal is written as <code>null</code>.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -1410,7 +1428,7 @@ with more than one annotation, writing the annotations in separate pairs of
 brackets or separated by commas in one pair of brackets produces the same
 effect.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -1485,7 +1503,7 @@ with an uppercase letter.  In case of a parametric data type, the type name
 continues with a left angle (<code>&lt;</code>), a list of type names separated by commas
 and ends with a right angle (<code>&gt;</code>).</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -1599,10 +1617,16 @@ Map&lt;Int, List&lt;String&gt;&gt; <i class="conum" data-value="3"></i><b>(3)</b
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#type-future">The Future Type</a></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Destiny</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Supertype of all futures</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8201;&#8212;&#8201;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#type-destiny">The Destiny Type</a></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Exception</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Exceptions</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>DivisionByZeroException</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#exception-type">[exception-type]</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#sec:exception-types">Exceptions</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>List&lt;A&gt;</code></p></td>
@@ -1694,7 +1718,7 @@ values.  Because values of algebraic data types are immutable, they can be
 safely passed on to other objects and cogs and make it easy to reason about
 program correctness.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -1865,8 +1889,8 @@ and its functions, without exporting the constructors.</p>
 <div class="paragraph">
 <p>Interfaces in ABS describe the functionality of objects.  Thus, Interfaces in
 ABS are similar to interfaces in Java.  Unlike Java, object references are
-typed by interfaces and not by their class.  See <a href="#typecheck-expression">The Type-Check Expression</a> and
-<a href="#typecast-expression">The Type-Cast Expression</a> for how to obtain a reference to the same object via a
+typed by interfaces and not by their class.  See <a href="#typecheck-expression">Type-Check Expressions</a> and
+<a href="#typecast-expression">Type-Cast Expressions</a> for how to obtain a reference to the same object via a
 different interface.</p>
 </div>
 <div class="paragraph">
@@ -1886,7 +1910,7 @@ an exception and an optional list of parameters.  The semantics are the same
 as for defining data constructors; naming a parameter will create an accessor
 function (see <a href="#sec:accessor-functions">Accessor Functions</a>).</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -1931,7 +1955,7 @@ exception in a process via its recovery block (see <a href="#sec:classes">Classe
 introduced with the keyword <code>type</code>.  Parametric type synonyms are not
 currently supported.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2031,10 +2055,25 @@ class C {
 <h2 id="-expressions">4. Expressions</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This chapter specifies all ABS expressions.  ABS expressions can either be
-side effect-free (i.e., part of the <em>functional sublanguage</em>) or have side effects.</p>
+<p>This chapter specifies all ABS expressions.  Expressions are usually evaluated
+for their value, although they can be used inside annotations as purely
+syntactic constructs that do not need to follow standard evaluation rules.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<div class="paragraph">
+<p>ABS expressions can either be pure or have side effects. <em>Pure expressions</em>
+only refer to entities in the functional and expression layer.  They can be
+evaluated multiple times without influencing the execution of the imperative
+and object oriented layers of ABS.  Pure expressions can be sub-expressions of
+other expressions and can be used as function bodies.  <em>Side-effect
+expressions</em>, on the other hand, refer to semantic entities “above” the
+functional layer (objects and futures).  They are only legal “stand-alone”
+(i.e., not as a sub-expression of another expression) and in certain places,
+mostly in the right-hand side of an assignment.  This strict separation of
+pure and side-effect expressions simplifies the language, for
+example wrt. using expressions inside annotations and reasoning about
+expressions in static analysis tools.</p>
+</div>
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2045,41 +2084,12 @@ side effect-free (i.e., part of the <em>functional sublanguage</em>) or have sid
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>Exp</em> ::=</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>PureExp</em> | <em>EffExp</em></p></td>
 </tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>The functional sublanguage of ABS is a purely-functional, side effect-free
-language.  It comprises functions and operators on built-in datatypes,
-user-defined algebraic datatypes, and user-defined functions defined on
-datatypes.</p>
-</div>
-<div class="paragraph">
-<p>Additionally, ABS contains a number of special expressions with well-defined
-side effects, such as the <code>new</code> expression which creates a new object.
-Expressions with side effects cannot be combined with other expressions, for
-example as an argument to a function call.  This slight notational
-inconvenience makes it easier to develop static analysis techniques and tools
-for ABS.</p>
-</div>
-<div class="sect2">
-<h3 id="sec:pure-expressions">4.1. Pure Expressions</h3>
-<div class="paragraph">
-<p>Pure Expressions are side effect-free expressions.  The value of these
-expressions only depends on their arguments, and they can be evaluated
-multiple times without influencing the execution semantics.</p>
-</div>
-<table class="tableblock frame-topbot grid-none stretch">
-<caption class="title">Syntax</caption>
-<colgroup>
-<col style="width: 30%;">
-<col style="width: 70%;">
-</colgroup>
-<tbody>
 <tr>
 <td class="tableblock halign-right valign-top"><p class="tableblock"><em>PureExp</em> ::=</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>SimpleIdentifier</em><br>
  | <code>this</code> <code>.</code> <em>SimpleIdentifier</em><br>
  | <code>this</code><br>
+ | <code>destiny</code><br>
  | <em>Literal</em><br>
  | <em>TemplateString</em><br>
  | <em>LetExp</em><br>
@@ -2094,16 +2104,24 @@ multiple times without influencing the execution semantics.</p>
  | <em>TypeCastExp</em><br>
  | <code>(</code> <em>PureExp</em> <code>)</code></p></td>
 </tr>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>EffExp</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>NewExp</em><br>
+ | <em>SyncCall</em><br>
+ | <em>AsyncCall</em><br>
+ | <em>GetExp</em><br>
+ | <em>AwaitExp</em></p></td>
+</tr>
 </tbody>
 </table>
-<div class="sect3">
-<h4 id="-literal-expressions">Literal Expressions</h4>
+<div class="sect2">
+<h3 id="-literals">4.1. Literals</h3>
 <div class="paragraph">
 <p>Literals, as defined in <a href="#sec:literals">Literals</a>, are expressions.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="-template-strings">Template Strings</h4>
+<div class="sect2">
+<h3 id="-template-strings">4.2. Template Strings</h3>
 <div class="paragraph">
 <p>Template strings are strings allowing embedded expressions.  In
 contrast to normal string literals, template strings can contain
@@ -2122,7 +2140,7 @@ template string are the backtick (<code>`</code>) and the dollar sign (<code>$</
 other characters, including line breaks and the backslash itself, do
 not need to be specially treated when writing a template string.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2152,13 +2170,13 @@ The price is \$$price$.`</code></pre>
 <p>The result of this expression will be a string with two lines, and with the values of the local variables <code>name</code> and <code>price</code> in place.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="-operator-expressions">Operator Expressions</h4>
+<div class="sect2">
+<h3 id="-operator-expressions">4.3. Operator Expressions</h3>
 <div class="paragraph">
 <p>ABS has a range of unary and binary operators working on pre-defined
 datatypes.  All operators are pure (side effect-free).</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2325,8 +2343,8 @@ to high precedence.</p>
 </tr>
 </tbody>
 </table>
-<div class="sect4">
-<h5 id="-semantics-of-comparison-operators">Semantics of Comparison Operators</h5>
+<div class="sect3">
+<h4 id="-semantics-of-comparison-operators">Semantics of Comparison Operators</h4>
 <div class="paragraph">
 <p>ABS has generic equality and less-than comparison between two values of the
 same type.</p>
@@ -2370,14 +2388,15 @@ Cons(1, _) &lt; Cons(2, _)</pre>
 <p>Objects and futures are compared by identity, in an implementation-specific
 but stable way.  This means that for any two variables <code>a</code> and <code>b</code> that
 point to different objects, the value of <code>a &lt; b</code> does not change as long as
-<code>a</code> and <code>b</code> are not re-assigned.<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnotedef_1" title="View footnote.">1</a>]</sup></p>
+<code>a</code> and <code>b</code> are not re-assigned.<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnotedef_1" title="View footnote.">1</a>]</sup>
+The value <code>null</code> compares less than any other object reference.</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="-the-let-expression">The Let Expression</h4>
+<div class="sect2">
+<h3 id="-let">4.4. Let</h3>
 <div class="paragraph">
 <p>The expression <code>let T v = p in b</code> evaluates <code>b</code>, with <code>v</code> bound to the value
 of evaluating the expression <code>p</code>.  The newly-introduced binding of <code>v</code> can
@@ -2388,7 +2407,7 @@ shadow a binding of <code>v</code> outside of the <code>let</code> expression.</
 Bindings are evaluated sequentially, i.e., later bindings can use
 earlier variables in their value expression.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2418,8 +2437,8 @@ earlier variables in their value expression.</p>
 </table>
 </div>
 </div>
-<div class="sect3">
-<h4 id="-the-data-constructor-expression">The Data Constructor Expression</h4>
+<div class="sect2">
+<h3 id="-data-constructor-expressions">4.5. Data Constructor Expressions</h3>
 <div class="paragraph">
 <p>Data Constructor Expressions are expressions that create data values by
 applying arguments to data type constructors.  Data constructor expressions
@@ -2429,7 +2448,7 @@ upper-case letter.</p>
 <div class="paragraph">
 <p>For data type constructors without parameters, the parentheses are optional.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2455,15 +2474,15 @@ Nil</code></pre>
 <a href="#sec:algebraic-data-types">Algebraic Data Types</a>.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="-the-function-call-expression">The Function Call Expression</h4>
+<div class="sect2">
+<h3 id="-function-calls">4.6. Function Calls</h3>
 <div class="paragraph">
 <p>Function calls apply arguments to functions, producing a value.  Function call
 expressions look similar to data constructor expressions, but function names
 always start with a lower-case letter.  The parentheses are mandatory in
 function calls.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2483,13 +2502,13 @@ function calls.</p>
 head(list)</code></pre>
 </div>
 </div>
-<div class="sect4">
-<h5 id="-the-n-ary-function-call-expression">The N-ary Function Call Expression</h5>
+<div class="sect3">
+<h4 id="-n-ary-function-calls">N-ary Function Calls</h4>
 <div class="paragraph">
 <p>Calls to n-ary Constructors (see <a href="#sec:n_ary-constructors">N-ary Constructors</a>) are written with
 brackets (<code>[]</code>) instead of parentheses (<code>()</code>).</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2504,13 +2523,13 @@ brackets (<code>[]</code>) instead of parentheses (<code>()</code>).</p>
 </table>
 </div>
 </div>
-<div class="sect3">
-<h4 id="-the-partially-defined-function-call-expression">The Partially-Defined-Function Call Expression</h4>
+<div class="sect2">
+<h3 id="-partially-defined-function-calls">4.7. Partially-Defined-Function Calls</h3>
 <div class="paragraph">
 <p>Calls to partially defined functions (see <a href="#sec:partially-defined-functions">Partial Function Definitions</a>) are similar to
 function call expressions, but have an additional prepended set of arguments.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2542,15 +2561,15 @@ filter((Int i) =&gt; i &gt; 0)(list[0, 1, 2])</code></pre>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="-the-conditional-expression">The Conditional Expression</h4>
+<div class="sect2">
+<h3 id="-conditional-expressions">4.8. Conditional Expressions</h3>
 <div class="paragraph">
 <p>The value of the conditional expression <code>when c then e1 else e2</code> is either the
 value of <code>e1</code> or the value of <code>e2</code>, depending on the value of <code>c</code>, which must
 be of type <code>Bool</code>.  Depending on the value of <code>c</code>, either <code>e1</code> or <code>e2</code> is
 evaluated, but not both.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2570,8 +2589,8 @@ evaluated, but not both.</p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="case-expression">Case Expressions</h4>
+<div class="sect2">
+<h3 id="case-expression">4.9. Case</h3>
 <div class="paragraph">
 <p>ABS supports pattern matching via the Case Expression.  A case expression
 consists of an input expression and one or more branches, each consisting of a
@@ -2605,7 +2624,7 @@ right-hand side of the first matching pattern.</p>
 </li>
 </ul>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2646,8 +2665,8 @@ case branches.  This older syntax is still supported by the compiler.
 </tr>
 </table>
 </div>
-<div class="sect4">
-<h5 id="-the-variable-pattern">The Variable Pattern</h5>
+<div class="sect3">
+<h4 id="-variable-patterns">Variable Patterns</h4>
 <div class="paragraph">
 <p>Variable patterns are written as identifiers starting with a lower-case
 letter.  If the identifier does not name a variable in the current scope, the
@@ -2720,8 +2739,8 @@ data constructors.  For example:</p>
 </table>
 </div>
 </div>
-<div class="sect4">
-<h5 id="-the-literal-pattern">The Literal Pattern</h5>
+<div class="sect3">
+<h4 id="-literal-patterns">Literal Patterns</h4>
 <div class="paragraph">
 <p>Literals can be used as patterns.  The pattern matches if the value of the
 case expression is equal to the literal value.</p>
@@ -2753,8 +2772,8 @@ case expression is equal to the literal value.</p>
 </table>
 </div>
 </div>
-<div class="sect4">
-<h5 id="-the-data-constructor-pattern">The Data Constructor Pattern</h5>
+<div class="sect3">
+<h4 id="-data-constructor-patterns">Data Constructor Patterns</h4>
 <div class="paragraph">
 <p>A data constructor pattern is written like a standard data constructor expression.
 Constructor arguments are again patterns.</p>
@@ -2791,8 +2810,8 @@ Constructor arguments are again patterns.</p>
 </table>
 </div>
 </div>
-<div class="sect4">
-<h5 id="-the-wildcard-pattern">The Wildcard Pattern</h5>
+<div class="sect3">
+<h4 id="-the-wildcard-pattern">The Wildcard Pattern</h4>
 <div class="paragraph">
 <p>The wildcard pattern, written with an underscore (<code>_</code>) matches any value.</p>
 </div>
@@ -2837,15 +2856,15 @@ type-correct if it can match the corresponding case expression.</p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="typecheck-expression">The Type-Check Expression</h4>
+<div class="sect2">
+<h3 id="typecheck-expression">4.10. Type-Check Expressions</h3>
 <div class="paragraph">
 <p>Variables pointing to objects are typed by interface, which means that the
 concrete class of the referenced object might support more methods than can be
 called through the reference.  The type-check expression checks if an object
 implements the given interface.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2873,8 +2892,8 @@ class C implements I, J {}
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="typecast-expression">The Type-Cast Expression</h4>
+<div class="sect2">
+<h3 id="typecast-expression">4.11. Type-Cast Expressions</h3>
 <div class="paragraph">
 <p>Variables pointing to objects are typed by interface, which means that
 the concrete class of the referenced object might support more methods
@@ -2882,7 +2901,7 @@ than can be called through the reference.  The type-cast expression
 returns a reference of type <code>I</code> to the same object if it implements
 the given interface <code>I</code>, or <code>null</code> otherwise.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2911,35 +2930,8 @@ class D implements I {}
 </div>
 </div>
 </div>
-</div>
 <div class="sect2">
-<h3 id="sec:side-effect-expressions">4.2. Expressions with Side Effects</h3>
-<div class="paragraph">
-<p>ABS has expressions with side effects.  These expressions are only legal
-“stand-alone”, i.e., not as a sub-expression of another expression.  This
-means that sub-expressions of expressions can only be pure expressions.  This
-restriction simplifies the reasoning about expressions in the ABS modeling
-language.</p>
-</div>
-<table class="tableblock frame-topbot grid-none stretch">
-<caption class="title">Syntax</caption>
-<colgroup>
-<col style="width: 30%;">
-<col style="width: 70%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-right valign-top"><p class="tableblock"><em>EffExp</em> ::=</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>NewExp</em><br>
-                 | <em>SyncCall</em><br>
-                 | <em>AsyncCall</em><br>
-                 | <em>GetExp</em><br>
-                 | <em>AwaitExp</em></p></td>
-</tr>
-</tbody>
-</table>
-<div class="sect3">
-<h4 id="-new-expression">New Expression</h4>
+<h3 id="-new">4.12. New</h3>
 <div class="paragraph">
 <p>A <code>new</code> expression creates a new object from a class name and a list of
 arguments.  In ABS objects can be created in two different ways.  Either they
@@ -2947,7 +2939,19 @@ are created in the current COG, using the <code>new local</code> expression, or 
 created in a new COG by using the <code>new</code> expression (see
 <a href="#sec:concurrency-model">The ABS Actor and Concurrency Model</a> for more details about cogs).</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This expression is a side-effect expression and cannot be used as a sub-expression.
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -2993,13 +2997,25 @@ the fresh object is on its own cog).
 </table>
 </div>
 </div>
-<div class="sect3">
-<h4 id="-synchronous-call-expression">Synchronous Call Expression</h4>
+<div class="sect2">
+<h3 id="-synchronous-method-calls">4.13. Synchronous Method Calls</h3>
 <div class="paragraph">
 <p>A synchronous call consists of a target expression evaluating to an interface
 type, a method name declared in that interface, and a list of argument expressions.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This expression is a side-effect expression and cannot be used as a sub-expression.
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3034,14 +3050,26 @@ possibility of deadlocks in case the callee tries to call back to an object of
 the caller cog.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="async-call-expression">Asynchronous Call Expression</h4>
+<div class="sect2">
+<h3 id="async-call-expression">4.14. Asynchronous Method Calls</h3>
 <div class="paragraph">
 <p>An asynchronous call consists of a target expression evaluating to an
 interface type, a method name declared in that interface, and a list of
 argument expressions.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This expression is a side-effect expression and cannot be used as a sub-expression.
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3073,8 +3101,8 @@ the method call.</p>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="get-expression">Get Expression</h4>
+<div class="sect2">
+<h3 id="get-expression">4.15. Get</h3>
 <div class="paragraph">
 <p>A get expression is used to obtain the value from a future.  The current task
 is blocked until the future has been resolved, i.e., until either the return
@@ -3082,7 +3110,19 @@ value is available or an exception has occurred in the callee task.  No other
 task in the COG can be activated while the current task is blocked by a get
 expression.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This expression is a side-effect expression and cannot be used as a sub-expression.
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3119,13 +3159,25 @@ variable <code>b</code>.  In case of any error, <code>b</code> is assigned <code
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="await-expression">Await Expression</h4>
+<div class="sect2">
+<h3 id="await-expression">4.16. Await (Expression)</h3>
 <div class="paragraph">
 <p>An await expression is a way to asynchronously call a method, wait for the
 callee to finish, and optionally get the result in one expression.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This expression is a side-effect expression and cannot be used as a sub-expression.
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3155,10 +3207,10 @@ await fx?;
 A x = fx.get;</code></pre>
 </div>
 </div>
-<div class="sect4">
-<h5 id="-exception-propagation-and-the-await-expression">Exception Propagation and the Await Expression</h5>
+<div class="sect3">
+<h4 id="-exception-propagation-and-the-await-expression">Exception Propagation and the Await Expression</h4>
 <div class="paragraph">
-<p>As explained in Section <a href="#get-expression">Get Expression</a>, exceptions propagate from callee
+<p>As explained in Section <a href="#get-expression">Get</a>, exceptions propagate from callee
 to caller via the <code>get</code> expression.  An <code>await</code> statement will proceed once
 the callee process has finished, but an exception in the future will not be
 raised when executing the <code>await</code> statement.  To align the <code>await</code> expression
@@ -3186,6 +3238,101 @@ await fx?;</code></pre>
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="destiny-expression">4.17. Destiny (Expression)</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This feature is only available in the Erlang backend.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <code>destiny</code> expression returns the future of the asynchronous call that is
+currently being executed.
+It returns a value of the <code>Destiny</code> type. For more information on how <code>Destiny</code>
+values can be used, see <a href="#type-destiny">The Destiny Type</a>.</p>
+</div>
+<table class="tableblock frame-ends grid-none stretch">
+<caption class="title">Syntax</caption>
+<colgroup>
+<col style="width: 30%;">
+<col style="width: 70%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-right valign-top"><p class="tableblock"><em>DestinyExp</em> ::=</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>destiny</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>class C {
+    Destiny myMethod() {
+        return destiny;
+    }
+
+    Unit run() {
+        Fut&lt;Destiny&gt; f = this!myMethod();
+        await f?;
+        Destiny g = f.get;
+        assert(f == g); <i class="conum" data-value="1"></i><b>(1)</b>
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>the boolean expression will evaluate to <code>True</code> since the returned <code>destiny</code>
+value is the same as the future of the asynchronous call to <code>myMethod</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If <code>destiny</code> is evaluated as part of a synchronous call S then it evaluates to
+the future of the task that is executing S:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>class C {
+    Unit syn(Destiny caller) {
+        assert(destiny == caller);
+    }
+
+    Unit asyn() {
+        this.syn(destiny);
+    }
+
+    Unit run() {
+        this!asyn();
+    }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+There is also the <code>destinyOf</code> built-in function that can retrieve the
+  future of the asynchronous call that is currently being executed by a <code>Process</code>,
+  see <a href="#sec:process-attributes">Processes and Process Attributes</a>.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -3195,8 +3342,8 @@ await fx?;</code></pre>
 <div class="paragraph">
 <p>Functions take a list of arguments and evaluate the expression in their body,
 producing a return value.  ABS functions are always pure.  This means the body
-of a function can use all pure expressions (see <a href="#sec:pure-expressions">Pure Expressions</a>) but
-no expressions with side effects (see <a href="#sec:side-effect-expressions">Expressions with Side Effects</a>).</p>
+of a function can use all pure expressions but
+no expressions with side effects.</p>
 </div>
 <div class="paragraph">
 <p>Functions can be <em>parametric</em>, which means that they can take and return
@@ -3206,7 +3353,7 @@ its type.  Parametric functions are defined like normal functions but have an
 additional type parameter section inside angle brackets (<code>&lt;</code> <code>&gt;</code>) after the
 function name.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3252,24 +3399,6 @@ def A head&lt;A&gt;(List&lt;A&gt; list) = <i class="conum" data-value="3"></i><b
 </tr>
 </table>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-The ABS standard library contains some special functions that cannot be
-defined with pure expressions, for example the function <code>println</code>.  The
-definition of such functions is done via a special function body of the form
-<code>builtin</code>, with optional pure expression arguments <code>builtin(a, "b", 3)</code>.  Such
-builtin functions have to be defined separately in the code generator for each
-backend where the model is compiled; details of this are
-implementation-specific and outside the scope of this manual.
-</td>
-</tr>
-</table>
-</div>
 <div class="sect2">
 <h3 id="sec:partially-defined-functions">5.1. Partial Function Definitions</h3>
 <div class="paragraph">
@@ -3296,7 +3425,7 @@ a separate, non-empty argument list containing the functional arguments.  For re
 inside the body of a partially defined function, omit the function parameter
 list.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3316,7 +3445,7 @@ list.</p>
 <div class="title">Example</div>
 <div class="content">
 <pre class="highlight"><code>// Simply applies a function fn to a value.
-def B apply&lt;A, B&gt;(fn)(A value) = fn(a);
+def B apply&lt;A, B&gt;(fn)(A value) = fn(value);
 
 def Int double(Int x) = x * 2;
 
@@ -3381,7 +3510,7 @@ every time a partially defined function is called, ABS uses anonymous
 functions.  Anonymous functions are only allowed in the first arguments list
 calls to partially defined functions.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3445,6 +3574,214 @@ code.
 </table>
 </div>
 </div>
+<div class="sect2">
+<h3 id="-built-in-functions">5.3. Built-In Functions</h3>
+<div class="paragraph">
+<p>Some special "functions" cannot be defined with pure expressions, for example
+the function <code>println</code>.  The definition of such functions is done via a
+special function body written as <code>builtin</code>, with optional pure expression
+arguments <code>builtin(a, "b", 3)</code>.  Such builtin functions have to be defined
+separately in the code generator for each backend where the model is compiled.</p>
+</div>
+<div class="paragraph">
+<p>Built-in functions in the standard library include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The functions <code>sqrt</code>, <code>log</code>, <code>exp</code> that work on floating-point numbers</p>
+</li>
+<li>
+<p>Functions that convert between different numerical types: <code>truncate</code>, <code>float</code>, <code>rat</code>, <code>floor</code>, <code>ceil</code>, <code>numerator</code>, <code>denominator</code></p>
+</li>
+<li>
+<p>String functions: <code>substr</code>, <code>strlen</code>, <code>toString</code>, <code>println</code></p>
+</li>
+<li>
+<p>Clock access: <code>currentms</code>, <code>ms_since_model_start</code></p>
+</li>
+<li>
+<p>Functions that return process attributes (see Section <a href="#sec:process-attributes">Processes and Process Attributes</a>)</p>
+</li>
+<li>
+<p>The <code>random</code> function</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="-embedded-sqlite-database-queries">5.4. Embedded SQLite Database Queries</h3>
+<div class="paragraph">
+<p>The Erlang and Java backends can read from a relational database and convert
+the result into ABS lists.  Currently only SQLite databases are supported.</p>
+</div>
+<div class="paragraph">
+<p>A SQLite database is queried by writing a function with a <code>builtin</code> body with
+three or more arguments: a literal <code>sqlite3</code>, the name of the database file,
+the query as a SQL string, and zero or more arguments to the query.  The
+return value is a list of ABS values.  The return type of such a function can
+be:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Int</code>, when the query returns rows with a single SQLite <code>INTEGER</code>
+value;</p>
+</li>
+<li>
+<p><code>Float</code>, when the query returns rows with a single SQLite <code>INTEGER</code>
+or <code>REAL</code> value;</p>
+</li>
+<li>
+<p><code>Rat</code>, when the query returns rows with a single SQLite <code>INTEGER</code> or
+<code>REAL</code> value;</p>
+</li>
+<li>
+<p><code>Bool</code>, when the query returns rows with a single SQLite <code>INTEGER</code>
+value, where <code>0</code> corresponds to ABS <code>False</code>;</p>
+</li>
+<li>
+<p><code>String</code>, when the query returns rows with a single SQLite <code>TEXT</code>
+value;</p>
+</li>
+<li>
+<p>An algebraic datatype, with a single constructor taking only the
+above datatypes, such that the constructor can be invoked for each
+row returned by the query.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Query parameters are written as <code>?</code> in the SQL query string.  Each of these
+parameters must be supplied with a value.  ABS query parameters are converted
+into SQL values (see <a href="https://www.sqlite.org/datatype3.html" class="bare">https://www.sqlite.org/datatype3.html</a>) as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Int</code> values are converted into <code>INTEGER</code>;</p>
+</li>
+<li>
+<p><code>Float</code> values are converted into <code>REAL</code>;</p>
+</li>
+<li>
+<p><code>Rat</code> values are converted into floating-point numbers before passing them to the query function;</p>
+</li>
+<li>
+<p><code>Bool</code> values are converted into <code>0</code> and <code>1</code> (note that SQLite treats all non-zero values as true; consider directly using a query parameter of type <code>Int</code> instead);</p>
+</li>
+<li>
+<p><code>String</code> values are converted into <code>STRING</code>.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example: creating a database</div>
+<div class="content">
+<pre class="highlight"><code>$ sqlite3 /tmp/test.sqlite3
+CREATE TABLE IF NOT EXISTS test_table (
+  int_value INTEGER,
+  float_value REAL,
+  string_value TEXT,
+  bool_value BOOLEAN
+);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value)
+     VALUES (15, 13.53, "hello", 0);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value)
+     VALUES (30, 42.5, "world", 1);
+.quit</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With the above database, the following ABS model can be run:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example: reading from the database</div>
+<div class="content">
+<pre class="highlight"><code>module Test;
+
+def List&lt;String&gt; fstring() = builtin(sqlite3, <i class="conum" data-value="1"></i><b>(1)</b>
+    "/tmp/test.sqlite3",
+    "SELECT string_value FROM test_table");
+
+def List&lt;Rat&gt; frat() = builtin(sqlite3, <i class="conum" data-value="2"></i><b>(2)</b>
+    "/tmp/test.sqlite3",
+    "SELECT float_value FROM test_table");
+
+data RowResult = RowResult(Int, Bool, Float, Rat, String);
+
+def List&lt;RowResult&gt; ftuple() = builtin(sqlite3, <i class="conum" data-value="3"></i><b>(3)</b>
+    "/tmp/test.sqlite3",
+    `SELECT int_value, bool_value, float_value, float_value, string_value
+       FROM test_table`);
+
+def List&lt;RowResult&gt; ftuple_with_params(String str, Rat rat) = builtin(sqlite3,
+    "/tmp/test.sqlite3",
+    `SELECT int_value, bool_value, float_value, float_value, string_value
+       FROM test_table
+      WHERE string_value = ? <i class="conum" data-value="4"></i><b>(4)</b>
+        AND float_value = ?`,
+    str, <i class="conum" data-value="5"></i><b>(5)</b>
+    rat);
+
+
+{
+    foreach (v, i in frat()) {
+        println(`$i$'th rational value is $v$`);
+    }
+    foreach (v, i in fstring()) {
+        println(`$i$'th string value is $v$`);
+    }
+    foreach (v, i in ftuple()) {
+        println(`$i$'th tuple is $v$`);
+    }
+    foreach (v, i in ftuple_with_params("world", 85/2)) {
+        println(`$i$'th tuple is $v$`);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A <code>builtin</code> function with first argument <code>sqlite3</code> takes two or more additional arguments: the name of the database, a SQL query string, and the query parameters.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>SQL <code>REAL</code> values are converted to ABS rational values</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>SQL query results with more than one column are converted into ABS user-defined datatypes. The data constructor of the result datatype has to take the same number of arguments as the <code>SELECT</code> returns, and the datatypes must be compatible.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Query parameters in SQLite are written as plain <code>?</code> in the query string.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>For each parameter in the SQL query, a value must be supplied.</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+For the Erlang backend only, when the database file (the second argument
+to the <code>builtin</code> expression) does not contain a path, the model will look for
+it in the <code>priv</code> directory of the compiled model.  That directory is the value
+of the erlang function <code>code:priv_dir(absmodel)</code>, typically
+<code>gen/erl/absmodel/_build/default/lib/absmodel/priv/</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -3453,7 +3790,7 @@ code.
 <div class="paragraph">
 <p>This chapter specifies all ABS statements.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3485,7 +3822,7 @@ code.
 <div class="paragraph">
 <p>The skip statement is a statement that does nothing.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3523,7 +3860,7 @@ variable.  The initialization expression is mandatory except for variables of
 reference types (interfaces and futures), in which case the variable is
 initialized with <code>null</code> if the initialization expression is omitted.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3574,7 +3911,7 @@ In case a local variable <code>f</code> is in scope at the point of the assignme
 statement, the <code>this</code> prefix has to be used to assign to the field <code>f</code>; assignment
 to <code>f</code> will change the value of the local variable.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3606,7 +3943,7 @@ resulting value is discarded.</p>
 <p>Expression statements are used for their side effects, for example issuing an
 asynchronous method call without waiting for its result.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3650,7 +3987,7 @@ expression evaluates to <code>True</code>, executing an assertion is equivalent 
 <code>skip;</code>.  If the expression evaluates to <code>False</code>, it is equivalent to <code>throw
 AssertionFailException;</code>.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3671,7 +4008,7 @@ AssertionFailException;</code>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="await-stmt">6.6. Await Statement</h3>
+<h3 id="await-stmt">6.6. Await (Statement)</h3>
 <div class="paragraph">
 <p>An await statement suspends the current task until the given guard becomes
 active (evaluates to <code>True</code>).  While the task is suspended, other tasks within
@@ -3702,9 +4039,9 @@ even if the guard evaluated without an exception afterwards.
 <p>In general, each cog will continue running a task without preempting it until
 the task is finished or it reaches a <em>scheduling point</em>.  Await statements are
 scheduling points, as are <code>suspend</code> statements and assignment or expression
-statements containing an await expression (see <a href="#await-expression">Await Expression</a>).</p>
+statements containing an await expression (see <a href="#await-expression">Await (Expression)</a>).</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3760,7 +4097,7 @@ await duration(3, 5); <i class="conum" data-value="4"></i><b>(4)</b></code></pre
 <div class="paragraph">
 <p>The suspend statement causes the current task to be suspended.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3822,7 +4159,7 @@ the future will become active.</p>
 <p>Methods that have a <code>Unit</code> return type do not need an explicit return
 statement.  The future will be resolved when the method terminates.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3862,7 +4199,7 @@ multiple <code>return</code> statements.  This makes model analysis easier.
 takes a single argument of type <code>ABS.StdLib.Exception</code>, which is the exception
 value to throw.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3904,7 +4241,7 @@ exceptions.</p>
 <p>A sequence of statements is called a <em>block</em>.  A block introduces a scope for
 local variables.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3961,7 +4298,7 @@ anywhere a single statement is valid.
 <p>ABS has the standard conditional statement.  The condition has to evaluate to
 a Boolean value.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -3991,7 +4328,7 @@ if (True)
 <div class="sect2">
 <h3 id="switch-stmt">6.12. Switch: Pattern Matching</h3>
 <div class="paragraph">
-<p>The switch statement, like the case expression (see <a href="#case-expression">Case Expressions</a>),
+<p>The switch statement, like the case expression (see <a href="#case-expression">Case</a>),
 consists of an expression and a series of branches, each consisting of a
 pattern and a statement (which can be a block).</p>
 </div>
@@ -4006,9 +4343,9 @@ executing that statement.</p>
 <p>If no pattern matches the expression, a <code>PatternMatchFailException</code> is thrown.</p>
 </div>
 <div class="paragraph">
-<p>For a description of the pattern syntax, see <a href="#case-expression">Case Expressions</a>.</p>
+<p>For a description of the pattern syntax, see <a href="#case-expression">Case</a>.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -4043,7 +4380,7 @@ switch (p) {
 <p>The while loop repeats its body while the condition evaluates to <code>True</code>.  The
 condition is re-evaluated after each iteration of the loop.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -4092,7 +4429,7 @@ in Section <a href="#type-list">Lists</a> for common list processing idioms.
 </tr>
 </table>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -4126,7 +4463,7 @@ using the <code>throw</code> keyword or implicitly, for example by dividing by z
 try-catch-finally statement is used to handle exceptions and resume normal
 execution afterwards.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -4163,7 +4500,7 @@ statement, the unhandled exception is passed on to this surrounding
 try-catch-finally statement.  Otherwise, the current process terminates and
 its future is resolved by storing the unhandled exception.  Any <code>get</code>
 expression on this future will re-throw the exception (see
-<a href="#get-expression">Get Expression</a>).  The object that ran the aborted process will execute its
+<a href="#get-expression">Get</a>).  The object that ran the aborted process will execute its
 recovery block with the unhandled exception as parameter (see
 <a href="#sec:classes">Classes</a>).</p>
 </div>
@@ -4245,7 +4582,7 @@ library interface <code>ABS.StdLib.Object</code> (see <a href="#type-object">Obj
 <p>The interface body consists of a list of method signature declarations.
 Method names start with a lowercase letter.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -4332,7 +4669,7 @@ one class; objects are created via the <code>new</code> expression.</p>
 </div>
 <div class="paragraph">
 <p>Classes implement one or more interfaces.  If a class implements more than
-one interface, <a href="#typecheck-expression">The Type-Check Expression</a> and <a href="#typecast-expression">The Type-Cast Expression</a> are used
+one interface, <a href="#typecheck-expression">Type-Check Expressions</a> and <a href="#typecast-expression">Type-Cast Expressions</a> are used
 to obtain a reference to the same object typed with a different interface.  If
 no explicit <code>implements</code> clause is given, the class will extend the standard
 library interface <code>ABS.StdLib.Object</code> (see <a href="#type-object">Object</a>).  The
@@ -4404,7 +4741,7 @@ block itself raises an exception, the object is killed.  Code in the recovery
 block has the same restrictions as in the init block (i.e., no processor
 release points, blocking expressions and <code>throw</code> statements).</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -4624,7 +4961,7 @@ traits are applied.</p>
 add methods to another trait, modify methods in another trait, or remove
 methods from another trait.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -4754,7 +5091,7 @@ is contained in the <code>export</code> clause.
 </div>
 <div class="sect2">
 <h3 id="-defining-a-module">10.1. Defining a Module</h3>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -5255,6 +5592,20 @@ A min&lt;A&gt;(A a, A b)</code></pre>
 <pre class="highlight"><code>Float float(Rat a)</code></pre>
 </div>
 </div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Very large integers and some rational numbers cannot be converted
+exactly into floating-point numbers.  More in general, <code>rat(float(x)) == x</code>
+might not be true.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <div class="title">rat</div>
 <p>Converts  a floating-point number into a rational number.</p>
@@ -5263,6 +5614,19 @@ A min&lt;A&gt;(A a, A b)</code></pre>
 <div class="content">
 <pre class="highlight"><code>Rat rat(Float f)</code></pre>
 </div>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Conversion from floating-point to rational numbers is inexact and
+backend-specific.  In general, <code>float(rat(x)) == x</code> might not be true.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <div class="title">floor</div>
@@ -5536,10 +5900,10 @@ All object references can be assigned to variables of this type.</p>
 </div>
 <div class="paragraph">
 <p>Future values are produced by asynchronous method calls (see
-<a href="#async-call-expression">Asynchronous Call Expression</a>).  The current process can suspend itself until a
+<a href="#async-call-expression">Asynchronous Method Calls</a>).  The current process can suspend itself until a
 future is resolved, i.e., until the return value of the asynchronous method
-call is available (see <a href="#await-stmt">Await Statement</a>).  The get expression returns the value
-of a future (see <a href="#get-expression">Get Expression</a>).  In case the future is not yet resolved,
+call is available (see <a href="#await-stmt">Await (Statement)</a>).  The get expression returns the value
+of a future (see <a href="#get-expression">Get</a>).  In case the future is not yet resolved,
 the get expression blocks the current cog.</p>
 </div>
 <div class="listingblock">
@@ -5584,6 +5948,94 @@ a shorthand can be used that combines the above three statements:</p>
 <td>This statement invokes <code>add</code>, suspends the current process until the result is available, then stores it in <code>result</code>.</td>
 </tr>
 </table>
+</div>
+<div class="sect3">
+<h4 id="type-destiny">The Destiny Type</h4>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This feature is only available in the Erlang backend.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <code>Destiny</code> type is the type of the <code>destiny</code> expression, see
+<a href="#destiny-expression">Destiny (Expression)</a>.
+Thus, its values are also futures:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>Unit myMethod() {
+    Destiny x = destiny;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>Destiny</code> type is a supertype of all future types.
+For example, values of any future type <code>Fut&lt;T&gt;</code> can implicitly be cast to the
+<code>Destiny</code> type:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>Destiny f = this!myMethod();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>Destiny</code> type supports all boolean comparisons that <code>Fut&lt;T&gt;</code> types
+support. Thus, one can use it to compare futures even across different future
+types to identify asynchronous method calls:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>Destiny f = this!myMethod();
+Fut&lt;Int&gt; g = this!myMethod();
+
+assert(f == f &amp;&amp; f != g);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The Get-Expression of a <code>Destiny</code> value is typed by the internal type <code>Bottom</code>
+that has no values.
+Thus, it is permitted to synchronize on a future typed by <code>Destiny</code> but one can
+not extract its result:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="highlight"><code>Int myMethod() {
+    Destiny f = destiny;
+    f.get; <i class="conum" data-value="1"></i><b>(1)</b>
+    await f?; <i class="conum" data-value="2"></i><b>(2)</b>
+    Int x = f.get; <i class="conum" data-value="3"></i><b>(3)</b>
+
+    return 42;
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This is permitted but results in a deadlock, as the method is now synchronizing on its own completion.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Applying <code>await</code> to a <code>Destiny</code> value is also permitted but in this case it has the same deadlock problem.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>This will result in a compile-time error.</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -6118,6 +6570,39 @@ contain an entry with key <code>k</code>.</p>
 </div>
 </div>
 <div class="paragraph">
+<div class="title">lookupReverse</div>
+<p>If there is an entry <code>k,v</code> in the map, return its key <code>Just(k)</code>.
+Otherwise, return <code>Nothing</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def Maybe&lt;A&gt; lookupReverse&lt;A, B&gt;(Map&lt;A, B&gt; ms, B v);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">lookupReverseDefault</div>
+<p>If there is an entry <code>k,v</code> in the map, return its key <code>Just(k)</code>.
+Otherwise, return the value <code>d</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def A lookupReverseDefault&lt;A, B&gt;(Map&lt;A, B&gt; ms, B v, A d);</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you need to know whether the map contains an entry with value
+<code>v</code>, use the function <code>lookupReverse</code> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
 <div class="title">insert</div>
 <p>Returns a map with all entries of <code>map</code> plus an entry <code>p</code>, which is given as a
 pair (<code>Pair(key, value)</code>) and maps <code>key</code> to <code>value</code>.  If <code>map</code> already
@@ -6235,6 +6720,16 @@ Maybe&lt;String&gt; question = Nothing;</code></pre>
 <pre class="highlight"><code>def A fromJust&lt;A&gt;(Maybe&lt;A&gt; m);</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<div class="title">fromJustDefault</div>
+<p>The function <code>fromJustDefault</code> returns the wrapped value of the first
+argument, or the second argument if the first argument is <code>Nothing</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>def A fromJustDefault&lt;A&gt;(Maybe&lt;A&gt; m, A default);</code></pre>
+</div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -6273,8 +6768,8 @@ they are returned from such methods.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The Model API accepts connections only from local (loopback) addresses,
-i.e., from the same machine.
+The Model API might accept connections only from local
+(loopback) addresses, i.e., from the same machine.
 </td>
 </tr>
 </table>
@@ -6286,11 +6781,12 @@ i.e., from the same machine.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-All queries in this section can be prepended with a <code>/v2/</code> prefix, i.e.,
-<code><a href="http://localhost:8080/v2/call" class="bare">http://localhost:8080/v2/call</a></code> instead of <code><a href="http://localhost:8080/call" class="bare">http://localhost:8080/call</a></code>.  In
-case incompatible changes have to be introduced to the Model API in the
-future, the semantics of invocations of queries with prefix <code>/v2/</code> will be
-preserved.
+All queries in this section can be prepended with a <code>/v2/</code>
+prefix, i.e., <code><a href="http://localhost:8080/v2/call" class="bare">http://localhost:8080/v2/call</a></code> instead of
+<code><a href="http://localhost:8080/call" class="bare">http://localhost:8080/call</a></code>.  In case incompatible changes have to be
+introduced to the Model API in the future, the semantics of
+invocations of queries with prefix <code>/v2/</code> will be preserved.  This
+prefix is only implemented on the Erlang backend; patches are welcome.
 </td>
 </tr>
 </table>
@@ -6298,14 +6794,17 @@ preserved.
 <div class="sect2">
 <h3 id="-starting-the-model-api">12.1. Starting the Model API</h3>
 <div class="paragraph">
-<p>When an ABS model compiled with the Erlang backend is started with the <code>-p</code>
-parameter naming a port number, the model will listen on the specified port
-for requests.  In the following example, we compile a model <code>my-model.abs</code> and
-start the model API on port 8080:</p>
+<p>When an ABS model is started with the <code>-p</code> parameter naming a port
+number, the model will listen on the specified port for requests.  In
+the following example, we compile a model <code>my-model.abs</code> and start the
+model API on port 8080:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ absc --erlang my-model.abs
+<pre>$ absc --java my-model.abs -o my-model.jar
+$ java -jar my-model.jar -p 8080
+# alternatively:
+$ absc --erlang my-model.abs
 $ gen/erl/run -p 8080</pre>
 </div>
 </div>
@@ -6324,13 +6823,16 @@ will terminate a model running on port 8080:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ curl localhost:8080/quit
-curl: (52) Empty reply from server</pre>
+<pre>$ curl localhost:8080/quit</pre>
 </div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="-exposing-objects">12.3. Exposing objects</h3>
+<div class="paragraph">
+<p>The Model API can be used to access objects of the running model, if
+these models are exposed.</p>
+</div>
 <div class="paragraph">
 <p>Objects are exposed via a <code>HTTPName</code> annotation.  In the following example,
 two objects of class <code>C</code> are exposed with the names <code>C1</code> and <code>C2</code>
@@ -6346,6 +6848,13 @@ variable declarations and <code>new</code> expression statements.</p>
 </div>
 <div class="sect2">
 <h3 id="-exposing-methods">12.4. Exposing methods</h3>
+<div class="paragraph">
+<p>The Model API can be used to call methods of exposed objects, if those
+methods are exposed in their interface definition.  Exposed methods
+have some restrictions for which arguments they can accept, because
+their argument values need to be serialized via JSON or URL
+parameters when called via the Model API.</p>
+</div>
 <div class="paragraph">
 <p>In an interface declaration, a <code>HTTPCallable</code> annotation exposes the annotated
 method such that it is callable from outside, given an exposed object that implements that interface.</p>
@@ -6515,6 +7024,10 @@ not be contained in the JSON object.</p>
 <div class="sect2">
 <h3 id="-querying-object-state">12.5. Querying object state</h3>
 <div class="paragraph">
+<p>The Model API can inspect the state of exposed objects, i.e., the
+names and values of the object&#8217;s fields.</p>
+</div>
+<div class="paragraph">
 <p>The following query returns the names of all exposed objects.</p>
 </div>
 <div class="listingblock">
@@ -6545,25 +7058,9 @@ with <code>"field"</code> as key.</p>
 <p>When querying for an unknown object or an unknown field, the HTTP request will
 produce a 404 response code.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-All queries in this section can be prepended with a <code>/v2/</code> prefix, i.e.,
-<code><a href="http://localhost:8080/v2/o" class="bare">http://localhost:8080/v2/o</a></code>.  In case incompatible changes are introduced
-to the Model API in the future, for example by introducing new return value
-encodings, reasonable effort will be made to keep the semantics of invocations
-of queries with prefix <code>/v2/</code> unchanged.
-</td>
-</tr>
-</table>
-</div>
 </div>
 <div class="sect2">
-<h3 id="-querying-exported-methods-of-an-object">12.6. Querying exported methods of an object</h3>
+<h3 id="-listing-the-exposed-methods-of-an-object">12.6. Listing the exposed methods of an object</h3>
 <div class="paragraph">
 <p>The following query returns, for an object exposed as <code>C1</code>, a JSON array of
 objects with metadata about callable functions.</p>
@@ -6599,7 +7096,7 @@ following entries:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="-invoking-methods">12.7. Invoking methods</h3>
+<h3 id="-calling-exposed-methods">12.7. Calling exposed methods</h3>
 <div class="paragraph">
 <p>Exposed methods are called by querying a URL of the form</p>
 </div>
@@ -6633,7 +7130,10 @@ $ curl -d "{ 'param1': 'value', 'param2': 50 }" http://localhost:8080/call/C1/me
 </div>
 </div>
 <div class="paragraph">
-<p>The following example shows how to call a method that takes a <code>List&lt;Int&gt;</code> called <code>mylist</code> from Javascript using the JQuery library:</p>
+<p>Of course, the Model API can not only be invoked via <code>curl</code> but also
+from other programs.  The following example shows how to call a method
+<code>testConfig</code> that takes an argument <code>mylist</code> of type <code>List&lt;Int&gt;</code> from
+Javascript using the JQuery library:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6696,7 +7196,7 @@ the Model API.</p>
 current value of the clock.</p>
 </div>
 <div class="paragraph">
-<p>When the model was started with a clock limit (see
+<p>If the model was started with a clock limit (see
 <a href="#timed-abs-and-model-api">Timed ABS and the Model API</a>), the limit can be increased via a request
 like the following:</p>
 </div>
@@ -6716,6 +7216,10 @@ even if the clock had not yet reached the previous limit.  I.e., when
 the same as when the clock was already stopped at the limit of 20 when
 the call was received by the Model API.</p>
 </div>
+<div class="paragraph">
+<p>Note that increasing the clock limit if the model was not started with
+an initial limit has no effect.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="-customizing-the-browser-based-visualization">12.9. Customizing the Browser-Based Visualization</h3>
@@ -6726,7 +7230,7 @@ to supply an <code>index.html</code> file at compile-time:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ absc --erlang --modelapi-index-file ./index.html *.abs</pre>
+<pre>$ absc --java --modelapi-index-file ./index.html *.abs</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6742,7 +7246,7 @@ command-line switch:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ absc --erlang --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs</pre>
+<pre>$ absc --java --modelapi-index-file ./index.html --modelapi-static-dir ./support-files/ *.abs</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6759,6 +7263,19 @@ will be accessible as <code><a href="http://localhost:8080/static/js/d3.js" clas
 </div>
 <div class="sect2">
 <h3 id="customizing-url-prefixes">12.10. Customizing the Model API URL</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This functionality is only available in the Erlang backend;
+patches are welcome.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>It is sometimes necessary to change the url under which the model publishes
 the given <code>index.html</code> file and static files.  When starting a model, the
@@ -6836,11 +7353,11 @@ one of the following states:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>the process is awaiting for a guard that is not enabled (see <a href="#await-stmt">Await Statement</a>)</p>
+<p>the process is awaiting for a guard that is not enabled (see <a href="#await-stmt">Await (Statement)</a>)</p>
 </li>
 <li>
 <p>the process is blocked on a future that is not available (see
-<a href="#get-expression">Get Expression</a>)</p>
+<a href="#get-expression">Get</a>)</p>
 </li>
 <li>
 <p>the process is suspended waiting for time to advance</p>
@@ -7041,14 +7558,14 @@ returning a new value of type <code>Duration</code>.  In case its first argument
 <div class="paragraph">
 <p>The <code>duration(min, max)</code> statement blocks the cog of the executing process
 until at least <code>min</code> and at most <code>max</code> time units have passed.  The <code>await
-duration(min, max)</code> statement (see <a href="#await-stmt">Await Statement</a>) suspends the current
+duration(min, max)</code> statement (see <a href="#await-stmt">Await (Statement)</a>) suspends the current
 process until at least <code>min</code> and at most <code>max</code> time units have passed.</p>
 </div>
 <div class="paragraph">
 <p>The second argument to <code>duration</code> can be omitted; <code>duration(x)</code> is interpreted
 the same as <code>duration(x, x)</code>.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -7201,6 +7718,10 @@ current state of the implementation on the Erlang backend.</p>
 <p>All identifiers introduced in this section reside in the <code>ABS.Scheduler</code>
 module, which is not imported by default.</p>
 </div>
+<div class="paragraph">
+<p>See <a href="https://doi.org/10.1007/s11334-012-0184-5" class="bare">https://doi.org/10.1007/s11334-012-0184-5</a> for a discussion of ABS user-defined
+schedulers and process attributes.</p>
+</div>
 <div class="sect2">
 <h3 id="-defining-schedulers">14.1. Defining Schedulers</h3>
 <div class="paragraph">
@@ -7239,7 +7760,7 @@ type <code>List&lt;Process&gt;</code> as their first argument.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="-processes-and-process-attributes">14.2. Processes and Process Attributes</h3>
+<h3 id="sec:process-attributes">14.2. Processes and Process Attributes</h3>
 <div class="paragraph">
 <p>A <em>process</em> is an ABS abstract datatype; i.e., there is no constructor
 available to create a <code>Process</code> value inside ABS.  Processes are created by
@@ -7279,6 +7800,11 @@ run a certain method.  The following attributes are available:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Duration</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The (current) deadline value of the process (<code>InfDuration</code> if none)</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>destinyOf</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Destiny</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The future of the asynchronous call that is currently being executed by the process</p></td>
+</tr>
 </tbody>
 </table>
 <div class="admonitionblock note">
@@ -7292,6 +7818,18 @@ The attributes <code>cost</code>, <code>start</code>, <code>crit</code> are avai
 the Maude backend only but will be implemented in the Erlang backend as well.
 The attributes <code>value</code>, <code>finish</code> are under consideration since their
 usefulness is questionable.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The attribute <code>destinyOf</code> is only available in the Erlang backend.
 </td>
 </tr>
 </table>
@@ -8146,7 +8684,7 @@ representation and check the models for syntax and semantic errors.  The role
 of the back ends is to generate code for the models targeting some suitable
 execution or simulation environment.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -8274,7 +8812,7 @@ that can be built.</p>
 models along with a number of extensions that specify additional constraints,
 typically cross-tree dependencies.  Its grammar is as follows:</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -8443,7 +8981,7 @@ configuration defines, for each selection of features satisfied by the product
 selection, which delta modules should be applied to the core.  Furthermore, it
 guides the code generation by ordering the application of the delta modules.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -8535,7 +9073,7 @@ It is also possible to declare products based on other products using
 <em>product expressions</em>. Product expressions use set-theoretic operations (union,
 intersection, complement) over products and sets of features.</p>
 </div>
-<table class="tableblock frame-topbot grid-none stretch">
+<table class="tableblock frame-ends grid-none stretch">
 <caption class="title">Syntax</caption>
 <colgroup>
 <col style="width: 30%;">
@@ -8691,9 +9229,9 @@ code from ABS.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Real-Time ABS</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">yes (deadline implementation missing)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User-defined Schedulers</p></td>
@@ -8707,14 +9245,14 @@ code from ABS.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Deployment</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">?</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">FLI</p></td>
@@ -8728,7 +9266,7 @@ code from ABS.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 </tr>
 </tbody>
 </table>
@@ -8894,7 +9432,36 @@ the directory <code>gen/erl/absmodel</code> after the simulation finishes.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="-haskell-backend">17.3. Haskell Backend</h3>
+<h3 id="-java-backend">17.3. Java Backend</h3>
+<div class="paragraph">
+<p>The Java backend runs ABS models on the JVM by translating them into Java and
+combining them with a runtime library implementing key ABS concepts.</p>
+</div>
+<div class="sect3">
+<h4 id="-how-to-run-the-java-backend">How to run the Java backend</h4>
+<div class="paragraph">
+<p>Compiling all files in the current directory into Java and starting the
+resulting model is done with the following commands:</p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>$ absc --java *.abs -o model.jar
+$ java -jar model.jar</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first command compiles the ABS model, the second command starts Java and
+runs the code contained in <code>model.jar</code>.  In case more than one abs file
+contains a main block, an arbitrary main block is executed.</p>
+</div>
+<div class="paragraph">
+<p>The source code of the generated classes can be inspected below the <code>gen/</code>
+directory.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="-haskell-backend">17.4. Haskell Backend</h3>
 <div class="paragraph">
 <p>The Haskell backend translates ABS models to Haskell source code,
 consequently compiled through a Haskell compiler and executed by the machine.
@@ -9129,8 +9696,8 @@ No other runtime system libraries and dependencies will be generated.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version v1.9.3<br>
-Last updated 2021-04-25 16:07:01 +0200
+Version v1.10.0<br>
+Last updated 2021-10-12 13:56:30 +0200
 </div>
 </div>
 </body>

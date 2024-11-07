@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.10">
+<meta name="generator" content="Asciidoctor 2.0.18">
 <meta name="keywords" content="ABS, manual, modeling languages, programming languages">
 <meta name="author" content="ABS Development Team">
 <meta name="copyright" content="CC-BY-SA 3.0">
@@ -746,7 +746,7 @@ p { margin-bottom: 1.25rem; }
 <h1>ABSC Compiler Internals</h1>
 <div class="details">
 <span id="author" class="author">ABS Development Team</span><br>
-<span id="revnumber">version v1.9.3</span>
+<span id="revnumber">version v1.10.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -776,6 +776,12 @@ p { margin-bottom: 1.25rem; }
 <ul class="sectlevel2">
 <li><a href="#-code-generation">3.1. Code Generation</a></li>
 <li><a href="#-the-runtime-system">3.2. The Runtime System</a></li>
+</ul>
+</li>
+<li><a href="#-the-java-backend">4. The Java backend</a>
+<ul class="sectlevel2">
+<li><a href="#-code-generation-2">4.1. Code Generation</a></li>
+<li><a href="#-the-runtime-system-2">4.2. The Runtime System</a></li>
 </ul>
 </li>
 </ul>
@@ -875,7 +881,41 @@ this guide are very welcome!</p>
 <p>Code below <code>frontend/src/main/java/org/abs_models/frontend/typechecker/</code>.</p>
 </div>
 <div class="paragraph">
-<p>Note the possibility to write type checker extensions; see the <code>ext/</code> subdirectory.  The mechanism for type checker extensions needs to be documented.</p>
+<p>Type checking is done in
+<code>org.abs_models.frontend.parser:analyzeFlattenAndRewriteModel</code>, which should
+be called by all backends.  For historical reasons, there are two passes of
+type checking: <code>Model.getErrors</code> and <code>Main.typeCheckModel</code>.  The latter method
+nrelies on some errors not being present that are detected by the former one,
+so they should always be called in the same sequence as in
+<code>analyzeFlattenAndRewriteModel</code>.</p>
+</div>
+<div class="paragraph">
+<p>Types are represented as their own class hierarchy, separate from the AST node
+classes.  See
+<code>frontend/src/main/java/org/abs_models/frontend/typechecker/Type.java</code> and its
+subclasses.</p>
+</div>
+<div class="paragraph">
+<p>Many AST nodes can calculate information about their type, via the <code>getType</code>
+method that returns a <code>Type</code> object.  This is implemented in
+<code>frontend/src/main/java/org/abs_models/frontend/typechecker/Typing.jrag</code></p>
+</div>
+<div class="paragraph">
+<p>Type checking itself uses <code>Type</code> objects and the <code>getType</code> method to collect
+type errors.  The methods <code>typeCheck</code> fill a <code>SemanticConditionList</code> with
+<code>SemanticCondition</code> objects.</p>
+</div>
+<div class="sect3">
+<h4 id="-type-checker-extensions">Type checker extensions</h4>
+<div class="paragraph">
+<p>Note the possibility to write type checker extensions; see the <code>frontend/src/main/java/org/abs_models/frontend/typechecker/ext/</code> directory.</p>
+</div>
+<div class="paragraph">
+<p>To implement a new type system extension, inherit from
+<code>DefaultTypeSystemExtension</code> and override some of its methods.  Then, register
+the extension by adding it to the <code>registerDefaultExtensions</code> method of the
+<code>TypeExtensionHelper</code> class.</p>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -902,11 +942,116 @@ this guide are very welcome!</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="-the-java-backend">4. The Java backend</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="-code-generation-2">4.1. Code Generation</h3>
+
+</div>
+<div class="sect2">
+<h3 id="-the-runtime-system-2">4.2. The Runtime System</h3>
+<div class="sect3">
+<h4 id="-abs-classes-datatypes-in-java">ABS Classes, Datatypes in Java</h4>
+<div class="paragraph">
+<p>The ABS standard library pre-defines various functions, classes,
+datatypes etc.  Depending on the usage pattern, there are various ways of
+making them available to the Java backend at compile time.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Built-in functions: These functions must be defined per backend.  The Java
+backend defines these functions in the file <code>ABSBuiltInFunctions.java</code>.</p>
+</li>
+<li>
+<p>Primitive datatypes: These are subclasses of <code>ABSBuiltInDataType.java</code>.  The
+types defined in <code>abslang.abs</code> (e.g., <code>Bool</code>, <code>Rat</code>, <code>String</code>) are generated
+but never used.</p>
+</li>
+<li>
+<p>Using other ABS functions, datatypes, classes etc. from Java: This can be
+done via reflection; see <code>ABSDCMirror.java</code> for an example.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="-task-scheduling-and-execution">Task Scheduling and Execution</h4>
+<div class="paragraph">
+<p>A running ABS model has a singleton class of type
+<code>org.abs_models.backend.java.lib.runtime.ABSRuntime</code> or one of its subclasses.</p>
+</div>
+<div class="paragraph">
+<p>Each cog is an instance of <code>org.abs_models.backend.java.lib.runtime.COG</code>.
+Each cog has one associated instance of type
+<code>org.abs_models.backend.java.scheduling.TaskScheduler</code>, by default this is
+<code>org.abs_models.backend.java.scheduling.DefaultTaskScheduler</code> but this is customizable by the user.</p>
+</div>
+<div class="paragraph">
+<p>In the following, we describe the behavior of <code>DefaultTaskScheduler</code>;
+reverse-engineering <code>SimpleTaskScheduler</code> remains to be done.</p>
+</div>
+<div class="paragraph">
+<p><code>DefaultTaskScheduler</code> contains an inner class <code>SchedulerThread</code>.  Instances
+of this class run ABS tasks, each running ABS process is handled by a Java
+thread of this class.  <code>SchedulerThread</code> instances are re-used: if a thread
+terminates, it checks for fresh tasks (in field <code>newTasks</code>) and starts running
+one; if there are no new tasks available, the thread terminates.</p>
+</div>
+<div class="paragraph">
+<p>A <code>SchedulerThread</code> instance is created either by the method
+<code>SchedulerThread.addTask</code> (if no task is running), or by a running
+<code>SchedulerThread</code> when the running thread suspends.  The running thread will
+not create a fresh thread when its task terminates; instead, it will pick up a
+waiting task and execute it.</p>
+</div>
+<div class="paragraph">
+<p>The "token" or lock of the cog is the field <code>runningThread</code>.  This field
+contains the running thread, or <code>null</code> if the cog has no running thread.  When
+encountering a scheduling point, the running thread sets this field to <code>null</code>
+and notifies all threads, which race to check if the lock <code>runningThread</code> is
+available and their guard evaluates to <code>true</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="-timed-semantics">Timed Semantics</h4>
+<div class="paragraph">
+<p>Each cog contains a counter <code>activeThreads</code> that is increased and decreased as
+processes suspend and wake up via the cog methods <code>notifyAwait</code>,
+<code>notifyWakeup</code>.  A guard&#8217;s <code>await</code> method will call these methods let the cog
+know about the task&#8217;s status (runnable or not).  Care must be taken to only
+call <code>await</code> on a guard when actually awaiting for the purpose of making a
+scheduling decision, and call the method <code>isTrue</code> when checking for a guard&#8217;s
+status outside of scheduling.</p>
+</div>
+<div class="paragraph">
+<p>A cog deems itself to be inactive in two cases when receiving <code>notifyAwait</code>:
+- Its <code>activeThreads</code> counter is <code>0</code> (all tasks are suspended)
+- Its scheduler returns non-<code>null</code> from <code>getActiveTask</code> (the active task is
+  blocked).</p>
+</div>
+<div class="paragraph">
+<p>Upon becoming inactive, the cog will signal the <code>ABSRuntime</code> singleton via the
+methods <code>notifyCogActive</code>, <code>notifyCogInactive</code>.  The runtime keeps track of
+the amount to increase the clock in the variable <code>wake_time</code>.  When the number
+of active cogs reaches zero, the runtime will try to increase the clock; this
+happens only when one or more <code>ABSDurationGuard</code> guards have registered
+themselves via <code>addDurationGuard</code>.  If so, the runtime increases the clock and
+notifies (as with <code>Object.notify</code>) the guards whose <code>min_time</code> is less than or
+equal to the current clock.  A duration guard, once notified, will notify its
+cog that the task is ready to run and return from its <code>await</code> method (which
+was called from the <code>SchedulerThread</code> running the ABS task).</p>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version v1.9.3<br>
-Last updated 2021-04-25 16:07:01 +0200
+Version v1.10.0<br>
+Last updated 2024-11-07 10:20:20 +0100
 </div>
 </div>
 </body>
