@@ -967,19 +967,19 @@ the query as a SQL string, and zero or more arguments to the query.  The
 return value is a list of ABS values.  The return type of such a function can
 be:
 
-- `Int`, when the query returns rows with a single SQLite `INTEGER`
-  value;
-- `Float`, when the query returns rows with a single SQLite `INTEGER`
-  or `REAL` value;
-- `Rat`, when the query returns rows with a single SQLite `INTEGER` or
-  `REAL` value;
-- `Bool`, when the query returns rows with a single SQLite `INTEGER`
-  value, where `0` corresponds to ABS `False`;
-- `String`, when the query returns rows with a single SQLite `TEXT`
-  value;
-- An algebraic datatype, with a single constructor taking only the
-  above datatypes, such that the constructor can be invoked for each
-  row returned by the query.
+- `List<Int>`, when the query returns rows with a single SQLite
+  `INTEGER` value;
+- `List<Float>`, when the query returns rows with a single SQLite
+  `INTEGER` or `REAL` value;
+- `List<Rat>`, when the query returns rows with a single SQLite
+  `INTEGER` or `REAL` value;
+- `List<Bool>`, when the query returns rows with a single SQLite
+  `INTEGER` value, where `0` corresponds to ABS `False`;
+- `List<String>`, when the query returns rows with a single SQLite
+  `TEXT` value;
+- A list of an algebraic datatype, with a single constructor taking
+  only the above datatypes, such that the constructor can be invoked
+  for each row returned by the query.
 
 Query parameters are written as `?` in the SQL query string.  Each of these
 parameters must be supplied with a value.  ABS query parameters are converted
