@@ -600,17 +600,15 @@ aspect GenerateJava {
                 stream.print(" = (" + JavaBackend.getQualifiedString(var.getType()) + ")" + bindingName + ".getBinding(" + varcount +");");
             }
             b.getRight().generateJava(stream);
+            stream.println("continue;");
+            stream.println("}");
             if (branchcount == getNumBranch() - 1) {
                 // KLUDGE: leave this in until we can generate ABS `throw'
                 // statements
                 stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
                 JavaGeneratorHelper.printEscapedString(stream, getPositionString());
                 stream.println(": value \" + " + varName + " + \" did not match any pattern.\");");
-            } else {
-                // Found a match => exit the statement
-                stream.println("continue;");
             }
-            stream.println("}");
         }
         stream.println("} while(false);");
     }

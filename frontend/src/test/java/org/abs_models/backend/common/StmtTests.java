@@ -96,6 +96,20 @@ public class StmtTests extends SemanticTests {
     }
 
     @Test
+    public void caseStmtLastMatch() throws Exception {
+        assertEvalTrue("""
+            {
+                String s = "in";
+                Bool testresult = False;
+                switch (s) {
+                    "out" => println("Got value `out`");
+                    _ => println("Got another value");
+                }
+                testresult = True;
+            }""");
+    }
+
+    @Test
     public void caseStmtMatchFailure() throws Exception {
         // https://github.com/abstools/abstools/issues/196
         Assume.assumeFalse("Not implemented on Java backend yet", driver.getBackendName() == BackendName.JAVA);
