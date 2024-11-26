@@ -40,6 +40,7 @@ aspect FnAppContext {
 
     // Function
     eq ExpFunctionDef.getRhs().isFnAppContextImperative() = false;
+    eq BuiltinFunctionDef.getArgument().isFnAppContextImperative() = false;
     eq PartialFunctionDecl.getPartialFunctionDef().isFnAppContextImperative() = false;
     eq PartialFunctionDecl.getFuncParam().isFnAppContextImperative() = false;
     eq Annotation.getValue().isFnAppContextImperative() = false; // Are annotations compiled?

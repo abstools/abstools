@@ -1,0 +1,38 @@
+module BackendTest;
+
+// The database was created as follows:
+/*
+CREATE TABLE IF NOT EXISTS test_table (
+  int_value INTEGER,
+  float_value REAL,
+  string_value TEXT,
+  bool_value BOOLEAN
+);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(15, 13.5, "hello", 0);
+INSERT INTO test_table(int_value, float_value, string_value, bool_value) VALUES(30, 42.5, "world", 1);
+*/
+
+data RowResult = RowResult(Int intR, Bool boolR, Float floatR, Rat ratR, String stringR);
+
+def List<RowResult> ftuple_with_all_except_rat(RowResult query_params) =
+    builtin(sqlite3,
+            // "/Users/rudi/Sync/Source/abstools/frontend/src/test/resources/sqlite3/test.sqlite3",
+            "test.sqlite3",
+            `SELECT int_value, bool_value, float_value, float_value, string_value
+               FROM test_table
+              WHERE int_value = ?
+                AND bool_value = ?
+                AND float_value = ?
+                AND string_value = ?`,
+            intR(query_params),
+            boolR(query_params),
+            floatR(query_params),
+            stringR(query_params));
+
+{
+    Bool testresult = True;
+    println("Starting SQLite3 test");
+    testresult = testresult && ftuple_with_all_except_rat(RowResult(15,False,13.5, 0, "hello")) == list[RowResult(15,False,13.5,27/2,"hello")];
+    testresult = testresult && ftuple_with_all_except_rat(RowResult(30,True,42.5, 0, "world")) == list[RowResult(30,True,42.5,85/2,"world")];
+    println(`Testresult = $testresult$`);
+}
