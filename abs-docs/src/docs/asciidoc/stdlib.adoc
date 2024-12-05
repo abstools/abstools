@@ -71,7 +71,7 @@ behavior.
 
 ==== Functions
 
-.min, max
+===== min, max
 
 These functions calculate the maximum and minimum of their two arguments.
 Since ABS datatypes are ordered, they can be applied to arguments of all
@@ -83,7 +83,7 @@ A max<A>(A a, A b)
 A min<A>(A a, A b)
 ----
 
-.abs
+===== abs
 
 This function calculates the absolute (positive) value of its argument.
 
@@ -92,7 +92,7 @@ This function calculates the absolute (positive) value of its argument.
 Rat abs(Rat x)
 ----
 
-.truncate
+===== truncate
 
 Converts a rational number to an integer by truncating towards zero.
 
@@ -101,7 +101,7 @@ Converts a rational number to an integer by truncating towards zero.
 Int truncate(Rat a)
 ----
 
-.float
+===== float
 
 Converts an integer or rational number into a floating-point number.
 
@@ -114,7 +114,7 @@ CAUTION: Very large integers and some rational numbers cannot be converted
 exactly into floating-point numbers.  More in general, `rat(float(x)) == x`
 might not be true.
 
-.rat
+===== rat
 
 Converts  a floating-point number into a rational number.
 
@@ -126,7 +126,7 @@ Rat rat(Float f)
 CAUTION: Conversion from floating-point to rational numbers is inexact and
 backend-specific.  In general, `float(rat(x)) == x` might not be true.
 
-.floor
+===== floor
 
 Returns the largest integer smaller or equal to the argument.
 
@@ -136,7 +136,7 @@ Int floor(Float f)
 ----
 
 
-.ceil
+===== ceil
 
 Returns the smallest integer larger or equal to the argument.
 
@@ -145,7 +145,7 @@ Returns the smallest integer larger or equal to the argument.
 Int ceil(Float f)
 ----
 
-.numerator
+===== numerator
 
 Returns the numerator of a rational number, or the number itself for an
 integer.
@@ -155,7 +155,7 @@ integer.
 Int numerator(Rat a)
 ----
 
-.denominator
+===== denominator
 
 Returns the denominator of a rational number, or `1` for an integer.
 
@@ -164,7 +164,7 @@ Returns the denominator of a rational number, or `1` for an integer.
 Int denominator(Rat a)
 ----
 
-.pow
+===== pow
 
 This function calculates `b` to the power of `n`.
 
@@ -173,7 +173,7 @@ This function calculates `b` to the power of `n`.
 Rat pow(Rat b, Int n)
 ----
 
-.sqrt_newton
+===== sqrt_newton
 
 This function approximates the square root of `x`; it stops when two subsequent
 estimates (as per Newton's algorithm) differ by less than `epsilon`.  `estimate` is an initial estimate of the
@@ -184,7 +184,7 @@ square root.
 Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon)
 ----
 
-.exp_newton
+===== exp_newton
 
 This function approximates _e_ to the power of `x`; it stops when two subsequent
 estimates (as per Newton's algorithm) differ by less than `epsilon`.
@@ -194,7 +194,7 @@ estimates (as per Newton's algorithm) differ by less than `epsilon`.
 Rat exp_newton(Rat x, Rat epsilon)
 ----
 
-.sqrt
+===== sqrt
 
 This function returns the square root of `x`.  It is an error if `x` is
 negative.
@@ -204,7 +204,7 @@ negative.
 Float sqrt(Float x)
 ----
 
-.log
+===== log
 
 This function returns the natural logarithm of its argument.
 
@@ -213,7 +213,7 @@ This function returns the natural logarithm of its argument.
 Float log(Float x)
 ----
 
-.exp
+===== exp
 
 This function returns Euler’s number _e_ raised to the power of `x`.
 
@@ -222,7 +222,7 @@ This function returns Euler’s number _e_ raised to the power of `x`.
 Float exp(Float x)
 ----
 
-.random
+===== random
 
 Returns an integer between 0 (inclusive) and its argument (exclusive).
 
@@ -257,7 +257,7 @@ literal is written as `\n`, carriage return as `\r`.
 
 ==== Functions
 
-.toString
+===== toString
 
 This function converts any data into a printable string representation.
 
@@ -266,7 +266,7 @@ This function converts any data into a printable string representation.
 def String toString<T>(T t)
 ----
 
-.substr
+===== substr
 
 Returns a substring of a given string `str` with length `length` starting from
 position `start` (inclusive).  The first character in a string has position 0.
@@ -276,7 +276,7 @@ position `start` (inclusive).  The first character in a string has position 0.
 def String substr(String str, Int start, Int length)
 ----
 
-.strlen
+===== strlen
 
 Returns the length of the given string `str`.  The empty string (`""`) has
 length 0.
@@ -286,7 +286,7 @@ length 0.
 def Int strlen(String str)
 ----
 
-.println
+===== println
 
 Prints the given string `s` to standard output, followed by a newline, meaning
 that the next output will not continue on the same line.
@@ -296,7 +296,7 @@ that the next output will not continue on the same line.
 def Unit println(String s)
 ----
 
-.print
+===== print
 
 Prints the given string `s` to standard output.  Does not cause the next
 output to begin on a new line.
@@ -486,7 +486,7 @@ List<Int> l2 = Cons(1, Cons(2, Cons(3, Nil)));
 
 ==== Functions
 
-.head
+===== head
 
 Returns the head of a list.
 
@@ -495,7 +495,7 @@ Returns the head of a list.
 def A head(List<A> l);
 ----
 
-.tail
+===== tail
 
 Returns the tail (rest) of a list.
 
@@ -504,7 +504,7 @@ Returns the tail (rest) of a list.
 def List<A> tail(List<A> l);
 ----
 
-.length
+===== length
 
 Returns the length of a list.  The length of `Nil` is 0.
 
@@ -514,7 +514,7 @@ def Int length(List<A> l);
 ----
 
 
-.isEmpty
+===== isEmpty
 
 Checks if a list is empty.  Returns `True` for `Nil`, `False` otherwise.
 
@@ -523,7 +523,7 @@ Checks if a list is empty.  Returns `True` for `Nil`, `False` otherwise.
 def Bool isEmpty(List<A> l);
 ----
 
-.nth
+===== nth
 
 Returns the `n`-th element of a list.  Returns the head of `l` for `n`=0,
 returns the last element of `l` for `n`=`length(l)-1`.
@@ -536,7 +536,7 @@ def A nth(List<A> l, Int n);
 ----
 
 
-.without
+===== without
 
 Returns a fresh list where all occurrences of `a` have been removed.
 
@@ -545,7 +545,7 @@ Returns a fresh list where all occurrences of `a` have been removed.
 def List<A> without<A>(List<A> list, A a);
 ----
 
-.concatenate
+===== concatenate
 
 Returns a list containing all elements of list `list1` followed by all
 elements of list `list2`.
@@ -556,7 +556,7 @@ def List<A> concatenate<A>(List<A> list1, List<A> list2);
 ----
 
 
-.appendright
+===== appendright
 
 Returns a list containing all elements of list `l` followed by the element `p`
 in the last position.
@@ -566,7 +566,7 @@ in the last position.
 def List<A> appendright<A>(List<A> l, A p);
 ----
 
-.reverse
+===== reverse
 
 Returns a list containing all elements of `l` in reverse order.
 
@@ -575,7 +575,7 @@ Returns a list containing all elements of `l` in reverse order.
 def List<A> reverse<A>(List<A> l);
 ----
 
-.copy
+===== copy
 
 Returns a list of length `n` containing `p` n times.
 
@@ -584,7 +584,7 @@ Returns a list of length `n` containing `p` n times.
 def List<A> copy<A>(A p, Int n);
 ----
 
-.map
+===== map
 
 Applies a function to each element of a list, returning a list of results in
 the same order.  The function `fn` must take an argument of type `A` and
@@ -595,7 +595,7 @@ return a value of type `B`.
 def List<B> map<A, B>(fn)(List<A> l);
 ----
 
-.filter
+===== filter
 
 Returns a list containing only the elements in the given list for which the
 given predicate returns `True`.  The function `predicate` must take an
@@ -606,7 +606,7 @@ argument of type `T` and return a Boolean value.
 def List<T> filter<T>(predicate)(List<T> l);
 ----
 
-.foldl
+===== foldl
 
 Accumulates a value starting with `init` and applying `accumulate` from left
 to right to current accumulator value and each element.  The function
@@ -619,7 +619,7 @@ a value of type `B`.
 def B foldl<A, B>(accumulate)(List<A> l, B init);
 ----
 
-.foldr
+===== foldr
 
 Accumulates a value starting with `init` and applying `accumulate` from right
 to left to each element and current accumulator value.  The function
@@ -664,7 +664,7 @@ The datatype for sets with elements of type `A` is `Set<A>`.  The `set` construc
 
 ==== Functions
 
-.contains
+===== contains
 
 Returns `True` if set `ss` contains element `e`, `False` otherwise.
 
@@ -673,7 +673,7 @@ Returns `True` if set `ss` contains element `e`, `False` otherwise.
 def Bool contains<A>(Set<A> ss, A e);
 ----
 
-.emptySet
+===== emptySet
 
 Returns `True` if set `xs` is empty, `False`  otherwise.
 
@@ -682,7 +682,7 @@ Returns `True` if set `xs` is empty, `False`  otherwise.
 def Bool emptySet<A>(Set<A> ss);
 ----
 
-.size
+===== size
 
 Returns the number of elements in set `xs`.
 
@@ -691,7 +691,7 @@ Returns the number of elements in set `xs`.
 def Int size<A>(Set<A> xs);
 ----
 
-.elements
+===== elements
 
 Returns a list with all elements in set `xs`.
 
@@ -700,7 +700,7 @@ Returns a list with all elements in set `xs`.
 def List<A> elements<A>(Set<A> xs);
 ----
 
-.union
+===== union
 
 Returns a set containing all elements of sets `set1` and `set2`.
 
@@ -709,7 +709,7 @@ Returns a set containing all elements of sets `set1` and `set2`.
 def Set<A> union<A>(Set<A> set1, Set<A> set2);
 ----
 
-.intersection
+===== intersection
 
 Returns a set containing all elements that are present in both sets `set1` and
 `set2`.
@@ -719,7 +719,7 @@ Returns a set containing all elements that are present in both sets `set1` and
 def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
 ----
 
-.difference
+===== difference
 
 Returns a set containing all elements of set `set1` not present in set `set2`.
 
@@ -728,7 +728,7 @@ Returns a set containing all elements of set `set1` not present in set `set2`.
 def Set<A> difference<A>(Set<A> set1, Set<A> set2);
 ----
 
-.isSubset
+===== isSubset
 
 Returns `True` if `set` contains all elements of `maybe_subset`, `False`
 otherwise.
@@ -738,7 +738,7 @@ otherwise.
 def Bool isSubset<A>(Set<A> maybe_subset, Set<A> set);
 ----
 
-.insertElement
+===== insertElement
 
 Returns a set with all elements of set `xs` plus element `e`.  Returns a set
 with the same elements as `xs` if `xs` already contains `e`.
@@ -748,7 +748,7 @@ with the same elements as `xs` if `xs` already contains `e`.
 def Set<A> insertElement<A>(Set<A> xs, A e);
 ----
 
-.remove
+===== remove
 
 Returns a set with all elements of set `xs` except element `e`.  Returns a set
 with the same elements as `xs` if `xs` did not contain `e`.
@@ -758,7 +758,7 @@ with the same elements as `xs` if `xs` did not contain `e`.
 def Set<A> remove<A>(Set<A> xs, A e);
 ----
 
-.take
+===== take
 
 Returns one element from a non-empty set.  It is an error to call `take` on an
 empty set; consider using `takeMaybe` in that case.
@@ -768,7 +768,7 @@ empty set; consider using `takeMaybe` in that case.
 def A take<A>(Set<A> ss);
 ----
 
-.takeMaybe
+===== takeMaybe
 
 Returns one element from a set, or `Nothing` for an empty set.
 
@@ -816,7 +816,7 @@ constructor function is used to construct maps.
 
 ==== Functions
 
-.emptyMap
+===== emptyMap
 
 Returns `True` if the map is empty, `False` otherwise.
 
@@ -825,7 +825,7 @@ Returns `True` if the map is empty, `False` otherwise.
 def Bool emptyMap<A, B>(Map<A, B> map);
 ----
 
-.removeKey
+===== removeKey
 
 Returns a map with the first occurrence of `key` removed.
 
@@ -834,7 +834,7 @@ Returns a map with the first occurrence of `key` removed.
 def Map<A, B> removeKey<A, B>(Map<A, B> map, A key);
 ----
 
-.values
+===== values
 
 Returns a list of all values within the map.
 
@@ -843,7 +843,7 @@ Returns a list of all values within the map.
 def List<B> values<A, B>(Map<A, B> map);
 ----
 
-.keys
+===== keys
 
 Returns a set of all keys of the map.
 
@@ -852,7 +852,7 @@ Returns a set of all keys of the map.
 def Set<A> keys<A, B>(Map<A, B> map);
 ----
 
-.entries
+===== entries
 
 Returns a list of all entries (i.e., pairs of key and value) of the map.
 
@@ -861,7 +861,7 @@ Returns a list of all entries (i.e., pairs of key and value) of the map.
 def List<Pair<A, B>> entries<A, B>(Map<A, B> map);
 ----
 
-.lookup
+===== lookup
 
 If value `v` is associated with a given key `k`, return `Just(v)`.  Otherwise,
 return `Nothing`.
@@ -871,7 +871,7 @@ return `Nothing`.
 def Maybe<B> lookup<A, B>(Map<A, B> ms, A k);
 ----
 
-.lookupDefault
+===== lookupDefault
 
 Returns the value associated with key `k`.  If the map does not contain an
 entry with key `k`, return the value `d`.
@@ -885,7 +885,7 @@ NOTE: If you need to know whether the map contains an entry for key `k`, use the
 function `lookup` instead.
 
 
-.lookupUnsafe
+===== lookupUnsafe
 
 Returns the value associated with key `k`.  It is an error if the map does not
 contain an entry with key `k`.
@@ -895,7 +895,7 @@ contain an entry with key `k`.
 def B lookupUnsafe<A, B>(Map<A, B> ms, A k);
 ----
 
-.lookupReverse
+===== lookupReverse
 
 If there is an entry `k,v` in the map, return its key `Just(k)`.
 Otherwise, return `Nothing`.
@@ -905,7 +905,7 @@ Otherwise, return `Nothing`.
 def Maybe<A> lookupReverse<A, B>(Map<A, B> ms, B v);
 ----
 
-.lookupReverseDefault
+===== lookupReverseDefault
 
 If there is an entry `k,v` in the map, return its key `Just(k)`.
 Otherwise, return the value `d`.
@@ -919,7 +919,7 @@ NOTE: If you need to know whether the map contains an entry with value
 `v`, use the function `lookupReverse` instead.
 
 
-.insert
+===== insert
 
 Returns a map with all entries of `map` plus an entry `p`, which is given as a
 pair (`Pair(key, value)`) and maps `key` to `value`.  If `map` already
@@ -934,7 +934,7 @@ def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p);
 ----
 
 
-.put
+===== put
 
 Returns a map with all entries of `ms` plus an entry mapping `k` to `v`, minus
 the first entry already mapping `k` to a value.
@@ -960,11 +960,11 @@ Pair<Int, String> pair = Pair(15, "Hello World");
 
 ==== Functions
 
-.fst
+===== fst
 
 The function `fst` returns the first value in a pair.
 
-.snd
+===== snd
 
 The function `snd` returns the second value in a pair.
 
@@ -983,15 +983,15 @@ Triple<Int, String, Bool> triple = Triple(15, "Hello World", False);
 
 ==== Functions
 
-.fstT
+===== fstT
 
 The function `fstT` returns the first value in a triple.
 
-.sndT
+===== sndT
 
 The function `sndT` returns the second value in a triple.
 
-.trdT
+===== trdT
 
 The function `trdT` returns the third value in a triple.
 
@@ -1011,7 +1011,7 @@ Maybe<String> question = Nothing;
 
 ==== Functions
 
-.isJust
+===== isJust
 
 The function `isJust` returns `False` if the `Maybe` value is `Nothing`,
 `True` otherwise.
@@ -1021,7 +1021,7 @@ The function `isJust` returns `False` if the `Maybe` value is `Nothing`,
 def Bool isJust<A>(Maybe<A> a);
 ----
 
-.fromJust
+===== fromJust
 
 The function `fromJust` returns the wrapped value of a `Maybe`.  It is an error to call `fromJust` on `Nothing`.
 
@@ -1030,7 +1030,7 @@ The function `fromJust` returns the wrapped value of a `Maybe`.  It is an error 
 def A fromJust<A>(Maybe<A> m);
 ----
 
-.fromJustDefault
+===== fromJustDefault
 
 The function `fromJustDefault` returns the wrapped value of the first
 argument, or the second argument if the first argument is `Nothing`.
@@ -1048,6 +1048,6 @@ This subsection lists definitions of the standard library that do not fit in any
 
 ==== Functions
 
-.ms_since_model_start
+===== ms_since_model_start
 
 The function `ms_since_model_start` returns a non-negative integer containing the number of milliseconds elapsed since the model was started.  It is useful mainly for benchmarking.
