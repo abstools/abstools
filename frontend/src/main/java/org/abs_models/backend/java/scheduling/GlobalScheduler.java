@@ -16,6 +16,7 @@ import org.abs_models.backend.java.lib.runtime.ABSDeadlockException;
 import org.abs_models.backend.java.lib.runtime.ABSException;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
+import org.abs_models.backend.java.lib.runtime.ABSThread;
 import org.abs_models.backend.java.lib.runtime.Logging;
 import org.abs_models.backend.java.lib.runtime.Task;
 
@@ -54,8 +55,9 @@ public class GlobalScheduler {
                 return;
             }
             if (options.isEmpty()) {
-                List<SimpleTaskScheduler.SimpleSchedulerThread> activeThreads = runtime.getThreadManager().getAllCopyOf(
-                    SimpleTaskScheduler.SimpleSchedulerThread.class);
+                List<SimpleTaskScheduler.SimpleSchedulerThread> activeThreads =
+                    runtime.getThreadManager().getAllCopyOf(
+                        SimpleTaskScheduler.SimpleSchedulerThread.class);
                 if (!activeThreads.isEmpty()) {
                     Set<Task<?>> suspendedTasks = new HashSet<>();
                     for (SimpleTaskScheduler.SimpleSchedulerThread st : activeThreads) {
@@ -65,7 +67,7 @@ public class GlobalScheduler {
                         }
                     }
                     // Need to filter out currentTask (that is finishing)
-                    Thread tt = Thread.currentThread();
+                    ABSThread tt = ABSThread.getCurrentThread();
                     if (tt instanceof SimpleTaskScheduler.SimpleSchedulerThread) {
                         Task<?> currT = ((SimpleTaskScheduler.SimpleSchedulerThread)tt).getExecutingTask().task;
                         suspendedTasks.remove(currT);

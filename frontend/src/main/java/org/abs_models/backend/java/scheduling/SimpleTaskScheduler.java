@@ -198,7 +198,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         public SimpleSchedulerThread(TaskInfo activeTask) {
             super(threadManager);
             this.executingTask = activeTask;
-            setName("ABS Scheduler Thread of " + cog.toString());
+            Thread.currentThread().setName("ABS Scheduler Thread of " + cog.toString());
             setCOG(cog);
         }
 
@@ -372,7 +372,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         } else {
             logger.info("COG " + cog.getID() + " creating " + activeTask);
             activeTask.thread = new SimpleSchedulerThread(activeTask);
-            activeTask.thread.start();
+            new Thread(activeTask.thread).start();
             activeTask.task.setStart(System.currentTimeMillis());
         }
     }

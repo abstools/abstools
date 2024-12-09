@@ -71,7 +71,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
             // We're idle and/or all threads are suspended waiting:
             // SchedulerThread#init will pick up a task from `newTasks`.
             runningThread = new SchedulerThread();
-            runningThread.start();
+            new Thread(runningThread).start();
         } else {
             // Some thread is running, don't start a new thread since the new
             // task will be picked up when the task of the running thread
@@ -93,7 +93,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
         public SchedulerThread() {
             super(threadManager);
-            setName("ABS Scheduler Thread of " + cog.toString());
+            Thread.currentThread().setName("ABS Scheduler Thread of " + cog.toString());
             setCOG(cog);
         }
 
@@ -125,7 +125,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
                         DefaultTaskScheduler.this.activeTask = newTasks.remove(0);
                         runningTask = DefaultTaskScheduler.this.activeTask;
-                        setName("ABS Scheduler Thread executing " + activeTask.toString());
+                        Thread.currentThread().setName("ABS Scheduler Thread executing " + activeTask.toString());
                     }
 
                     log.finest(() -> "Executing " + runningTask);
@@ -154,7 +154,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
                     // its thread
                     log.finest(() -> runningTask + " on " + g + " Starting new Scheduler Thread");
                     runningThread = new SchedulerThread();
-                    runningThread.start();
+                    new Thread(runningThread).start();
                 } else {
                     // Start a scheduling round: we already set
                     // `runningThread` to null, so someone else can grab it

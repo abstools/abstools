@@ -6,7 +6,7 @@ package org.abs_models.backend.java.lib.runtime;
 
 import java.util.logging.Logger;
 
-public abstract class ABSThread extends Thread {
+public abstract class ABSThread implements Runnable {
     private static Logger logger = Logging.getLogger(ABSThread.class.getName());
     private static final ThreadLocal<ABSThread> currentThread = new ThreadLocal<>();
     private COG cog;
@@ -16,7 +16,7 @@ public abstract class ABSThread extends Thread {
     private void init(ABSThreadManager m) {
         this.manager = m;
         manager.addThread(this);
-        setName("ABS Main Thread");
+        Thread.currentThread().setName("ABS Main Thread");
     }
 
     public ABSThread(ABSThreadManager m) {
@@ -71,9 +71,9 @@ public abstract class ABSThread extends Thread {
     }
 
     public synchronized void shutdown() {
-        logger.fine("Thread "+this.threadId()+" received shutdown signal");
+        logger.fine("Thread "+Thread.currentThread().threadId()+" received shutdown signal");
         shutdown = true;
-        this.interrupt();
+        Thread.currentThread().interrupt();
     }
 
     public synchronized void wasInterrupted(InterruptedException e) {
