@@ -5,7 +5,7 @@ plugins {
     id 'application'
 
     id 'antlr'
-    id "com.github.spotbugs" version "6.0.26"
+    id "com.github.spotbugs" version "6.0.27"
     id 'com.github.johnrengelman.shadow'
     // add jshell support (https://github.com/mrsarm/jshell-plugin):
     // rlwrap ./gradlew --console plain jshell
@@ -39,8 +39,8 @@ distributions {
 dependencies {
     // General-purpose utility libraries; these could be replaced with
     // Java 21 standard library built-ins, if possible.
-    implementation 'commons-io:commons-io:2.17.0'
-    implementation 'com.google.guava:guava:33.3.1-jre'
+    implementation 'commons-io:commons-io:2.18.0'
+    implementation 'com.google.guava:guava:33.4.0-jre'
     // Command-line parser library
     implementation 'info.picocli:picocli:4.7.6'
     // Parser library
@@ -59,28 +59,28 @@ dependencies {
     // Rational numbers for the Java backend
     implementation 'org.apfloat:apfloat:1.14.0'
     // SQLite library for the Java backend
-    implementation 'org.xerial:sqlite-jdbc:3.47.0.0'
+    implementation 'org.xerial:sqlite-jdbc:3.47.2.0'
     // Logging backend used by SQLite library
     implementation 'org.slf4j:slf4j-jdk14:2.0.16'
     // JSON library for the Java backend Model API
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.4")
     // Executes JUnit4 tests, see
     // https://github.com/junit-team/junit5-samples/tree/main/junit5-migration-gradle
     testImplementation("junit:junit:4.13.2")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.3")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.4")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
 }
 
 // JastAdd
 task generateJastAddAST(type: JavaExec) {
     // The JastAdd plugin version <= 1.13.3 does not work with gradle > 6.3,
     // so we use a JavaExec task directly.
-    description 'Processes the JastAdd AST.'
+    description = 'Processes the JastAdd AST.'
     classpath = project.configurations.jastadd2
     mainClass = 'org.jastadd.JastAdd'
     doFirst {
@@ -159,8 +159,8 @@ task checkErlang() {
 }
 
 task compileErlangBackend(type: Exec, dependsOn: processResources) {
-    description 'Compiles Erlang backend support files.'
-    workingDir 'build/resources/main/erlang/absmodel'
+    description = 'Compiles Erlang backend support files.'
+    workingDir = 'build/resources/main/erlang/absmodel'
     commandLine 'escript', '../bin/rebar3', 'compile'
 }
 compileErlangBackend.dependsOn 'checkErlang'
@@ -208,8 +208,8 @@ shadowJar {
 
 // this is necessary for the `absc` scripts
 task plainJar(type: Copy, dependsOn: shadowJar) {
-    description 'Copies the combined jar into its documented location.'
-    group 'build'
+    description = 'Copies the combined jar into its documented location.'
+    group = 'build'
     from shadowJar.archiveFile
     into 'dist'
     rename '(.*).jar', 'absfrontend.jar'
@@ -223,7 +223,7 @@ assemble.dependsOn plainJar
 // users to set their $PATH (see e.g. `frontend/README.md`,
 // https://abstools.github.io/getting_started/local-install/)
 task copyScripts(type: Copy) {
-    description 'Copies absc scripts into their documented locations.'
+    description = 'Copies absc scripts into their documented locations.'
     from 'src/main/resources/scripts'
     into 'bin/'
 }
