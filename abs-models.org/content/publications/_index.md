@@ -24,10 +24,10 @@ This page links ABS workshops, as well as selected research papers on the develo
 
 ## Case Studies
 
-- G. Turin, A. Borgarelli, S. Donetti, E. B. Johnsen, S. L. Tapia Tarifa, and F. Damiani.  
-  *A Formal Model of the Kubernetes Container Framework..*  
-  Leveraging Applications of Formal Methods, Verification and Validation (ISoLA 2020). LNCS 12476. Springer, 2020.  
-  DOI: [10.1007/978-3-030-61362-4\_32](https://doi.org/10.1007/978-3-030-61362-4_32). Download a [preprint](https://ebjohnsen.org/publication/20-isola2/20-isola2.pdf).  
+- G. Turin, A. Borgarelli, S. Donetti, F. Damiani, E. B. Johnsen, and S. L. Tapia Tarifa.  
+  *Predicting resource consumption of Kubernetes container systems using resource models.*  
+  Journal of Systems and Software, Volume 203, September 2023.  
+  DOI: [10.1016/j.jss.2023.111750](https://doi.org/10.1016/j.jss.2023.111750). Download a [preprint](https://ebjohnsen.org/publication/23-jss/).  
 
 - J-C Lin, M-C Lee, I. C. Yu, and E. B. Johnsen.  
   *A configurable and executable model of Spark Streaming on Apache YARN.*  
@@ -84,10 +84,10 @@ This page links ABS workshops, as well as selected research papers on the develo
 
 ## Software Product Lines
 
-- F. Damiani, R. Hähnle, E. Kamburjan, M. Lienhardt, L. Paolini.  
-  *Variability modules for Java-like languages.*  
-  Proc. 25th ACM International Systems and Software Product Line Conference (SPLC 2021). ACM, 2021.  
-  DOI: [10.1145/3461001.3471143](https://doi.org/10.1145/3461001.3471143).  
+- F. Damiani, R. Hähnle, E. Kamburjan, M. Lienhardt, and L. Paolini.  
+  *Variability modules.*  
+  Journal of Systems and Software, Volume 195, January 2023.  
+  DOI: [10.1016/j.jss.2022.111510](https://doi.org/10.1016/j.jss.2022.111510).  
 
 - F. Damiani, M. Lienhardt, R. Muschevici, I. Schaefer.  
   *An Extension of the ABS Toolchain with a Mechanism for Type Checking SPLs.*  

@@ -24,6 +24,7 @@ The following people have contributed to the ABS language and tools so far:
 - Nikolaos Bezirgiannis
 - Joakim Bjørk
 - Frank de Boer
+- Andrea Borgarelli
 - Richard Bubel
 - Dave Clarke
 - Jesús Correas
@@ -48,6 +49,7 @@ The following people have contributed to the ABS language and tools so far:
 - Radu Muschevici
 - Behrooz Nobakht
 - Olaf Owe
+- Luca Paolini
 - Björn Petersen
 - Germán Puebla
 - Violet Ka I Pun
@@ -60,6 +62,7 @@ The following people have contributed to the ABS language and tools so far:
 - Martin Steffen
 - Volker Stolz
 - S. Lizeth Tapia Tarifa
+- Gianluca Turin
 - Lars Tveito
 - Peter Y.H. Wong
 - Ingrid Chieh Yu
