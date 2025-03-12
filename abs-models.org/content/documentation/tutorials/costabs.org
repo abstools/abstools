@@ -1,0 +1,687 @@
+---
+title: "Resource Analysis with CostABS"
+description: "CostABS is a a static analyzer for automatically inferring upper/lower bounds on the worst/best-case Resource usage (a.k.a. cost) of ABS programs.  In this tutorial, we overview the different features of CostABS by example."
+date: 2018-06-07
+weight: 3
+showDate: false
+type: post
+draft: false
+---
+
+CostABS is a a static analyzer for automatically inferring upper/lower bounds
+on the worst/best-case Resource usage (a.k.a. cost) of ABS programs.  The
+inferred upper bounds have important applications in the fields of program
+optimization, verification and certification.  CostABS is parametric on the
+cost model, i.e., the type of cost that the user wants to infer (e.g., number
+of steps, amount of memory allocated, amount of data transmitted, etc.), and
+it supports different notions of cost such as sequential, parallel, peak, etc.
+
+In this tutorial, we overview the different features of CostABS by example.
+All examples are linked to the collaboratory where you can directly replay the
+steps described in the tutorial.
+
+** Resource Analysis with SACO
+
+In what follows we present how to use EasyInterface with the different
+analyses that CostABS is able to perform with some examples.
+
+We first show how to start to use CostABS within the ABS collaboratory.  For
+this, we must first select the analysis in the top pull-down menu, and, for
+executing the analysis, we click on ~Run~.  The ~Clear~ button (top right)
+removes all previous results.
+
+The parameters of the selected analysis can be configured by clicking on the
+~Settings~ button located in the top-left corner of the EasyInterface page.
+The results of the selected analysis are presented in the console at the
+bottom of the screen.  This can be done by means of graphs, text messages,
+markers, highlighters in the code, and interactions among them.  In the
+following, we describe the use of CostABS by analyzing several examples.
+
+*** Basic Resource Analysis
+
+Let us start by performing the basic resource analysis computed by CostABS and
+described in the paper [[http://link.springer.com/chapter/10.1007%2F978-3-642-54862-8_46][“SACO: Static Analyzer for Concurrent Objects”]].  To do
+it, open the file {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost"
+"VendingMachine_init.abs" >}}, which contains the following code:
+
+#+BEGIN_SRC abs
+   module VendingMachine_init;
+
+   interface VendingMachine {
+    Unit insertCoin();
+    Unit insertCoins( Int nCoins );
+    Int retrieveCoins();
+   }
+
+   interface PrettyPrinter {
+    Unit showIncome( Int nCoins );
+    Unit showCoin();
+  }
+
+  class IVendingMachine( Int coins, PrettyPrinter out ) implements VendingMachine{
+    Unit insertCoin(){
+      coins = coins + 1;
+  }
+
+    Unit insertCoins( Int nCoins ){
+      while( nCoins > 0 ){
+      nCoins = nCoins - 1;
+      Fut<Unit> f = this ! insertCoin();
+      await f?;
+      }
+    }
+
+     [coins < max(coins)]
+     Int retrieveCoins(){
+       Int total = 0;
+
+       while( coins > 0 ){
+        coins = coins - 1;
+        Fut<Unit> f = out ! showCoin();
+        //await f?;
+        total = total + 1;
+       }
+       return total;
+     }
+    }
+
+
+  class IPrettyPrinter implements PrettyPrinter{
+     Unit showIncome( Int nCoins ){ /*Show something*/ }
+     Unit showCoin(){ /*Show something*/ }
+  }
+
+  class IMain {
+     Unit main( Int n ){
+       PrettyPrinter o = new IPrettyPrinter();
+       VendingMachine v = new IVendingMachine( 0, o );
+
+       v ! insertCoins(n);
+       Fut<Int> f = v ! retrieveCoins();
+       await f?;
+       Int total = f.get;
+       o ! showIncome( total );
+     }
+  }
+#+END_SRC
+
+By selecting Resource Analysis and clicking on ~Settings~ a pop-up window
+appears and shows the configuration that allows us to set up the parameters
+for the analysis.  The following parameters are available:
+
+- Cost model :: The cost model indicates the type of resource that we are interested in measuring. The user can select among the following cost metrics: termination (only termination is proved), steps (counts the number of executed instructions), objects (counts the number of executed new instructions), tasks (counts the number of asynchronous calls to methods), memory (measures the size of the created data structures), data transmitted (measures the amount of data transmitted among the distributed objects), user-defined model (allows to write annotations in the code of the form ~[cost == expr]~ and the analysis accumulates the cost specified by the user in ~expr~ every time this program point is visited).
+
+- Cost centers :: This option allows us to decide whether we want to obtain the cost per cost center (i.e., for each of the abstract objects inferred by the analysis) or a monolithic expression that accumulates the whole computation in the distributed system. The value no refers to the latter case. If we want to separate the cost per cost center, we have again two possibilities. The option class shows the cost of all objects of the same class together, while objectindicates the cost attributed to each abstract object.
+
+- Asymptotic bounds :: Upper bounds can be displayed in asymptotic or non-asymptotic form. The former one is obtained by removing all constants and subsumed expressions from the non-asymptotic cost, only showing the complexity order.
+
+- Symbolic or numeric :: Next, if the cost model is memory or objects, the upper bounds can be shown either symbolically, in terms of symbolic sizes (we use ~size(A)~ to refer to the size of an object of type ~A~), or numeric, by assigning a predefined measure to them.
+
+- Debug :: sets the verbosity of the output (the higher the number, the more verbose the output).
+
+- Rely Guarantee :: performs the resource analysis taking into account the possible interleavings in the tasks execution (as described in the paper [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][“Termination and Cost Analysis of Loops with Concurrent Interleavings”]]).
+
+- Peak Cost Analysis :: computes the peak cost analysis for all objects which are identified (see the paper [[http://dx.doi.org/10.1007/978-3-319-10936-7_2][”Peak Cost Analysis of Distributed Systems”]]).
+
+- Parallel Cost Analysis :: computes the parallel cost analysis of the program (see the paper [[http://dx.doi.org/10.1007/978-3-662-48288-9_16][“Parallel Cost Analysis of Distributed Systems”]]).
+
+- Non-cumulative Cost Analysis :: computes the non-cumulative cost of the program (see the paper [[http://dx.doi.org/10.1007/978-3-662-46681-0_6][“Non-cumulative Resource Analysis”]]).
+
+- Backend of the Analysis :: SACO uses PUBS or CoFloCo as backend to solve the cost equations (see the technical report [[http://envisage-project.eu/wp-content/uploads/2013/09/APLAS14techReport.pdf][“Resource Analysis of Complex Programs with Cost Equations”]]).
+
+- Conditional Upper Bounds :: computes a set of conditional upper bounds (UBs) according to some conditions on the input parameters (see the technical report [[http://envisage-project.eu/wp-content/uploads/2013/09/APLAS14techReport.pdf][“Resource Analysis of Complex Programs with Cost Equations”]]).
+
+- Timed Cost Analysis :: computes the cost analysis in time (see [[https://www.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_SE/Page_Content/Group_Members/Antonio_Flores-Montoya/ResourceAnalysisTime_TechReport.pdf][this technical report]]).
+
+Let us analyze the program {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost"
+"VendingMachine_init.abs" >}} with the default values, except for the
+~Asymptotic bounds~ parameter that must be set to ~yes~.  Click on ~Refresh
+Outline~ and select the entry method (method ~main~ of class ~IMain~) in the
+Outline (the region on the right of the page).  Then click on ~Run~ to perform
+the analysis.  The result should be shown in the console as follows:
+
+#+BEGIN_EXAMPLE
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,max(coins)) = nat(n)+nat(max(coins))
+#+END_EXAMPLE
+
+It can be seen in the resource analysis results given by CostABS that the
+upper bound is linear and it is a function on ~n~ (the input parameter of
+~main~) and on the maximum value that the field ~coins~ can take, denoted
+~max(coins)~.  Variable ~n~ is wrapped by function ~nat~ previously defined to
+avoid negative costs.  The upper bound is shown in the console view and also
+at the method’s header when the mouse passes over the marker in line 48 in the
+program.
+
+Now, let us analyze the main method of the file {{< eifilelink "/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost" "VendingMachine.abs" >}}, which contains the following code:
+
+#+BEGIN_SRC abs
+  module VendingMachine;
+  interface VendingMachine {
+      Unit insertCoin();
+      Unit insertCoins( Int nCoins );
+      Int retrieveCoins();
+  }
+  interface PrettyPrinter {
+      Unit showIncome( Int nCoins );
+      Unit showCoin();
+  }
+  interface Main{
+      Unit main( Int n );
+  }
+  class IVendingMachine( Int coins, PrettyPrinter out ) implements VendingMachine{
+      Unit insertCoin(){
+          coins = coins + 1;
+      }
+      Unit insertCoins( Int nCoins ){
+          while( nCoins > 0 ){
+              nCoins = nCoins - 1;
+              Fut<Unit> f = this ! insertCoin();
+              await f?;
+          }
+      }
+      Int retrieveCoins(){
+          Int result = 0;
+          while( coins > 0 ){
+              coins = coins - 1;
+              Fut<Unit> f = out ! showCoin();
+              await f?;
+              result = result + 1;
+          }
+          return result;
+      }
+  }
+  class IPrettyPrinter implements PrettyPrinter{
+      Unit showIncome( Int nCoins ){ /*Show something*/ }
+      Unit showCoin(){ /*Show something*/ }
+  }
+  class IMain implements Main{
+      Unit main( Int n ){
+          PrettyPrinter o = new IPrettyPrinter();
+          VendingMachine v = new IVendingMachine( 0, o );
+          v ! insertCoins(n);
+          Fut<Int> f = v ! retrieveCoins();
+          await f?;
+          Int result = f.get;
+          o ! showIncome( result );
+      }
+  }
+#+END_SRC
+
+This file is just like the previous example, but includes the ~await~ instruction at line 37 that was commented out in the previous program.
+Analyze this program with the same configuration as before: default setting
+values, except for the asymptotic bounds parameter set to ~yes~.  Click on
+~Refresh Outline~ and select the entry method (method ~main~ of class ~IMain~)
+in the outline. Then click on ~Run~ to perform the analysis.  The results will be shown like this:
+
+#+BEGIN_EXAMPLE
+Method IMain.main terminates?: UNKOWN
+UB for 'IMain.main'(this,n) = nat(n)+c(failed(no_rf,[scc=7,cr=entrywhile_1/4]))
+#+END_EXAMPLE
+
+The analyzer shows, by using a warning marker (see line 41), that the resource analysis cannot infer an upper bound nor guarantee the termination of the program.
+
+*** Rely-Guarantee Resource Analysis
+
+{{% notice info %}}
+NOTE: this analysis is not currently available.
+{{% /notice %}}
+
+Let us now perform the rely-guarantee resource analysis, described in the paper [[http://dx.doi.org/10.1007/978-3-319-02444-8_25][”Termination and Cost Analysis of Loops with Concurrent Interleavings“]], on the main method of the {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/VendingMachine.abs&app=cost"
+"VendingMachine.abs" >}} file. To do so, we set the option ~Rely Guarantee~ to
+~yes~ and the ~Cost Model~ to ~termination~.
+
+After applying the analysis, it can be seen on the default console that
+CostABS proves that all methods of the program terminate.  Let us now slightly
+modify the example to make method ~insertCoins~ non-terminating by removing
+line 35 with the instruction ~coins = coins – 1~.  The analysis information is
+displayed as follows. For each strongly connected component(SCC) (SCC-while
+loops and recursive methods are basically the SCCs in a program), the analysis
+places a marker in the entry line to the SCC.  If the SCC is terminating
+(eg. line 25), by clicking on the marker, the lines that compose this SCC are
+highlighted in yellow. On the other hand, if the SCC is non-terminating (line
+34), by clicking on the marker, CostABS highlights the lines of the SCC in
+blue.  Besides the markers, the list of all SCCs of the program and their
+computed termination results are printed by CostABS on the console.
+
+At this point, let us perform the rely guarantee resource analysis to infer
+the cost of the program.  Restore the original code of line 35, click on
+~Settings~ and select the ~Steps~ cost model with the option ~Rely guarantee~ set to ~yes~.  Then click on ~Run~ to perform the analysis.
+
+The resulting upper bound obtained is a function in terms on ~n~ (the input
+parameter of ~main~) and in terms of the maximum value that field ~coins~ can
+take, denoted ~max(coins)~.  We can observe that the cost of ~main~ is linear
+with respect to both.  In addition, CostABS shows a marker to the left of each
+method header to display their corresponding upper bounds.
+
+*** Load Balance
+
+At this point, let us use the resource analysis to study the load balance of
+the program {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/Performance.abs&app=cost"
+"Performance.abs" >}}, which contains the following code:
+
+#+BEGIN_SRC abs
+   module Parallel;
+   import * from ABS.StdLib;
+
+  interface I {
+      Unit m (Int n);
+      Unit p (Int n, I x);
+      Unit m2 (Int n);
+      Unit q ();
+  }
+
+  class C implements I{
+      Unit m (Int n) {
+          I a = new C();
+          while (n > 0) {
+              a!p(n, a);
+              n = n - 1;
+          }
+      }
+
+      Unit mthis (Int n) {
+          I a = new C();
+          while (n > 0) {
+              a!p(n, this);
+              n = n - 1;
+          }
+      }
+
+      Unit p (Int n, I x) {
+          while (n > 0) {
+              x!q();
+              n = n - 1;
+          }
+      }
+
+      Unit m2 (Int n) {
+          while (n > 0) {
+              I a = new C ();
+              a!p(n, a);
+              n = n - 1;
+          }
+      }
+
+      Unit q () {
+          skip;
+      }
+
+  }
+#+END_SRC
+
+As the concurrency unit of ABS is the object, this analysis uses the cost
+centers to assign the cost of each execution step to the object where the step
+is performed.  We start by applying the Resource Analysis and setting the
+option ~Cost Centers~ to ~object~ in the settings.  Then click on ~Refresh
+Outline~ and select the method ~C.m~ on the right region of the page. Finally,
+click on ~Run~ to perform the analysis.  In the console, we see the following output:
+
+#+BEGIN_EXAMPLE
+UB Object Sensitive for C.m(this,n): 6*c([C.m])+nat(n)* (2*c([C.m])+5*c([C.m])+3*c([1,C.m])+nat(n)* (2*c([1,C.m])+5*c([1,C.m])+2*c([1,C.m]))+2*c([1,C.m])+c([1,C.m]))+2*c([C.m])+c([C.m])+c([1,C.m])
+UB for cobox ([13,12],C): 1+nat(n)* (6+9*nat(n))
+UB for cobox ([12],C.m): 9+7*nat(n)
+#+END_EXAMPLE
+
+CostABS returns the cost centers in the program, one cost center labelled with
+~[12]~ which corresponds to the object that executes ~C.m~ and another one
+labelled with ~[13,12]~, which abstracts the object created at line 13.  The
+labels of the nodes contain the program lines where the corresponding object
+is created.  That is, the node labeled as ~[13,12]~ corresponds to the ~C~ object, created at line 13 while executing the main method, the node
+identified by line 12. In addition, CostABS shows a graph with both nodes in
+the ~Console Graph~ view at the bottom of the screen.  By clicking on the node
+~[12]~, CostABS shows a dialog box with the upper bound on the number of steps
+performed by this node.  Similarly, by clicking on the node ~[13,12]~, it shows
+the number of steps that can be executed by the object identified with
+~[13,12]~.
+
+We can observe that the node ~[12]~ performs a number of steps that is bounded
+by a linear function on the input parameter ~n~, while in the node ~[13,12]~ the number of steps is bounded by a quadratic function on ~n~.  If we analyze
+method ~C.mthis~, the cost is distributed in a different way.  In this case,
+both nodes ~[20]~ and ~[21,20]~ have a quadratic upper bound on the number of
+steps performed by each node. The difference between both methods is that the
+call ~x!q()~ at line 30 is performed in object ~[13,12]~ in the former case,
+and in object ~[20]~ in the latter.
+
+We can obtain the number of instances of each object we can have in each node.
+Select ~C.m2~ and unselect the previously selected methods on the outline on
+the right of the page, and perform the Resource Analysis, setting the options
+~Cost Model~ to ~Objects~ and ~Cost Centers~ to ~Object~.  It can be seen in
+the output of CostABS that the number of instances of the object identified by
+~[37,35]~ is bounded by ~n~ (the input argument of method ~m2~).  Finally, we
+can apply the resource analysis to ~C.m2~ selecting ~Cost Model~ to ~Steps~ to
+obtain the results of the analysis for this method regarding the number of
+steps.
+
+*** Transmission Data Sizes
+
+Now, let us perform the transmission data size analysis to the following code:
+
+#+BEGIN_SRC abs
+  module DemoTraffic;
+  import * from ABS.StdLib;
+
+  interface II {
+          Unit work (Int n, List<Int> l);
+  }
+
+  interface IS {
+          Int process (List<Int> l);
+  }
+
+  class Master (IS s) implements II {
+
+
+          Unit work (Int n, List<Int> l){
+                  while (n>0) {
+                          l = Cons(1,l);
+                          Fut<Int> q = s!process(l);
+                          q.get;
+                          n = n - 1;
+                  }
+          }
+
+  }
+
+  class Slave () implements IS{
+          Int process (List<Int> l) {return 1;}
+  }
+
+  class IMain {
+          Unit main (List<Int> l, Int n) {
+                  IS s = new  Slave();
+                  II m = new  Master(s);
+                  m!work(n,l);
+           }
+  }
+#+END_SRC
+
+Open the file {{< eifilelink "/collaboratory/path/to/DataTransmitted.abs"
+"DataTransmitted.abs" >}}.  To analyze this file with the transmission data
+size analysis, select the analysis ~Resource Analysis (SACO)~ and set the
+option ~Cost Model~ to ~Traffic~.  Then refresh the outline and apply the
+analysis to the method ~IMain.main~.
+
+When the analysis is applied, the console will show the upper bound
+expressions for all possible pairs of objects identified by the analysis:
+
+#+BEGIN_EXAMPLE
+UB Object Sensitive for IMain.main(this,l,n): c(o([IMain.main],[2,IMain.main],Master.work))* (1+c(i)+nat(l))+c(o([2,IMain.main],[IMain.main],Master.work))* (1+c(i))+c(o([IMain.main],[2,IMain.main],Master.init))* (1+c(i))+c(o([2,IMain.main],[IMain.main],Master.init))*c(i)+c(o([IMain.main],[1,IMain.main],Slave.init))*c(i)+c(o([1,IMain.main],[IMain.main],Slave.init))*c(i)+nat(n)* (c(o([2,IMain.main],[1,IMain.main],Slave.process))* (c(i)+nat(l+2*n))+c(o([1,IMain.main],[2,IMain.main],Slave.process))* (1+c(i)))
+UB for interactions between ([31],[32,31]): c(i)
+UB for interactions between ([31],[33,31]): 2+nat(l)+2*c(i)
+UB for interactions between ([33,31],[32,31]): nat(n)* (c(i)+nat(l+2*n))
+UB for interactions between ([32,31],[31]): c(i)
+UB for interactions between ([33,31],[31]): 1+2*c(i)
+UB for interactions between ([32,31],[33,31]): nat(n)* (1+c(i))
+#+END_EXAMPLE
+
+For example, the last line of the console output is the upper bound of the
+size of the data transmitted from the node ~[32,31]~ to the node ~[33,31]~,
+that are the ~Slave~ and ~Master~ objects created at line 32 and line 33,
+respectively.  We can observe that this upper bound linearly depends on the
+input parameter ~n~, which is the number of times the method ~process~ in the
+~Slave~ object is invoked.  On the other hand, the data transmitted from the
+~Master~ object ~[33,31]~ to the ~Slave~ object ~[32,31]~ is different, as the
+invocation contains the list ~l~ which is passed as argument to the method
+~process~.  In this case, the upper bound is a quadratic function on the
+parameter ~n~, as the list passed as argument grows at each iteration of the
+loop at line 16, and this loop iterates ~n~ times.
+
+In addition to the console information, the graph in output tab ~Console
+Graph~ shows the objects creation.  By clicking on a node in the graph, a
+message outputs the UBs (upper bounds) for all transmissions data sizes that
+the selected object can perform and the objects involved in such
+transmissions.  For example, by clicking on the node ~[32,31]~, which
+corresponds to the ~Master~ object, we can see the upper bounds on the data
+transmitted (incoming and outgoing transmissions) from this object.  As
+before, the labels of the nodes contain the program lines where the
+corresponding object is created. For instance, the node labeled as ~[32,31]~
+corresponds to the ~Master~ object, created at line 32 while executing the
+main method, the object identified by line 31.  In such upper bounds, the cost
+expression ~c(i)~ represents the cost of establishing the communication.
+
+*** Non-Cumulative Cost
+
+We can illustrate the analysis for computing the non-cumulative cost with the
+file {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/Noncumulative.abs&app=cost"
+"Noncumulative.abs" >}}, which contains the following code:
+
+#+BEGIN_SRC abs
+  module Noncumulative;
+  import * from ABS.StdLib;
+  class IMain {
+      Unit main (Int s, Int n) {
+          [x == acquire(10)]
+          Int i= 0;
+          [r == acquire(100)]
+          i = 0;
+          [r == acquire(s)]
+          i = 1;
+          [r == release()]
+          i = 2;
+          [y == acquire(n)]
+          i = 3;
+          [x == release()]
+          i = 4;
+      }
+  }
+#+END_SRC
+
+In ~Settings~, restore the default values and set the option ~noncumulative_cost~ to ~yes~.  Then refresh the outline and select the method ~IMain.main~.  The results obtained after clicking ~Run~ show that we have two sets of program points that can lead to the maximum on the number of resources acquired, as well as their corresponding upper bound expressions.  The set ~[L6,L8,L10]~ corresponds to the acquireinstructions at lines 6, 8 and 10 of the program.  With this set of ~acquire~ instructions, we obtain an upper bound of the number of resources that linearly depends on the input parameter ~s~ because of the ~acquire~ at line 10.  The set ~[L6,L8,L14]~ can also lead to the maximum number of resources acquired, if the actual value of the input parameter ~n~ is larger than ~s~.
+
+*** Peak Cost Analysis
+
+Let us continue by performing the peak cost analysis to the program {{<
+eifilelink
+"/collaboratory/deliverables/D3.3.2/VendingMachine_init.abs&app=cost"
+"VendingMachine_init.abs" >}}.  Similarly to other analyses, we first select
+the entry method (method ~main~ in class ~IMain~) in the outline view and
+start the Resource Analysis (SACO) with default options, with the exception of
+the option ~Peak Cost~, which must be set to ~yes~.  After clicking ~Run~, the
+peak cost analysis outputs in the console.
+
+#+BEGIN_EXAMPLE
+Closure time 2 ms.
+Direct mhp time 0 ms.
+ Indirect mhp time 24 ms.
+Configurations found for queue [49,48] -- IPrettyPrinter.showIncome,IPrettyPrinter.showCoin
+   -- IPrettyPrinter.init
+UBs for the configurations of queue [49,48]
+   -- UB_k for [49,48]-[IPrettyPrinter.showIncome,IPrettyPrinter.showCoin]): 2+2*nat(max(coins)-1)
+   -- UB_k for [49,48]-[IPrettyPrinter.init]): 0
+
+Configurations found for queue [50,48] -- IVendingMachine.insertCoins,IVendingMachine.retrieveCoins,IVendingMachine.insertCoin
+   -- IVendingMachine.init
+UBs for the configurations of queue [50,48]
+   -- UB_k for [50,48]-[IVendingMachine.insertCoins,IVendingMachine.retrieveCoins,IVendingMachine.insertCoin]): 13+14*nat(n)+13*nat(max(coins)-1)
+   -- UB_k for [50,48]-[IVendingMachine.init]): 0
+#+END_EXAMPLE
+
+For each identified ABS object, all possible queue configurations are shown. A queue configuration is the set of tasks that can be in the task queue simultaneously. For each queue configuration, the tasks involved in the configuration are shown. In addition, the total cost associated with the configuration is displayed as well.
+
+The analysis of the program ~VendingMachine_init.abs~ shows that there are two possible queue configurations for each object identified in the program.  For example, for the object ~[49,48]~ one of the configurations contains tasks for methods ~showIncome~ and ~showCoin~, and the number of steps executed by those tasks linearly depends on the value of the field ~coins~.
+
+As before, the output tab ~Console Graph~ also shows a graph where the labels of the nodes contain the program lines where the corresponding object is created.  For instance, the node labeled as ~[49,48]~ corresponds to the ~PrettyPrinter~ object, created at line 49 while executing the ~main~ method which starts at line 48.  By clicking on a node, the queue configurations that have been identified and their costs are shown in a message.
+
+*** Parallel Cost
+
+Let us perform the parallel cost analysis described in the paper [[http://dx.doi.org/10.1007/978-3-662-48288-9_16][“Parallel Cost Analysis of Distributed Systems”]].  To do so,
+we open the file {{< eifilelink
+"/collaboratory/deliverables/D3.3.2/Parallel.abs&app=cost" "Parallel.abs" >}},
+which contains the following code:
+
+#+BEGIN_SRC abs
+  module Parallel;
+  import * from ABS.StdLib;
+
+  interface IX {
+      Unit p (IY y);
+  }
+
+  interface IY {
+      Unit q ();
+      Unit s ();
+  }
+
+  class X implements IX {
+      Unit p (IY y) {
+          skip;
+          y!s();
+          Int method_end = 0;
+      }
+  }
+
+  class Y implements IY {
+      Unit q () {
+          Int method_end = 0;
+      }
+      Unit s () {
+          Int method_end = 0;
+      }
+
+  }
+
+  class IMain {
+      Unit main () {
+
+          IX x = new  X ();
+          IY y = new  Y ();
+
+          x!p(y);
+          skip;
+          y!q();
+          Int method_end = 0;
+      }
+  }
+#+END_SRC
+
+Select the entry method ~IMain.main~ in the outline and apply the Resource Analysis by restoring the default values and setting the option ~Parallel Cost~  to ~yes~.  The analysis results show the computed upper bound expressions obtained for all paths identified in the DFG (distributed flow graph) of the program.  In addition, the result shows the number of nodes and edges of the computed DFG.
+
+#+BEGIN_EXAMPLE
+Closure time 1 ms.
+Direct mhp time 0 ms.
+ Indirect mhp time 3 ms.
+DFG Number of Nodes: 11
+DFG Number of Edges: 12
+DFG Number of Exit nodes: 4
+Number of Paths found: 16
+The Parallel Cost for IMain.main(this) is the maximum of the expressions (4):
+UB Expression: 10
+UB Expression: 14
+UB Expression: 13
+UB Expression: 9
+#+END_EXAMPLE
+
+*** Cost Analysis in Time
+
+Let us continue by performing the cost analysis in time to the program in {{<
+eifilelink path="/collaboratory/deliverables/D3.3.2/Timed.abs" app="cost" >}},
+with the following code:
+
+#+BEGIN_SRC abs
+module Timed; 
+
+interface Job{
+    Unit start(Int dur);
+}
+
+class IMain{
+    Unit main(Int n){
+        while(n>0){
+            Job job=new local Job();
+            job!start(10);	
+            await duration(1,1);
+            n= n-1;
+        }
+    }
+}
+
+class Job implements Job{
+    Unit start(Int dur){
+        while(dur>0){
+            [Cost: 1] dur=dur-1;
+            await duration(1,1);
+        }
+    }
+}
+#+END_SRC
+
+Select the entry method ~IMain.main~ in the outline of the program.  Then,
+select the Resource Analysis and set the option ~Timed Cost~ to ~yes~.  After
+applying the analysis, the output of SACO shows
+
+#+BEGIN_EXAMPLE
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,time,target) = n*c(condition([[1*time=1,-1*n+1*_G13533=1,-1*target>= -9,1*_G13533>=2,-1*_G13533+1*target>=0]]))
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,time,target) = 0*c(condition([[1*time=1,-1*n+1*_G13533=1,1*_G13533>=2,-1*_G13533+1*target>=9],[1*time=1,1*_G13533=1,-1*n>=0,1*target>=1]]))
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,time,target) = 1*c(condition([[1*time=1,1*target=1,-1*n+1*_G13542=1,1*_G13542>=3],[1*time=1,-1*n+1*_G13542=1,-1*target+1*_G13542= -8,1*_G13542>=2],[1*n=1,1*time=1,1*target=1,1*_G13542=2]]))
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,time,target) = 9*c(condition([[1*time=1,-1*n+1*_G13533=1,1*target>=11,-1*target+1*_G13533>= -7,-1*_G13533+1*target>=0],[1*time=1,1*target=10,-1*n+1*_G13533=1,-1*_G13533>= -10,1*_G13533>=3]]))
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,time,target) = 10*c(condition([[1*time=1,-1*n+1*_G13533=1,1*target>=11,-1*target+1*_G13533>=2],[1*time=1,1*target=10,-1*n+1*_G13533=1,1*_G13533>=12]]))
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,time,target) = 11*c(condition([[1*time=1,-1*target+1*n=0,-1*_G13545+1*n= -1,1*n>=11],[1*n=10,1*time=1,1*target=10,1*_G13545=11]]))
+Method IMain.main terminates?: YES
+UB for 'IMain.main'(this,n,time,target) = (n+1)*c(condition([[1*time=1,-1*n+1*_G13536=1,-1*target>= -9,1*target>=2,-1*target+1*_G13536>=2],[1*time=1,-1*target+1*n=0,-1*_G13536+1*n= -1,-1*n>= -9,1*n>=2]]))
+#+END_EXAMPLE
+
+*** CoFloCo Backend
+
+Finally, let us analyze the program {{< eifilelink
+path="/collaboratory/deliverables/D3.3.2/CoFloCoExample.abs" app="cost" >}} by
+using CoFloCo as backend. In this case, the file contains the following code:
+
+#+BEGIN_SRC abs
+module Parallel;
+import * from ABS.StdLib;
+
+class C {
+    Bool nondet=False;
+	
+    Unit m1 (Int i, Int dir, Int n) {
+        while (0<i && i < n) {
+            if (dir == 1) {
+                i = i + 1;
+            } else {
+                i = i - 1;
+            }
+        }
+    }
+	
+    Unit m2 (Int x, Int y, Int a, Int r) {
+        while (x > 0 && y > 0) {
+            if (nondet) {
+                x = x - 1;
+                y = r;
+            } else {
+                y = y - 1;
+            }
+            suspend;
+        }
+    }
+
+    Unit m3 (Int x, Int y, Int a) {
+        while (x > 0) {
+            while (y > 0 && nondet) {
+                y = y - 1;
+                suspend;
+            }
+            x = x - 1;
+        }
+    }
+}
+#+END_SRC
+
+We can select the method of interest, that is, ~C.m~, ~C.m2~ or ~C.m3~ and then perform the resource analysis with the default options except the option ~Backend~, which must be set to ~CoFloCo~.  After applying the analysis, SACO shows the results of the analysis of ~C.m~ with CoFloCo.
+
+# FIXME: The option "Conditional UBs" is not in the Settings window for Resource Analysis (SACO)
+
+# Additionally, by setting the option ~Conditional UBs~ to ~yes~, we can obtain conditional upper bounds.
+

@@ -1,0 +1,11 @@
+assets/css/chroma*.css
+assets/css/variables.css
+assets/css/*/**
+assets/fonts/*/**
+assets/js/*/**
+docs
+exampleSite
+layouts
+*.md
+*.yaml
+*.yml

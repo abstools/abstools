@@ -1,0 +1,7 @@
+title = "The ABS Collaboratory"
+publishDir = "collaboratory"
+
+[params]
+  # See comments in top-level config.toml about these parameters
+  eifilelink = "/ei/clients/web/index.html?file="
+  collaboratory = true

@@ -1,0 +1,149 @@
+<h3>4 The Functional Layer</h3>
+<h4>4.1 Algebraic Data Types</h4>
+The base layer of ABS is a simple language for parametric algebraic data types
+(ADTs) with a self-explaining syntax. The only predefined datatypes(Foot: There is one more predefined type that is used for synchronization which is explained in Sect. 6.) are <strong>Bool,Int, String, Unit</strong> and parametric lists as defined below. The type <strong>Unit</strong> is used as
+a type for methods without return value and works like Java’s <strong>void</strong>. All other
+types are user-defined.
+We assume that the Eclipse plugin is installed (see Sect. 1.3). To create
+a new ABS file in an existing ABS project, right click on the project in the
+explorer and choose <strong>New|ABS Module</strong>. In the input mask that pops up, specify a
+file name, for example, <strong>CustomerData</strong>, and click <strong>Finish</strong>. This creates a new file
+named CustomerData.abs in the workspace, which can be edited in the usual
+way. The running example of this tutorial has a banking theme. Let us create
+some datatypes related to customers. <em>All type and constructor names must be
+upper-case</em>.
+<pre>data Level = Standard | Silver | Gold;
+data Customer = Test | Person(Int, Level) | Company(Int);</pre>
+There are three kind of customers defined by three different type construc-
+tors: a test customer, individual customers, and corporate customers. Individual
+customers are identified by a personal id and possess a status level while corpo-
+rate customers are identified by their vat number. We can make this more explicit
+and, at the same, automatically create selector functions for the arguments of
+each type constructor by the following alternative definition:
+<pre>data Customer = Test | Person(Int pid, Level) | Company(Int vat);</pre>
+Assume now that we want to define lists of customers. For this we can use
+the following built-in parametric list type, which provides a convenient concrete
+syntax for lists:
+<pre>data List&lt;T&gt; = Nil | Cons(T, List&lt;T&gt;);
+List&lt;Int&gt; l = [1,2,3];</pre>
+The definition of parametric lists demonstrates that type definitions may be
+recursive.
+
+Let us instantiate parametric lists with <strong>Customer</strong> and, at the same
+time, create a <em>type synonym</em>:
+<pre>type CustomerList = List&lt;Customer&gt;;</pre>
+Type synonyms do not add new types or functionality, but can greatly en-
+hance readability.
+<h4>4.2 Functions</h4>
+The functional layer of ABS consists of a pure first-order functional language
+with definitions by case distinction and pattern matching. All function names
+must be lower-case. Let us begin by defining a function that computes the length
+of a list of customers:
+<pre>def Int length(CustomerList list) =
+case list {
+   Nil =&gt; 0 ;
+   Cons(n, ls) =&gt; 1 + length(ls) ;
+   _ =&gt; 0 ;
+} ;</pre>
+Several kinds of patterns are permitted on the left-hand side of case distinc-
+tions. In the example above, the first and second cases use a data constructor
+pattern. In the second case, this contains an unbound variable whose value is ex-
+tracted and used on the right-hand side. The last case uses an underscore pattern
+containing an anonymous variable that matches anything. Naturally, it would
+have been possible to define a parametric version of <strong>Int length(List&lt;T&gt; list)</strong>.
+This is left as an exercise to the reader.
+Here is another example illustrating the remaining patterns, that is, the literal
+pattern and the bound variable pattern:
+<pre>def Int sign(Int n) =
+case n {
+   0 =&gt; 0 ;
+   n =&gt; if (n &gt; 0) then 1 else -1 ;
+} ;</pre>
+The ABS parser does not attempt to establish whether case distinctions are
+exhaustive. If no pattern in a case expression matches, a runtime error results.
+It is up to the modeler to prevent this situation (in the near future, ABS will
+be equipped with the possibility of failure handling). Similarly, it is perfectly
+possible to define the following function:
+<pre>def Int getPid(Customer c) = pid(c);</pre>
+However, if c has any other type than <strong>Person(Int,Level)</strong> at runtime, an error
+will result.
+We close this section by illustrating a piece of syntactic sugar for associative
+collection types such as sets, bags, sequences, etc. To construct concrete elements
+of such datatypes one typically needs to iterate several binary constructors, such
+as <strong>Insert(1,Insert(2,Insert(3,EmptySet)))</strong>. This is cumbersome. The following
+idiom defines an n-ary constructor that uses concrete list syntax as its argument.
+By convention, the constructor should have the same name as the type it is
+derived from, but in lower-case.
+<pre>data Set&lt;A&gt; = EmptySet | Insert(A, Set&lt;A&gt;);
+def Set&lt;A&gt; set&lt;A&gt;(List&lt;A&gt; l) =
+case l {
+   Nil =&gt; EmptySet;
+   Cons(hd, tl) =&gt; Insert(hd, set(tl));
+} ;</pre>
+<a href="ABSProblemReporting.jpg"><img src="ABSProblemReporting-414x300.jpg" alt="Parse error in the ABS Eclipse editor; errors are highlighted on the editor line where they occur as well as in the Problems tab of the messages subwindow" width="414" height="300" class="alignnone size-medium wp-image-773" /></a>
+
+<strong>Fig. 5.</strong> Parser error in the ABS Eclipse editor; errors are highlighted on the editor
+line where they occur as well as in the <strong>Problems</strong> tab of the messages subwindow
+<pre>Set&lt;Int&gt; s = set[1,2,3];</pre>
+<h4>4.3 Modules</h4>
+If you tried to type in the previous examples into the ABS Eclipse editor you
+got parser errors despite the definitions being syntactically correct (similarly as
+in <a href="ABSProblemReporting.jpg">Fig. 5</a>). This is, because any ABS definition must be contained in exactly one
+<em>module</em>. ABS is equipped with a simple syntactic module system that is inspired
+by that of Haskell <a href="http://haskell.org/">[33]</a>. To make the examples of the previous section work,
+simply add a <em>module declaration</em> like this as the first line of the file:
+<pre>module CustomerData;</pre>
+Module names must be upper-case and define a syntactic scope until the end
+of the file or until the next module declaration, whatever comes first. Module
+names can also be part of qualified type names.
+Module declarations are followed by <em>export</em> and <em>import</em> directives. The former
+lists the types, type constructors, and functions that are visible to other modules,
+the latter lists the entities from other modules that can be used in the current
+module. With the type definitions of the previous section we might write:
+<pre>module CustomerData;
+export Standard, Customer, Company, getPid;
+...
+module Test;
+import * from CustomerData;
+def Customer c1() = Company(2);
+def Customer c2() = Person(1,Standard); // erroneous</pre>
+The module <strong>CustomerData</strong> exposes three of its constructors and a function
+while module <strong>Test</strong> imports anything made available by the former. The definition
+of <strong>c1</strong> is correct, but the definition of <strong>c2</strong> gives a parse error about a constructor
+that cannot be resolved, because <strong>Person</strong> is not exported.
+The <strong>from</strong> clause constitutes an <em>unqualified import</em>. Instead, it is also possible
+to make <em>qualified</em> imports. For example, we could have written:
+<pre>import CustomerData.Company, CustomerData.Customer;
+def CustomerData.Customer c1() = CustomerData.Company(2);</pre>
+In this case, however, one must also use qualified type names in the definitions
+as illustrated above.
+The ABS compiler knows one predefined module that does not need to be
+explicitly imported—the ABS standard library <strong>ABS.StdLib</strong>. It contains a num-
+ber of standard collection types, such as lists, sets, maps, together with the
+usual functions defined on them. It also contains some other types and functions
+that are used often. The standard library module is contained in a file named
+<strong>abslang.abs</strong>. To look up the definition of any standard type or function (or
+any other type or function, for that matter), simply move the cursor over the
+identifier in question and press F3. For example, pressing F3 over the identifier
+<strong>Cons</strong> in the definition of <strong>length</strong> in the previous section opens a new tab that
+contains <strong>abslang.abs</strong> and jumps to the line that contains the definition of the
+constructor <strong>Cons</strong>. This lookup functionality is, of course, well-known to users of
+the Eclipse IDE.
+<h4>4.4 Abstract Data Types</h4>
+The module system allows to define <em>abstract data types</em> by hiding the type con-
+structors. This implies that only functions can be used to access data elements.
+Their explicit representation is hidden. Of course, one then needs to supply
+suitable constructor functions, otherwise, no new elements can be created at all.
+In the example of the previous section we might decide to expose only the
+types and constructor functions as follows:
+<pre>module CustomerData;
+export Customer, Level, createCustomer, createLevel;
+def Customer createCustomer(Int id, String kind) = ... ;
+def Level createLevel() = ... ;</pre>
+We leave it as an exercise to write a suitable definition of <strong>createCustomer</strong>.
+As usual, the advantage of using abstract data types is that one can replace the
+definition of types without the need to change any client code.
+
+&nbsp;
+
+<center><a href="http://www.abs-models.org/?page_id=658">Prev</a> | <a href="http://www.abs-models.org/?page_id=662">Next</a></center>
