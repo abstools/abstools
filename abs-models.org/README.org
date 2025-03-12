@@ -11,11 +11,7 @@ Run =hugo server= and open a browser at ~localhost:1313~ to test changes locally
 ** Updating the theme
 
 Newer hugo releases might emit warnings or errors for our theme.  In
-that case:
-- remove ~themes/hugo-theme-relearn~
-- in ~themes/~, run =git clone https://github.com/McShelby/hugo-theme-relearn=
-- in ~themes/hugo-theme-relearn~, remove the directories .git,
-  .githooks, .github, exampleSite
+that case, run =themes/update-theme.sh=
 
 ** Deploying on the website
 

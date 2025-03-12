@@ -40,6 +40,12 @@ other = "Etusivulle"
 [Edit-this-page]
 other = "Muokkaa"
 
+[Show-Markdown]
+other = "Näytä Markdown"
+
+[Show-source]
+other = "Näytä lähdekoodi"
+
 [Print-this-chapter]
 other = "Tulosta koko luku"
 
@@ -123,3 +129,6 @@ other = "Luokat"
 
 [category]
 other = "Kategoria"
+
+[Details]
+other = "Tiedot"

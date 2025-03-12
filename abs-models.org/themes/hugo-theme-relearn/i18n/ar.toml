@@ -40,6 +40,12 @@ other = "الذهاب إلى الصفحة الرئيسية"
 [Edit-this-page]
 other = "حرر"
 
+[Show-Markdown]
+other = "إظهار Markdown"
+
+[Show-source]
+other = "إظهار شفرة المصدر"
+
 [Print-this-chapter]
 other = "طباعة الفصل بأكمله"
 
@@ -123,3 +129,6 @@ other = "فئات"
 
 [category]
 other = "فئة"
+
+[Details]
+other = "التفاصيل"

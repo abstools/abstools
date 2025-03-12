@@ -40,6 +40,12 @@ other = "转到主页"
 [Edit-this-page]
 other = "编辑"
 
+[Show-Markdown]
+other = "显示 Markdown"
+
+[Show-source]
+other = "显示源代码"
+
 [Print-this-chapter]
 other = "打印整章"
 
@@ -123,3 +129,6 @@ other = "类别"
 
 [category]
 other = "类别"
+
+[Details]
+other = "详情"

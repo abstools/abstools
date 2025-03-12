@@ -40,6 +40,12 @@ other = "Naar startpagina"
 [Edit-this-page]
 other = "Bewerken"
 
+[Show-Markdown]
+other = "Afprijzing weergeven"
+
+[Show-source]
+other = "Broncode weergeven"
+
 [Print-this-chapter]
 other = "Het hele hoofdstuk afdrukken"
 
@@ -123,3 +129,6 @@ other = "Categorieën"
 
 [category]
 other = "Categorie"
+
+[Details]
+other = "Details"

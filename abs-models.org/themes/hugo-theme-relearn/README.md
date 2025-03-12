@@ -4,7 +4,7 @@ A theme for [Hugo](https://gohugo.io/) designed for documentation.
 
 [★ What's new in the latest version ★](https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes)
 
-![Image of the Relearn theme in light and dark mode on phone, tablet and desktop](https://github.com/McShelby/hugo-theme-relearn/raw/main/images/hero.png)
+![Image of the Relearn theme in light and dark mode on phone, tablet and desktop](https://mcshelby.github.io/hugo-theme-relearn/images/hero.png)
 
 ## Overview
 
@@ -38,16 +38,18 @@ The Relearn theme is an enhanced fork of the popular [Learn theme](https://githu
 
 - **Multilingual Support**
   - [Full right-to-left (RTL) language support](https://mcshelby.github.io/hugo-theme-relearn/configuration/sitemanagement/multilingual)
-  - [Extensive list of supported languages](https://mcshelby.github.io/hugo-theme-relearn/configuration/sitemanagement/multilingual): Arabic, Chinese (Simplified and Traditional), Czech, Dutch, English, Finnish, French, German, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Polish, Portuguese, Romanian, Russian, Spanish, Swahili, Turkish, Vietnamese
+  - [Extensive list of supported languages](https://mcshelby.github.io/hugo-theme-relearn/configuration/sitemanagement/multilingual): Arabic, Chinese (Simplified and Traditional), Czech, Dutch, English, Finnish, French, German, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Persian, Polish, Portuguese, Romanian, Russian, Spanish, Swahili, Turkish, Ukrainian, Vietnamese
   - [Multilingual content search capabilities](https://mcshelby.github.io/hugo-theme-relearn/configuration/sidebar/search#mixed-language-support)
 
 - **Enhanced Markdown Features**
-  - [CommonMark and other Markdown extensions](https://mcshelby.github.io/hugo-theme-relearn/authoring/markdown#standard-and-extensions)
+  - [CommonMark compliant](https://mcshelby.github.io/hugo-theme-relearn/authoring/markdown)
+  - [Support for Markdown extensions like GitHub Flavored Markdown](https://mcshelby.github.io/hugo-theme-relearn/authoring/markdown#standard-and-extensions)
   - [Support for Obsidian callouts](https://mcshelby.github.io/hugo-theme-relearn/authoring/markdown#obsidian-callouts)
-  - [Advanced image manipulation like lightbox, sizing, shadows, borders, and alignment](https://mcshelby.github.io/hugo-theme-relearn/configuration/customization/imageeffects)
+  - [Advanced link manipulation like download and target](https://mcshelby.github.io/hugo-theme-relearn/configuration/customization/linkeffects)
+  - [Advanced image manipulation like lightbox, sizing, shadows, borders and alignment](https://mcshelby.github.io/hugo-theme-relearn/configuration/customization/imageeffects)
 
 - **Rich Shortcode Library**
-  - [Customizable marker badges](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/badge)
+  - [Marker badges](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/badge)
   - [Flexible buttons](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/button)
   - [Child page listing](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/children)
   - [Expandable content areas](https://mcshelby.github.io/hugo-theme-relearn/shortcodes/expand)

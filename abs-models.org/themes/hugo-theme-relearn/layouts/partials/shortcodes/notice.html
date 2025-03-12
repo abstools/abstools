@@ -1,17 +1,19 @@
 {{- $page := .page }}
 {{- if and (not $page) .context }}
   {{- $page = .context }}
-  {{- warnf "%q: DEPRECATED parameter 'context' for shortcode 'notice' found, use 'page' instead; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/5/#5-18-0" $page.File.Filename }}
+  {{- $filepath := "[virtual file]" }}{{ with and $page $page.File $page.File.Filename }}{{ $filepath = . }}{{ end }}
+  {{- warnf "%q: DEPRECATED parameter 'context' for shortcode 'notice' found, use 'page' instead; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/5/#5-18-0" $filepath }}
 {{- end }}
 {{- $class := .class | default "notices" }}
 {{- $containerstyle := .containerstyle | default "div" }}
 {{- $containerclass := .containerclass | default slice | append "box-content" }}
 {{- $color := .color | default "" }}
 {{- $content := trim .content "\n\r\t " }}
-{{- $hasContent := ne (strings.TrimLeft "<p>" $content) "" }}
+{{- $hasContent := ne (strings.TrimPrefix "<p>" $content) "" }}
 {{- if not (hasPrefix $content "<") }}
   {{- $content = printf "<p>\n%s" $content }}
 {{- end }}
+{{- $groupid := .groupid }}
 {{- $style := .style | default "default" }}
 {{- $boxStyle := partial "_relearn/boxStyle.gotmpl" (dict "style" $style "title" .title "icon" .icon) }}
 {{- $title := trim ($boxStyle.title) " " }}
@@ -31,32 +33,46 @@
     {{- $expander = true }}
   {{- end }}
 {{- end }}
-{{- $id := cond (or (eq .id nil) (eq .id "")) (partial "_relearn/makeRandomMd5.gotmpl" $page) .id }}
-{{- $idattribute := "" }}
+{{- $params := .params | default dict }}
+{{- $classes := split (index $params "class" | default "") " " }}
+{{- $classes = $classes | append "box" }}
+{{- $classes = $classes | append "cstyle" }}
+{{- $classes = $classes | append $class }}
+{{- $classes = $classes | append $style }}
 {{- if $expander }}
-  {{- $containerclass = $containerclass | append "expand-content" }}
-  {{- $idattribute = printf ` id="R-expandcontent-%s"` $id }}
+  {{- $classes = $classes | append "expand" }}
+{{- else }}
+  {{- $expanded = true }}
+{{- end }}
+{{- $params = dict "class" (delimit $classes " ") | merge $params }}
+{{- if $color }}
+  {{- $styles := split (index $params "style" | default "") ";" }}
+  {{- $styles = $styles | append (printf "--VARIABLE-BOX-color: %s" $color) }}
+  {{- $params = dict "style" (delimit $styles ";") | merge $params }}
+{{- end }}
+{{ if $groupid }}
+  {{- $params = dict "name" $groupid | merge $params }}
 {{- end }}
 {{- with $page }}
   {{- if or $icon $title $hasContent -}}
-<div class="{{ if $expander }}expand {{ end }}box {{ $class }} cstyle {{ $style }}"{{ if $color }} style="--VARIABLE-BOX-color: {{ $color }};"{{ end }}>
-    {{- if $expander }}
-  <input type="checkbox" id="R-expand-{{ $id }}" aria-controls="R-expandcontent-{{ $id }}"{{ if $expanded }} checked{{ end }}>
-  <label class="expand-label box-label" for="R-expand-{{ $id }}">
-    <i class="expander-icon fa-fw fas fa-chevron-down"></i>
-    <i class="expander-icon fa-fw fas fa-chevron-right"></i> {{ if $icon }}<i class="{{ $icon }}"></i>{{ end }}{{ if and $icon $title }} {{ end }}{{ $title | .RenderString }}
-  </label>
-  <div class="box-spacer"></div>
-    {{- else if or $icon $title }}
-  <div class="box-label">
-    {{ if $icon }}<i class="{{ $icon }}"></i>{{ end }}{{ if and $icon $title }} {{ end }}{{ $title | .RenderString }}
-  </div>
-    {{- end }}
+<details
+  {{- if $expanded }} open{{ end }}
+  {{- range $k, $v := $params }}
+      {{- if not (or (in (slice "open" "summary") $k) (strings.HasPrefix $k "on")) }}
+          {{- printf " %s=%q" $k $v | safeHTMLAttr }}
+      {{- end }}
+  {{- end }}>
+  <summary class="box-label{{ if and (not $expander) (not $icon) (not $title) }} a11y-only{{ end }}"{{ if not $expander }} tabindex="-1"{{ end }}>{{ if $expander }}
+    <i class="expander-icon fa-fw fas fa-chevron-right"></i> {{ end }}{{ if $icon }}
+    <i class="{{ $icon }}"></i> {{ end }}{{ if $title }}
+    {{ $title | .RenderString }}{{ else }}
+    <span class="a11y-only">{{ T "Details" }}</span>{{ end }}
+  </summary>
     {{- if $hasContent }}
-{{ printf "  <%s%s class=\"%s\">" $containerstyle $idattribute (delimit $containerclass " ") | safeHTML }}
+{{ printf "  <%s class=\"%s\">" $containerstyle (delimit $containerclass " ") | safeHTML }}
 {{ $content | safeHTML }}
 {{ printf "  </%s>" $containerstyle | safeHTML }}
     {{- end }}
-</div>
+</details>
   {{- end }}
 {{- end }}

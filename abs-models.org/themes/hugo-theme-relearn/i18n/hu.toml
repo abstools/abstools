@@ -40,6 +40,12 @@ other = "Menj a kezdőlapra"
 [Edit-this-page]
 other = "Szerkesztés"
 
+[Show-Markdown]
+other = "Markdown megjelenítése"
+
+[Show-source]
+other = "Forráskód megjelenítése"
+
 [Print-this-chapter]
 other = "Teljes fejezet nyomtatása"
 
@@ -123,3 +129,6 @@ other = "Kategóriák"
 
 [category]
 other = "Kategória"
+
+[Details]
+other = "Részletek"

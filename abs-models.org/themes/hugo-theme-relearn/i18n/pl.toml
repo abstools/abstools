@@ -40,6 +40,12 @@ other = "Idź do strony paczątkowej"
 [Edit-this-page]
 other = "Edycja"
 
+[Show-Markdown]
+other = "Pokaż język Markdown"
+
+[Show-source]
+other = "Pokaż kod źródłowy"
+
 [Print-this-chapter]
 other = "Drukowanie całego rozdziału"
 
@@ -123,3 +129,6 @@ other = "Kategorie"
 
 [category]
 other = "Kategoria"
+
+[Details]
+other = "Szczegóły"

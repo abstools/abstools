@@ -40,6 +40,12 @@ other = "Mergi la pagina principală"
 [Edit-this-page]
 other = "Editează"
 
+[Show-Markdown]
+other = "Afișează Markdown"
+
+[Show-source]
+other = "Afișați codul sursă"
+
 [Print-this-chapter]
 other = "Tipărește întregul capitol"
 
@@ -123,3 +129,6 @@ other = "Categorii"
 
 [category]
 other = "Categorie"
+
+[Details]
+other = "Detalii"

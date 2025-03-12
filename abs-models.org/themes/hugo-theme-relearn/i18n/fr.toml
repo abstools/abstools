@@ -40,6 +40,12 @@ other = "Vers la page d'accueil"
 [Edit-this-page]
 other = "Éditer"
 
+[Show-Markdown]
+other = "Afficher Markdown"
+
+[Show-source]
+other = "Afficher le code source"
+
 [Print-this-chapter]
 other = "Imprimer le chapitre entier"
 
@@ -123,3 +129,6 @@ other = "Catégories"
 
 [category]
 other = "Catégorie"
+
+[Details]
+other = "Détails"

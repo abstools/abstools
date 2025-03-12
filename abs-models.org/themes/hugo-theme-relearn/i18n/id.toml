@@ -40,6 +40,12 @@ other = "Ke halaman depan"
 [Edit-this-page]
 other = "Mengedit"
 
+[Show-Markdown]
+other = "Tampilkan Markdown"
+
+[Show-source]
+other = "Tampilkan kode sumber"
+
 [Print-this-chapter]
 other = "Mencetak seluruh bab"
 
@@ -123,3 +129,6 @@ other = "Kategori"
 
 [category]
 other = "Kategori"
+
+[Details]
+other = "Rincian"

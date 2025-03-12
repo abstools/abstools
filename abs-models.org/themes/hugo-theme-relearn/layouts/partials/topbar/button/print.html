@@ -2,16 +2,17 @@
 {{- $onwidthm := cond (isset . "onwidthm") .onwidthm "show" }}
 {{- $onwidthl := cond (isset . "onwidthl") .onwidthl "show" }}
 {{- with .page }}
-	{{- $printFormat := .OutputFormats.Get "print" }}
-	{{- $show := $printFormat }}
+	{{- $format := .OutputFormats.Get "print" }}
+	{{- $show := and $format (not (.Param "disablePrintButton")) }}
 	{{- if $show }}
 		{{- $show = not (partial "_relearn/pageIsSpecial.gotmpl" .) }}
 	{{- end }}
 	{{- if $show }}
+		{{- $href := printf "%s?format=print" .Path }}
 		{{- partial "topbar/func/button.html" (dict
 			"page" .
 			"class" "topbar-button-print"
-			"href" $printFormat.RelPermalink
+			"href" $href
 			"icon" "print"
 			"onwidths" $onwidths
 			"onwidthm" $onwidthm

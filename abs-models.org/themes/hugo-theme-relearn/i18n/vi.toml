@@ -40,6 +40,12 @@ other = "Đi đến trang chủ"
 [Edit-this-page]
 other = "Biên tập"
 
+[Show-Markdown]
+other = "Hiển thị Markdown"
+
+[Show-source]
+other = "Hiển thị mã nguồn"
+
 [Print-this-chapter]
 other = "In toàn bộ chương"
 
@@ -126,3 +132,6 @@ other = "Thể loại"
 
 [category]
 other = "Loại"
+
+[Details]
+other = "Chi tiết"

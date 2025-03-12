@@ -40,6 +40,12 @@ other = "Přejít na domovskou stránku"
 [Edit-this-page]
 other = "Upravit"
 
+[Show-Markdown]
+other = "Zobrazit Markdown"
+
+[Show-source]
+other = "Zobrazit zdrojový kód"
+
 [Print-this-chapter]
 other = "Vytisknout kapitolu"
 
@@ -123,3 +129,6 @@ other = "Kategorie"
 
 [category]
 other = "Kategorie"
+
+[Details]
+other = "Podrobnosti"

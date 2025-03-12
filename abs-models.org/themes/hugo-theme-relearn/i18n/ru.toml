@@ -40,6 +40,12 @@ other = "Перейти на главную"
 [Edit-this-page]
 other = "редактировать"
 
+[Show-Markdown]
+other = "Показать Markdown"
+
+[Show-source]
+other = "Показать исходный код"
+
 [Print-this-chapter]
 other = "Печать всей главы"
 
@@ -123,3 +129,6 @@ other = "Категории"
 
 [category]
 other = "Категория"
+
+[Details]
+other = "Подробности"
