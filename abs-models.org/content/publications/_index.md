@@ -22,6 +22,9 @@ This page links ABS workshops, as well as selected research papers on the develo
 - **2024** APM Workshop 2024: October 02-04, 2024, Turin,
   Italy. https://edkamb.github.io/APM_24/
 
+- **2025** APM Workshop 2025: October 1-3, 2025, Porto,
+  Portugal. https://apm-workshop.github.io/2025/
+
 ## Case Studies
 
 - G. Turin, A. Borgarelli, S. Donetti, F. Damiani, E. B. Johnsen, and S. L. Tapia Tarifa.  
