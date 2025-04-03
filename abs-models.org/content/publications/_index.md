@@ -8,22 +8,22 @@ This page links ABS workshops, as well as selected research papers on the develo
 
 ## ABS Workshops
 
-- **2017** First International ABS Workshop: May 31--June 2, 2017, Oslo, Norway.
-
-- **2018** Second International ABS Workshop: May 28--May 30, 2018, Darmstadt, Germany.  https://formbar.raillab.de/en/abs2018/
-
-- **2019** Third International ABS Workshop: May 13--May 15, 2019, Amsterdam, The Netherlands.   https://www.cwi.nl/research/groups/formal-methods/events/third-international-workshop-on-the-abs-modeling-language-and-tools
-
-- **2021**  Fourth International ABS Workshop: August 26--August 27, 2021, Virtual.  https://formbar.raillab.de/en/abs-workshop-2021/
-
-- **2023** Fifth International ABS Workshop: October 04-06, 2023, Lyon,
-  France. https://edkamb.github.io/ABS_23/
+- **2025** APM Workshop 2025: October 1-3, 2025, Porto,
+  Portugal. https://apm-workshop.github.io/2025/
 
 - **2024** APM Workshop 2024: October 02-04, 2024, Turin,
   Italy. https://edkamb.github.io/APM_24/
 
-- **2025** APM Workshop 2025: October 1-3, 2025, Porto,
-  Portugal. https://apm-workshop.github.io/2025/
+- **2023** Fifth International ABS Workshop: October 04-06, 2023, Lyon,
+  France. https://edkamb.github.io/ABS_23/
+
+- **2021**  Fourth International ABS Workshop: August 26--August 27, 2021, Virtual.  https://formbar.raillab.de/en/abs-workshop-2021/
+
+- **2019** Third International ABS Workshop: May 13--May 15, 2019, Amsterdam, The Netherlands.   https://www.cwi.nl/research/groups/formal-methods/events/third-international-workshop-on-the-abs-modeling-language-and-tools
+
+- **2018** Second International ABS Workshop: May 28--May 30, 2018, Darmstadt, Germany.  https://formbar.raillab.de/en/abs2018/
+
+- **2017** First International ABS Workshop: May 31--June 2, 2017, Oslo, Norway.
 
 ## Case Studies
 
