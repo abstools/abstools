@@ -63,7 +63,7 @@ aspect GenerateJava {
                 stream.println("}");
 
                 stream.println("public java.lang.String getClassName() { return \"Main\"; }");
-                stream.println("public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
+                stream.println("public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.emptyList(); }");
                 stream.println("public " + mainName + "(" + COG.class.getName() + " cog) { super(cog); }");
                 stream.println("public java.util.List<java.util.Map<java.lang.String, java.lang.Object>> getHttpCallableMethodInfo() { throw new UnsupportedOperationException(\"method 'getHttpCallableMethodInfo' cannot be called on Main block\");} ");
 
