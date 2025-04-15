@@ -47,54 +47,188 @@ Model API:: Interacting with a running ABS model via HTTP requests.
 | Model API
 | -
 | yes
-| -
 | yes
 
 |===
 
+[[sec:java-backend]]
+=== Java Backend
 
-=== Maude Backend
+The Java backend runs ABS models on the JVM by translating them into Java and
+combining them with a runtime library implementing key ABS concepts.
 
-The Maude backend is a high-level, executable semantics in rewriting logic of
-the ABS language.  Due to its relatively compact nature, it serves as a
-test-bed for new language features.
+==== How to run the Java backend
 
-Executing a model on the Maude backend results in a complete snapshot of the system state after execution has finished.
+Compiling all files in the current directory into Java and starting the
+resulting model is done with the following commands:
 
-The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.
+  $ absc --java *.abs -o model.jar
+  $ java -jar model.jar
 
-Features:
+The first command compiles the ABS model, the second command starts Java and
+runs the code contained in `model.jar`.  In case more than one abs file
+contains a main block, an arbitrary main block is executed.
 
-* CPU and bandwidth resources
-* Simulation of resource usage on deployment components
-* Timed semantics
-* Executable formal semantics of the ABS language
+The model accepts a number of command-line arguments; see the output
+of `java -jar model.jar -h` for a list.
 
+The source code of the generated classes can be inspected below the `gen/`
+directory.
 
-==== How to run the Maude backend
+==== Compiling ABS Code from Gradle
 
-Running a model on Maude involves compiling the code, then starting Maude with
-the resulting file as input.
+The gradle build system can compile ABS code by adding the below
+fragment to a Java project's `build.gradle` file.  This does the
+following:
 
-Compiling all files in the current directory into Maude is done with the following command:
+* Downloads the latest released version of the ABS compiler
+* Compiles all ABS files below `src/main/abs`
+* Adds a dependency such that ABS code is compiled before Java code
+* Adds the resulting Java source directory `build/abs` so that
+  generated ABS classes can be referenced from Java.
 
-  $ absc --maude *.abs -o model.maude
+[source,groovy]
+----
+// Use Gradle's cache directory for downloaded files
+ext {
+    absToolsDir = new File("${gradle.gradleUserHomeDir}/caches/abstools")
+}
 
-The model is started with the following commands:
+task downloadAbsFrontend {
+    description 'Downloads the latest absfrontend.jar from GitHub releases'
+    def taskAbsToolsDir = project.ext.absToolsDir
 
-  $ maude
-  Maude> in model.maude
-  Maude> frew start .
+    doLast {
+        logger.lifecycle("Checking for latest absfrontend.jar...")
+        taskAbsToolsDir.mkdirs()
+        def apiUrl = new java.net.URL("https://api.github.com/repos/abstools/abstools/releases/latest")
+        def connection = apiUrl.openConnection()
+        // GitHub API may require a User-Agent header
+        connection.setRequestProperty("User-Agent", "Gradle Build")
 
-This sequence of commands starts Maude, then loads the compiled model and
-starts it.  The resulting output is a dump of the complete system state after
-execution of the model finishes.
+        def jsonText = connection.getInputStream().getText()
+        def json = new groovy.json.JsonSlurper().parseText(jsonText)
+        def version = json.tag_name.toString()
+        if (version.startsWith('v')) {
+            version = version.substring(1)  // Remove 'v' prefix if present
+        }
+        def jarAsset = json.assets.find { it.name == "absfrontend.jar" }
+        if (jarAsset) {
+            def versionedJarName = "absfrontend-${version}.jar"
+            def versionedJarFile = new File(taskAbsToolsDir, versionedJarName)
+            if (versionedJarFile.exists()) {
+                logger.lifecycle("Version ${version} already downloaded at ${versionedJarFile.absolutePath}")
+            } else {
+                def downloadUrl = jarAsset.browser_download_url
+                logger.lifecycle("Found new version ${version} at: ${downloadUrl}")
+                // Delete any previous absfrontend jar files
+                taskAbsToolsDir.listFiles().each { file ->
+                    if (file.name.startsWith("absfrontend-") && file.name.endsWith(".jar")) {
+                        logger.lifecycle("Deleting old version: ${file.name}")
+                        file.delete()
+                    }
+                }
+                def jarConnection = new java.net.URL(downloadUrl).openConnection()
+                jarConnection.setRequestProperty("User-Agent", "Gradle Build")
+                try (def inputStream = jarConnection.getInputStream()) {
+                    java.nio.file.Files.copy(inputStream, versionedJarFile.toPath(),
+                                             java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                }
+                logger.lifecycle("Successfully downloaded absfrontend.jar version ${version} to ${versionedJarFile.absolutePath}")
+            }
+        } else {
+            throw new GradleException("Could not find absfrontend.jar in the latest release")
+        }
+    }
+}
 
-In case of problems, check the following:
+def getLatestAbsFrontendJar() {
+    def dir = project.ext.absToolsDir
+    if (!dir.exists()) {
+        throw new GradleException("Could not find absfrontend.jar")
+    }
+    def jarFiles = dir.listFiles().findAll { file ->
+        file.name.startsWith("absfrontend-") && file.name.endsWith(".jar")
+    }
+    if (jarFiles.isEmpty()) {
+        throw new GradleException("Could not find absfrontend.jar")
+    }
+    // There should be only one
+    return jarFiles[0]
+}
 
-- `absc` should be in the path; check the `PATH` environment variable.
-- `absfrontend.jar` should be in the environment variable `CLASSPATH`.
+// Compile ABS
+task compileAbs(type: Exec, dependsOn: downloadAbsFrontend) {
+    description = 'Compiles ABS.'
+    inputs.dir 'src/main/abs'
+    outputs.dir 'build/abs'
+    commandLine 'java', '-jar', getLatestAbsFrontendJar(), '--java', '-d', 'build/abs/',
+        *fileTree(dir: 'src/main/abs', include: '**/*.abs').collect { it.absolutePath }
+}
 
+// Also, add build/abs to the runtime classpath
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/abs'
+        }
+        runtimeClasspath += files('build/abs')
+    }
+}
+
+tasks.withType(JavaCompile) {
+    dependsOn compileAbs
+    source('build/abs')
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+----
+
+==== Running an ABS Model from Java
+
+An ABS model can be started from a Java program by calling the main
+method of a special class `Main` in the generated Java code.
+
+Here is a simple ABS program that waits for 15 time unites, then prints a greeting.
+
+[source,abs]
+----
+module ABS;
+{
+    await duration(15);
+    println(`Hello world!  The time is $now()$`);
+}
+----
+
+If the generated ABS Java code is included in the Java project's
+source path, this ABS model can be started from Java as follows, and
+the generated output captured in a string:
+
+[source,java]
+----
+package org.example;
+
+public class App {
+    public static void main(String[] args) throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream printStream = new PrintStream(outputStream);
+        PrintStream originalOut = System.out;
+        try {
+            System.setOut(printStream);
+            ABS.Main.main(new String[0]);
+        } finally {
+            System.setOut(originalOut);
+        }
+        System.out.println("Captured Output:");
+        System.out.println(outputStream.toString());
+    }
+}
+----
 
 [[sec:erlang-backend]]
 === Erlang Backend
@@ -161,23 +295,46 @@ To generate code coverage information, compile an abs model with the
 For each `.abs` file, running the model will generate a `.abs.gcov` file in
 the directory `gen/erl/absmodel` after the simulation finishes.
 
-=== Java Backend
+=== Maude Backend
 
-The Java backend runs ABS models on the JVM by translating them into Java and
-combining them with a runtime library implementing key ABS concepts.
+The Maude backend is a high-level, executable semantics in rewriting logic of
+the ABS language.  Due to its relatively compact nature, it serves as a
+test-bed for new language features.
 
-==== How to run the Java backend
+Executing a model on the Maude backend results in a complete snapshot of the system state after execution has finished.
 
-Compiling all files in the current directory into Java and starting the
-resulting model is done with the following commands:
+The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.
 
-  $ absc --java *.abs -o model.jar
-  $ java -jar model.jar
+Features:
 
-The first command compiles the ABS model, the second command starts Java and
-runs the code contained in `model.jar`.  In case more than one abs file
-contains a main block, an arbitrary main block is executed.
+* CPU and bandwidth resources
+* Simulation of resource usage on deployment components
+* Timed semantics
+* Executable formal semantics of the ABS language
 
-The source code of the generated classes can be inspected below the `gen/`
-directory.
+
+==== How to run the Maude backend
+
+Running a model on Maude involves compiling the code, then starting Maude with
+the resulting file as input.
+
+Compiling all files in the current directory into Maude is done with the following command:
+
+  $ absc --maude *.abs -o model.maude
+
+The model is started with the following commands:
+
+  $ maude
+  Maude> in model.maude
+  Maude> frew start .
+
+This sequence of commands starts Maude, then loads the compiled model and
+starts it.  The resulting output is a dump of the complete system state after
+execution of the model finishes.
+
+In case of problems, check the following:
+
+- `absc` should be in the path; check the `PATH` environment variable.
+- `absfrontend.jar` should be in the environment variable `CLASSPATH`.
+
 
