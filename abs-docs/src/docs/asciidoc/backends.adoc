@@ -94,6 +94,12 @@ ext {
     absToolsDir = new File("${gradle.gradleUserHomeDir}/caches/abstools")
 }
 
+dependencies {
+    // Any other dependencies here ...
+    implementation files(getLatestAbsFrontendJar())
+}
+
+
 task downloadAbsFrontend {
     description 'Downloads the latest absfrontend.jar from GitHub releases'
     def taskAbsToolsDir = project.ext.absToolsDir
