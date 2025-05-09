@@ -60,8 +60,8 @@ dependencies {
     implementation 'org.apfloat:apfloat:1.14.0'
     // SQLite library for the Java backend
     implementation 'org.xerial:sqlite-jdbc:3.47.2.0'
-    // Logging backend used by SQLite library
-    implementation 'org.slf4j:slf4j-jdk14:2.0.16'
+    // // Logging backend used by SQLite library
+    // implementation 'org.slf4j:slf4j-jdk14:2.0.16'
     // JSON library for the Java backend Model API
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
 
