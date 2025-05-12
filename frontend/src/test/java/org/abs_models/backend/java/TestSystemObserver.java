@@ -28,7 +28,7 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
             public void taskCreated(TaskView task) {
                 if (mainTask == null) {
                     mainTask = task;
-                    mainTask.registerTaskListener(new EmptyTaskObserver() {
+                    mainTask.registerTaskListener(new DefaultTaskObserver() {
                         @Override
                         public void taskFinished(TaskView task) {
                             if (task == mainTask)

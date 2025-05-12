@@ -65,14 +65,14 @@ import javax.swing.tree.TreePath;
 import org.abs_models.backend.java.lib.runtime.ABSException;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
 import org.abs_models.backend.java.observing.COGView;
+import org.abs_models.backend.java.observing.DefaultSystemObserver;
 import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.ObjectCreationObserver;
 import org.abs_models.backend.java.observing.ObjectView;
-import org.abs_models.backend.java.observing.SystemObserver;
 import org.abs_models.backend.java.utils.ColorUtils;
 import org.abs_models.backend.java.utils.StringUtil;
 
-public class GraphicalDebugger implements SystemObserver {
+public class GraphicalDebugger extends DefaultSystemObserver {
     final DebugWindow window;
     final DebugModel model;
 
@@ -84,21 +84,6 @@ public class GraphicalDebugger implements SystemObserver {
     // only for ad-hoc testing
     public static void main(String[] args) {
         new GraphicalDebugger();
-    }
-
-    @Override
-    public void systemStarted() {
-    }
-
-    @Override
-    public void newCOGCreated(COGView cog, ObjectView initialObject) {
-        model.cogCreated(cog, initialObject);
-    }
-
-    @Override
-    public void systemFinished() {
-        // TODO Auto-generated method stub
-
     }
 
     public static Color getColor(TaskState ts) {
@@ -113,6 +98,11 @@ public class GraphicalDebugger implements SystemObserver {
         case BLOCKED: return ColorUtils.setSaturation(Color.RED, 0.5f);
         default: throw new IllegalArgumentException("Unknown Taskstate " + ts);
         }
+    }
+
+    @Override
+    public void newCOGCreated(COGView cog, ObjectView initialObject) {
+        model.cogCreated(cog, initialObject);
     }
 
     @Override

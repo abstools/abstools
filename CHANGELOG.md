@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+Bug fixes and minor refactorings.
+
 ## [1.10.0] - 2024-11-07
 
 ### Added

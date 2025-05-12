@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.abs_models.backend.java.lib.runtime.ABSException;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
-import org.abs_models.backend.java.observing.EmptyTaskObserver;
+import org.abs_models.backend.java.observing.DefaultTaskObserver;
 import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.GuardView;
 import org.abs_models.backend.java.observing.ObjectCreationObserver;
@@ -165,7 +165,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
     private final TaskBlockingObserver TASK_BLOCKING_OBSERVER = new TaskBlockingObserver();
 
-    class TaskBlockingObserver extends EmptyTaskObserver {
+    class TaskBlockingObserver extends DefaultTaskObserver {
         @Override
         public void taskBlockedOnFuture(TaskView task, FutView fut) {
             synchronized (SequenceDiagramVisualization.this) {
