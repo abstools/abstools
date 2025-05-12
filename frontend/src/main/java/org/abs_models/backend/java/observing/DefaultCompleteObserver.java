@@ -9,7 +9,7 @@ import java.util.List;
 import org.abs_models.backend.java.lib.runtime.ABSException;
 import org.abs_models.backend.java.lib.types.ABSValue;
 
-public class EmptyCompleteObserver implements CompleteObserver {
+public class DefaultCompleteObserver implements CompleteObserver {
 
     @Override
     public void systemStarted() {

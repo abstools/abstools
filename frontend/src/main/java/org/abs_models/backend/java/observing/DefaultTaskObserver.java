@@ -7,11 +7,11 @@ package org.abs_models.backend.java.observing;
 import org.abs_models.backend.java.lib.types.ABSValue;
 
 /**
- * An empty implementation of the {@link TaskObserver} interface
+ * A default implementation of the {@link TaskObserver} interface
  * 
  * @author Jan Schäfer
  */
-public class EmptyTaskObserver implements TaskObserver {
+public class DefaultTaskObserver implements TaskObserver {
 
     @Override
     public void taskStarted(TaskView task) {
