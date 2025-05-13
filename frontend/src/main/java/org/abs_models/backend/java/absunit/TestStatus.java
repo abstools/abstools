@@ -7,7 +7,6 @@ package org.abs_models.backend.java.absunit;
 import java.util.List;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.TaskStackFrameView;
 
 /**
@@ -51,7 +50,7 @@ public class TestStatus {
     private final String className;
 
     /** The value of the parameters of the test method at invocation time */
-    private final List<ABSValue> args;
+    private final List<Object> args;
 
     /*
      * the last executed line of code and the name of the file containing the
@@ -69,7 +68,7 @@ public class TestStatus {
      */
     private final int framesDepth;
 
-    public TestStatus(int id, String method, String className, List<ABSValue> args,
+    public TestStatus(int id, String method, String className, List<Object> args,
             List<? extends TaskStackFrameView> frames, Status status) {
         taskID = id;
         testMethod = method;

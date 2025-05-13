@@ -6,14 +6,12 @@ package org.abs_models.backend.java.observing;
 
 import java.util.List;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public interface ObjectObserver {
 
-    void methodCalled(ObjectView object, String method, List<ABSValue> args);
+    void methodCalled(ObjectView object, String method, List<Object> args);
 
-    void fieldRead(ObjectView object, String field, ABSValue value);
+    void fieldRead(ObjectView object, String field, Object value);
 
-    void fieldUpdated(ObjectView object, String field, ABSValue oldValue, ABSValue newValue);
+    void fieldUpdated(ObjectView object, String field, Object oldValue, Object newValue);
 
 }

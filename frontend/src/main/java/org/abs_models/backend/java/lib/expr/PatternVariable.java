@@ -4,8 +4,6 @@
  */
 package org.abs_models.backend.java.lib.expr;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public class PatternVariable extends Pattern {
     private final String varName;
 
@@ -14,7 +12,7 @@ public class PatternVariable extends Pattern {
     }
 
     @Override
-    public boolean match(ABSValue dt, PatternBinding b) {
+    public boolean match(Object dt, PatternBinding b) {
         b.addBinding(dt);
         return true;
     }

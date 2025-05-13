@@ -19,7 +19,6 @@ import FLDefs.*;
 // from Java
 import abs.backend.java.fli.*;
 import abs.backend.java.lib.runtime.ABSFut;
-import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 
 
@@ -35,27 +34,27 @@ import abs.backend.java.lib.types.ABSUnit;
 public class ForeignClassImpl extends ForeignClass_c {
 
    @Override
-   public ABSUnit fli_m(ABSString s) {
+   public ABSUnit fli_m(String s) {
       System.out.println("Hello ABS, just got "+s+ " from you!");
       return ABSUnit.UNIT;
    }
 
    @Override
-   public ABSString fli_foo(Test t) {
+   public String fli_foo(Test t) {
        if (t.isBar()) {
            System.out.println("Found a Bar with argument "+t.toBar().getArg0());
            return t.toBar().getArg0();
        }
-      return ABSString.fromString("This is Java");
+      return "This is Java";
    }
    
    @Override
-   public ABSUnit fli_visit(List<ABSString> planets) {
+   public ABSUnit fli_visit(List<String> planets) {
        if (planets.isNil())
            System.out.println("Planet list is Empty");
        else {
-           List_Cons<ABSString> cons = planets.toCons();
-           ABSString s = cons.getArg0();
+           List_Cons<String> cons = planets.toCons();
+           String s = cons.getArg0();
            System.out.println("Found planet "+s);
        }
       return null;
@@ -63,7 +62,7 @@ public class ForeignClassImpl extends ForeignClass_c {
 
    @Override
    public ABSUnit fli_aPing(Ping_i p) {
-       ABSFut<ABSString> fut = p.async_ping(ABSString.fromString("Hi Ping!!!"));
+       ABSFut<String> fut = p.async_ping("Hi Ping!!!");
        System.out.println("Waiting for future....");
        System.out.println("Got future: "+fut.get());
       return ABSUnit.UNIT;

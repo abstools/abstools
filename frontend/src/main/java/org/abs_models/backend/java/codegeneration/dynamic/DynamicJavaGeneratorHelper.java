@@ -112,7 +112,7 @@ public class DynamicJavaGeneratorHelper {
         stream.print(")");
     }
 
-    public static void generateTypeParameters(PrintStream stream, Decl dtd, boolean plusExtends) {
+    public static void generateTypeParameters(PrintStream stream, Decl dtd) {
         List<TypeParameterDecl> typeParams = null;
         if (dtd instanceof HasTypeParameters) {
             typeParams = ((HasTypeParameters)dtd).getTypeParameters();
@@ -127,8 +127,6 @@ public class DynamicJavaGeneratorHelper {
                 else
                     stream.print(", ");
                 stream.print(d.getName());
-                if (plusExtends)
-                    stream.print(" extends " + ABSValue.class.getName());
             }
             stream.print(">");
         }
@@ -261,7 +259,7 @@ public class DynamicJavaGeneratorHelper {
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.println("public java.util.List<" + ABSValue.class.getName() + "> getArgs() {");
+        stream.println("public java.util.List<Object> getArgs() {");
         stream.println("return java.util.Arrays.asList(new " + ABSValue.class.getName() + "[] {");
         generateArgStringList(stream, n);
         stream.println("});");

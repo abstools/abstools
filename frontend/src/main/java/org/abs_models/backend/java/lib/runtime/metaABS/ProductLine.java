@@ -13,9 +13,7 @@ import org.abs_models.backend.java.lib.runtime.ABSDynamicProductLine;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicReconfiguration;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicRuntime;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class ProductLine {
     private static ABSDynamicClass thisClass;
@@ -46,7 +44,7 @@ public class ProductLine {
         
         thisClass.addMethod(/*ABSDynamicProduct*/ "getCurrentProduct", new ABSClosure() {
             @Override
-            public ABSDynamicProduct exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicProduct exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicProduct currentProd = getDynamicRuntime().getDSPL().getCurrentProduct();
                 return currentProd;
             }
@@ -54,16 +52,16 @@ public class ProductLine {
 
         thisClass.addMethod(/*ABSDynamicProduct*/ "getProduct", new ABSClosure() {
             @Override
-            public ABSDynamicProduct exec(ABSDynamicObject t, ABSValue... params) {
-                ABSString name = (ABSString)params[0];
-                ABSDynamicProduct product = getDynamicRuntime().getDSPL().getProduct(name.getString());
+            public ABSDynamicProduct exec(ABSDynamicObject t, Object... params) {
+                String name = (String)params[0];
+                ABSDynamicProduct product = getDynamicRuntime().getDSPL().getProduct(name);
                 return product;
             }
         });
         
         thisClass.addMethod(/*ABSUnit*/ "reconfigure", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicProduct targetProd = (ABSDynamicProduct)params[0];
                 ABSDynamicProductLine pl = getDynamicRuntime().getDSPL();
                 pl.reconfigure(targetProd);
@@ -73,7 +71,7 @@ public class ProductLine {
         
         thisClass.addMethod(/*ABSUnit*/ "addProduct", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicProduct product = (ABSDynamicProduct)params[0];
                 getDynamicRuntime().getDSPL().addProduct(product);
                 return ABSUnit.UNIT;
@@ -82,7 +80,7 @@ public class ProductLine {
         
         thisClass.addMethod(/*ABSUnit*/ "removeProduct", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicProduct product = (ABSDynamicProduct)params[0];
                 getDynamicRuntime().getDSPL().removeProduct(product);
                 return ABSUnit.UNIT;
@@ -91,7 +89,7 @@ public class ProductLine {
         
         thisClass.addMethod(/*ABSUnit*/ "addReconfiguration", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration recf = (ABSDynamicReconfiguration)params[0];
                 getDynamicRuntime().getDSPL().addReconfiguration(recf);
                 return ABSUnit.UNIT;
@@ -100,7 +98,7 @@ public class ProductLine {
         
         thisClass.addMethod(/*ABSUnit*/ "removeReconfiguration", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration recf = (ABSDynamicReconfiguration)params[0];
                 getDynamicRuntime().getDSPL().removeReconfiguration(recf);
                 return ABSUnit.UNIT;

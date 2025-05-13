@@ -20,8 +20,6 @@ import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSRational;
-import org.abs_models.backend.java.lib.types.ABSString;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
 import org.abs_models.common.Constants;
 import org.abs_models.frontend.analyser.AnnotationHelper;
@@ -133,8 +131,7 @@ public class JavaGeneratorHelper {
         stream.print(")");
     }
 
-    public static void generateTypeParameters(PrintStream stream, Decl dtd,
-            boolean plusExtends) {
+    public static void generateTypeParameters(PrintStream stream, Decl dtd) {
         List<TypeParameterDecl> typeParams = null;
         if (dtd instanceof HasTypeParameters) {
             typeParams = ((HasTypeParameters)dtd).getTypeParameters();
@@ -149,8 +146,6 @@ public class JavaGeneratorHelper {
                 else
                     stream.print(",");
                 stream.print(d.getName());
-                if (plusExtends)
-                    stream.print(" extends " + ABSValue.class.getName());
             }
             stream.print(">");
         }
@@ -198,7 +193,7 @@ public class JavaGeneratorHelper {
         stream.println("throw new RuntimeException(\"Database file " + dbname + " not found\");");
         stream.println("}");
         stream.println("// Not all databases support reading a resultset in reverse, use accumulator to preserve row order");
-        stream.println("java.util.List<org.abs_models.backend.java.lib.types.ABSValue> acc = new java.util.ArrayList<>();");
+        stream.println("java.util.List<Object> acc = new java.util.ArrayList<>();");
         stream.println("ABS.StdLib.List result = new ABS.StdLib.List_Nil();");
         stream.println("String connection_string = \"jdbc:sqlite:" + dbname + "\";");
         stream.println("try (java.sql.Connection connection = java.sql.DriverManager.getConnection(connection_string);");
@@ -228,7 +223,7 @@ public class JavaGeneratorHelper {
             } else if (t.isStringType()) {
                 stream.print("statement.setString(" + (i - 2) + ", (");
                 e.generateJava(stream);
-                stream.println(").getString());");
+                stream.println("));");
             } else {
                 // unreachable because of type checking:
                 // Typecheckerhelper.isValidSQLite3ArgumentType won't let us
@@ -252,7 +247,7 @@ public class JavaGeneratorHelper {
             } else if (query_type.isRatType()) {
                 stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(1))");
             } else if (query_type.isStringType()) {
-                stream.print(ABSString.class.getName() + ".fromString(rs.getString(1))");
+                stream.print("rs.getString(1)");
             } else {
                 // unreachable: query result is type-checked before code
                 // generation starts
@@ -282,7 +277,7 @@ public class JavaGeneratorHelper {
                 } else if (t.isRatType()) {
                     stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(" + i + "))");
                 } else if (t.isStringType()) {
-                    stream.print(ABSString.class.getName() + ".fromString(rs.getString(" + i + "))");
+                    stream.print("rs.getString(" + i + ")");
                 } else {
                     // unreachable because of type checking
                 }
@@ -295,7 +290,7 @@ public class JavaGeneratorHelper {
         stream.println("System.err.println(e);");
         stream.println("System.exit(1);");
         stream.println("}");
-        stream.println("for (org.abs_models.backend.java.lib.types.ABSValue row : acc) {");
+        stream.println("for (Object row : acc) {");
         stream.println("result = new ABS.StdLib.List_Cons(row, result);");
         stream.println("}");
         stream.println("return result;");
@@ -366,7 +361,7 @@ public class JavaGeneratorHelper {
                 org.abs_models.backend.java.lib.types.ABSDataType value = this;
                 while (className.equals("ABS.StdLib.Map_InsertAssoc")) {
                     org.abs_models.backend.java.lib.types.ABSDataType entry = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(0); // guaranteed to be Pair
-                    result.putIfAbsent(org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions.toString(entry.getArg(0)).getString(),
+                    result.putIfAbsent(org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions.toString(entry.getArg(0)),
                         org.abs_models.backend.java.lib.runtime.ModelApi.absToJson(entry.getArg(1)));
                     value = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(1);
                     className = value.getClass().getName();
@@ -377,7 +372,7 @@ public class JavaGeneratorHelper {
             stream.println("return java.util.Map.of();");
         } else if (useToString) {
             // no accessors or HTTPName annotations
-            stream.println("return " + ABSBuiltInFunctions.class.getName() + ".toString(this).getString();");
+            stream.println("return " + ABSBuiltInFunctions.class.getName() + ".toString(this);");
         } else {
             stream.println("java.util.HashMap<java.lang.String, java.lang.Object> result = new java.util.HashMap<>();");
             for (int elem = 0; elem < c.getNumConstructorArg(); elem++) {
@@ -581,7 +576,7 @@ public class JavaGeneratorHelper {
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.println("public java.util.List<" + ABSValue.class.getName() + "> getArgs() {");
+        stream.println("public java.util.List<Object> getArgs() {");
         stream.print("return java.util.List.of(");
         generateArgStringList(stream, n);
         stream.println(");");

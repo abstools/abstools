@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.TaskStackFrameView;
 import org.abs_models.backend.java.observing.TaskView;
 
@@ -28,8 +27,8 @@ public class TestModel {
 
         final String testMethod;
         final String className;
-        final List<ABSValue> testMethodArguments;
-        final LinkedList<ABSValue> arguments = new LinkedList<>();
+        final List<Object> testMethodArguments;
+        final LinkedList<Object> arguments = new LinkedList<>();
         if (task.getStack().hasFrames()) {
             final TaskStackFrameView currentF = task.getStack().getCurrentFrame();
             testMethod = currentF.getMethod().getName();

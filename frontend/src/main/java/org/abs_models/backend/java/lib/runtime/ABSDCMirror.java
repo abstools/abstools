@@ -1,12 +1,8 @@
 package org.abs_models.backend.java.lib.runtime;
 
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
-import org.abs_models.backend.java.lib.types.ABSDataType;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSRational;
-import org.abs_models.backend.java.lib.types.ABSString;
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -135,14 +131,12 @@ public class ABSDCMirror {
     }
 
     public String getDescription() {
-        ABSString descriptionRaw;
-	try {
-	    descriptionRaw = (ABSString)GET_FIELD_VALUE.invoke(dc, "description");
-	} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+	    try {
+	        return (String)GET_FIELD_VALUE.invoke(dc, "description");
+	    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
-	}
-        return descriptionRaw.getString();
+	    }
     }
 
     // Find class ABS.DC.DeploymentComponent and needed methods, and the

@@ -8,9 +8,7 @@ import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicDelta;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class Delta {
     private static ABSDynamicClass thisClass;
@@ -32,17 +30,17 @@ public class Delta {
     public static void setupMetaAPI() {
         thisClass.setName("Delta");
 
-        thisClass.addMethod(/*ABSString*/ "getName", new ABSClosure() {
+        thisClass.addMethod("getName", new ABSClosure() {
             @Override
-            public ABSString exec(ABSDynamicObject t, ABSValue... params) {
+            public String exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicDelta delta = (ABSDynamicDelta)t;
-                return ABSString.fromString(delta.getName());
+                return delta.getName();
             }
         });
 
         thisClass.addMethod(/*ABSUnit*/ "apply", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicDelta delta = (ABSDynamicDelta)t;
                 delta.apply();
                 return ABSUnit.UNIT;

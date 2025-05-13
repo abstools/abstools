@@ -7,7 +7,6 @@ package org.abs_models.backend.java.observing;
 import java.util.List;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class DefaultCompleteObserver implements CompleteObserver {
 
@@ -28,15 +27,15 @@ public class DefaultCompleteObserver implements CompleteObserver {
     }
 
     @Override
-    public void methodCalled(ObjectView o, String method, List<ABSValue> args) {
+    public void methodCalled(ObjectView o, String method, List<Object> args) {
     }
 
     @Override
-    public void fieldRead(ObjectView o, String field, ABSValue value) {
+    public void fieldRead(ObjectView o, String field, Object value) {
     }
 
     @Override
-    public void fieldUpdated(ObjectView o, String field, ABSValue oldValue, ABSValue newValue) {
+    public void fieldUpdated(ObjectView o, String field, Object oldValue, Object newValue) {
     }
 
     @Override

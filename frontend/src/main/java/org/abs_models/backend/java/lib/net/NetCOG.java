@@ -14,7 +14,6 @@ import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.runtime.Task;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 /**
  * A NET-aware COG
@@ -22,8 +21,8 @@ import org.abs_models.backend.java.lib.types.ABSValue;
  */
 public class NetCOG extends COG {
     private NetNode node;
-    private final Map<Promise, ABSValue> promises = new HashMap<>();
-    private final Map<Promise, ABSFut<? super ABSValue>> futureMap
+    private final Map<Promise, Object> promises = new HashMap<>();
+    private final Map<Promise, ABSFut<Object>> futureMap
         = new HashMap<>();
 
     public NetCOG(NetNode node, ABSNetRuntime runtime, Class<?> clazz) {
@@ -32,18 +31,21 @@ public class NetCOG extends COG {
     }
 
     synchronized void processMsg(Msg msg) {
-        if (msg instanceof CallMsg) {
-            CallMsg cm = (CallMsg) msg;
-            // FIXME: create task and replace promises with futures
-            Task<?> task = new Task(cm.call);
-            addTask(task);
-        } else {
-            PromiseMsg pm = (PromiseMsg) msg;
-            promises.put(pm.promise, pm.value);
-            ABSFut<? super ABSValue> f = futureMap.get(pm.promise);
-            if (f != null) {
-                f.resolve(pm.value);
-            }
+        switch (msg) {
+            case CallMsg cm:
+                // FIXME: create task and replace promises with futures
+                Task<?> task = new Task<>(cm.call);
+                addTask(task);
+                break;
+            case PromiseMsg pm:
+                promises.put(pm.promise, pm.value);
+                ABSFut<Object> f = futureMap.get(pm.promise);
+                if (f != null) {
+                    f.resolve(pm.value);
+                }
+                break;
+            default:
+            // nothing to do
         }
     }
 
@@ -55,12 +57,12 @@ public class NetCOG extends COG {
         return node;
     }
 
-    public synchronized void registerFuture(NetFut<? super ABSValue> fut) {
+    public synchronized void registerFuture(NetFut<Object> fut) {
         if (futureMap.containsKey(fut.getPromise()))
             throw new IllegalStateException("Future for promises already existed");
 
         futureMap.put(fut.getPromise(), fut);
-        ABSValue v = promises.get(fut.getPromise());
+        Object v = promises.get(fut.getPromise());
         if (v != null) {
             fut.resolve(v);
             return;

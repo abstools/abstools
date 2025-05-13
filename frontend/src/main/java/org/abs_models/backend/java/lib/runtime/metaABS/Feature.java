@@ -8,8 +8,6 @@ import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicFeature;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
-import org.abs_models.backend.java.lib.types.ABSString;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class Feature {
 
@@ -34,19 +32,19 @@ public class Feature {
 
         thisClass.addMethod(/*ABSString*/ "getName", new ABSClosure() {
             @Override
-            public ABSString exec(ABSDynamicObject t, ABSValue... params) {
+            public String exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicFeature f = (ABSDynamicFeature)t;
-                return ABSString.fromString(f.getName());
+                return f.getName();
             }
         });
 
         thisClass.addMethod(/*ABSString*/ "getAttributes", new ABSClosure() {
             @Override
-            public ABSString exec(ABSDynamicObject t, ABSValue... params) {
+            public String exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicFeature f = (ABSDynamicFeature)t;
 
                 //TODO
-                return ABSString.fromString("Not Implemented Yet");
+                return "Not Implemented Yet";
             }
         });
 

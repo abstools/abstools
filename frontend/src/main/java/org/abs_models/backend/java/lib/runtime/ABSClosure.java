@@ -5,7 +5,6 @@
 package org.abs_models.backend.java.lib.runtime;
 
 import org.abs_models.backend.java.lib.runtime.metaABS.Method;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public abstract class ABSClosure extends ABSDynamicObject {
 
@@ -14,6 +13,6 @@ public abstract class ABSClosure extends ABSDynamicObject {
     }
 
     // Run the method; to be implemented by subclasses
-    public abstract ABSValue exec(ABSDynamicObject t, ABSValue... params);
+    public abstract Object exec(ABSDynamicObject t, Object... params);
 
 }

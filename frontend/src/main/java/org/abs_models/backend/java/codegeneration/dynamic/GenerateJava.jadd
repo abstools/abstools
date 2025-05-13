@@ -139,9 +139,9 @@ aspect GenerateJavaDynamic_Core {
         DynamicJavaGeneratorHelper.generateHelpLine(this,stream);
 
         stream.print("public final class " + constructorClassName);
-        DynamicJavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, true);
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
         stream.print(" extends " + dataTypeDecl.getName());
-        DynamicJavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, false);
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
 
         stream.println(" {");
 
@@ -174,7 +174,7 @@ aspect GenerateJavaDynamic_Core {
         }
         stream.println("}");
 
-        stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return new " + ABSValue.class.getName() + "[] { ");
+        stream.print("protected Object[] getArgs() { return new " + ABSValue.class.getName() + "[] { ");
         i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
             if (i > 0)
@@ -279,7 +279,7 @@ aspect GenerateJavaDynamic_Core {
         DynamicJavaGeneratorHelper.generateHelpLine(this, stream);
 
         stream.print("public abstract class " + getName());
-        DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, true);
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream, this);
 
         stream.println(" extends " + ABSAlgebraicDataType.class.getName() + " {");
 
@@ -288,7 +288,7 @@ aspect GenerateJavaDynamic_Core {
                     + "() { return this instanceof " + JavaBackend.getConstructorName(c)
                     + "; }");
             stream.print("public final " + JavaBackend.getConstructorName(c));
-            DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, false);
+            DynamicJavaGeneratorHelper.generateTypeParameters(stream, this);
             stream.println(" to" + c.getName()
                     + "() { return (" + JavaBackend.getConstructorName(c) + ") this; }");
 
@@ -307,7 +307,7 @@ aspect GenerateJavaDynamic_Core {
         stream.println(" implements " + ABSFunction.class.getName() + " {");
         stream.println("private " + className + "() { }");
         stream.print("public static ");
-        DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, true);
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream, this);
 
         getTypeUse().generateJavaDynamic(stream);
         stream.print(" apply");
@@ -903,10 +903,9 @@ aspect GenerateJavaDynamic_Core {
     }
 
     public void StringLiteral.generateJavaDynamic(PrintStream stream) {
-        stream.print(ABSString.class.getName());
-        stream.print(".fromString(\"");
+        stream.print("\"");
         DynamicJavaGeneratorHelper.printEscapedString(stream, getContent());
-        stream.print("\")");
+        stream.print("\"");
     }
 
     public void ListLiteral.generateJavaDynamic(PrintStream stream) {

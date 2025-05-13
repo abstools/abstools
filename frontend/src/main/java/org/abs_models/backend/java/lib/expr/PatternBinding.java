@@ -6,16 +6,14 @@ package org.abs_models.backend.java.lib.expr;
 
 import java.util.ArrayList;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public class PatternBinding {
-    ArrayList<ABSValue> binding = new ArrayList<>();
+    ArrayList<Object> binding = new ArrayList<>();
 
-    public void addBinding(ABSValue dt) {
+    public void addBinding(Object dt) {
         binding.add(dt);
     }
 
-    public ABSValue getBinding(int i) {
+    public Object getBinding(int i) {
         return binding.get(i);
     }
 }

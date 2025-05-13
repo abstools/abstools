@@ -6,8 +6,6 @@ package org.abs_models.backend.java.observing;
 
 import java.util.Set;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 /**
  * Represents a single stack frame of a method invocation.
  * A stack frame is a map from variable names to values.
@@ -34,7 +32,7 @@ public interface TaskStackFrameView {
      * @param variableName the name of the variable to get the value of
      * @return the value of variable variableName
      */
-    public ABSValue getValue(String variableName);
+    public Object getValue(String variableName);
     
     /** 
      * Returns the method of this stack frame

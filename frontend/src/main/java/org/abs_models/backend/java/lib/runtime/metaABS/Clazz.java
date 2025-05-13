@@ -7,9 +7,7 @@ package org.abs_models.backend.java.lib.runtime.metaABS;
 import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class Clazz {
     private static ABSDynamicClass thisClass;
@@ -31,41 +29,41 @@ public class Clazz {
     public static void setupMetaAPI() {
         thisClass.setName("Class");
 
-        thisClass.addMethod(/*ABSString*/ "getName", new ABSClosure() {
+        thisClass.addMethod("getName", new ABSClosure() {
             @Override
-            public ABSString exec(ABSDynamicObject t, ABSValue... params) {
+            public String exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)t.getFieldValue_Internal("class");
-                return ABSString.fromString(cls.getName());
+                return cls.getName();
             }
         });
 
         thisClass.addMethod(/*ABSClosure*/ "getMethod", new ABSClosure() {
             @Override
-            public ABSDynamicObject exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicObject exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)t.getFieldValue_Internal("class");
-                ABSString name = (ABSString)params[0];
-                ABSClosure method = cls.getMethod(name.getString());
+                String name = (String)params[0];
+                ABSClosure method = cls.getMethod(name);
                 return method;
             }
         });
 
         thisClass.addMethod(/*ABSUnit*/ "addMethod", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)t.getFieldValue_Internal("class");
-                ABSString name = (ABSString)params[0];
+                String name = (String)params[0];
                 ABSClosure method = (ABSClosure)((ABSDynamicObject)params[1]).getFieldValue_Internal("method");
-                cls.addMethod(name.getString(), method);
+                cls.addMethod(name, method);
                 return ABSUnit.UNIT;
             }
         });
 
         thisClass.addMethod(/*ABSUnit*/ "removeMethod", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)t.getFieldValue_Internal("class");
-                ABSString name = (ABSString)params[0];
-                cls.removeMethod(name.getString());
+                String name = (String)params[0];
+                cls.removeMethod(name);
                 return ABSUnit.UNIT;
             }
         });

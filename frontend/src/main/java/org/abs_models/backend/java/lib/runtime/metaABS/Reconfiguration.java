@@ -13,9 +13,7 @@ import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicProduct;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicReconfiguration;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicUpdate;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.common.ListUtils;
 
 public class Reconfiguration {
@@ -43,17 +41,17 @@ public class Reconfiguration {
          * MetaABS Reconfiguration API -- cf. abslang.abs module ABS.Meta 
          */
         
-        thisClass.addMethod(/*ABSString*/ "getName", new ABSClosure() {
+        thisClass.addMethod("getName", new ABSClosure() {
             @Override
-            public ABSString exec(ABSDynamicObject t, ABSValue... params) {
+            public String exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
-                return ABSString.fromString(thisR.getName());
+                return thisR.getName();
             }
         });
 
         thisClass.addMethod(/*ABSDynamicProduct*/ "getCurrentProduct", new ABSClosure() {
             @Override
-            public ABSDynamicProduct exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicProduct exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
                 return thisR.getCurrentProduct();
             }
@@ -61,7 +59,7 @@ public class Reconfiguration {
 
         thisClass.addMethod(/*ABSUnit*/ "setCurrentProduct", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
                 ABSDynamicProduct prod = (ABSDynamicProduct)params[0];
                 thisR.setCurrentProduct(prod);
@@ -71,7 +69,7 @@ public class Reconfiguration {
 
         thisClass.addMethod(/*ABSDynamicProduct*/ "getTargetProduct", new ABSClosure() {
             @Override
-            public ABSDynamicProduct exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicProduct exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
                 return thisR.getTargetProduct();
             }
@@ -79,7 +77,7 @@ public class Reconfiguration {
 
         thisClass.addMethod(/*ABSUnit*/ "setTargetProduct", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
                 ABSDynamicProduct prod = (ABSDynamicProduct)params[0];
                 thisR.setTargetProduct(prod);
@@ -89,7 +87,7 @@ public class Reconfiguration {
         
         thisClass.addMethod(/*List<ABSDynamicDelta>*/ "getDeltas", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
                 List<ABSDynamicDelta> deltas = thisR.getDeltas();
                 return ListUtils.toABSList(deltas);
@@ -98,7 +96,7 @@ public class Reconfiguration {
 
         thisClass.addMethod(/*List<ABSDynamicDelta>*/ "setDeltas", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
                 // TODO
                 return ABSUnit.UNIT;
@@ -107,7 +105,7 @@ public class Reconfiguration {
 
         thisClass.addMethod(/*ABSDynamicUpdate*/ "getStateUpdate", new ABSClosure() {
             @Override
-            public ABSDynamicUpdate exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicUpdate exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
                 return thisR.getUpdate();
             }
@@ -115,7 +113,7 @@ public class Reconfiguration {
         
         thisClass.addMethod(/*List<ABSDynamicDelta>*/ "setStateUpdate", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicReconfiguration thisR = (ABSDynamicReconfiguration)t;
                 ABSDynamicUpdate upd = (ABSDynamicUpdate)params[0];
                 thisR.setUpdate(upd);

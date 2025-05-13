@@ -20,7 +20,6 @@ import org.abs_models.backend.java.lib.runtime.ABSThread;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.types.ABSClass;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.ClassDecl;
@@ -242,7 +241,7 @@ public class ClassDeclGenerator {
     }
 
     private void generateGetFieldValueMethod() {
-        stream.println("protected final " + ABSValue.class.getName() + " getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
+        stream.println("protected final Object getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
         for (ParamDecl p : decl.getParams()) {
             stream.println("if (__ABS_fieldName.equals(\"" + p.getName() + "\")) return " + JavaBackend.getVariableName(p.getName()) + ";");
         }

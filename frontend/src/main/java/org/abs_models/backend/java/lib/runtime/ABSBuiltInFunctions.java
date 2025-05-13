@@ -24,7 +24,6 @@ import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSFloat;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
 
@@ -34,16 +33,16 @@ public class ABSBuiltInFunctions {
 
     private static final PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
 
-    public static ABSInteger strlen(ABSString s) {
-        return s.strlen();
+    public static ABSInteger strlen(String s) {
+        return ABSInteger.fromInt(s.length());
     }
 
-    public static ABSString substr(ABSString s, ABSInteger from, ABSInteger length) {
-        return s.substr(from, length);
+    public static String substr(String s, ABSInteger from, ABSInteger length) {
+        return s.substring(from.toInt(), from.toInt() + length.toInt());
     }
 
-    public static ABSUnit print(ABSString s) {
-        out.print(s.getString());
+    public static ABSUnit print(String s) {
+        out.print(s);
         return ABSUnit.UNIT;
     }
 
@@ -85,11 +84,11 @@ public class ABSBuiltInFunctions {
         return ABSThread.getCurrentCOG().getDC();
     }
 
-    public static <T> ABSString toString(T t) {
+    public static <T> String toString(T t) {
         if (t == null) {
-            return ABSString.fromString("null");
+            return "null";
         } else {
-            return ABSString.fromString(t.toString());
+            return t.toString();
         }
     }
 
@@ -97,8 +96,8 @@ public class ABSBuiltInFunctions {
      * functions related to user-defined schedulers (see abslang, module
      * ABS.Scheduler)
      */
-    public static ABSString method(ABSProcess p) {
-        return ABSString.fromString(p.getMethodName());
+    public static String method(ABSProcess p) {
+        return p.getMethodName();
     }
 
     public static ABSDataType arrival(ABSProcess p) {
@@ -154,11 +153,11 @@ public class ABSBuiltInFunctions {
     public static <T> ABSDynamicObject reflect(T t) {
         String name = "$mirror";
         try {
-            ABSValue existingMirror = ((ABSDynamicObject) t).getFieldValue(name);
+            Object existingMirror = ((ABSDynamicObject) t).getFieldValue(name);
             return (ABSDynamicObject) existingMirror;
         } catch (NoSuchFieldException e) {
             ABSDynamicObject mirror = new ABSDynamicObject(ObjectMirror.singleton());
-            mirror.setFieldValue("object", (ABSValue) t);
+            mirror.setFieldValue("object", t);
             ((ABSDynamicObject) t).setFieldValue(name, mirror);
             return mirror;
         }
@@ -172,16 +171,16 @@ public class ABSBuiltInFunctions {
     /*
      * Convenience functions, to be removed
      */
-    public static ABSUnit println(ABSString s) {
-        out.println(s.getString());
+    public static ABSUnit println(String s) {
+        out.println(s);
         return ABSUnit.UNIT;
     }
 
-    public static ABSString readln() {
+    public static String readln() {
         try (Scanner scanner = new Scanner(System.in)) {
-	    String line = scanner.nextLine();
-	    return ABSString.fromString(line.trim());
-	}
+	        String line = scanner.nextLine();
+	        return line.trim();
+	    }
     }
 
     /*

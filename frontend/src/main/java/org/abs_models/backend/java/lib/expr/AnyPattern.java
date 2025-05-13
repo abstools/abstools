@@ -4,12 +4,10 @@
  */
 package org.abs_models.backend.java.lib.expr;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public class AnyPattern extends Pattern {
 
     @Override
-    public boolean match(ABSValue dt, PatternBinding binding) {
+    public boolean match(Object dt, PatternBinding binding) {
         return true;
     }
 

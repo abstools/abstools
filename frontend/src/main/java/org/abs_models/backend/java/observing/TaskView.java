@@ -7,7 +7,6 @@ package org.abs_models.backend.java.observing;
 import java.util.List;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public interface TaskView {
     /**
@@ -32,7 +31,7 @@ public interface TaskView {
 
     String getMethodName();
 
-    List<ABSValue> getArgs();
+    List<Object> getArgs();
 
     FutView getFuture();
 

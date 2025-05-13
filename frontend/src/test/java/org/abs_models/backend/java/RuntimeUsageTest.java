@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.GuardView;
@@ -173,7 +172,7 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
     }
 
     @Override
-    public void localVariableChanged(TaskStackFrameView stackFrame, String n, ABSValue v) {
+    public void localVariableChanged(TaskStackFrameView stackFrame, String n, Object v) {
         System.out.println(name+":task "+stackFrame.getStack().getTask().getID()+": local variable "+n+" = "+v);
         
     }

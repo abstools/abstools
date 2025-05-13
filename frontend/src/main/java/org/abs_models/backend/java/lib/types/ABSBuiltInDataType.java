@@ -14,5 +14,4 @@ public abstract class ABSBuiltInDataType extends ABSDataType {
     public String getConstructorName() {
         return constructorName;
     }
-
 }

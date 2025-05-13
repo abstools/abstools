@@ -45,12 +45,12 @@ public class ListUtils {
     /*
      * Transform a java.util.List into an ABS.StdLib.List
      */
-    public static ABSValue toABSList(java.util.List<? extends ABSValue> l) {
+    public static ABSValue toABSList(java.util.List<?> l) {
         if (l.isEmpty()) {
             return DynamicClassUtils.instance("ABS.StdLib.List_Nil");
         } else {
-            ArrayList<ABSValue> ml = new ArrayList<>(l); // make sure we can use remove()
-            ABSValue head = ml.remove(0);
+            ArrayList<Object> ml = new ArrayList<>(l); // make sure we can use remove()
+            Object head = ml.remove(0);
             return DynamicClassUtils.instance("ABS.StdLib.List_Cons", head, toABSList(ml));
         }
     }
@@ -58,11 +58,11 @@ public class ListUtils {
     /*
      * Transform a java.util.Set into an ABS.StdLib.Set
      */
-    public static ABSValue toABSSet(java.util.Set<? extends ABSValue> set) {
+    public static ABSValue toABSSet(java.util.Set<?> set) {
         if (set.isEmpty()) {
             return DynamicClassUtils.instance("ABS.StdLib.Set_EmptySet");
         } else {
-            ABSValue value = set.iterator().next();
+            Object value = set.iterator().next();
             set.remove(value);
             return DynamicClassUtils.instance("ABS.StdLib.Set_Insert", value, toABSSet(set));
         }

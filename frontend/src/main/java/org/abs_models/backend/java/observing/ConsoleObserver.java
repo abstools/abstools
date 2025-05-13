@@ -7,7 +7,6 @@ package org.abs_models.backend.java.observing;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.utils.StringUtil;
 
 /**
@@ -43,7 +42,7 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     }
     
     @Override
-    public void methodCalled(ObjectView object, String method, List<ABSValue> args) {
+    public void methodCalled(ObjectView object, String method, List<Object> args) {
         show("Method called: "+method+"("+StringUtil.iterableToString(args, ",")+")");
     }
     
@@ -70,7 +69,7 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     }
 
     @Override
-    public void onResolved(FutView fut, ABSValue value) {
+    public void onResolved(FutView fut, Object value) {
         show("Future["+fut.getID()+"] resolved with value '"+value+"'");
     }
 
@@ -111,7 +110,7 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     }
 
     @Override
-    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, Object v) {
         // TODO Auto-generated method stub
         
     }

@@ -70,7 +70,7 @@ aspect GenerateJava {
                 // main block
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
                 stream.println("// Create initial DC, hook it up to the initial cog");
-                stream.println(ABSInterface.class.getName() + " __main_block_dc = ABS.DC.DeploymentComponent_c.createNewLocalObject(" + ABSString.class.getName() + ".fromString(\"Initial DC\"), ABS.StdLib.map_f.apply(new ABS.StdLib.List_Nil<>()));");
+                stream.println(ABSInterface.class.getName() + " __main_block_dc = ABS.DC.DeploymentComponent_c.createNewLocalObject(\"Initial DC\", ABS.StdLib.map_f.apply(new ABS.StdLib.List_Nil<>()));");
                 stream.println(ABSThread.class.getName() + ".getCurrentCOG().setDCfromMainBlock(__main_block_dc);");
                 block.generateJava(stream);
                 stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
@@ -113,13 +113,13 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateHelpLine(this,stream);
 
         stream.print("public final class " + constructorClassName);
-        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, true);
+        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
         stream.print(" extends " + dataTypeDecl.getName());
-        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, false);
+        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
 
         stream.println(" {");
 
-        stream.println("public final " + ABSValue.class.getName() + "[] allArgs;");
+        stream.println("public final Object[] allArgs;");
 
         stream.print("public " + constructorClassName + "(");
         boolean first = true;
@@ -134,7 +134,7 @@ aspect GenerateJava {
             i++;
         }
         stream.println(") {");
-        stream.print("allArgs = new " + ABSValue.class.getName() + "[] { ");
+        stream.print("allArgs = new Object[] { ");
         i=0;
         for (ConstructorArg u : getConstructorArgs()) {
             if (i > 0)
@@ -145,7 +145,7 @@ aspect GenerateJava {
         stream.println(" };");
         stream.println("}");
 
-        stream.println("protected " + ABSValue.class.getName() + "[] getArgs() { return allArgs; }");
+        stream.println("protected Object[] getArgs() { return allArgs; }");
 
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";}");
 
@@ -171,13 +171,13 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateHelpLine(this,stream);
 
         stream.print("public final class " + constructorClassName);
-        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, true);
+        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
         stream.print(" extends ABS.StdLib.Exception");
-        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, false);
+        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
 
         stream.println(" {");
 
-        stream.println("public final " + ABSValue.class.getName() + "[] allArgs;");
+        stream.println("public final Object[] allArgs;");
 
         stream.print("public " + constructorClassName + "(");
         boolean first = true;
@@ -192,7 +192,7 @@ aspect GenerateJava {
             i++;
         }
         stream.println(") {");
-        stream.print("allArgs = new " + ABSValue.class.getName() + "[] { ");
+        stream.print("allArgs = new Object[] { ");
         i=0;
         for (ConstructorArg u : getConstructorArgs()) {
             if (i > 0)
@@ -203,7 +203,7 @@ aspect GenerateJava {
         stream.println(" };");
         stream.println("}");
 
-        stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return allArgs; }");
+        stream.print("protected Object[] getArgs() { return allArgs; }");
 
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";} ");
 
@@ -281,7 +281,7 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateHelpLine(this,stream);
 
         stream.print("public abstract class " + getName());
-        JavaGeneratorHelper.generateTypeParameters(stream,this, true);
+        JavaGeneratorHelper.generateTypeParameters(stream,this);
 
         stream.println(" extends " + ABSAlgebraicDataType.class.getName() + " {");
 
@@ -290,7 +290,7 @@ aspect GenerateJava {
                     "() { return this instanceof " + JavaBackend.getConstructorName(c)+
                     "; }");
             stream.print("public final " + JavaBackend.getConstructorName(c));
-            JavaGeneratorHelper.generateTypeParameters(stream,this, false);
+            JavaGeneratorHelper.generateTypeParameters(stream,this);
             stream.println(" to" + c.getName()+
                     "() { return (" + JavaBackend.getConstructorName(c) + ") this; }");
 
@@ -319,7 +319,7 @@ aspect GenerateJava {
         stream.println(" implements " + ABSFunction.class.getName() + " {");
         stream.println("private " + className + "() { }");
         stream.print("public static ");
-        JavaGeneratorHelper.generateTypeParameters(stream,this, true);
+        JavaGeneratorHelper.generateTypeParameters(stream,this);
 
         getTypeUse().generateJava(stream);
         stream.print(" apply");
@@ -1013,10 +1013,9 @@ aspect GenerateJava {
     }
 
     public void StringLiteral.generateJava(PrintStream stream) {
-        stream.print(ABSString.class.getName());
-        stream.print(".fromString(\"");
+        stream.print("\"");
         JavaGeneratorHelper.printEscapedString(stream, getContent());
-        stream.print("\")");
+        stream.print("\"");
     }
 
     public void ListLiteral.generateJava(PrintStream stream) {
@@ -1054,10 +1053,18 @@ aspect GenerateJava {
     }
 
     public void AddAddExp.generateJava(PrintStream stream) {
-        getLeft().generateJava(stream);
-        stream.print(".add(");
-        getRight().generateJava(stream);
-        stream.print(")");
+        if (getLeft().getType().isStringType()) {
+            stream.print("(");
+            getLeft().generateJava(stream);
+            stream.print("+");
+            getRight().generateJava(stream);
+            stream.print(")");
+        } else {
+            getLeft().generateJava(stream);
+            stream.print(".add(");
+            getRight().generateJava(stream);
+            stream.print(")");
+        }
     }
 
     public void SubAddExp.generateJava(PrintStream stream) {
