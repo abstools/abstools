@@ -17,7 +17,6 @@ import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.runtime.Logging;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.SimpleTaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
@@ -44,7 +43,7 @@ public class Cog {
 
         thisClass.addMethod(/*List<Process>*/ "getQueue", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
 
                 // TODO
                 return ABSUnit.UNIT;
@@ -53,7 +52,7 @@ public class Cog {
 
         thisClass.addMethod(/*ABSUnit*/ "info", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 COG cog = (COG)t.getFieldValue_Internal("cog");
 
                 System.out.println("Cog scheduler " + cog.getScheduler().toString());
@@ -70,7 +69,7 @@ public class Cog {
 
         thisClass.addMethod(/*ABSUnit*/ "setScheduler", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 COG cog = (COG)t.getFieldValue_Internal("cog");
                 if (! (cog.getScheduler() instanceof SimpleTaskScheduler)) {
                     throw new DynamicException("For user-defined scheduling to work, the Scheduler must be an instance of " + SimpleTaskScheduler.class.getName() + " (use \"-taskscheduler=simple\")");

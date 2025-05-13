@@ -6,9 +6,9 @@ package org.abs_models.backend.java.lib.types;
 
 public abstract class ABSDataType implements ABSValue {
 
-    private static final ABSValue[] NO_ARGS = new ABSValue[0];
+    private static final Object[] NO_ARGS = new Object[0];
 
-    protected ABSValue[] getArgs() {
+    protected Object[] getArgs() {
         return NO_ARGS;
     }
 
@@ -18,7 +18,7 @@ public abstract class ABSDataType implements ABSValue {
      * @return the i'th constructor argument of this data value
      * @throws IllegalArgumentException if {@code i < 0 or i >= getNumArgs()}
      */
-    public ABSValue getArg(int i) {
+    public Object getArg(int i) {
        if (i < 0 || i >= getNumArgs()) throw new IllegalArgumentException(i+ " is not a valid constructor argument index");
        return getArgs()[i];
     }
@@ -38,16 +38,16 @@ public abstract class ABSDataType implements ABSValue {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getConstructorName());
-        ABSValue[] args = getArgs();
+        Object[] args = getArgs();
         if (args.length > 0) {
             sb.append('(');
             int i = 0;
-            for (ABSValue v : args) {
+            for (Object v : args) {
                 if (i > 0) {
                     sb.append(',');
                 }
                 sb.append(switch (v) {
-                    case ABSString s -> "\"" + s.toString() + "\"";
+                    case String s -> "\"" + s.toString() + "\"";
                     default -> v.toString();
                 });
                 i++;

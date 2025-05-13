@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+The Java backend used subclasses of `ABSValue` to wrap instances of
+String, boolean etc., unwrapping them for all computations.  Use the
+wrapped values directly instead in generated code.
+- Instead of `ABSString`, use `java.lang.String`
+
 ### Removed
 
 ### Fixed

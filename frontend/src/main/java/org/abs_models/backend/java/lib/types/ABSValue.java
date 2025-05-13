@@ -4,4 +4,4 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-public interface ABSValue extends ABSType { }
+public interface ABSValue extends ABSType {}

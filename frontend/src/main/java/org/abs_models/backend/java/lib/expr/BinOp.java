@@ -13,16 +13,14 @@ import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSRational;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 /**
  * Comparisons between ABS values.
  */
 public class BinOp {
 
-    public static ABSBool eq(ABSValue v1, ABSValue v2) {
+    public static ABSBool eq(Object v1, Object v2) {
         // Various branches in the following switch statement rely on the
         // typechecker to only allow through type-correct programs, which
         // means that v1 and v2 have the same ABS type.
@@ -50,8 +48,9 @@ public class BinOp {
                     return ABSBool.fromBoolean(f1.getDouble() == f2.getDouble());
                 }
                 break;
-            case ABSString s1: if (v2 instanceof ABSString s2) {
-                    return ABSBool.fromBoolean(s1.getString().equals(s2.getString()));
+            case String s1:
+                if (v2 instanceof String s2) {
+                    return ABSBool.fromBoolean(s1.equals(s2));
                 }
                 break;
             case ABSAlgebraicDataType t1:
@@ -71,11 +70,11 @@ public class BinOp {
         return ABSBool.FALSE;
     }
 
-    public static ABSBool notEq(ABSValue v, ABSValue v2) {
+    public static ABSBool notEq(Object v, Object v2) {
         return eq(v, v2).negate();
     }
 
-    public static ABSBool gt(ABSValue v1, ABSValue v2) {
+    public static ABSBool gt(Object v1, Object v2) {
         switch (v1) {
             case null: return ABSBool.FALSE;
             case ABSDynamicClass c1:
@@ -126,9 +125,9 @@ public class BinOp {
                     return ABSBool.fromBoolean(f1.getDouble() > f2.getDouble());
                 }
                 break;
-            case ABSString s1:
-                if (v2 instanceof ABSString s2) {
-                    return ABSBool.fromBoolean(s1.getString().compareTo(s2.getString()) > 0);
+            case String s1:
+                if (v2 instanceof String s2) {
+                    return ABSBool.fromBoolean(s1.compareTo(s2) > 0);
                 }
                 break;
             case ABSAlgebraicDataType t1:
@@ -156,19 +155,19 @@ public class BinOp {
     // v2 instead of two -- we go for simpler code instead of performance for
     // now.
 
-    public static ABSBool lt(ABSValue v1, ABSValue v2) {
+    public static ABSBool lt(Object v1, Object v2) {
         ABSBool eq = eq(v1, v2);
         if (eq.toBoolean()) return ABSBool.FALSE;
         else return gt(v1, v2).negate();
     }
 
-    public static ABSBool gtEq(ABSValue v1, ABSValue v2) {
+    public static ABSBool gtEq(Object v1, Object v2) {
         ABSBool eq = eq(v1, v2);
         if (eq.toBoolean()) return ABSBool.TRUE;
         else return gt(v1, v2);
     }
 
-    public static ABSBool ltEq(ABSValue v1, ABSValue v2) {
+    public static ABSBool ltEq(Object v1, Object v2) {
         ABSBool eq = eq(v1, v2);
         if (eq.toBoolean()) return ABSBool.TRUE;
         else return gt(v1, v2).negate();

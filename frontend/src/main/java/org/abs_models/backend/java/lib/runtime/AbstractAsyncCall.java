@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.abs_models.backend.java.lib.types.ABSRef;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public abstract class AbstractAsyncCall<T extends ABSRef> implements AsyncCall<T> {
 
@@ -27,7 +26,7 @@ public abstract class AbstractAsyncCall<T extends ABSRef> implements AsyncCall<T
     }
     
     @Override
-    public List<ABSValue> getArgs() {
+    public List<Object> getArgs() {
         return Collections.emptyList();
     }
 

@@ -4,8 +4,6 @@
  */
 package org.abs_models.backend.java.observing;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 /**
  * A default implementation of the {@link TaskObserver} interface
  * 
@@ -42,7 +40,7 @@ public class DefaultTaskObserver implements TaskObserver {
     }
 
     @Override
-    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, Object v) {
         
     }
 

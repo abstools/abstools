@@ -4,8 +4,6 @@
  */
 package org.abs_models.backend.java.observing;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public interface TaskObserver {
     void taskStarted(TaskView task);
 
@@ -61,6 +59,6 @@ public interface TaskObserver {
      * @param name the name of the variable
      * @param v the new value
      */
-    void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v);
+    void localVariableChanged(TaskStackFrameView stackFrame, String name, Object v);
 
 }

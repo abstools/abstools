@@ -4,7 +4,6 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.TaskView;
 
 /**
@@ -14,7 +13,7 @@ import org.abs_models.backend.java.observing.TaskView;
  *
  * @param <V>
  */
-public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
+public class ABSTaskFut<V> extends ABSFut<V> {
     private final Task<?> resolvingTask;
 
 

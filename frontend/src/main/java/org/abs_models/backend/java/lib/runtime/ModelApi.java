@@ -27,7 +27,6 @@ import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSRational;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
 
@@ -354,22 +353,22 @@ public class ModelApi {
                     return;
                 }
                 final List<Object> parameters = (List)methodEntry.get("parameters");
-                final Map<String, ABSValue> bindings;
+                final Map<String, Object> bindings;
                 try {
 		    bindings = extractParameterBindings(exchange, parameters);
 		} catch (IOException | ParameterConversionException | ReflectiveOperationException e1) {
                     sendResponse(exchange, 422, "text/plain", "Could not process method invocation: " + e1.getMessage());
                     return;
 		}
-                final List<ABSValue> arguments = parameters.stream()
+                final List<Object> arguments = parameters.stream()
                     .map(p -> bindings.get(((Map)p).get("name")))
                     .collect(Collectors.toList());
-                ABSFut<? extends ABSValue> f = o.invokeMethod(methodName, arguments);
+                ABSFut<? extends Object> f = o.invokeMethod(methodName, arguments);
                 if (f == null) {
                     sendResponse(exchange, 500, "text/plain", "Internal error while executing method call");
                 } else {
                     f.awaitForModelApi();
-                    ABSValue result = f.get();
+                    Object result = f.get();
                     Object jsonResult = absToJson(result);
                     sendResponse(exchange, 200, "text/json",
                         // note that `null` is a valid ABSValue :-)
@@ -393,14 +392,14 @@ public class ModelApi {
     }
 
     @Nonnull
-    private static Map<String, ABSValue> extractParameterBindings(HttpExchange exchange,
+    private static Map<String, Object> extractParameterBindings(HttpExchange exchange,
         List<Object> parameterList) throws StreamReadException, DatabindException, IOException, ParameterConversionException, ReflectiveOperationException {
         Map<String, String> parameters = parameterList.stream()
             .map(o -> (Map)o)
             .collect(Collectors.toMap(
                 e -> e.get("name").toString(),
                 e -> e.get("type").toString()));
-        HashMap<String, ABSValue> result = new HashMap<>();
+        HashMap<String, Object> result = new HashMap<>();
         if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
             // Read the request body
             InputStream requestBody = exchange.getRequestBody();
@@ -441,9 +440,9 @@ public class ModelApi {
         return result;
     }
 
-    private static ABSValue convertParameter(String name, Object value, String type) throws ParameterConversionException, ReflectiveOperationException {
+    private static Object convertParameter(String name, Object value, String type) throws ParameterConversionException, ReflectiveOperationException {
         if (type.equals("ABS.StdLib.String") && value instanceof String s) {
-            return ABSString.fromString(s);
+            return s;
         } else if (type.equals("ABS.StdLib.Float") && value instanceof Double d) {
             return ABSFloat.fromDouble(d);
         } else if (type.equals("ABS.StdLib.Int") && value instanceof Integer i) {
@@ -457,9 +456,9 @@ public class ModelApi {
             String valueType = type.substring(type.indexOf(',') + 1, type.length() - 1);
             ABSValue result = (ABSValue)makeEmptyMap.newInstance();
             if (!m.isEmpty()) {
-                for (Map.Entry e : m.entrySet()) {
-                    ABSValue k = convertParameter(name, e.getKey(), "ABS.StdLib.String");
-                    ABSValue v = convertParameter(name, e.getValue(), valueType);
+                for (Map.Entry<?,?> e : m.entrySet()) {
+                    Object k = convertParameter(name, e.getKey(), "ABS.StdLib.String");
+                    Object v = convertParameter(name, e.getValue(), valueType);
                     result = (ABSValue)makeInsertAssoc.newInstance((ABSValue)makePair.newInstance(k, v), result);
                 }
             }
@@ -478,9 +477,9 @@ public class ModelApi {
         }
     }
 
-    private static ABSValue convertUrlParameter(String name, String value, String type) throws ParameterConversionException {
+    private static Object convertUrlParameter(String name, String value, String type) throws ParameterConversionException {
         if (type.equals("ABS.StdLib.String")) {
-            return ABSString.fromString(value);
+            return value;
         } else if (type.equals("ABS.StdLib.Float")) {
             try {
                 return ABSFloat.fromDouble(Double.parseDouble(value));
@@ -558,14 +557,14 @@ public class ModelApi {
         }
     }
 
-    public static Object absToJson(ABSValue value) {
+    public static Object absToJson(Object value) {
         switch (value) {
             case null: return null;
             case ABSObject o: return o.toString();
             case ABSFut<?> f: return f.toString();
             case ABSUnit u: return "Unit";
             case ABSBool b: return b.toBoolean();
-            case ABSString s: return s.getString();
+            case String s: return s;
             case ABSInteger i: return i.getBigInteger();
             case ABSRational r: return r.toDouble();
             case ABSFloat f: return f.getDouble();

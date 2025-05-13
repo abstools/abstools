@@ -35,8 +35,8 @@ public class FileHandler extends FileHandler_c {
     
     private java.io.File file;
     
-    public ABSUnit fli_setFileName(ABSString f) {
-        file = new java.io.File(f.getString());
+    public ABSUnit fli_setFileName(String f) {
+        file = new java.io.File(f);
         return ABSUnit.UNIT;
     }
 
@@ -45,8 +45,8 @@ public class FileHandler extends FileHandler_c {
         return ABSUnit.UNIT;
     }
 
-    public ABSUnit fli_setFileAt(File parent, ABSString name) {
-        file = new java.io.File(file(parent),name.getString());
+    public ABSUnit fli_setFileAt(File parent, String name) {
+        file = new java.io.File(file(parent),name);
         return ABSUnit.UNIT;
     }
     
@@ -78,15 +78,15 @@ public class FileHandler extends FileHandler_c {
         return cutil.convert(toFile,Arrays.asList(file.listFiles()));
     }
 
-    public ABSString fli_getName() {
+    public String fli_getName() {
         return putil.convert(file.getName());
     }
 
-    public ABSString fli_getParent() {
+    public String fli_getParent() {
         return putil.convert(file.getParent());
     }
 
-    public ABSString fli_getAbsolutePath() {
+    public String fli_getAbsolutePath() {
         return putil.convert(file.getAbsolutePath());
     }
 
@@ -112,9 +112,9 @@ public class FileHandler extends FileHandler_c {
     
     private String name(File f) {
         StringBuilder builder = new StringBuilder();
-        for (ABSValue value : cutil.convert(filePath_f.apply(f))) {
-            if (value instanceof ABSString) {
-                builder.append(((ABSString) value).getString()).append(sep);   
+        for (Object value : cutil.convert(filePath_f.apply(f))) {
+            if (value instanceof String s) {
+                builder.append(s).append(sep);
             }
         }
         return builder.substring(0, builder.length()-1).toString();

@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.abs_models.backend.java.lib.runtime.TaskStack.Frame;
 import org.abs_models.backend.java.lib.types.ABSRef;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.ClassView;
 import org.abs_models.backend.java.observing.FutView;
@@ -21,7 +20,7 @@ import org.abs_models.backend.java.observing.TaskView;
 import org.apfloat.Aprational;
 
 public class Task<T extends ABSRef> implements Runnable {
-    private final ABSFut<? super ABSValue> future;
+    private final ABSFut<Object> future;
     private final int id;
     private Thread executingThread;
     private ABSException exception;
@@ -109,7 +108,7 @@ public class Task<T extends ABSRef> implements Runnable {
         return value;
     }
 
-    public synchronized void setLocalVariable(String name, ABSValue v) {
+    public synchronized void setLocalVariable(String name, Object v) {
         if (stack != null) {
             Frame f = stack.getCurrentFrame();
             f.setValue(name,v);
@@ -194,7 +193,7 @@ public class Task<T extends ABSRef> implements Runnable {
 
 
         try {
-            ABSValue res = (ABSValue) call.call();
+            Object res = call.call();
             future.resolve(res);
         } catch (ABSException e) {
             this.exception = e;
@@ -268,7 +267,7 @@ public class Task<T extends ABSRef> implements Runnable {
             }
         }
 
-        public synchronized void localVariableChanged(Frame f,String name, ABSValue v) {
+        public synchronized void localVariableChanged(Frame f,String name, Object v) {
             for (TaskObserver l : getObservers()) {
                 l.localVariableChanged(f,name, v);
             }
@@ -339,7 +338,7 @@ public class Task<T extends ABSRef> implements Runnable {
         }
 
         @Override
-        public List<ABSValue> getArgs() {
+        public List<Object> getArgs() {
             return Task.this.call.getArgs();
         }
 

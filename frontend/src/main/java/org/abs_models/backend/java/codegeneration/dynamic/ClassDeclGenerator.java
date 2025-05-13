@@ -13,12 +13,10 @@ import org.abs_models.backend.java.lib.runtime.ABSField;
 import org.abs_models.backend.java.lib.runtime.ABSInitObjectCall;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.ABSRunMethodCall;
-import org.abs_models.backend.java.lib.runtime.ABSRuntime;
 import org.abs_models.backend.java.lib.runtime.ABSThread;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.FieldDecl;
 import org.abs_models.frontend.ast.MethodImpl;
@@ -203,11 +201,10 @@ public class ClassDeclGenerator {
         stream.println("if (instance == null) { instance = new CON$TRUCT(); }");
         stream.println("return instance;");
         stream.println("}");
-        stream.println("public " + ABSValue.class.getName() + " exec(final " + ABSDynamicObject.class.getName() + " thisP, "
-                + ABSValue.class.getName() + "... args) {");
+        stream.println("public Object exec(final " + ABSDynamicObject.class.getName() + " thisP, Object... args) {");
 
         
-        // Fields and parameters are initialised in ABSDynamicObject::initializeFields(ABSValue[] params)
+        // Fields and parameters are initialised in ABSDynamicObject::initializeFields(Object[] params)
         // so this whole CON$TRUCT is probably only needed for the InitBlock
         
 //        stream.println("// Initialise fields");

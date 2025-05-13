@@ -20,7 +20,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.DefaultTaskObserver;
 import org.abs_models.backend.java.observing.FutView;
@@ -260,7 +259,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
             writeOut("(");
             StringBuffer argString = new StringBuffer();
             boolean first = true;
-            for (ABSValue v : task.getArgs()) {
+            for (Object v : task.getArgs()) {
                 if (first)
                     first = false;
                 else
@@ -449,7 +448,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     }
 
     @Override
-    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, Object v) {
         // TODO Auto-generated method stub
 
     }

@@ -4,8 +4,6 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
-import org.abs_models.backend.java.lib.types.ABSString;
-
 /**
  * useful helper methods which can be used by FLI clients  
  */
@@ -15,15 +13,7 @@ public class FLIHelper {
         ABSRuntime.getRuntime().getOutStream().print(msg);
     }
     
-    public static void print(ABSString msg) {
-        print(msg.getString());
-    }
-    
     public static void println(String msg) {
         print(msg + "\n");
-    }
-    
-    public static void println(ABSString msg) {
-        println(msg.getString());
     }
 }

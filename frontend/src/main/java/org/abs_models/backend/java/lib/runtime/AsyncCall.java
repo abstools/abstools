@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.abs_models.backend.java.lib.types.ABSRef;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public interface AsyncCall<T extends ABSRef> extends Callable<Object> {
 
@@ -16,7 +15,7 @@ public interface AsyncCall<T extends ABSRef> extends Callable<Object> {
     
     String methodName();
     
-    List<ABSValue> getArgs();
+    List<Object> getArgs();
     
     T getTarget();
     

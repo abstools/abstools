@@ -6,8 +6,6 @@ package org.abs_models.backend.java.observing;
 
 import java.util.List;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public interface ObjectView {
     COGView getCOG();
 
@@ -15,7 +13,7 @@ public interface ObjectView {
 
     String getClassName();
 
-    ABSValue getFieldValue(String fieldName) throws NoSuchFieldException;
+    Object getFieldValue(String fieldName) throws NoSuchFieldException;
 
     void registerObjectObserver(ObjectObserver l);
 

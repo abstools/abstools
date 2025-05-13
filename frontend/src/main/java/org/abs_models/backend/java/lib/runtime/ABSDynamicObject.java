@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.abs_models.backend.java.codegeneration.dynamic.DynamicException;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.ClassView;
 import org.abs_models.backend.java.observing.ObjectObserver;
@@ -20,20 +19,20 @@ import org.abs_models.backend.java.observing.ObjectView;
 
 public class ABSDynamicObject extends ABSObject {
     private ABSDynamicClass clazz;
-    private Map<String,ABSValue> fields;
+    private Map<String,Object> fields;
 
-    public ABSDynamicObject(ABSDynamicClass clazz, ABSValue... params) {
+    public ABSDynamicObject(ABSDynamicClass clazz, Object... params) {
         this.clazz = clazz;
         initializeFields(params);
     }
 
-    public ABSDynamicObject(COG cog, ABSDynamicClass clazz, ABSValue... params) {
+    public ABSDynamicObject(COG cog, ABSDynamicClass clazz, Object... params) {
         super(cog);
         this.clazz = clazz;
         initializeFields(params);
     }
 
-    private void initializeFields(ABSValue[] params) {
+    private void initializeFields(Object[] params) {
         fields = new HashMap<>();
 
         // parameters
@@ -74,14 +73,14 @@ public class ABSDynamicObject extends ABSObject {
         return new ArrayList<>(clazz.getFieldNames());
     }
 
-    public ABSValue getFieldValue(String field) throws NoSuchFieldException {
+    public Object getFieldValue(String field) throws NoSuchFieldException {
         if (fields.containsKey(field))
             return fields.get(field);
         else
             throw new NoSuchFieldException(field);
     }
 
-    public ABSValue getFieldValue_Internal(String field) {
+    public Object getFieldValue_Internal(String field) {
         try {
             return getFieldValue(field);
         } catch (NoSuchFieldException e) {
@@ -89,7 +88,7 @@ public class ABSDynamicObject extends ABSObject {
         }
     }
 
-    public void setFieldValue(String fieldName, ABSValue val) {
+    public void setFieldValue(String fieldName, Object val) {
         fields.put(fieldName, val);
     }
 
@@ -98,7 +97,7 @@ public class ABSDynamicObject extends ABSObject {
         this.getCOG().objectInitialized(this);
     }
 
-    public ABSValue dispatch(String mName, ABSValue... params) {
+    public Object dispatch(String mName, Object... params) {
         ABSClosure method = clazz.getMethod(mName);
         return method.exec(this, params);
     }
@@ -133,7 +132,7 @@ public class ABSDynamicObject extends ABSObject {
         }
 
         @Override
-        public ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
+        public Object getFieldValue(String fieldName) throws NoSuchFieldException {
             return ABSDynamicObject.this.getFieldValue(fieldName);
         }
 
@@ -169,7 +168,7 @@ public class ABSDynamicObject extends ABSObject {
 	throw new UnsupportedOperationException("Unimplemented method 'getHttpCallableMethodInfo'");
     }
 
-    public ABSFut<? extends ABSValue> invokeMethod(String name, List<ABSValue> arguments) {
+    public ABSFut<? extends Object> invokeMethod(String name, List<Object> arguments) {
 	throw new UnsupportedOperationException("Unimplemented method 'invokeMethod'");
     }
 

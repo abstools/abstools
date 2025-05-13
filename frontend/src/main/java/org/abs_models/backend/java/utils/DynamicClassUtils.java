@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
 import org.abs_models.backend.java.lib.runtime.Logging;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class DynamicClassUtils {
 
@@ -28,7 +27,7 @@ public class DynamicClassUtils {
     }
     
     @SuppressWarnings("unchecked")
-    public static <T extends ABSValue> T instance(Class<?> cls, Object... args) {
+    public static <T> T instance(Class<?> cls, Object... args) {
         String name = cls.getName();
         if (cls.getDeclaredConstructors().length != 1)
             logger.warning("Class " + name + " has either more than one, or zero constructors.");
@@ -51,7 +50,7 @@ public class DynamicClassUtils {
         
     }
     
-    public static <T extends ABSValue> T instance(String name, Object... args) {
+    public static <T> T instance(String name, Object... args) {
         Class<?> cls = getClass(name);
         return instance(cls, args);
     }

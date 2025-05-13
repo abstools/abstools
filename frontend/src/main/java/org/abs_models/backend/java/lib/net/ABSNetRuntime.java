@@ -11,7 +11,6 @@ import org.abs_models.backend.java.lib.runtime.ABSThread;
 import org.abs_models.backend.java.lib.runtime.AsyncCall;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.types.ABSRef;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 
 /**
@@ -75,7 +74,7 @@ public class ABSNetRuntime extends ABSRuntime {
     @Override
     public <T extends ABSRef> ABSFut<?> asyncCall(AsyncCall<T> call) {
         Promise p = new PromiseImpl();
-        NetFut<? super ABSValue> fut = null;
+        NetFut<Object> fut = null;
         if (getCurrentNetCOG() != null) {
             fut = new NetFut(p);
             getCurrentNetCOG().registerFuture(fut);

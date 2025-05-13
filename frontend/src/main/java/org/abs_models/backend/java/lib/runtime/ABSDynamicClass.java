@@ -13,10 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.abs_models.backend.java.codegeneration.dynamic.DynamicException;
-import org.abs_models.backend.java.lib.expr.BinOp;
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSClass;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.manipulation.ClassManipulator;
 
 public class ABSDynamicClass implements ABSClass {
