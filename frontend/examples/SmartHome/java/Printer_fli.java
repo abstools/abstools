@@ -10,8 +10,8 @@ public class Printer_fli extends Printer_c {
         System.out.println(integer.toInt());
         return ABSUnit.UNIT;
     }   
-    public ABSUnit fli_printB(ABSBool bool) {
-        System.out.println(bool.toBoolean());
+    public ABSUnit fli_printB(boolean bool) {
+        System.out.println(bool);
         return ABSUnit.UNIT;
     }
 }

@@ -14,7 +14,7 @@ public class PatternValue extends Pattern {
 
     @Override
     public boolean match(Object dt, PatternBinding binding) {
-        return BinOp.eq(value, dt).toBoolean();
+        return BinOp.eq(value, dt);
     }
 
 }
