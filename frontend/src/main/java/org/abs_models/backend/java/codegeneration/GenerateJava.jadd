@@ -150,11 +150,11 @@ aspect GenerateJava {
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";}");
 
         // eq method
-        stream.println("public " + ABSBool.class.getName() + " eq(" + ABSValue.class.getName() + " o) {");
-        stream.println("if (! (o instanceof " + constructorClassName + ")) return " + ABSBool.class.getName() + ".FALSE;");
+        stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
+        stream.println("if (! (o instanceof " + constructorClassName + ")) return false;");
         stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
-        stream.println("boolean allEqual = java.util.stream.IntStream.range(0, allArgs.length).allMatch(i -> " + BinOp.class.getName() + ".eq(allArgs[i], other.allArgs[i]).toBoolean());");
-        stream.println("return "  + ABSBool.class.getName() + ".fromBoolean(allEqual);");
+        stream.println("boolean allEqual = java.util.stream.IntStream.range(0, allArgs.length).allMatch(i -> " + BinOp.class.getName() + ".eq(allArgs[i], other.allArgs[i]));");
+        stream.println("return allEqual;");
         stream.println("}");
         stream.println();
 
@@ -208,11 +208,11 @@ aspect GenerateJava {
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";} ");
 
         // eq method
-        stream.println("public " + ABSBool.class.getName() + " eq(" + ABSValue.class.getName() + " o) {");
-        stream.println("if (! (o instanceof " + constructorClassName + ")) return " + ABSBool.class.getName() + ".FALSE;");
+        stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
+        stream.println("if (! (o instanceof " + constructorClassName + ")) return false;");
         stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
-        stream.println("boolean allEqual = java.util.stream.IntStream.range(0, allArgs.length).allMatch(i -> " + BinOp.class.getName() + ".eq(allArgs[i], other.allArgs[i]).toBoolean());");
-        stream.println("return "  + ABSBool.class.getName() + ".fromBoolean(allEqual);");
+        stream.println("boolean allEqual = java.util.stream.IntStream.range(0, allArgs.length).allMatch(i -> " + BinOp.class.getName() + ".eq(allArgs[i], other.allArgs[i]));");
+        stream.println("return allEqual;");
         stream.println("}");
 
         // toJSON method
@@ -406,7 +406,7 @@ aspect GenerateJava {
         if (this instanceof MainBlock) {
             for (VarDecl v : getVars()) {
                 if (v.getName().equals("testresult")) {
-                    stream.println("System.out.println(\"__ABS_TESTRESULT=\" + testresult.toBoolean());");
+                    stream.println("System.out.println(\"__ABS_TESTRESULT=\" + testresult);");
                 }
             }
         }
@@ -513,7 +513,7 @@ aspect GenerateJava {
         super.generateJava(stream);
         stream.print("if (");
         getCondition().generateJava(stream);
-        stream.println(".toBoolean()) {");
+        stream.println(") {");
         getThen().generateJava(stream);
         stream.println("}");
         if (hasElse()) {
@@ -571,7 +571,7 @@ aspect GenerateJava {
         super.generateJava(stream);
         stream.print("while (");
         getCondition().generateJava(stream);
-        stream.print(".toBoolean())");
+        stream.print(")");
         getBody().generateJava(stream);
     }
 
@@ -618,7 +618,7 @@ aspect GenerateJava {
         super.generateJava(stream);
         stream.print("if (!");
         getCondition().generateJava(stream);
-        stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
+        stream.print(") throw new " + ABSAssertException.class.getName() + "(\"");
         JavaGeneratorHelper.printEscapedString(stream, getPositionString());
         stream.println(": Assertion failed\");");
 
@@ -824,7 +824,7 @@ aspect GenerateJava {
 
     public void IfExp.generateJava(PrintStream stream) {
         getCondExp().generateJava(stream);
-        stream.print(".toBoolean() ? ");
+        stream.print(" ? ");
         getThenExp().generateJava(stream);
         stream.print(" : ");
         getElseExp().generateJava(stream);
@@ -940,10 +940,12 @@ aspect GenerateJava {
         DataTypeDecl decl = c.getDataTypeDecl();
         Type t = decl.getType();
         if (t.isBoolType()) {
+            // FIXME: would love to emit "true" and "false" here, but certain
+            // ABS methods cannot be compiled.
             if ("True".equals(c.getName()))
-                stream.print(ABSBool.class.getName() + ".TRUE");
+                stream.print("Boolean.TRUE");
             else
-                stream.print(ABSBool.class.getName() + ".FALSE");
+                stream.print("Boolean.FALSE");
         } else if (t.isUnitType()) {
             stream.print(JavaBackendConstants.UNITVALUE);
         } else {
@@ -1048,8 +1050,9 @@ aspect GenerateJava {
     }
 
     public void NegExp.generateJava(PrintStream stream) {
+        stream.print("!(");
         getOperand().generateJava(stream);
-        stream.print(".negate()");
+        stream.print(")");
     }
 
     public void AddAddExp.generateJava(PrintStream stream) {
@@ -1096,15 +1099,17 @@ aspect GenerateJava {
     }
 
     public void AndBoolExp.generateJava(PrintStream stream) {
+        stream.print("(");
         getLeft().generateJava(stream);
-        stream.print(".and(");
+        stream.print(") && (");
         getRight().generateJava(stream);
         stream.print(")");
     }
 
     public void OrBoolExp.generateJava(PrintStream stream) {
+        stream.print("(");
         getLeft().generateJava(stream);
-        stream.print(".or(");
+        stream.print(") || (");
         getRight().generateJava(stream);
         stream.print(")");
     }

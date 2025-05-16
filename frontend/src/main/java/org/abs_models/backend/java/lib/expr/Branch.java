@@ -4,8 +4,6 @@
  */
 package org.abs_models.backend.java.lib.expr;
 
-import org.abs_models.backend.java.lib.types.ABSBool;
-
 public abstract class Branch<R> {
     Pattern pattern;
 
@@ -23,14 +21,14 @@ public abstract class Branch<R> {
 
 }
 
-class Test {
-    /**
-     * data Foo = X | Bar(Foo);
-     * 
-     * Foo b = Bar(Bar(X)); case b { X => 1; Bar(X) => 2; Bar(x)False => 2; }
-     */
+// class Test {
+//     /**
+//      * data Foo = X | Bar(Foo);
+//      * 
+//      * Foo b = Bar(Bar(X)); case b { X => 1; Bar(X) => 2; Bar(x)False => 2; }
+//      */
 
-    void m() {
-        ABSBool b = ABSBool.TRUE;
-    }
-}
+//     void m() {
+//         Boolean b = Boolean.TRUE;
+//     }
+// }

@@ -10,28 +10,58 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 
 import org.abs_models.backend.java.JavaBackend;
+import org.abs_models.backend.java.JavaBackendConstants;
+import org.abs_models.backend.java.codegeneration.JavaCode;
 import org.abs_models.backend.java.codegeneration.JavaCodeGenerationException;
 import org.abs_models.backend.java.codegeneration.JavaCodeStream;
 import org.abs_models.backend.java.codegeneration.JavaGeneratorHelper;
-import org.abs_models.backend.java.JavaBackendConstants;
-import org.abs_models.backend.java.codegeneration.JavaCode;
 import org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions;
-import org.abs_models.backend.java.lib.runtime.*;
-import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
-import org.abs_models.backend.java.lib.runtime.ABSDynamicReconfiguration;
+import org.abs_models.backend.java.lib.runtime.ABSClosure;
+import org.abs_models.backend.java.lib.runtime.ABSDynamicDelta;
+import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
+import org.abs_models.backend.java.lib.runtime.ABSDynamicProduct;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicRuntime;
-import org.abs_models.backend.java.lib.runtime.ABSDynamicUpdate;
+import org.abs_models.backend.java.lib.runtime.ABSField;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
+import org.abs_models.backend.java.lib.runtime.AbstractAsyncCall;
 import org.abs_models.backend.java.lib.runtime.AsyncCall;
-import org.abs_models.backend.java.lib.types.ABSBool;
+import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.types.ABSValue;
-import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.AssignStmt;
+import org.abs_models.frontend.ast.AwaitAsyncCall;
+import org.abs_models.frontend.ast.AwaitStmt;
+import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.Decl;
+import org.abs_models.frontend.ast.DeltaDecl;
+import org.abs_models.frontend.ast.ExpGuard;
+import org.abs_models.frontend.ast.Feature;
+import org.abs_models.frontend.ast.FieldDecl;
+import org.abs_models.frontend.ast.FieldUse;
+import org.abs_models.frontend.ast.FnApp;
+import org.abs_models.frontend.ast.FunctionDecl;
+import org.abs_models.frontend.ast.HasTypeParameters;
+import org.abs_models.frontend.ast.LetExp;
+import org.abs_models.frontend.ast.List;
+import org.abs_models.frontend.ast.MethodImpl;
+import org.abs_models.frontend.ast.MethodSig;
+import org.abs_models.frontend.ast.NewExp;
+import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.ProductDecl;
+import org.abs_models.frontend.ast.PureExp;
+import org.abs_models.frontend.ast.ReturnStmt;
+import org.abs_models.frontend.ast.Stmt;
+import org.abs_models.frontend.ast.SyncCall;
+import org.abs_models.frontend.ast.TypeParameterDecl;
+import org.abs_models.frontend.ast.TypedVarOrFieldDecl;
+import org.abs_models.frontend.ast.VarDecl;
+import org.abs_models.frontend.ast.VarOrFieldDecl;
+import org.abs_models.frontend.ast.VarOrFieldUse;
+import org.abs_models.frontend.ast.VarUse;
 import org.abs_models.frontend.typechecker.Type;
 
 public class DynamicJavaGeneratorHelper {
@@ -423,7 +453,7 @@ public class DynamicJavaGeneratorHelper {
 
         replaceLocalVariables(expr.copy(), beforeAwaitStream);
 
-        stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public "+ABSBool.class.getName()+" evaluateExp() { return ");
+        stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public boolean evaluateExp() { return ");
         expGuard.getPureExp().generateJavaDynamic(stream);
         stream.print("; }}");
 

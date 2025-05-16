@@ -13,19 +13,4 @@ public class PrimitiveUtil {
         return ABSInteger.fromInt(i);
     }
     
-    public String convert(ABSString s) {
-        return s.getString();
-    }
-    
-    public ABSString convert(String s) {
-        return ABSString.fromString(s);
-    }
-    
-    public Boolean convert(ABSBool b) {
-        return b.toBoolean();
-    }
-    
-    public ABSBool convert(Boolean b) {
-        return ABSBool.fromBoolean(b);
-    }
 }

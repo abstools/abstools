@@ -187,17 +187,17 @@ aspect GenerateJavaDynamic_Core {
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\"; }");
 
         // eq method
-        stream.println("public " + ABSBool.class.getName() + " eq(" + ABSValue.class.getName() + " o) {");
-        stream.println("if (! (o instanceof " + constructorClassName + ")) return " + ABSBool.class.getName() + ".FALSE;");
+        stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
+        stream.println("if (! (o instanceof " + constructorClassName + ")) return false;");
         stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
 
         i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
-            stream.println("if (!this.arg" + i + ".eq(other.arg" + i + ").toBoolean()) return " + ABSBool.class.getName() + ".FALSE;");
+            stream.println("if (!this.arg" + i + ".eq(other.arg" + i + ")) return false;");
             i++;
         }
 
-        stream.println("return " + ABSBool.class.getName() + ".TRUE;");
+        stream.println("return true;");
         stream.println("}");
 
         // match method
@@ -379,7 +379,7 @@ aspect GenerateJavaDynamic_Core {
         if (this instanceof MainBlock) {
             for (VarDecl v : getVars()) {
                 if (v.getName().equals("testresult")) {
-                    stream.println("System.out.println(\"__ABS_TESTRESULT=\" + testresult.toBoolean());");
+                    stream.println("System.out.println(\"__ABS_TESTRESULT=\" + testresult);");
                 }
             }
         }
@@ -470,7 +470,7 @@ aspect GenerateJavaDynamic_Core {
         super.generateJavaDynamic(stream);
         stream.print("if (");
         getCondition().generateJavaDynamic(stream);
-        stream.println(".toBoolean()) {");
+        stream.println(") {");
         getThen().generateJavaDynamic(stream);
         stream.println("}");
         if (hasElse()) {
@@ -509,7 +509,7 @@ aspect GenerateJavaDynamic_Core {
         super.generateJavaDynamic(stream);
         stream.print("while (");
         getCondition().generateJavaDynamic(stream);
-        stream.print(".toBoolean())");
+        stream.print(")");
         getBody().generateJavaDynamic(stream);
     }
 
@@ -517,7 +517,7 @@ aspect GenerateJavaDynamic_Core {
         super.generateJavaDynamic(stream);
         stream.print("if (!");
         getCondition().generateJavaDynamic(stream);
-        stream.print(".toBoolean()) throw new " + ABSAssertException.class.getName() + "(\"");
+        stream.print(") throw new " + ABSAssertException.class.getName() + "(\"");
         DynamicJavaGeneratorHelper.printEscapedString(stream, getPositionString());
         stream.println(": Assertion failed\");");
     }
@@ -548,8 +548,7 @@ aspect GenerateJavaDynamic_Core {
 
     public void DurationGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {
         stream.print("new " + JavaBackendConstants.EXPGUARD +
-                "() { public " + ABSBool.class.getName() +
-                " evaluateExp() { return " + ABSBool.class.getName() + ".TRUE; }}");
+                     "() { public boolean evaluateExp() { return true; }}");
     }
 
     /*
@@ -654,7 +653,7 @@ aspect GenerateJavaDynamic_Core {
 
     public void IfExp.generateJavaDynamic(PrintStream stream) {
         getCondExp().generateJavaDynamic(stream);
-        stream.print(".toBoolean() ? ");
+        stream.print(" ? ");
         getThenExp().generateJavaDynamic(stream);
         stream.print(" : ");
         getElseExp().generateJavaDynamic(stream);
@@ -825,10 +824,7 @@ aspect GenerateJavaDynamic_Core {
         DataTypeDecl decl = c.getDataTypeDecl();
         Type t = decl.getType();
         if (t.isBoolType()) {
-            stream.print(ABSBool.class.getName());
-            stream.print(".fromBoolean(");
             stream.print(c.getName().toLowerCase());
-            stream.print(")");
         } else if (t.isUnitType()) {
             stream.print(JavaBackendConstants.UNITVALUE);
         } else {
@@ -938,8 +934,9 @@ aspect GenerateJavaDynamic_Core {
     }
 
     public void NegExp.generateJavaDynamic(PrintStream stream) {
+        stream.print("!(");
         getOperand().generateJavaDynamic(stream);
-        stream.print(".negate()");
+        stream.print(")");
     }
 
     public void AddAddExp.generateJavaDynamic(PrintStream stream) {
@@ -978,15 +975,17 @@ aspect GenerateJavaDynamic_Core {
     }
 
     public void AndBoolExp.generateJavaDynamic(PrintStream stream) {
+        stream.print("(");
         getLeft().generateJavaDynamic(stream);
-        stream.print(".and(");
+        stream.print(") && (");
         getRight().generateJavaDynamic(stream);
         stream.print(")");
     }
 
     public void OrBoolExp.generateJavaDynamic(PrintStream stream) {
+        stream.print("(");
         getLeft().generateJavaDynamic(stream);
-        stream.print(".or(");
+        stream.print(") || (");
         getRight().generateJavaDynamic(stream);
         stream.print(")");
     }

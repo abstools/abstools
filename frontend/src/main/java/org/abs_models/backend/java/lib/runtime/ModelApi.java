@@ -23,7 +23,6 @@ import javax.annotation.Nonnull;
 
 import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSRational;
@@ -216,7 +215,7 @@ public class ModelApi {
                             } catch (ParameterConversionException e) {
                                 sendResponse(exchange, 400, "text/json", errorResponse);
                             }
-                            if (BinOp.lt(by, ABSInteger.ZERO).toBoolean()) {
+                            if (BinOp.lt(by, ABSInteger.ZERO)) {
                                 sendResponse(exchange, 400, "text/json", errorResponse);
                                 return;
                             }
@@ -450,7 +449,7 @@ public class ModelApi {
         } else if (type.equals("ABS.StdLib.Int") && value instanceof BigInteger i) {
             return ABSInteger.fromBigInt(i);
         } else if (type.equals("ABS.StdLib.Bool") && value instanceof Boolean b) {
-            return ABSBool.fromBoolean(b);
+            return b;
         } else if (type.startsWith("ABS.StdLib.Map") && value instanceof Map<?, ?> m) {
             // always a Map<String,...> -- only extract the value type, key is always String
             String valueType = type.substring(type.indexOf(',') + 1, type.length() - 1);
@@ -494,7 +493,7 @@ public class ModelApi {
             }
         } else if (type.equals("ABS.StdLib.Bool")) {
             if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
-                return ABSBool.fromBoolean(Boolean.valueOf(value));
+                return Boolean.valueOf(value);
             } else {
                 throw new ParameterConversionException("Could not parse " + value + " as Bool for parameter '" + name + "'");
             }
@@ -563,7 +562,7 @@ public class ModelApi {
             case ABSObject o: return o.toString();
             case ABSFut<?> f: return f.toString();
             case ABSUnit u: return "Unit";
-            case ABSBool b: return b.toBoolean();
+            case Boolean b: return b;
             case String s: return s;
             case ABSInteger i: return i.getBigInteger();
             case ABSRational r: return r.toDouble();

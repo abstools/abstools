@@ -17,10 +17,13 @@ public class PatternConstructor extends Pattern {
     }
 
     @Override
-    public boolean match(Object value, PatternBinding b) {
+    public boolean match(Object value, PatternBinding binding) {
         switch (value) {
-            case java.lang.String s:
+            case String s:
                 return constructorClass.getSimpleName().equals("String");
+            case Boolean b:
+                if (b) return constructorClass.getSimpleName().endsWith("True");
+                else return constructorClass.getSimpleName().endsWith("False");
             case ABSBuiltInDataType bt:
                 return constructorClass.getSimpleName().endsWith(bt.getConstructorName());
             case ABSAlgebraicDataType dt:
@@ -28,7 +31,7 @@ public class PatternConstructor extends Pattern {
                     return false;
                 else {
                     for (int i = 0; i < dt.getNumArgs(); i++) {
-                        if (!subpattern[i].match(dt.getArg(i), b)) return false;
+                        if (!subpattern[i].match(dt.getArg(i), binding)) return false;
                     }
                     return true;
                 }

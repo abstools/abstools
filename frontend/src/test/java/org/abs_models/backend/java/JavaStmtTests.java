@@ -45,7 +45,7 @@ public class JavaStmtTests extends JavaBackendTest {
 
     @Test
     public void whileStmt() throws Exception {
-        assertValid(" { while (True) { } }");
+        assertValid(" { Bool x = True; while (x) { } }");
     }
 
     @Test
@@ -136,6 +136,19 @@ public class JavaStmtTests extends JavaBackendTest {
     public void typeSynonyms3() throws Exception {
         assertValid("type Data = Int; data DataList = DataNil | ConsData(Data, DataList); "
                 + "{ DataList l = ConsData(5,DataNil); Bool testresult = case l { ConsData(x,y) => x == 5;}; }");
+    }
+
+    @Test
+    public void endlessWhileLoopMethod() throws Exception {
+        // Check that we don't trigger Java's simpleton unreachable
+        // code warning
+        assertValid("""
+            class C {
+                Unit m() {
+                    while (True) {}
+                }
+            }
+            """);
     }
 
 }

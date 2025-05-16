@@ -10,22 +10,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.Scanner;
 
+import org.abs_models.backend.java.lib.expr.BinOp;
+import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
 import org.abs_models.backend.java.lib.runtime.metaABS.ObjectMirror;
 import org.abs_models.backend.java.lib.runtime.metaABS.ProductLine;
+import org.abs_models.backend.java.lib.types.ABSDataType;
+import org.abs_models.backend.java.lib.types.ABSFloat;
+import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSInterface;
+import org.abs_models.backend.java.lib.types.ABSProcess;
+import org.abs_models.backend.java.lib.types.ABSRational;
+import org.abs_models.backend.java.lib.types.ABSUnit;
+import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.utils.DynamicClassUtils;
 import org.apfloat.Aprational;
 import org.apfloat.AprationalMath;
-import org.abs_models.backend.java.lib.expr.BinOp;
-import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
-import org.abs_models.backend.java.lib.types.ABSBool;
-import org.abs_models.backend.java.lib.types.ABSDataType;
-import org.abs_models.backend.java.lib.types.ABSInteger;
-import org.abs_models.backend.java.lib.types.ABSProcess;
-import org.abs_models.backend.java.lib.types.ABSRational;
-import org.abs_models.backend.java.lib.types.ABSFloat;
-import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class ABSBuiltInFunctions {
 
@@ -67,7 +66,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSInteger random(ABSInteger i) {
-        if (BinOp.ltEq(i, ABSInteger.ZERO).toBoolean()) {
+        if (BinOp.ltEq(i, ABSInteger.ZERO)) {
             throw new UnmatchedCaseException("Random function called with non positive upper bound " + i);
         }
         BigInteger n = i.getBigInteger();
@@ -136,8 +135,8 @@ public class ABSBuiltInFunctions {
         return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getFinishTime()));
     }
 
-    public static ABSBool critical(ABSProcess p) {
-        return ABSBool.fromBoolean(p.isCritical());
+    public static boolean critical(ABSProcess p) {
+        return p.isCritical();
     }
 
     public static ABSInteger value(ABSProcess p) {

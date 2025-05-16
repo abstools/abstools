@@ -8,7 +8,6 @@ import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
 import org.abs_models.backend.java.lib.runtime.COG;
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 
 /* Class ABSObjectMirror
@@ -72,11 +71,11 @@ public class ObjectMirror {
         /*
          * respondsTo: find out whether object responds to given method
          */
-        thisClass.addMethod(/*ABSBool*/ "respondsTo", new ABSClosure() {
+        thisClass.addMethod("respondsTo", new ABSClosure() {
             @Override
-            public ABSBool exec(ABSDynamicObject t, Object... params) {
+            public Boolean exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)((ABSDynamicObject)t.dispatch("getObject")).getClazz();
-                return ABSBool.fromBoolean(cls.hasMethod((String)params[0]));
+                return cls.hasMethod((String)params[0]);
             }
         });
         

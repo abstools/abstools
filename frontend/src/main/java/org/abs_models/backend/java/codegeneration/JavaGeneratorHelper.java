@@ -14,8 +14,13 @@ import java.util.stream.StreamSupport;
 
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.java.JavaBackendConstants;
-import org.abs_models.backend.java.lib.runtime.*;
-import org.abs_models.backend.java.lib.types.ABSBool;
+import org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions;
+import org.abs_models.backend.java.lib.runtime.ABSFut;
+import org.abs_models.backend.java.lib.runtime.ABSRuntime;
+import org.abs_models.backend.java.lib.runtime.ABSThread;
+import org.abs_models.backend.java.lib.runtime.AbstractAsyncCallRT;
+import org.abs_models.backend.java.lib.runtime.ModelApi;
+import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
@@ -207,7 +212,7 @@ public class JavaGeneratorHelper {
             if (t.isBoolType()) {
                 stream.print("statement.setInt(" + (i - 2) + ", (");
                 e.generateJava(stream);
-                stream.println(").toBoolean() ? 1 : 0);");
+                stream.println(") ? 1 : 0);");
             } else if (t.isIntType()) {
                 stream.print("statement.setBigDecimal(" + (i - 2) + ", new java.math.BigDecimal((");
                 e.generateJava(stream);
@@ -239,7 +244,7 @@ public class JavaGeneratorHelper {
             // handle singleton return value
             stream.print("acc.add(0, ");
             if (query_type.isBoolType()) {
-                stream.print("rs.getBoolean(1) ? " + ABSBool.class.getName() + ".TRUE : " + ABSBool.class.getName() + ".FALSE");
+                stream.print("rs.getBoolean(1)");
             } else if (query_type.isIntType()) {
                 stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(1).toBigInteger())");
             } else if (query_type.isFloatType()) {
@@ -269,7 +274,7 @@ public class JavaGeneratorHelper {
                 // ResultSet is 1-indexed, args is 0-indexed
                 Type t = args.get(i-1);
                 if (t.isBoolType()) {
-                    stream.print("rs.getBoolean(" + i + ") ? " + ABSBool.class.getName() + ".TRUE : " + ABSBool.class.getName() + ".FALSE");
+                    stream.print("rs.getBoolean(" + i + ")");
                 } else if (t.isIntType()) {
                     stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(" + i + ").toBigInteger())");
                 } else if (t.isFloatType()) {
@@ -501,7 +506,7 @@ public class JavaGeneratorHelper {
         stream.print("new ABS.StdLib.Duration_InfDuration()");
         stream.println(",");
         rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Critical");
-        if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream);
+        if (rtAttr == null) stream.print("false"); else rtAttr.generateJava(stream);
 
         stream.println(")");
         stream.println("{");
@@ -701,7 +706,7 @@ public class JavaGeneratorHelper {
 
         replaceLocalVariables((PureExp)expr.copy(), beforeAwaitStream);
 
-        stream.print("new " + JavaBackendConstants.EXPGUARD + "() { public " + ABSBool.class.getName() + " evaluateExp() { return ");
+        stream.print("new " + JavaBackendConstants.EXPGUARD + "() { public boolean evaluateExp() { return ");
         expGuard.getPureExp().generateJava(stream);
         stream.print("; }}");
     }
