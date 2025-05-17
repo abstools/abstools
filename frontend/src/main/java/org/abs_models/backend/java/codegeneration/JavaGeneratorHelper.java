@@ -21,7 +21,6 @@ import org.abs_models.backend.java.lib.runtime.ABSThread;
 import org.abs_models.backend.java.lib.runtime.AbstractAsyncCallRT;
 import org.abs_models.backend.java.lib.runtime.ModelApi;
 import org.abs_models.backend.java.lib.runtime.Task;
-import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSRational;
@@ -224,7 +223,7 @@ public class JavaGeneratorHelper {
             } else if (t.isFloatType()) {
                 stream.print("statement.setDouble(" + (i - 2) + ", (");
                 e.generateJava(stream);
-                stream.println(").getDouble());");
+                stream.println("));");
             } else if (t.isStringType()) {
                 stream.print("statement.setString(" + (i - 2) + ", (");
                 e.generateJava(stream);
@@ -248,7 +247,7 @@ public class JavaGeneratorHelper {
             } else if (query_type.isIntType()) {
                 stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(1).toBigInteger())");
             } else if (query_type.isFloatType()) {
-                stream.print(ABSFloat.class.getName() + ".fromDouble(rs.getDouble(1))");
+                stream.print("rs.getDouble(1)");
             } else if (query_type.isRatType()) {
                 stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(1))");
             } else if (query_type.isStringType()) {
@@ -278,7 +277,7 @@ public class JavaGeneratorHelper {
                 } else if (t.isIntType()) {
                     stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(" + i + ").toBigInteger())");
                 } else if (t.isFloatType()) {
-                    stream.print(ABSFloat.class.getName() + ".fromDouble(rs.getDouble(" + i + "))");
+                    stream.print("rs.getDouble(" + i + ")");
                 } else if (t.isRatType()) {
                     stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(" + i + "))");
                 } else if (t.isStringType()) {

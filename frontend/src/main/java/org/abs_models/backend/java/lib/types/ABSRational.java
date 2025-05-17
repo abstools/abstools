@@ -133,8 +133,8 @@ public class ABSRational extends ABSBuiltInDataType {
         return ABSInteger.fromBigInt(value.denominator());
     }
 
-    public ABSFloat toFloat() {
-        return ABSFloat.fromDouble(value.doubleValue());
+    public double toFloat() {
+        return value.doubleValue();
     }
 
 }

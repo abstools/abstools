@@ -23,7 +23,6 @@ import javax.annotation.Nonnull;
 
 import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
-import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSUnit;
@@ -443,7 +442,7 @@ public class ModelApi {
         if (type.equals("ABS.StdLib.String") && value instanceof String s) {
             return s;
         } else if (type.equals("ABS.StdLib.Float") && value instanceof Double d) {
-            return ABSFloat.fromDouble(d);
+            return d;
         } else if (type.equals("ABS.StdLib.Int") && value instanceof Integer i) {
             return ABSInteger.fromInt(i);
         } else if (type.equals("ABS.StdLib.Int") && value instanceof BigInteger i) {
@@ -481,7 +480,7 @@ public class ModelApi {
             return value;
         } else if (type.equals("ABS.StdLib.Float")) {
             try {
-                return ABSFloat.fromDouble(Double.parseDouble(value));
+                return Double.parseDouble(value);
             } catch (NumberFormatException e) {
                 throw new ParameterConversionException("Could not parse " + value + " as Double for parameter '" + name + "'");
             }
@@ -566,7 +565,7 @@ public class ModelApi {
             case String s: return s;
             case ABSInteger i: return i.getBigInteger();
             case ABSRational r: return r.toDouble();
-            case ABSFloat f: return f.getDouble();
+            case Double f: return f;
             case ABSAlgebraicDataType d:
                 return d.toJson();
             default:

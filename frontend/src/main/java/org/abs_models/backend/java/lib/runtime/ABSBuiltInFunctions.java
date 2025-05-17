@@ -15,7 +15,6 @@ import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
 import org.abs_models.backend.java.lib.runtime.metaABS.ObjectMirror;
 import org.abs_models.backend.java.lib.runtime.metaABS.ProductLine;
 import org.abs_models.backend.java.lib.types.ABSDataType;
-import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSProcess;
@@ -225,31 +224,31 @@ public class ABSBuiltInFunctions {
         return r.denominator();
     }
 
-    public static ABSFloat float__(ABSRational r) {
-        return r.toFloat();
+    public static double float__(ABSRational r) {
+        return r.toDouble();
     }
 
-    public static ABSRational rat(ABSFloat f) {
-        return ABSRational.fromDouble(f.getDouble());
+    public static ABSRational rat(double f) {
+        return ABSRational.fromDouble(f);
     }
 
-    public static ABSInteger floor(ABSFloat f) {
+    public static ABSInteger floor(double f) {
         return ABSInteger.floor(f);
     }
 
-    public static ABSInteger ceil(ABSFloat f) {
+    public static ABSInteger ceil(double f) {
         return ABSInteger.ceil(f);
     }
 
-    public static ABSFloat sqrt(ABSFloat f) {
-        return ABSFloat.fromDouble(StrictMath.sqrt(f.getDouble()));
+    public static double sqrt(double f) {
+        return StrictMath.sqrt(f);
     }
 
-    public static ABSFloat log(ABSFloat f) {
-        return ABSFloat.fromDouble(StrictMath.log(f.getDouble()));
+    public static double log(double f) {
+        return StrictMath.log(f);
     }
 
-    public static ABSFloat exp(ABSFloat f) {
-        return ABSFloat.fromDouble(StrictMath.exp(f.getDouble()));
+    public static double exp(double f) {
+        return StrictMath.exp(f);
     }
 }

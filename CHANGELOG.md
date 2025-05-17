@@ -15,6 +15,7 @@ String, boolean etc., unwrapping them for all computations.  Use the
 wrapped values directly instead in generated code.
 - Instead of `ABSString`, use `java.lang.String`
 - Instead of `ABSBool`, use `java.lang.Boolean`
+- Instead of `ABSFloat`, use `java.lang.Double`
 
 ### Removed
 
