@@ -1008,10 +1008,7 @@ aspect GenerateJava {
     }
 
     public void FloatLiteral.generateJava(PrintStream stream) {
-        stream.print(ABSFloat.class.getName());
-        stream.print(".fromDouble(");
         stream.print(getContent() + "d");
-        stream.print(")");
     }
 
     public void StringLiteral.generateJava(PrintStream stream) {
@@ -1045,8 +1042,14 @@ aspect GenerateJava {
     }
 
     public void MinusExp.generateJava(PrintStream stream) {
-        getOperand().generateJava(stream);
-        stream.print(".negate()");
+        if (getOperand().getType().isFloatType()) {
+            stream.print("(-");
+            getOperand().generateJava(stream);
+            stream.print(")");
+        } else {
+            getOperand().generateJava(stream);
+            stream.print(".negate()");
+        }
     }
 
     public void NegExp.generateJava(PrintStream stream) {
@@ -1056,7 +1059,8 @@ aspect GenerateJava {
     }
 
     public void AddAddExp.generateJava(PrintStream stream) {
-        if (getLeft().getType().isStringType()) {
+        Type t = getLeft().getType();
+        if (t.isStringType() || t.isFloatType()) {
             stream.print("(");
             getLeft().generateJava(stream);
             stream.print("+");
@@ -1071,31 +1075,67 @@ aspect GenerateJava {
     }
 
     public void SubAddExp.generateJava(PrintStream stream) {
-        getLeft().generateJava(stream);
-        stream.print(".subtract(");
-        getRight().generateJava(stream);
-        stream.print(")");
+        Type t = getLeft().getType();
+        if (t.isFloatType()) {
+            stream.print("(");
+            getLeft().generateJava(stream);
+            stream.print("-");
+            getRight().generateJava(stream);
+            stream.print(")");
+        } else {
+            getLeft().generateJava(stream);
+            stream.print(".subtract(");
+            getRight().generateJava(stream);
+            stream.print(")");
+        }
     }
 
     public void DivMultExp.generateJava(PrintStream stream) {
-        getLeft().generateJava(stream);
-        stream.print(".divide(");
-        getRight().generateJava(stream);
-        stream.print(")");
+        Type t = getLeft().getType();
+        if (t.isFloatType()) {
+            stream.print("(");
+            getLeft().generateJava(stream);
+            stream.print("/");
+            getRight().generateJava(stream);
+            stream.print(")");
+        } else {
+            getLeft().generateJava(stream);
+            stream.print(".divide(");
+            getRight().generateJava(stream);
+            stream.print(")");
+        }
     }
 
     public void ModMultExp.generateJava(PrintStream stream) {
-        getLeft().generateJava(stream);
-        stream.print(".mod(");
-        getRight().generateJava(stream);
-        stream.print(")");
+        Type t = getLeft().getType();
+        if (t.isFloatType()) {
+            stream.print("(");
+            getLeft().generateJava(stream);
+            stream.print("%");
+            getRight().generateJava(stream);
+            stream.print(")");
+        } else {
+            getLeft().generateJava(stream);
+            stream.print(".mod(");
+            getRight().generateJava(stream);
+            stream.print(")");
+        }
     }
 
     public void MultMultExp.generateJava(PrintStream stream) {
-        getLeft().generateJava(stream);
-        stream.print(".multiply(");
-        getRight().generateJava(stream);
-        stream.print(")");
+        Type t = getLeft().getType();
+        if (t.isFloatType()) {
+            stream.print("(");
+            getLeft().generateJava(stream);
+            stream.print("*");
+            getRight().generateJava(stream);
+            stream.print(")");
+        } else {
+            getLeft().generateJava(stream);
+            stream.print(".multiply(");
+            getRight().generateJava(stream);
+            stream.print(")");
+        }
     }
 
     public void AndBoolExp.generateJava(PrintStream stream) {

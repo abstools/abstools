@@ -22,7 +22,6 @@ import org.abs_models.backend.java.codegeneration.JavaCode;
 import org.abs_models.backend.java.codegeneration.JavaCodeGenerationException;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
-import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSRational;
@@ -118,7 +117,7 @@ public class JavaBackend extends Main {
     private static final Map<String, String> dataTypeMap = Map.of(
         "Int", ABSInteger.class.getName(),
         "Rat", ABSRational.class.getName(),
-        "Float", ABSFloat.class.getName(),
+        "Float", java.lang.Double.class.getName(),
         "Bool", java.lang.Boolean.class.getName(),
         "String", java.lang.String.class.getName(),
         "Fut", ABSFut.class.getName(),

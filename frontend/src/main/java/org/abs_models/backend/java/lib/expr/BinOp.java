@@ -9,7 +9,6 @@ import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
-import org.abs_models.backend.java.lib.types.ABSFloat;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSUnit;
@@ -41,9 +40,9 @@ public class BinOp {
                     return r1.toAprational().compareTo(r2.toAprational()) == 0;
                 }
                 break;
-            case ABSFloat f1:
-                if (v2 instanceof ABSFloat f2) {
-                    return f1.getDouble() == f2.getDouble();
+            case Double f1:
+                if (v2 instanceof Double f2) {
+                    return f1.compareTo(f2) == 0;
                 }
                 break;
             case String s1:
@@ -65,7 +64,7 @@ public class BinOp {
                 throw new RuntimeException("Encountered unknown ABS type " + v1.getClass() + " in BinOp#eq, giving up.");
         }
         // not reached except in case of mistyped program
-        return false;
+        throw new RuntimeException("Encountered unknown ABS type " + v1.getClass() + " in BinOp#eq, giving up.");
     }
 
     public static boolean notEq(Object v, Object v2) {
@@ -118,9 +117,9 @@ public class BinOp {
                     return r1.toAprational().compareTo(r2.toAprational()) > 0;
                 }
                 break;
-            case ABSFloat f1:
-                if (v2 instanceof ABSFloat f2) {
-                    return f1.getDouble() > f2.getDouble();
+            case Double f1:
+                if (v2 instanceof Double f2) {
+                    return f1 > f2;
                 }
                 break;
             case String s1:
@@ -146,7 +145,7 @@ public class BinOp {
                 throw new RuntimeException("Encountered unknown ABS type " + v1.getClass() + " in BinOp#gt, giving up.");
         }
         // not reached except in case of mistyped program
-        return false;
+        throw new RuntimeException("Encountered unknown ABS type " + v1.getClass() + " in BinOp#gt, giving up.");
     }
 
     // Note: the below methods could be open-coded to make one pass over v1,

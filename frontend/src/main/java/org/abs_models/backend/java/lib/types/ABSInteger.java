@@ -106,12 +106,12 @@ public class ABSInteger extends ABSRational {
         return ONE;
     }
 
-    public static ABSInteger floor(ABSFloat f) {
-        return new ABSInteger(new Apfloat(f.getDouble()).floor());
+    public static ABSInteger floor(double f) {
+        return new ABSInteger(new Apfloat(f).floor());
     }
 
-    public static ABSInteger ceil(ABSFloat f) {
-        return new ABSInteger(new Apfloat(f.getDouble()).ceil());
+    public static ABSInteger ceil(double f) {
+        return new ABSInteger(new Apfloat(f).ceil());
     }
 
 }
