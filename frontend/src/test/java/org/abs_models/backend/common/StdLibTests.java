@@ -132,6 +132,17 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void mapPutIntIntoRat() throws Exception {
+        assertEvalTrue("""
+            {
+                Map<Int, Rat> m = map[];
+                m = put(m, 0, 10);
+                Bool testresult = lookupUnsafe(m, 0) == 10;
+            }
+            """);
+    }
+
+    @Test
     public void mapKeys() throws Exception {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = keys(map) == set[1, 2, 3]; }");
     }
