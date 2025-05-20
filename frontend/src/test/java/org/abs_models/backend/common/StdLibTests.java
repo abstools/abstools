@@ -284,6 +284,21 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void absInt() throws Exception {
+        assertEvalTrue("{ Bool testresult = abs(-5) == 5; }");
+    }
+
+    @Test
+    public void absRat() throws Exception {
+        assertEvalTrue("{ Bool testresult = abs(-5/2) == 5/2; }");
+    }
+
+    @Test
+    public void absFloat() throws Exception {
+        assertEvalTrue("{ Bool testresult = abs(-5.2) == 5.2; }");
+    }
+
+    @Test
     public void sqrt1() throws Exception {
         assertEvalTrue("{Bool testresult = sqrt(4.0) == 2.0;}");
     }
