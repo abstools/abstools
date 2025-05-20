@@ -212,6 +212,46 @@ public class ABSBuiltInFunctions {
         return val;
     }
 
+    public static ABSRational min(ABSRational r1, ABSRational r2) {
+        return r1.toAprational().compareTo(r2.toAprational()) < 0 ? r1 : r2;
+    }
+
+    public static ABSInteger min(ABSInteger i1, ABSInteger i2) {
+        return i1.toAprational().compareTo(i2.toAprational()) < 0 ? i1 : i2;
+    }
+
+    public static Double min(Double d1, Double d2) {
+        return d1 < d2 ? d1 : d2;
+    }
+
+    public static ABSRational max(ABSRational r1, ABSRational r2) {
+        return r1.toAprational().compareTo(r2.toAprational()) > 0 ? r1 : r2;
+    }
+
+    public static ABSInteger max(ABSInteger i1, ABSInteger i2) {
+        return i1.toAprational().compareTo(i2.toAprational()) > 0 ? i1 : i2;
+    }
+
+    public static Double max(Double d1, Double d2) {
+        return d1 > d2 ? d1 : d2;
+    }
+
+    public static ABSRational abs(ABSRational r) {
+        return r.toAprational().compareTo(Aprational.ZERO) < 0
+            ? ABSRational.fromAprational(r.toAprational().negate())
+            : r;
+    }
+
+    public static ABSInteger abs(ABSInteger i) {
+        return i.toAprational().compareTo(Aprational.ZERO) < 0
+            ? ABSInteger.fromBigInt(i.toAprational().negate())
+            : i;
+    }
+
+    public static Double abs(Double d) {
+        return Math.abs(d);
+    }
+
     public static ABSInteger truncate(ABSRational r) {
         return r.truncate();
     }

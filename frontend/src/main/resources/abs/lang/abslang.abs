@@ -92,10 +92,13 @@ interface Object { }
 def Bool and(Bool a, Bool b) = a && b;
 def Bool not(Bool a) = !a;
 
-def A max<A>(A a, A b) = when a > b then a else b;
-def A min<A>(A a, A b) = when a < b then a else b;
-
-def Rat abs(Rat x) = when x > 0 then x else -x;
+// KLUDGE: the functions 'min', 'max', 'abs' should work for all
+// numeric types, but not for any others.  We can't express this since
+// we don't have Rust-style traits or similar, so we depend on the
+// backend throwing an error during compilation.
+def A max<A>(A a, A b) = builtin; // when a > b then a else b;
+def A min<A>(A a, A b) = builtin; // when a < b then a else b;
+def A abs<A>(A x) = builtin; // when x > 0 then x else -x;
 
 def Rat pow(Rat b, Int n) =
     when n < 0

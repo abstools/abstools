@@ -6,6 +6,7 @@
 -export([currentms/1,ms_since_model_start/1,getProductLine/1,lowlevelDeadline/1,print/2,println/2,strlen/2,substr/4,thisDC/1,toString/2]).
 -export([random/2,truncate/2,numerator/2, denominator/2]).
 -export([float/2, rat/2, floor/2, ceil/2, sqrt/2, log/2, exp/2]).
+-export([min/3, max/3, abs/2]).
 
 -export([method/2, destinyOf/2, arrival/2, proc_deadline/2]).
 
@@ -154,6 +155,29 @@ rat(_Cog, F) ->
             Length = length(Rest) - 1,
             Factor = mochinum:int_pow(10, Length),
             rationals:new(trunc(F * Factor), Factor)
+    end.
+
+min(_Cog, N1, N2) ->
+    case cmp:lt(N1, N2) of
+        true -> N1;
+        false -> N2
+    end.
+
+max(_Cog, N1, N2) ->
+    case cmp:lt(N1, N2) of
+        true -> N2;
+        false -> N1
+    end.
+
+abs(_Cog, R={N, D}) when is_integer(N),is_integer(D) ->
+    case rationals:is_negative(R) of
+        true -> rationals:neg(R);
+        false -> R
+    end;
+abs(_Cog, N) ->
+    case N < 0 of
+        true -> - N;
+        false -> N
     end.
 
 floor(_Cog, F) ->
