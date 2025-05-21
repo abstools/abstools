@@ -96,17 +96,17 @@ ext {
 
 dependencies {
     // Any other dependencies here ...
-    implementation files(getLatestAbsFrontendJar())
+    implementation files(new File(project.ext.absToolsDir, "absfrontend.jar"))
 }
-
 
 task downloadAbsFrontend {
     description 'Downloads the latest absfrontend.jar from GitHub releases'
     def taskAbsToolsDir = project.ext.absToolsDir
+    def taskAbsDownloadsDir = new File(taskAbsToolsDir, "/downloads")
 
     doLast {
         logger.lifecycle("Checking for latest absfrontend.jar...")
-        taskAbsToolsDir.mkdirs()
+        taskAbsDownloadsDir.mkdirs()
         def apiUrl = new java.net.URL("https://api.github.com/repos/abstools/abstools/releases/latest")
         def connection = apiUrl.openConnection()
         // GitHub API may require a User-Agent header
@@ -121,14 +121,15 @@ task downloadAbsFrontend {
         def jarAsset = json.assets.find { it.name == "absfrontend.jar" }
         if (jarAsset) {
             def versionedJarName = "absfrontend-${version}.jar"
-            def versionedJarFile = new File(taskAbsToolsDir, versionedJarName)
+            def versionedJarFile = new File(taskAbsDownloadsDir, versionedJarName)
+            def jarFile = new File(taskAbsToolsDir, "absfrontend.jar")
             if (versionedJarFile.exists()) {
                 logger.lifecycle("Version ${version} already downloaded at ${versionedJarFile.absolutePath}")
             } else {
                 def downloadUrl = jarAsset.browser_download_url
-                logger.lifecycle("Found new version ${version} at: ${downloadUrl}")
+                logger.lifecycle("Found latest version ${version} at: ${downloadUrl}")
                 // Delete any previous absfrontend jar files
-                taskAbsToolsDir.listFiles().each { file ->
+                taskAbsDownloadsDir.listFiles().each { file ->
                     if (file.name.startsWith("absfrontend-") && file.name.endsWith(".jar")) {
                         logger.lifecycle("Deleting old version: ${file.name}")
                         file.delete()
@@ -142,25 +143,13 @@ task downloadAbsFrontend {
                 }
                 logger.lifecycle("Successfully downloaded absfrontend.jar version ${version} to ${versionedJarFile.absolutePath}")
             }
+            java.nio.file.Files.copy(versionedJarFile.toPath(), jarFile.toPath(),
+                                     java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            logger.lifecycle("Copied ${versionedJarFile.absolutePath} to ${jarFile.absolutePath}")
         } else {
             throw new GradleException("Could not find absfrontend.jar in the latest release")
         }
     }
-}
-
-def getLatestAbsFrontendJar() {
-    def dir = project.ext.absToolsDir
-    if (!dir.exists()) {
-        throw new GradleException("Could not find absfrontend.jar")
-    }
-    def jarFiles = dir.listFiles().findAll { file ->
-        file.name.startsWith("absfrontend-") && file.name.endsWith(".jar")
-    }
-    if (jarFiles.isEmpty()) {
-        throw new GradleException("Could not find absfrontend.jar")
-    }
-    // There should be only one
-    return jarFiles[0]
 }
 
 // Compile ABS
@@ -168,7 +157,7 @@ task compileAbs(type: Exec, dependsOn: downloadAbsFrontend) {
     description = 'Compiles ABS.'
     inputs.dir 'src/main/abs'
     outputs.dir 'build/abs'
-    commandLine 'java', '-jar', getLatestAbsFrontendJar(), '--java', '-d', 'build/abs/',
+    commandLine 'java', '-jar', project.ext.absToolsDir.toString() + '/absfrontend.jar', '--java', '-d', 'build/abs/',
         *fileTree(dir: 'src/main/abs', include: '**/*.abs').collect { it.absolutePath }
 }
 
