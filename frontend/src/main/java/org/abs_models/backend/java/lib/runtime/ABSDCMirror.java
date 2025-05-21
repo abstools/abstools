@@ -1,8 +1,5 @@
 package org.abs_models.backend.java.lib.runtime;
 
-import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
-import org.abs_models.backend.java.lib.types.ABSInterface;
-import org.abs_models.backend.java.lib.types.ABSRational;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -11,6 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
+import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.apfloat.Aprational;
 
 /**
@@ -48,7 +47,7 @@ public class ABSDCMirror {
         try {
             try {
                 DC_CHECK_SAME_COG.setBoolean(dc, false);
-                return ((ABSRational)DC_CONSUME_COST.invoke(dc, ABSRational.fromAprational(needed_cpu))).toAprational();
+                return (Aprational)DC_CONSUME_COST.invoke(dc, needed_cpu);
             } finally {
                 DC_CHECK_SAME_COG.setBoolean(dc, true);
             }
@@ -150,7 +149,7 @@ public class ABSDCMirror {
         try {
             CLASS_DC = Class.forName("ABS.DC.DeploymentComponent_c");
             DC_CHECK_SAME_COG = ABSObject.class.getDeclaredField("__checkSameCog");
-            DC_CONSUME_COST = CLASS_DC.getDeclaredMethod("consumeCost", ABSRational.class);
+            DC_CONSUME_COST = CLASS_DC.getDeclaredMethod("consumeCost", Aprational.class);
             DC_ADVANCE_TIME_BY_1_TICK = CLASS_DC.getDeclaredMethod("advanceTimeBy1Tick");
             GET_FIELD_VALUE = CLASS_DC.getDeclaredMethod("getFieldValue", java.lang.String.class);
             GET_FIELD_VALUE.setAccessible(true); // override `protected` flag

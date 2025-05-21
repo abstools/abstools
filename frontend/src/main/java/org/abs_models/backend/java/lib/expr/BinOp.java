@@ -10,8 +10,8 @@ import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSProcess;
-import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSUnit;
+import org.apfloat.Aprational;
 
 /**
  * Comparisons between ABS values.
@@ -35,9 +35,9 @@ public class BinOp {
             case ABSFut<?> f: return f == v2;
             case ABSUnit u: return v2 instanceof ABSUnit;
             case Boolean b1: return b1.equals(v2);
-            case ABSRational r1:
-                if (v2 instanceof ABSRational r2) { // includes ABSInteger
-                    return r1.toAprational().compareTo(r2.toAprational()) == 0;
+            case Aprational r1:
+                if (v2 instanceof Aprational r2) { // includes Apint
+                    return r1.compareTo(r2) == 0;
                 }
                 break;
             case Double f1:
@@ -112,9 +112,9 @@ public class BinOp {
                     return b1 && !b2;
                 }
                 break;
-            case ABSRational r1:
-                if (v2 instanceof ABSRational r2) { // includes ABSInteger
-                    return r1.toAprational().compareTo(r2.toAprational()) > 0;
+            case Aprational r1:
+                if (v2 instanceof Aprational r2) { // includes Apint
+                    return r1.compareTo(r2) > 0;
                 }
                 break;
             case Double f1:

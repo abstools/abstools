@@ -4,9 +4,9 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
-import org.abs_models.backend.java.lib.types.ABSRational;
-import org.apfloat.Aprational;
 import java.util.logging.Logger;
+
+import org.apfloat.Aprational;
 
 /**
  * A "guard" that implements the Cost: annotation from Timed ABS.
@@ -31,14 +31,11 @@ public class ABSResourceGuard extends ABSGuard {
 
     /**
      * Construct an ABSResourceGuard.
-     * <p>
-     * This constructor is called from generated code, hence the use of {@code
-     * ABSRational} as parameter.
      *
      * @param resources The amount of resources needed.
      */
-    public ABSResourceGuard(ABSRational resources) {
-        this.resources_needed = resources.toAprational();
+    public ABSResourceGuard(Aprational resources) {
+        this.resources_needed = resources;
         this.resources_consumed = Aprational.ZERO;
         if (resources_needed.signum() < 0) {
             log.severe(() -> this + " trying to consume a negative amount of resources(" + resources_needed + "), continuing with 0 required resources instead.");
