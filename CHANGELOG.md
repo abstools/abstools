@@ -16,6 +16,8 @@ wrapped values directly instead in generated code.
 - Instead of `ABSString`, use `java.lang.String`
 - Instead of `ABSBool`, use `java.lang.Boolean`
 - Instead of `ABSFloat`, use `java.lang.Double`
+- Instead of `ABSRational`, use `org.apfloat.Aprational`
+- Instead of `ABSInteger`, use `org.apfloat.Apint`
 
 ### Removed
 

@@ -888,8 +888,8 @@ aspect GenerateJavaDynamic_Core {
     }
 
     public void IntLiteral.generateJavaDynamic(PrintStream stream) {
-        stream.print(ABSInteger.class.getName());
-        stream.print(".fromString(\"");
+        stream.print("new " + Apint.class.getName());
+        stream.print("(\"");
         stream.print(getContent());
         stream.print("\")");
     }

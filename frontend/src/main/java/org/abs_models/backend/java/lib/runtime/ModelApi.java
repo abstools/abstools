@@ -23,10 +23,10 @@ import javax.annotation.Nonnull;
 
 import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
-import org.abs_models.backend.java.lib.types.ABSInteger;
-import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
+import org.apfloat.Apint;
+import org.apfloat.Aprational;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.exc.StreamReadException;
@@ -180,7 +180,7 @@ public class ModelApi {
     private static class ClockHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            ABSRational now = ABSRational.fromAprational(ABSRuntime.getRuntime().getClock());
+            Aprational now = ABSRuntime.getRuntime().getClock();
             final List<String> paths = Arrays.stream(exchange.getRequestURI().getPath().split("/"))
                 .filter(p -> !p.isEmpty())
                 .collect(Collectors.toList());
@@ -194,7 +194,7 @@ public class ModelApi {
                 sendResponse(exchange, 200, "text/json", response);
             } else if (paths.size() == 2 && "advance".equals(paths.get(1))) {
                 // decode an Int in the `by` URL parameter
-                ABSInteger by = null;
+                Apint by = null;
                 String errorResponse = mapper.writeValueAsString(Map.of("error", "Need parameter \"by\" with positive integer"));
                 String uriParams = exchange.getRequestURI().getQuery();
                 if (uriParams != null) {
@@ -210,11 +210,11 @@ public class ModelApi {
                             return;
                         } else {
                             try {
-                                by = (ABSInteger)convertUrlParameter("by", urlParam.substring(split + 1), "ABS.StdLib.Int");
+                                by = (Apint)convertUrlParameter("by", urlParam.substring(split + 1), "ABS.StdLib.Int");
                             } catch (ParameterConversionException e) {
                                 sendResponse(exchange, 400, "text/json", errorResponse);
                             }
-                            if (BinOp.lt(by, ABSInteger.ZERO)) {
+                            if (BinOp.lt(by, Apint.ZERO)) {
                                 sendResponse(exchange, 400, "text/json", errorResponse);
                                 return;
                             }
@@ -222,7 +222,7 @@ public class ModelApi {
                     }
                 }
                 if (by != null) {
-                    Object limit = ABSRuntime.getRuntime().addToClockLimit(by.getBigInteger().longValue());
+                    Object limit = ABSRuntime.getRuntime().addToClockLimit(by.longValue());
                     String response = mapper.writeValueAsString(Map.of("result", limit));
                     sendResponse(exchange, 200, "text/json", response);
                 } else {
@@ -444,9 +444,9 @@ public class ModelApi {
         } else if (type.equals("ABS.StdLib.Float") && value instanceof Double d) {
             return d;
         } else if (type.equals("ABS.StdLib.Int") && value instanceof Integer i) {
-            return ABSInteger.fromInt(i);
+            return new Apint(i);
         } else if (type.equals("ABS.StdLib.Int") && value instanceof BigInteger i) {
-            return ABSInteger.fromBigInt(i);
+            return new Apint(i);
         } else if (type.equals("ABS.StdLib.Bool") && value instanceof Boolean b) {
             return b;
         } else if (type.startsWith("ABS.StdLib.Map") && value instanceof Map<?, ?> m) {
@@ -486,7 +486,7 @@ public class ModelApi {
             }
         } else if (type.equals("ABS.StdLib.Int")) {
             try {
-                return ABSInteger.fromBigInt(new BigInteger(value));
+                return new Apint(value);
             } catch (NumberFormatException e) {
                 throw new ParameterConversionException("Could not parse " + value + " as Int for parameter '" + name + "'");
             }
@@ -563,8 +563,8 @@ public class ModelApi {
             case ABSUnit u: return "Unit";
             case Boolean b: return b;
             case String s: return s;
-            case ABSInteger i: return i.getBigInteger();
-            case ABSRational r: return r.toDouble();
+            case Apint i: return i.toBigInteger();
+            case Aprational r: return r.doubleValue();
             case Double f: return f;
             case ABSAlgebraicDataType d:
                 return d.toJson();

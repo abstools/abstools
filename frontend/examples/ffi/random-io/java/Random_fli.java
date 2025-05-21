@@ -5,10 +5,10 @@ import org.abs_models.backend.java.lib.types.*;
 
 public class Random_fli extends Random_c {
     
-    public ABSInteger fli_random(ABSInteger max) {
+    public Apint fli_random(Apint max) {
         Random rnd = new Random();
-        int n = rnd.nextInt(max.toInt());
-        return ABSInteger.fromInt(n);
+        int n = rnd.nextInt(max.intValue());
+        return new Apint(n);
     }
 }
 

@@ -21,9 +21,7 @@ import org.abs_models.backend.java.lib.runtime.ABSThread;
 import org.abs_models.backend.java.lib.runtime.AbstractAsyncCallRT;
 import org.abs_models.backend.java.lib.runtime.ModelApi;
 import org.abs_models.backend.java.lib.runtime.Task;
-import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
-import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
 import org.abs_models.common.Constants;
 import org.abs_models.frontend.analyser.AnnotationHelper;
@@ -59,6 +57,8 @@ import org.abs_models.frontend.ast.VarOrFieldDecl;
 import org.abs_models.frontend.ast.VarUse;
 import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.Type;
+import org.apfloat.Apint;
+import org.apfloat.Aprational;
 
 public class JavaGeneratorHelper {
 
@@ -215,11 +215,11 @@ public class JavaGeneratorHelper {
             } else if (t.isIntType()) {
                 stream.print("statement.setBigDecimal(" + (i - 2) + ", new java.math.BigDecimal((");
                 e.generateJava(stream);
-                stream.println(").getBigInteger()));");
+                stream.println(").toBigInteger()));");
             } else if (t.isRatType()) {
                 stream.print("statement.setDouble(" + (i - 2) + ", (");
                 e.generateJava(stream);
-                stream.println(").toDouble());");
+                stream.println(").doubleValue());");
             } else if (t.isFloatType()) {
                 stream.print("statement.setDouble(" + (i - 2) + ", (");
                 e.generateJava(stream);
@@ -245,11 +245,11 @@ public class JavaGeneratorHelper {
             if (query_type.isBoolType()) {
                 stream.print("rs.getBoolean(1)");
             } else if (query_type.isIntType()) {
-                stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(1).toBigInteger())");
+                stream.print("new " + Apint.class.getName() + "(rs.getBigDecimal(1).toBigInteger())");
             } else if (query_type.isFloatType()) {
                 stream.print("rs.getDouble(1)");
             } else if (query_type.isRatType()) {
-                stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(1))");
+                stream.print("new " + Aprational.class.getName() + "(rs.getDouble(1))");
             } else if (query_type.isStringType()) {
                 stream.print("rs.getString(1)");
             } else {
@@ -275,11 +275,11 @@ public class JavaGeneratorHelper {
                 if (t.isBoolType()) {
                     stream.print("rs.getBoolean(" + i + ")");
                 } else if (t.isIntType()) {
-                    stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(" + i + ").toBigInteger())");
+                    stream.print("new " + Apint.class.getName() + "(rs.getBigDecimal(" + i + ").toBigInteger())");
                 } else if (t.isFloatType()) {
                     stream.print("rs.getDouble(" + i + ")");
                 } else if (t.isRatType()) {
-                    stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(" + i + "))");
+                    stream.print("new " + Aprational.class.getName() + "(rs.getDouble(" + i + "))");
                 } else if (t.isStringType()) {
                     stream.print("rs.getString(" + i + ")");
                 } else {

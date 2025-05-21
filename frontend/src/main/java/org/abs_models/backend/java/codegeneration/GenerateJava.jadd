@@ -10,6 +10,8 @@ import org.abs_models.backend.java.lib.types.*;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.locationtypes.LocationTypeExtension;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
+import org.apfloat.Apint;
+import org.apfloat.Aprational;
 
 aspect GenerateJava {
 
@@ -995,13 +997,13 @@ aspect GenerateJava {
     public void IntLiteral.generateJava(PrintStream stream) {
         // Long.MAX_VALUE = 9223372036854775807L
         boolean needsFromString = getContent().length() > 18;
-        stream.print(ABSInteger.class.getName());
+        stream.print("new " + Apint.class.getName());
         if (needsFromString) {
-            stream.print(".fromString(\"");
+            stream.print("(\"");
             stream.print(getContent());
             stream.print("\")");
         } else {
-            stream.print(".fromLong(");
+            stream.print("(");
             stream.print(getContent());
             stream.print("L)");
         }
@@ -1096,6 +1098,12 @@ aspect GenerateJava {
             stream.print("(");
             getLeft().generateJava(stream);
             stream.print("/");
+            getRight().generateJava(stream);
+            stream.print(")");
+        } else if (t.isIntType() && getRight().getType().isIntType()) {
+            stream.print("new " + Aprational.class.getName() + "(");
+            getLeft().generateJava(stream);
+            stream.print(",");
             getRight().generateJava(stream);
             stream.print(")");
         } else {
