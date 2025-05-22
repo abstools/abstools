@@ -7,7 +7,6 @@ package org.abs_models.backend.java.lib.expr;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
-import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSUnit;
@@ -29,7 +28,6 @@ public class BinOp {
                     return c1.getName().equals(c2.getName());
                 }
                 break;
-            case COG c: return c == v2;
             case ABSProcess p: return p == v2;
             case ABSObject o: return o == v2;
             case ABSFut<?> f: return f == v2;
@@ -77,13 +75,6 @@ public class BinOp {
             case ABSDynamicClass c1:
                 if (v2 instanceof ABSDynamicClass c2) {
                     return c1.getName().compareTo(c2.getName()) > 0;
-                }
-                break;
-            case COG c1:
-                if (v2 instanceof COG c2) {
-                    return c1.getID() > c2.getID();
-                } else if (v2 == null) {
-                    return true;
                 }
                 break;
             case ABSProcess p1:
