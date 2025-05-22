@@ -12,14 +12,13 @@ import java.util.logging.Logger;
 
 import org.abs_models.backend.java.JavaBackendException;
 import org.abs_models.backend.java.lib.types.ABSInterface;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.ObjectCreationObserver;
 import org.abs_models.backend.java.observing.TaskSchedulerView;
 import org.abs_models.backend.java.scheduling.TaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
 
-public class COG implements ABSValue {
+public class COG {
     protected static final Logger log = Logging.getLogger(COG.class.getName());
 
     private final TaskScheduler scheduler;
