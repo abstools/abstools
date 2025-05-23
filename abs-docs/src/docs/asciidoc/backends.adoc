@@ -157,7 +157,7 @@ task compileAbs(type: Exec, dependsOn: downloadAbsFrontend) {
     description = 'Compiles ABS.'
     inputs.dir 'src/main/abs'
     outputs.dir 'build/abs'
-    commandLine 'java', '-jar', project.ext.absToolsDir.toString() + '/absfrontend.jar', '--java', '-d', 'build/abs/',
+    commandLine 'java', '-jar', project.ext.absToolsDir.toString() + '/absfrontend.jar', '--java', '-d', 'build/abs/', '--sourceonly',
         *fileTree(dir: 'src/main/abs', include: '**/*.abs').collect { it.absolutePath }
 }
 
