@@ -280,13 +280,27 @@ aspect GenerateJava {
 
 
     public void DataTypeDecl.generateJava(PrintStream stream) {
-        JavaGeneratorHelper.generateHelpLine(this,stream);
+        boolean hasConstructors = getNumDataConstructor() > 0;
 
-        stream.print("public abstract class " + getName());
+        JavaGeneratorHelper.generateHelpLine(this,stream);
+        if (hasConstructors) {
+            stream.print("public abstract sealed class " + getName());
+        } else {
+            stream.print("public abstract class " + getName());
+        }
         JavaGeneratorHelper.generateTypeParameters(stream,this);
 
-        stream.println(" extends " + ABSAlgebraicDataType.class.getName() + " {");
+        stream.print(" extends " + ABSAlgebraicDataType.class.getName());
 
+        if (hasConstructors) {
+            stream.print(" permits ");
+            stream.print(ListUtils.toJavaList(getDataConstructors())
+                    .stream()
+                    .map(JavaBackend::getConstructorName)
+                    .collect(Collectors.joining(", ")));
+        }
+
+        stream.println(" {");
         for (DataConstructor c : getDataConstructors()) {
             stream.println("public final boolean is" + c.getName()+
                     "() { return this instanceof " + JavaBackend.getConstructorName(c)+
