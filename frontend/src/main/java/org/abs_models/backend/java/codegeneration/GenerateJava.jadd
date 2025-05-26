@@ -300,19 +300,7 @@ aspect GenerateJava {
                     .collect(Collectors.joining(", ")));
         }
 
-        stream.println(" {");
-        for (DataConstructor c : getDataConstructors()) {
-            stream.println("public final boolean is" + c.getName()+
-                    "() { return this instanceof " + JavaBackend.getConstructorName(c)+
-                    "; }");
-            stream.print("public final " + JavaBackend.getConstructorName(c));
-            JavaGeneratorHelper.generateTypeParameters(stream,this);
-            stream.println(" to" + c.getName()+
-                    "() { return (" + JavaBackend.getConstructorName(c) + ") this; }");
-
-        }
-
-        stream.println("}");
+        stream.println(" { }");
     }
 
     public void FunctionDecl.generateJava(PrintStream stream) {
