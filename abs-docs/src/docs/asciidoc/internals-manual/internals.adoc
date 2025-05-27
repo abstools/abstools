@@ -124,9 +124,11 @@ making them available to the Java backend at compile time.
 
 - Built-in functions: These functions must be defined per backend.  The Java
   backend defines these functions in the file `ABSBuiltInFunctions.java`.
-- Primitive datatypes: These are subclasses of `ABSBuiltInDataType.java`.  The
-  types defined in `abslang.abs` (e.g., `Bool`, `Rat`, `String`) are generated
-  but never used.
+- Primitive datatypes: `Bool`, `String` and `Float` are translated to
+  their Java counterparts.  `Unit` is used as-is, `Int` and `Rat` are
+  translated to types from the Apfloat library.  The other types
+  (`Unit`, `Fut<A>`) are implemented as subclasses of
+  `ABSBuiltinDatatype`.
 - Using other ABS functions, datatypes, classes etc. from Java: This can be
   done via reflection; see `ABSDCMirror.java` for an example.
 
