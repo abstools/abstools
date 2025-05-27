@@ -4,8 +4,10 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-public abstract class ABSBuiltInDataType extends ABSDataType {
+public abstract class ABSBuiltInDataType implements ABSDataType {
     public final String constructorName;
+
+    public String toString() { return toStringHelper(); }
 
     protected ABSBuiltInDataType(String constructorName) {
         this.constructorName = constructorName;
