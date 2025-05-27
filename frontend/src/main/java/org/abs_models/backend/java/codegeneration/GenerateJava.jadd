@@ -147,9 +147,11 @@ aspect GenerateJava {
         stream.println(" };");
         stream.println("}");
 
-        stream.println("protected Object[] getArgs() { return allArgs; }");
+        stream.println("public Object[] getArgs() { return allArgs; }");
 
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";}");
+
+        stream.println("public java.lang.String toString() { return toStringHelper(); }");
 
         // eq method
         stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
@@ -205,7 +207,7 @@ aspect GenerateJava {
         stream.println(" };");
         stream.println("}");
 
-        stream.print("protected Object[] getArgs() { return allArgs; }");
+        stream.print("public Object[] getArgs() { return allArgs; }");
 
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";} ");
 
@@ -290,7 +292,7 @@ aspect GenerateJava {
         }
         JavaGeneratorHelper.generateTypeParameters(stream,this);
 
-        stream.print(" extends " + ABSAlgebraicDataType.class.getName());
+        stream.print(" implements " + ABSAlgebraicDataType.class.getName());
 
         if (hasConstructors) {
             stream.print(" permits ");

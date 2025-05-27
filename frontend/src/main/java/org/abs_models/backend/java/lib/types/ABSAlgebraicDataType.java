@@ -4,8 +4,8 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-public abstract class ABSAlgebraicDataType extends ABSDataType {
+public interface ABSAlgebraicDataType extends ABSDataType {
 
-    public abstract Object toJson();
+    public Object toJson();
 
 }

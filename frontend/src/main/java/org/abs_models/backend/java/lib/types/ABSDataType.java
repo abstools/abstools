@@ -4,11 +4,11 @@
  */
 package org.abs_models.backend.java.lib.types;
 
-public abstract class ABSDataType implements ABSValue {
+public interface ABSDataType extends ABSValue {
 
-    private static final Object[] NO_ARGS = new Object[0];
+    static final Object[] NO_ARGS = new Object[0];
 
-    protected Object[] getArgs() {
+    default Object[] getArgs() {
         return NO_ARGS;
     }
 
@@ -18,7 +18,7 @@ public abstract class ABSDataType implements ABSValue {
      * @return the i'th constructor argument of this data value
      * @throws IllegalArgumentException if {@code i < 0 or i >= getNumArgs()}
      */
-    public Object getArg(int i) {
+    default Object getArg(int i) {
        if (i < 0 || i >= getNumArgs()) throw new IllegalArgumentException(i+ " is not a valid constructor argument index");
        return getArgs()[i];
     }
@@ -27,15 +27,17 @@ public abstract class ABSDataType implements ABSValue {
      * Returns the number of constructor arguments of this data value.
      * @return the number of constructor arguments of this data value
      */
-    public int getNumArgs() {
+    default int getNumArgs() {
        return getArgs().length;
     }
 
-    public String getConstructorName() {
+    default String getConstructorName() {
         return this.getClass().getSimpleName();
     }
 
-    public String toString() {
+    default String toStringHelper() {
+        // Can't override toString in an interface; call this method
+        // in implementing classes instead
         StringBuilder sb = new StringBuilder();
         sb.append(getConstructorName());
         Object[] args = getArgs();
