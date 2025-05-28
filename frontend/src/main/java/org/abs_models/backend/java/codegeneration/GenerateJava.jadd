@@ -116,7 +116,7 @@ aspect GenerateJava {
 
         stream.print("public final class " + constructorClassName);
         JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
-        stream.print(" extends " + dataTypeDecl.getName());
+        stream.print(" implements " + dataTypeDecl.getName());
         JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
 
         stream.println(" {");
@@ -176,7 +176,7 @@ aspect GenerateJava {
 
         stream.print("public final class " + constructorClassName);
         JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
-        stream.print(" extends ABS.StdLib.Exception");
+        stream.print(" implements ABS.StdLib.Exception");
         JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
 
         stream.println(" {");
@@ -286,13 +286,16 @@ aspect GenerateJava {
 
         JavaGeneratorHelper.generateHelpLine(this,stream);
         if (hasConstructors) {
-            stream.print("public abstract sealed class " + getName());
+            stream.print("public sealed interface " + getName());
         } else {
-            stream.print("public abstract class " + getName());
+            // Two cases apply here: 
+            // - The dummy definitions of Int etc. in abslang.abs
+            // - The Exception type, which is an open type
+            stream.print("public interface " + getName());
         }
         JavaGeneratorHelper.generateTypeParameters(stream,this);
 
-        stream.print(" implements " + ABSAlgebraicDataType.class.getName());
+        stream.print(" extends " + ABSAlgebraicDataType.class.getName());
 
         if (hasConstructors) {
             stream.print(" permits ");
