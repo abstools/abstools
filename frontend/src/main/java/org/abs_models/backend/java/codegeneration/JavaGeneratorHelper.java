@@ -10,10 +10,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.java.JavaBackendConstants;
+import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
@@ -22,6 +25,7 @@ import org.abs_models.backend.java.lib.runtime.AbstractAsyncCallRT;
 import org.abs_models.backend.java.lib.runtime.ModelApi;
 import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.types.ABSProcess;
+import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
 import org.abs_models.common.Constants;
 import org.abs_models.frontend.analyser.AnnotationHelper;
@@ -300,6 +304,52 @@ public class JavaGeneratorHelper {
         stream.println("return result;");
     }
 
+    public static void generateDataConstructor(PrintStream stream, DataConstructor c, String datatypeName, DataTypeDecl dataTypeDecl) {
+        String constructorClassName = JavaBackend.getConstructorName(c);
+        JavaGeneratorHelper.generateHelpLine(c,stream);
+
+        stream.print("public record " + constructorClassName);
+        if (dataTypeDecl != null) JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
+        stream.print("("
+                       + IntStream
+                               .range(0, c.getNumConstructorArg())
+                               .mapToObj(i -> JavaBackend.getJavaType(c.getConstructorArg(i)) + " arg" + i)
+                               .collect(Collectors.joining(", "))
+                     + ")");
+        stream.print(" implements " + datatypeName);
+
+        stream.println(" {");
+
+        stream.println("public Object[] getArgs() { return new Object[] { "
+                       + IntStream
+                               .range(0, c.getNumConstructorArg())
+                               .mapToObj(i -> "arg" + i)
+                               .collect(Collectors.joining(", "))
+                       + " }; }");
+        stream.println("public java.lang.String getConstructorName() { return \"" + c.getName() + "\";}");
+
+        stream.println("public java.lang.String toString() { return toStringHelper(); }");
+
+        // eq method
+        stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
+        stream.println("if (! (o instanceof " + constructorClassName + ")) return false;");
+        stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
+        stream.println("return true "
+                       + IntStream.range(0, c.getNumConstructorArg())
+                               .mapToObj(i -> " && "
+                                              + BinOp.class.getName()
+                                              + ".eq(arg" + i + ", other.arg" + i + ")")
+                               .collect(Collectors.joining())
+                       + ";");
+        stream.println("}");
+        stream.println();
+
+        // toJSON method
+        JavaGeneratorHelper.generateDataTypeConstructorToJsonMethod(stream, c);
+
+        stream.println("}");
+    }
+
     /**
      * Convert data types to something that can be JSONified by the
      * Jackson library for the Model API.  There are three cases:<p>
@@ -391,7 +441,7 @@ public class JavaGeneratorHelper {
                 }
                 if (key != null) {
                     stream.println("result.put(\"" + key + "\", "
-                                   + ModelApi.class.getName() + ".absToJson(this.allArgs[" + elem + "]));");
+                                   + ModelApi.class.getName() + ".absToJson(arg" + elem + "));");
                 }
             }
             stream.println("return result;");

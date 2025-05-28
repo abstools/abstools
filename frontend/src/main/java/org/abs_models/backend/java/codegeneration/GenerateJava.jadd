@@ -110,119 +110,13 @@ aspect GenerateJava {
     abstract void Decl.generateJava(PrintStream stream);
 
     public void DataConstructor.generateJava(PrintStream stream) {
-        String constructorClassName = JavaBackend.getConstructorName(this);
         DataTypeDecl dataTypeDecl = ((DataTypeType)getType()).getDecl();
-        JavaGeneratorHelper.generateHelpLine(this,stream);
-
-        stream.print("public final class " + constructorClassName);
-        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
-        stream.print(" implements " + dataTypeDecl.getName());
-        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
-
-        stream.println(" {");
-
-        stream.println("public final Object[] allArgs;");
-
-        stream.print("public " + constructorClassName + "(");
-        boolean first = true;
-        int i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            if (first)
-                first = false;
-            else
-                stream.print(", ");
-            stream.print("final ");
-            stream.print(JavaBackend.getJavaType(u) + " arg" + i);
-            i++;
-        }
-        stream.println(") {");
-        stream.print("allArgs = new Object[] { ");
-        i=0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            if (i > 0)
-                stream.print(", ");
-            stream.print("arg" + i);
-            i++;
-        }
-        stream.println(" };");
-        stream.println("}");
-
-        stream.println("public Object[] getArgs() { return allArgs; }");
-
-        stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";}");
-
-        stream.println("public java.lang.String toString() { return toStringHelper(); }");
-
-        // eq method
-        stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
-        stream.println("if (! (o instanceof " + constructorClassName + ")) return false;");
-        stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
-        stream.println("boolean allEqual = java.util.stream.IntStream.range(0, allArgs.length).allMatch(i -> " + BinOp.class.getName() + ".eq(allArgs[i], other.allArgs[i]));");
-        stream.println("return allEqual;");
-        stream.println("}");
-        stream.println();
-
-        // toJSON method
-        JavaGeneratorHelper.generateDataTypeConstructorToJsonMethod(stream, this);
-
-        stream.println("}");
+        JavaGeneratorHelper.generateDataConstructor(stream, this, dataTypeDecl.getName(), dataTypeDecl);
     }
 
     public void ExceptionConstructor.generateJava(PrintStream stream) {
-        // Mostly copied from DataConstructor.generateJava
-        String constructorClassName = JavaBackend.getConstructorName(this);
         DataTypeDecl dataTypeDecl = ((DataTypeType)getType()).getDecl();
-        JavaGeneratorHelper.generateHelpLine(this,stream);
-
-        stream.print("public final class " + constructorClassName);
-        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
-        stream.print(" implements ABS.StdLib.Exception");
-        JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
-
-        stream.println(" {");
-
-        stream.println("public final Object[] allArgs;");
-
-        stream.print("public " + constructorClassName + "(");
-        boolean first = true;
-        int i = 0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            if (first)
-                first = false;
-            else
-                stream.print(", ");
-            stream.print("final ");
-            stream.print(JavaBackend.getJavaType(u) + " arg" + i);
-            i++;
-        }
-        stream.println(") {");
-        stream.print("allArgs = new Object[] { ");
-        i=0;
-        for (ConstructorArg u : getConstructorArgs()) {
-            if (i > 0)
-                stream.print(", ");
-            stream.print("arg" + i);
-            i++;
-        }
-        stream.println(" };");
-        stream.println("}");
-
-        stream.print("public Object[] getArgs() { return allArgs; }");
-
-        stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\";} ");
-
-        // eq method
-        stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
-        stream.println("if (! (o instanceof " + constructorClassName + ")) return false;");
-        stream.println(constructorClassName + " other = (" + constructorClassName + ") o;");
-        stream.println("boolean allEqual = java.util.stream.IntStream.range(0, allArgs.length).allMatch(i -> " + BinOp.class.getName() + ".eq(allArgs[i], other.allArgs[i]));");
-        stream.println("return allEqual;");
-        stream.println("}");
-
-        // toJSON method
-        JavaGeneratorHelper.generateDataTypeConstructorToJsonMethod(stream, this);
-
-        stream.println("}");
+        JavaGeneratorHelper.generateDataConstructor(stream, this, "ABS.StdLib.Exception", dataTypeDecl);
     }
 
     public void InterfaceDecl.generateJava(PrintStream stream) {
