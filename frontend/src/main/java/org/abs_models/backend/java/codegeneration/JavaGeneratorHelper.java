@@ -336,7 +336,28 @@ public class JavaGeneratorHelper {
         stream.println("}");
         stream.println("public java.lang.String getConstructorName() { return \"" + c.getName() + "\";}");
 
-        stream.println("public java.lang.String toString() { return toStringHelper(); }");
+        stream.println("public java.lang.String toString() {");
+        stream.println("StringBuilder sb = new StringBuilder();");
+        stream.println("sb.append(\"" + c.getName() + "\");");
+        if (c.getNumConstructorArg() > 0) {
+            String separator = "";
+            stream.println("sb.append(\"(\");");
+            for (int i = 0; i < c.getNumConstructorArg(); i++) {
+                if (!separator.isEmpty()) {
+                    stream.println("sb.append(\"" + separator + "\");");
+                }
+                separator = ",";
+                ConstructorArg a = c.getConstructorArg(i);
+                if (a.getType().isStringType()) {
+                    stream.println("sb.append(\"\\\"\" + arg" + i + " + \"\\\"\");");
+                } else {
+                    stream.println("sb.append(" + ABSBuiltInFunctions.class.getName() + ".toString(arg" + i + "));");
+                }
+            }
+            stream.println("sb.append(\")\");");
+        }
+        stream.println("return sb.toString();");
+        stream.println("}");
 
         // eq method
         stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
