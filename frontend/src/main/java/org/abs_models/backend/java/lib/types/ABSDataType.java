@@ -35,27 +35,4 @@ public interface ABSDataType extends ABSValue {
         return this.getClass().getSimpleName();
     }
 
-    default String toStringHelper() {
-        // Can't override toString in an interface; call this method
-        // in implementing classes instead
-        StringBuilder sb = new StringBuilder();
-        sb.append(getConstructorName());
-        Object[] args = getArgs();
-        if (args.length > 0) {
-            sb.append('(');
-            int i = 0;
-            for (Object v : args) {
-                if (i > 0) {
-                    sb.append(',');
-                }
-                sb.append(switch (v) {
-                    case String s -> "\"" + s.toString() + "\"";
-                    default -> v.toString();
-                });
-                i++;
-            }
-            sb.append(')');
-        }
-        return sb.toString();
-    }
 }
