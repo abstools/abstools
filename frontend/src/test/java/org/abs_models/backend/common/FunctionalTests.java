@@ -303,8 +303,14 @@ public class FunctionalTests extends SemanticTests {
 
     @Test
     public void casePatternStringLiteral() throws Exception {
-        assertEvalTrue("def Bool f() = let (String s) = \"foo\" in case s { \"bar\" => False; \"foo\" => True; };"
-                + CALL_F);
+        assertEvalTrue("""
+            def Bool f() =
+                let (String s) = "foo"
+                in case s { "bar" => False | "foo" => True };
+            {
+                Bool testresult = f();
+            }
+            """);
     }
 
     @Test
@@ -343,6 +349,23 @@ public class FunctionalTests extends SemanticTests {
      }
 
     @Test
+    public void caseOnePossibilityInExpr() throws Exception {
+        // Mis-compiled with naive Java codegen (we need to introduce
+        // temporary variable of type Person, not directly construct
+        // the value to match against).
+        assertEvalTrue("""
+            data Person = Person(Int age, String name) | AnonymousPerson(Int age);
+            {
+                Bool testresult = False;
+                switch (Person(15, "Hello")) {
+                    Person(_, _) => testresult = True;
+                    AnonymousPerson(_) => testresult = False;
+                }
+            }
+        """);
+    }
+
+    @Test
     public void typeSynonyms() throws Exception {
         assertEvalTrue("type Data = Int; { Int i = 5; Data d = 5; Bool testresult = d == i; }");
     }
@@ -375,7 +398,19 @@ public class FunctionalTests extends SemanticTests {
     
     @Test
     public void testIntRatCase() throws Exception {
-        assertEvalTrue("def Rat pow2(Int n, Int i) = case i < 0 { True => 1 / pow2(n, -i); False => case i { 0 => 1; _ => n * pow2(n, i-1);};  }; { Bool testresult = True; }");
+        assertEvalTrue("""
+            def Rat pow2(Int n, Int i) =
+                    case i < 0 {
+                    True => 1 / pow2(n, -i)
+                  | False => case i {
+                                 0 => 1
+                               | _ => n * pow2(n, i-1)
+                    }
+                };
+            {
+                        Bool testresult = True;
+            }
+            """);
     }
 
     @Test

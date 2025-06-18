@@ -4,14 +4,80 @@
  */
 package org.abs_models.frontend.typechecker;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.abs_models.common.ListUtils;
 import org.abs_models.frontend.analyser.ErrorMessage;
+import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.SemanticError;
 import org.abs_models.frontend.analyser.SemanticWarning;
-import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.TypeError;
-import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.ast.ASTNode;
+import org.abs_models.frontend.ast.AmbiguousDecl;
+import org.abs_models.frontend.ast.AttrAssignment;
+import org.abs_models.frontend.ast.Binary;
+import org.abs_models.frontend.ast.CaseBranch;
+import org.abs_models.frontend.ast.CaseExp;
+import org.abs_models.frontend.ast.ClassDecl;
+import org.abs_models.frontend.ast.CompilationUnit;
+import org.abs_models.frontend.ast.Const;
+import org.abs_models.frontend.ast.ConstructorArg;
+import org.abs_models.frontend.ast.ConstructorPattern;
+import org.abs_models.frontend.ast.DataConstructor;
+import org.abs_models.frontend.ast.DataConstructorExp;
+import org.abs_models.frontend.ast.DataTypeDecl;
+import org.abs_models.frontend.ast.DataTypeUse;
+import org.abs_models.frontend.ast.Decl;
+import org.abs_models.frontend.ast.DeltaClause;
+import org.abs_models.frontend.ast.DeltaDecl;
+import org.abs_models.frontend.ast.DeltaID;
+import org.abs_models.frontend.ast.DeltaParamDecl;
+import org.abs_models.frontend.ast.Deltaparam;
+import org.abs_models.frontend.ast.Deltaspec;
+import org.abs_models.frontend.ast.ExceptionDecl;
+import org.abs_models.frontend.ast.Exp;
+import org.abs_models.frontend.ast.Export;
+import org.abs_models.frontend.ast.Feature;
+import org.abs_models.frontend.ast.FieldDecl;
+import org.abs_models.frontend.ast.FieldUse;
+import org.abs_models.frontend.ast.FnApp;
+import org.abs_models.frontend.ast.FromExport;
+import org.abs_models.frontend.ast.FromImport;
+import org.abs_models.frontend.ast.GetExp;
+import org.abs_models.frontend.ast.HasActualParams;
+import org.abs_models.frontend.ast.HasParams;
+import org.abs_models.frontend.ast.HasType;
+import org.abs_models.frontend.ast.Import;
+import org.abs_models.frontend.ast.InitBlock;
+import org.abs_models.frontend.ast.MethodSig;
+import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.ModuleDecl;
+import org.abs_models.frontend.ast.Name;
+import org.abs_models.frontend.ast.NamedExport;
+import org.abs_models.frontend.ast.NamedImport;
+import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.ParametricDataTypeDecl;
+import org.abs_models.frontend.ast.ParametricDataTypeUse;
+import org.abs_models.frontend.ast.ParametricFunctionDecl;
+import org.abs_models.frontend.ast.Pattern;
+import org.abs_models.frontend.ast.PatternVar;
+import org.abs_models.frontend.ast.ProductDecl;
+import org.abs_models.frontend.ast.PureExp;
+import org.abs_models.frontend.ast.StarExport;
+import org.abs_models.frontend.ast.StarImport;
+import org.abs_models.frontend.ast.TypeSynDecl;
+import org.abs_models.frontend.ast.TypeUse;
+import org.abs_models.frontend.ast.UnderscorePattern;
+import org.abs_models.frontend.ast.Value;
+import org.abs_models.frontend.ast.VarDeclStmt;
+import org.abs_models.frontend.ast.VarOrFieldDecl;
+import org.abs_models.frontend.ast.VarOrFieldUse;
 import org.abs_models.frontend.parser.Main;
 
 public class TypeCheckerHelper {
@@ -711,43 +777,90 @@ public class TypeCheckerHelper {
      * whose first constructor takes parameters of these types.
      */
     public static boolean isValidSQLite3ReturnType(Type t) {
-	if (t.isUnknownType())
-	    return false;
-	if (!t.isDataType())
-	    return false;
+	    if (t.isUnknownType())
+	        return false;
+	    if (!t.isDataType())
+	        return false;
 
-	DataTypeType dt = (DataTypeType) t;
-	if (!(dt.getDecl().getName().equals("List")))
-	    return false;
-	if (!(dt.numTypeArgs() == 1
-	      && dt.getTypeArg(0).isDataType()))
-	    return false;
+	    DataTypeType dt = (DataTypeType) t;
+	    if (!(dt.getDecl().getName().equals("List")))
+	        return false;
+	    if (!(dt.numTypeArgs() == 1
+	          && dt.getTypeArg(0).isDataType()))
+	        return false;
 
-	DataTypeType lt = (DataTypeType)dt.getTypeArg(0);
-	if (lt.isBoolType())
+	    DataTypeType lt = (DataTypeType)dt.getTypeArg(0);
+	    if (lt.isBoolType())
+	        return true;
+	    if (lt.isIntType())
+	        return true;
+	    if (lt.isRatType())
+	        return true;
+	    if (lt.isFloatType())
+	        return true;
+	    if (lt.isStringType())
+	        return true;
+	    DataTypeDecl ltd = lt.getDecl();
+	    if (ltd.getNumDataConstructor() != 1)
+	        return false;
+	    if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
+	        return false;
+	    for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
+	        Type cat = ca.getTypeUse().getType();
+	        if (!(cat.isBoolType()
+		          || cat.isIntType()
+		          || cat.isRatType()
+		          || cat.isFloatType()
+		          || cat.isStringType()))
+		        return false;
+	    }
 	    return true;
-	if (lt.isIntType())
-	    return true;
-	if (lt.isRatType())
-	    return true;
-	if (lt.isFloatType())
-	    return true;
-	if (lt.isStringType())
-	    return true;
-	DataTypeDecl ltd = lt.getDecl();
-	if (ltd.getNumDataConstructor() != 1)
-	    return false;
-	if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
-	    return false;
-	for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
-	    Type cat = ca.getTypeUse().getType();
-	    if (!(cat.isBoolType()
-		  || cat.isIntType()
-		  || cat.isRatType()
-		  || cat.isFloatType()
-		  || cat.isStringType()))
-		return false;
-	}
-	return true;
+    }
+
+    /**
+     * Check whether the branches in the case expression form an
+     * exhaustive covering of the type, in which case we don't need to
+     * emit a default branch for the switch expression / statement.
+     * This is mostly trivial except for algebraic datatypes where we
+     * need to check if every constructor is covered.
+     */
+    public static boolean needsDefaultBranch(CaseExp e) {
+        // First, get rid of the easy case
+        for (CaseBranch b : e.getBranchs()) {
+            if (b.getLeft() instanceof UnderscorePattern
+                || b.getLeft() instanceof PatternVar) {
+                return false;
+            }
+        }
+        Type t = e.getExpr().getType();
+        // KLUDGE: In Java 21 we have to insert a default branch since
+        // we have to compare in the `when` condition of each switch
+        // branch so we have to return false here even if we cover
+        // both Boolean cases. Java >=24 allows matching against
+        // primitive Boolean values, so the next line can be removed
+        // then.
+        if (t.isBoolType()) return true;
+        if (t.getDecl() instanceof DataTypeDecl d) {
+            Set<String> constructors = ListUtils.toJavaList(d.getDataConstructors())
+                .stream()
+                .map(c -> c.getName())
+                .collect(Collectors.toSet());
+            Set<String> usedConstructors = new HashSet<>();
+            // have to iterate over constructors
+            for (CaseBranch b : e.getBranchs()) {
+                Pattern p = b.getLeft();
+                if (p instanceof ConstructorPattern cp) {
+                    // TODO: add only if no arg is PatternVarUse or
+                    // LiteralPattern
+                    usedConstructors.add(cp.getConstructor());
+                } else {
+                    // can't happen in well-typed abs
+                    continue;
+                }
+            }
+            if (!constructors.isEmpty() && usedConstructors.containsAll(constructors)) return false;
+        }
+        // nothing left to check
+        return true;
     }
 }
