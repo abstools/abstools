@@ -54,7 +54,7 @@ public class ClassDeclGenerator {
     }
 
     private void generate() {
-        JavaGeneratorHelper.generateHelpLine(decl, stream);
+        JavaGeneratorHelper.generateHelpLine(stream, decl);
         generateClassHeader();
         generateClassBody();
     }
@@ -162,7 +162,7 @@ public class ClassDeclGenerator {
     private void generateNewObjectMethods() {
         // Convenience method for new C
         stream.print("public static final <T extends " + className + "> T createNewLocalObject");
-        JavaGeneratorHelper.generateParams(stream, decl.getParams());
+        JavaGeneratorHelper.generateParams(stream, decl.getParams(), true);
         stream.print(" { return (T)");
         stream.print(className + ".__ABS_createNewLocalObject");
         JavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
@@ -170,7 +170,7 @@ public class ClassDeclGenerator {
 
         // static constructor method for new C
         stream.print("public static final <T extends " + className + "> T __ABS_createNewLocalObject");
-        JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
+        JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams(), true);
         stream.println(" {");
         generateObjectConstruction(ABSRuntime.class.getName() + ".getRuntime()");
         stream.println("__ABS_result.__ABS_init();");
@@ -185,7 +185,7 @@ public class ClassDeclGenerator {
     private void generateCreateNewCOGMethod() {
         // Convenience method for new cog C
         stream.print("public static final <T extends " + className + "> T createNewCogObject");
-        JavaGeneratorHelper.generateParams(stream, decl.getParams());
+        JavaGeneratorHelper.generateParams(stream, decl.getParams(), true);
         stream.print(" { ");
         stream.print("return (T)");
         stream.print(className + ".__ABS_createNewCogObject");
@@ -200,7 +200,7 @@ public class ClassDeclGenerator {
                 ABSObject.class.getName() + " __ABS_source, "
                 + UserSchedulingStrategy.class.getName() + " Strategy, "
                 + "ABS.DC.DeploymentComponent_i DC",
-                decl.getParams());
+                decl.getParams(), true);
         stream.println(" {");
         stream.println("final " + ABSRuntime.class.getName() + " __ABS_runtime = " + ABSRuntime.class.getName() + ".getRuntime();");
         stream.println("final " + COG.class.getName() + " __ABS_cog = Strategy == null ? __ABS_runtime.createCOG(" + className + ".class, DC) : __ABS_runtime.createCOG(" + className + ".class, DC, Strategy);");
@@ -257,7 +257,7 @@ public class ClassDeclGenerator {
     private void generateConstructor() {
         // constructor
         stream.print("public " + className);
-        JavaGeneratorHelper.generateParams(stream, decl.getParams());
+        JavaGeneratorHelper.generateParams(stream, decl.getParams(), true);
         stream.println(" {");
 
         for (ParamDecl p : decl.getParams()) {

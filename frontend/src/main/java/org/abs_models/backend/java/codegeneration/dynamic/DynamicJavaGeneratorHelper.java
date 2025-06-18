@@ -69,7 +69,7 @@ public class DynamicJavaGeneratorHelper {
     private static final String FLI_METHOD_PREFIX = "fli_";
 
     public static void generateHelpLine(ASTNode<?> node, PrintStream stream) {
-        JavaGeneratorHelper.generateHelpLine(node, stream);
+        JavaGeneratorHelper.generateHelpLine(stream, node);
     }
 
     public static void generateArgs(PrintStream stream, List<PureExp> args, java.util.List<Type> types) {

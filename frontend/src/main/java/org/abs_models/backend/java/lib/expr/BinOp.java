@@ -17,7 +17,7 @@ import org.apfloat.Aprational;
  */
 public class BinOp {
 
-    public static boolean eq(Object v1, Object v2) {
+    public static Boolean eq(Object v1, Object v2) {
         // Various branches in the following switch statement rely on the
         // typechecker to only allow through type-correct programs, which
         // means that v1 and v2 have the same ABS type.
@@ -65,11 +65,11 @@ public class BinOp {
         throw new RuntimeException("Encountered unknown ABS type " + v1.getClass() + " in BinOp#eq, giving up.");
     }
 
-    public static boolean notEq(Object v, Object v2) {
+    public static Boolean notEq(Object v, Object v2) {
         return !eq(v, v2);
     }
 
-    public static boolean gt(Object v1, Object v2) {
+    public static Boolean gt(Object v1, Object v2) {
         switch (v1) {
             case null: return false;
             case ABSDynamicClass c1:
@@ -143,21 +143,21 @@ public class BinOp {
     // v2 instead of two -- we go for simpler code instead of performance for
     // now.
 
-    public static boolean lt(Object v1, Object v2) {
-        boolean eq = eq(v1, v2);
-        if (eq) return false;
+    public static Boolean lt(Object v1, Object v2) {
+        Boolean eq = eq(v1, v2);
+        if (eq) return Boolean.FALSE;
         else return !gt(v1, v2);
     }
 
-    public static boolean gtEq(Object v1, Object v2) {
-        boolean eq = eq(v1, v2);
-        if (eq) return true;
+    public static Boolean gtEq(Object v1, Object v2) {
+        Boolean eq = eq(v1, v2);
+        if (eq) return Boolean.TRUE;
         else return gt(v1, v2);
     }
 
     public static boolean ltEq(Object v1, Object v2) {
-        boolean eq = eq(v1, v2);
-        if (eq) return true;
+        Boolean eq = eq(v1, v2);
+        if (eq) return Boolean.TRUE;
         else return !gt(v1, v2);
     }
 

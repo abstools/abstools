@@ -71,12 +71,12 @@ public class JavaExprTests extends JavaBackendTest {
 
     @Test
     public void useofJavaKeywordsPattern() throws Exception {
-        assertValid("def Bool continue(Bool break) = case break { false => break; };");
+        assertValid("def Bool continue(Bool break) = case break { False => break; };");
     }
 
     @Test
     public void useOfVariablesInsideCase() throws Exception {
-        assertValid("{ Bool b = True; Bool c = case b { _ => b; }; }");
+        assertValid("{ Bool b = True; Bool c = case b { _ => b }; }");
     }
 
     @Test

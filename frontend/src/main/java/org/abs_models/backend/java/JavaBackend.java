@@ -139,6 +139,10 @@ public class JavaBackend extends Main {
         return getQualifiedString(absType.getType());
     }
 
+    public static String getJavaType(Type type) {
+        return getQualifiedString(type);
+    }
+
     public static String getQualifiedString(String s) {
         return s;
     }

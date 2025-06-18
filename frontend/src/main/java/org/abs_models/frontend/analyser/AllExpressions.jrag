@@ -1,0 +1,55 @@
+aspect AllExpressions {
+    // Extract all expressions from statements.  Used to create
+    // `final` bindings for variables that are matched against in
+    // switch expressions.
+
+    coll java.util.Set<Exp> Stmt.allExpressions() [new HashSet<Exp>()];
+
+    AssignStmt contributes getValue() to Stmt.allExpressions() for this;
+    DurationStmt contributes each java.util.Set.of(getMin(), getMax()) to Stmt.allExpressions() for this;
+    MoveCogToStmt contributes getTarget() to Stmt.allExpressions() for this;
+    ReturnStmt contributes getRetExp() to Stmt.allExpressions() for this;
+    ExpressionStmt contributes getExp() to Stmt.allExpressions() for this;
+    AssertStmt contributes getCondition() to Stmt.allExpressions() for this;
+    VarDeclStmt contributes getVarDecl().getInitExp() when getVarDecl().hasInitExp() to Stmt.allExpressions() for this;
+    IfStmt contributes getCondition() to Stmt.allExpressions() for this;
+    WhileStmt contributes getCondition() to Stmt.allExpressions() for this;
+    ForeachStmt contributes getListExp() to Stmt.allExpressions() for this;
+    CaseStmt contributes getExpr() to Stmt.allExpressions() for this;
+    ThrowStmt contributes getReason() to Stmt.allExpressions() for this;
+    DieStmt contributes getReason() to Stmt.allExpressions() for this;
+
+    coll java.util.Set<PatternVarUse> Exp.boundPatternVars() [new HashSet<PatternVarUse>()];
+    CaseExp contributes each ListUtils.toJavaList(getBranchs()).stream().flatMap(b -> b.getLeft().getBoundPatternVars().stream()).collect(Collectors.toSet()) to Exp.boundPatternVars() for this;
+
+    syn java.util.Set<PatternVarUse> Stmt.boundPatternVars() = allExpressions()
+        .stream()
+        .flatMap(e -> e.boundPatternVars().stream())
+        .collect(java.util.stream.Collectors.toSet());
+
+    syn java.util.Set<PatternVarUse> CaseStmt.boundPatternVars() {
+        HashSet<PatternVarUse> result = new HashSet<>(getExpr().boundPatternVars());
+        for (CaseBranchStmt s : getBranchs()) {
+            result.addAll(s.getLeft().getBoundPatternVars());
+        }
+        return result;
+    }
+
+    syn java.util.Set<String> Stmt.freshBoundPatternVarNames() {
+        HashSet<String> result = boundPatternVars().stream()
+            .map(PatternVarUse::getName)
+            .collect(java.util.stream.Collectors.toCollection(HashSet::new));
+        if (!result.isEmpty()) {
+            Stmt parent = closestParent(Stmt.class);
+            while (parent != null) {
+                parent.boundPatternVars().forEach(v -> result.remove(v.getName()));
+                parent = parent.closestParent(Stmt.class);
+            }
+        }
+        return result;
+    }
+
+}
+// Local Variables:
+// mode: java
+// End:

@@ -7,8 +7,8 @@ import java.util.stream.Stream;
 aspect TreeUtils {
 
     /**
-     * This method finds the closest parent conforming to `type`, starting from this
-     * object's parent. May return null.
+     * Return the closest parent conforming to `type`, starting from this
+     * object's parent, or null if none found.
      */
     @CheckForNull
     public <N extends ASTNode<?>> N ASTNode.closestParent(Class<N> type) {
@@ -23,8 +23,8 @@ aspect TreeUtils {
     }
 
     /**
-     * This method finds the uppermost parent conforming to `type`, starting from this
-     * object's parent. May return null.
+     * Return the uppermost parent conforming to `type`, starting from this
+     * object's parent, or null if none found.
      */
     @CheckForNull
     public <N extends ASTNode<?>> N ASTNode.uppermostParentOfType(Class<N> type) {
@@ -38,6 +38,27 @@ aspect TreeUtils {
         }
         return type.cast(result);
     }
+
+    /**
+     * Return the distance of this node to the closest parent
+     * conforming to `type`, or the depth of this node in the AST if
+     * no parent is of class `type`.
+     */
+    @CheckForNull
+    public int ASTNode.distanceTo(Class type) {
+        int result = 0;
+        ASTNode<?> n = getParent();
+        while (n != null) {
+            result++;
+            if (type.isInstance(n))
+                return result;
+            else
+                n = n.getParent();
+        }
+        return result;
+    }
+
+
 
     /**
      * Finds all children of this node with the specified <code>type</code>. If this node has the
@@ -171,3 +192,7 @@ aspect TreeUtils {
         };
     }
 }
+
+// Local Variables:
+// mode: java
+// End:
