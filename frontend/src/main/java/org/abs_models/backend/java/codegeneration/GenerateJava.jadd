@@ -1001,15 +1001,23 @@ aspect GenerateJava {
     public void IntLiteral.generateJava(PrintStream stream) {
         // Long.MAX_VALUE = 9223372036854775807L
         boolean needsFromString = getContent().length() > 18;
-        stream.print("new " + Apint.class.getName());
-        if (needsFromString) {
-            stream.print("(\"");
-            stream.print(getContent());
-            stream.print("\")");
+        boolean isZero = getContent().equals("0");
+        boolean isOne = getContent().equals("1");
+        if (isZero) {
+            stream.print(Apint.class.getName() + ".ZERO");
+        } else if (isOne) {
+            stream.print(Apint.class.getName() + ".ONE");
         } else {
-            stream.print("(");
-            stream.print(getContent());
-            stream.print("L)");
+            stream.print("new " + Apint.class.getName());
+            if (needsFromString) {
+                stream.print("(\"");
+                stream.print(getContent());
+                stream.print("\")");
+            } else  {
+                stream.print("(");
+                stream.print(getContent());
+                stream.print("L)");
+            }
         }
     }
 
