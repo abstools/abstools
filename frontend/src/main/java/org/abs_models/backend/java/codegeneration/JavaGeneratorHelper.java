@@ -326,6 +326,14 @@ public class JavaGeneratorHelper {
                                .mapToObj(i -> "arg" + i)
                                .collect(Collectors.joining(", "))
                        + " }; }");
+        stream.println("public Object getArg(int i) {");
+        stream.println("switch (i) {");
+        for (int i = 0; i < c.getNumConstructorArg(); i++) {
+            stream.println("case " + i + ": return arg" + i + ";");
+        }
+        stream.println("default: throw new IllegalArgumentException(i+ \" is not a valid constructor argument index\");");
+        stream.println("}");
+        stream.println("}");
         stream.println("public java.lang.String getConstructorName() { return \"" + c.getName() + "\";}");
 
         stream.println("public java.lang.String toString() { return toStringHelper(); }");
