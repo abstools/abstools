@@ -10,20 +10,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-The Java backend used subclasses of `ABSValue` to wrap instances of
-String, boolean etc., unwrapping them for all computations.  Use the
-wrapped values directly instead in generated code.
-- Instead of `ABSString`, use `java.lang.String`
-- Instead of `ABSBool`, use `java.lang.Boolean`
-- Instead of `ABSFloat`, use `java.lang.Double`
-- Instead of `ABSRational`, use `org.apfloat.Aprational`
-- Instead of `ABSInteger`, use `org.apfloat.Apint`
+- Refactor the Java backend to use Java-native datatypes directly
+  instead of wrapping them inside subclasses of `ABSDataType`:
+  - Instead of `ABSString`, use `java.lang.String`
+  - Instead of `ABSBool`, use `java.lang.Boolean`
+  - Instead of `ABSFloat`, use `java.lang.Double`
+  - Instead of `ABSRational`, use `org.apfloat.Aprational`
+  - Instead of `ABSInteger`, use `org.apfloat.Apint`
+  - Implement ABS user-defined datatypes as Java `record`s
+
+- Refactor the Java backend to use Java 21 pattern matching and record
+  patterns to implement the ABS `switch` statement and `case`
+  expression instead of creating temporary matcher and binding
+  objects.  This should significantly reduce memory use when
+  processing large datastructures.
 
 ### Removed
 
 ### Fixed
 
-Bug fixes and minor refactorings.
+Various bug fixes and minor refactorings.
 
 ## [1.10.0] - 2024-11-07
 

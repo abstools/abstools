@@ -86,11 +86,10 @@
     should contain the new version number
 
 - push the release commit (`git push`)
+- push the release tag (`git push --tags`)
 
 - finalize release on github (automating these steps would involve
   handling github API keys, so we keep it manual.)
-
-  - push the release tag (`git push --tags`)
 
   - upload `absfrontend.jar`: go to
     [https://github.com/abstools/abstools/releases/tag/vx.y.z].  Click
