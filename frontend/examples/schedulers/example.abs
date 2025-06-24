@@ -1,6 +1,5 @@
 module M;
 import * from ABS.Scheduler;
-import * from ABS.Meta;
 
 interface C { Unit m(); }
 
@@ -44,34 +43,8 @@ def Process fifo_h(Process p1, List<Process> l1) =
 def Bool fifo_comp(Process p1, Process p2) = timeValue(arrival(p1)) <= timeValue(arrival(p2));
 
 
-/* user-defined scheduler class
- * schedule() defers the scheduling decision to the fifo function
- */
-class MyScheduler1 implements ProcessScheduler {
-    Process schedule(List<Process> l) {
-        return fifo(l);
-    }
-}
-
-class MyScheduler2 implements ProcessScheduler {
-    Process schedule (List<Process> l) {
-        return fifo(l);
-    }
-}
-
-
 {
-//    [Scheduler: defaultscheduler(queue)] C obj = new CImpl();
-
-    C o = new CImpl();
-
-    ObjectMirror om = reflect(o);
-    Cog g = om.getCog();
-
-    // sched is in a different cog!
-    ProcessScheduler sched = new local MyScheduler1();
-    g.setScheduler(sched);
-
+    [Scheduler: defaultscheduler(queue)] C obj = new CImpl();
     o!m();
     o!m();
     o!m();
