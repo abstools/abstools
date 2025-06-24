@@ -4,7 +4,6 @@
  */
 package org.abs_models.backend.java.lib.expr;
 
-import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
@@ -23,11 +22,6 @@ public class BinOp {
         // means that v1 and v2 have the same ABS type.
         switch (v1) {
             case null: return v2 == null;
-            case ABSDynamicClass c1:
-                if (v2 instanceof ABSDynamicClass c2) {
-                    return c1.getName().equals(c2.getName());
-                }
-                break;
             case ABSProcess p: return p == v2;
             case ABSObject o: return o == v2;
             case ABSFut<?> f: return f == v2;
@@ -72,11 +66,6 @@ public class BinOp {
     public static Boolean gt(Object v1, Object v2) {
         switch (v1) {
             case null: return false;
-            case ABSDynamicClass c1:
-                if (v2 instanceof ABSDynamicClass c2) {
-                    return c1.getName().compareTo(c2.getName()) > 0;
-                }
-                break;
             case ABSProcess p1:
                 if (v2 instanceof ABSProcess p2) {
                     return p1.getPid() > p2.getPid();
