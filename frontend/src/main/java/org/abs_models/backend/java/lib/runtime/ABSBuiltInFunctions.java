@@ -12,8 +12,6 @@ import java.util.Scanner;
 
 import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
-import org.abs_models.backend.java.lib.runtime.metaABS.ObjectMirror;
-import org.abs_models.backend.java.lib.runtime.metaABS.ProductLine;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSUnit;
@@ -139,30 +137,6 @@ public class ABSBuiltInFunctions {
 
     public static Apint value(ABSProcess p) {
         return new Apint(p.getValue());
-    }
-
-    /*
-     * Functions to access the meta level
-     * 
-     * reflect creates a "mirror object" for the given object, which gives
-     * access to the meta API.
-     */
-    public static <T> ABSDynamicObject reflect(T t) {
-        String name = "$mirror";
-        try {
-            Object existingMirror = ((ABSDynamicObject) t).getFieldValue(name);
-            return (ABSDynamicObject) existingMirror;
-        } catch (NoSuchFieldException e) {
-            ABSDynamicObject mirror = new ABSDynamicObject(ObjectMirror.singleton());
-            mirror.setFieldValue("object", t);
-            ((ABSDynamicObject) t).setFieldValue(name, mirror);
-            return mirror;
-        }
-    }
-
-    public static ABSDynamicObject getProductLine() {
-        ABSDynamicObject pl = new ABSDynamicObject(ProductLine.singleton());
-        return pl;
     }
 
     /*

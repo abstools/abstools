@@ -69,6 +69,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- Removed the Java dynamic backend.  This backend implemented runtime
+  reflection and dynamic reconfiguration via switching between
+  products.  Sadly, this backend was never finished, had been
+  unmaintained for some years and was undocumented.  Some aspects of
+  it, like runtime reflection via object mirrors, are straightforward
+  to re-add at a later date if a use case arises.  Others, like
+  dynamic adding of fields or removing of methods at runtime while
+  processes are running, need more research to implement in a sound
+  way.
+
 ### Fixed
 
 Various bug fixes and minor refactorings.

@@ -76,9 +76,6 @@ public class JavaBackend extends Main {
         return result;
     }
 
-    // unused -- does not work
-    private boolean untypedJavaGen = false;
-
     private int compile() throws Exception {
         final Model model = parse(arguments.files);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
@@ -101,13 +98,8 @@ public class JavaBackend extends Main {
 
     private void compile(Model m, File destDir, File output_jar) throws IOException, JavaCodeGenerationException {
         JavaCode javaCode = new JavaCode(destDir, output_jar, arguments.http_index_file, arguments.http_static_dir);
-        if (this.untypedJavaGen) {
-            if (arguments.verbose) System.out.println("Generating dynamic Java code...");
-            m.generateJavaCodeDynamic(javaCode, arguments.debug_generated_code);
-        } else {
-            if (arguments.verbose) System.out.println("Generating Java code...");
-            m.generateJavaCode(javaCode, arguments.debug_generated_code);
-        }
+        if (arguments.verbose) System.out.println("Generating Java code...");
+        m.generateJavaCode(javaCode, arguments.debug_generated_code);
         if (!arguments.java_sourceOnly) {
             if (arguments.verbose) System.out.println("Compiling generated Java code...");
             javaCode.compile();
