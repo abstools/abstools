@@ -12,7 +12,6 @@ public class Constants {
     public static final String STDLIB_NAME = "ABS.StdLib";
 
     public static final String FLI_NAME = "ABS.FLI";
-    public static final String META_NAME = "ABS.Meta";
     public static final String DC_NAME = "ABS.DC";
     public static final String SCHEDULE_NAME = "ABS.Scheduler";
     public static final String PL_NAME = "ABS.Productline";
@@ -23,7 +22,6 @@ public class Constants {
     public static final List<String> BUILT_IN_LIBS =
         Collections.unmodifiableList(Arrays.asList(STDLIB_NAME,
                                                    FLI_NAME,
-                                                   META_NAME,
                                                    DC_NAME,
                                                    SCHEDULE_NAME,
                                                    PL_NAME,
