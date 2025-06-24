@@ -5,13 +5,16 @@
 package org.abs_models.backend.java.lib.runtime;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 
 import org.abs_models.backend.java.lib.net.ABSNetRuntime;
 import org.abs_models.backend.java.lib.net.NetworkImpl;
 import org.abs_models.backend.java.lib.net.NodeImpl;
+import org.abs_models.backend.java.observing.DefaultSystemObserver;
 
 public class StartUp {
-    public static void startup(String[] args, Class<?> mainClass) throws InstantiationException, IllegalAccessException, IOException {
+    public static void startup(String[] args, Class<?> mainClass) throws InstantiationException, IllegalAccessException, IOException, InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         RuntimeOptions options = new RuntimeOptions(args);
         Logging.setLogLevel(options.logLevel.stringValue());
         final ABSRuntime runtime;
@@ -26,6 +29,12 @@ public class StartUp {
         }
         ABSRuntime.setRunsInOwnProcess(true);
         Config.initRuntimeFromOptions(runtime, options);
+        runtime.addSystemObserver(new DefaultSystemObserver() {
+            public void systemFinished() {
+                latch.countDown();
+            }
+        });
         runtime.start(mainClass);
+        latch.await();
     }
 }
