@@ -63,7 +63,7 @@ run-collaboratory:		## Run the collaboratory on port 8080
 server:				## Deploy development environment on Debian-based server
 	@:$(call check_defined, SERVER, server name or address as accepted by ssh)
 	ssh $(SERVER) sudo apt-get -y update
-	ssh $(SERVER) sudo apt-get -y install make openjdk-21-jdk openjdk-21-jre erlang maude emacs git
+	ssh $(SERVER) sudo apt-get -y install make openjdk-25-jdk openjdk-25-jre erlang maude emacs git
 	ssh $(SERVER) git clone https://github.com/abstools/abstools
 	ssh $(SERVER) make -f "~/abstools/Makefile" frontend
 	ssh $(SERVER) 'echo "PATH=\$$HOME/abstools/frontend/bin/bash:\$$PATH" >> ~/.bashrc'

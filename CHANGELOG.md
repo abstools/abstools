@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The standard library section of the reference manual now contains
   short usage examples for each function.
 
+- The toolchain now requires Java 25.
+
 ### Removed
 
 ### Fixed

@@ -1,7 +1,7 @@
 # Release Process
 
 - If possible, perform the release using the recommended Java version
-  (currently 21), since jars generated with later versions cannot be
+  (currently 25), since jars generated with later versions cannot be
   used with earlier versions.
 
 - Docker image creation might fail on non-Intel machines; use an Intel

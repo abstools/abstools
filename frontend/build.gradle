@@ -24,7 +24,7 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
     withJavadocJar()
     withSourcesJar()
@@ -38,7 +38,7 @@ distributions {
 
 dependencies {
     // General-purpose utility libraries; these could be replaced with
-    // Java 21 standard library built-ins, if possible.
+    // Java 25 standard library built-ins, if possible.
     implementation 'commons-io:commons-io:2.21.0'
     implementation 'com.google.guava:guava:33.5.0-jre'
     // Command-line parser library

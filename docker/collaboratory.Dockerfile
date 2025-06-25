@@ -4,7 +4,7 @@
 
 FROM erlang:26-alpine AS jdk-erlang
 RUN <<EOF
-    apk --update --no-cache add bash nss openjdk21-jdk gcc libc-dev git
+    apk --update --no-cache add bash nss openjdk25-jdk gcc libc-dev git
     apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community hugo
 EOF
 
@@ -77,11 +77,11 @@ DEBIAN_BACKPORTS
 COPY <<DEBIAN_UNSTABLE /etc/apt/sources.list.d/unstable.list
 deb http://ftp.de.debian.org/debian sid main
 DEBIAN_UNSTABLE
-# Java 21 is currently (as of 2024-07-29) not in bookworm-backports,
+# Java 25 is currently (as of 2024-07-29) not in bookworm-backports,
 # so we fall back to unstable temporarily
 RUN <<EOF
     apt-get -y update
-    apt-get -y install -t unstable openjdk-21-jdk-headless
+    apt-get -y install -t unstable openjdk-25-jdk-headless
 EOF
 
 COPY <<ENVISAGE_CONFIG_FILE /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
