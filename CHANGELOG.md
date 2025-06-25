@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.10.1] - 2025-06-25
+
+### Added
+
 - Added documentation for compiling and running ABS models inside a
   Java project using the gradle build tool.
 
@@ -479,7 +489,8 @@ Various bug fixes and minor refactorings.
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/abstools/abstools/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/abstools/abstools/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/abstools/abstools/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/abstools/abstools/compare/v1.9.1...v1.9.2
