@@ -4,7 +4,7 @@
 {{- if eq $by "auto" }}
 	{{- $by = "" }}
 {{- end }}
-{{- $by = $by | default $page.Params.ordersectionsby | default $page.Site.Params.ordersectionsby | default "weight" }}
+{{- $by = $by | default $page.Params.ordersectionsby | default $page.Site.Params.ordersectionsby | default "default" }}
 
 {{- $pages := slice }}
 
@@ -26,7 +26,7 @@
 	{{- $pages = $page.Pages }}
 {{- else }}
 	{{- $filepath := "[virtual file]" }}{{ with and $page $page.File $page.File.Filename }}{{ $filepath = . }}{{ end }}
-	{{- warnf "%q: Unknown pages sort order '%s'" $filepath }}
+	{{- warnf "%q: Unknown pages sort order %q" $filepath $by }}
 	{{- $pages = $page.Pages }}
 {{- end }}
 

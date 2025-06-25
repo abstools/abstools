@@ -143,21 +143,21 @@ function switchTab(tabGroup, tabId) {
 
     // Store the selection to make it persistent
     if (window.localStorage) {
-      var selectionsJSON = window.localStorage.getItem(window.relearn.absBaseUri + '/tab-selections');
+      var selectionsJSON = window.relearn.getItem(window.localStorage, window.relearn.absBaseUri + '/tab-selections');
       if (selectionsJSON) {
         var tabSelections = JSON.parse(selectionsJSON);
       } else {
         var tabSelections = {};
       }
       tabSelections[tabGroup] = tabId;
-      window.localStorage.setItem(window.relearn.absBaseUri + '/tab-selections', JSON.stringify(tabSelections));
+      window.relearn.setItem(window.localStorage, window.relearn.absBaseUri + '/tab-selections', JSON.stringify(tabSelections));
     }
   }
 }
 
 function restoreTabSelections() {
   if (window.localStorage) {
-    var selectionsJSON = window.localStorage.getItem(window.relearn.absBaseUri + '/tab-selections');
+    var selectionsJSON = window.relearn.getItem(window.localStorage, window.relearn.absBaseUri + '/tab-selections');
     if (selectionsJSON) {
       var tabSelections = JSON.parse(selectionsJSON);
     } else {
@@ -324,7 +324,7 @@ function initMermaid(update, attrs) {
 
   var search;
   if (update) {
-    search = sessionStorage.getItem(window.relearn.absBaseUri + '/search-value');
+    search = window.relearn.getItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value');
     unmark();
   }
   var is_initialized = update ? update_func(attrs) : init_func(attrs);
@@ -373,7 +373,7 @@ function initMermaid(update, attrs) {
     });
   }
   if (update && search && search.length) {
-    sessionStorage.setItem(window.relearn.absBaseUri + '/search-value', search);
+    window.relearn.setItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value', search);
     mark();
   }
 }
@@ -435,7 +435,7 @@ function initOpenapi(update, attrs) {
 <html lang="${lang}" dir="${isRtl ? 'rtl' : 'ltr'}" data-r-output-format="${format}" data-r-theme-variant="${variant}">
   <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="${window.relearn.themeUseOpenapi.css}">
+    <link rel="stylesheet" href="${window.relearn.themeUseOpenapi.css}${assetBuster}">
     <link rel="stylesheet" href="${relBasePath}/css/swagger${min}.css${assetBuster}">
     <link rel="stylesheet" href="${relBasePath}/css/swagger-${swagger_theme}${min}.css${assetBuster}">
     <link rel="stylesheet" href="${theme}">
@@ -565,9 +565,10 @@ function initAnchorClipboard() {
     return;
   }
 
-  document.querySelectorAll(':has(h1) :is(h2[id], h3[id], h4[id] , h5[id], h6[id])').forEach(function (element) {
-    var url = encodeURI((document.location.origin == 'null' ? document.location.protocol + '//' + document.location.host : document.location.origin) + document.location.pathname);
-    var link = url + '#' + element.id;
+  document.querySelectorAll(':has(h1) :is(h2[id], h3[id], h4[id], h5[id], h6[id])').forEach(function (element) {
+    var origin = document.location.origin == 'null' ? `${document.location.protocol}//${document.location.host}` : document.location.origin;
+    var id = encodeURIComponent(element.id);
+    var link = `${origin}${document.location.pathname}#${id}`;
     var new_element = document.createElement('button');
     new_element.classList.add('anchor');
     if (!window.relearn.disableAnchorCopy) {
@@ -698,6 +699,15 @@ function initCodeClipboard() {
     // avoid copy-to-clipboard for highlight shortcode in table lineno mode
     var isFirstLineCell = inTable && code.parentNode.parentNode.parentNode.querySelector('td:first-child > pre > code') == code;
     var isBlock = inTable || inPre;
+    var inHeading = false;
+    var parent = code.parentNode;
+    while (parent && parent !== document) {
+      if (/^h[1-6]$/i.test(parent.tagName)) {
+        inHeading = true;
+        break;
+      }
+      parent = parent.parentNode;
+    }
 
     if (!isFirstLineCell && (inPre || text.length > 5)) {
       code.classList.add('copy-to-clipboard-code');
@@ -714,7 +724,7 @@ function initCodeClipboard() {
         code = clone;
       }
       var button = null;
-      if (isBlock || !window.relearn.disableInlineCopyToClipboard) {
+      if (isBlock || (!window.relearn.disableInlineCopyToClipboard && !inHeading)) {
         button = document.createElement('button');
         var buttonPrefix = isBlock ? 'block' : 'inline';
         button.classList.add(buttonPrefix + '-copy-to-clipboard-button');
@@ -1330,7 +1340,7 @@ function clearHistory() {
   var visitedItem = window.relearn.absBaseUri + '/visited-url/';
   for (var item in sessionStorage) {
     if (item.substring(0, visitedItem.length) === visitedItem) {
-      sessionStorage.removeItem(item);
+      window.relearn.removeItem(window.sessionStorage, item);
       var url = item.substring(visitedItem.length);
       // in case we have `relativeURLs=true` we have to strip the
       // relative path to root
@@ -1344,11 +1354,11 @@ function clearHistory() {
 
 function initHistory() {
   var visitedItem = window.relearn.absBaseUri + '/visited-url/';
-  sessionStorage.setItem(visitedItem + document.querySelector('body').dataset.url, 1);
+  window.relearn.setItem(window.sessionStorage, visitedItem + document.querySelector('body').dataset.url, 1);
 
   // loop through the sessionStorage and see if something should be marked as visited
   for (var item in sessionStorage) {
-    if (item.substring(0, visitedItem.length) === visitedItem && sessionStorage.getItem(item) == 1) {
+    if (item.substring(0, visitedItem.length) === visitedItem && window.relearn.getItem(window.sessionStorage, item) == 1) {
       var url = item.substring(visitedItem.length);
       // in case we have `relativeURLs=true` we have to strip the
       // relative path to root
@@ -1416,7 +1426,7 @@ function scrollToPositions() {
     return;
   }
 
-  var search = sessionStorage.getItem(window.relearn.absBaseUri + '/search-value');
+  var search = window.relearn.getItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value');
   if (search && search.length) {
     search = regexEscape(search);
     var found = elementContains(search, elc);
@@ -1444,6 +1454,42 @@ function scrollToPositions() {
   }
 }
 
+function handleHistoryClearer() {
+  document.querySelectorAll('.R-historyclearer button').forEach(function (select) {
+    select.addEventListener('click', function (event) {
+      clearHistory();
+    });
+  });
+}
+
+function handleLanguageSwitcher() {
+  document.querySelectorAll('.R-languageswitcher select').forEach(function (select) {
+    select.addEventListener('change', function (event) {
+      const url = this.options[`R-select-language-${this.value}`].dataset.url;
+      this.value = this.querySelector('[data-selected]')?.value ?? select.value;
+      window.location = url;
+    });
+  });
+}
+
+function handleVariantSwitcher() {
+  document.querySelectorAll('.R-variantswitcher select').forEach(function (select) {
+    select.addEventListener('change', function (event) {
+      window.relearn.changeVariant(this.value);
+    });
+  });
+}
+
+function handleVersionSwitcher() {
+  document.querySelectorAll('.R-versionswitcher select').forEach(function (select) {
+    select.addEventListener('change', function (event) {
+      const url = (this.options[`R-select-version-${this.value}`].dataset.abs == 'true' ? '' : window.relearn.relBaseUri) + this.options[`R-select-version-${this.value}`].dataset.uri + window.relearn.path;
+      this.value = this.querySelector('[data-selected]')?.value ?? select.value;
+      window.location = url;
+    });
+  });
+}
+
 window.addEventListener('popstate', function (event) {
   scrollToPositions();
 });
@@ -1460,7 +1506,7 @@ function mark() {
     bodyInnerLinks[i].classList.add('highlight');
   }
 
-  var value = sessionStorage.getItem(window.relearn.absBaseUri + '/search-value');
+  var value = window.relearn.getItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value');
   var highlightableElements = document.querySelectorAll('.highlightable');
   highlight(highlightableElements, value, { element: 'mark', className: 'search' });
 
@@ -1560,7 +1606,7 @@ function highlightNode(node, re, nodeName, className) {
 }
 
 function unmark() {
-  sessionStorage.removeItem(window.relearn.absBaseUri + '/search-value');
+  window.relearn.removeItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value');
   var markedElements = document.querySelectorAll('mark.search');
   for (var i = 0; i < markedElements.length; i++) {
     var parent = markedElements[i].parentNode;
@@ -1634,7 +1680,7 @@ function elementContains(txt, e) {
 function searchInputHandler(value) {
   unmark();
   if (value.length) {
-    sessionStorage.setItem(window.relearn.absBaseUri + '/search-value', value);
+    window.relearn.setItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value', value);
     mark();
   }
 }
@@ -1646,7 +1692,7 @@ function initSearch() {
     e.addEventListener('keydown', function (event) {
       if (event.key == 'Escape') {
         var input = event.target;
-        var search = sessionStorage.getItem(window.relearn.absBaseUri + '/search-value');
+        var search = window.relearn.getItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value');
         if (!search || !search.length) {
           input.blur();
         }
@@ -1686,13 +1732,13 @@ function initSearch() {
   var urlParams = new URLSearchParams(window.location.search);
   var value = urlParams.get('search-by');
   if (value) {
-    sessionStorage.setItem(window.relearn.absBaseUri + '/search-value', value);
+    window.relearn.setItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value', value);
   }
   mark();
 
   // set initial search value for inputs on page load
-  if (sessionStorage.getItem(window.relearn.absBaseUri + '/search-value')) {
-    var search = sessionStorage.getItem(window.relearn.absBaseUri + '/search-value');
+  if (window.relearn.getItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value')) {
+    var search = window.relearn.getItem(window.sessionStorage, window.relearn.absBaseUri + '/search-value');
     inputs.forEach(function (e) {
       e.value = search;
       var event = document.createEvent('Event');
@@ -1757,6 +1803,10 @@ function ready(fn) {
 ready(function () {
   initArrowVerticalNav();
   initArrowHorizontalNav();
+  handleHistoryClearer();
+  handleLanguageSwitcher();
+  handleVariantSwitcher();
+  handleVersionSwitcher();
   initMermaid();
   initOpenapi();
   initMenuScrollbar();
@@ -1950,3 +2000,81 @@ function normalizeColor(c) {
   c = c.replace(/ +/g, ' ');
   return c;
 }
+
+function initVersionIndex(index) {
+  if (!index || !index.length) {
+    return;
+  }
+
+  document.querySelectorAll('.R-versionswitcher select').forEach(function (select) {
+    var preSelectedOption = select.querySelector('[data-selected]')?.cloneNode(true);
+
+    var selectedOption = null;
+    if (select.selectedIndex >= 0) {
+      selectedOption = select.options[select.selectedIndex].cloneNode(true);
+    }
+
+    // Remove all existing options
+    while (select.firstChild) {
+      select.removeChild(select.firstChild);
+    }
+
+    // Add all options from the index
+    index.forEach(function (version) {
+      // Create new option element
+      var option = document.createElement('option');
+      option.id = 'R-select-version-' + version.value;
+      option.value = version.value;
+      option.dataset.abs = version.isAbs;
+      option.dataset.uri = version.baseURL;
+      option.dataset.identifier = version.identifier;
+      option.textContent = version.title;
+
+      // Add the option to the select
+      select.appendChild(option);
+    });
+
+    if (preSelectedOption) {
+      const option = select.querySelector(`option[value="${preSelectedOption.value}"]`);
+      if (!option) {
+        select.appendChild(preSelectedOption);
+      } else {
+        option.dataset.selected = '';
+      }
+    }
+    if (selectedOption) {
+      // Re-select the previously selected option if it exists
+      const option = select.querySelector(`option[value="${selectedOption.value}"]`);
+      if (!option) {
+        select.appendChild(selectedOption);
+      }
+      select.value = selectedOption.value;
+    } else if (select.options.length > 0) {
+      // If there was no selection before, select the first option
+      select.selectedIndex = 0;
+      return;
+    }
+  });
+}
+
+function initVersionJs() {
+  if (window.relearn.version_js_url) {
+    var js = document.createElement('script');
+    // we need to add a random number on each call to read this file fresh from the server;
+    // it may reside in a different Hugo instance and therefore we do not know when it changes
+    var url = new URL(window.relearn.version_js_url, window.location.href);
+    var randomNum = Math.floor(Math.random() * 1000000);
+    url.searchParams.set('v', randomNum.toString());
+    js.src = url.toString();
+    js.setAttribute('async', '');
+    js.onload = function () {
+      initVersionIndex(relearn_versionindex);
+    };
+    js.onerror = function (e) {
+      console.error('Error getting version index file');
+    };
+    document.head.appendChild(js);
+  }
+}
+
+initVersionJs();

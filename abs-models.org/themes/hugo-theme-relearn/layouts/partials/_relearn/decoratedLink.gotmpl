@@ -1,7 +1,13 @@
 {{- $u := urls.Parse .url }}
 {{- $hideFilepath := .hideFilepath | default false }}
 {{- $type := printf "%T" .linkObject }}
-{{- $isPage := eq $type "*hugolib.pageState" }}
+{{- $isPage := or
+	(eq $type "*hugolib.pageForRenderHooks")
+	(eq $type "*hugolib.pageForShortcode")
+	(eq $type "*hugolib.pageState")
+	(eq $type "*hugolib.pageWithOrdinal")
+	(eq $type "*hugolib.pageWithWeight0")
+}}
 {{- $href := partial "permalink.gotmpl" (dict "to" .linkObject) }}
 {{- if $isPage }}
 	{{- $format := $u.Query.Get "format" }}
@@ -11,7 +17,7 @@
 			{{- $href = partial "permalink.gotmpl" (dict "to" $of) }}
 		{{- else }}
 			{{- $msg := printf "output format %q not found" $of }}
-			{{- partial "partials/inline/print-error" (dict "url" .url "page" .page "param" .param "msg" $msg "linkObject" .linkObject "hideFilepath" $hideFilepath) }}
+			{{- partial "inline/print-error" (dict "url" .url "page" .page "param" .param "msg" $msg "linkObject" .linkObject "hideFilepath" $hideFilepath) }}
 		{{- end }}
 	{{- end }}
 {{- end }}
@@ -42,7 +48,7 @@
 			{{- end }}
 		{{- else }}
 			{{- $msg := printf "heading ID %q not found" . }}
-			{{- partial "partials/inline/print-error" (dict "url" $.url "page" $.page "param" $.param "msg" $msg "linkObject" $.linkObject "hideFilepath" $.hideFilepath) }}
+			{{- partial "inline/print-error" (dict "url" $.url "page" $.page "param" $.param "msg" $msg "linkObject" $.linkObject "hideFilepath" $.hideFilepath) }}
 		{{- end }}
 	{{- end }}
 {{- end }}
