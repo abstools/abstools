@@ -740,13 +740,228 @@ p { margin-bottom: 1.25rem; }
 
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+pre.rouge table td { padding: 5px; }
+pre.rouge table pre { margin: 0; }
+pre.rouge .cm {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cp {
+  color: #999999;
+  font-weight: bold;
+}
+pre.rouge .c1 {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+pre.rouge .c, pre.rouge .ch, pre.rouge .cd, pre.rouge .cpf {
+  color: #999988;
+  font-style: italic;
+}
+pre.rouge .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+pre.rouge .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+pre.rouge .ge {
+  color: #000000;
+  font-style: italic;
+}
+pre.rouge .gr {
+  color: #aa0000;
+}
+pre.rouge .gh {
+  color: #999999;
+}
+pre.rouge .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+pre.rouge .go {
+  color: #888888;
+}
+pre.rouge .gp {
+  color: #555555;
+}
+pre.rouge .gs {
+  font-weight: bold;
+}
+pre.rouge .gu {
+  color: #aaaaaa;
+}
+pre.rouge .gt {
+  color: #aa0000;
+}
+pre.rouge .kc {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kd {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kn {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kp {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kr {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .kt {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .k, pre.rouge .kv {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .mf {
+  color: #009999;
+}
+pre.rouge .mh {
+  color: #009999;
+}
+pre.rouge .il {
+  color: #009999;
+}
+pre.rouge .mi {
+  color: #009999;
+}
+pre.rouge .mo {
+  color: #009999;
+}
+pre.rouge .m, pre.rouge .mb, pre.rouge .mx {
+  color: #009999;
+}
+pre.rouge .sa {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .sb {
+  color: #d14;
+}
+pre.rouge .sc {
+  color: #d14;
+}
+pre.rouge .sd {
+  color: #d14;
+}
+pre.rouge .s2 {
+  color: #d14;
+}
+pre.rouge .se {
+  color: #d14;
+}
+pre.rouge .sh {
+  color: #d14;
+}
+pre.rouge .si {
+  color: #d14;
+}
+pre.rouge .sx {
+  color: #d14;
+}
+pre.rouge .sr {
+  color: #009926;
+}
+pre.rouge .s1 {
+  color: #d14;
+}
+pre.rouge .ss {
+  color: #990073;
+}
+pre.rouge .s, pre.rouge .dl {
+  color: #d14;
+}
+pre.rouge .na {
+  color: #008080;
+}
+pre.rouge .bp {
+  color: #999999;
+}
+pre.rouge .nb {
+  color: #0086B3;
+}
+pre.rouge .nc {
+  color: #445588;
+  font-weight: bold;
+}
+pre.rouge .no {
+  color: #008080;
+}
+pre.rouge .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+pre.rouge .ni {
+  color: #800080;
+}
+pre.rouge .ne {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nf, pre.rouge .fm {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nl {
+  color: #990000;
+  font-weight: bold;
+}
+pre.rouge .nn {
+  color: #555555;
+}
+pre.rouge .nt {
+  color: #000080;
+}
+pre.rouge .vc {
+  color: #008080;
+}
+pre.rouge .vg {
+  color: #008080;
+}
+pre.rouge .vi {
+  color: #008080;
+}
+pre.rouge .nv, pre.rouge .vm {
+  color: #008080;
+}
+pre.rouge .ow {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .o {
+  color: #000000;
+  font-weight: bold;
+}
+pre.rouge .w {
+  color: #bbbbbb;
+}
+pre.rouge {
+  background-color: #f8f8f8;
+}
+</style>
 </head>
 <body class="book toc2 toc-right">
 <div id="header">
 <h1>ABS Documentation</h1>
 <div class="details">
 <span id="author" class="author">ABS Development Team</span><br>
-<span id="revnumber">version v1.10.0</span>
+<span id="revnumber">version v1.10.1</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -908,10 +1123,9 @@ p { margin-bottom: 1.25rem; }
 </li>
 <li><a href="#-abs-backends">17. ABS Backends</a>
 <ul class="sectlevel2">
-<li><a href="#-maude-backend">17.1. Maude Backend</a></li>
+<li><a href="#sec:java-backend">17.1. Java Backend</a></li>
 <li><a href="#sec:erlang-backend">17.2. Erlang Backend</a></li>
-<li><a href="#-java-backend">17.3. Java Backend</a></li>
-<li><a href="#-haskell-backend">17.4. Haskell Backend</a></li>
+<li><a href="#-maude-backend">17.3. Maude Backend</a></li>
 </ul>
 </li>
 </ul>
@@ -1219,7 +1433,7 @@ following EBNF conventions for specifying the syntax of ABS elements.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>// this is a comment
+<pre class="rouge highlight"><code>// this is a comment
 module A; // this is also a comment</code></pre>
 </div>
 </div>
@@ -1231,7 +1445,7 @@ multiple lines and do not nest.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>/* this
+<pre class="rouge highlight"><code>/* this
 is a multiline
 comment */</code></pre>
 </div>
@@ -1453,7 +1667,7 @@ tool chain.  Pre-defined annotations are usually type-checked.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>[Near] class Example { ... }</code></pre>
+<pre class="rouge highlight"><code>[Near] class Example { ... }</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1462,7 +1676,7 @@ tool chain.  Pre-defined annotations are usually type-checked.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>[Cost: 15, Deadline: Duration(20)] o!m();</code></pre>
+<pre class="rouge highlight"><code>[Cost: 15, Deadline: Duration(20)] o!m();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1471,7 +1685,7 @@ tool chain.  Pre-defined annotations are usually type-checked.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>[Cost: 15] [Deadline: Duration(20)] o!m();</code></pre>
+<pre class="rouge highlight"><code>[Cost: 15] [Deadline: Duration(20)] o!m();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1531,7 +1745,7 @@ system via their <code>run</code> method and constructor arguments.)</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>String <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="rouge highlight"><code>String <i class="conum" data-value="1"></i><b>(1)</b>
 A_s1mple_type <i class="conum" data-value="2"></i><b>(2)</b>
 Map&lt;Int, List&lt;String&gt;&gt; <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
@@ -1693,7 +1907,7 @@ future holds and will return can be of any concrete type.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Fut&lt;String&gt; <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="rouge highlight"><code>Fut&lt;String&gt; <i class="conum" data-value="1"></i><b>(1)</b>
 Fut&lt;List&lt;Rat&gt;&gt; <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
@@ -1747,7 +1961,7 @@ optional accessor function (see <a href="#sec:accessor-functions">Accessor Funct
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>data IntList = NoInt | ConsInt(Int head, IntList tail); <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="rouge highlight"><code>data IntList = NoInt | ConsInt(Int head, IntList tail); <i class="conum" data-value="1"></i><b>(1)</b>
 data Bool = True | False; <i class="conum" data-value="2"></i><b>(2)</b>
 data NotInstantiable; <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
@@ -1784,7 +1998,7 @@ belong to the same data type.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>data Person = Person(String name, Int age);
+<pre class="rouge highlight"><code>data Person = Person(String name, Int age);
 {
   Person john = Person("John", 34);
   Int age = age(john); <i class="conum" data-value="1"></i><b>(1)</b>
@@ -1815,7 +2029,7 @@ after the data type name.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>data List&lt;A&gt; = Nil | Cons(A, List&lt;A&gt;);</code></pre>
+<pre class="rouge highlight"><code>data List&lt;A&gt; = Nil | Cons(A, List&lt;A&gt;);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1824,7 +2038,7 @@ after the data type name.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>List&lt;Int&gt; l = Cons(1, Cons(2, Nil));</code></pre>
+<pre class="rouge highlight"><code>List&lt;Int&gt; l = Cons(1, Cons(2, Nil));</code></pre>
 </div>
 </div>
 </div>
@@ -1839,7 +2053,7 @@ expressions via a user-supplied function.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>def Set&lt;A&gt; set&lt;A&gt;(List&lt;A&gt; l) = <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="rouge highlight"><code>def Set&lt;A&gt; set&lt;A&gt;(List&lt;A&gt; l) = <i class="conum" data-value="1"></i><b>(1)</b>
     case l {
        Nil =&gt; EmptySet
        | Cons(x,xs) =&gt; insertElement(set(xs), x)
@@ -1935,7 +2149,7 @@ type <code>Exception</code>.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>exception MyException;
+<pre class="rouge highlight"><code>exception MyException;
 exception MyOtherException(String param, Int); // no accessor for second param</code></pre>
 </div>
 </div>
@@ -1971,7 +2185,7 @@ currently supported.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>type Filename = String;
+<pre class="rouge highlight"><code>type Filename = String;
 type Filenames = Set&lt;Filename&gt;;
 type Servername = String;
 type Packet = String;
@@ -2025,7 +2239,7 @@ erroneous, and will result in a type error:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>interface I { }
+<pre class="rouge highlight"><code>interface I { }
 class C {
     [Far] I m([Near] I o) {
         return o; <i class="conum" data-value="1"></i><b>(1)</b>
@@ -2162,7 +2376,7 @@ not need to be specially treated when writing a template string.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>`Hello $name$!
+<pre class="rouge highlight"><code>`Hello $name$!
 The price is \$$price$.`</code></pre>
 </div>
 </div>
@@ -2425,7 +2639,7 @@ earlier variables in their value expression.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>let Int x = 2 + 2, Int y = x + 1 in y * 2 <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<pre class="rouge highlight"><code>let Int x = 2 + 2, Int y = x + 1 in y * 2 <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2464,7 +2678,7 @@ upper-case letter.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>True
+<pre class="rouge highlight"><code>True
 Cons(True, Nil)
 Nil</code></pre>
 </div>
@@ -2498,7 +2712,7 @@ function calls.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>tail(Cons(True, Nil))
+<pre class="rouge highlight"><code>tail(Cons(True, Nil))
 head(list)</code></pre>
 </div>
 </div>
@@ -2556,7 +2770,7 @@ function call expressions, but have an additional prepended set of arguments.</p
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>map(toString)(list[1, 2])
+<pre class="rouge highlight"><code>map(toString)(list[1, 2])
 filter((Int i) =&gt; i &gt; 0)(list[0, 1, 2])</code></pre>
 </div>
 </div>
@@ -2585,7 +2799,7 @@ evaluated, but not both.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>when 5 == 4 then True else False</code></pre>
+<pre class="rouge highlight"><code>when 5 == 4 then True else False</code></pre>
 </div>
 </div>
 </div>
@@ -2684,7 +2898,7 @@ data constructors.  For example:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>let (Pair&lt;Int, Int&gt; a) = Pair(5, 5) in
+<pre class="rouge highlight"><code>let (Pair&lt;Int, Int&gt; a) = Pair(5, 5) in
   case a {
     Pair(x, x) =&gt; x <i class="conum" data-value="1"></i><b>(1)</b>
     | Pair(x, y) =&gt; y <i class="conum" data-value="2"></i><b>(2)</b>
@@ -2710,7 +2924,7 @@ data constructors.  For example:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>let (x = 7) in
+<pre class="rouge highlight"><code>let (x = 7) in
   case Pair(5, 5) {
     Pair(x, x) =&gt; x <i class="conum" data-value="1"></i><b>(1)</b>
     | Pair(x, y) =&gt; y <i class="conum" data-value="2"></i><b>(2)</b>
@@ -2748,7 +2962,7 @@ case expression is equal to the literal value.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>let (Pair&lt;Int, Int&gt; a) = Pair(5, 5) in
+<pre class="rouge highlight"><code>let (Pair&lt;Int, Int&gt; a) = Pair(5, 5) in
   case a {
     Pair(3, x) =&gt; x <i class="conum" data-value="1"></i><b>(1)</b>
     | Pair(x, y) =&gt; y <i class="conum" data-value="2"></i><b>(2)</b>
@@ -2781,7 +2995,7 @@ Constructor arguments are again patterns.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>let (List&lt;Int&gt; l) = list[1, 2, 3] in
+<pre class="rouge highlight"><code>let (List&lt;Int&gt; l) = list[1, 2, 3] in
   case l {
     Nil =&gt; 0 <i class="conum" data-value="1"></i><b>(1)</b>
     | Cons(1, _) =&gt; 15 <i class="conum" data-value="2"></i><b>(2)</b>
@@ -2818,7 +3032,7 @@ Constructor arguments are again patterns.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>let (List&lt;Int&gt; l) = list[1, 2, 3] in
+<pre class="rouge highlight"><code>let (List&lt;Int&gt; l) = list[1, 2, 3] in
   case l {
     Nil =&gt; True <i class="conum" data-value="1"></i><b>(1)</b>
     | _ =&gt; False <i class="conum" data-value="2"></i><b>(2)</b>
@@ -2880,7 +3094,7 @@ implements the given interface.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>interface I {}
+<pre class="rouge highlight"><code>interface I {}
 interface J {}
 class C implements I, J {}
 {
@@ -2917,7 +3131,7 @@ the given interface <code>I</code>, or <code>null</code> otherwise.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>interface I {}
+<pre class="rouge highlight"><code>interface I {}
 interface J {}
 class C implements I, J {}
 class D implements I {}
@@ -2967,7 +3181,7 @@ This expression is a side-effect expression and cannot be used as a sub-expressi
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>new local Foo(5)
+<pre class="rouge highlight"><code>new local Foo(5)
 new Bar()</code></pre>
 </div>
 </div>
@@ -3031,7 +3245,7 @@ This expression is a side-effect expression and cannot be used as a sub-expressi
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Bool b = x.m(5, 3);</code></pre>
+<pre class="rouge highlight"><code>Bool b = x.m(5, 3);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3097,7 +3311,7 @@ the method call.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Fut&lt;Bool&gt; f = x!m(5);</code></pre>
+<pre class="rouge highlight"><code>Fut&lt;Bool&gt; f = x!m(5);</code></pre>
 </div>
 </div>
 </div>
@@ -3138,7 +3352,7 @@ This expression is a side-effect expression and cannot be used as a sub-expressi
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Bool b = f.get;</code></pre>
+<pre class="rouge highlight"><code>Bool b = f.get;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3155,7 +3369,7 @@ variable <code>b</code>.  In case of any error, <code>b</code> is assigned <code
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>try b = f.get; catch { _ =&gt; b = False; }</code></pre>
+<pre class="rouge highlight"><code>try b = f.get; catch { _ =&gt; b = False; }</code></pre>
 </div>
 </div>
 </div>
@@ -3193,7 +3407,7 @@ This expression is a side-effect expression and cannot be used as a sub-expressi
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>A x = await o!m();</code></pre>
+<pre class="rouge highlight"><code>A x = await o!m();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3202,7 +3416,7 @@ This expression is a side-effect expression and cannot be used as a sub-expressi
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Fut&lt;A&gt; fx = o!m();
+<pre class="rouge highlight"><code>Fut&lt;A&gt; fx = o!m();
 await fx?;
 A x = fx.get;</code></pre>
 </div>
@@ -3222,7 +3436,7 @@ results in an exception:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>await o!m();</code></pre>
+<pre class="rouge highlight"><code>await o!m();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3232,7 +3446,7 @@ these two statements:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Fut&lt;A&gt; fx = o!m();
+<pre class="rouge highlight"><code>Fut&lt;A&gt; fx = o!m();
 await fx?;</code></pre>
 </div>
 </div>
@@ -3274,7 +3488,7 @@ values can be used, see <a href="#type-destiny">The Destiny Type</a>.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>class C {
+<pre class="rouge highlight"><code>class C {
     Destiny myMethod() {
         return destiny;
     }
@@ -3304,7 +3518,7 @@ the future of the task that is executing S:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>class C {
+<pre class="rouge highlight"><code>class C {
     Unit syn(Destiny caller) {
         assert(destiny == caller);
     }
@@ -3371,7 +3585,7 @@ function name.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>def Rat abs(Rat x) = if x &gt; 0 then x else -x; <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="rouge highlight"><code>def Rat abs(Rat x) = if x &gt; 0 then x else -x; <i class="conum" data-value="1"></i><b>(1)</b>
 
 def Int length&lt;A&gt;(List&lt;A&gt; list) = <i class="conum" data-value="2"></i><b>(2)</b>
 case list {
@@ -3444,7 +3658,7 @@ list.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>// Simply applies a function fn to a value.
+<pre class="rouge highlight"><code>// Simply applies a function fn to a value.
 def B apply&lt;A, B&gt;(fn)(A value) = fn(value);
 
 def Int double(Int x) = x * 2;
@@ -3458,7 +3672,7 @@ def Int double(Int x) = x * 2;
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>def List&lt;B&gt; map&lt;A, B&gt;(f)(List&lt;A&gt; list) = case list { <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="rouge highlight"><code>def List&lt;B&gt; map&lt;A, B&gt;(f)(List&lt;A&gt; list) = case list { <i class="conum" data-value="1"></i><b>(1)</b>
     Nil =&gt; Nil
     | Cons(x, xs) =&gt; Cons(f(x), map(xs)) <i class="conum" data-value="2"></i><b>(2)</b>
 };
@@ -3534,7 +3748,7 @@ define the <code>double</code> function explicitly.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>{
+<pre class="rouge highlight"><code>{
   List&lt;Int&gt; list = list[1, 2, 3];
   list = map((Int y) =&gt; y * 2)(list);
 }</code></pre>
@@ -3548,7 +3762,7 @@ first-class values, no closure is created.)</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>{
+<pre class="rouge highlight"><code>{
   Int factor = 5;
   List&lt;Int&gt; list = list[1, 2, 3];
   list = map((Int y) =&gt; y * factor)(list);
@@ -3625,29 +3839,29 @@ be:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>Int</code>, when the query returns rows with a single SQLite <code>INTEGER</code>
-value;</p>
+<p><code>List&lt;Int&gt;</code>, when the query returns rows with a single SQLite
+<code>INTEGER</code> value;</p>
 </li>
 <li>
-<p><code>Float</code>, when the query returns rows with a single SQLite <code>INTEGER</code>
-or <code>REAL</code> value;</p>
+<p><code>List&lt;Float&gt;</code>, when the query returns rows with a single SQLite
+<code>INTEGER</code> or <code>REAL</code> value;</p>
 </li>
 <li>
-<p><code>Rat</code>, when the query returns rows with a single SQLite <code>INTEGER</code> or
-<code>REAL</code> value;</p>
+<p><code>List&lt;Rat&gt;</code>, when the query returns rows with a single SQLite
+<code>INTEGER</code> or <code>REAL</code> value;</p>
 </li>
 <li>
-<p><code>Bool</code>, when the query returns rows with a single SQLite <code>INTEGER</code>
-value, where <code>0</code> corresponds to ABS <code>False</code>;</p>
+<p><code>List&lt;Bool&gt;</code>, when the query returns rows with a single SQLite
+<code>INTEGER</code> value, where <code>0</code> corresponds to ABS <code>False</code>;</p>
 </li>
 <li>
-<p><code>String</code>, when the query returns rows with a single SQLite <code>TEXT</code>
-value;</p>
+<p><code>List&lt;String&gt;</code>, when the query returns rows with a single SQLite
+<code>TEXT</code> value;</p>
 </li>
 <li>
-<p>An algebraic datatype, with a single constructor taking only the
-above datatypes, such that the constructor can be invoked for each
-row returned by the query.</p>
+<p>A list of an algebraic datatype, with a single constructor taking
+only the above datatypes, such that the constructor can be invoked
+for each row returned by the query.</p>
 </li>
 </ul>
 </div>
@@ -3678,7 +3892,7 @@ into SQL values (see <a href="https://www.sqlite.org/datatype3.html" class="bare
 <div class="listingblock">
 <div class="title">Example: creating a database</div>
 <div class="content">
-<pre class="highlight"><code>$ sqlite3 /tmp/test.sqlite3
+<pre class="rouge highlight"><code>$ sqlite3 /tmp/test.sqlite3
 CREATE TABLE IF NOT EXISTS test_table (
   int_value INTEGER,
   float_value REAL,
@@ -3698,7 +3912,7 @@ INSERT INTO test_table(int_value, float_value, string_value, bool_value)
 <div class="listingblock">
 <div class="title">Example: reading from the database</div>
 <div class="content">
-<pre class="highlight"><code>module Test;
+<pre class="rouge highlight"><code>module Test;
 
 def List&lt;String&gt; fstring() = builtin(sqlite3, <i class="conum" data-value="1"></i><b>(1)</b>
     "/tmp/test.sqlite3",
@@ -3838,7 +4052,7 @@ of the erlang function <code>code:priv_dir(absmodel)</code>, typically
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>skip;</code></pre>
+<pre class="rouge highlight"><code>skip;</code></pre>
 </div>
 </div>
 </div>
@@ -3876,7 +4090,7 @@ initialized with <code>null</code> if the initialization expression is omitted.<
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Bool b = True;</code></pre>
+<pre class="rouge highlight"><code>Bool b = True;</code></pre>
 </div>
 </div>
 <div class="sect3">
@@ -3892,7 +4106,7 @@ assign a new value to <code>constant_i</code>:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>{
+<pre class="rouge highlight"><code>{
     [Final] Int constant_i = 24;
     constant_i = 25;
 }</code></pre>
@@ -3927,7 +4141,7 @@ to <code>f</code> will change the value of the local variable.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>this.f = True;
+<pre class="rouge highlight"><code>this.f = True;
 x = 5;</code></pre>
 </div>
 </div>
@@ -3974,7 +4188,7 @@ calling methods on references passed in via the <code>new</code> expression.
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>server!operate();
+<pre class="rouge highlight"><code>server!operate();
 new Client(server);</code></pre>
 </div>
 </div>
@@ -4003,7 +4217,7 @@ AssertionFailException;</code>.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>assert x != null;</code></pre>
+<pre class="rouge highlight"><code>assert x != null;</code></pre>
 </div>
 </div>
 </div>
@@ -4064,7 +4278,7 @@ statements containing an await expression (see <a href="#await-expression">Await
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Fut&lt;Bool&gt; f = x!m();
+<pre class="rouge highlight"><code>Fut&lt;Bool&gt; f = x!m();
 await f?; <i class="conum" data-value="1"></i><b>(1)</b>
 await this.x == True; <i class="conum" data-value="2"></i><b>(2)</b>
 await f? &amp; this.y &gt; 5; <i class="conum" data-value="3"></i><b>(3)</b>
@@ -4140,7 +4354,7 @@ cases, it is better to await on the condition: <code>await condition; doTheThing
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>suspend;</code></pre>
+<pre class="rouge highlight"><code>suspend;</code></pre>
 </div>
 </div>
 </div>
@@ -4188,7 +4402,7 @@ multiple <code>return</code> statements.  This makes model analysis easier.
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>return x;</code></pre>
+<pre class="rouge highlight"><code>return x;</code></pre>
 </div>
 </div>
 </div>
@@ -4215,7 +4429,7 @@ value to throw.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>  throw AssertionFailException;</code></pre>
+<pre class="rouge highlight"><code>  throw AssertionFailException;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4270,7 +4484,7 @@ anywhere a single statement is valid.
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>{
+<pre class="rouge highlight"><code>{
   Int a = 0; <i class="conum" data-value="1"></i><b>(1)</b>
   a = a + 1;
   n = a % 10;
@@ -4314,7 +4528,7 @@ a Boolean value.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>if (5 &lt; x) {
+<pre class="rouge highlight"><code>if (5 &lt; x) {
   y = 6;
 }
 else {
@@ -4365,7 +4579,7 @@ executing that statement.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Pair&lt;Int, Int&gt; p = Pair(2, 3);
+<pre class="rouge highlight"><code>Pair&lt;Int, Int&gt; p = Pair(2, 3);
 Int x = 0;
 switch (p) {
   Pair(2, y) =&gt; { x = y; skip; }
@@ -4396,7 +4610,7 @@ condition is re-evaluated after each iteration of the loop.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>while (x &lt; 5) {
+<pre class="rouge highlight"><code>while (x &lt; 5) {
   x = x + 1;
 }</code></pre>
 </div>
@@ -4445,7 +4659,7 @@ in Section <a href="#type-list">Lists</a> for common list processing idioms.
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>foreach (v in list["a", "b", "c"]) {
+<pre class="rouge highlight"><code>foreach (v in list["a", "b", "c"]) {
   println(`v is bound to $v$`);
 }
 
@@ -4507,7 +4721,7 @@ recovery block with the unhandled exception as parameter (see
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>try {
+<pre class="rouge highlight"><code>try {
     Rat z = 1/x; <i class="conum" data-value="1"></i><b>(1)</b>
 } catch {
     DivisionByZeroException =&gt; println("We divided by zero"); <i class="conum" data-value="2"></i><b>(2)</b>
@@ -4539,7 +4753,7 @@ around the catch block can be omitted.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>try b = f.get; catch _ =&gt; b = False; <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<pre class="rouge highlight"><code>try b = f.get; catch _ =&gt; b = False; <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4637,7 +4851,7 @@ server and a client.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>interface DB {
+<pre class="rouge highlight"><code>interface DB {
   File getFile(Filename fId);
   Int getLength(Filename fId);
   Unit storeFile(Filename fId, File file);
@@ -4805,7 +5019,7 @@ lists.
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>class DataBase(Map&lt;Filename,File&gt; db) implements DB {
+<pre class="rouge highlight"><code>class DataBase(Map&lt;Filename,File&gt; db) implements DB {
 	File getFile(Filename fId) {
 		return lookup(db, fId);
 	}
@@ -4847,7 +5061,7 @@ assign new values to two fields declared as <code>Final</code>:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>class Sample ([Final] Int constant_i) {
+<pre class="rouge highlight"><code>class Sample ([Final] Int constant_i) {
     [Final] Int constant_j = 24;
     Unit m() {
         constant_i = 25; // error
@@ -4878,7 +5092,7 @@ will lead to a compile error.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>class Wrong {
+<pre class="rouge highlight"><code>class Wrong {
     Int field = 12;
 
     // This will not compile
@@ -4910,7 +5124,7 @@ error.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>class Sample {
+<pre class="rouge highlight"><code>class Sample {
     Int field = 12;
 
     {
@@ -4931,7 +5145,7 @@ error.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Unit run() {
+<pre class="rouge highlight"><code>Unit run() {
 	// active behavior ...
 }</code></pre>
 </div>
@@ -5014,7 +5228,7 @@ type checking.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>trait T = { Unit x(){ skip; } }
+<pre class="rouge highlight"><code>trait T = { Unit x(){ skip; } }
 trait T2 = { Unit y(){ skip; } } adds T
 // T2 contains the following methods:
 // Unit y(){ skip; } Unit x(){ skip; }</code></pre>
@@ -5036,7 +5250,7 @@ compile-time error.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>trait T = { Bool m(){ return False; } }
+<pre class="rouge highlight"><code>trait T = { Bool m(){ return False; } }
 trait T2 = { Bool m() { Bool orig = original(); return !orig; } }
 class C {
   uses T modifies T2;
@@ -5056,7 +5270,7 @@ from the trait.  If a method with the same name is not present in the class
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>trait T = { Bool m(){ return False; } }
+<pre class="rouge highlight"><code>trait T = { Bool m(){ return False; } }
 class C {
   uses T removes { Bool m(); };
 }
@@ -5179,7 +5393,7 @@ something like this:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>module Drinks;
+<pre class="rouge highlight"><code>module Drinks;
 export Drink, pourMilk, pourWater;
 data Drink = Milk | Water;
 def Drink pourMilk() = Milk;
@@ -5202,7 +5416,7 @@ module.  Note that imported names are <em>not</em> re-exported by <code>export *
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>module Test;
+<pre class="rouge highlight"><code>module Test;
 export *;
 import * from OtherModule;
 export * from OtherModule;</code></pre>
@@ -5228,7 +5442,7 @@ accessible as <code>Drinks.Drink</code>:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>module Bar;
+<pre class="rouge highlight"><code>module Bar;
 import Drinks.Drink; <i class="conum" data-value="1"></i><b>(1)</b>
 import pourMilk from Drinks; <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
@@ -5252,7 +5466,7 @@ module <code>Module</code> accessible without module qualifier in the current mo
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>module Bar;
+<pre class="rouge highlight"><code>module Bar;
 import * from Drinks; <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
@@ -5272,7 +5486,7 @@ import * from Drinks; <i class="conum" data-value="1"></i><b>(1)</b></code></pre
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>module Bar;
+<pre class="rouge highlight"><code>module Bar;
 import * from Drinks;
 export * from Drinks;</code></pre>
 </div>
@@ -5288,7 +5502,7 @@ accessible as well.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>module Bar;
+<pre class="rouge highlight"><code>module Bar;
 import * from Drinks;
 export Drink from Drinks; <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
@@ -5301,7 +5515,7 @@ export Drink from Drinks; <i class="conum" data-value="1"></i><b>(1)</b></code><
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>module Bar;
+<pre class="rouge highlight"><code>module Bar;
 import Drink from Drinks;
 export * from Drinks;</code></pre>
 </div>
@@ -5333,7 +5547,7 @@ datatype is <code>Bool</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Bool value = True;</code></pre>
+<pre class="rouge highlight"><code>Bool value = True;</code></pre>
 </div>
 </div>
 </div>
@@ -5553,43 +5767,50 @@ behavior.
 </div>
 <div class="sect3">
 <h4 id="-functions">Functions</h4>
+<div class="sect4">
+<h5 id="-min-max">min, max</h5>
 <div class="paragraph">
-<div class="title">min, max</div>
 <p>These functions calculate the maximum and minimum of their two arguments.
 Since ABS datatypes are ordered, they can be applied to arguments of all
 types.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>A max&lt;A&gt;(A a, A b)
+<pre class="rouge highlight"><code>A max&lt;A&gt;(A a, A b)
 A min&lt;A&gt;(A a, A b)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-abs">abs</h5>
 <div class="paragraph">
-<div class="title">abs</div>
 <p>This function calculates the absolute (positive) value of its argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Rat abs(Rat x)</code></pre>
+<pre class="rouge highlight"><code>Rat abs(Rat x)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-truncate">truncate</h5>
 <div class="paragraph">
-<div class="title">truncate</div>
 <p>Converts a rational number to an integer by truncating towards zero.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Int truncate(Rat a)</code></pre>
+<pre class="rouge highlight"><code>Int truncate(Rat a)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-float">float</h5>
 <div class="paragraph">
-<div class="title">float</div>
 <p>Converts an integer or rational number into a floating-point number.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Float float(Rat a)</code></pre>
+<pre class="rouge highlight"><code>Float float(Rat a)</code></pre>
 </div>
 </div>
 <div class="admonitionblock caution">
@@ -5606,13 +5827,15 @@ might not be true.
 </tr>
 </table>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-rat">rat</h5>
 <div class="paragraph">
-<div class="title">rat</div>
 <p>Converts  a floating-point number into a rational number.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Rat rat(Float f)</code></pre>
+<pre class="rouge highlight"><code>Rat rat(Float f)</code></pre>
 </div>
 </div>
 <div class="admonitionblock caution">
@@ -5628,108 +5851,131 @@ backend-specific.  In general, <code>float(rat(x)) == x</code> might not be true
 </tr>
 </table>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-floor">floor</h5>
 <div class="paragraph">
-<div class="title">floor</div>
 <p>Returns the largest integer smaller or equal to the argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Int floor(Float f)</code></pre>
+<pre class="rouge highlight"><code>Int floor(Float f)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-ceil">ceil</h5>
 <div class="paragraph">
-<div class="title">ceil</div>
 <p>Returns the smallest integer larger or equal to the argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Int ceil(Float f)</code></pre>
+<pre class="rouge highlight"><code>Int ceil(Float f)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-numerator">numerator</h5>
 <div class="paragraph">
-<div class="title">numerator</div>
 <p>Returns the numerator of a rational number, or the number itself for an
 integer.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Int numerator(Rat a)</code></pre>
+<pre class="rouge highlight"><code>Int numerator(Rat a)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-denominator">denominator</h5>
 <div class="paragraph">
-<div class="title">denominator</div>
 <p>Returns the denominator of a rational number, or <code>1</code> for an integer.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Int denominator(Rat a)</code></pre>
+<pre class="rouge highlight"><code>Int denominator(Rat a)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-pow">pow</h5>
 <div class="paragraph">
-<div class="title">pow</div>
 <p>This function calculates <code>b</code> to the power of <code>n</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Rat pow(Rat b, Int n)</code></pre>
+<pre class="rouge highlight"><code>Rat pow(Rat b, Int n)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-sqrt_newton">sqrt_newton</h5>
 <div class="paragraph">
-<div class="title">sqrt_newton</div>
 <p>This function approximates the square root of <code>x</code>; it stops when two subsequent
 estimates (as per Newton&#8217;s algorithm) differ by less than <code>epsilon</code>.  <code>estimate</code> is an initial estimate of the
 square root.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon)</code></pre>
+<pre class="rouge highlight"><code>Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-exp_newton">exp_newton</h5>
 <div class="paragraph">
-<div class="title">exp_newton</div>
 <p>This function approximates <em>e</em> to the power of <code>x</code>; it stops when two subsequent
 estimates (as per Newton&#8217;s algorithm) differ by less than <code>epsilon</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Rat exp_newton(Rat x, Rat epsilon)</code></pre>
+<pre class="rouge highlight"><code>Rat exp_newton(Rat x, Rat epsilon)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-sqrt">sqrt</h5>
 <div class="paragraph">
-<div class="title">sqrt</div>
 <p>This function returns the square root of <code>x</code>.  It is an error if <code>x</code> is
 negative.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Float sqrt(Float x)</code></pre>
+<pre class="rouge highlight"><code>Float sqrt(Float x)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-log">log</h5>
 <div class="paragraph">
-<div class="title">log</div>
 <p>This function returns the natural logarithm of its argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Float log(Float x)</code></pre>
+<pre class="rouge highlight"><code>Float log(Float x)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-exp">exp</h5>
 <div class="paragraph">
-<div class="title">exp</div>
 <p>This function returns Euler’s number <em>e</em> raised to the power of <code>x</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Float exp(Float x)</code></pre>
+<pre class="rouge highlight"><code>Float exp(Float x)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-random">random</h5>
 <div class="paragraph">
-<div class="title">random</div>
 <p>Returns an integer between 0 (inclusive) and its argument (exclusive).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Int random(Int below)</code></pre>
+<pre class="rouge highlight"><code>Int random(Int below)</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -5820,53 +6066,63 @@ literal is written as <code>\n</code>, carriage return as <code>\r</code>.</p>
 </div>
 <div class="sect3">
 <h4 id="-functions-2">Functions</h4>
+<div class="sect4">
+<h5 id="-tostring">toString</h5>
 <div class="paragraph">
-<div class="title">toString</div>
 <p>This function converts any data into a printable string representation.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def String toString&lt;T&gt;(T t)</code></pre>
+<pre class="rouge highlight"><code>def String toString&lt;T&gt;(T t)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-substr">substr</h5>
 <div class="paragraph">
-<div class="title">substr</div>
 <p>Returns a substring of a given string <code>str</code> with length <code>length</code> starting from
 position <code>start</code> (inclusive).  The first character in a string has position 0.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def String substr(String str, Int start, Int length)</code></pre>
+<pre class="rouge highlight"><code>def String substr(String str, Int start, Int length)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-strlen">strlen</h5>
 <div class="paragraph">
-<div class="title">strlen</div>
 <p>Returns the length of the given string <code>str</code>.  The empty string (<code>""</code>) has
 length 0.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Int strlen(String str)</code></pre>
+<pre class="rouge highlight"><code>def Int strlen(String str)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-println">println</h5>
 <div class="paragraph">
-<div class="title">println</div>
 <p>Prints the given string <code>s</code> to standard output, followed by a newline, meaning
 that the next output will not continue on the same line.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Unit println(String s)</code></pre>
+<pre class="rouge highlight"><code>def Unit println(String s)</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-print">print</h5>
 <div class="paragraph">
-<div class="title">print</div>
 <p>Prints the given string <code>s</code> to standard output.  Does not cause the next
 output to begin on a new line.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Unit print(String s)</code></pre>
+<pre class="rouge highlight"><code>def Unit print(String s)</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -5909,7 +6165,7 @@ the get expression blocks the current cog.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Fut&lt;Int&gt; f = o!add(2, 3); <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="rouge highlight"><code>Fut&lt;Int&gt; f = o!add(2, 3); <i class="conum" data-value="1"></i><b>(1)</b>
 await f?; <i class="conum" data-value="2"></i><b>(2)</b>
 Int result = f.get; <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
@@ -5938,7 +6194,7 @@ a shorthand can be used that combines the above three statements:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Int result = await o!add(2, 3); <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<pre class="rouge highlight"><code>Int result = await o!add(2, 3); <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5971,7 +6227,7 @@ Thus, its values are also futures:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Unit myMethod() {
+<pre class="rouge highlight"><code>Unit myMethod() {
     Destiny x = destiny;
 }</code></pre>
 </div>
@@ -5984,7 +6240,7 @@ For example, values of any future type <code>Fut&lt;T&gt;</code> can implicitly 
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Destiny f = this!myMethod();</code></pre>
+<pre class="rouge highlight"><code>Destiny f = this!myMethod();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5995,7 +6251,7 @@ types to identify asynchronous method calls:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Destiny f = this!myMethod();
+<pre class="rouge highlight"><code>Destiny f = this!myMethod();
 Fut&lt;Int&gt; g = this!myMethod();
 
 assert(f == f &amp;&amp; f != g);</code></pre>
@@ -6010,7 +6266,7 @@ not extract its result:</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>Int myMethod() {
+<pre class="rouge highlight"><code>Int myMethod() {
     Destiny f = destiny;
     f.get; <i class="conum" data-value="1"></i><b>(1)</b>
     await f?; <i class="conum" data-value="2"></i><b>(2)</b>
@@ -6121,7 +6377,7 @@ by another list <code>l</code> (<code>Cons(a, l)</code>).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>data List&lt;A&gt; = Nil | Cons(A head, List&lt;A&gt; tail);</code></pre>
+<pre class="rouge highlight"><code>data List&lt;A&gt; = Nil | Cons(A head, List&lt;A&gt; tail);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6130,51 +6386,60 @@ by another list <code>l</code> (<code>Cons(a, l)</code>).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>List&lt;Int&gt; l1 = list[1, 2, 3];
+<pre class="rouge highlight"><code>List&lt;Int&gt; l1 = list[1, 2, 3];
 List&lt;Int&gt; l2 = Cons(1, Cons(2, Cons(3, Nil)));</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
 <h4 id="-functions-3">Functions</h4>
+<div class="sect4">
+<h5 id="-head">head</h5>
 <div class="paragraph">
-<div class="title">head</div>
 <p>Returns the head of a list.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def A head(List&lt;A&gt; l);</code></pre>
+<pre class="rouge highlight"><code>def A head(List&lt;A&gt; l);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-tail">tail</h5>
 <div class="paragraph">
-<div class="title">tail</div>
 <p>Returns the tail (rest) of a list.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;A&gt; tail(List&lt;A&gt; l);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;A&gt; tail(List&lt;A&gt; l);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-length">length</h5>
 <div class="paragraph">
-<div class="title">length</div>
 <p>Returns the length of a list.  The length of <code>Nil</code> is 0.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Int length(List&lt;A&gt; l);</code></pre>
+<pre class="rouge highlight"><code>def Int length(List&lt;A&gt; l);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-isempty">isEmpty</h5>
 <div class="paragraph">
-<div class="title">isEmpty</div>
 <p>Checks if a list is empty.  Returns <code>True</code> for <code>Nil</code>, <code>False</code> otherwise.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool isEmpty(List&lt;A&gt; l);</code></pre>
+<pre class="rouge highlight"><code>def Bool isEmpty(List&lt;A&gt; l);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-nth">nth</h5>
 <div class="paragraph">
-<div class="title">nth</div>
 <p>Returns the <code>n</code>-th element of a list.  Returns the head of <code>l</code> for <code>n</code>=0,
 returns the last element of <code>l</code> for <code>n</code>=<code>length(l)-1</code>.</p>
 </div>
@@ -6183,80 +6448,96 @@ returns the last element of <code>l</code> for <code>n</code>=<code>length(l)-1<
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def A nth(List&lt;A&gt; l, Int n);</code></pre>
+<pre class="rouge highlight"><code>def A nth(List&lt;A&gt; l, Int n);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-without">without</h5>
 <div class="paragraph">
-<div class="title">without</div>
 <p>Returns a fresh list where all occurrences of <code>a</code> have been removed.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;A&gt; without&lt;A&gt;(List&lt;A&gt; list, A a);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;A&gt; without&lt;A&gt;(List&lt;A&gt; list, A a);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-concatenate">concatenate</h5>
 <div class="paragraph">
-<div class="title">concatenate</div>
 <p>Returns a list containing all elements of list <code>list1</code> followed by all
 elements of list <code>list2</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;A&gt; concatenate&lt;A&gt;(List&lt;A&gt; list1, List&lt;A&gt; list2);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;A&gt; concatenate&lt;A&gt;(List&lt;A&gt; list1, List&lt;A&gt; list2);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-appendright">appendright</h5>
 <div class="paragraph">
-<div class="title">appendright</div>
 <p>Returns a list containing all elements of list <code>l</code> followed by the element <code>p</code>
 in the last position.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;A&gt; appendright&lt;A&gt;(List&lt;A&gt; l, A p);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;A&gt; appendright&lt;A&gt;(List&lt;A&gt; l, A p);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-reverse">reverse</h5>
 <div class="paragraph">
-<div class="title">reverse</div>
 <p>Returns a list containing all elements of <code>l</code> in reverse order.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;A&gt; reverse&lt;A&gt;(List&lt;A&gt; l);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;A&gt; reverse&lt;A&gt;(List&lt;A&gt; l);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-copy">copy</h5>
 <div class="paragraph">
-<div class="title">copy</div>
 <p>Returns a list of length <code>n</code> containing <code>p</code> n times.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;A&gt; copy&lt;A&gt;(A p, Int n);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;A&gt; copy&lt;A&gt;(A p, Int n);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-map">map</h5>
 <div class="paragraph">
-<div class="title">map</div>
 <p>Applies a function to each element of a list, returning a list of results in
 the same order.  The function <code>fn</code> must take an argument of type <code>A</code> and
 return a value of type <code>B</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;B&gt; map&lt;A, B&gt;(fn)(List&lt;A&gt; l);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;B&gt; map&lt;A, B&gt;(fn)(List&lt;A&gt; l);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-filter">filter</h5>
 <div class="paragraph">
-<div class="title">filter</div>
 <p>Returns a list containing only the elements in the given list for which the
 given predicate returns <code>True</code>.  The function <code>predicate</code> must take an
 argument of type <code>T</code> and return a Boolean value.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;T&gt; filter&lt;T&gt;(predicate)(List&lt;T&gt; l);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;T&gt; filter&lt;T&gt;(predicate)(List&lt;T&gt; l);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-foldl">foldl</h5>
 <div class="paragraph">
-<div class="title">foldl</div>
 <p>Accumulates a value starting with <code>init</code> and applying <code>accumulate</code> from left
 to right to current accumulator value and each element.  The function
 <code>accumulate</code> must take two arguments: the first of type <code>A</code> (the type of the
@@ -6265,11 +6546,13 @@ a value of type <code>B</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def B foldl&lt;A, B&gt;(accumulate)(List&lt;A&gt; l, B init);</code></pre>
+<pre class="rouge highlight"><code>def B foldl&lt;A, B&gt;(accumulate)(List&lt;A&gt; l, B init);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-foldr">foldr</h5>
 <div class="paragraph">
-<div class="title">foldr</div>
 <p>Accumulates a value starting with <code>init</code> and applying <code>accumulate</code> from right
 to left to each element and current accumulator value.  The function
 <code>accumulate</code> must take two arguments: the first of type <code>A</code> (the type of the
@@ -6278,7 +6561,8 @@ a value of type <code>B</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def B foldr&lt;A, B&gt;(accumulate)(List&lt;A&gt; l, B init);</code></pre>
+<pre class="rouge highlight"><code>def B foldr&lt;A, B&gt;(accumulate)(List&lt;A&gt; l, B init);</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -6301,7 +6585,7 @@ element, use <code>remove</code>.  To test for set membership, use the function
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Unit printAll&lt;A&gt;(Set&lt;A&gt; set) =
+<pre class="rouge highlight"><code>def Unit printAll&lt;A&gt;(Set&lt;A&gt; set) =
   case takeMaybe(set) {
     Nothing =&gt; println("Finished")
     | Just(e) =&gt; let (Unit dummy) = println("Element " + toString(e)) in printAll(remove(set, e))
@@ -6316,117 +6600,141 @@ element, use <code>remove</code>.  To test for set membership, use the function
 </div>
 <div class="sect3">
 <h4 id="-functions-4">Functions</h4>
+<div class="sect4">
+<h5 id="-contains">contains</h5>
 <div class="paragraph">
-<div class="title">contains</div>
 <p>Returns <code>True</code> if set <code>ss</code> contains element <code>e</code>, <code>False</code> otherwise.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool contains&lt;A&gt;(Set&lt;A&gt; ss, A e);</code></pre>
+<pre class="rouge highlight"><code>def Bool contains&lt;A&gt;(Set&lt;A&gt; ss, A e);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-emptyset">emptySet</h5>
 <div class="paragraph">
-<div class="title">emptySet</div>
 <p>Returns <code>True</code> if set <code>xs</code> is empty, <code>False</code>  otherwise.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool emptySet&lt;A&gt;(Set&lt;A&gt; ss);</code></pre>
+<pre class="rouge highlight"><code>def Bool emptySet&lt;A&gt;(Set&lt;A&gt; ss);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-size">size</h5>
 <div class="paragraph">
-<div class="title">size</div>
 <p>Returns the number of elements in set <code>xs</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Int size&lt;A&gt;(Set&lt;A&gt; xs);</code></pre>
+<pre class="rouge highlight"><code>def Int size&lt;A&gt;(Set&lt;A&gt; xs);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-elements">elements</h5>
 <div class="paragraph">
-<div class="title">elements</div>
 <p>Returns a list with all elements in set <code>xs</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;A&gt; elements&lt;A&gt;(Set&lt;A&gt; xs);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;A&gt; elements&lt;A&gt;(Set&lt;A&gt; xs);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-union">union</h5>
 <div class="paragraph">
-<div class="title">union</div>
 <p>Returns a set containing all elements of sets <code>set1</code> and <code>set2</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Set&lt;A&gt; union&lt;A&gt;(Set&lt;A&gt; set1, Set&lt;A&gt; set2);</code></pre>
+<pre class="rouge highlight"><code>def Set&lt;A&gt; union&lt;A&gt;(Set&lt;A&gt; set1, Set&lt;A&gt; set2);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-intersection">intersection</h5>
 <div class="paragraph">
-<div class="title">intersection</div>
 <p>Returns a set containing all elements that are present in both sets <code>set1</code> and
 <code>set2</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Set&lt;A&gt; intersection&lt;A&gt;(Set&lt;A&gt; set1, Set&lt;A&gt; set2);</code></pre>
+<pre class="rouge highlight"><code>def Set&lt;A&gt; intersection&lt;A&gt;(Set&lt;A&gt; set1, Set&lt;A&gt; set2);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-difference">difference</h5>
 <div class="paragraph">
-<div class="title">difference</div>
 <p>Returns a set containing all elements of set <code>set1</code> not present in set <code>set2</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Set&lt;A&gt; difference&lt;A&gt;(Set&lt;A&gt; set1, Set&lt;A&gt; set2);</code></pre>
+<pre class="rouge highlight"><code>def Set&lt;A&gt; difference&lt;A&gt;(Set&lt;A&gt; set1, Set&lt;A&gt; set2);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-issubset">isSubset</h5>
 <div class="paragraph">
-<div class="title">isSubset</div>
 <p>Returns <code>True</code> if <code>set</code> contains all elements of <code>maybe_subset</code>, <code>False</code>
 otherwise.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool isSubset&lt;A&gt;(Set&lt;A&gt; maybe_subset, Set&lt;A&gt; set);</code></pre>
+<pre class="rouge highlight"><code>def Bool isSubset&lt;A&gt;(Set&lt;A&gt; maybe_subset, Set&lt;A&gt; set);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-insertelement">insertElement</h5>
 <div class="paragraph">
-<div class="title">insertElement</div>
 <p>Returns a set with all elements of set <code>xs</code> plus element <code>e</code>.  Returns a set
 with the same elements as <code>xs</code> if <code>xs</code> already contains <code>e</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Set&lt;A&gt; insertElement&lt;A&gt;(Set&lt;A&gt; xs, A e);</code></pre>
+<pre class="rouge highlight"><code>def Set&lt;A&gt; insertElement&lt;A&gt;(Set&lt;A&gt; xs, A e);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-remove">remove</h5>
 <div class="paragraph">
-<div class="title">remove</div>
 <p>Returns a set with all elements of set <code>xs</code> except element <code>e</code>.  Returns a set
 with the same elements as <code>xs</code> if <code>xs</code> did not contain <code>e</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Set&lt;A&gt; remove&lt;A&gt;(Set&lt;A&gt; xs, A e);</code></pre>
+<pre class="rouge highlight"><code>def Set&lt;A&gt; remove&lt;A&gt;(Set&lt;A&gt; xs, A e);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-take">take</h5>
 <div class="paragraph">
-<div class="title">take</div>
 <p>Returns one element from a non-empty set.  It is an error to call <code>take</code> on an
 empty set; consider using <code>takeMaybe</code> in that case.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def A take&lt;A&gt;(Set&lt;A&gt; ss);</code></pre>
+<pre class="rouge highlight"><code>def A take&lt;A&gt;(Set&lt;A&gt; ss);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-takemaybe">takeMaybe</h5>
 <div class="paragraph">
-<div class="title">takeMaybe</div>
 <p>Returns one element from a set, or <code>Nothing</code> for an empty set.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Maybe&lt;A&gt; takeMaybe&lt;A&gt;(Set&lt;A&gt; ss);</code></pre>
+<pre class="rouge highlight"><code>def Maybe&lt;A&gt; takeMaybe&lt;A&gt;(Set&lt;A&gt; ss);</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -6447,7 +6755,7 @@ values are of type <code>B</code>.  The expression <code>map[]</code> produces a
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Map&lt;Int, String&gt; m = map[Pair(1, "ABS"), Pair(3, "SACO")];</code></pre>
+<pre class="rouge highlight"><code>Map&lt;Int, String&gt; m = map[Pair(1, "ABS"), Pair(3, "SACO")];</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -6481,69 +6789,82 @@ constructor function is used to construct maps.</p>
 </div>
 <div class="sect3">
 <h4 id="-functions-5">Functions</h4>
+<div class="sect4">
+<h5 id="-emptymap">emptyMap</h5>
 <div class="paragraph">
-<div class="title">emptyMap</div>
 <p>Returns <code>True</code> if the map is empty, <code>False</code> otherwise.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool emptyMap&lt;A, B&gt;(Map&lt;A, B&gt; map);</code></pre>
+<pre class="rouge highlight"><code>def Bool emptyMap&lt;A, B&gt;(Map&lt;A, B&gt; map);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-removekey">removeKey</h5>
 <div class="paragraph">
-<div class="title">removeKey</div>
 <p>Returns a map with the first occurrence of <code>key</code> removed.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Map&lt;A, B&gt; removeKey&lt;A, B&gt;(Map&lt;A, B&gt; map, A key);</code></pre>
+<pre class="rouge highlight"><code>def Map&lt;A, B&gt; removeKey&lt;A, B&gt;(Map&lt;A, B&gt; map, A key);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-values">values</h5>
 <div class="paragraph">
-<div class="title">values</div>
 <p>Returns a list of all values within the map.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;B&gt; values&lt;A, B&gt;(Map&lt;A, B&gt; map);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;B&gt; values&lt;A, B&gt;(Map&lt;A, B&gt; map);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-keys">keys</h5>
 <div class="paragraph">
-<div class="title">keys</div>
 <p>Returns a set of all keys of the map.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Set&lt;A&gt; keys&lt;A, B&gt;(Map&lt;A, B&gt; map);</code></pre>
+<pre class="rouge highlight"><code>def Set&lt;A&gt; keys&lt;A, B&gt;(Map&lt;A, B&gt; map);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-entries">entries</h5>
 <div class="paragraph">
-<div class="title">entries</div>
 <p>Returns a list of all entries (i.e., pairs of key and value) of the map.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def List&lt;Pair&lt;A, B&gt;&gt; entries&lt;A, B&gt;(Map&lt;A, B&gt; map);</code></pre>
+<pre class="rouge highlight"><code>def List&lt;Pair&lt;A, B&gt;&gt; entries&lt;A, B&gt;(Map&lt;A, B&gt; map);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-lookup">lookup</h5>
 <div class="paragraph">
-<div class="title">lookup</div>
 <p>If value <code>v</code> is associated with a given key <code>k</code>, return <code>Just(v)</code>.  Otherwise,
 return <code>Nothing</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Maybe&lt;B&gt; lookup&lt;A, B&gt;(Map&lt;A, B&gt; ms, A k);</code></pre>
+<pre class="rouge highlight"><code>def Maybe&lt;B&gt; lookup&lt;A, B&gt;(Map&lt;A, B&gt; ms, A k);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-lookupdefault">lookupDefault</h5>
 <div class="paragraph">
-<div class="title">lookupDefault</div>
 <p>Returns the value associated with key <code>k</code>.  If the map does not contain an
 entry with key <code>k</code>, return the value <code>d</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def B lookupDefault&lt;A, B&gt;(Map&lt;A, B&gt; ms, A k, B d);</code></pre>
+<pre class="rouge highlight"><code>def B lookupDefault&lt;A, B&gt;(Map&lt;A, B&gt; ms, A k, B d);</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -6559,34 +6880,40 @@ function <code>lookup</code> instead.
 </tr>
 </table>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-lookupunsafe">lookupUnsafe</h5>
 <div class="paragraph">
-<div class="title">lookupUnsafe</div>
 <p>Returns the value associated with key <code>k</code>.  It is an error if the map does not
 contain an entry with key <code>k</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def B lookupUnsafe&lt;A, B&gt;(Map&lt;A, B&gt; ms, A k);</code></pre>
+<pre class="rouge highlight"><code>def B lookupUnsafe&lt;A, B&gt;(Map&lt;A, B&gt; ms, A k);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-lookupreverse">lookupReverse</h5>
 <div class="paragraph">
-<div class="title">lookupReverse</div>
 <p>If there is an entry <code>k,v</code> in the map, return its key <code>Just(k)</code>.
 Otherwise, return <code>Nothing</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Maybe&lt;A&gt; lookupReverse&lt;A, B&gt;(Map&lt;A, B&gt; ms, B v);</code></pre>
+<pre class="rouge highlight"><code>def Maybe&lt;A&gt; lookupReverse&lt;A, B&gt;(Map&lt;A, B&gt; ms, B v);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-lookupreversedefault">lookupReverseDefault</h5>
 <div class="paragraph">
-<div class="title">lookupReverseDefault</div>
 <p>If there is an entry <code>k,v</code> in the map, return its key <code>Just(k)</code>.
 Otherwise, return the value <code>d</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def A lookupReverseDefault&lt;A, B&gt;(Map&lt;A, B&gt; ms, B v, A d);</code></pre>
+<pre class="rouge highlight"><code>def A lookupReverseDefault&lt;A, B&gt;(Map&lt;A, B&gt; ms, B v, A d);</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -6602,8 +6929,10 @@ If you need to know whether the map contains an entry with value
 </tr>
 </table>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-insert">insert</h5>
 <div class="paragraph">
-<div class="title">insert</div>
 <p>Returns a map with all entries of <code>map</code> plus an entry <code>p</code>, which is given as a
 pair (<code>Pair(key, value)</code>) and maps <code>key</code> to <code>value</code>.  If <code>map</code> already
 contains an entry with the same key <code>key</code>, it is not removed from the map but
@@ -6613,17 +6942,20 @@ the first entry for a given key and thus “undoes” the effect of calling
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Map&lt;A, B&gt; insert&lt;A, B&gt;(Map&lt;A, B&gt; map, Pair&lt;A, B&gt; p);</code></pre>
+<pre class="rouge highlight"><code>def Map&lt;A, B&gt; insert&lt;A, B&gt;(Map&lt;A, B&gt; map, Pair&lt;A, B&gt; p);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-put">put</h5>
 <div class="paragraph">
-<div class="title">put</div>
 <p>Returns a map with all entries of <code>ms</code> plus an entry mapping <code>k</code> to <code>v</code>, minus
 the first entry already mapping <code>k</code> to a value.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Map&lt;A, B&gt; put&lt;A, B&gt;(Map&lt;A, B&gt; ms, A k, B v);</code></pre>
+<pre class="rouge highlight"><code>def Map&lt;A, B&gt; put&lt;A, B&gt;(Map&lt;A, B&gt; ms, A k, B v);</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -6638,19 +6970,23 @@ respectively.  The constructor is called <code>Pair</code> as well.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Pair&lt;Int, String&gt; pair = Pair(15, "Hello World");</code></pre>
+<pre class="rouge highlight"><code>Pair&lt;Int, String&gt; pair = Pair(15, "Hello World");</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
 <h4 id="-functions-6">Functions</h4>
+<div class="sect4">
+<h5 id="-fst">fst</h5>
 <div class="paragraph">
-<div class="title">fst</div>
 <p>The function <code>fst</code> returns the first value in a pair.</p>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-snd">snd</h5>
 <div class="paragraph">
-<div class="title">snd</div>
 <p>The function <code>snd</code> returns the second value in a pair.</p>
+</div>
 </div>
 </div>
 </div>
@@ -6664,23 +7000,29 @@ respectively.  The constructor is called <code>Pair</code> as well.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Triple&lt;Int, String, Bool&gt; triple = Triple(15, "Hello World", False);</code></pre>
+<pre class="rouge highlight"><code>Triple&lt;Int, String, Bool&gt; triple = Triple(15, "Hello World", False);</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
 <h4 id="-functions-7">Functions</h4>
+<div class="sect4">
+<h5 id="-fstt">fstT</h5>
 <div class="paragraph">
-<div class="title">fstT</div>
 <p>The function <code>fstT</code> returns the first value in a triple.</p>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-sndt">sndT</h5>
 <div class="paragraph">
-<div class="title">sndT</div>
 <p>The function <code>sndT</code> returns the second value in a triple.</p>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-trdt">trdT</h5>
 <div class="paragraph">
-<div class="title">trdT</div>
 <p>The function <code>trdT</code> returns the third value in a triple.</p>
+</div>
 </div>
 </div>
 </div>
@@ -6694,40 +7036,46 @@ denotes the absence of such a value.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Maybe&lt;Int&gt; answer = Just(42);
+<pre class="rouge highlight"><code>Maybe&lt;Int&gt; answer = Just(42);
 Maybe&lt;String&gt; question = Nothing;</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
 <h4 id="-functions-8">Functions</h4>
+<div class="sect4">
+<h5 id="-isjust">isJust</h5>
 <div class="paragraph">
-<div class="title">isJust</div>
 <p>The function <code>isJust</code> returns <code>False</code> if the <code>Maybe</code> value is <code>Nothing</code>,
 <code>True</code> otherwise.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool isJust&lt;A&gt;(Maybe&lt;A&gt; a);</code></pre>
+<pre class="rouge highlight"><code>def Bool isJust&lt;A&gt;(Maybe&lt;A&gt; a);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-fromjust">fromJust</h5>
 <div class="paragraph">
-<div class="title">fromJust</div>
 <p>The function <code>fromJust</code> returns the wrapped value of a <code>Maybe</code>.  It is an error to call <code>fromJust</code> on <code>Nothing</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def A fromJust&lt;A&gt;(Maybe&lt;A&gt; m);</code></pre>
+<pre class="rouge highlight"><code>def A fromJust&lt;A&gt;(Maybe&lt;A&gt; m);</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="-fromjustdefault">fromJustDefault</h5>
 <div class="paragraph">
-<div class="title">fromJustDefault</div>
 <p>The function <code>fromJustDefault</code> returns the wrapped value of the first
 argument, or the second argument if the first argument is <code>Nothing</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def A fromJustDefault&lt;A&gt;(Maybe&lt;A&gt; m, A default);</code></pre>
+<pre class="rouge highlight"><code>def A fromJustDefault&lt;A&gt;(Maybe&lt;A&gt; m, A default);</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -6739,9 +7087,11 @@ argument, or the second argument if the first argument is <code>Nothing</code>.<
 </div>
 <div class="sect3">
 <h4 id="-functions-9">Functions</h4>
+<div class="sect4">
+<h5 id="-ms_since_model_start">ms_since_model_start</h5>
 <div class="paragraph">
-<div class="title">ms_since_model_start</div>
 <p>The function <code>ms_since_model_start</code> returns a non-negative integer containing the number of milliseconds elapsed since the model was started.  It is useful mainly for benchmarking.</p>
+</div>
 </div>
 </div>
 </div>
@@ -7137,13 +7487,13 @@ Javascript using the JQuery library:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-javascript" data-lang="javascript">$.ajax({
-    url: "call/Model/testConfig",
-    type: "POST",
-    data: JSON.stringify({ "mylist": [1,2,3] }),
-}).done(function(result) {
-    console.log("Result: " + JSON.stringify(result));
-});</code></pre>
+<pre class="rouge highlight"><code data-lang="javascript"><span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+    <span class="na">url</span><span class="p">:</span> <span class="dl">"</span><span class="s2">call/Model/testConfig</span><span class="dl">"</span><span class="p">,</span>
+    <span class="na">type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">POST</span><span class="dl">"</span><span class="p">,</span>
+    <span class="na">data</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span> <span class="dl">"</span><span class="s2">mylist</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="p">}),</span>
+<span class="p">}).</span><span class="nx">done</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="dl">"</span><span class="s2">Result: </span><span class="dl">"</span> <span class="o">+</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">result</span><span class="p">));</span>
+<span class="p">});</span></code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -7380,7 +7730,7 @@ the standard library as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>data Time = Time(Rat timeValue);
+<pre class="rouge highlight"><code>data Time = Time(Rat timeValue);
 data Duration = Duration(Rat durationValue) | InfDuration;</code></pre>
 </div>
 </div>
@@ -7393,7 +7743,7 @@ data Duration = Duration(Rat durationValue) | InfDuration;</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Time now()</code></pre>
+<pre class="rouge highlight"><code>def Time now()</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7404,7 +7754,7 @@ become available.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>  Time t1 = now();
+<pre class="rouge highlight"><code>  Time t1 = now();
   Int i = pow(2, 50);
   Time t2 = now();
   assert (t1 == t2); <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
@@ -7425,7 +7775,7 @@ advance in ABS is explicit and can only occur in suspension points.</td>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Duration deadline()</code></pre>
+<pre class="rouge highlight"><code>def Duration deadline()</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7434,7 +7784,7 @@ caller site.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Unit m() {
+<pre class="rouge highlight"><code>Unit m() {
   [Deadline: Duration(10)] this!n(); <i class="conum" data-value="1"></i><b>(1)</b>
 }
 
@@ -7467,7 +7817,7 @@ Unit n() {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Rat timeValue(Time t);</code></pre>
+<pre class="rouge highlight"><code>def Rat timeValue(Time t);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7477,7 +7827,7 @@ between its two arguments, i.e., a value greater or equal to <code>0</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Rat timeDifference(Time t1, Time t2);</code></pre>
+<pre class="rouge highlight"><code>def Rat timeDifference(Time t1, Time t2);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7487,7 +7837,7 @@ is less than the value of its second argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool timeLessThan(Time t1, Time t2);</code></pre>
+<pre class="rouge highlight"><code>def Bool timeLessThan(Time t1, Time t2);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7496,7 +7846,7 @@ is less than the value of its second argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Rat durationValue(Duration t);</code></pre>
+<pre class="rouge highlight"><code>def Rat durationValue(Duration t);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7505,7 +7855,7 @@ is less than the value of its second argument.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool isDurationInfinite(Duration d);</code></pre>
+<pre class="rouge highlight"><code>def Bool isDurationInfinite(Duration d);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7516,7 +7866,7 @@ function.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Time addDuration(Time t, Duration d);</code></pre>
+<pre class="rouge highlight"><code>def Time addDuration(Time t, Duration d);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7527,7 +7877,7 @@ to this function.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Time subtractDuration(Time t, Duration d);</code></pre>
+<pre class="rouge highlight"><code>def Time subtractDuration(Time t, Duration d);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7538,7 +7888,7 @@ arguments are <code>InfDuration</code>, <code>durationLessThan</code> returns <c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Bool durationLessThan(Duration d1, Duration d2);</code></pre>
+<pre class="rouge highlight"><code>def Bool durationLessThan(Duration d1, Duration d2);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7549,7 +7899,7 @@ returning a new value of type <code>Duration</code>.  In case its first argument
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>def Duration subtractFromDuration(Duration d, Rat v);</code></pre>
+<pre class="rouge highlight"><code>def Duration subtractFromDuration(Duration d, Rat v);</code></pre>
 </div>
 </div>
 </div>
@@ -7736,7 +8086,7 @@ scheduler chooses a non-deterministic one.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>def Process defaultscheduler(List&lt;Process&gt; queue) = head(queue);
+<pre class="rouge highlight"><code>def Process defaultscheduler(List&lt;Process&gt; queue) = head(queue);
 
 def Process randomscheduler(List&lt;Process&gt; queue) = nth(queue, random(length(queue)));</code></pre>
 </div>
@@ -7747,7 +8097,7 @@ def Process randomscheduler(List&lt;Process&gt; queue) = nth(queue, random(lengt
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>def Process earliest_deadline_scheduler(List&lt;Process&gt; queue) =
+<pre class="rouge highlight"><code>def Process earliest_deadline_scheduler(List&lt;Process&gt; queue) =
   foldl((Process a, Process b) =&gt;
       if durationLessThan(proc_deadline(a), proc_deadline(b)) // a &lt; b
       then a else b)
@@ -7853,7 +8203,7 @@ have the name <code>queue</code>.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>[Scheduler: defaultscheduler(queue)] class C implements I {
+<pre class="rouge highlight"><code>[Scheduler: defaultscheduler(queue)] class C implements I {
   ...
 }</code></pre>
 </div>
@@ -7864,7 +8214,7 @@ have the name <code>queue</code>.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>   [Scheduler: randomscheduler(queue)] I instance = new C();</code></pre>
+<pre class="rouge highlight"><code>   [Scheduler: randomscheduler(queue)] I instance = new C();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7878,7 +8228,7 @@ scheduler.</p>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="highlight"><code>module Test;
+<pre class="rouge highlight"><code>module Test;
 import * from ABS.StdLib.Scheduler;
 
 class C {
@@ -8080,7 +8430,7 @@ summarized in Table <a href="#table-dc-lifecycle">[table-dc-lifecycle]</a>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>module ProviderDemo;
+<pre class="rouge highlight"><code>module ProviderDemo;
 import * from ABS.DC;
 
 {
@@ -8122,7 +8472,7 @@ instance should support.  These names are used in the methods
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>[Atomic] Unit setInstanceDescriptions(Map&lt;String, Map&lt;Resourcetype, Rat&gt;&gt; instanceDescriptions);</code></pre>
+<pre class="rouge highlight"><code>[Atomic] Unit setInstanceDescriptions(Map&lt;String, Map&lt;Resourcetype, Rat&gt;&gt; instanceDescriptions);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8131,7 +8481,7 @@ instance should support.  These names are used in the methods
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>[Atomic] Map&lt;String, Map&lt;Resourcetype, Rat&gt;&gt; getInstanceDescriptions();</code></pre>
+<pre class="rouge highlight"><code>[Atomic] Map&lt;String, Map&lt;Resourcetype, Rat&gt;&gt; getInstanceDescriptions();</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8143,7 +8493,7 @@ exists, <code>launchInstanceNamed</code> returns <code>null</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>DeploymentComponent launchInstanceNamed(String instancename);</code></pre>
+<pre class="rouge highlight"><code>DeploymentComponent launchInstanceNamed(String instancename);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8169,7 +8519,7 @@ exists, <code>prelaunchInstanceNamed</code> returns <code>null</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>DeploymentComponent prelaunchInstanceNamed(String instancename);</code></pre>
+<pre class="rouge highlight"><code>DeploymentComponent prelaunchInstanceNamed(String instancename);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8196,7 +8546,7 @@ provider, but the deployment component should still be managed by it.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>DeploymentComponent launchInstance(Map&lt;Resourcetype, Rat&gt; description);</code></pre>
+<pre class="rouge highlight"><code>DeploymentComponent launchInstance(Map&lt;Resourcetype, Rat&gt; description);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8223,7 +8573,7 @@ by it.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>DeploymentComponent prelaunchInstance(Map&lt;Resourcetype, Rat&gt; d)</code></pre>
+<pre class="rouge highlight"><code>DeploymentComponent prelaunchInstance(Map&lt;Resourcetype, Rat&gt; d)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8249,7 +8599,7 @@ deployment component.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Bool acquireInstance(DeploymentComponent instance);</code></pre>
+<pre class="rouge highlight"><code>Bool acquireInstance(DeploymentComponent instance);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8279,7 +8629,7 @@ the responsibility of the modeler.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Bool releaseInstance(DeploymentComponent instance);</code></pre>
+<pre class="rouge highlight"><code>Bool releaseInstance(DeploymentComponent instance);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8299,7 +8649,7 @@ backend-specific.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>Bool shutdownInstance(DeploymentComponent instance);</code></pre>
+<pre class="rouge highlight"><code>Bool shutdownInstance(DeploymentComponent instance);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8905,7 +9255,7 @@ cost, capacity and number of machines:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>root Calculations {
+<pre class="rouge highlight"><code>root Calculations {
   group oneof {
     Wordcount,
     Wordsearch
@@ -8945,7 +9295,7 @@ generated:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>module Test;
+<pre class="rouge highlight"><code>module Test;
 import * from ABS.Productline;
 
 {
@@ -9052,7 +9402,7 @@ when the given delta module is applied.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>productline DeltaResourceExample;
+<pre class="rouge highlight"><code>productline DeltaResourceExample;
 features Cost, NoCost, NoDeploymentScenario, UnlimitedMachines, LimitedMachines, Wordcount, Wordsearch;
 delta DOccurrences when Wordsearch;
 delta DFixedCost(Cost.cost) when Cost;
@@ -9116,7 +9466,7 @@ intersection, complement) over products and sets of features.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>product WordcountModel (Wordcount, NoCost, NoDeploymentScenario);
+<pre class="rouge highlight"><code>product WordcountModel (Wordcount, NoCost, NoDeploymentScenario);
 product WordcountFull (Wordcount, Cost{cost=10}, UnlimitedMachines{capacity=20});
 product WordsearchFull (Wordsearch, Cost{cost=10}, UnlimitedMachines{capacity=20});
 product WordsearchDemo (Wordsearch, Cost{cost=10}, LimitedMachines{capacity=20, machinelimit=2});</code></pre>
@@ -9127,7 +9477,7 @@ product WordsearchDemo (Wordsearch, Cost{cost=10}, LimitedMachines{capacity=20, 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>product Org1 = SekolahBermainMatahari || {Continuous};
+<pre class="rouge highlight"><code>product Org1 = SekolahBermainMatahari || {Continuous};
 product Org2 = SekolahBermainMatahari || {Continuous, Automatic_Report};
 product Org3 = SekolahBermainMatahari || PKPU;
 product Org4 = SekolahBermainMatahari || PKPU || RamadhanForKids;
@@ -9195,33 +9545,35 @@ models.</p>
 bandwidth) of <em>Deployment Components</em> and simulation of resource usage
 deployed thereon.  Builds on the semantics of Real-Time ABS.</p>
 </dd>
-<dt class="hdlist1">Deployment</dt>
-<dd>
-<p>Running ABS code on a number of physical or virtual machines,
-with support for creating new cogs remotely.</p>
-</dd>
 <dt class="hdlist1">FLI</dt>
 <dd>
 <p>Foreign-Language Interface, the ability to call backend-specific native
 code from ABS.</p>
+</dd>
+<dt class="hdlist1">User-defined Schedulers</dt>
+<dd>
+<p>Specification of per-cog task priorities
+using ABS functions.</p>
+</dd>
+<dt class="hdlist1">Model API</dt>
+<dd>
+<p>Interacting with a running ABS model via HTTP requests.</p>
 </dd>
 </dl>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 6. Backend Capabilities</caption>
 <colgroup>
-<col style="width: 20%;">
-<col style="width: 20%;">
-<col style="width: 20%;">
-<col style="width: 20%;">
-<col style="width: 20%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
 </colgroup>
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top">Backend</th>
 <th class="tableblock halign-left valign-top">Maude</th>
 <th class="tableblock halign-left valign-top">Erlang</th>
-<th class="tableblock halign-left valign-top">Haskell</th>
 <th class="tableblock halign-left valign-top">Java</th>
 </tr>
 </thead>
@@ -9230,27 +9582,11 @@ code from ABS.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Real-Time ABS</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">User-defined Schedulers</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">partial</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Resource Models</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Deployment</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 </tr>
@@ -9259,90 +9595,218 @@ code from ABS.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">planned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User-defined Schedulers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Model API</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
 </tr>
 </tbody>
 </table>
 <div class="sect2">
-<h3 id="-maude-backend">17.1. Maude Backend</h3>
+<h3 id="sec:java-backend">17.1. Java Backend</h3>
 <div class="paragraph">
-<p>The Maude backend is a high-level, executable semantics in rewriting logic of
-the ABS language.  Due to its relatively compact nature, it serves as a
-test-bed for new language features.</p>
-</div>
-<div class="paragraph">
-<p>Executing a model on the Maude backend results in a complete snapshot of the system state after execution has finished.</p>
-</div>
-<div class="paragraph">
-<p>The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.</p>
-</div>
-<div class="paragraph">
-<p>Features:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>CPU and bandwidth resources</p>
-</li>
-<li>
-<p>Simulation of resource usage on deployment components</p>
-</li>
-<li>
-<p>Timed semantics</p>
-</li>
-<li>
-<p>Executable formal semantics of the ABS language</p>
-</li>
-</ul>
+<p>The Java backend runs ABS models on the JVM by translating them into Java and
+combining them with a runtime library implementing key ABS concepts.</p>
 </div>
 <div class="sect3">
-<h4 id="-how-to-run-the-maude-backend">How to run the Maude backend</h4>
+<h4 id="-how-to-run-the-java-backend">How to run the Java backend</h4>
 <div class="paragraph">
-<p>Running a model on Maude involves compiling the code, then starting Maude with
-the resulting file as input.</p>
-</div>
-<div class="paragraph">
-<p>Compiling all files in the current directory into Maude is done with the following command:</p>
+<p>Compiling all files in the current directory into Java and starting the
+resulting model is done with the following commands:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>$ absc --maude *.abs -o model.maude</pre>
+<pre>$ absc --java *.abs -o model.jar
+$ java -jar model.jar</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The model is started with the following commands:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>$ maude
-Maude&gt; in model.maude
-Maude&gt; frew start .</pre>
-</div>
+<p>The first command compiles the ABS model, the second command starts Java and
+runs the code contained in <code>model.jar</code>.  In case more than one abs file
+contains a main block, an arbitrary main block is executed.</p>
 </div>
 <div class="paragraph">
-<p>This sequence of commands starts Maude, then loads the compiled model and
-starts it.  The resulting output is a dump of the complete system state after
-execution of the model finishes.</p>
+<p>The model accepts a number of command-line arguments; see the output
+of <code>java -jar model.jar -h</code> for a list.</p>
 </div>
 <div class="paragraph">
-<p>In case of problems, check the following:</p>
+<p>The source code of the generated classes can be inspected below the <code>gen/</code>
+directory.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="-compiling-abs-code-from-gradle">Compiling ABS Code from Gradle</h4>
+<div class="paragraph">
+<p>The gradle build system can compile ABS code by adding the below
+fragment to a Java project&#8217;s <code>build.gradle</code> file.  This does the
+following:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>absc</code> should be in the path; check the <code>PATH</code> environment variable.</p>
+<p>Downloads the latest released version of the ABS compiler</p>
 </li>
 <li>
-<p><code>absfrontend.jar</code> should be in the environment variable <code>CLASSPATH</code>.</p>
+<p>Compiles all ABS files below <code>src/main/abs</code></p>
+</li>
+<li>
+<p>Adds a dependency such that ABS code is compiled before Java code</p>
+</li>
+<li>
+<p>Adds the resulting Java source directory <code>build/abs</code> so that
+generated ABS classes can be referenced from Java.</p>
 </li>
 </ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="groovy"><span class="c1">// Use Gradle's cache directory for downloaded files</span>
+<span class="n">ext</span> <span class="o">{</span>
+    <span class="n">absToolsDir</span> <span class="o">=</span> <span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="s2">"${gradle.gradleUserHomeDir}/caches/abstools"</span><span class="o">)</span>
+<span class="o">}</span>
+
+<span class="n">dependencies</span> <span class="o">{</span>
+    <span class="c1">// Any other dependencies here ...</span>
+    <span class="n">implementation</span> <span class="nf">files</span><span class="o">(</span><span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="n">project</span><span class="o">.</span><span class="na">ext</span><span class="o">.</span><span class="na">absToolsDir</span><span class="o">,</span> <span class="s2">"absfrontend.jar"</span><span class="o">))</span>
+<span class="o">}</span>
+
+<span class="n">task</span> <span class="n">downloadAbsFrontend</span> <span class="o">{</span>
+    <span class="n">description</span> <span class="s1">'Downloads the latest absfrontend.jar from GitHub releases'</span>
+    <span class="kt">def</span> <span class="n">taskAbsToolsDir</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="na">ext</span><span class="o">.</span><span class="na">absToolsDir</span>
+    <span class="kt">def</span> <span class="n">taskAbsDownloadsDir</span> <span class="o">=</span> <span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="n">taskAbsToolsDir</span><span class="o">,</span> <span class="s2">"/downloads"</span><span class="o">)</span>
+
+    <span class="n">doLast</span> <span class="o">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="na">lifecycle</span><span class="o">(</span><span class="s2">"Checking for latest absfrontend.jar..."</span><span class="o">)</span>
+        <span class="n">taskAbsDownloadsDir</span><span class="o">.</span><span class="na">mkdirs</span><span class="o">()</span>
+        <span class="kt">def</span> <span class="n">apiUrl</span> <span class="o">=</span> <span class="k">new</span> <span class="n">java</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">URL</span><span class="o">(</span><span class="s2">"https://api.github.com/repos/abstools/abstools/releases/latest"</span><span class="o">)</span>
+        <span class="kt">def</span> <span class="n">connection</span> <span class="o">=</span> <span class="n">apiUrl</span><span class="o">.</span><span class="na">openConnection</span><span class="o">()</span>
+        <span class="c1">// GitHub API may require a User-Agent header</span>
+        <span class="n">connection</span><span class="o">.</span><span class="na">setRequestProperty</span><span class="o">(</span><span class="s2">"User-Agent"</span><span class="o">,</span> <span class="s2">"Gradle Build"</span><span class="o">)</span>
+
+        <span class="kt">def</span> <span class="n">jsonText</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="na">getInputStream</span><span class="o">().</span><span class="na">getText</span><span class="o">()</span>
+        <span class="kt">def</span> <span class="n">json</span> <span class="o">=</span> <span class="k">new</span> <span class="n">groovy</span><span class="o">.</span><span class="na">json</span><span class="o">.</span><span class="na">JsonSlurper</span><span class="o">().</span><span class="na">parseText</span><span class="o">(</span><span class="n">jsonText</span><span class="o">)</span>
+        <span class="kt">def</span> <span class="n">version</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="na">tag_name</span><span class="o">.</span><span class="na">toString</span><span class="o">()</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">version</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="s1">'v'</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="na">substring</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>  <span class="c1">// Remove 'v' prefix if present</span>
+        <span class="o">}</span>
+        <span class="kt">def</span> <span class="n">jarAsset</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="na">assets</span><span class="o">.</span><span class="na">find</span> <span class="o">{</span> <span class="n">it</span><span class="o">.</span><span class="na">name</span> <span class="o">==</span> <span class="s2">"absfrontend.jar"</span> <span class="o">}</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">jarAsset</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">def</span> <span class="n">versionedJarName</span> <span class="o">=</span> <span class="s2">"absfrontend-${version}.jar"</span>
+            <span class="kt">def</span> <span class="n">versionedJarFile</span> <span class="o">=</span> <span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="n">taskAbsDownloadsDir</span><span class="o">,</span> <span class="n">versionedJarName</span><span class="o">)</span>
+            <span class="kt">def</span> <span class="n">jarFile</span> <span class="o">=</span> <span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="n">taskAbsToolsDir</span><span class="o">,</span> <span class="s2">"absfrontend.jar"</span><span class="o">)</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">versionedJarFile</span><span class="o">.</span><span class="na">exists</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">logger</span><span class="o">.</span><span class="na">lifecycle</span><span class="o">(</span><span class="s2">"Version ${version} already downloaded at ${versionedJarFile.absolutePath}"</span><span class="o">)</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="kt">def</span> <span class="n">downloadUrl</span> <span class="o">=</span> <span class="n">jarAsset</span><span class="o">.</span><span class="na">browser_download_url</span>
+                <span class="n">logger</span><span class="o">.</span><span class="na">lifecycle</span><span class="o">(</span><span class="s2">"Found latest version ${version} at: ${downloadUrl}"</span><span class="o">)</span>
+                <span class="c1">// Delete any previous absfrontend jar files</span>
+                <span class="n">taskAbsDownloadsDir</span><span class="o">.</span><span class="na">listFiles</span><span class="o">().</span><span class="na">each</span> <span class="o">{</span> <span class="n">file</span> <span class="o">-&gt;</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">file</span><span class="o">.</span><span class="na">name</span><span class="o">.</span><span class="na">startsWith</span><span class="o">(</span><span class="s2">"absfrontend-"</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="n">file</span><span class="o">.</span><span class="na">name</span><span class="o">.</span><span class="na">endsWith</span><span class="o">(</span><span class="s2">".jar"</span><span class="o">))</span> <span class="o">{</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="na">lifecycle</span><span class="o">(</span><span class="s2">"Deleting old version: ${file.name}"</span><span class="o">)</span>
+                        <span class="n">file</span><span class="o">.</span><span class="na">delete</span><span class="o">()</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+                <span class="kt">def</span> <span class="n">jarConnection</span> <span class="o">=</span> <span class="k">new</span> <span class="n">java</span><span class="o">.</span><span class="na">net</span><span class="o">.</span><span class="na">URL</span><span class="o">(</span><span class="n">downloadUrl</span><span class="o">).</span><span class="na">openConnection</span><span class="o">()</span>
+                <span class="n">jarConnection</span><span class="o">.</span><span class="na">setRequestProperty</span><span class="o">(</span><span class="s2">"User-Agent"</span><span class="o">,</span> <span class="s2">"Gradle Build"</span><span class="o">)</span>
+                <span class="k">try</span> <span class="o">(</span><span class="kt">def</span> <span class="n">inputStream</span> <span class="o">=</span> <span class="n">jarConnection</span><span class="o">.</span><span class="na">getInputStream</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="n">java</span><span class="o">.</span><span class="na">nio</span><span class="o">.</span><span class="na">file</span><span class="o">.</span><span class="na">Files</span><span class="o">.</span><span class="na">copy</span><span class="o">(</span><span class="n">inputStream</span><span class="o">,</span> <span class="n">versionedJarFile</span><span class="o">.</span><span class="na">toPath</span><span class="o">(),</span>
+                                             <span class="n">java</span><span class="o">.</span><span class="na">nio</span><span class="o">.</span><span class="na">file</span><span class="o">.</span><span class="na">StandardCopyOption</span><span class="o">.</span><span class="na">REPLACE_EXISTING</span><span class="o">)</span>
+                <span class="o">}</span>
+                <span class="n">logger</span><span class="o">.</span><span class="na">lifecycle</span><span class="o">(</span><span class="s2">"Successfully downloaded absfrontend.jar version ${version} to ${versionedJarFile.absolutePath}"</span><span class="o">)</span>
+            <span class="o">}</span>
+            <span class="n">java</span><span class="o">.</span><span class="na">nio</span><span class="o">.</span><span class="na">file</span><span class="o">.</span><span class="na">Files</span><span class="o">.</span><span class="na">copy</span><span class="o">(</span><span class="n">versionedJarFile</span><span class="o">.</span><span class="na">toPath</span><span class="o">(),</span> <span class="n">jarFile</span><span class="o">.</span><span class="na">toPath</span><span class="o">(),</span>
+                                     <span class="n">java</span><span class="o">.</span><span class="na">nio</span><span class="o">.</span><span class="na">file</span><span class="o">.</span><span class="na">StandardCopyOption</span><span class="o">.</span><span class="na">REPLACE_EXISTING</span><span class="o">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="na">lifecycle</span><span class="o">(</span><span class="s2">"Copied ${versionedJarFile.absolutePath} to ${jarFile.absolutePath}"</span><span class="o">)</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">GradleException</span><span class="o">(</span><span class="s2">"Could not find absfrontend.jar in the latest release"</span><span class="o">)</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c1">// Compile ABS</span>
+<span class="n">task</span> <span class="nf">compileAbs</span><span class="o">(</span><span class="nl">type:</span> <span class="n">Exec</span><span class="o">,</span> <span class="nl">dependsOn:</span> <span class="n">downloadAbsFrontend</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s1">'Compiles ABS.'</span>
+    <span class="n">inputs</span><span class="o">.</span><span class="na">dir</span> <span class="s1">'src/main/abs'</span>
+    <span class="n">outputs</span><span class="o">.</span><span class="na">dir</span> <span class="s1">'build/abs'</span>
+    <span class="n">commandLine</span> <span class="s1">'java'</span><span class="o">,</span> <span class="s1">'-jar'</span><span class="o">,</span> <span class="n">project</span><span class="o">.</span><span class="na">ext</span><span class="o">.</span><span class="na">absToolsDir</span><span class="o">.</span><span class="na">toString</span><span class="o">()</span> <span class="o">+</span> <span class="s1">'/absfrontend.jar'</span><span class="o">,</span> <span class="s1">'--java'</span><span class="o">,</span> <span class="s1">'-d'</span><span class="o">,</span> <span class="s1">'build/abs/'</span><span class="o">,</span> <span class="s1">'--sourceonly'</span><span class="o">,</span>
+        <span class="o">*</span><span class="n">fileTree</span><span class="o">(</span><span class="nl">dir:</span> <span class="s1">'src/main/abs'</span><span class="o">,</span> <span class="nl">include:</span> <span class="s1">'**/*.abs'</span><span class="o">).</span><span class="na">collect</span> <span class="o">{</span> <span class="n">it</span><span class="o">.</span><span class="na">absolutePath</span> <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c1">// Also, add build/abs to the runtime classpath</span>
+<span class="n">sourceSets</span> <span class="o">{</span>
+    <span class="n">main</span> <span class="o">{</span>
+        <span class="n">java</span> <span class="o">{</span>
+            <span class="n">srcDirs</span> <span class="s1">'build/abs'</span>
+        <span class="o">}</span>
+        <span class="n">runtimeClasspath</span> <span class="o">+=</span> <span class="n">files</span><span class="o">(</span><span class="s1">'build/abs'</span><span class="o">)</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="n">tasks</span><span class="o">.</span><span class="na">withType</span><span class="o">(</span><span class="n">JavaCompile</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">dependsOn</span> <span class="n">compileAbs</span>
+    <span class="nf">source</span><span class="o">(</span><span class="s1">'build/abs'</span><span class="o">)</span>
+<span class="o">}</span>
+
+<span class="c1">// Apply a specific Java toolchain to ease working on different environments.</span>
+<span class="n">java</span> <span class="o">{</span>
+    <span class="n">toolchain</span> <span class="o">{</span>
+        <span class="n">languageVersion</span> <span class="o">=</span> <span class="n">JavaLanguageVersion</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">21</span><span class="o">)</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="-running-an-abs-model-from-java">Running an ABS Model from Java</h4>
+<div class="paragraph">
+<p>An ABS model can be started from a Java program by calling the main
+method of a special class <code>Main</code> in the generated Java code.</p>
+</div>
+<div class="paragraph">
+<p>Here is a simple ABS program that waits for 15 time unites, then prints a greeting.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="abs">module ABS;
+{
+    await duration(15);
+    println(`Hello world!  The time is $now()$`);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the generated ABS Java code is included in the Java project&#8217;s
+source path, this ABS model can be started from Java as follows, and
+the generated output captured in a string:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="java"><span class="kn">package</span> <span class="nn">org.example</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">App</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">Exception</span> <span class="o">{</span>
+        <span class="nc">ByteArrayOutputStream</span> <span class="n">outputStream</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ByteArrayOutputStream</span><span class="o">();</span>
+        <span class="nc">PrintStream</span> <span class="n">printStream</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">PrintStream</span><span class="o">(</span><span class="n">outputStream</span><span class="o">);</span>
+        <span class="nc">PrintStream</span> <span class="n">originalOut</span> <span class="o">=</span> <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">;</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="nc">System</span><span class="o">.</span><span class="na">setOut</span><span class="o">(</span><span class="n">printStream</span><span class="o">);</span>
+            <span class="no">ABS</span><span class="o">.</span><span class="na">Main</span><span class="o">.</span><span class="na">main</span><span class="o">(</span><span class="k">new</span> <span class="nc">String</span><span class="o">[</span><span class="mi">0</span><span class="o">]);</span>
+        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+            <span class="nc">System</span><span class="o">.</span><span class="na">setOut</span><span class="o">(</span><span class="n">originalOut</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Captured Output:"</span><span class="o">);</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">outputStream</span><span class="o">.</span><span class="na">toString</span><span class="o">());</span>
+    <span class="o">}</span>
+<span class="o">}</span></code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -9432,256 +9896,78 @@ the directory <code>gen/erl/absmodel</code> after the simulation finishes.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="-java-backend">17.3. Java Backend</h3>
+<h3 id="-maude-backend">17.3. Maude Backend</h3>
 <div class="paragraph">
-<p>The Java backend runs ABS models on the JVM by translating them into Java and
-combining them with a runtime library implementing key ABS concepts.</p>
-</div>
-<div class="sect3">
-<h4 id="-how-to-run-the-java-backend">How to run the Java backend</h4>
-<div class="paragraph">
-<p>Compiling all files in the current directory into Java and starting the
-resulting model is done with the following commands:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>$ absc --java *.abs -o model.jar
-$ java -jar model.jar</pre>
-</div>
+<p>The Maude backend is a high-level, executable semantics in rewriting logic of
+the ABS language.  Due to its relatively compact nature, it serves as a
+test-bed for new language features.</p>
 </div>
 <div class="paragraph">
-<p>The first command compiles the ABS model, the second command starts Java and
-runs the code contained in <code>model.jar</code>.  In case more than one abs file
-contains a main block, an arbitrary main block is executed.</p>
+<p>Executing a model on the Maude backend results in a complete snapshot of the system state after execution has finished.</p>
 </div>
 <div class="paragraph">
-<p>The source code of the generated classes can be inspected below the <code>gen/</code>
-directory.</p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="-haskell-backend">17.4. Haskell Backend</h3>
-<div class="paragraph">
-<p>The Haskell backend translates ABS models to Haskell source code,
-consequently compiled through a Haskell compiler and executed by the machine.
-The backend, albeit  a work in progress, already supports most ABS constructs
-and, above that, augments the language with extra features, such as <code>Type Inference</code>,
-<code>Foreign Imports</code> and real <code>Deployment Components</code>.</p>
+<p>The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.</p>
 </div>
 <div class="paragraph">
-<div class="title">Type Inference</div>
-<p>With the feature of <code>Type Inference</code> enabled, the user can <em>optionally</em> leave out
-the declaration of types of certain expressions; the backend will be responsible
-to infer those types and type-check them in the ABS program. The type inference
-is <em>safe</em>, in the sense that it will not infer any wrong types (soundness property).</p>
-</div>
-<div class="paragraph">
-<p>To make use of this feature, the user puts an underscore <code>_</code> in place
-of where a type would normally be, as in this ABS block of code:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">{ _ x = 3;
-  Int y = 4; // type inference is optional
-  x = x+y;
-  _ l = Cons(x, Cons(y, Nil));
-  _ s = length(l) + 4; }</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-At the moment, the type inference cannot infer
-<em>interface types</em> as in <code>_ o = new Class();</code>.
-It can however infer all the other types, that is Builtin, Algebraic, and Exception data types.
-There is a plan to support this in the future.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<div class="title">Foreign Imports</div>
-<p>The Haskell backend extends the ABS module system with the ability
-to include Haskell-written code inside the ABS program itself.
-This feature is provided by the <code>foreign_import</code> keyword,
-which syntactically follows that of the normal <code>import</code> keyword. To illustrate this:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">module Bar;
-...
-foreign_import Vertex from Data.Graph;
-foreign_import vertices from Data.Graph;</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>the programmer has imported the <code>Vertex</code> algebraic datatype and
-the <code>vertices</code> function from the <code>Data.Graph</code> Haskell library module into an ABS module
-named <code>Bar</code>. Any imported Haskell term will be treated as its ABS
-counterpart. In the example case, the programmer may re-export the foreign terms
-or use them as normal ABS terms:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>{
-  Graph g = empty_graph();
-  List&lt;Vertex&gt; vs = vertices(g);
-}</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-At the moment, the ABS programmer can reuse (with <code>foreign_import</code>)  Haskell&#8217;s <em>Algebraic Data types</em>
-and <em>Pure functions</em>, but not monadic IO code (Haskell code with side-effects). This restriction
-is planned to be lifted in a later release of the backend.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<div class="title">Deployment Components</div>
-<p>The Haskell backend implements the ABS feature of Deployment Components, faithfully as described in Chapter 8.
-The backend follows the view that Deployment Components are <em>virtual machines</em> running in the Cloud.
-As such, each single DC corresponds to one Cloud virtual machine (VM).</p>
-</div>
-<div class="paragraph">
-<p>Two DC classes (implementations) are provided to support the <a href="http://opennebula.org/">OpenNebula</a> and
-<a href="http://azure.microsoft.com">Microsoft Azure</a> cloud computing platforms accordingly:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">class NebulaDC(CPU cpu, Mem memory) implements DC {
-  ...
-}</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">class AzureDC(CPU cpu, Mem memory) implements DC {
-  ...
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The <code>CPU</code> and <code>Mem</code> datatypes are passed as arguments when creating the DC to parameterize
-its computing resources. These datatypes are simple defined as type synonyms to
-Int, but you can expect more sophisticated resource encodings for a future backend release.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>type CPU = Int; // processor cores
-type Mem = Int; // RAM measured in MB</code></pre>
-</div>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-The backend has only been developed on and tested against the OpenNebula platform.
-This hopefully will change when more cloud providers will be supported.
-</td>
-</tr>
-</table>
-</div>
-<div class="sect3">
-<h4 id="-how-to-obtain-and-install">How to obtain and install</h4>
-<div class="paragraph">
-<p>The compiler itself is written in Haskell and distributed as a normal Haskell package. Therefore to build abs2haskell you need either</p>
-</div>
-<div class="paragraph">
-<p>1) a recent release of the <a href="https://www.haskell.org/platform/">Haskell platform</a> (version &gt;= 2013.2.0.0),</p>
-</div>
-<div class="paragraph">
-<p>2) the GHC compiler accompanied by the Cabal packaging system:</p>
+<p>Features:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>GHC compiler (version &gt;=7.6)</p>
+<p>CPU and bandwidth resources</p>
 </li>
 <li>
-<p>Cabal package (version &gt;=1.4)</p>
+<p>Simulation of resource usage on deployment components</p>
 </li>
 <li>
-<p><code>cabal-install</code> program. The compiler depends on other community
-packages/libraries. This program will automatically fetch
-and install any library dependencies.</p>
+<p>Timed semantics</p>
+</li>
+<li>
+<p>Executable formal semantics of the ABS language</p>
 </li>
 </ul>
 </div>
+<div class="sect3">
+<h4 id="-how-to-run-the-maude-backend">How to run the Maude backend</h4>
 <div class="paragraph">
-<div class="title">Downloading, building and installing the compiler</div>
-<p>Clone the repository with the command:</p>
+<p>Running a model on Maude involves compiling the code, then starting Maude with
+the resulting file as input.</p>
+</div>
+<div class="paragraph">
+<p>Compiling all files in the current directory into Maude is done with the following command:</p>
 </div>
 <div class="literalblock">
 <div class="content">
-<pre>$ git clone git://github.com/bezirg/abs2haskell</pre>
+<pre>$ absc --maude *.abs -o model.maude</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To build and install the abs2haskell backend run inside the <code>abs2haskell/</code> directory:</p>
+<p>The model is started with the following commands:</p>
 </div>
-<div class="listingblock">
+<div class="literalblock">
 <div class="content">
-<pre class="highlight"><code>sudo make install</code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="-how-to-run-the-haskell-backend">How to run the Haskell backend</h4>
-<div class="paragraph">
-<p>After installing the compiler, you should
-have the program <code>abs2haskell</code> under your <code>PATH</code>.</p>
-</div>
-<div class="paragraph">
-<p>Examples of running:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>$ abs2haskell Example.abs
-
-# An ABS program may have multiple main blocks in different modules.
-# So you have to specify in which module is the main block you want to build with
-
-$ abs2haskell --main-is=Example.abs Example.abs
-
-$ abs2haskell examples/   # will compile all ABS files under examples directory</code></pre>
+<pre>$ maude
+Maude&gt; in model.maude
+Maude&gt; frew start .</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The compiler will generate ".hs" files for each compiled ABS module.
-No other runtime system libraries and dependencies will be generated.</p>
+<p>This sequence of commands starts Maude, then loads the compiled model and
+starts it.  The resulting output is a dump of the complete system state after
+execution of the model finishes.</p>
 </div>
 <div class="paragraph">
-<p>The final step before running the ABS program is to compile the generated Haskell code to machine code, as the example:</p>
+<p>In case of problems, check the following:</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code>ghc --make -threaded Example.hs # put the generated haskell file that has the main block here</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Running the final program</div>
-<div class="content">
-<pre class="highlight"><code>./Example -O # means run it on 1 core with default optimizations
-./Example -O +RTS -N1 # the same as the above
-./Example -O +RTS -N2 # run it on 2 cores
-./Example -O +RTS -N4 # run it on 4 cores
-./Example -O +RTS -NK # run it on K cores</code></pre>
-</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>absc</code> should be in the path; check the <code>PATH</code> environment variable.</p>
+</li>
+<li>
+<p><code>absfrontend.jar</code> should be in the environment variable <code>CLASSPATH</code>.</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -9696,8 +9982,8 @@ No other runtime system libraries and dependencies will be generated.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version v1.10.0<br>
-Last updated 2021-10-12 13:56:30 +0200
+Version v1.10.1<br>
+Last updated 2025-04-15 15:30:41 +0200
 </div>
 </div>
 </body>

@@ -746,7 +746,7 @@ p { margin-bottom: 1.25rem; }
 <h1>ABSC Compiler Internals</h1>
 <div class="details">
 <span id="author" class="author">ABS Development Team</span><br>
-<span id="revnumber">version v1.10.0</span>
+<span id="revnumber">version v1.10.1</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -965,9 +965,11 @@ making them available to the Java backend at compile time.</p>
 backend defines these functions in the file <code>ABSBuiltInFunctions.java</code>.</p>
 </li>
 <li>
-<p>Primitive datatypes: These are subclasses of <code>ABSBuiltInDataType.java</code>.  The
-types defined in <code>abslang.abs</code> (e.g., <code>Bool</code>, <code>Rat</code>, <code>String</code>) are generated
-but never used.</p>
+<p>Primitive datatypes: <code>Bool</code>, <code>String</code> and <code>Float</code> are translated to
+their Java counterparts.  <code>Unit</code> is used as-is, <code>Int</code> and <code>Rat</code> are
+translated to types from the Apfloat library.  The other types
+(<code>Unit</code>, <code>Fut&lt;A&gt;</code>) are implemented as subclasses of
+<code>ABSBuiltinDatatype</code>.</p>
 </li>
 <li>
 <p>Using other ABS functions, datatypes, classes etc. from Java: This can be
@@ -1050,8 +1052,8 @@ was called from the <code>SchedulerThread</code> running the ABS task).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version v1.10.0<br>
-Last updated 2024-11-07 10:20:20 +0100
+Version v1.10.1<br>
+Last updated 2025-05-27 18:08:16 +0200
 </div>
 </div>
 </body>
