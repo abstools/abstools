@@ -132,6 +132,11 @@ public abstract class ABSObject implements ABSRef {
         }
 
         @Override
+        public ABSObject getObject() {
+            return ABSObject.this;
+        }
+
+        @Override
         public String getName() {
             return getClassName();
         }
