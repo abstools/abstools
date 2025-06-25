@@ -843,6 +843,10 @@ public class ABSRuntime {
                     .map(ABSDurationGuard::getMaxTime)
                     .reduce(duration_guards.peek().getMaxTime(), (t1, t2) -> t1.compareTo(t2) < 0 ? t1 : t2);
             }
+            // stupid java "lambdas"
+            var nRG = resourceGuardsWoken;
+            var nDG = durationGuardsWoken;
+            log.finest(() -> "Woke " + nRG + " tasks waiting for resources and " + nDG + " tasks waiting for time");
             guardsWoken = guardsWoken + resourceGuardsWoken + durationGuardsWoken;
         }
         this.nWakingCogs = guardsWoken;
