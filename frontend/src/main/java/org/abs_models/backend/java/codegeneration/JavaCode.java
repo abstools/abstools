@@ -74,7 +74,11 @@ public class JavaCode {
             "META-INF/proguard/",
             "org/slf4j",
             // JSON support for Model API
-            "com/fasterxml/jackson"
+            "com/fasterxml/jackson",
+            // RDF support for semantic lifting, sparql endpoint
+            "org/apache/jena",
+            "org/apache/commons",
+            "org/apache/thrift"
     );
 
 
