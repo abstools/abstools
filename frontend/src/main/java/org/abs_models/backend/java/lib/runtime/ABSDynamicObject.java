@@ -111,6 +111,7 @@ public class ABSDynamicObject extends ABSObject {
     }
 
 
+    private final  View __dynamicView = new View();
 
     public ObjectView getView() {
         if (view == null) {
@@ -153,6 +154,11 @@ public class ABSDynamicObject extends ABSObject {
         @Override
         public long getID() {
             return ABSDynamicObject.this.__id;
+        }
+
+        @Override
+        public ABSObject getObject() {
+            return ABSDynamicObject.this;
         }
 
         @Override
