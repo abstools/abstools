@@ -2,7 +2,7 @@
     {{- with .Store.Get "relearnOutputFormat" }}
       {{- $outputFormat = . }}
     {{- else }}
-      {{- warnf "WARNING no key `relearnOutputFormat` found in page store, set one by providing the file `layouts/_default/view/storeOutputFormat.<MYOUTPUTFORMAT>.html` for your self-defined output format; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/6/#6-0-0" }}
+      {{- warnf "WARNING no key `relearnOutputFormat` found in page store; define a block `storeOutputFormat` for your HTML based output format templates and add `{{- .Store.Set \"relearnOutputFormat\" \"<your-output-format-name>\" }}`; see https://mcshelby.github.io/hugo-theme-relearn/introduction/releasenotes/8/#8-0-0" }}
     {{- end }}
     {{- $assetBusting := partialCached "assetbusting.gotmpl" . }}
     {{- $minify := not hugo.IsServer }}
@@ -97,10 +97,29 @@
     {{- range $contentlangs }}
       {{- $quotedcontentlangs = $quotedcontentlangs | append (printf "'%s'" .) }}
     {{- end }}
+    {{- $versionIndexUrl := "" }}
+    {{- $versions := partialCached "_relearn/siteVersions.gotmpl" . }}
+    {{- if $versions }}
+      {{- $versionIndexUrl = trim (or .Site.Params.versionIndexURL "versionindex.js") "/" }}
+      {{- $versionIndexUrl = path.Join (path.Dir $versionIndexUrl) (print (path.BaseName $versionIndexUrl) "." site.Language.Lang (path.Ext $versionIndexUrl)) }}
+      {{- if .IsHome }}
+        {{- $templateres := resources.Get "/_relearn_versionindex.js" }}
+        {{- $resultres := $templateres | resources.ExecuteAsTemplate $versionIndexUrl site.Home }}
+        {{- /* the following code causes Hugo to generate our file in public */}}
+        {{- $url := $resultres.RelPermalink }}
+      {{- end }}
+      {{- with (where $versions "isLatest" true | first 1) }}
+        {{- range . }}
+          {{- $versionIndexUrl = print .baseURL "/" $versionIndexUrl }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- $path := partial "_relearn/pageLangPath.gotmpl" . }}
     <script>
       window.relearn = window.relearn || {};
       {{ "// configuration" | safeJS }}
       {{ printf "window.relearn.min = `%s`;" $min | safeJS }}
+      window.relearn.path='{{ $path | safeJS }}';
       window.relearn.relBasePath='{{ partial "_relearn/relBasePath.gotmpl" . | safeJS }}';
       window.relearn.relBaseUri='{{ partial "_relearn/relBaseUri.gotmpl" . | safeJS }}';
       window.relearn.absBaseUri='{{ replaceRE "/*$" "" .Site.BaseURL | safeJS }}';
@@ -108,34 +127,39 @@
       {{- if $searchIndexUrl }}
       window.relearn.index_js_url={{ (printf "%s%s" $searchIndexUrl $assetBusting) | relURL }};
       {{- end }}
+      {{- if $versionIndexUrl }}
+      window.relearn.version_js_url={{ (printf "%s%s" $versionIndexUrl $assetBusting) | relURL }};
+      {{- end }}
       window.relearn.disableAnchorCopy={{ printf "%t" (eq .Site.Params.disableAnchorCopy true) | safeJS }};
       window.relearn.disableAnchorScrolling={{ printf "%t" (eq .Site.Params.disableAnchorScrolling true) | safeJS }};
       window.relearn.disableInlineCopyToClipboard={{ printf "%t" (eq $disableInlineCopyToClipboard true) | safeJS }};
       window.relearn.enableBlockCodeWrap={{ printf "%t" (eq $wrap true) | safeJS }};
+      {{ "// legal" | safeJS }}
+      window.relearn.getItem = (s,n) => {return s.getItem(n)};
+      window.relearn.setItem = (s,n,v) => {return s.setItem(n,v)};
+      window.relearn.removeItem = (s,n) => {return s.removeItem(n)};
       {{ "// variant stuff" | safeJS }}
       window.relearn.themevariants = [ {{ delimit $quotedthemevariants ", " | safeJS }} ];
       window.relearn.customvariantname = "my-custom-variant";
       window.relearn.changeVariant = function(variant) {
         var oldVariant = document.documentElement.dataset.rThemeVariant;
-        window.localStorage.setItem(window.relearn.absBaseUri + "/variant", variant);
+        window.relearn.setItem(window.localStorage, window.relearn.absBaseUri + "/variant", variant);
         document.documentElement.dataset.rThemeVariant = variant;
         if (oldVariant != variant) {
           document.dispatchEvent( new CustomEvent('themeVariantLoaded', { detail: { variant, oldVariant } }) );
+          window.relearn.markVariant();
         }
       }
       window.relearn.markVariant = function() {
-        var variant = window.localStorage.getItem(window.relearn.absBaseUri + "/variant");
-        var select = document.querySelector("#R-select-variant");
-        if (select) {
-          select.value = variant;
-        }
+        var variant = window.relearn.getItem(window.localStorage, window.relearn.absBaseUri + "/variant");
+        document.querySelectorAll(".R-variantswitcher select").forEach((select) => {select.value = variant;});
       }
       window.relearn.initVariant = function() {
-        var variant = window.localStorage.getItem(window.relearn.absBaseUri + "/variant") ?? "";
+        var variant = window.relearn.getItem(window.localStorage, window.relearn.absBaseUri + "/variant") ?? "";
         if( variant == window.relearn.customvariantname ){
         }else if( !variant || !window.relearn.themevariants.includes(variant) ){
           variant = window.relearn.themevariants[0];
-          window.localStorage.setItem(window.relearn.absBaseUri + "/variant", variant);
+          window.relearn.setItem(window.localStorage, window.relearn.absBaseUri + "/variant", variant);
         }
         document.documentElement.dataset.rThemeVariant = variant;
       }

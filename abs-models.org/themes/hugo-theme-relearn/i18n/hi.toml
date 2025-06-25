@@ -1,6 +1,9 @@
 [Reading-direction]
 other = "ltr"
 
+[Versioning-warning]
+other = 'आप इस पृष्ठ का संस्करण {{.pageVersion.title}} पढ़ रहे हैं। वर्तमान संस्करण पाया जा सकता है <a href="{{.latestUrl}}">यहाँ</a>.'
+
 [Search]
 other = "खोजे"
 
@@ -36,6 +39,9 @@ other = "यह पृष्ठ अभि अनुपलब्ध है!"
 
 [Go-to-homepage]
 other = "मुख्य पृष्ठ पर जाऐ"
+
+[home-button]
+other = "Home"
 
 [Edit-this-page]
 other = "संपादन करना"
