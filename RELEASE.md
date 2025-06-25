@@ -82,6 +82,9 @@
   
   - check the output of `absc -V`; it should output the new version
     number
+
+- Update the website with the new version of the language manual:
+  - `cp -r abs-docs/build/docs/asciidoc/* abs-models.org/static/manual`
   - check the header of `abs-docs/build/docs/asciidoc/index.html`, it
     should contain the new version number
 

@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Added documentation for compiling and running ABS models inside a
+  Java project using the gradle build tool.
+
 ### Changed
 
 - Refactor the Java backend to use Java-native datatypes directly
