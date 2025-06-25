@@ -140,19 +140,21 @@ A running ABS model has a singleton class of type
 Each cog is an instance of `org.abs_models.backend.java.lib.runtime.COG`.
 Each cog has one associated instance of type
 `org.abs_models.backend.java.scheduling.TaskScheduler`, by default this is
-`org.abs_models.backend.java.scheduling.DefaultTaskScheduler` but this is customizable by the user.
+`org.abs_models.backend.java.scheduling.DefaultTaskScheduler` but this is
+customizable by the user when starting a model.
 
 In the following, we describe the behavior of `DefaultTaskScheduler`;
 reverse-engineering `SimpleTaskScheduler` remains to be done.
 
-`DefaultTaskScheduler` contains an inner class `SchedulerThread`.  Instances
-of this class run ABS tasks, each running ABS process is handled by a Java
-thread of this class.  `SchedulerThread` instances are re-used: if a thread
-terminates, it checks for fresh tasks (in field `newTasks`) and starts running
-one; if there are no new tasks available, the thread terminates.
+`DefaultTaskScheduler` contains an inner class `SchedulerThread`.
+Instances of this class run ABS tasks, each running ABS process is
+handled by a Java thread of this class.  `SchedulerThread` instances
+`wait` on the enclosing DefaultTaskScheduler instance when they are
+ready to run.  `SchedulerThread` instances are responsible for calling
+`notifyAll` when they suspend or exit.
 
 A `SchedulerThread` instance is created either by the method
-`SchedulerThread.addTask` (if no task is running), or by a running
+`SchedulerThread.addTaskToScheduler` (if no task is running), or by a running
 `SchedulerThread` when the running thread suspends.  The running thread will
 not create a fresh thread when its task terminates; instead, it will pick up a
 waiting task and execute it.

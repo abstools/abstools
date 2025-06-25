@@ -372,7 +372,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         } else {
             logger.info("COG " + cog.getID() + " creating " + activeTask);
             activeTask.thread = new SimpleSchedulerThread(activeTask);
-            new Thread(activeTask.thread).start();
+            Thread.ofVirtual().start(activeTask.thread);
             activeTask.task.setStart(System.currentTimeMillis());
         }
     }
