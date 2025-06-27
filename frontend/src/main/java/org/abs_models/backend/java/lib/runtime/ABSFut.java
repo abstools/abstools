@@ -258,11 +258,15 @@ public abstract class ABSFut<V> extends ABSBuiltInDataType
     }
 
 
-    protected volatile View view;
+    protected View view;
 
-    public synchronized FutView getView() {
+    public FutView getView() {
         if (view == null) {
-            view = createView();
+            synchronized(this) {
+                if (view == null) {
+                    view = createView();
+                }
+            }
         }
         return view;
     }
@@ -289,7 +293,7 @@ public abstract class ABSFut<V> extends ABSBuiltInDataType
 
 
         @Override
-        public TaskView getResolvingTask() {
+        public TaskView getResolvingTaskView() {
             return null;
         }
 

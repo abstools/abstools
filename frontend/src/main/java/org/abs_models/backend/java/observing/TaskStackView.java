@@ -23,14 +23,14 @@ public interface TaskStackView {
      * Returns the task to which this stack belongs to
      * @return the task to which this stack belongs to
      */
-    public TaskView getTask();
+    public TaskView getTaskView();
     
     /**
      * Returns the list of stack frames of this task stack.
      * The last element of the list represents the top of the stack
      * @return the list of stack frames of this task stack.
      */
-    public List<? extends TaskStackFrameView> getFrames();
+    public List<? extends TaskStackFrameView> getFrameViews();
     
     /**
      * Returns the current active frame of the task stack.
@@ -38,7 +38,7 @@ public interface TaskStackView {
      * Returns null if there is no stack frame
      * @return the current active frame of the task stack, or null if there is no frame 
      */
-    public TaskStackFrameView getCurrentFrame();
+    public TaskStackFrameView getCurrentFrameView();
 
     /**
      * Whether this task has any frames

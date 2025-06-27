@@ -7,7 +7,7 @@ package org.abs_models.backend.java.observing;
 import java.util.List;
 
 public interface ObjectView {
-    COGView getCOG();
+    COGView getCOGView();
 
     ClassView getClassView();
 

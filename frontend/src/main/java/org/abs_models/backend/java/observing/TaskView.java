@@ -15,7 +15,7 @@ public interface TaskView {
      * 
      * @return the calling task
      */
-    TaskView getSender();
+    TaskView getSenderView();
 
     /**
      * The source object of the asynchronous call leading to this task is null
@@ -23,17 +23,17 @@ public interface TaskView {
      * 
      * @return the source object, or <code>null</code> if there is no source object
      */
-    ObjectView getSource();
+    ObjectView getSourceObjectView();
 
-    ObjectView getTarget();
+    ObjectView getTargetObjectView();
 
-    COGView getCOG();
+    COGView getCOGView();
 
     String getMethodName();
 
     List<Object> getArgs();
 
-    FutView getFuture();
+    FutView getFutView();
 
     void registerTaskListener(TaskObserver listener);
 
@@ -44,6 +44,6 @@ public interface TaskView {
     boolean hasException();
 
     ABSException getException();
-    
-    TaskStackView getStack();
+
+    TaskStackView getStackView();
 }

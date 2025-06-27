@@ -5,7 +5,7 @@
 package org.abs_models.backend.java.observing;
 
 public interface FutView {
-    TaskView getResolvingTask();
+    TaskView getResolvingTaskView();
 
     boolean isResolved();
 

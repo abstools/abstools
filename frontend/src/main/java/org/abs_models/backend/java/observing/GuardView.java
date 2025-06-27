@@ -36,19 +36,19 @@ public interface GuardView {
      * Return the left contained guard of an AndGuard.  Only call this method
      * if `isAndGuard` returns true.
      */
-    GuardView getLeftGuard();
+    GuardView getLeftGuardView();
 
     /**
      * Return the right contained guard of an AndGuard.  Only call this method
      * if `isAndGuard` returns true.
      */
-    GuardView getRightGuard();
+    GuardView getRightGuardView();
 
     /**
      * Return the contained future of a FutureGuard.  Only call this method if
      * `isFutureGuard` returns true.
      */
-    FutView getFuture();
+    FutView getFutView();
 
     /**
      * Returns the minimum wakeup time of a DurationGuard.  Only call this

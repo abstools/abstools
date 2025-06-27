@@ -29,10 +29,10 @@ public class TestModel {
         final String className;
         final List<Object> testMethodArguments;
         final LinkedList<Object> arguments = new LinkedList<>();
-        if (task.getStack().hasFrames()) {
-            final TaskStackFrameView currentF = task.getStack().getCurrentFrame();
-            testMethod = currentF.getMethod().getName();
-            className = currentF.getMethod().getClassView().getName();
+        if (task.getStackView().hasFrames()) {
+            final TaskStackFrameView currentF = task.getStackView().getCurrentFrameView();
+            testMethod = currentF.getMethodView().getName();
+            className = currentF.getMethodView().getClassView().getName();
 
             for (String parameterName : currentF.getVariableNames()) {
                 arguments.add(currentF.getValue(parameterName));
@@ -40,19 +40,19 @@ public class TestModel {
 
         } else {
             testMethod = task.getMethodName();
-            className  = task.getTarget().getClassName();
+            className  = task.getTargetObjectView().getClassName();
             arguments.addAll(task.getArgs());
         }
 
-        if (!task.getStack().hasFrames()) {
+        if (!task.getStackView().hasFrames()) {
             System.out.println("Not yet started " + testMethod + " for task " + task.getID());
         } else {
-            System.out.println("Test " + task.getStack().getCurrentFrame().getMethod() + " task: " + task.getID());
+            System.out.println("Test " + task.getStackView().getCurrentFrameView().getMethodView() + " task: " + task.getID());
         }
 
         final TestStatus newTest = new TestStatus(task.getID(), testMethod, className,
                 arguments,
-                task.getStack().getFrames(), TestStatus.Status.ACTIVE);
+                task.getStackView().getFrameViews(), TestStatus.Status.ACTIVE);
 
         push(newTest);
 
@@ -183,7 +183,7 @@ public class TestModel {
 
     public void taskStep(TaskView task, String fileName, int line) {
         TestStatus status = peek(task.getID());
-        int depth = task.getStack().getFrames() == null ? 0 : task.getStack().getFrames().size();
+        int depth = task.getStackView().getFrameViews() == null ? 0 : task.getStackView().getFrameViews().size();
         if (status != null && status.depth() == depth) {
             status.updatePos(fileName, line);
         }

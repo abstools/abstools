@@ -79,7 +79,7 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
     @Override
     public void taskCreated(TaskView task) {
         task.registerTaskListener(this);
-        task.getFuture().registerFutObserver(this);
+        task.getFutView().registerFutObserver(this);
     }
 
     @Override
@@ -124,8 +124,8 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
 
     @Override
     public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
-        if (isUnitTest(stackFrame.getMethod().getName())) {
-            pushSyncTestInfo(task, new SyncTestInfo(task, stackFrame.getStack().getFrames().size()));
+        if (isUnitTest(stackFrame.getMethodView().getName())) {
+            pushSyncTestInfo(task, new SyncTestInfo(task, stackFrame.getStackView().getFrameViews().size()));
             model.testStarted(task);
         }
     }
@@ -176,7 +176,7 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
     @Override
     public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {
         synchronized (syncTests) {
-            if (isUnitTest(oldFrame.getMethod().getName())) {
+            if (isUnitTest(oldFrame.getMethodView().getName())) {
                 model.testFinished(task);
                 pop(task.getID());
             }

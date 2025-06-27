@@ -217,31 +217,35 @@ public class DefaultTaskScheduler implements TaskScheduler {
     }
 
     @Override
-    public synchronized TaskSchedulerView getView() {
+    public TaskSchedulerView getView() {
         if (view == null) {
-            view = new View();
+            synchronized(this) {
+                if (view == null) {
+                    view = new View();
+                }
+            }
         }
         return view;
     }
 
     private class View extends AbstractTaskSchedulerView {
         @Override
-        public List<TaskView> getReadyTasks() {
+        public List<TaskView> getReadyTaskViews() {
             return null;
         }
 
         @Override
-        public List<TaskView> getSuspendedTasks() {
+        public List<TaskView> getSuspendedTaskViews() {
             return null;
         }
 
         @Override
-        public List<TaskView> getSchedulableTasks() {
+        public List<TaskView> getSchedulableTaskViews() {
             return null;
         }
 
         @Override
-        public TaskView getActiveTask() {
+        public TaskView getActiveTaskView() {
             return DefaultTaskScheduler.this.getActiveTask().getView();
         }
 

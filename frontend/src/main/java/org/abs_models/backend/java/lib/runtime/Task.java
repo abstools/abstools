@@ -110,7 +110,7 @@ public class Task<T extends ABSRef> implements Runnable {
 
     public synchronized void setLocalVariable(String name, Object v) {
         if (stack != null) {
-            Frame f = stack.getCurrentFrame();
+            Frame f = stack.getCurrentFrameView();
             f.setValue(name,v);
             if (view != null) {
                 view.localVariableChanged(f,name,v);
@@ -222,18 +222,19 @@ public class Task<T extends ABSRef> implements Runnable {
                 + "]";
     }
 
-    private volatile View view;
+    private View view;
 
-    private Object viewCreationLock = new Object();
     private boolean finished = false;
 
     public TaskView getView() {
-        synchronized(viewCreationLock) {
         if (view == null) {
-            view = new View();
+            synchronized(this) {
+                if (view == null) {
+                    view = new View();
+                }
+            }
         }
         return view;
-        }
     }
 
     public synchronized Thread getExecutingThread() {
@@ -255,7 +256,7 @@ public class Task<T extends ABSRef> implements Runnable {
         private List<TaskObserver> taskListener;
 
         @Override
-        public TaskView getSender() {
+        public TaskView getSenderView() {
             if (call.getSender() == null)
                 return null;
             return call.getSender().getView();
@@ -298,14 +299,14 @@ public class Task<T extends ABSRef> implements Runnable {
         }
 
         @Override
-        public ObjectView getSource() {
+        public ObjectView getSourceObjectView() {
             if (call.getSource() == null)
                 return null;
             return call.getSource().getView();
         }
 
         @Override
-        public ObjectView getTarget() {
+        public ObjectView getTargetObjectView() {
             return ((ABSObject)call.getTarget()).getView();
         }
 
@@ -328,7 +329,7 @@ public class Task<T extends ABSRef> implements Runnable {
         }
 
         @Override
-        public COGView getCOG() {
+        public COGView getCOGView() {
             return Task.this.getCOG().getView();
         }
 
@@ -343,7 +344,7 @@ public class Task<T extends ABSRef> implements Runnable {
         }
 
         @Override
-        public FutView getFuture() {
+        public FutView getFutView() {
             return future.getView();
         }
 
@@ -373,7 +374,7 @@ public class Task<T extends ABSRef> implements Runnable {
         }
 
         @Override
-        public TaskStackView getStack() {
+        public TaskStackView getStackView() {
             return stack;
         }
 

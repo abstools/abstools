@@ -14,23 +14,23 @@ public interface TaskSchedulerView {
      * are suspended on an unstable guard, i.e., a guard that may become false
      * after it was true. Such tasks are in the suspendedTasks list.
      */
-    List<TaskView> getReadyTasks();
+    List<TaskView> getReadyTaskViews();
 
     /**
      * Returns a list of all suspended tasks.
      * All these tasks wait on a guard.
      * Some of these guards may be true.
      */
-    List<TaskView> getSuspendedTasks();
+    List<TaskView> getSuspendedTaskViews();
 
     /**
      * Returns a list of schedulable tasks.
      * This list contains all tasks of getReadyTasks() plus the tasks
      * from getSuspendedTasks(), which are waiting on a guard which is true
      */
-    List<TaskView> getSchedulableTasks();
+    List<TaskView> getSchedulableTaskViews();
     
-    TaskView getActiveTask();
+    TaskView getActiveTaskView();
 
     void registerTaskSchedulerObserver(TaskSchedulerObserver listener);
 
