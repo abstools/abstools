@@ -75,13 +75,15 @@ public abstract class ABSObject implements ABSRef {
         }
     }
 
-    protected volatile ObjectView __view;
+    protected ObjectView view;
 
-    public synchronized ObjectView getView() {
-        if (__view == null) {
-            __view = new View();
+    public ObjectView getView() {
+        if (view == null) {
+            synchronized(this) {
+                if (view == null) view = new View();
+            }
         }
-        return __view;
+        return view;
     }
 
     protected Object getFieldValue(String fieldName) throws NoSuchFieldException {
@@ -91,7 +93,7 @@ public abstract class ABSObject implements ABSRef {
     private class View implements ObjectView, ClassView {
 
         @Override
-        public COGView getCOG() {
+        public COGView getCOGView() {
             return __cog.getView();
         }
 

@@ -5,7 +5,7 @@
 package org.abs_models.backend.java.observing;
 
 public interface COGView {
-    TaskSchedulerView getScheduler();
+    TaskSchedulerView getSchedulerView();
 
     void registerObjectCreationListener(ObjectCreationObserver listener);
 

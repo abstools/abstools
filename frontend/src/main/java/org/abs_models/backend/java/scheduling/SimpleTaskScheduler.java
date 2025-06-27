@@ -402,15 +402,15 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     private volatile View view;
 
-    private final Object viewCreatorLock = new Object();
-
     @Override
     public TaskSchedulerView getView() {
-        synchronized (viewCreatorLock) {
-        if (view == null)
-            view = new View();
-        return view;
+        if (view == null) {
+            synchronized(this) {
+                if (view == null)
+                    view = new View();
+            }
         }
+        return view;
     }
 
     @Override
@@ -490,11 +490,11 @@ public class SimpleTaskScheduler implements TaskScheduler {
     private class View extends AbstractTaskSchedulerView {
 
         @Override
-        public List<TaskView> getSchedulableTasks() {
+        public List<TaskView> getSchedulableTaskViews() {
             synchronized (SimpleTaskScheduler.this) {
                 ArrayList<TaskView> result = new ArrayList<>();
                 if (getActiveTask() != null) {
-                    result.add(getActiveTask());
+                    result.add(getActiveTaskView());
                     return result;
                 }
 
@@ -507,7 +507,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
 
         @Override
-        public List<TaskView> getReadyTasks() {
+        public List<TaskView> getReadyTaskViews() {
             synchronized (SimpleTaskScheduler.this) {
                 ArrayList<TaskView> result = new ArrayList<>();
                 for (TaskInfo t : readyTasks) {
@@ -519,7 +519,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
 
         @Override
-        public List<TaskView> getSuspendedTasks() {
+        public List<TaskView> getSuspendedTaskViews() {
             synchronized (SimpleTaskScheduler.this) {
                 ArrayList<TaskView> result = new ArrayList<>();
                 for (TaskInfo t : suspendedTasks) {
@@ -531,7 +531,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
 
         @Override
-        public TaskView getActiveTask() {
+        public TaskView getActiveTaskView() {
             Task<?> activeTask = SimpleTaskScheduler.this.getActiveTask();
             if (activeTask == null)
                 return null;

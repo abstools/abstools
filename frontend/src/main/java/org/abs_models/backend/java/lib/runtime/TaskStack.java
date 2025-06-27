@@ -68,23 +68,23 @@ class TaskStack implements TaskStackView {
         }
 
         @Override
-        public TaskStackView getStack() {
+        public TaskStackView getStackView() {
             return TaskStack.this;
         }
 
         @Override
-        public MethodView getMethod() {
+        public MethodView getMethodView() {
             return method;
         }
     }
 
     @Override
-    public List<? extends TaskStackFrameView> getFrames() {
+    public List<? extends TaskStackFrameView> getFrameViews() {
         return Collections.unmodifiableList(frames);
     }
 
     @Override
-    public synchronized Frame getCurrentFrame() {
+    public synchronized Frame getCurrentFrameView() {
         return frames.get(frames.size()-1);
     }
 
@@ -94,7 +94,7 @@ class TaskStack implements TaskStackView {
     }
 
     @Override
-    public TaskView getTask() {
+    public TaskView getTaskView() {
         return task.getView();
     }
 }

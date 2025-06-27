@@ -112,17 +112,21 @@ public class ABSDynamicObject extends ABSObject {
 
 
 
-    public synchronized ObjectView getView() {
-        if (__view == null) {
-            __view = new View();
+    public ObjectView getView() {
+        if (view == null) {
+            synchronized(this) {
+                if (view == null) {
+                    view = new View();
+                }
+            }
         }
-        return __view;
+        return view;
     }
 
     private class View implements ObjectView {
 
         @Override
-        public COGView getCOG() {
+        public COGView getCOGView() {
             return __cog.getView();
         }
 

@@ -92,7 +92,7 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
         System.out.println(name+": created cog "+cog.getID());
         objectCreated(initialObject);
         cog.registerObjectCreationListener(this);
-        cog.getScheduler().registerTaskSchedulerObserver(this);
+        cog.getSchedulerView().registerTaskSchedulerObserver(this);
     }
 
     @Override
@@ -173,7 +173,7 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
 
     @Override
     public void localVariableChanged(TaskStackFrameView stackFrame, String n, Object v) {
-        System.out.println(name+":task "+stackFrame.getStack().getTask().getID()+": local variable "+n+" = "+v);
+        System.out.println(name+":task "+stackFrame.getStackView().getTaskView().getID()+": local variable "+n+" = "+v);
         
     }
 

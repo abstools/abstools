@@ -19,7 +19,7 @@ public interface TaskStackFrameView {
      * Returns the stack to which this frame belongs to
      * @return the stack to which this frame belongs to
      */
-    public TaskStackView getStack();
+    public TaskStackView getStackView();
     
     /**
      * Returns all variable names of this stack frame
@@ -38,6 +38,6 @@ public interface TaskStackFrameView {
      * Returns the method of this stack frame
      * @return the method of this stack frame
      */
-    public MethodView getMethod();
+    public MethodView getMethodView();
 
 }

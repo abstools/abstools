@@ -48,7 +48,7 @@ public class TaskStateHistoryObserver implements SystemObserver,TaskSchedulerObs
 
     @Override
     public void newCOGCreated(COGView cog, ObjectView initialObject) {
-        cog.getScheduler().registerTaskSchedulerObserver(this);
+        cog.getSchedulerView().registerTaskSchedulerObserver(this);
     }
 
     @Override

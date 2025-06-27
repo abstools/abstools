@@ -69,7 +69,7 @@ public class ABSTaskFut<V> extends ABSFut<V> {
 
     private class TaskFutView extends View {
         @Override
-        public TaskView getResolvingTask() {
+        public TaskView getResolvingTaskView() {
             return ABSTaskFut.this.resolvingTask.getView();
         }
     }

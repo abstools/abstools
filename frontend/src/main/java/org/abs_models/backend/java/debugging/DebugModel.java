@@ -45,7 +45,7 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
     }
 
     public void cogCreated(COGView cog, ObjectView initialObject) {
-        cog.getScheduler().registerTaskSchedulerObserver(this);
+        cog.getSchedulerView().registerTaskSchedulerObserver(this);
         ArrayList<DebugModelListener> localList;
         COGInfo info = new COGInfo(cog, initialObject);
         synchronized (this) {
@@ -97,7 +97,7 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
         task.registerTaskListener(this);
         TaskInfo info = addInfoLine(task);
 
-        COGInfo cinfo = cogInfo.get(task.getCOG());
+        COGInfo cinfo = cogInfo.get(task.getCOGView());
         cinfo.addTask(info);
         cogInfoChanged(cinfo);
     }

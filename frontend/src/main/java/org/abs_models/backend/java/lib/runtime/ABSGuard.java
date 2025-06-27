@@ -62,8 +62,13 @@ public abstract class ABSGuard {
     private GuardView view;
 
     public GuardView getView() {
-        if (view == null)
-            view = new View();
+        if (view == null) {
+            synchronized(this) {
+                if (view == null) {
+                    view = new View();
+                }
+            }
+        }
         return view;
     }
 
@@ -89,15 +94,15 @@ public abstract class ABSGuard {
             return ABSGuard.this instanceof ABSAndGuard;
         }
 
-        public GuardView getLeftGuard() {
+        public GuardView getLeftGuardView() {
             return ((ABSAndGuard) ABSGuard.this).getLeftGuard().getView();
         }
 
-        public GuardView getRightGuard() {
+        public GuardView getRightGuardView() {
             return ((ABSAndGuard) ABSGuard.this).getRightGuard().getView();
         }
 
-        public FutView getFuture() {
+        public FutView getFutView() {
             return ((ABSFutureGuard) ABSGuard.this).fut.getView();
         }
 

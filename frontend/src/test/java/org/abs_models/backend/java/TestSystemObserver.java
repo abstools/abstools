@@ -19,7 +19,7 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
         System.out.println("NEW COG CREATED");
         COGView mainCOG = cog;
         mainCOG.registerObjectCreationListener(this);
-        mainCOG.getScheduler().registerTaskSchedulerObserver(new TaskSchedulerObserver() {
+        mainCOG.getSchedulerView().registerTaskSchedulerObserver(new TaskSchedulerObserver() {
             TaskView mainTask;
 
             @Override
@@ -35,9 +35,9 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
                     });
                 }
                 String sourceClass = "INIT";
-                if (task.getSource() != null)
-                    sourceClass = task.getSource().getClassName();
-                System.out.print("TASK CREATED: " + sourceClass + " --> " + task.getTarget().getClassName() + "."
+                if (task.getSourceObjectView() != null)
+                    sourceClass = task.getSourceObjectView().getClassName();
+                System.out.print("TASK CREATED: " + sourceClass + " --> " + task.getTargetObjectView().getClassName() + "."
                         + task.getMethodName() + "(");
                 int i = 0;
                 for (Object v : task.getArgs()) {

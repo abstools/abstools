@@ -38,7 +38,7 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     @Override
     public void objectCreated(ObjectView o) {
         super.objectCreated(o);
-        show(objectString(o)+" created in COG["+o.getCOG().getID()+"]");
+        show(objectString(o)+" created in COG["+o.getCOGView().getID()+"]");
     }
     
     @Override
@@ -53,14 +53,14 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     @Override
     public void taskCreated(TaskView task) {
         show("Task["+task.getID()+"] created ("
-                +objectString(task.getTarget())+
+                +objectString(task.getTargetObjectView())+
                 "!"+task.getMethodName()+
                 "("+StringUtil.iterableToString(task.getArgs(), ",")+
                 ")"+
                 ")");
 
         task.registerTaskListener(this);
-        task.getFuture().registerFutObserver(this);
+        task.getFutView().registerFutObserver(this);
     }
     
     @Override
@@ -106,7 +106,7 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
 
     @Override
     public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
-        show("Task["+task.getID()+"] called "+stackFrame.getMethod().getClassView().getName()+"."+stackFrame.getMethod().getName());
+        show("Task["+task.getID()+"] called "+stackFrame.getMethodView().getClassView().getName()+"."+stackFrame.getMethodView().getName());
     }
 
     @Override

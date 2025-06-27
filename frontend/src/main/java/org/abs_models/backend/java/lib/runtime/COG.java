@@ -164,9 +164,13 @@ public class COG {
 
     private View view;
 
-    public synchronized COGView getView() {
+    public COGView getView() {
         if (view == null) {
-            view = new View();
+            synchronized(this) {
+                if (view == null) {
+                    view = new View();
+                }
+            }
         }
         return view;
     }
@@ -227,7 +231,7 @@ public class COG {
         }
 
         @Override
-        public TaskSchedulerView getScheduler() {
+        public TaskSchedulerView getSchedulerView() {
             return scheduler.getView();
         }
 
