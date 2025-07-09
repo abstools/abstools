@@ -240,6 +240,11 @@ public class COG {
             return id;
         }
 
+        @Override
+        public COG getCOG() {
+            return COG.this;
+        }
+
     }
 
     public void register(ABSObject absObject) {
