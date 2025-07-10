@@ -25,6 +25,9 @@ import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
+import org.abs_models.backend.java.observing.GraphObserver;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.resultset.ResultSetLang;
 import org.apfloat.Apint;
 import org.apfloat.Aprational;
 
@@ -105,6 +108,7 @@ public class ModelApi {
         server.createContext("/quit", new ModelApi.QuitHandler());
         server.createContext("/clock", new ModelApi.ClockHandler());
         server.createContext("/dcs", new ModelApi.DCHandler());
+        server.createContext("/sparql", new ModelApi.SparqlHandler());
         // this is a catch-all handler so should be last
         server.createContext("/", new ModelApi.RootHandler());
         server.setExecutor(Executors.newCachedThreadPool(r -> {
@@ -156,9 +160,30 @@ public class ModelApi {
     }
 
     /**
+     * A handler that implements a SPARQL endpoint.
+     */
+    private static class SparqlHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!exchange.getRequestMethod().equals("POST")) {
+                exchange.sendResponseHeaders(405, 0);
+                exchange.close();
+            } else {
+                String queryString = new String(exchange.getRequestBody().readAllBytes());
+                Lang lang = ResultSetLang.RS_JSON;
+                // TODO: introduce query parameter that lets us select the output format:
+                // RS_XML, RS_JSON, RS_CSV, RS_TSV, RS_Thrift, RS_Protobuf, RS_Text
+                String solution = GraphObserver.runQuery(GraphObserver.getModel(), queryString, lang);
+                sendResponse(exchange, 200, lang.getHeaderString(), solution);
+            }
+        }
+    }
+
+    /**
      * A handler that serves the /index.html file.  Also serves as
      * catch-all handler and will return 404 for unmatched paths.
      */
+
     // `index.html` is `resources/java/modelapi/index.html` but can be
     // overridden by the `--modelapi-index-file` parameter
     private static class RootHandler implements HttpHandler {
