@@ -1,6 +1,7 @@
 package org.abs_models.backend.java.observing;
 
-import java.util.ArrayList;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +21,15 @@ import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.sparql.ARQConstants;
+import org.apache.jena.sparql.core.Prologue;
+import org.apache.jena.sparql.resultset.ResultsWriter;
 import org.apfloat.Apint;
 import org.apfloat.Aprational;
 
@@ -106,16 +112,32 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
      * the query string, so do not need to be defined.
      */
     public static List<QuerySolution> runQuery(Model model, String queryString) {
-        List<QuerySolution> result = new ArrayList<>();
         queryString = sparqlPrefix + queryString;
         Query query = QueryFactory.create(queryString);
         try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             ResultSet results = qexec.execSelect();
-            results.forEachRemaining((solution) -> {
-                result.add(solution);
-            });
-            return result;
+            return ResultSetFormatter.toList(results);
         }
+    }
+
+    public static String runQuery(Model model, String queryString, Lang language) {
+        queryString = sparqlPrefix + queryString;
+        String result = "";
+        Query query = QueryFactory.create(queryString);
+        try (QueryExecution qexec = QueryExecutionFactory.create(query, model);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ResultSet results = qexec.execSelect();
+            ResultsWriter.create()
+                .lang(language)
+                // see ResultSetFormat.out(OutputStream, ResultSet, Prologue)
+                // TODO: figure out why text format uses namespace prefixes but json, xml etc. don't
+                .set(ARQConstants.symPrologue, new Prologue(query.getPrefixMapping()))
+                .write(baos, results);
+            result = baos.toString();
+        } catch (IOException e) {
+            log.warning("Caught exception closing a string output stream; ignoring it since this should not happen.");
+		}
+        return result;
     }
 
     /**
@@ -129,9 +151,9 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
      * Return an RDF model of the current ABS state.
      */
     public static Model getModel() {
-        Model model = ModelFactory.createDefaultModel();
         Set<ObjectView> objects = Set.copyOf(objectSet);
         Set<COGView> cogs = Set.copyOf(cogSet);
+        Model model = ModelFactory.createDefaultModel();
         initNamespaces(model);
         for (ObjectView view : objects) {
             addObjectTriples(model, view);
