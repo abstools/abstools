@@ -2,6 +2,9 @@ package org.abs_models.backend.java.observing;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -160,6 +163,16 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         }
         for (COGView view : cogs) {
             addCogTriples(model, view);
+        }
+        try (InputStream is = GraphObserver.class.getResourceAsStream("/resources/prog.ttl")) {
+            if (is != null) {
+                String progModelString = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                Model progModel = ModelFactory.createDefaultModel();
+                progModel.read(new StringReader(progModelString), null, "TURTLE");
+                model.add(progModel);
+            }
+        } catch (IOException e) {
+            log.warning("Failed to read the abs and program ontologies, RDF model only contains the runtime ontology");
         }
         return model;
     }
