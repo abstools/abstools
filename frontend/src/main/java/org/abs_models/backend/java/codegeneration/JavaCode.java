@@ -78,7 +78,8 @@ public class JavaCode {
             // RDF support for semantic lifting, sparql endpoint
             "org/apache/jena",
             "org/apache/commons",
-            "org/apache/thrift"
+            "org/apache/thrift",
+            "com/github/benmanes/caffeine"
     );
 
 
@@ -90,7 +91,7 @@ public class JavaCode {
         this.srcDir = srcDir;
         this.output_jar = output_jar;
         this.httpIndexFile = http_index_file;
-	this.httpStaticDir = http_static_dir;
+	    this.httpStaticDir = http_static_dir;
     }
 
     public String[] getFileNames() {
@@ -280,6 +281,17 @@ public class JavaCode {
                     });
             }
         }
+    }
+
+    public void writeOntology(final org.abs_models.frontend.ast.Model model) {
+        final File dir = new File(getSrcDir(), "resources");
+        dir.mkdirs();
+        final File file = new File(dir, "prog.ttl");
+        try (FileOutputStream out = new FileOutputStream(file, false)) {
+            JavaGeneratorHelper.generateProgramOntology(model).write(out, "TURTLE");
+        } catch (IOException e) {
+			throw new RuntimeException("Error while creating program ontology " + file);
+		}
     }
 
     public boolean hasMainClasses() {
