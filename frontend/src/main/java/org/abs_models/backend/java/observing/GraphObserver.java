@@ -2,7 +2,13 @@ package org.abs_models.backend.java.observing;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +36,8 @@ import org.apache.jena.riot.Lang;
 import org.apache.jena.sparql.ARQConstants;
 import org.apache.jena.sparql.core.Prologue;
 import org.apache.jena.sparql.resultset.ResultsWriter;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.apfloat.Apint;
 import org.apfloat.Aprational;
 
@@ -43,6 +51,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
 
     /** The namespace prefixes used by the ABS ontology. */
     public static final Map<String, String> absNamespaces = Map.of(
+        "rdfs", RDFS.label.getNameSpace(),
         // the abs language ontology prefix
         "abs", "http://abs-models.org/ns/abs/",
         "prog", "http://abs-models.org/ns/prog/",
@@ -52,6 +61,53 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         .stream()
         .map(e -> "PREFIX " + e.getKey() + ": <" + e.getValue() + ">\n")
         .collect(Collectors.joining());
+
+    /** The program model, generated at compile time */
+    static Model progModel = ModelFactory.createDefaultModel();
+    static Map<String, Resource> knownClasses = new HashMap<>();
+    static Map<String, Resource> knownInterfaces = new HashMap<>();
+    static Map<String, Resource> knownDatatypes = new HashMap<>();
+    static Map<String, Resource> knownConstructors = new HashMap<>();
+
+    static {
+        try (InputStream is = GraphObserver.class.getResourceAsStream("/resources/prog.ttl")) {
+            if (is != null) {
+                String progModelString = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                progModel.read(new StringReader(progModelString), null, "TURTLE");
+            }
+        } catch (IOException e) {
+            log.warning("Failed to read the abs and program ontologies, RDF model only contains the runtime ontology");
+        }
+        String absns = absNamespaces.get("abs");
+        progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "class"))
+            .forEach(
+                classres -> {
+                    if (classres.hasProperty(RDFS.label)) {
+                        knownClasses.put(classres.getProperty(RDFS.label).getString(), classres);
+                    }
+                });
+        progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "interface"))
+            .forEach(
+                interfaceres -> {
+                    if (interfaceres.hasProperty(RDFS.label)) {
+                        knownInterfaces.put(interfaceres.getProperty(RDFS.label).getString(), interfaceres);
+                    }
+                });
+        progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "datatype"))
+            .forEach(
+                datatyperes -> {
+                    if (datatyperes.hasProperty(RDFS.label)) {
+                        knownDatatypes.put(datatyperes.getProperty(RDFS.label).getString(), datatyperes);
+                    }
+                });
+        progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "dataconstructor"))
+            .forEach(
+                constructorres -> {
+                    if (constructorres.hasProperty(RDFS.label)) {
+                        knownConstructors.put(constructorres.getProperty(RDFS.label).getString(), constructorres);
+                    }
+                });
+    }
 
     // Note: iterate over the sets below using a snapshot to avoid gc
     // messing with us: `for (Object obj : Set.copyOf(objectSet)) { }`
@@ -136,7 +192,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
             result = baos.toString();
         } catch (IOException e) {
             log.warning("Caught exception closing a string output stream; ignoring it since this should not happen.");
-		}
+        }
         return result;
     }
 
@@ -155,11 +211,22 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         Set<COGView> cogs = Set.copyOf(cogSet);
         Model model = ModelFactory.createDefaultModel();
         initNamespaces(model);
+        model.add(progModel);
         for (ObjectView view : objects) {
             addObjectTriples(model, view);
         }
         for (COGView view : cogs) {
             addCogTriples(model, view);
+        }
+        try (InputStream is = GraphObserver.class.getResourceAsStream("/resources/prog.ttl")) {
+            if (is != null) {
+                String progModelString = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                Model progModel = ModelFactory.createDefaultModel();
+                progModel.read(new StringReader(progModelString), null, "TURTLE");
+                model.add(progModel);
+            }
+        } catch (IOException e) {
+            log.warning("Failed to read the abs and program ontologies, RDF model only contains the runtime ontology");
         }
         return model;
     }
@@ -180,16 +247,17 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
      */
     static void addObjectTriples(Model model, ObjectView view) {
         ABSObject obj = view.getObject();
-        String type = obj.getClass().getPackageName() + "." + obj.getClassName();
+        String packagename = obj.getClass().getPackageName();
+        String type = packagename + "." + obj.getClassName();
         String absNS = absNamespaces.get("abs");
         String progNS = absNamespaces.get("prog");
         String runNS = absNamespaces.get("run");
-        Resource objRes = model.createResource(runNS + "obj" + obj.hashCode(),
-            model.createResource(progNS + type));
+        Resource classRes = knownClasses.getOrDefault(type, model.createResource(progNS + type));
+        Resource objRes = model.createResource(runNS + "obj" + obj.hashCode(), classRes);
         Property inProp = model.createProperty(absNS + "in");
         objRes.addProperty(inProp, model.createResource(runNS + "cog" + obj.getCOG().hashCode()));
         for (String fieldName : obj.getFieldNames()) {
-            Property fieldProp = model.createProperty(progNS + fieldName);
+            Property fieldProp = model.createProperty(progNS + packagename + "." + fieldName);
             try {
                 addFieldTriples(model, objRes, fieldProp, obj.getView().getFieldValue(fieldName));
             } catch (NoSuchFieldException e) {
@@ -199,40 +267,54 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         }
     }
 
+    /**
+     * Queue entry for data structure reflection method
+     */
+    private record WorkItem(Resource resource, Property property, Object value) {}
+
     static void addFieldTriples(Model model, Resource res, Property fieldProp, Object value) {
         String runNS = absNamespaces.get("run");
-        switch (value) {
-            case null:
-                res.addLiteral(fieldProp, model.createTypedLiteral("null"));
-                break;
-            case Apint i:
-                res.addLiteral(fieldProp, model.createTypedLiteral(i.toBigInteger()));
-                break;
-            case Aprational r:
-                res.addLiteral(fieldProp, model.createTypedLiteral(r.doubleValue()));
-                break;
-            case ABSObject o2:
-                res.addProperty(fieldProp, model.createResource(runNS + "obj" + o2.hashCode()));
-                break;
-            case ABSAlgebraicDataType a:
-                Resource r = addDataValueTriples(model, a);
-                res.addProperty(fieldProp, r);
-                break;
-            default:
-                res.addLiteral(fieldProp, model.createTypedLiteral(value));
-        }
-    }
-
-    static Resource addDataValueTriples(Model model, ABSAlgebraicDataType a) {
-        String type = a.getClass().getPackageName() + "." + a.getConstructorName();
         String progNS = absNamespaces.get("prog");
-        Resource result = model.createResource(model.createResource(progNS + type));
-        for (int i = 0; i < a.getNumArgs(); i++) {
-            Property prop = model.createProperty(progNS + "arg" + i);
-            Object value = a.getArg(i);
-            addFieldTriples(model, result, prop, value);
-        }
-        return result;
-    }
 
+        Deque<WorkItem> queue = new ArrayDeque<>();
+        queue.addLast(new WorkItem(res, fieldProp, value));
+
+        while (!queue.isEmpty()) {
+            WorkItem item = queue.removeFirst();
+            Resource currentRes = item.resource;
+            Property currentProp = item.property;
+            Object currentValue = item.value;
+
+            switch (currentValue) {
+                case null:
+                    currentRes.addLiteral(currentProp, model.createTypedLiteral("null"));
+                    break;
+                case Apint i:
+                    currentRes.addLiteral(currentProp, model.createTypedLiteral(i.toBigInteger()));
+                    break;
+                case Aprational r:
+                    currentRes.addLiteral(currentProp, model.createTypedLiteral(r.doubleValue()));
+                    break;
+                case ABSObject o2:
+                    currentRes.addProperty(currentProp, model.createResource(runNS + "obj" + o2.hashCode()));
+                    break;
+                case ABSAlgebraicDataType a:
+                    // Create the resource for this algebraic data type
+                    String type = a.getClass().getPackageName() + "." + a.getConstructorName();
+                    Resource cons = knownConstructors.getOrDefault(type, model.createResource(progNS + type));
+                    Resource dataRes = model.createResource(cons);
+                    // Link it to the parent
+                    currentRes.addProperty(currentProp, dataRes);
+                    // Add all of its arguments to the queue
+                    for (int i = 0; i < a.getNumArgs(); i++) {
+                        Property argProp = model.createProperty(progNS + "arg" + i);
+                        Object argValue = a.getArg(i);
+                        queue.addLast(new WorkItem(dataRes, argProp, argValue));
+                    }
+                    break;
+                default:
+                    currentRes.addLiteral(currentProp, model.createTypedLiteral(currentValue));
+            }
+        }
+    }
 }
