@@ -7,7 +7,9 @@ import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 import java.net.FileNameMap;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -165,15 +167,30 @@ public class ModelApi {
     private static class SparqlHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            if (!exchange.getRequestMethod().equals("POST")) {
-                exchange.getResponseHeaders().set("Allow", "POST");
+            // For the format of sparql queries over http, see
+            // https://www.w3.org/TR/sparql11-protocol/#query-operation
+            String queryString;
+            if (exchange.getRequestMethod().equals("GET")) {
+                // https://www.w3.org/TR/sparql11-protocol/#query-via-get
+                URI uri = exchange.getRequestURI();
+                queryString = URLDecoder.decode(
+                    Arrays.stream(uri.getQuery().split("&"))
+                        .filter(param -> param.startsWith("query="))
+                        .map(param -> param.substring("query=".length()))
+                        .findFirst()
+                        .orElse(""),
+                    StandardCharsets.UTF_8);
+            } else if (exchange.getRequestMethod().equals("POST")) {
+                // https://www.w3.org/TR/sparql11-protocol/#query-via-post-direct
+                queryString = new String(exchange.getRequestBody().readAllBytes());
+                // TODO: implement
+                // https://www.w3.org/TR/sparql11-protocol/#query-via-post-urlencoded
+                // if necessary
+            } else {
+                exchange.getResponseHeaders().set("Allow", "GET POST");
                 exchange.sendResponseHeaders(405, 0);
                 exchange.close();
-            } else {
-                String queryString = new String(exchange.getRequestBody().readAllBytes());
-                Lang lang = negotiateContentType(exchange.getResponseHeaders().getFirst("Accept"));
-                String solution = GraphObserver.runQuery(GraphObserver.getModel(), queryString, lang);
-                sendResponse(exchange, 200, lang.getHeaderString(), solution);
+                return;
             }
             Lang lang = negotiateContentType(exchange.getRequestHeaders().getFirst("Accept"));
             String solution = GraphObserver.runQuery(GraphObserver.getModel(), queryString, lang);
