@@ -27,7 +27,7 @@ import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.GraphObserver;
 import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.resultset.ResultSetLang;
+import org.apache.jena.riot.RDFLanguages;
 import org.apfloat.Apint;
 import org.apfloat.Aprational;
 
@@ -166,17 +166,34 @@ public class ModelApi {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             if (!exchange.getRequestMethod().equals("POST")) {
+                exchange.getResponseHeaders().set("Allow", "POST");
                 exchange.sendResponseHeaders(405, 0);
                 exchange.close();
             } else {
                 String queryString = new String(exchange.getRequestBody().readAllBytes());
-                Lang lang = ResultSetLang.RS_JSON;
-                // TODO: introduce query parameter that lets us select the output format:
-                // RS_XML, RS_JSON, RS_CSV, RS_TSV, RS_Thrift, RS_Protobuf, RS_Text
+                Lang lang = negotiateContentType(exchange.getResponseHeaders().getFirst("Accept"));
                 String solution = GraphObserver.runQuery(GraphObserver.getModel(), queryString, lang);
                 sendResponse(exchange, 200, lang.getHeaderString(), solution);
             }
+            Lang lang = negotiateContentType(exchange.getRequestHeaders().getFirst("Accept"));
+            String solution = GraphObserver.runQuery(GraphObserver.getModel(), queryString, lang);
+            sendResponse(exchange, 200, lang.getHeaderString(), solution);
         }
+
+        Lang negotiateContentType(String acceptHeader) {
+            if (acceptHeader == null) acceptHeader = "application/sparql-results+json";
+            String[] mediaTypes = acceptHeader.split(",");
+            for (String mediaType : mediaTypes) {
+                // Remove quality values and whitespace
+                String cleanType = mediaType.split(";")[0].trim();
+                Lang lang = RDFLanguages.contentTypeToLang(cleanType);
+                if (lang != null) {
+                    return lang;
+                }
+            }
+            return Lang.RDFJSON; // should never be reached
+        }
+
     }
 
     /**
