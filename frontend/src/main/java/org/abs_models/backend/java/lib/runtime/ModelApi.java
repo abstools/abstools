@@ -202,7 +202,6 @@ public class ModelApi {
                 exchange.close();
                 return;
             }
-            log.severe(queryString);
             Lang lang = negotiateContentType(exchange.getRequestHeaders().getFirst("Accept"));
             String solution = GraphObserver.runQuery(GraphObserver.getModel(), queryString, lang);
             sendResponse(exchange, 200, lang.getHeaderString(), solution);
