@@ -75,6 +75,23 @@ of `java -jar model.jar -h` for a list.
 The source code of the generated classes can be inspected below the `gen/`
 directory.
 
+==== Semantic Lifting
+
+The Java backend supports *semantic lifting*, i.e., obtaining a
+semantic representation of aspects of the model and the runtime state.
+The data is provided in RDF form.
+
+When an ABS model is started with the `--printRDF` argument, this semantic
+representation is printed to the terminal in TRTL form after the model
+finishes.
+
+When an ABS model is started with the `--sparqlQuery` argument
+followed by a valid SPARQL query, that query is run and its result
+printed after the model finishes.
+
+When an ABS model is run with the Model API active, it provides a
+SPARQL endpoint under the `/sparql` URL.
+
 ==== Compiling ABS Code from Gradle
 
 The gradle build system can compile ABS code by adding the below
