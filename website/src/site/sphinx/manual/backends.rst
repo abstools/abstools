@@ -42,6 +42,7 @@ ABS backends.
    Resource Models            yes      yes      yes
    FLI                        -        -        yes
    SQLite queries             -        yes      yes
+   SPARQL queries             -        -        yes
    User-defined Schedulers    yes      yes      -
    Model API                  -        yes      yes
    Trace record/replay        -        yes      -
@@ -234,6 +235,29 @@ the generated output captured in a string:
           such filenames.  If the property is not set or contains an
           invalid value, relative filenames are resolved against the
           JVM's current directory.
+
+
+RDF Representation of Runtime State
+-----------------------------------
+
+The Java backend supports *semantic lifting*, i.e., obtaining a
+semantic representation of aspects of the model and the runtime state.
+The data is provided in RDF form.
+
+When an ABS model is started with the ``--printRDF`` argument, this
+semantic representation is printed to the terminal in `TRTL format
+<https://www.w3.org/TR/turtle/>`__ after the model finishes.
+
+When an ABS model is started with the ``--sparqlQuery`` argument
+followed by a valid SPARQL query, that query is run after the model
+finishes, and its result printed in TRTL form.
+
+When an ABS model is run with the Model API active, it provides a
+SPARQL endpoint under the ``/sparql`` URL.  The endpoint accepts
+SPARQL queries following the `SPARQL 1.1 Protocol
+<https://www.w3.org/TR/sparql11-protocol/>`__ and by default returns
+results in `JSON format
+<https://www.w3.org/TR/sparql11-results-json/>`__.
 
 
 .. _sec:erlang-backend:
