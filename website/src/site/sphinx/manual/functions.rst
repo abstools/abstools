@@ -327,3 +327,4 @@ directory is the value of the erlang function
 ``gen/erl/absmodel/_build/default/lib/absmodel/priv/``.  For the Java
 backend, the path to the database file is resolved relative to the
 current path of the process running the model.
+
