@@ -180,12 +180,24 @@ public class ModelApi {
                         .findFirst()
                         .orElse(""),
                     StandardCharsets.UTF_8);
-            } else if (exchange.getRequestMethod().equals("POST")) {
+            } else if (exchange.getRequestMethod().equals("POST")
+                       && (exchange.getRequestHeaders()
+                           .get("Content-Type")
+                           .contains("application/x-www-form-urlencoded"))) {
+                // https://www.w3.org/TR/sparql11-protocol/#query-via-post-urlencoded
+                String encodedQuery = new String(exchange.getRequestBody().readAllBytes());
+                queryString = URLDecoder.decode(Arrays.stream(encodedQuery.split("&"))
+                                                .filter(param -> param.startsWith("query="))
+                                                .map(param -> param.substring("query=".length()))
+                                                .findFirst()
+                                                .orElse("")
+                                                , StandardCharsets.UTF_8);
+            } else if (exchange.getRequestMethod().equals("POST")
+                       && (exchange.getRequestHeaders()
+                           .get("Content-Type")
+                           .contains("application/sparql-query"))) {
                 // https://www.w3.org/TR/sparql11-protocol/#query-via-post-direct
                 queryString = new String(exchange.getRequestBody().readAllBytes());
-                // TODO: implement
-                // https://www.w3.org/TR/sparql11-protocol/#query-via-post-urlencoded
-                // if necessary
             } else {
                 exchange.getResponseHeaders().set("Allow", "GET POST");
                 exchange.sendResponseHeaders(405, 0);
