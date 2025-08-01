@@ -5,7 +5,7 @@ plugins {
     id 'application'
 
     id 'antlr'
-    id "com.github.spotbugs" version "6.2.1"
+    id "com.github.spotbugs" version "6.2.2"
     id 'com.github.johnrengelman.shadow'
     // add jshell support (https://github.com/mrsarm/jshell-plugin):
     // rlwrap ./gradlew --console plain jshell
@@ -39,7 +39,7 @@ distributions {
 dependencies {
     // General-purpose utility libraries; these could be replaced with
     // Java 21 standard library built-ins, if possible.
-    implementation 'commons-io:commons-io:2.19.0'
+    implementation 'commons-io:commons-io:2.20.0'
     implementation 'com.google.guava:guava:33.4.8-jre'
     // Command-line parser library
     implementation 'info.picocli:picocli:4.7.7'
@@ -59,20 +59,20 @@ dependencies {
     // Rational numbers for the Java backend
     implementation 'org.apfloat:apfloat:1.14.0'
     // SQLite library for the Java backend
-    implementation 'org.xerial:sqlite-jdbc:3.50.2.0'
+    implementation 'org.xerial:sqlite-jdbc:3.50.3.0'
     // // Logging backend used by SQLite library
     // implementation 'org.slf4j:slf4j-jdk14:2.0.16'
     // JSON library for the Java backend Model API
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-engine:1.13.3")
-    testImplementation("org.junit.platform:junit-platform-launcher:1.13.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-engine:1.13.4")
+    testImplementation("org.junit.platform:junit-platform-launcher:1.13.4")
     testImplementation("junit:junit:4.13.2")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.13.3")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.13.4")
 }
 
 // JastAdd
