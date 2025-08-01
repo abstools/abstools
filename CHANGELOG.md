@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The expressions `x implements I` and `x as I` are now implemented by
+  the Java backend.
+
 ### Changed
 
 ### Removed

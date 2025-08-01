@@ -730,10 +730,24 @@ aspect GenerateJava {
     }
 
     public void ImplementsExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print("((");
+        getExp().generateJava(stream);
+        stream.print(")");
+        stream.print(" instanceof ");
+        getInterfaceTypeUse().generateJava(stream);
+        stream.print(")");
     }
+
     public void AsExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print("((");
+        getExp().generateJava(stream);
+        stream.print(") instanceof ");
+        getInterfaceTypeUse().generateJava(stream);
+        stream.print(" ? (");
+        getInterfaceTypeUse().generateJava(stream);
+        stream.print(")");
+        getExp().generateJava(stream);
+        stream.print(" : null)");
     }
 
     public abstract void TypeUse.generateJava(PrintStream stream);

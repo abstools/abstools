@@ -240,13 +240,11 @@ public class ObjectTests extends SemanticTests {
 
     @Test
     public void downcast_false() throws Exception {
-        Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
         assertEvalTrue(new File("abssamples/backend/ObjectTests/downcast-false.abs"));
     }
 
     @Test
     public void downcast_true() throws Exception {
-        Assume.assumeTrue("Only meaningful with downcast support", driver.supportsDowncasting());
         assertEvalTrue(new File("abssamples/backend/ObjectTests/downcast-true.abs"));
     }
 
@@ -274,7 +272,6 @@ public class ObjectTests extends SemanticTests {
     }
     @Test
     public void common_superinterface() throws Exception {
-        Assume.assumeTrue("This test only works with downcast support", driver.supportsDowncasting());
         assertEvalTrue(new File("abssamples/backend/ObjectTests/common_superinterface.abs"));
     }
 }

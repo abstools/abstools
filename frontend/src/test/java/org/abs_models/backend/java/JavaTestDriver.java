@@ -85,9 +85,6 @@ public class JavaTestDriver extends ABSTest implements BackendTestDriver {
     public boolean supportsExceptions() { return false; }
 
     @Override
-    public boolean supportsDowncasting() { return false; }
-
-    @Override
     public boolean supportsSQLite() { return true; }
 
     @Override
