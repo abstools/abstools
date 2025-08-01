@@ -465,9 +465,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     public boolean supportsExceptions() { return true; }
 
     @Override
-    public boolean supportsDowncasting() { return true; }
-
-    @Override
     public boolean supportsSQLite() { return true; }
 
     @Override
