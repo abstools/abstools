@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The Java backend now implements semantic lifting, i.e., representing
+  model structure and runtime state as RDF.
+  - Running a model with the argument `--printRDF` will print the RDF
+    graph after the model has finished.
+  - Running a model with the argument `--sparqlQuery` followed by a
+    SPARQL query will run and print the result of the query after the
+    model has finished.
+  - The Model API offers an additional URL `/sparql` that implements a
+    SPARQL endpoint.
+
 - The expressions `x implements I` and `x as I` are now implemented by
   the Java backend.
 
