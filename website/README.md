@@ -17,6 +17,8 @@ docker collaboratory container and at https://abs-models.org.
 - [X] Convert Publications
 - [X] Convert Contact
 - [X] Convert Acknowledgments
+- [X] Implement glossary
+- [ ] Implement index
 - [ ] Implement bibliography
 
 

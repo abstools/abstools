@@ -18,4 +18,14 @@ Glossary
       callee object.  Tasks are scheduled by the cog containing the
       callee object.  Each task has an associated future.
 
+   RDF
+      RDF is a standard model for data interchange on the Web,
+      extending the linking structure of the Web to use URIs to name
+      the relationship between things as well as the two ends of the
+      link; see `<https://www.w3.org/RDF/>`__.
 
+   SPARQL
+      SPARQL is a set of specifications that provide languages and
+      protocols to query and manipulate RDF graph content on the Web
+      or in an RDF store; see
+      `<https://www.w3.org/TR/sparql11-overview/>`__.

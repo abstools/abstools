@@ -29,6 +29,8 @@ public interface BackendTestDriver {
 
     public abstract boolean supportsSQLite();
 
+    public abstract boolean supportsSPARQL();
+
     public abstract void assertEvalEquals(String absCode, boolean value) throws Exception;
 
     public abstract void assertEvalFails(String absCode) throws Exception;

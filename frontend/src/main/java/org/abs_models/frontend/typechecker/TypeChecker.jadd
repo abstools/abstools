@@ -345,36 +345,46 @@ aspect TypeChecker {
                 TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), def.getRhs());
             }
         } else {
-	    BuiltinFunctionDef def = (BuiltinFunctionDef)getFunctionDef();
-	    // do not use def.isSQLiteQuery() here since we want to
-	    // detect incorrect argument counts etc.
-	    if (def.getNumArgument() > 0
-		&& def.getArgument(0) instanceof VarOrFieldUse
-		&& ((VarUse)def.getArgument(0)).getName().equals("sqlite3"))
-	    {
-		// check function result type: must be a list of basic type or type with constructor.
-		if (!TypeCheckerHelper.isValidSQLite3ReturnType(getTypeUse().getType())) {
-		    e.add(new TypeError(getTypeUse(), ErrorMessage.SQLITE3_INCORRECT_RETURN_TYPE, ""));
-		}
-		// check `builtin' parameters
-		if (def.getNumArgument() < 3) {
-		    e.add(new TypeError(def, ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
-		} else if (!(def.getArgument(1) instanceof StringLiteral)) {
-		    e.add(new TypeError(def.getArgument(1), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
-		} else if ((!(def.getArgument(2) instanceof StringLiteral))) {
-		    e.add(new TypeError(def.getArgument(2), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
-		}
-                for (int i = 3; i < def.getNumArgument(); i++) {
-                    if (!(def.getArgument(i) instanceof PureExp)) {
-                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
-                        continue;
+            BuiltinFunctionDef def = (BuiltinFunctionDef)getFunctionDef();
+            if (def.getNumArgument() > 0 && def.getArgument(0) instanceof VarOrFieldUse) {
+                // Check correctness of various "special" queries.  We
+                // do not use def.isSQLiteQuery() or similar here
+                // since we want to detect and report incorrect
+                // argument counts etc.
+                VarOrFieldUse queryType = (VarOrFieldUse)def.getArgument(0);
+                if (queryType.getName().equals("sqlite3")) {
+                    if (!TypeCheckerHelper.isValidSQLite3ReturnType(getTypeUse().getType())) {
+                        e.add(new TypeError(getTypeUse(), ErrorMessage.SQLITE3_INCORRECT_RETURN_TYPE, ""));
                     }
-                    PureExp arg = (PureExp)def.getArgument(i);
-                    if (!TypeCheckerHelper.isValidSQLite3ArgumentType(arg.getType())) {
-                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                    // check `builtin' parameters
+                    if (def.getNumArgument() < 3) {
+                        e.add(new TypeError(def, ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                    } else if (!(def.getArgument(1) instanceof StringLiteral)) {
+                        e.add(new TypeError(def.getArgument(1), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                    } else if ((!(def.getArgument(2) instanceof StringLiteral))) {
+                        e.add(new TypeError(def.getArgument(2), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                    }
+                    for (int i = 3; i < def.getNumArgument(); i++) {
+                        if (!(def.getArgument(i) instanceof PureExp)) {
+                            e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                            continue;
+                        }
+                        PureExp arg = (PureExp)def.getArgument(i);
+                        if (!TypeCheckerHelper.isValidSQLite3ArgumentType(arg.getType())) {
+                            e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                        }
+                    }
+                } else if (queryType.getName().equals("sparql")) {
+                    if (!TypeCheckerHelper.isValidSparqlReturnType(getTypeUse().getType())) {
+                        e.add(new TypeError(getTypeUse(), ErrorMessage.SPARQL_INCORRECT_RETURN_TYPE, ""));
+                    }
+                    if (def.getNumArgument() != 2) {
+                        e.add(new TypeError(def, ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
+                    } else if (!(def.getArgument(1) instanceof StringLiteral)) {
+                        e.add(new TypeError(def.getArgument(1), ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
                     }
                 }
-	    }
+            }
         }
     }
 
@@ -1385,19 +1395,19 @@ aspect TypeCheckProductline {
         }
     }
 
-	public abstract boolean Value.isAssignableTo(Type t);
-	public boolean BoolVal.isAssignableTo(Type t) {
-		return t.isBoolType();
-	}
-	public boolean StringVal.isAssignableTo(Type t) {
+        public abstract boolean Value.isAssignableTo(Type t);
+        public boolean BoolVal.isAssignableTo(Type t) {
+                return t.isBoolType();
+        }
+        public boolean StringVal.isAssignableTo(Type t) {
             return t.isStringType();
-	}
-	public boolean IntVal.isAssignableTo(Type t) {
-		return t.isNumericType();
-	}
+        }
+        public boolean IntVal.isAssignableTo(Type t) {
+                return t.isNumericType();
+        }
         public boolean UnknownVal.isAssignableTo(Type t) {
             return false;
-	}
+        }
 
 
     protected void DeltaClause.typeCheck(Map<String,DeltaDecl> ds, Set<String> definedFeatures, SemanticConditionList e) {
@@ -1425,18 +1435,18 @@ aspect TypeCheckProductline {
     eq DeltaClassParam.getType() = UnknownType.INSTANCE; // XXX
     eq DeltaFieldParam.getType() = getParamDecl().getType();
 
-	public abstract boolean DeltaParamDecl.accepts(Value val);
-	public boolean DeltaClassParam.accepts(Value val) { return true; /* XXX NYI? */ }
-	public boolean DeltaFieldParam.accepts(Value val) {
+        public abstract boolean DeltaParamDecl.accepts(Value val);
+        public boolean DeltaClassParam.accepts(Value val) { return true; /* XXX NYI? */ }
+        public boolean DeltaFieldParam.accepts(Value val) {
       return val.isAssignableTo(getType());
-	}
+        }
 
-	syn boolean DeltaClause.refersTo(Feature f) = !hasAppCond() || getAppCond().refersTo(f);
-	syn boolean AppCond.refersTo(Feature f);
-	eq AppCondFeature.refersTo(Feature f) = getName().equals(f.getName());
-	eq AppCondAnd.refersTo(Feature f) = getLeft().refersTo(f) || getRight().refersTo(f);
-	eq AppCondOr.refersTo(Feature f) = getLeft().refersTo(f) || getRight().refersTo(f);
-	eq AppCondNot.refersTo(Feature f) = getAppCond().refersTo(f);
+        syn boolean DeltaClause.refersTo(Feature f) = !hasAppCond() || getAppCond().refersTo(f);
+        syn boolean AppCond.refersTo(Feature f);
+        eq AppCondFeature.refersTo(Feature f) = getName().equals(f.getName());
+        eq AppCondAnd.refersTo(Feature f) = getLeft().refersTo(f) || getRight().refersTo(f);
+        eq AppCondOr.refersTo(Feature f) = getLeft().refersTo(f) || getRight().refersTo(f);
+        eq AppCondNot.refersTo(Feature f) = getAppCond().refersTo(f);
 }
 
 // Local Variables:

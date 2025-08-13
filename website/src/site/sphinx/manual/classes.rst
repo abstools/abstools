@@ -16,14 +16,14 @@ library interface ``ABS.StdLib.Object`` (see :ref:`type-object`).  The
 ``ABS.StdLib.Object`` interface does not specify any methods.
 
 .. note:: Classes typically explicitly implement one or more
-          interfaces so that methods can be called on them, but the
+          interfaces so that they can receive method calls, but the
           ``run`` method makes it meaningful to have objects without
           public methods; such objects cannot accept method calls but
           can send method calls to other objects.
 
-NOTE: For ease of reasoning and analysis, ABS methods differ only by
-name.  It is an error for a class to implement two interfaces that
-both contain a method with the same name.
+.. note:: For ease of reasoning and analysis, ABS methods differ only
+          by name.  It is an error for a class to implement two
+          interfaces that both contain a method with the same name.
 
 Classes have *fields* that define the state of objects of that class.
 All fields are private and can only be accessed from methods defined
@@ -79,9 +79,9 @@ one of the used traits (see :ref:`sec:traits`).  A class is free to
 define methods not declared in an interface; such methods are private
 to the class and cannot be called from outside the class.
 
-NOTE: ABS currently does not support method overloading.  Each method
-must have a unique name since methods are not disambiguated by their
-parameter lists.
+.. note:: ABS currently does not support method overloading.  Each
+          method must have a unique name since methods are not
+          disambiguated by their parameter lists.
 
 Example::
 
