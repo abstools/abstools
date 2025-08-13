@@ -7,9 +7,9 @@ ABS provides pre-defined exceptions that are thrown in specific
 circumstances.  See :ref:`sec:exception-types` for information about
 exceptions.
 
-NOTE: This list is subject to revision in future versions of ABS.  Not
-all these exceptions are currently thrown by different backends in the
-described situation.
+.. note:: This list is subject to revision in future versions of ABS.
+          Not all these exceptions are currently thrown by different
+          backends in the described situation.
 
 ``DivisionByZeroException``
     Raised in arithmetic expressions when the divisor (denominator) is

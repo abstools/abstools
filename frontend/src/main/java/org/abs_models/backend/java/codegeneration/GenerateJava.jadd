@@ -216,7 +216,7 @@ aspect GenerateJava {
             // - SQLite queries; for these, we need to generate a body that
             //   runs the query.
             BuiltinFunctionDef b = (BuiltinFunctionDef)getFunctionDef();
-            if (!b.isSQLite3Query()) {
+            if (!b.isSQLite3Query() && !b.isSparqlQuery()) {
                 return;
             }
         }
@@ -234,8 +234,8 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateParams(stream, getParams(), true);
         stream.println(" {");
         if (getFunctionDef() instanceof BuiltinFunctionDef) {
-            // Can currently only be an SQLite query; let it emit a function
-            // body instead of a single expression.
+            // Can currently only be an SQLite or Sparql query; let it
+            // emit a function body instead of a single expression.
             getFunctionDef().generateJava(stream);
         } else if (getFunctionDef() instanceof ExpFunctionDef) {
             Set<PatternVarUse> boundVars = ((ExpFunctionDef)getFunctionDef()).getRhs().boundPatternVars();
@@ -271,6 +271,8 @@ aspect GenerateJava {
         // including a return statement instead of just an expression.
         if (isSQLite3Query()) {
             JavaGeneratorHelper.generateSqlite3Body(stream, this);
+        } else if (isSparqlQuery()) {
+            JavaGeneratorHelper.generateSparqlBody(stream, this);
         } else {
             stream.println("return null;");
         }

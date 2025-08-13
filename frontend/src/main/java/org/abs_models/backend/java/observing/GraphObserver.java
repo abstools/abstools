@@ -1,33 +1,12 @@
 package org.abs_models.backend.java.observing;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
+import org.abs_models.backend.java.lib.WeakValueHashMap;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.runtime.Logging;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSInterface;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.query.ResultSetFormatter;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -40,6 +19,15 @@ import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apfloat.Apint;
 import org.apfloat.Aprational;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * An observer that follows cog (and, transitively, object) creation.
@@ -57,7 +45,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         "prog", "http://abs-models.org/ns/prog/",
         "run", "http://abs-models.org/ns/run/");
 
-    static String sparqlPrefix = absNamespaces.entrySet()
+    public static String sparqlPrefix = absNamespaces.entrySet()
         .stream()
         .map(e -> "PREFIX " + e.getKey() + ": <" + e.getValue() + ">\n")
         .collect(Collectors.joining());
@@ -109,9 +97,11 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                 });
     }
 
-    // Note: iterate over the sets below using a snapshot to avoid gc
-    // messing with us: `for (Object obj : Set.copyOf(objectSet)) { }`
-    private static Set<ObjectView> objectSet = Collections.newSetFromMap(new WeakHashMap<ObjectView, Boolean>());
+    // Note: do not iterate over these two data structures directly
+    // since the garbage collector could remove entries at any time;
+    // instead, use a snapshot, for example `for (Object obj :
+    // Set.copyOf(cogSet)) { /* ... */ }`
+    private static Map<String, ObjectView> objectMap = new WeakValueHashMap<String, ObjectView>();
     private static Set<COGView> cogSet = Collections.newSetFromMap(new WeakHashMap<COGView, Boolean>());
 
     /**
@@ -125,19 +115,25 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
 
     /**
      * Deactivate garbage collection of registered objects and sets,
-     * and make these sets immmutable.  Should be done at the end of
-     * the model run to preserve the ending state.
+     * and make these sets immmutable.  Done at the end of the model
+     * run to preserve the ending state before printing the RDF graph
+     * and/or running a SPARQL query from the command line.
      */
     public static synchronized void freezeObserver() {
-        objectSet = Set.copyOf(objectSet);
+        objectMap = Map.copyOf(objectMap);
         cogSet = Set.copyOf(cogSet);
+    }
+
+    /// Create the URI of a resource representing an ABS object.
+    private static String objectResourceName(Object o) {
+        return absNamespaces.get("run") + "obj" + o.hashCode();
     }
 
     /**
      * Note an object to be added to the object graph.
      */
     public static synchronized void addObject(ObjectView o) {
-        objectSet.add(o);
+        objectMap.put(objectResourceName(o.getObject()), o);
     }
 
     /**
@@ -161,6 +157,16 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
 
     @Override
     public void objectInitialized(ObjectView o) { }
+
+    /**
+     * Find the ABS object named by the given resource in the RDF
+     * model.  Returns `null` if none found.
+     */
+    public static ABSObject findObjectForResource(String r) {
+        ObjectView v = objectMap.get(r);
+        if (v == null) return null;
+        else return v.getObject();
+    }
 
     /**
      * Run a SPARQL query over the current ABS state.  The {@code
@@ -207,12 +213,13 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
      * Return an RDF model of the current ABS state.
      */
     public static Model getModel() {
-        Set<ObjectView> objects = Set.copyOf(objectSet);
+        // Copy the weak map and set to pacify the gc
+        Map<String, ObjectView> objects = Map.copyOf(objectMap);
         Set<COGView> cogs = Set.copyOf(cogSet);
         Model model = ModelFactory.createDefaultModel();
         initNamespaces(model);
         model.add(progModel);
-        for (ObjectView view : objects) {
+        for (ObjectView view : objects.values()) {
             addObjectTriples(model, view);
         }
         for (COGView view : cogs) {
@@ -231,7 +238,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         return model;
     }
 
-    public static void addCogTriples(Model model, COGView view) {
+    private static void addCogTriples(Model model, COGView view) {
         COG cog = view.getCOG();
         ABSInterface dc = cog.getDC();
         String absNS = absNamespaces.get("abs");
@@ -239,7 +246,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         Resource cogRes = model.createResource(runNS + "cog" + cog.hashCode(),
             model.createResource(absNS + "cog"));
         Property inProp = model.createProperty(absNS + "in");
-        cogRes.addProperty(inProp, model.createResource(runNS + "obj" + dc.hashCode()));
+        cogRes.addProperty(inProp, model.createResource(objectResourceName(dc)));
     }
 
     /**
@@ -253,7 +260,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         String progNS = absNamespaces.get("prog");
         String runNS = absNamespaces.get("run");
         Resource classRes = knownClasses.getOrDefault(type, model.createResource(progNS + type));
-        Resource objRes = model.createResource(runNS + "obj" + obj.hashCode(), classRes);
+        Resource objRes = model.createResource(objectResourceName(obj), classRes);
         Property inProp = model.createProperty(absNS + "in");
         objRes.addProperty(inProp, model.createResource(runNS + "cog" + obj.getCOG().hashCode()));
         for (String fieldName : obj.getFieldNames()) {
@@ -296,7 +303,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                     currentRes.addLiteral(currentProp, model.createTypedLiteral(r.doubleValue()));
                     break;
                 case ABSObject o2:
-                    currentRes.addProperty(currentProp, model.createResource(runNS + "obj" + o2.hashCode()));
+                    currentRes.addProperty(currentProp, model.createResource(objectResourceName(o2)));
                     break;
                 case ABSAlgebraicDataType a:
                     // Create the resource for this algebraic data type

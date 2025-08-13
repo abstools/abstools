@@ -34,7 +34,10 @@ public class StartUp {
         final boolean useRDF = options.printRDF.isTrue()
                                || options.sparqlQuery.wasSet()
                                // for the SPARQL endpoint
-                               || options.modelapiPort.wasSet();
+                               || options.modelapiPort.wasSet()
+                               // TODO: check if the model contains
+                               // sparql queries
+                               || true;
         ABSRuntime.setRunsInOwnProcess(true);
         Config.initRuntimeFromOptions(runtime, options);
         runtime.addSystemObserver(new DefaultSystemObserver() {

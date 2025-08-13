@@ -1,4 +1,4 @@
-/** 
+/**
  * Copyright (c) 2021, Rudolf Schlatte.
  * This file is licensed under the terms of the Modified BSD License.
  */
@@ -50,4 +50,11 @@ public class DataSourceTests extends SemanticTests {
         assertEvalTrueWithTestfiles(new File("abssamples/backend/DatasourceTests/sqlite3_functioncall_parameters.abs"),
             new File("sqlite3/test.sqlite3"));
     }
+
+    @Test
+    public void querySparql() throws Exception {
+        Assume.assumeTrue("Only meaningful with SPARQL support", driver.supportsSPARQL());
+        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql.abs"));
+    }
+
 }

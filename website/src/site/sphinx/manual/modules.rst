@@ -9,10 +9,10 @@ type aliases) are contained in modules.  All definitions are visible
 in their own module only, except when the module exports the name and
 it is imported in another module or referenced by its qualified name.
 
-NOTE: The ``export`` clause in a module definition exports *names*,
-not definitions as such.  This means that if a module defines a class
-and an interface with the same name, both definitions will be
-accessible if that name is contained in the ``export`` clause.
+.. note:: The ``export`` clause in a module definition exports
+          *names*, not definitions as such.  This means that, for
+          example, a module that defines a class and an interface with
+          the same name cannot export only the interface.
 
 
 Defining a Module

@@ -16,8 +16,6 @@ import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.erlang.ErlangTestDriver;
 import org.abs_models.backend.java.JavaTestDriver;
-import org.abs_models.backend.maude.MaudeCompiler;
-import org.abs_models.backend.maude.MaudeTestDriver;
 import org.abs_models.frontend.ast.Model;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;

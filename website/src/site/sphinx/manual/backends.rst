@@ -244,20 +244,26 @@ The Java backend supports *semantic lifting*, i.e., obtaining a
 semantic representation of aspects of the model and the runtime state.
 The data is provided in RDF form.
 
+An ABS model can query its own state at runtime -- see
+:ref:`sparql-queries`.  The rest of this section describes how to work
+with semantically-lifted models from outside, i.e., from the command
+line or the Model API.
+
 When an ABS model is started with the ``--printRDF`` argument, this
 semantic representation is printed to the terminal in `TRTL format
 <https://www.w3.org/TR/turtle/>`__ after the model finishes.
 
 When an ABS model is started with the ``--sparqlQuery`` argument
 followed by a valid SPARQL query, that query is run after the model
-finishes, and its result printed in TRTL form.
+finishes, and its result is printed in TRTL form.
 
-When an ABS model is run with the Model API active, it provides a
-SPARQL endpoint under the ``/sparql`` URL.  The endpoint accepts
-SPARQL queries following the `SPARQL 1.1 Protocol
-<https://www.w3.org/TR/sparql11-protocol/>`__ and by default returns
-results in `JSON format
-<https://www.w3.org/TR/sparql11-results-json/>`__.
+When an ABS model is running with the :ref:`Model API <sec:model-api>`
+active, it provides a SPARQL endpoint under the ``/sparql`` URL.  The
+endpoint accepts SPARQL queries as specified in `Section 2.1
+<https://www.w3.org/TR/sparql11-protocol/#query-operation>`__ of the
+`SPARQL 1.1 Protocol <https://www.w3.org/TR/sparql11-protocol/>`__.
+The sparql endpoint returns results in `JSON format
+<https://www.w3.org/TR/sparql11-results-json/>`__ by default.
 
 
 .. _sec:erlang-backend:

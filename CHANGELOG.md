@@ -16,7 +16,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     SPARQL query will run and print the result of the query after the
     model has finished.
   - The Model API offers an additional URL `/sparql` that implements a
-    SPARQL endpoint.
+    SPARQL endpoint as specified in Section 2.1 of
+    <https://www.w3.org/TR/sparql11-protocol/>.
+
+- In the Java backend, it is now possible to define functions that
+  query the lifted program state, for example, to find objects that
+  implement an interface `Test.I`:
+
+  ```
+  def List<I> find_objects() = builtin(sparql, 
+    `SELECT ?o WHERE {
+       ?o a/abs:implements/rdfs:label "Test.I" .
+     }`)
+  ```
+
+  See the manual for more details.  Note that this querying facility
+  is provisional and its semantics might change.
 
 - A new function `range(a, b)` in the standard library returns a list
   of integers ranging from a to b (inclusive).  This is useful, for

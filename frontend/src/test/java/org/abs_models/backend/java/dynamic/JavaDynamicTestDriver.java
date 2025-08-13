@@ -71,6 +71,9 @@ public class JavaDynamicTestDriver implements BackendTestDriver {
     public boolean supportsSQLite() { return false; }
 
     @Override
+    public boolean supportsSPARQL() { return false; }
+
+    @Override
     public boolean supportsModelApi() {
         return false;
     }

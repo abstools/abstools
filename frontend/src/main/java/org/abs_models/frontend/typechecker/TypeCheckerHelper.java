@@ -138,18 +138,13 @@ public class TypeCheckerHelper {
     }
 
     public static void checkForGetOnDestiny(SemanticConditionList l, ASTNode<?> node, String targetFieldOrVariableName, Exp potentialGetValue) {
-        if (potentialGetValue instanceof GetExp) {
-            final GetExp getValue = (GetExp) potentialGetValue;
-
+        if (potentialGetValue instanceof GetExp getValue) {
             if (getValue.getType().isBottomType()) {
                 l.add(new TypeError(
-                            node,
-                            ErrorMessage.CANNOT_STORE_DESTINY_GET,
-                            new String[] {
-                                getValue.getPureExp().toString(),
-                                targetFieldOrVariableName
-                            }
-                        )
+                    node,
+                    ErrorMessage.CANNOT_STORE_DESTINY_GET,
+                    getValue.getPureExp().toString(),
+                    targetFieldOrVariableName)
                 );
             }
         }
@@ -414,9 +409,9 @@ public class TypeCheckerHelper {
             String location = "";
             Decl decl = null;
             if (origrn instanceof ResolvedDeclName) {
-                decl = ((ResolvedDeclName)origrn).getDecl();
+                decl = origrn.getDecl();
             } else if (origrn instanceof ResolvedAmbigiousName) {
-                decl = ((AmbiguousDecl)((ResolvedAmbigiousName)origrn).getDecl()).getAlternative().get(0);
+                decl = ((AmbiguousDecl) origrn.getDecl()).getAlternative().get(0);
             }
             if (decl != null && !decl.getFileName().equals(Main.UNKNOWN_FILENAME)) {
                 location = " at " + decl.getFileName() + ":" + decl.getStartLine() + ":" + decl.getStartColumn();
@@ -463,8 +458,7 @@ public class TypeCheckerHelper {
             res.put(rn.getSimpleName(), rn);
             res.put(rn.getQualifiedName(), rn);
 
-            if (d instanceof DataTypeDecl) {
-                DataTypeDecl dataDecl = (DataTypeDecl) d;
+            if (d instanceof DataTypeDecl dataDecl) {
                 for (DataConstructor c : dataDecl.getDataConstructors()) {
                     rn = new ResolvedDeclName(moduleName, c);
                     if (res.containsKey(rn.getSimpleName()))
@@ -497,14 +491,12 @@ public class TypeCheckerHelper {
         ResolvedMap res = new ResolvedMap();
 
         for (Import i : mod.getImports()) {
-            if (i instanceof StarImport) {
-                StarImport si = (StarImport) i;
+            if (i instanceof StarImport si) {
                 ModuleDecl md = mod.lookupModule(si.getModuleName());
                 if (md != null) {
                     res.addAllNamesNoHiding(md.getExportedNames());
                 }
-            } else if (i instanceof NamedImport) {
-                NamedImport ni = (NamedImport) i;
+            } else if (i instanceof NamedImport ni) {
                 for (Name n : ni.getNames()) {
                     // statements like "import X;" lead to earlier type error;
                     // avoid calling lookupModule(null) here
@@ -516,8 +508,7 @@ public class TypeCheckerHelper {
                             } catch (TypeCheckerException e) {} // NADA
                     }
                 }
-            } else if (i instanceof FromImport) {
-                FromImport fi = (FromImport) i;
+            } else if (i instanceof FromImport fi) {
                 ModuleDecl md = mod.lookupModule(fi.getModuleName());
                 if (md != null) {
                     ResolvedMap en = md.getExportedNames();
@@ -553,23 +544,20 @@ public class TypeCheckerHelper {
     public static ResolvedMap getExportedNames(ModuleDecl mod) {
         ResolvedMap res = new ResolvedMap();
         for (Export e : mod.getExports()) {
-            if (e instanceof StarExport) {
-                StarExport se = (StarExport) e;
+            if (e instanceof StarExport se) {
                 if (!se.hasModuleName()) {
                     res.putAll(mod.getDefinedNames());
                 } else {
                     String moduleName = se.getModuleName().getName();
                     res.putNamesOfModule(mod, mod.getVisibleNames(), moduleName, null);
                 }
-            } else if (e instanceof FromExport) {
-                FromExport fe = (FromExport) e;
+            } else if (e instanceof FromExport fe) {
                 String moduleName = fe.getModuleName();
                 for (Name n : fe.getNames()) {
                     String simpleName = n.getSimpleName();
                     res.putNamesOfModule(mod, mod.getVisibleNames(), moduleName, simpleName);
                 }
-            } else if (e instanceof NamedExport) {
-                NamedExport ne = (NamedExport) e;
+            } else if (e instanceof NamedExport ne) {
                 for (Name n : ne.getNames()) {
                     String simpleName = n.getSimpleName();
                     res.putKindedNames(simpleName, mod.getVisibleNames());
@@ -746,24 +734,24 @@ public class TypeCheckerHelper {
     /**
      * Check whether argument t can be an argument to a SQLite3 query.
      *
-     * This method returns true if t is a string, numeric or boolean type.
+     * <p>This method returns true if t is a string, numeric or boolean type.
      */
     public static boolean isValidSQLite3ArgumentType(Type t) {
-	if (t.isUnknownType())
-	    return false;
-	else if (!t.isDataType())
-	    return false;
-	DataTypeType lt = (DataTypeType) t;
-	if (lt.isBoolType())
-	    return true;
-	else if (lt.isIntType())
-	    return true;
-	else if (lt.isRatType())
-	    return true;
-	else if (lt.isFloatType())
-	    return true;
-	else if (lt.isStringType())
-	    return true;
+        if (t.isUnknownType())
+            return false;
+        else if (!t.isDataType())
+            return false;
+        DataTypeType lt = (DataTypeType) t;
+        if (lt.isBoolType())
+            return true;
+        else if (lt.isIntType())
+            return true;
+        else if (lt.isRatType())
+            return true;
+        else if (lt.isFloatType())
+            return true;
+        else if (lt.isStringType())
+            return true;
         else
             return false;
     }
@@ -771,49 +759,92 @@ public class TypeCheckerHelper {
     /**
      * Check whether argument t can be the result of a SQLite3 query.
      *
-     * This method returns true if t is a list whose type parameter is
+     * <p>This method returns true if t is a list whose type parameter is
      * a string, numeric or boolean type, or an algebraic datatype
      * whose first constructor takes parameters of these types.
      */
     public static boolean isValidSQLite3ReturnType(Type t) {
-	    if (t.isUnknownType())
-	        return false;
-	    if (!t.isDataType())
-	        return false;
+            if (t.isUnknownType())
+                return false;
+            if (!t.isDataType())
+                return false;
 
-	    DataTypeType dt = (DataTypeType) t;
-	    if (!(dt.getDecl().getName().equals("List")))
-	        return false;
-	    if (!(dt.numTypeArgs() == 1
-	          && dt.getTypeArg(0).isDataType()))
-	        return false;
+            DataTypeType dt = (DataTypeType) t;
+            if (!(dt.getDecl().getName().equals("List")))
+                return false;
+            if (!(dt.numTypeArgs() == 1
+                  && dt.getTypeArg(0).isDataType()))
+                return false;
 
-	    DataTypeType lt = (DataTypeType)dt.getTypeArg(0);
-	    if (lt.isBoolType())
-	        return true;
-	    if (lt.isIntType())
-	        return true;
-	    if (lt.isRatType())
-	        return true;
-	    if (lt.isFloatType())
-	        return true;
-	    if (lt.isStringType())
-	        return true;
-	    DataTypeDecl ltd = lt.getDecl();
-	    if (ltd.getNumDataConstructor() != 1)
-	        return false;
-	    if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
-	        return false;
-	    for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
-	        Type cat = ca.getTypeUse().getType();
-	        if (!(cat.isBoolType()
-		          || cat.isIntType()
-		          || cat.isRatType()
-		          || cat.isFloatType()
-		          || cat.isStringType()))
-		        return false;
-	    }
-	    return true;
+            DataTypeType lt = (DataTypeType)dt.getTypeArg(0);
+            if (lt.isBoolType())
+                return true;
+            if (lt.isIntType())
+                return true;
+            if (lt.isRatType())
+                return true;
+            if (lt.isFloatType())
+                return true;
+            if (lt.isStringType())
+                return true;
+            DataTypeDecl ltd = lt.getDecl();
+            if (ltd.getNumDataConstructor() != 1)
+                return false;
+            if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
+                return false;
+            for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
+                Type cat = ca.getTypeUse().getType();
+                if (!(cat.isBoolType()
+                          || cat.isIntType()
+                          || cat.isRatType()
+                          || cat.isFloatType()
+                          || cat.isStringType()))
+                        return false;
+            }
+            return true;
+    }
+
+    /**
+     * Check whether argument t can be the result of a SPARQL query.
+     *
+     * <p>This method returns true if t is a list whose type parameter is
+     * a string, numeric or boolean type, an interface type, or an
+     * algebraic datatype whose first constructor takes parameters of
+     * these types.
+     */
+    public static boolean isValidSparqlReturnType(Type t) {
+        if (t.isUnknownType())
+            return false;
+        if (!t.isDataType())
+            return false;
+
+        DataTypeType dt = (DataTypeType) t;
+        if (!(dt.getDecl().getName().equals("List")))
+            return false;
+        if (!(dt.numTypeArgs() == 1))
+            return false;
+
+        Type at = dt.getTypeArg(0);
+
+        if (at.isBoolType() || at.isNumericType() || at.isStringType() || at.isInterfaceType())
+            return true;
+
+        if (!at.isDataType()) return false;
+        DataTypeType lt = (DataTypeType)at;
+        DataTypeDecl ltd = lt.getDecl();
+        if (ltd.getNumDataConstructor() != 1)
+            return false;
+        if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
+            return false;
+        for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
+            Type cat = ca.getTypeUse().getType();
+            if (!(cat.isBoolType()
+                  || cat.isNumericType()
+                  || cat.isStringType()
+                  || cat.isInterfaceType()))
+                return false;
+        }
+        return true;
     }
 
     /**
@@ -842,7 +873,7 @@ public class TypeCheckerHelper {
         if (t.getDecl() instanceof DataTypeDecl d) {
             Set<String> constructors = ListUtils.toJavaList(d.getDataConstructors())
                 .stream()
-                .map(c -> c.getName())
+                .map(DataConstructor::getName)
                 .collect(Collectors.toSet());
             Set<String> usedConstructors = new HashSet<>();
             // have to iterate over constructors
