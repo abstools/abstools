@@ -7,13 +7,16 @@ package org.abs_models.backend.java.lib.runtime;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
 import org.abs_models.backend.java.lib.runtime.metaABS.ObjectMirror;
 import org.abs_models.backend.java.lib.runtime.metaABS.ProductLine;
+import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSProcess;
 import org.abs_models.backend.java.lib.types.ABSUnit;
@@ -81,13 +84,96 @@ public class ABSBuiltInFunctions {
         return ABSThread.getCurrentCOG().getDC();
     }
 
+    /**
+     * Implementation of the ABS builtin function {@code toString}.
+     * This method is called directly from ABS code, generated {@code
+     * T.toString} methods for datatypes call {@code toString(t,
+     * false)} instead when recursing into members.
+     */
     public static <T> String toString(T t) {
+        return toString(t, true);
+    }
+
+    /**
+     * Dispatcher for ABS `toString`.  We implement some primitive
+     * datatypes directly and hand off the rest to type-specific
+     * `toString` implementations.  We also handle the special case of
+     * ABS strings: `toString(string_var)` should not surround its
+     * result in quotes or escape contained quotes, but the result for
+     * strings contained in `toString(struct_with_string_members)`
+     * should do both these things.
+     */
+    public static <T> String toString(T t, boolean toplevel) {
         return switch (t) {
             case null -> "null";
             case Boolean b when b -> "True";
             case Boolean b when !b -> "False";
+            case String s -> toplevel ? s : "\"" + s.replace("\"", "\\\"") + "\"";
+            case ABSAlgebraicDataType dt -> absDatatypeToString(dt, toplevel);
             default -> t.toString();
         };
+    }
+
+    /**
+     * Convert ABS datatypes to string.  Override the behavior of
+     * builtin list, set, map datatypes; dispatch all others to the
+     * behavior defined during code generation.
+     */
+    public static String absDatatypeToString(ABSAlgebraicDataType dt, boolean toplevel) {
+        switch (dt.getClass().getName()) {
+            // The code for the three special cases is quite similar
+            // and could be refactored out into a method -- but it's
+            // less than a screenful so let's keep it inline for now.
+            case "ABS.StdLib.List_Cons": {
+                StringBuffer sb = new StringBuffer("list[");
+                String separator = "";
+                Object iter = dt;
+                do {
+                    sb.append(separator); separator = ",";
+                    sb.append(toString(dt.getArg(0), false));
+                    if (dt.getArg(1) instanceof ABSAlgebraicDataType next) {
+                        dt = next;
+                    } else {
+                        break;
+                    }
+                } while (dt.getClass().getName().equals("ABS.StdLib.List_Cons"));
+                sb.append("]");
+                return sb.toString();
+            }
+            case "ABS.StdLib.Set_Insert": {
+                StringBuffer sb = new StringBuffer("set[");
+                String separator = "";
+                Object iter = dt;
+                do {
+                    sb.append(separator); separator = ",";
+                    sb.append(toString(dt.getArg(0), false));
+                    if (dt.getArg(1) instanceof ABSAlgebraicDataType next) {
+                        dt = next;
+                    } else {
+                        break;
+                    }
+                } while (dt.getClass().getName().equals("ABS.StdLib.Set_Insert"));
+                sb.append("]");
+                return sb.toString();
+            }
+            case "ABS.StdLib.Map_InsertAssoc": {
+                StringBuffer sb = new StringBuffer("map[");
+                String separator = "";
+                Object iter = dt;
+                do {
+                    sb.append(separator); separator = ",";
+                    sb.append(toString(dt.getArg(0), false));
+                    if (dt.getArg(1) instanceof ABSAlgebraicDataType next) {
+                        dt = next;
+                    } else {
+                        break;
+                    }
+                } while (dt.getClass().getName().equals("ABS.StdLib.Map_InsertAssoc"));
+                sb.append("]");
+                return sb.toString();
+            }
+            default: return dt.toString();
+        }
     }
 
     /*
