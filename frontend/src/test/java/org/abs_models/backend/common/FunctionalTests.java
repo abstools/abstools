@@ -445,4 +445,9 @@ public class FunctionalTests extends SemanticTests {
     public void ms_since_model_start() throws Exception {
         assertEvalTrue("{ Int time = ms_since_model_start(); Bool testresult = time >= 0; }");
     }
+
+    @Test
+    public void toStringTopLevelAndConstructors() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/FunctionalTests/toStringTopLevelAndConstructors.abs"));
+    }
 }

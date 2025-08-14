@@ -365,12 +365,7 @@ public class JavaGeneratorHelper {
                     stream.println("sb.append(\"" + separator + "\");");
                 }
                 separator = ",";
-                ConstructorArg a = c.getConstructorArg(i);
-                if (a.getType().isStringType()) {
-                    stream.println("sb.append(\"\\\"\" + arg" + i + " + \"\\\"\");");
-                } else {
-                    stream.println("sb.append(" + ABSBuiltInFunctions.class.getName() + ".toString(arg" + i + "));");
-                }
+                stream.println("sb.append(" + ABSBuiltInFunctions.class.getName() + ".toString(arg" + i + ", false));");
             }
             stream.println("sb.append(\")\");");
         }
@@ -429,15 +424,15 @@ public class JavaGeneratorHelper {
         if (qualifiedName.equals("ABS.StdLib.List_Cons")) {
             stream.println(
                 """
-                java.lang.String className = this.getClass().getName();
-                java.util.ArrayList<Object> result = new java.util.ArrayList<>();
-                org.abs_models.backend.java.lib.types.ABSDataType value = this;
-                while (className.equals("ABS.StdLib.List_Cons")) {
-                    result.addLast(org.abs_models.backend.java.lib.runtime.ModelApi.absToJson(value.getArg(0)));
-                    value = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(1);
-                    className = value.getClass().getName();
-                }
-                return result;
+                        java.lang.String className = this.getClass().getName();
+                        java.util.ArrayList<Object> result = new java.util.ArrayList<>();
+                        org.abs_models.backend.java.lib.types.ABSDataType value = this;
+                        while (className.equals("ABS.StdLib.List_Cons")) {
+                            result.addLast(org.abs_models.backend.java.lib.runtime.ModelApi.absToJson(value.getArg(0)));
+                            value = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(1);
+                            className = value.getClass().getName();
+                        }
+                        return result;
                 """);
         } else if (qualifiedName.equals("ABS.StdLib.List_Nil")) {
             stream.println("return java.util.List.of();");

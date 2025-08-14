@@ -10,6 +10,7 @@
 target/
 build/
 out/
+gen/
 /log/
 /frontend/dist/
 /frontend/bin/

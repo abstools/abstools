@@ -60,39 +60,45 @@ constructorname_to_string(A) ->
                end,
     list_to_binary(Realname).
 
+%% Entry point: we're at toplevel
+toString(_Cog, A) ->
+    toString(_Cog, A, true).
 
 abslistish_to_iolist(Cog, Cons, Emp, {Cons, H, Emp}) ->
-    toString(Cog, H);
+    toString(Cog, H, false);
 abslistish_to_iolist(Cog, Cons, Emp, {Cons, H, T={Cons, _, _}}) ->
-    [toString(Cog, H), ", ", abslistish_to_iolist(Cog, Cons, Emp, T)];
+    [toString(Cog, H, false), ",", abslistish_to_iolist(Cog, Cons, Emp, T)];
 abslistish_to_iolist(Cog, Cons, _Emp, {Cons, H, T}) ->
-    [toString(Cog, H), ", ", toString(Cog, T)].
+    [toString(Cog, H, alse), ",", toString(Cog, T, false)].
 
-
-toString(_Cog, true) -> <<"True"/utf8>>;        % Bool True
-toString(_Cog, false) -> <<"False"/utf8>>;      % Bool False
-toString(_Cog,I) when is_float(I) ->            % Float
+%% toString; third argument tells whether we're at toplevel or need to
+%% escape strings.
+toString(_Cog, true, _) -> <<"True"/utf8>>;     % Bool True
+toString(_Cog, false, _) -> <<"False"/utf8>>;   % Bool False
+toString(_Cog,I, _) when is_float(I) ->         % Float
     list_to_binary(mochinum:digits(I));
-toString(_Cog,I) when is_integer(I) ->          % Integer
+toString(_Cog,I, _) when is_integer(I) ->       % Integer
     integer_to_binary(I);
-toString(_Cog,{N,D}) when is_integer(N),is_integer(D)-> % Rat
+toString(_Cog,{N,D}, _) when is_integer(N),is_integer(D)-> % Rat
     {N1, D1} = rationals:proper({N, D}),
     case D1 of
         1 -> integer_to_binary(N1);
         _ -> iolist_to_binary([integer_to_binary(N1), <<"/"/utf8>>, integer_to_binary(D1)])
     end;
-toString(_Cog,S) when is_binary(S) -> S;        % String
-toString(_Cog, null) -> <<"null"/utf8>>;        % null
-toString(_Cog,A) when is_atom(A) ->             % datatype w/o arguments
+toString(_Cog,S, true) when is_binary(S) -> S;   % String at toplevel
+toString(_Cog,S, false) when is_binary(S) ->      % String embedded in data structure
+    ["\"", string:replace(S, "\"", "\\\"", all), "\""];
+toString(_Cog, null, _) -> <<"null"/utf8>>;   % null
+toString(_Cog,A, _) when is_atom(A) ->        % datatype w/o arguments
     constructorname_to_string(A);
-toString(Cog,P) when is_pid(P) ->               % Fut
+toString(Cog,P, _) when is_pid(P) ->            % Fut
     Status=future:has_value(P),
     case Status of
         true -> Value=future:get_after_await(P, Cog),
-                iolist_to_binary([pid_to_list(P), ":", toString(Cog, Value)]);
+                iolist_to_binary([pid_to_list(P), ":", toString(Cog, Value, false)]);
         false -> iolist_to_binary([pid_to_list(P), ":empty"])
     end;
-toString(_Cog,O=#object{cog=Cog,oid=Oid}) ->    % Object
+toString(_Cog,O=#object{cog=Cog,oid=Oid}, _) -> % Object
     C=object:get_class_from_ref(O),
     ClassName=case C of
                   none -> <<"<no class - main module>">>;
@@ -100,11 +106,11 @@ toString(_Cog,O=#object{cog=Cog,oid=Oid}) ->    % Object
               end,
     iolist_to_binary([ClassName,
                       ":", pid_to_list(Cog#cog.ref), "-", integer_to_binary(Oid)]);
-toString(_Cog, L) when is_list(L) ->            % List<A>
+toString(_Cog, L, _) when is_list(L) ->         % List<A>
     iolist_to_binary(["list[",
-                      lists:join(", ", lists:map(fun(I) -> toString(_Cog, I) end, L)),
+                      lists:join(",", lists:map(fun(I) -> toString(_Cog, I, false) end, L)),
                       "]"]);
-toString(_Cog, T) when is_tuple(T) ->
+toString(_Cog, T, _) when is_tuple(T) ->
     [C|A] = tuple_to_list(T),
     case C of
         dataInsert ->                           % Set<A>
@@ -115,11 +121,7 @@ toString(_Cog, T) when is_tuple(T) ->
                [constructorname_to_string(C),   % datatype with arguments
                 "(",
                 lists:join(",",
-                           lists:map(fun(X) -> case is_binary(X) of
-                                                   true -> ["\"", X, "\""];
-                                                   false -> toString(_Cog,X)
-                                               end
-                                     end,
+                           lists:map(fun(X) -> toString(_Cog,X, false) end,
                                      A)),
                 ")"])
     end.
