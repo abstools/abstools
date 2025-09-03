@@ -13,60 +13,6 @@ aspect Nullable {
   Exp implements HasNullableType;
 
   /**
-    * True iff the expression is either Nullable or Null
-    */
-  syn boolean Exp.couldBeNull() = getNullableType() == PrimitiveNullableType.Nullable || getNullableType() == PrimitiveNullableType.Null;
-
-  // == Parameters ==
-  syn boolean ParamDecl.nullable() {
-    NullableType nt = getNullableType();
-    if (nt == null) return false;
-    return nt.isNullable();
-  }
-
-  // == MethodSig ==
-  /**
-   * Whether the return type is declared as Nullable
-   */
-  syn boolean MethodSig.nullable() {
-    NullableType nt = getNullableType();
-    if (nt == null) return false;
-    return nt.isNullable();
-  }
-
-  // == Function ==
-  /**
-   * Whether the return type is declared as Nullable
-   */
-  syn boolean FunctionDecl.nullable() {
-    NullableType nt = getNullableType();
-    if (nt == null) return false;
-    return nt.isNullable();
-  }
-
-  // == Partial Function
-  /**
-   * Whether the return type is declared as Nullable
-   */
-  syn boolean PartialFunctionDecl.nullable() {
-    NullableType nt = getNullableType();
-    if (nt == null) return false;
-    return nt.isNullable();
-  }
-
-  // == VarOrFieldDecl
-  /**
-   * Whether the variable or field type is declared as Nullable
-   */
-  syn boolean VarOrFieldDecl.nullable() = false;
-
-  eq TypedVarOrFieldDecl.nullable() {
-    NullableType nt = getNullableType();
-    if (nt == null) return false;
-    return nt.isNullable();
-  }
-
-  /**
    * The nullable type of this parameter
    */
   syn NullableType ParamDecl.getNullableType() {
