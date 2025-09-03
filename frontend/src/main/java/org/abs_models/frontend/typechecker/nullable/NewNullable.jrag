@@ -1,0 +1,531 @@
+import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.DataTypeNullableType;
+import com.google.common.collect.ImmutableMap;
+
+aspect NewNullable {
+    /**
+     * The nullable type of the expression. Returns null when the type is not a reference or future type
+     */
+    syn NullableType Exp.getNullableType() circular [PrimitiveNullableType.Unknown];
+
+    /**
+     *  Gathers all declarations relevant to the nullable type analysis
+     *  These differ depending on the node this entry belongs to:
+     *    - MethodImpl: All parameters and all declarations in the body
+     *    - If the node is in a ClassDecl: All parameters and fields
+     *    - MainBlock: All declarations in the block
+     */
+    syn lazy ImmutableMap<VarOrFieldDecl, NullableType> CFGEntry.getInitialNullableTypes() {
+        //return ImmutableMap.of();
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
+        ASTNode parent = getParent();
+
+        if (parent instanceof MethodImpl) {
+            MethodImpl met = (MethodImpl) parent;
+            java.util.List<VarOrFieldDecl> decls = met.findChildren(VarOrFieldDecl.class);
+            for (VarOrFieldDecl d : decls) {
+                builder = builder.put(d, PrimitiveNullableType.Unknown);
+            }
+        }
+
+        ASTNode n = parent;
+        ClassDecl c = null;
+        while (n != null && !(n instanceof ModuleDecl)) {
+            if (n instanceof ClassDecl) {
+                c = (ClassDecl) n;
+                break;
+            }
+            n = n.getParent();
+        }
+
+        if (c != null) {
+            for (ParamDecl p : c.getParams()) {
+                builder = builder.put(p, PrimitiveNullableType.Unknown);
+            }
+            for (FieldDecl f : c.getFields()) {
+                builder = builder.put(f, PrimitiveNullableType.Unknown);
+            }
+        }
+
+        if (parent instanceof MainBlock) {
+            MainBlock mb = (MainBlock) parent;
+            java.util.List<VarOrFieldDecl> decls = mb.findChildren(VarOrFieldDecl.class);
+            for (VarOrFieldDecl d : decls) {
+                builder = builder.put(d, PrimitiveNullableType.Unknown);
+            }
+        }
+
+        return builder.build();
+    }
+
+    // == NullableTypes_in
+    syn ImmutableMap<VarOrFieldDecl, NullableType> CFGNode.nullableTypes_in() circular [entry().getInitialNullableTypes()] {
+        CFGNode self = this;
+
+        boolean isCatch = self instanceof CaseBranchStmt
+            && ((CaseBranchStmt) self).parentStmt() instanceof TryCatchFinallyStmt;
+
+        // Special case: if we have exactly one pred, we might extract extra info
+        if (pred().size() == 1) {
+            CFGNode p = null;
+            for (CFGNode n : pred()) {
+                p = n;
+            }
+            if (p instanceof IfStmt) {
+                IfStmt i = (IfStmt) p;
+                if (self == i.getThen()) {
+                    return p.nullableTypes_out_then();
+                } else {
+                    return p.nullableTypes_out_else();
+                }
+            } else if (p instanceof WhileStmt) {
+                WhileStmt w = (WhileStmt) p;
+                if (self == w.getBody()) {
+                    return p.nullableTypes_out_then();
+                } else {
+                    return p.nullableTypes_out_else();
+                }
+            } else if (p instanceof AssertStmt) {
+                AssertStmt a = (AssertStmt) p;
+                if (self instanceof CaseBranchStmt) {
+                    return p.nullableTypes_out_then();
+                } else {
+                    return p.nullableTypes_out_then();
+                }
+            } else {
+                return isCatch ? p.nullableTypes_in() : p.nullableTypes_out();
+            }
+        }
+
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(entry().getInitialNullableTypes());
+        for (CFGNode n : pred()) {
+            if (!isCatch && n instanceof IfStmt && !((IfStmt) n).hasElse()) {
+                // We are in a stmt that follows an if without else and we have > 1 preds
+                // This means that we can use the else information
+                builder = NullableType.intersect(builder.build(), n.nullableTypes_out_else());
+                continue;
+            }
+            builder = NullableType.intersect(builder.build(), isCatch ? n.nullableTypes_in() : n.nullableTypes_out());
+        }
+        return builder.build();
+    }
+
+    // == NullableTypes_out
+    /**
+     * Used to compute nullable type, do not use directly
+     * For most stmts out = in
+     */
+    syn ImmutableMap<VarOrFieldDecl, NullableType> CFGNode.nullableTypes_out() circular [entry().getInitialNullableTypes()] = nullableTypes_in();
+
+    /**
+     * Used to compute nullable type, do not use directly
+     * What gets propagated to the `then` successors of a conditional node (if, while)
+     */
+    syn ImmutableMap<VarOrFieldDecl, NullableType> CFGNode.nullableTypes_out_then() circular [entry().getInitialNullableTypes()] = ImmutableMap.of();
+    /**
+     * Used to compute nullable type, do not use directly
+     * What gets propagated to the `else` successors of a conditional node (if, while)
+     */
+    syn ImmutableMap<VarOrFieldDecl, NullableType> CFGNode.nullableTypes_out_else() circular [entry().getInitialNullableTypes()] = ImmutableMap.of();
+
+    eq CFGEntry.nullableTypes_out() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
+
+        ASTNode parent = getParent();
+
+        ASTNode n = parent;
+        ClassDecl c = null;
+        while (n != null && !(n instanceof ModuleDecl)) {
+            if (n instanceof ClassDecl) {
+                c = (ClassDecl) n;
+                break;
+            }
+            n = n.getParent();
+        }
+
+        if (c != null) {
+            for (ParamDecl p : c.getParams()) {
+                builder = builder.put(p, p.getNullableType());
+            }
+        }
+
+        if (parent instanceof MethodImpl) {
+            MethodImpl met = (MethodImpl) parent;
+            for (ParamDecl p : met.getMethodSig().getParams()) {
+                builder = builder.put(p, p.getNullableType());
+            }
+
+            // Fields can only surely be initialized in methods
+            for (FieldDecl f : c.getFields()) {
+                builder = builder.put(f, f.getNullableType());
+            }
+        }
+
+        return builder.build();
+    }
+    // AssertStmt can propagate conditional information
+    eq AssertStmt.nullableTypes_out_then() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(nullableTypes_in());
+        VarOrFieldDecl dnn = getCondition().testsNotNull();
+        VarOrFieldDecl dn = getCondition().testsNull();
+        if (dnn != null) {
+            builder = builder.put(dnn, PrimitiveNullableType.Nonnull);
+        }
+        if (dn != null) {
+            builder = builder.put(dn, PrimitiveNullableType.Null);
+        }
+        return builder.buildKeepingLast();
+    }
+    eq AssertStmt.nullableTypes_out_else() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(nullableTypes_in());
+        VarOrFieldDecl dnn = getCondition().testsNotNull();
+        VarOrFieldDecl dn = getCondition().testsNull();
+        if (dnn != null) {
+            builder = builder.put(dnn, PrimitiveNullableType.Null);
+        }
+        if (dn != null) {
+            builder = builder.put(dn, PrimitiveNullableType.Nonnull);
+        }
+        return builder.buildKeepingLast();
+    }
+
+    // Add or remove the corresponding decl depending on the assigned value
+    eq AssignStmt.nullableTypes_out() {
+        Exp e = getValue();
+        ImmutableMap<VarOrFieldDecl, NullableType> out = e.nullableTypes_out();
+
+        VarOrFieldUse var = getVar();
+
+        VarOrFieldDecl d = var.getDecl();
+
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+                    .putAll(out)
+                    .put(d, e.getNullableType());
+        return builder.buildKeepingLast();
+    }
+
+    // Get information from the expression an propagate it
+    eq ExpressionStmt.nullableTypes_out() = getExp().nullableTypes_out();
+
+    // Give conditional information if applicable
+    eq IfStmt.nullableTypes_out_then() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(nullableTypes_in());
+        VarOrFieldDecl dnn = getCondition().testsNotNull();
+        VarOrFieldDecl dn = getCondition().testsNull();
+        if (dnn != null) {
+            builder = builder.put(dnn, PrimitiveNullableType.Nonnull);
+        }
+        if (dn != null) {
+            builder = builder.put(dn, PrimitiveNullableType.Null);
+        }
+        return builder.buildKeepingLast();
+    }
+    eq IfStmt.nullableTypes_out_else() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(nullableTypes_in());
+        VarOrFieldDecl dnn = getCondition().testsNotNull();
+        VarOrFieldDecl dn = getCondition().testsNull();
+        if (dnn != null) {
+            builder = builder.put(dnn, PrimitiveNullableType.Null);
+        }
+        if (dn != null) {
+            builder = builder.put(dn, PrimitiveNullableType.Nonnull);
+        }
+        return builder.buildKeepingLast();
+    }
+
+    // Add decl if the value is Nonnull
+    eq VarDeclStmt.nullableTypes_out() {
+        VarDecl d = getVarDecl();
+
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder;
+
+        if (!d.hasInitExp()) {
+            builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+                .putAll(nullableTypes_in());
+            return builder.put(d, NullCheckerExtension.emptyInitialNullableType(d.getType())).buildKeepingLast();
+        }
+
+        Exp init = d.getInitExp();
+        builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(init.nullableTypes_out());
+        return builder.put(d, init.getNullableType()).buildKeepingLast();
+    }
+
+    // Give conditional information if applicable
+    eq WhileStmt.nullableTypes_out_then() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(nullableTypes_in());
+        VarOrFieldDecl dnn = getCondition().testsNotNull();
+        VarOrFieldDecl dn = getCondition().testsNull();
+        if (dnn != null) {
+            builder = builder.put(dnn, PrimitiveNullableType.Nonnull);
+        }
+        if (dn != null) {
+            builder = builder.put(dn, PrimitiveNullableType.Null);
+        }
+        return builder.buildKeepingLast();
+    }
+    eq WhileStmt.nullableTypes_out_else() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(nullableTypes_in());
+        VarOrFieldDecl dnn = getCondition().testsNotNull();
+        VarOrFieldDecl dn = getCondition().testsNull();
+        if (dnn != null) {
+            builder = builder.put(dnn, PrimitiveNullableType.Null);
+        }
+        if (dn != null) {
+            builder = builder.put(dn, PrimitiveNullableType.Nonnull);
+        }
+        return builder.buildKeepingLast();
+    }
+
+    // == Exp ==
+
+    // Expressions can alter nullability, but most don't
+
+    /**
+     * Used to compute nullable types, do not use directly
+     *
+     * We get the current nullable types from the parent stmt.
+     * We could just make expressions nodes, but that would complicate the analysis
+     */
+    syn ImmutableMap<VarOrFieldDecl, NullableType> Exp.nullableTypes_in() = parentStmt().nullableTypes_in();
+
+    /**
+     * Used to compute nullable types, do not use directly
+     */
+    syn ImmutableMap<VarOrFieldDecl, NullableType> Exp.nullableTypes_out() circular [ImmutableMap.of()];
+
+    // Most expressions don't affect nullable types
+    eq Exp.nullableTypes_out() = nullableTypes_in();
+
+    // Calls make the callee Nonnull
+    eq Call.nullableTypes_out() {
+        ImmutableMap<VarOrFieldDecl, NullableType> in = nullableTypes_in();
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(in);
+
+        PureExp callee = getCallee();
+
+        if (callee instanceof VarOrFieldUse) {
+            VarOrFieldUse c = (VarOrFieldUse) callee;
+            builder = builder.put(c.getDecl(), PrimitiveNullableType.Nonnull);
+        }
+
+        return builder.buildKeepingLast();
+    }
+
+    eq Call.getNullableType() = getMethodSig().getNullableType();
+    eq AsyncCall.getNullableType() {
+        // The type of an async call is a Fut of the method's signature; wrap it in a DataTypeNT
+        ArrayList<NullableType> nts = new ArrayList<NullableType>(1);
+        nts.add(getMethodSig().getNullableType());
+        return new DataTypeNullableType(nts);
+    }
+
+    eq GetExp.getNullableType() {
+        // A get expr unwraps a Fut, so remove one layer of the DataTypeNT
+        DataTypeNullableType dnt = (DataTypeNullableType) getPureExp().getNullableType();
+        return dnt.getParam(0);
+    }
+
+    eq NewExp.getNullableType() = PrimitiveNullableType.Nonnull;
+
+    eq OriginalCall.getNullableType() = PrimitiveNullableType.Unknown;
+
+    eq VarOrFieldUse.getNullableType() = nullableTypes_in().get(getDecl());
+
+    eq AsExp.getNullableType() = PrimitiveNullableType.Nullable;
+
+    eq Binary.getNullableType() {
+        // All binary ops are over non-parametric data types
+        return DataTypeNullableType.EMPTY;
+    }
+
+    eq CaseExp.getNullableType() {
+        NullableType nt = PrimitiveNullableType.Unknown;
+        for (CaseBranch b : getBranchs()) {
+            NullableType bnt = b.getRight().getNullableType();
+            nt = nt.getMostCommon(bnt);
+        }
+        return nt;
+    }
+
+    eq DataConstructorExp.getNullableType() {
+        DataTypeType ty = (DataTypeType) getType();
+        if (!(ty.getDecl() instanceof ParametricDataTypeDecl)) {
+            return DataTypeNullableType.EMPTY;
+        }
+        ParametricDataTypeDecl decl = (ParametricDataTypeDecl) ty.getDecl();
+        DataConstructor cons = getDataConstructor();
+        java.util.List<NullableType> nts = new ArrayList<NullableType>(ty.numTypeArgs());
+        java.util.List<NullableType> paramNts = new ArrayList<NullableType>(getNumParam());
+
+        for (PureExp param : getParams()) {
+            paramNts.add(param.getNullableType());
+        }
+
+        for (TypeParameterDecl param : decl.getTypeParameters()) {
+            boolean foundNt = false;
+            for (int i = 0; i < cons.getNumConstructorArg(); ++i) {
+                Type arg = cons.getConstructorArg(i).getType();
+                if (arg instanceof TypeParameter) {
+                    TypeParameter tp = (TypeParameter) arg;
+                    if (tp.getDecl() == param) {
+                        nts.add(paramNts.get(i));
+                        foundNt = true;
+                        break;
+                    }
+                }
+            }
+            if (!foundNt) {
+                nts.add(PrimitiveNullableType.Unknown);
+            }
+        }
+
+        assert(nts.size() == decl.getNumTypeParameter());
+
+        return new DataTypeNullableType(nts);
+    }
+
+    eq FnApp.getNullableType() {
+        // We cannot get the NullableType from the decl, because of generics
+        Type t = getType();
+        return NullCheckerExtension.getNullableType(t);
+    }
+
+    eq IfExp.virtualThenStmt().nullableTypes_in() {
+        VarOrFieldDecl dnn = getCondExp().testsNotNull();
+        VarOrFieldDecl dn = getCondExp().testsNotNull();
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(nullableTypes_in());
+        if (dnn != null) {
+            builder = builder.put(dnn, PrimitiveNullableType.Nonnull);
+        }
+        if (dn != null) {
+            builder = builder.put(dn, PrimitiveNullableType.Null);
+        }
+        return builder.buildKeepingLast();
+    }
+
+    eq IfExp.virtualElseStmt().nullableTypes_in() {
+        VarOrFieldDecl dnn = getCondExp().testsNotNull();
+        VarOrFieldDecl dn = getCondExp().testsNotNull();
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(nullableTypes_in());
+        if (dnn != null) {
+            builder = builder.put(dnn, PrimitiveNullableType.Null);
+        }
+        if (dn != null) {
+            builder = builder.put(dn, PrimitiveNullableType.Nonnull);
+        }
+        return builder.buildKeepingLast();
+    }
+
+    eq IfExp.getNullableType() {
+        NullableType nt1 = getThenExp().getNullableType();
+        NullableType nt2 = getElseExp().getNullableType();
+        return nt1.getMostCommon(nt2);
+    }
+
+    eq ImplementsExp.getNullableType() {
+        // booleans are non-parametric data types
+        return DataTypeNullableType.EMPTY;
+    }
+
+    inh ImmutableMap<VarOrFieldDecl, NullableType> VirtualStmt.nullableTypes_in();
+    eq LetExp.virtualStmt().nullableTypes_in() {
+        ImmutableMap<VarOrFieldDecl, NullableType> in = nullableTypes_in();
+        ParamDecl d = getVar();
+
+        return new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(in)
+            .put(d, getVal().getNullableType())
+            .buildKeepingLast();
+    }
+    eq LetExp.getNullableType() = getExp().getNullableType();
+
+    eq CaseBranch.virtualStmt().nullableTypes_in() {
+        ImmutableMap<VarOrFieldDecl, NullableType> in = caseExp().nullableTypes_in();
+        ImmutableMap<VarOrFieldDecl, NullableType> patTypes = getLeft().getNullableTypes();
+
+        return new ImmutableMap.Builder<VarOrFieldDecl, NullableType>()
+            .putAll(in)
+            .putAll(patTypes)
+            .buildKeepingLast();
+    }
+
+    eq FieldDecl.virtualStmt().nullableTypes_in() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
+        ClassDecl c = (ClassDecl) parent.parent;
+        for (ParamDecl p : c.getParams()) {
+           builder = builder.put(p, NullCheckerExtension.getNullableType(p.getType()));
+        }
+        for (FieldDecl f : c.getFields()) {
+           builder = builder.put(f, NullCheckerExtension.getNullableType(f.getType()));
+        }
+        return builder.build();
+    }
+
+    inh NullableType Pattern.matchedNullableType();
+    inh NullableType CaseBranch.matchedNullableType();
+    eq CaseExp.getBranch(int i).matchedNullableType() = getExpr().getNullableType();
+    eq CaseBranch.getLeft().matchedNullableType() = matchedNullableType();
+    eq ConstructorPattern.getParam(int i).matchedNullableType() {
+        DataConstructor dc = getDataConstructor();
+        DataTypeType dtt = (DataTypeType) dc.getType();
+        DataTypeNullableType mnt = (DataTypeNullableType) matchedNullableType();
+        ImmutableMap<TypeParameterDecl, NullableType> inst = NullCheckerExtension.nullableTypeMapping(dtt, mnt);
+        return dc.getConstructorArg(i).getType().instantiateNullableType(inst);
+    }
+
+    syn lazy ImmutableMap<VarOrFieldDecl, NullableType> Pattern.getNullableTypes() = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>().build();
+    eq PatternVar.getNullableTypes() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
+        builder = builder.put(getVar(), matchedNullableType());
+        return builder.build();
+    }
+    eq ConstructorPattern.getNullableTypes() {
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
+        for (Pattern p : getParams()) {
+            builder = builder.putAll(p.getNullableTypes());
+        }
+        return builder.build();
+    }
+
+    eq ExpFunctionDef.virtualStmt().nullableTypes_in() {
+        FunctionDecl d = (FunctionDecl) getParent();
+
+        ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
+
+        for (ParamDecl p : d.getParams()) {
+            builder = builder.put(p, p.getNullableType());
+        }
+
+        return builder.buildKeepingLast();
+    }
+
+    eq LiteralExp.getNullableType() = DataTypeNullableType.EMPTY;
+
+    eq NullExp.getNullableType() = PrimitiveNullableType.Null;
+
+    eq ParFnApp.getNullableType() {
+        // We cannot get the NullableType from the decl, because of generics
+        Type t = getType();
+        return NullCheckerExtension.getNullableType(t);
+    }
+
+    eq ThisExp.getNullableType() = PrimitiveNullableType.Nonnull;
+
+    eq DestinyExp.getNullableType() = DataTypeNullableType.DT_OF_EMPTY;
+
+    eq Unary.getNullableType() {
+        // All binary ops are over non-parametric data types
+        return DataTypeNullableType.EMPTY;
+    }
+}

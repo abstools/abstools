@@ -4,13 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.abs_models.frontend.FrontendTest;
 import org.abs_models.frontend.analyser.BitVec;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.KindedName;
+import org.abs_models.frontend.typechecker.nullable.DataTypeNullableType;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
-import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.PrimitiveNullableType;
 import org.junit.Test;
 
 public class NullableTests extends FrontendTest {
@@ -27,7 +29,7 @@ public class NullableTests extends FrontendTest {
         assertEquals(1, b.getStmt(0).nonnull_out().size());
         assertTrue(b.getStmt(0).nonnull_out().contains(d));
         assertTrue(v.nonnull());
-        assertEquals(NullableType.Nonnull, v.getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, v.getNullableType());
     }
 
     @Test
@@ -52,8 +54,8 @@ public class NullableTests extends FrontendTest {
         assertEquals(2, a.nonnull_out().size());
         assertTrue(a.nonnull_out().contains(d0));
         assertTrue(a.nonnull_out().contains(d1));
-        assertEquals(NullableType.Nullable, d0.getNullableType());
-        assertEquals(NullableType.Nonnull, es.getExp().getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, d0.getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, es.getExp().getNullableType());
     }
 
     @Test
@@ -67,7 +69,7 @@ public class NullableTests extends FrontendTest {
 
         assertEquals(1, a.nonnull_out().size());
         assertTrue(a.nonnull_out().contains(d0));
-        assertEquals(NullableType.Nullable, es.getExp().getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, es.getExp().getNullableType());
     }
 
     @Test
@@ -79,7 +81,7 @@ public class NullableTests extends FrontendTest {
         ExpressionStmt es = (ExpressionStmt) b.getStmt(2);
 
         assertEquals(0, a.nonnull_out().size());
-        assertNull(es.getExp().getNullableType());
+        assertEquals(DataTypeNullableType.EMPTY, es.getExp().getNullableType());
     }
 
     @Test
@@ -93,15 +95,10 @@ public class NullableTests extends FrontendTest {
         AssignStmt a = (AssignStmt) b.getStmt(1);
         ExpressionStmt es = (ExpressionStmt) b.getStmt(2);
 
-        assertEquals(3, a.nonnull_out().size());
-        assertTrue(a.nonnull_out().contains(p0));
-        assertTrue(a.nonnull_out().contains(p1));
-        assertTrue(a.nonnull_out().contains(d0));
-
-        assertEquals(NullableType.Nonnull, p0.getNullableType());
-        assertEquals(NullableType.Nonnull, p1.getNullableType());
-        assertEquals(NullableType.Nullable, d0.getNullableType());
-        assertEquals(NullableType.Nonnull, es.getExp().getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, p0.getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, p1.getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, d0.getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, es.getExp().getNullableType());
     }
 
     @Test
@@ -111,10 +108,9 @@ public class NullableTests extends FrontendTest {
 
         VarDeclStmt ds = (VarDeclStmt) b.getStmt(0);
         AssignStmt a = (AssignStmt) b.getStmt(1);
-        ExpressionStmt es = (ExpressionStmt) b.getStmt(2);
 
         assertEquals(0, a.nonnull_out().size());
-        assertNull(ds.getVarDecl().getNullableType());
+        assertEquals(DataTypeNullableType.DT_OF_EMPTY, ds.getVarDecl().getNullableType());
     }
 
     @Test
@@ -125,7 +121,7 @@ public class NullableTests extends FrontendTest {
         AssignStmt a = (AssignStmt) b.getStmt(1);
 
         assertEquals(0, a.nonnull_out().size());
-        assertEquals(NullableType.Nullable, ((FunctionDecl) met.getModuleDecl().getDecl(0)).getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, ((FunctionDecl) met.getModuleDecl().getDecl(0)).getNullableType());
     }
 
     @Test
@@ -139,8 +135,8 @@ public class NullableTests extends FrontendTest {
 
         assertEquals(1, a.nonnull_out().size());
         assertTrue(a.nonnull_out().contains(d0));
-        assertEquals(NullableType.Nonnull, ((FunctionDecl) met.getModuleDecl().getDecl(0)).getNullableType());
-        assertEquals(NullableType.Nonnull, es.getExp().getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, ((FunctionDecl) met.getModuleDecl().getDecl(0)).getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, es.getExp().getNullableType());
     }
 
     @Test
@@ -165,7 +161,7 @@ public class NullableTests extends FrontendTest {
 
         assertEquals(1, a.nonnull_out().size());
         assertTrue(a.nonnull_out().contains(d0));
-        assertNull(a.getValue().getNullableType());
+        assertEquals(DataTypeNullableType.EMPTY, a.getValue().getNullableType());
     }
 
     @Test
@@ -349,7 +345,7 @@ public class NullableTests extends FrontendTest {
         BitVec<VarOrFieldDecl> nonnull = b.getStmt(0).nonnull_out();
         assertTrue(nonnull.contains(p));
         assertEquals(1, nonnull.size());
-        assertEquals(NullableType.Nullable, p.getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, p.getNullableType());
     }
 
     @Test
@@ -584,9 +580,9 @@ public class NullableTests extends FrontendTest {
         ParamDecl p1 = c.getParam(1);
         ParamDecl p2 = c.getParam(2);
 
-        assertEquals(NullableType.Nullable, p0.getNullableType());
-        assertEquals(NullableType.Nonnull, p1.getNullableType());
-        assertNull(p2.getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, p0.getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, p1.getNullableType());
+        assertEquals(DataTypeNullableType.EMPTY, p2.getNullableType());
         assertEquals(1, skip.nonnull_in().size());
         assertTrue(skip.nonnull_in().contains(p1));
     }
@@ -602,9 +598,9 @@ public class NullableTests extends FrontendTest {
         ParamDecl p2 = c.getParam(2);
         Stmt skip = met.getBlock().getStmt(0);
 
-        assertEquals(NullableType.Nullable, p0.getNullableType());
-        assertEquals(NullableType.Nonnull, p1.getNullableType());
-        assertNull(p2.getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, p0.getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, p1.getNullableType());
+        assertEquals(DataTypeNullableType.EMPTY, p2.getNullableType());
         assertEquals(1, skip.nonnull_in().size());
         assertTrue(skip.nonnull_in().contains(p1));
     }
@@ -619,9 +615,9 @@ public class NullableTests extends FrontendTest {
         FieldDecl f1 = c.getField(1);
         FieldDecl f2 = c.getField(2);
 
-        assertEquals(NullableType.Nullable, f0.getNullableType());
-        assertEquals(NullableType.Nonnull, f1.getNullableType());
-        assertNull(f2.getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, f0.getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, f1.getNullableType());
+        assertEquals(DataTypeNullableType.EMPTY, f2.getNullableType());
         assertEquals(0, skip.nonnull_in().size());
         assertEquals(2, skip.null_in().size());
         assertTrue(skip.null_in().contains(f0));
@@ -639,9 +635,9 @@ public class NullableTests extends FrontendTest {
         FieldDecl f2 = c.getField(2);
         Stmt skip = met.getBlock().getStmt(0);
 
-        assertEquals(NullableType.Nullable, f0.getNullableType());
-        assertEquals(NullableType.Nonnull, f1.getNullableType());
-        assertNull(f2.getNullableType());
+        assertEquals(PrimitiveNullableType.Nullable, f0.getNullableType());
+        assertEquals(PrimitiveNullableType.Nonnull, f1.getNullableType());
+        assertEquals(DataTypeNullableType.EMPTY, f2.getNullableType());
         assertEquals(1, skip.nonnull_in().size());
         assertTrue(skip.nonnull_in().contains(f1));
     }
@@ -663,7 +659,7 @@ public class NullableTests extends FrontendTest {
         assertEquals(1, s1.null_out().size());
         assertTrue(s1.null_out().contains(s0.getVarDecl()));
 
-        assertEquals(NullableType.Null, s1.getExp().getNullableType());
+        assertEquals(PrimitiveNullableType.Null, s1.getExp().getNullableType());
     }
 
     @Test
@@ -683,7 +679,7 @@ public class NullableTests extends FrontendTest {
         assertEquals(1, s1.null_out().size());
         assertTrue(s1.null_out().contains(s0.getVarDecl()));
 
-        assertEquals(NullableType.Null, s1.getExp().getNullableType());
+        assertEquals(PrimitiveNullableType.Null, s1.getExp().getNullableType());
     }
 
     @Test
@@ -706,6 +702,29 @@ public class NullableTests extends FrontendTest {
         assertEquals(2, vds2.nonnull_out().size());
         assertTrue(vds2.nonnull_out().contains(vd0));
         assertTrue(vds2.nonnull_out().contains(vd2));
+    }
+
+    /**
+     * See <a href="https://github.com/abstools/abstools/issues/307">issue #307</a>
+     */
+    @Test
+    public void issue307() {
+        Model m = getModel(
+            """
+                {
+                    Object o = null;
+                    Maybe<[Nonnull] Object> x = Just(o);
+                    [Nonnull] Object o2 = fromJust(x);
+                    print(`[Nonnull] o2 is $o2$`);
+                }""");
+        MainBlock mb = m.getMainBlock();
+
+        var vds0 = (VarDeclStmt) mb.getStmt(0);
+
+        assertEquals(1, vds0.null_out().size());
+        assertTrue(vds0.nonnull_out().isEmpty());
+        var sl = m.typeCheck();
+        assertEquals(1, sl.getErrorCount());
     }
 
     static private Model getModel(String prog) {

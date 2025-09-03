@@ -4,6 +4,11 @@
  */
 package org.abs_models.frontend.typechecker;
 
+import org.abs_models.frontend.ast.TypeParameterDecl;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.PrimitiveNullableType;
+import com.google.common.collect.ImmutableMap;
+
 public final class BottomType extends Type {
     public static final BottomType INSTANCE = new BottomType();
 
@@ -41,5 +46,10 @@ public final class BottomType extends Type {
     @Override
     public Type copy() {
         return new BottomType();
+    }
+
+    @Override
+    public NullableType instantiateNullableType(ImmutableMap<TypeParameterDecl, NullableType> inst) {
+        return PrimitiveNullableType.NonApplicable;
     }
 }

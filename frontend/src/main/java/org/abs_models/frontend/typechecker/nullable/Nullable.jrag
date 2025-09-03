@@ -5,35 +5,17 @@ import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
  */
 aspect Nullable {
   public interface HasNullableType {
-        NullableType getNullableType();
-    }
+    NullableType getNullableType();
+    //java.util.List<NullableType> getNullableTypeParams();
+  }
     
   ParamDecl implements HasNullableType;
   Exp implements HasNullableType;
 
   /**
-    * The nullable type of the expression. Returns null when the type is not a reference or future type
-    */
-  syn NullableType Exp.getNullableType() {
-    Type t = getType();
-
-    if (!NullCheckerExtension.shouldHaveNullableType(t)) {
-      return null;
-    }
-
-    if (nonnull()) {
-      return NullableType.Nonnull;
-    }
-    if (isNull()) {
-      return NullableType.Null;
-    }
-    return NullableType.Nullable;
-  }
-
-  /**
     * True iff the expression is either Nullable or Null
     */
-  syn boolean Exp.couldBeNull() = getNullableType() == NullableType.Nullable || getNullableType() == NullableType.Null;
+  syn boolean Exp.couldBeNull() = getNullableType() == PrimitiveNullableType.Nullable || getNullableType() == PrimitiveNullableType.Null;
 
   // == Parameters ==
   syn boolean ParamDecl.nullable() {
