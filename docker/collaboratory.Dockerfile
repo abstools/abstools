@@ -1,21 +1,20 @@
 # syntax=docker/dockerfile:1.3-labs
-FROM alpine:3.20 AS abs-models-site
-RUN <<EOF
-    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community hugo git
-    git clone https://github.com/abstools/abs-models.org.git /abs-models.org
-EOF
-WORKDIR /abs-models.org
-RUN hugo -e collaboratory
+
+# NOTE: check .dockerignore if builds fail with missing files
 
 FROM erlang:26-alpine AS jdk-erlang
-RUN apk --update --no-cache add bash nss openjdk21-jdk gcc libc-dev git
+RUN <<EOF
+    apk --update --no-cache add bash nss openjdk21-jdk gcc libc-dev git
+    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community hugo
+EOF
 
 FROM jdk-erlang AS builder
 COPY ./ /appSrc/
 WORKDIR /appSrc
 RUN <<EOF
-chmod +x gradlew
-./gradlew --no-daemon frontend:assemble
+    chmod +x gradlew
+    ./gradlew --no-daemon frontend:assemble
+    hugo -s abs-models.org -e collaboratory
 EOF
 
 FROM php:8.3.9-apache-bookworm
@@ -100,7 +99,7 @@ EC_APETHOME="/usr/local/lib/apet"
 EC_SYCOHOME="/usr/local/lib/apet"
 ENVISAGE_CONFIG_FILE
 
-COPY --from=abs-models-site /abs-models.org/collaboratory/ /var/www/html/
+COPY --from=builder /appSrc/abs-models.org/collaboratory/ /var/www/html/
 COPY ./binaries/ /binaries/
 RUN <<EOF
 set -e

@@ -8,7 +8,6 @@ import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class Method {
     private static ABSDynamicClass thisClass;
@@ -35,13 +34,13 @@ public class Method {
         // * the number and types of arguments
         thisClass.addMethod(/*ABSValue*/ "exec", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 ABSClosure method = (ABSClosure)t;
 
                 // FIXME
                 // params[0] is the receiver object, 
                 // params[1] is an ABSList with the actual arguments
-                ABSValue res = method.exec((ABSDynamicObject)params[0], params[1]);
+                Object res = method.exec((ABSDynamicObject)params[0], params[1]);
                 
                 // FIXME return the result...
                 return ABSUnit.UNIT;

@@ -8,10 +8,7 @@ import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
 import org.abs_models.backend.java.lib.runtime.COG;
-import org.abs_models.backend.java.lib.types.ABSBool;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 /* Class ABSObjectMirror
  * 
@@ -39,12 +36,10 @@ public class ObjectMirror {
         /*
          * getClassName: get name of object's class
          */
-        thisClass.addMethod(/*ABSString*/ "getClassName", new ABSClosure() {
+        thisClass.addMethod("getClassName", new ABSClosure() {
             @Override
-            public ABSString exec(ABSDynamicObject t, ABSValue... params) {
-                ABSString name;
-                name = ABSString.fromString(((ABSDynamicObject)t.dispatch("getObject")).getClassName());
-                return name;
+            public String exec(ABSDynamicObject t, Object... params) {
+                return ((ABSDynamicObject)t.dispatch("getObject")).getClassName();
             }
         });
         
@@ -53,7 +48,7 @@ public class ObjectMirror {
          */
         thisClass.addMethod(/*ABSDynamicObject<Clazz>*/ "getClass", new ABSClosure() {
             @Override
-            public ABSDynamicObject exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicObject exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicClass cls = ((ABSDynamicObject)t.dispatch("getObject")).getClazz();
                 ABSDynamicObject o = new ABSDynamicObject(Clazz.singleton());
                 o.setFieldValue("class", cls);
@@ -66,7 +61,7 @@ public class ObjectMirror {
          */
         thisClass.addMethod(/*Unit*/ "setClass", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)((ABSDynamicObject)params[0]).getFieldValue_Internal("class");
                 ((ABSDynamicObject)t.dispatch("getObject")).setClazz(cls);
                 return ABSUnit.UNIT;
@@ -76,11 +71,11 @@ public class ObjectMirror {
         /*
          * respondsTo: find out whether object responds to given method
          */
-        thisClass.addMethod(/*ABSBool*/ "respondsTo", new ABSClosure() {
+        thisClass.addMethod("respondsTo", new ABSClosure() {
             @Override
-            public ABSBool exec(ABSDynamicObject t, ABSValue... params) {
+            public Boolean exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)((ABSDynamicObject)t.dispatch("getObject")).getClazz();
-                return ABSBool.fromBoolean(cls.hasMethod(((ABSString)params[0]).getString()));
+                return cls.hasMethod((String)params[0]);
             }
         });
         
@@ -89,7 +84,7 @@ public class ObjectMirror {
 
         thisClass.addMethod(/*ABSDynamicObject<COG>*/ "getCog", new ABSClosure() {
             @Override
-            public ABSDynamicObject exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicObject exec(ABSDynamicObject t, Object... params) {
                 COG cog = ((ABSDynamicObject)t.dispatch("getObject")).getCOG();
                 ABSDynamicObject o = new ABSDynamicObject(Cog.singleton());
                 o.setFieldValue("cog", cog);
@@ -99,7 +94,7 @@ public class ObjectMirror {
         
         thisClass.addMethod(/*Unit*/ "setCog", new ABSClosure() {
             @Override
-            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, Object... params) {
                 ((ABSDynamicObject)t.dispatch("getObject")).setCOG((COG)params[0]);
                 return ABSUnit.UNIT;
             }
@@ -110,7 +105,7 @@ public class ObjectMirror {
          */
         thisClass.addMethod(/*ABSDynamicObject*/ "getObject", new ABSClosure() {
             @Override
-            public ABSDynamicObject exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicObject exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicObject object;
                 object = (ABSDynamicObject)t.getFieldValue_Internal("object");
                 return object;

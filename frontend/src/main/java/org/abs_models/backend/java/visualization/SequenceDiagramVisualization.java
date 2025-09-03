@@ -20,9 +20,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
-import org.abs_models.backend.java.observing.EmptyTaskObserver;
+import org.abs_models.backend.java.observing.DefaultTaskObserver;
 import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.GuardView;
 import org.abs_models.backend.java.observing.ObjectCreationObserver;
@@ -64,7 +63,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         String className = initialObject.getClassName();
         createdCOGClasses.put(cog,className);
         if (isObservedClass(className)) {
-            cog.getScheduler().registerTaskSchedulerObserver(this);
+            cog.getSchedulerView().registerTaskSchedulerObserver(this);
             if (!staticActors) {
                 if (!firstMessage) {
                     // special support for adding nodes later to a diagram
@@ -100,7 +99,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
 
     protected synchronized Integer getID(ObjectView v) {
-        Integer id = objectIds.get(v.getCOG());
+        Integer id = objectIds.get(v.getCOGView());
         if (id == null) {
             AtomicInteger counter = idCounters.get(v.getClassName());
             if (counter == null) {
@@ -108,7 +107,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 idCounters.put(v.getClassName(), counter);
             }
             id = counter.incrementAndGet();
-            objectIds.put(v.getCOG(), id);
+            objectIds.put(v.getCOGView(), id);
         }
         return id;
     }
@@ -165,14 +164,14 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
     private final TaskBlockingObserver TASK_BLOCKING_OBSERVER = new TaskBlockingObserver();
 
-    class TaskBlockingObserver extends EmptyTaskObserver {
+    class TaskBlockingObserver extends DefaultTaskObserver {
         @Override
         public void taskBlockedOnFuture(TaskView task, FutView fut) {
             synchronized (SequenceDiagramVisualization.this) {
                 if (!isObserved(task))
                     return;
                 waitingFutures.add(fut);
-                String actorName = getActorName(task.getTarget());
+                String actorName = getActorName(task.getTargetObjectView());
                 writeOutLn("*" + fut.getID() + " " + actorName);
                 writeOutLn("future get");
                 writeOutLn("*" + fut.getID());
@@ -190,9 +189,9 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                     return;
                 resolvedFutures.add(fut);
 
-                TaskView futTask = fut.getResolvingTask();
-                String sourceClass = futTask.getTarget().getClassName();
-                writeOut(getActorName(futTask.getTarget()));
+                TaskView futTask = fut.getResolvingTaskView();
+                String sourceClass = futTask.getTargetObjectView().getClassName();
+                writeOut(getActorName(futTask.getTargetObjectView()));
                 if (isSystemClass(sourceClass)) {
                     //if (futTask.getID() != 1) // no main task
                         writeOut("[" + "Task" + futTask.getID() + "]");
@@ -200,12 +199,12 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 } else {
                     writeOut(":");
                 }
-                String futTaskName = getActorName(task.getTarget()) + "[" + "FutTask" + futTask.getID() + "]";
+                String futTaskName = getActorName(task.getTargetObjectView()) + "[" + "FutTask" + futTask.getID() + "]";
                 writeOut(futTaskName);
                 writeOutLn(".future resolved\\:" + shorten(String.valueOf(fut.getValue())));
                 writeOutLn(futTaskName + ":stop");
-                writeOutLn("(" + fut.getID() + ") " + getActorName(task.getTarget()));
-                writeOutLn(getActorName(futTask.getTarget())+ "[Task" + futTask.getID() + "]:stop");
+                writeOutLn("(" + fut.getID() + ") " + getActorName(task.getTargetObjectView()));
+                writeOutLn(getActorName(futTask.getTargetObjectView())+ "[Task" + futTask.getID() + "]:stop");
             }
         }
 
@@ -215,12 +214,12 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     public synchronized void taskCreated(TaskView task) {
         task.registerTaskListener(this);
 
-        if (task.getSource() == null) {
+        if (task.getSourceObjectView() == null) {
             return;
         }
 
-        String sourceClass = getClassName(task.getSource());
-        String targetClass = getClassName(task.getTarget());
+        String sourceClass = getClassName(task.getSourceObjectView());
+        String targetClass = getClassName(task.getTargetObjectView());
 
         if (isObservedClass(sourceClass) && isObservedClass(targetClass)) {
 
@@ -229,9 +228,9 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
             if (isEnvironmentClass(sourceClass) || isEnvironmentClass(targetClass))
                 msgAction = ":";
 
-            String source = getActorName(task.getSource());
+            String source = getActorName(task.getSourceObjectView());
             if (isSystemClass(sourceClass))
-                source = source + "[" + "Task" + task.getSender().getID() + "]";
+                source = source + "[" + "Task" + task.getSenderView().getID() + "]";
 
             if (firstMessage) {
                 writeOutLn();
@@ -250,7 +249,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
              * if (systemClasses.contains(task.getSource().getClassName())) {
              * writeOut(":>"); }
              */
-            writeOut(getActorName(task.getTarget()));
+            writeOut(getActorName(task.getTargetObjectView()));
             if (isSystemClass(targetClass)) {
                 //if (task.getID() != 1) // no main task
                     writeOut("[" + "Task" + task.getID() + "]");
@@ -260,7 +259,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
             writeOut("(");
             StringBuffer argString = new StringBuffer();
             boolean first = true;
-            for (ABSValue v : task.getArgs()) {
+            for (Object v : task.getArgs()) {
                 if (first)
                     first = false;
                 else
@@ -279,7 +278,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     }
 
     private String getClassName(ObjectView obj) {
-        return createdCOGClasses.get(obj.getCOG());
+        return createdCOGClasses.get(obj.getCOGView());
     }
 
     private String shorten(String arg) {
@@ -306,13 +305,13 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
             return;
         // writeOut("Future " + task.getFuture().getID() + " resolved\\: " +
         // task.getFuture().getValue());
-        if (!waitingFutures.contains(task.getFuture())) {
-            String taskName = getActorName(task.getTarget());
+        if (!waitingFutures.contains(task.getFutView())) {
+            String taskName = getActorName(task.getTargetObjectView());
             //if (task.getID() != 1) // no main task
                 taskName += "[" + "Task" + task.getID() + "]";
             writeOutLn(taskName + ":"); // do something to avoid empty tasks
             writeOutLn(taskName + ":stop");
-            resolvedFutures.add(task.getFuture());
+            resolvedFutures.add(task.getFutView());
         }
     }
 
@@ -320,7 +319,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     public synchronized void taskStarted(TaskView task) {
         if (!isObserved(task))
             return;
-        String target = task.getTarget().getClassName();
+        String target = task.getTargetObjectView().getClassName();
         // writeOut(target+"[" + "Task" + task.getID() + "]:<started>"); //
         // do something to avoid empty tasks
 
@@ -332,10 +331,10 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
             return;
 
         if (guard.isFutureGuard()) {
-            FutView fut = guard.getFuture();
-            if (isObserved(fut.getResolvingTask())) {
+            FutView fut = guard.getFutView();
+            if (isObserved(fut.getResolvingTaskView())) {
                 waitingFutures.add(fut);
-                String actorName = getActorName(task.getTarget());
+                String actorName = getActorName(task.getTargetObjectView());
                 writeOutLn("*" + fut.getID() + " " + actorName);
                 // writeOut("[" + "Task" + task.getID() + "]");
                 // writeOut(":");
@@ -353,8 +352,8 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     }
 
     public boolean isObserved(TaskView task) {
-        String source = task.getSource().getClassName();
-        String target = task.getTarget().getClassName();
+        String source = task.getSourceObjectView().getClassName();
+        String target = task.getTargetObjectView().getClassName();
         return isObservedClass(source) && isObservedClass(target)
                 && isSystemClass(target);
     }
@@ -368,32 +367,32 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         if (!isObserved(task))
             return;
         if (guard.isFutureGuard()) {
-            FutView fut = guard.getFuture();
+            FutView fut = guard.getFutView();
 
-            TaskView resolvingTask = fut.getResolvingTask();
+            TaskView resolvingTask = fut.getResolvingTaskView();
             if (isObserved(resolvingTask)) {
 
                 if (!waitingFutures.contains(fut) || resolvedFutures.contains(fut))
                     return;
                 resolvedFutures.add(fut);
 
-                writeOut(getActorName(resolvingTask.getTarget()));
+                writeOut(getActorName(resolvingTask.getTargetObjectView()));
                 writeOut("[" + "Task" + resolvingTask.getID() + "]");
                 writeOut(":>");
-                writeOut(getActorName(task.getTarget()));
+                writeOut(getActorName(task.getTargetObjectView()));
                 writeOut("[" + "Taskx" + resolvingTask.getID() + "]");
                 writeOut(".resolved\\: ");
                 writeOut(shorten(String.valueOf(fut.getValue())));
                 writeOutLn();
-                writeOut(getActorName(resolvingTask.getTarget()));
+                writeOut(getActorName(resolvingTask.getTargetObjectView()));
                 writeOut("[" + "Task" + resolvingTask.getID() + "]");
                 writeOut(":stop");
                 writeOutLn();
-                writeOut(getActorName(task.getTarget()));
+                writeOut(getActorName(task.getTargetObjectView()));
                 writeOut("[" + "Taskx" + resolvingTask.getID() + "]");
                 writeOut(":stop");
                 writeOutLn();
-                writeOutLn("(" + fut.getID() + ") " + getActorName(task.getTarget()));
+                writeOutLn("(" + fut.getID() + ") " + getActorName(task.getTargetObjectView()));
             }
         }
     }
@@ -449,7 +448,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     }
 
     @Override
-    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, Object v) {
         // TODO Auto-generated method stub
 
     }

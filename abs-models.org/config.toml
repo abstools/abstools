@@ -1,0 +1,30 @@
+baseURL = "https://abs-models.org/"
+languageCode = "en-us"
+title = "The ABS Modeling Language"
+
+# Change the default theme to be use when building the site with Hugo
+theme = "hugo-theme-relearn"
+
+[blackfriday]
+  # auto-detection of fractions messes up DOIs in the publication page
+  fractions = false
+
+# For search functionnality
+[outputs]
+  home = [ "html", "rss", "search", "searchpage" ]
+
+[params]
+  themeVariant = "abs"
+  ordersectionsby = "weight"
+  # Are we building the site for deployment in the collaboratory container?
+  collaboratory = false
+  # Linking of files contained in the collaboratory.  This either points to a
+  # public instance, or to localhost.  See config/collaboratory/config.toml.
+  # Build with "hugo" for public website or "hugo -e collaboratory" for the
+  # container.
+  #
+  # Links in org-mode:
+  # [[{{% siteparam "eifilelink" %}}/collaboratory/path/to/File.abs][File.abs]]
+  # Links in Markdown:
+  # [File.abs]({{% siteparam "eifilelink" %}}/collaboratory/path/to/File.abs)
+  eifilelink = "http://ei.abs-models.org:8082/clients/web/index.html?file="

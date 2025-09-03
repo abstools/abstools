@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.GuardView;
@@ -46,7 +45,7 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
     }
 
     public void cogCreated(COGView cog, ObjectView initialObject) {
-        cog.getScheduler().registerTaskSchedulerObserver(this);
+        cog.getSchedulerView().registerTaskSchedulerObserver(this);
         ArrayList<DebugModelListener> localList;
         COGInfo info = new COGInfo(cog, initialObject);
         synchronized (this) {
@@ -98,7 +97,7 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
         task.registerTaskListener(this);
         TaskInfo info = addInfoLine(task);
 
-        COGInfo cinfo = cogInfo.get(task.getCOG());
+        COGInfo cinfo = cogInfo.get(task.getCOGView());
         cinfo.addTask(info);
         cogInfoChanged(cinfo);
     }
@@ -243,7 +242,7 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
     }
 
     @Override
-    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, Object v) {
         // TODO Auto-generated method stub
 
     }

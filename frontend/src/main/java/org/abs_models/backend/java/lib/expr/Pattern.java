@@ -4,10 +4,8 @@
  */
 package org.abs_models.backend.java.lib.expr;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public abstract class Pattern {
-    public PatternBinding match(ABSValue dt) {
+    public PatternBinding match(Object dt) {
         PatternBinding b = new PatternBinding();
         if (match(dt, b))
             return b;
@@ -15,6 +13,6 @@ public abstract class Pattern {
             return null;
     }
 
-    public abstract boolean match(ABSValue dt, PatternBinding binding);
+    public abstract boolean match(Object dt, PatternBinding binding);
 
 }

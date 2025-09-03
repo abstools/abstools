@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.abs_models.backend.java.lib.types.ABSRef;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.ClassView;
 import org.abs_models.backend.java.observing.ObjectObserver;
@@ -76,23 +75,25 @@ public abstract class ABSObject implements ABSRef {
         }
     }
 
-    protected volatile ObjectView __view;
+    protected ObjectView view;
 
-    public synchronized ObjectView getView() {
-        if (__view == null) {
-            __view = new View();
+    public ObjectView getView() {
+        if (view == null) {
+            synchronized(this) {
+                if (view == null) view = new View();
+            }
         }
-        return __view;
+        return view;
     }
 
-    protected ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
+    protected Object getFieldValue(String fieldName) throws NoSuchFieldException {
         throw new NoSuchFieldException(fieldName);
     }
 
     private class View implements ObjectView, ClassView {
 
         @Override
-        public COGView getCOG() {
+        public COGView getCOGView() {
             return __cog.getView();
         }
 
@@ -107,7 +108,7 @@ public abstract class ABSObject implements ABSRef {
         }
 
         @Override
-        public ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
+        public Object getFieldValue(String fieldName) throws NoSuchFieldException {
             return ABSObject.this.getFieldValue(fieldName);
         }
 
@@ -147,7 +148,7 @@ public abstract class ABSObject implements ABSRef {
     // Return value is serializable by the Jackson JSON library
     public abstract List<Map<String, Object>> getHttpCallableMethodInfo();
 
-    public ABSFut<? extends ABSValue> invokeMethod(String name, List<ABSValue> arguments) {
+    public ABSFut<? extends Object> invokeMethod(String name, List<Object> arguments) {
         return null;
     }
 }

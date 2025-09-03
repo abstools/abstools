@@ -5,8 +5,6 @@
 package org.abs_models.backend.java;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSString;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.*;
 
 public class TestSystemObserver implements SystemObserver, ObjectCreationObserver {
@@ -21,14 +19,14 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
         System.out.println("NEW COG CREATED");
         COGView mainCOG = cog;
         mainCOG.registerObjectCreationListener(this);
-        mainCOG.getScheduler().registerTaskSchedulerObserver(new TaskSchedulerObserver() {
+        mainCOG.getSchedulerView().registerTaskSchedulerObserver(new TaskSchedulerObserver() {
             TaskView mainTask;
 
             @Override
             public void taskCreated(TaskView task) {
                 if (mainTask == null) {
                     mainTask = task;
-                    mainTask.registerTaskListener(new EmptyTaskObserver() {
+                    mainTask.registerTaskListener(new DefaultTaskObserver() {
                         @Override
                         public void taskFinished(TaskView task) {
                             if (task == mainTask)
@@ -37,12 +35,12 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
                     });
                 }
                 String sourceClass = "INIT";
-                if (task.getSource() != null)
-                    sourceClass = task.getSource().getClassName();
-                System.out.print("TASK CREATED: " + sourceClass + " --> " + task.getTarget().getClassName() + "."
+                if (task.getSourceObjectView() != null)
+                    sourceClass = task.getSourceObjectView().getClassName();
+                System.out.print("TASK CREATED: " + sourceClass + " --> " + task.getTargetObjectView().getClassName() + "."
                         + task.getMethodName() + "(");
                 int i = 0;
-                for (ABSValue v : task.getArgs()) {
+                for (Object v : task.getArgs()) {
                     if (i > 0)
                         System.out.print(", ");
                     System.out.print(v);
@@ -83,8 +81,8 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
     public void objectInitialized(ObjectView o) {
         if (o.getClassName().equals("FieldClass")) {
             try {
-                ABSString s = (ABSString) o.getFieldValue("field");
-                System.out.println("FIELD VALUE=" + s.getString());
+                String s = (String) o.getFieldValue("field");
+                System.out.println("FIELD VALUE=" + s);
             } catch (NoSuchFieldException e) {
                 e.printStackTrace();
             }

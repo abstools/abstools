@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.MethodView;
 import org.abs_models.backend.java.observing.TaskStackFrameView;
 import org.abs_models.backend.java.observing.TaskStackView;
@@ -47,7 +46,7 @@ class TaskStack implements TaskStackView {
     }
 
     public class Frame implements TaskStackFrameView {
-        private final Map<String,ABSValue> values = new HashMap<>();
+        private final Map<String, Object> values = new HashMap<>();
         private final MethodView method;
 
         Frame(MethodView v) {
@@ -60,32 +59,32 @@ class TaskStack implements TaskStackView {
         }
 
         @Override
-        public synchronized ABSValue getValue(String variableName) {
+        public synchronized Object getValue(String variableName) {
             return values.get(variableName);
         }
 
-        synchronized void setValue(String variableName, ABSValue v) {
+        synchronized void setValue(String variableName, Object v) {
             values.put(variableName, v);
         }
 
         @Override
-        public TaskStackView getStack() {
+        public TaskStackView getStackView() {
             return TaskStack.this;
         }
 
         @Override
-        public MethodView getMethod() {
+        public MethodView getMethodView() {
             return method;
         }
     }
 
     @Override
-    public List<? extends TaskStackFrameView> getFrames() {
+    public List<? extends TaskStackFrameView> getFrameViews() {
         return Collections.unmodifiableList(frames);
     }
 
     @Override
-    public synchronized Frame getCurrentFrame() {
+    public synchronized Frame getCurrentFrameView() {
         return frames.get(frames.size()-1);
     }
 
@@ -95,7 +94,7 @@ class TaskStack implements TaskStackView {
     }
 
     @Override
-    public TaskView getTask() {
+    public TaskView getTaskView() {
         return task.getView();
     }
 }

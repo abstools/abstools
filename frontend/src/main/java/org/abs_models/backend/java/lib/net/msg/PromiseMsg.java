@@ -7,14 +7,13 @@ package org.abs_models.backend.java.lib.net.msg;
 import org.abs_models.backend.java.lib.net.Promise;
 import org.abs_models.backend.java.lib.net.NetCOG;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class PromiseMsg implements ObjectTargetMsg {
     public final ABSObject target;
     public final Promise promise;
-    public final ABSValue value;
+    public final Object value;
     
-    public PromiseMsg(Promise p, ABSObject target, ABSValue value) {
+    public PromiseMsg(Promise p, ABSObject target, Object value) {
         this.promise = p;
         this.target = target;
         this.value = value;

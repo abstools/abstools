@@ -27,8 +27,6 @@ public interface BackendTestDriver {
 
     public abstract boolean supportsExceptions();
 
-    public abstract boolean supportsDowncasting();
-
     public abstract boolean supportsSQLite();
 
     public abstract void assertEvalEquals(String absCode, boolean value) throws Exception;

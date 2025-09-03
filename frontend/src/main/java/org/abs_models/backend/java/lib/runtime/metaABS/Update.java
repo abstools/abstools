@@ -8,9 +8,7 @@ import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicClass;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicUpdate;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public class Update {
     private static ABSDynamicClass thisClass;
@@ -32,17 +30,17 @@ public class Update {
     public static void setupMetaAPI() {
         thisClass.setName("Update");
 
-        thisClass.addMethod(/*ABSString*/ "getName", new ABSClosure() {
+        thisClass.addMethod("getName", new ABSClosure() {
             @Override
-            public ABSString exec(ABSDynamicObject t, ABSValue... params) {
+            public String exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicUpdate update = (ABSDynamicUpdate)t;
-                return ABSString.fromString(update.getName());
+                return update.getName();
             }
         });
 
         thisClass.addMethod(/*ABSUnit*/ "apply", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicUpdate update = (ABSDynamicUpdate)t;
                 update.apply();
                 return ABSUnit.UNIT;

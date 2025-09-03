@@ -1,0 +1,54 @@
+<h3>3 Architecture of ABS</h3>
+The architecture of ABS has been organized as a stack of clearly separated layers
+as illustrated in <a href="fig4.png">Fig. 4</a>. In the design we strove for
+<ol>
+	<li>an attractive, easy-to-learn language with a syntax that is familiar to many developers and</li>
+	<li>to provide maximal separation of concern (orthogonality) among different concepts.</li>
+</ol>
+The four bottom layers provide a modern programming language based on
+a combination of algebraic data types (ADTs), pure functions, and a simple
+imperative-OO language. The idea is that anyone familiar with either Java and
+Haskell or with Scala is able to grasp this part of ABS immediately, even
+though ABS is considerably simpler than any of these languages.
+The next two layers realize tightly coupled and distributed concurrency, respectively.
+The concurrency and synchronization constructs are designed in a way
+to permit a compositional proof theory for functional verification in a program
+logic <a href="http://dx.doi.org/10.1016/j.scico.2010.08.003">[3]</a>. Standard contracts are used for functional specification of sequential
+programs and behavioral interfaces over sets of histories are used for specifying
+concurrent programs, see also the paper by Poetzsch-Heffter in this volume <a href="http://dx.doi.org/10.1007/978-3-642-40615-7_3">[34]</a>.
+The language layers up to here are often called <em>Core ABS</em>. Above these
+are orthogonal extensions for product line engineering, deployment components,
+and runtime components that allow to model mobile code. The latter are not
+discussed in this volume, but are described in <a href="http://dx.doi.org/10.1007/978-3-642-34026-0_6">[28]</a>.
+As mentioned above, ABS is a fully executable language. Nevertheless, <em>ab-
+straction</em> is achieved in a number of ways: first of all, ABS contains only five
+built-in datatypes—everything else is user-defined. The rationale is that no pre-
+mature decision on the properties of datatypes is enforced, which helps to create
+implementation-independent models. Second, functions on datatypes can be <em>un-
+derspecified</em>. The modeler has the alternative to return abstract values or to leave
+case distinctions incomplete. The latter may result in runtime errors, but is nev-
+ertheless useful for simulation, test generation or verification scenarios. Third,
+the scheduling of concurrent tasks as well as the order of queuing messages is
+non-deterministic.
+Of course, one might want to give full implementation details at some time.
+This is possible by refining an ADT into an implemented class or by realizing it
+in Java via the <em>foreign language interface</em> available in ABS (Sect. 7. Concrete
+schedulers can be specified via deployment components <a href="http://dx.doi.org/10.1007/978-3-642-40615-7">[24, </a><a href="http://doi.acm.org/10.1145/2245276.2232086">32]</a>.
+Crucially, the abstraction capabilities of ABS allow to specify partial behav-
+ior during early design stages, such as feature analysis, without committing to
+implementation details. This lends support, for example, to rapid prototyping
+or to the early analysis of consequences of design decisions.
+ABS has been designed as a compact language. Each layer has no more first-
+class concepts than are needed to ensure usability (including some syntactic
+sugar). This does not mean, however, that ABS is a small language: the ABS
+grammar has considerably more non-terminals than that of Java! The reason
+is that ABS features several language concepts that are simply not present in
+Java. In the final analysis, this reflects the ambition of ABS to cover the whole
+modeling spectrum from feature analysis, deployment mapping, high-level design
+and down to implementation issues. To show that in spite of this ABS is not
+unwieldy, but rather easy to use and quite flexible, is the aim of the present
+tutorial.
+
+&nbsp;
+
+<center><a href="http://www.abs-models.org/?page_id=656">Prev</a> | <a href="http://www.abs-models.org/?page_id=660">Next</a></center>

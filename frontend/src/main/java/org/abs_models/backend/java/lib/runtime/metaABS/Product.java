@@ -12,8 +12,6 @@ import org.abs_models.backend.java.lib.runtime.ABSDynamicFeature;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicProduct;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicReconfiguration;
-import org.abs_models.backend.java.lib.types.ABSString;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.common.ListUtils;
 
 public class Product {
@@ -40,17 +38,17 @@ public class Product {
          * MetaABS Product API -- cf. abslang.abs module ABS.Meta
          */
 
-        thisClass.addMethod(/*ABSString*/ "getName", new ABSClosure() {
+        thisClass.addMethod("getName", new ABSClosure() {
             @Override
-            public ABSString exec(ABSDynamicObject t, ABSValue... params) {
+            public String exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicProduct thisP = (ABSDynamicProduct)t;
-                return ABSString.fromString(thisP.getName());
+                return thisP.getName();
             }
         });
 
         thisClass.addMethod(/*List<ABSDynamicFeature>*/ "getFeatures", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicProduct thisP = (ABSDynamicProduct)t;
                 ArrayList<ABSDynamicFeature> features = new ArrayList<>();
                 for (ABSDynamicFeature f : thisP.getFeatures()) {
@@ -62,7 +60,7 @@ public class Product {
 
         thisClass.addMethod(/*Set<ABSDynamicProduct>*/ "getConfigurableProducts", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public Object exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicProduct thisP = (ABSDynamicProduct)t;
                 return ListUtils.toABSSet(thisP.getConfigurableProducts());
             }
@@ -70,7 +68,7 @@ public class Product {
 
         thisClass.addMethod(/*ABSDynamicReconfiguration*/ "getReconfiguration", new ABSClosure() {
             @Override
-            public ABSDynamicReconfiguration exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicReconfiguration exec(ABSDynamicObject t, Object... params) {
                 ABSDynamicProduct thisP = (ABSDynamicProduct)t;
                 ABSDynamicProduct targetP = (ABSDynamicProduct)params[0];
                 return thisP.getReconfiguration(targetP);

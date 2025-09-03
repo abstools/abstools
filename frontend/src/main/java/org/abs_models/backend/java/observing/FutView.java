@@ -4,14 +4,12 @@
  */
 package org.abs_models.backend.java.observing;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public interface FutView {
-    TaskView getResolvingTask();
+    TaskView getResolvingTaskView();
 
     boolean isResolved();
 
-    ABSValue getValue();
+    Object getValue();
 
     void registerFutObserver(FutObserver obs);
 

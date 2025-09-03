@@ -65,14 +65,14 @@ import javax.swing.tree.TreePath;
 import org.abs_models.backend.java.lib.runtime.ABSException;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
 import org.abs_models.backend.java.observing.COGView;
+import org.abs_models.backend.java.observing.DefaultSystemObserver;
 import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.ObjectCreationObserver;
 import org.abs_models.backend.java.observing.ObjectView;
-import org.abs_models.backend.java.observing.SystemObserver;
 import org.abs_models.backend.java.utils.ColorUtils;
 import org.abs_models.backend.java.utils.StringUtil;
 
-public class GraphicalDebugger implements SystemObserver {
+public class GraphicalDebugger extends DefaultSystemObserver {
     final DebugWindow window;
     final DebugModel model;
 
@@ -84,21 +84,6 @@ public class GraphicalDebugger implements SystemObserver {
     // only for ad-hoc testing
     public static void main(String[] args) {
         new GraphicalDebugger();
-    }
-
-    @Override
-    public void systemStarted() {
-    }
-
-    @Override
-    public void newCOGCreated(COGView cog, ObjectView initialObject) {
-        model.cogCreated(cog, initialObject);
-    }
-
-    @Override
-    public void systemFinished() {
-        // TODO Auto-generated method stub
-
     }
 
     public static Color getColor(TaskState ts) {
@@ -113,6 +98,11 @@ public class GraphicalDebugger implements SystemObserver {
         case BLOCKED: return ColorUtils.setSaturation(Color.RED, 0.5f);
         default: throw new IllegalArgumentException("Unknown Taskstate " + ts);
         }
+    }
+
+    @Override
+    public void newCOGCreated(COGView cog, ObjectView initialObject) {
+        model.cogCreated(cog, initialObject);
     }
 
     @Override
@@ -560,7 +550,7 @@ class TaskTable extends JPanel {
                 return "" + line.task.getID();
             }
             case 1: {
-                ObjectView source = line.task.getSource();
+                ObjectView source = line.task.getSourceObjectView();
                 if (source != null) {
                     return source.toString();
                 }
@@ -568,7 +558,7 @@ class TaskTable extends JPanel {
 
             }
             case 2: {
-                return line.task.getTarget().toString();
+                return line.task.getTargetObjectView().toString();
             }
             case 3: {
                 StringBuilder sb = new StringBuilder();
@@ -596,9 +586,9 @@ class TaskTable extends JPanel {
                 }
                 return "";
             case 6:
-                return "" + line.task.getCOG().getID();
+                return "" + line.task.getCOGView().getID();
             case 7: {
-                FutView fut = line.task.getFuture();
+                FutView fut = line.task.getFutView();
                 if (fut.isResolved())
                     return "" + fut.getValue();
                 else
@@ -689,7 +679,7 @@ class COGTree extends JPanel {
                 lbl = new JLabel("COG " + cogInfo.cog.getID() + " [" + cogInfo.initialObject + "]");
             } else if (value instanceof TaskInfo) {
                 TaskInfo taskInfo = (TaskInfo) value;
-                lbl = new JLabel("Task " + taskInfo.task.getID() + " (" + taskInfo.task.getTarget() + "."
+                lbl = new JLabel("Task " + taskInfo.task.getID() + " (" + taskInfo.task.getTargetObjectView() + "."
                         + taskInfo.task.getMethodName() + ")");
 
                 lbl.setBackground(GraphicalDebugger.getColor(taskInfo.state));
@@ -730,7 +720,7 @@ class COGTree extends JPanel {
             TreeNode node = tasks.get(line);
             treeModel.nodeChanged(node);
 
-            DefaultMutableTreeNode cogNode = cogs.get(line.task.getCOG());
+            DefaultMutableTreeNode cogNode = cogs.get(line.task.getCOGView());
             TreeNode objectsNode = cogNode.getChildAt(0);
             for (int i = 0; i < objectsNode.getChildCount(); i++) {
                 TreeNode objectNode = objectsNode.getChildAt(i);
@@ -745,7 +735,7 @@ class COGTree extends JPanel {
             DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(line);
             tasks.put(line, newNode);
             DefaultMutableTreeNode tasksNode = (DefaultMutableTreeNode) cogs.get(
-                    debugModel.getCOGInfo(line.task.getCOG()).cog).getChildAt(1);
+                    debugModel.getCOGInfo(line.task.getCOGView()).cog).getChildAt(1);
             treeModel.insertNodeInto(newNode, tasksNode, tasksNode.getChildCount());
             tree.scrollPathToVisible(new TreePath(newNode.getPath()));
 
@@ -787,7 +777,7 @@ class COGTree extends JPanel {
         }
 
         private void addObjectNode(ObjectView o) {
-            DefaultMutableTreeNode objectsNode = (DefaultMutableTreeNode) cogs.get(o.getCOG()).getChildAt(0);
+            DefaultMutableTreeNode objectsNode = (DefaultMutableTreeNode) cogs.get(o.getCOGView()).getChildAt(0);
             DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(o);
             treeModel.insertNodeInto(newNode, objectsNode, objectsNode.getChildCount());
 

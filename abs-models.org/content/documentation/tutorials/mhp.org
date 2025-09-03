@@ -1,0 +1,123 @@
+---
+title: "May-Happen-in-Parallel Analysis"
+description: "The maypar static analysis tool finds pairs of program statements that possibly execute in parallel."
+date: 2018-06-07
+weight: 4
+showDate: false
+type: post
+draft: false
+---
+
+** May-Happen-in-Parallel Analysis (MHP)
+
+ABS is a distributed language where different methods can be invoked
+asynchronously.  Therefore, there can be several tasks executing their code at
+the same time.  This simultaneity complicates the analysis and understanding
+of ABS programs, since (in general) there is a high level of parallelism.  The
+MHP analysis alleviates this situation by computing, for each instruction,
+which other instructions could execute in parallel.  This information can be
+very interesting for developers and testers, but it is crucial for the
+precision of many of the SACO analyses presented in the [[../costabs][CostABS tutorial]].
+
+The result of the MHP analysis, described in the paper [[http://dx.doi.org/10.1007/978-3-642-30793-5_3][“Analysis of
+May-Happen-in-Parallel in Concurrent Objects”]], is a set of pairs of
+instructions that could execute in parallel in any execution of the program.
+It is important to stress that this analysis computes an /overapproximation/
+of the parallelism.  In other words, if a pair of instruction can execute in
+parallel, then they will be detected by the analysis; however, the analysis
+can incorrectly detect pairs of instructions that never execute in parallel
+when executing the program.
+
+*** MHP Analysis in the Collaboratory
+
+In order to apply the MHP Analysis in the Collaboratory, just:
+
+- Open the ABS program to analyze.
+- Select ~MHP Analysis~ in the list of analyses.
+- Refresh the list of methods in the right side (button ~Refresh Outline~) and select the entry point of the analysis.  Only one method or function can be selected as entry point.  If none is selected then the main block will be considered the entry point.
+- Press the ~Run~ button.
+
+Let us see the results of the MHP analysis in the {{< eifilelink app="mhp" path="/collaboratory/deliverables/D3.3.2/VendingMachine.abs" >}} program selecting the ~main~ method from class ~IMain~ as the entry point.  The analysis reports its results in two places.  First, all the pairs of instructions that can be executed in parallel are printed in the console. This information is very detailed and verbose, but difficult to understand:
+
+#+BEGIN_EXAMPLE
+...
+L28 (Await)[IVendingMachine.insertCoins(-[2,'IMain.main']-)]  ||  L37 (Await)[IVendingMachine.retrieveCoins(-[2,'IMain.main']-)]
+
+L20 (Entry)[IVendingMachine.insertCoin(-[2,'IMain.main']-)]  ||  L60 (Exit)[IMain.main(-['IMain.main']-)]
+...
+#+END_EXAMPLE
+
+The previous fragment shows that the instruction at L28 (the ~await~ instruction in method ~insertCoins~) can happen in parallel with the instruction at L37 (the ~await~ instruction in method ~retrieveCoins~), and the same for instructions at L20 and L60.  However, the most comfortable way of inspecting the results of the MHP analysis is by navigating the code.  Every considered instruction will have a blue arrow in its left margin.  When clicking the arrow of an instruction, all the other considered instructions that can happen in parallel with it will be highlighted in yellow.  For example, clicking on the arrow in L37 will show the instructions that can happen in parallel with it, which as expected include L28.  We have mentioned “considered instruction” because, by default, the MHP analysis only takes into account those instructions that are entry/exit points of methods and ~await~ or ~release~ instructions.  In order to obtain the full list of instructions that may happen in parallel, open the settings window (button ~Settings~, option ~MHP analysis~) and change the option ~Amount of considered points~ from ~Reduced~ to ~Full~.  With these new settings the analysis obtains the MHP information for all the instructions in the program.
+
+Since the MHP analysis is a sound overapproximation, instructions that cannot execute in parallel are never detected.  For example, due to the ~await~ instruction at L57, the task ~retrieveCoins~ must be finished before continuing.  Therefore, the ~await~ instruction at L37, which is inside ~retrieveCoins~, cannot happen in parallel with the instructions after the ~await~ (L58 and L59) or the method ~showIncome~ that is invoked at L59.  If we execute a full MHP analysis and select the arrow at L37, those fragments will not be highlighted.
+
+*** MHP Settings
+
+In addition to the Amount of considered points to compute all the pairs of instructions that can execute in parallel or only a the most important, the MHP analysis supports other important settings, as shown in the next figure:
+
+{{< figure class="image main" src="/images/tutorials/costabs/mhp_settings.png" >}}
+
+Using these parameters we can adapt the behavior of the analysis:
+- ~Debug information~ (~0~, ~1~, or ~2~): level of information that is printed in the console, where ~0~ is the lowest level.
+- ~Points-to analysis precision~ (~1~, ~2~, ~3~ and ~4~): the precision that will be used in the point-to analysis that approximates the different objects that are created during execution.
+- ~Condition synchronization MHP extension~ (~no~, ~yes~): by default, the MHP analysis only considers simple await instructions involving one future variable (~await f?;~).  When enabling this option, the analysis tries to use the information from ~await~ instructions that involve complex conditions like ~await this.x != null~.
+- ~Inter-Procedural Synchronization~ (~no~, ~yes~): enables a refinement of the MHP analysis that obtains finer information about the finished task, thus producing more precise results in programs with inter-procedural synchronization.
+  # FIXME explain "Amount of considered points" option
+
+*** May-Happen-in-Parallel with Inter-Procedural Synchronization
+
+Let us analyze with SACO the program {{< eifilelink path="/collaboratory/deliverables/D3.3.2/InterProcedural.abs" app="mhp" >}} with the Inter-Procedural Synchronization of the MHP analysis (described in the paper [[http://dx.doi.org/10.1007/978-3-662-48288-9_5][May-Happen-in-Parallel Analysis for Asynchronous Programs with Inter-Procedural Synchronization]]), as mentioned before.
+
+#+BEGIN_SRC abs
+module Parallel;
+import * from ABS.StdLib;
+
+interface IO1 {
+    Unit f ();
+}
+
+interface IO2 {
+    Unit g (Fut<Unit> w);
+}
+
+class O1 implements IO1 {
+    Unit f () {
+        skip;
+    }
+}
+
+class O2 implements IO2 {
+    Unit g (Fut<Unit> w) {
+        skip;
+        await w?;
+        skip;
+    }
+}
+
+{
+    Fut<Unit> x;
+    Fut<Unit> y;
+    IO1 o1 = new local O1();
+    IO2 o2 = new local O2();
+    x = o1!f();
+    y = o2!g(x);
+    await y?;
+}
+#+END_SRC
+
+If we apply the MHP analysis without inter-procedural synchronization, we
+obtain that L14 can happen in parallel with L34 because the analysis is not
+able to infer that when method ~g~ finishes its execution, method ~f~ has finished
+too (caused by the await instruction in L21).
+
+To refine the MHP analysis, we set the option ~Inter-Procedural
+Synchronization~ to ~yes~.  Using this refinement we obtain that the only
+program points that can happen in parallel with L34 are the end of methods ~f~
+and ~g~, which means that both methods must have finished when L34 is reached.
+
+# * [0/3] TODOs                                                      :noexport:
+# - [ ] Add boilerplate text at beginning of each task: "Restore settings to
+#   default and set the following options ..."
+# - [ ] Add overview / table of contents at the start
+# - [ ] Add short explanation of the tool to each section + link to
+#   documentation or paper

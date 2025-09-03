@@ -1,0 +1,68 @@
+<h3>2 Design Principles of ABS</h3>
+ABS targets software systems that are concurrent, distributed, object-oriented,
+built from components, and highly reusable. To achieve the latter, we follow
+the arguably most successful software reuse methodology in practice: <em>software
+product families or software product lines</em> <a href="http://dx.doi.org/10.1007/3-540-28901-1">[35]</a>, see also the <a title="Product Hall of Fame" href="http://splc.net/fame.html">Product Line Hall of</a>
+<a title="Product Hall of Fame" href="http://splc.net/fame.html"> Fame</a>. To this end, ABS supports the modeling of variability in terms of feature
+models as a <em>first-class language concept</em>. As shown in Sect. 8, ABS thus provides
+language-based support for <em>product line engineering</em> (PLE).
+As an abstract language ABS is well suited to model software that is supposed
+to be deployed in a virtualized environment. To close the gap between design
+and deployment it is necessary to represent low-level concepts such as system
+time, memory, latency, or scheduling at the level of abstract models. In ABS this
+is possible via a flexible and pluggable notation called <em>deployment components</em>.
+This goes beyond the present, introductory tutorial, but is covered in detail in
+the chapter by Johnsen in this volume <a href="http://dx.doi.org/10.1007/978-3-642-40615-7">[24]</a>.
+ABS is not merely a modeling notation, but it arrives with an integrated
+tool set that helps to <em>automate the software engineering process</em>. Tools are use-
+less, however, unless they ensure <em>predictability of results, interoperability</em>, and
+<em>usability</em>. A fundamental requirement for the first two criteria is a uniform, for-
+mal semantics. But interoperability also involves the capability to connect with
+other notations than ABS. This is ensured by providing numerous language in-
+terfaces from and to ABS as shown in<a href="fig3.png"> Fig. 3</a>. These are realized by various
+import, export, and code generation tools, several of which are discussed below.
+
+<a href="fig3.png"><img src="fig3-385x266.png" alt="fig3-385x266" width="385" height="266" class="alignnone size-medium wp-image-742" /></a>
+
+<strong>Fig. 3.</strong> Interfaces between ABS and other languages
+
+Arguably the most important criterion for tools, however, is usability. This
+tutorial is not the place to embark on a full discussion of what that entails, but
+it should be indisputable that <em>automation, scalability</em>, and <em>integration</em> are of the
+utmost importance.
+To ensure the first two of these qualities, the HATS project adopted as a
+central principle to develop ABS <em>in tandem</em> with its tool set. This is not merely
+a historical footnote, but central to an understanding of the trade-offs made
+in the design of the ABS language. For most specification and programming
+languages their (automatic) analyzability is considered in hindsight and turns
+out not to be scalable or even feasible. With ABS, the slogan of <em>design for
+verifiability</em> that originated in the context of hardware description languages <a href="http://link.springer.com/chapter/10.1007%2F0-387-97226-9_20">[30]</a>,
+has been systematically applied to a software modeling language. For example,
+the concurrency model of ABS is designed such that it permits a compositional
+proof system <a href="http://dx.doi.org/10.1016/j.scico.2010.08.003">[3]</a>, the reuse principle employed in ABS is chosen in such a way
+that incremental verification is possible <a href="http://dx.doi.org/10.1007/978-3-642-34026-0_4">[21]</a>, etc.
+Many formal methods tools focus on analysis, in particular, on verification.
+Functional verification, model checking, test case generation, and resource es-
+timation are supported by ABS tools as well. Just as important as analytic
+methods, specifically in a model-based context, are <em>generative</em> ones: ABS is fully
+executable (albeit in a non-deterministic manner) and supports code generation
+to Java, Scala, and Maude. In addition, it is possible to <em>learn</em> ABS models
+from observed behavior <a href="http://www.hats-project.eu/sites/default/files/Deliverable3.2.pdf">[16]</a>.
+Regarding <em>integration</em>, the tool set around the ABS language is realized as
+a set of plugins for the popular Eclipse IDE. These plugins realize the ABS
+
+<a href="fig4.png"><img src="fig4-434x260.png" alt="fig4-434x260" width="434" height="258" class="alignnone size-medium wp-image-748" /></a>
+
+<strong>Fig. 4.</strong> Architecture of the ABS language
+
+<em>Modeling Perspective</em> (see <a href="ABSModelingPerspective.jpg">Fig. 2</a>) and the <em>ABS Debug Perspective</em> (see <a href="ABSDebugPerspective.jpg">Fig. 8</a>),
+which provide the same functionality as their Java counterparts, that is, parsing,
+syntax highlighting, parse error location, symbol lookup, compilation, building,
+runtime configurations, interactive debugging, etc. In addition to these standard
+development tools, however, a number of analysis and generation tools are avail-
+able as well. Some of these, for example, Java code generation or type inference
+are illustrated below. An overview of the ABS tool suite is given in <a href="http://dx.doi.org/10.1007/s10009-012-0250-1">[42]</a>.
+
+&nbsp;
+
+<center><a href="http://www.abs-models.org/?page_id=653">Prev</a> | <a href="http://www.abs-models.org/?page_id=658">Next</a></center>

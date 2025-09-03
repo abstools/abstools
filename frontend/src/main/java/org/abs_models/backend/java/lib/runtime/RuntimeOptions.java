@@ -241,6 +241,7 @@ public class RuntimeOptions {
     }
 
     void parseCommandLineArgs(String[] args) {
+        if (args == null) return;
         ArrayList<String> arguments = new ArrayList<>(Arrays.asList(args));
         ListIterator<String> argslist = arguments.listIterator();
         ArrayList<Option> remainingOptions = new ArrayList<>(options);

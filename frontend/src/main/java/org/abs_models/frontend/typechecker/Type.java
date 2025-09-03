@@ -20,7 +20,7 @@ public abstract class Type {
 
     protected Map<Object,Object> metaData = new HashMap<>();
     {
-        metaData.put(ANNOTATION_KEY, Collections.EMPTY_LIST);
+        metaData.put(ANNOTATION_KEY, Collections.emptyList());
     }
 
     public Type withAnnotations(org.abs_models.frontend.ast.List<Annotation> anns) {

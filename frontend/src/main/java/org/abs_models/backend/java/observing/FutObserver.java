@@ -4,8 +4,6 @@
  */
 package org.abs_models.backend.java.observing;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public interface FutObserver {
-    void onResolved(FutView fut, ABSValue value);
+    void onResolved(FutView fut, Object value);
 }

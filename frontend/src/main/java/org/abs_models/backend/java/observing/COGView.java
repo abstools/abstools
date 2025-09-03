@@ -4,12 +4,16 @@
  */
 package org.abs_models.backend.java.observing;
 
+import org.abs_models.backend.java.lib.runtime.COG;
+
 public interface COGView {
-    TaskSchedulerView getScheduler();
+    TaskSchedulerView getSchedulerView();
 
     void registerObjectCreationListener(ObjectCreationObserver listener);
 
     void registerObjectCreationListener(String className, ObjectCreationObserver e);
 
     int getID();
+
+    COG getCOG();
 }

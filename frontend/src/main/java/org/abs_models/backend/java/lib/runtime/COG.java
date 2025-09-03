@@ -12,14 +12,13 @@ import java.util.logging.Logger;
 
 import org.abs_models.backend.java.JavaBackendException;
 import org.abs_models.backend.java.lib.types.ABSInterface;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.ObjectCreationObserver;
 import org.abs_models.backend.java.observing.TaskSchedulerView;
 import org.abs_models.backend.java.scheduling.TaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
 
-public class COG implements ABSValue {
+public class COG {
     protected static final Logger log = Logging.getLogger(COG.class.getName());
 
     private final TaskScheduler scheduler;
@@ -165,9 +164,13 @@ public class COG implements ABSValue {
 
     private View view;
 
-    public synchronized COGView getView() {
+    public COGView getView() {
         if (view == null) {
-            view = new View();
+            synchronized(this) {
+                if (view == null) {
+                    view = new View();
+                }
+            }
         }
         return view;
     }
@@ -228,13 +231,18 @@ public class COG implements ABSValue {
         }
 
         @Override
-        public TaskSchedulerView getScheduler() {
+        public TaskSchedulerView getSchedulerView() {
             return scheduler.getView();
         }
 
         @Override
         public int getID() {
             return id;
+        }
+
+        @Override
+        public COG getCOG() {
+            return COG.this;
         }
 
     }

@@ -12,15 +12,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import com.google.common.annotations.VisibleForTesting;
 
 import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.parser.Main;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.NullOutputStream;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Translates given ABS Files to an Erlang program
@@ -155,11 +154,17 @@ public class ErlangBackend extends Main {
                                + String.join(" ", compile_command));
         }
 
-        Process p = Runtime.getRuntime().exec(compile_command.toArray(new String[0]));
-        if (options.contains(CompileOptions.VERBOSE)) IOUtils.copy(p.getInputStream(), System.out);
-        else IOUtils.copy(p.getInputStream(), NullOutputStream.INSTANCE);
-        p.waitFor();
-        if (p.exitValue() != 0) {
+        ProcessBuilder pb = new ProcessBuilder(compile_command);
+        if (options.contains(CompileOptions.VERBOSE)) {
+            pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+        } else {
+            pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+            pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+        }
+        Process p = pb.start();
+        int exitCode = p.waitFor();
+        if (exitCode != 0) {
             String message = "Compilation of generated erlang code failed with exit value " + p.exitValue();
             if (!options.contains(CompileOptions.VERBOSE)) message = message + "\n  (use -v for detailed compiler output)";
             throw new InternalBackendException(message);

@@ -18,7 +18,6 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.COGView;
 import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.GuardView;
@@ -49,7 +48,7 @@ public class TaskStateHistoryObserver implements SystemObserver,TaskSchedulerObs
 
     @Override
     public void newCOGCreated(COGView cog, ObjectView initialObject) {
-        cog.getScheduler().registerTaskSchedulerObserver(this);
+        cog.getSchedulerView().registerTaskSchedulerObserver(this);
     }
 
     @Override
@@ -170,7 +169,7 @@ public class TaskStateHistoryObserver implements SystemObserver,TaskSchedulerObs
     }
 
     @Override
-    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, Object v) {
         // TODO Auto-generated method stub
         
     }

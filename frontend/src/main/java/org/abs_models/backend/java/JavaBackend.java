@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,12 +22,7 @@ import org.abs_models.backend.java.codegeneration.JavaCode;
 import org.abs_models.backend.java.codegeneration.JavaCodeGenerationException;
 import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
-import org.abs_models.backend.java.lib.types.ABSBool;
-import org.abs_models.backend.java.lib.types.ABSFloat;
-import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
-import org.abs_models.backend.java.lib.types.ABSRational;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.common.NotImplementedYetException;
 import org.abs_models.frontend.ast.ClassDecl;
@@ -51,6 +45,8 @@ import org.abs_models.frontend.typechecker.InterfaceType;
 import org.abs_models.frontend.typechecker.Type;
 import org.abs_models.frontend.typechecker.TypeParameter;
 import org.abs_models.frontend.typechecker.UnionType;
+import org.apfloat.Apint;
+import org.apfloat.Aprational;
 
 public class JavaBackend extends Main {
 
@@ -118,20 +114,15 @@ public class JavaBackend extends Main {
         }
     }
 
-    private static final Map<String, String> dataTypeMap = initDataTypeMap();
-
-    private static Map<String, String> initDataTypeMap() {
-        final Map<String, String> res = new HashMap<>();
-        res.put("Int", ABSInteger.class.getName());
-        res.put("Rat", ABSRational.class.getName());
-        res.put("Float", ABSFloat.class.getName());
-        res.put("Bool", ABSBool.class.getName());
-        res.put("String", ABSString.class.getName());
-        res.put("Fut", ABSFut.class.getName());
-        res.put("Unit", ABSUnit.class.getName());
-        res.put("Process", ABSProcess.class.getName());
-        return res;
-    }
+    private static final Map<String, String> dataTypeMap = Map.of(
+        "Int", Apint.class.getName(),
+        "Rat", Aprational.class.getName(),
+        "Float", java.lang.Double.class.getName(),
+        "Bool", java.lang.Boolean.class.getName(),
+        "String", java.lang.String.class.getName(),
+        "Fut", ABSFut.class.getName(),
+        "Unit", ABSUnit.class.getName(),
+        "Process", ABSProcess.class.getName());
 
     public static boolean isBuiltinDataType(Type absType) {
         if (absType.isDataType())
@@ -146,6 +137,10 @@ public class JavaBackend extends Main {
 
     public static String getJavaType(TypeUse absType) {
         return getQualifiedString(absType.getType());
+    }
+
+    public static String getJavaType(Type type) {
+        return getQualifiedString(type);
     }
 
     public static String getQualifiedString(String s) {

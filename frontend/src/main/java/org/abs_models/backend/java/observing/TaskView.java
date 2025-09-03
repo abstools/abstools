@@ -7,7 +7,6 @@ package org.abs_models.backend.java.observing;
 import java.util.List;
 
 import org.abs_models.backend.java.lib.runtime.ABSException;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
 public interface TaskView {
     /**
@@ -16,7 +15,7 @@ public interface TaskView {
      * 
      * @return the calling task
      */
-    TaskView getSender();
+    TaskView getSenderView();
 
     /**
      * The source object of the asynchronous call leading to this task is null
@@ -24,17 +23,17 @@ public interface TaskView {
      * 
      * @return the source object, or <code>null</code> if there is no source object
      */
-    ObjectView getSource();
+    ObjectView getSourceObjectView();
 
-    ObjectView getTarget();
+    ObjectView getTargetObjectView();
 
-    COGView getCOG();
+    COGView getCOGView();
 
     String getMethodName();
 
-    List<ABSValue> getArgs();
+    List<Object> getArgs();
 
-    FutView getFuture();
+    FutView getFutView();
 
     void registerTaskListener(TaskObserver listener);
 
@@ -45,6 +44,6 @@ public interface TaskView {
     boolean hasException();
 
     ABSException getException();
-    
-    TaskStackView getStack();
+
+    TaskStackView getStackView();
 }

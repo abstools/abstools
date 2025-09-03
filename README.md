@@ -28,6 +28,9 @@ Folders
   <https://abs-models.org/getting_started/local-install/> for installation
   instructions.
 
+* `abs-models.org` - Source for the https://abs-models.org website.
+  See the README.org file in that subdirectory for deployment information.
+
 * `abs-docs` - the ABS language manual, available online at
   <http://abs-models.org/manual/>.  To generate the manual locally,
   run `make manual`.

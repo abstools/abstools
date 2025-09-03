@@ -5,11 +5,8 @@
 package org.abs_models.backend.java.lib.runtime;
 
 import org.abs_models.backend.java.JavaBackendException;
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSDataType;
-import org.abs_models.backend.java.lib.types.ABSRational;
 import org.abs_models.backend.java.lib.types.ABSRef;
-
 import org.apfloat.Aprational;
 
 public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyncCall<T> implements AsyncCallRTAttributes {
@@ -32,7 +29,7 @@ public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyn
      */
     private boolean critical;
 
-    public AbstractAsyncCallRT(ABSObject source, T target, ABSDataType dl, ABSDataType co, ABSBool cr) {
+    public AbstractAsyncCallRT(ABSObject source, T target, ABSDataType dl, ABSDataType co, boolean cr) {
         super(source, target);
         deadline_t = convertFromDuration(dl);
         if (deadline_t.signum() > 0) {
@@ -40,7 +37,7 @@ public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyn
             deadline_t = deadline_t.add(ABSRuntime.getRuntime().getClock());
         }
         cost = convertFromDuration(co);
-        critical = cr.toBoolean();
+        critical = cr;
     }
 
     @Override
@@ -60,8 +57,7 @@ public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyn
 
     private Aprational convertFromDuration(ABSDataType duration) {
         if (duration.getConstructorName().equals("Duration")) {
-            ABSRational rat = (ABSRational)duration.getArg(0);
-            return rat.toAprational();
+            return (Aprational)duration.getArg(0);
         } else if (duration.getConstructorName().equals("InfDuration")) {
             return new Aprational(-1);
         } else {

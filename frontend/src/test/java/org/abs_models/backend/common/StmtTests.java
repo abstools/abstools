@@ -34,7 +34,9 @@ public class StmtTests extends SemanticTests {
 
     @Test
     public void whileFalse() throws Exception {
-        assertEvalTrue("{ Bool testresult = False; while (False) { } testresult = True;  }");
+        // cannot directly write `while(False)`: Java backend fails
+        // with error about unreachable code
+        assertEvalTrue("{ Bool testresult = False; while (testresult) { } testresult = True;  }");
     }
 
     @Test

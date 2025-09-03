@@ -10,17 +10,23 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 import org.abs_models.backend.java.JavaBackend;
 import org.abs_models.backend.java.JavaBackendConstants;
-import org.abs_models.backend.java.lib.runtime.*;
-import org.abs_models.backend.java.lib.types.ABSBool;
-import org.abs_models.backend.java.lib.types.ABSFloat;
-import org.abs_models.backend.java.lib.types.ABSInteger;
+import org.abs_models.backend.java.lib.expr.BinOp;
+import org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions;
+import org.abs_models.backend.java.lib.runtime.ABSFut;
+import org.abs_models.backend.java.lib.runtime.ABSRuntime;
+import org.abs_models.backend.java.lib.runtime.ABSThread;
+import org.abs_models.backend.java.lib.runtime.AbstractAsyncCallRT;
+import org.abs_models.backend.java.lib.runtime.ModelApi;
+import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.types.ABSProcess;
-import org.abs_models.backend.java.lib.types.ABSRational;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
 import org.abs_models.common.Constants;
@@ -31,11 +37,14 @@ import org.abs_models.frontend.ast.AsyncCall;
 import org.abs_models.frontend.ast.AwaitAsyncCall;
 import org.abs_models.frontend.ast.AwaitStmt;
 import org.abs_models.frontend.ast.BuiltinFunctionDef;
+import org.abs_models.frontend.ast.CaseStmt;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.ConstructorArg;
+import org.abs_models.frontend.ast.ConstructorPattern;
 import org.abs_models.frontend.ast.DataConstructor;
 import org.abs_models.frontend.ast.DataTypeDecl;
 import org.abs_models.frontend.ast.Decl;
+import org.abs_models.frontend.ast.Exp;
 import org.abs_models.frontend.ast.ExpGuard;
 import org.abs_models.frontend.ast.FnApp;
 import org.abs_models.frontend.ast.FunctionDecl;
@@ -46,8 +55,12 @@ import org.abs_models.frontend.ast.MethodImpl;
 import org.abs_models.frontend.ast.MethodSig;
 import org.abs_models.frontend.ast.NewExp;
 import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.Pattern;
+import org.abs_models.frontend.ast.PatternVar;
+import org.abs_models.frontend.ast.PatternVarUse;
 import org.abs_models.frontend.ast.PureExp;
 import org.abs_models.frontend.ast.ReturnStmt;
+import org.abs_models.frontend.ast.Stmt;
 import org.abs_models.frontend.ast.StringLiteral;
 import org.abs_models.frontend.ast.ThisExp;
 import org.abs_models.frontend.ast.TypeParameterDecl;
@@ -57,12 +70,14 @@ import org.abs_models.frontend.ast.VarOrFieldDecl;
 import org.abs_models.frontend.ast.VarUse;
 import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.Type;
+import org.apfloat.Apint;
+import org.apfloat.Aprational;
 
 public class JavaGeneratorHelper {
 
     private static final String FLI_METHOD_PREFIX = "fli_";
 
-    public static void generateHelpLine(ASTNode<?> node, PrintStream stream) {
+    public static void generateHelpLine(PrintStream stream, ASTNode<?> node) {
         stream.println("// " + node.getPositionString());
     }
 
@@ -110,11 +125,11 @@ public class JavaGeneratorHelper {
         stream.print(")");
     }
 
-    public static void generateParams(PrintStream stream, List<ParamDecl> params) {
-        generateParams(stream, null, params);
+    public static void generateParams(PrintStream stream, List<ParamDecl> params, boolean isFinal) {
+        generateParams(stream, null, params, isFinal);
     }
 
-    public static void generateParams(PrintStream stream, String firstArg, List<ParamDecl> params) {
+    public static void generateParams(PrintStream stream, String firstArg, List<ParamDecl> params, boolean isFinal) {
         stream.print("(");
 
         boolean first = true;
@@ -124,36 +139,41 @@ public class JavaGeneratorHelper {
         }
 
         for (ParamDecl d : params) {
-            if (!first)
-                stream.print(", ");
-            // stream.print("final ");
+            if (!first) stream.print(", ");
+            if (isFinal) stream.print("final ");
             d.generateJava(stream);
             first = false;
         }
         stream.print(")");
     }
 
-    public static void generateTypeParameters(PrintStream stream, Decl dtd,
-            boolean plusExtends) {
+    /**
+     * Returns "<A, B>" or the empty string if dtd does not have type
+     * parameters.
+     */
+    public static String getTypeParameters(Decl dtd) {
+        StringBuilder result = new StringBuilder("");
         List<TypeParameterDecl> typeParams = null;
         if (dtd instanceof HasTypeParameters) {
             typeParams = ((HasTypeParameters)dtd).getTypeParameters();
-        } else
-            return;
-        if (typeParams.getNumChild() > 0) {
-            stream.print("<");
-            boolean isFirst = true;
-            for (TypeParameterDecl d : typeParams) {
-                if (isFirst)
-                    isFirst = false;
-                else
-                    stream.print(",");
-                stream.print(d.getName());
-                if (plusExtends)
-                    stream.print(" extends " + ABSValue.class.getName());
+            if (typeParams.getNumChild() > 0) {
+                result.append("<");
+                boolean isFirst = true;
+                for (TypeParameterDecl d : typeParams) {
+                    if (isFirst)
+                        isFirst = false;
+                    else
+                        result.append(",");
+                    result.append(d.getName());
+                }
+                result.append(">");
             }
-            stream.print(">");
         }
+        return result.toString();
+    }
+
+    public static void generateTypeParameters(PrintStream stream, Decl dtd) {
+        stream.print(getTypeParameters(dtd));
     }
 
     public static void generateBuiltInFnApp(PrintStream stream, FnApp app) {
@@ -198,7 +218,7 @@ public class JavaGeneratorHelper {
         stream.println("throw new RuntimeException(\"Database file " + dbname + " not found\");");
         stream.println("}");
         stream.println("// Not all databases support reading a resultset in reverse, use accumulator to preserve row order");
-        stream.println("java.util.List<org.abs_models.backend.java.lib.types.ABSValue> acc = new java.util.ArrayList<>();");
+        stream.println("java.util.List<Object> acc = new java.util.ArrayList<>();");
         stream.println("ABS.StdLib.List result = new ABS.StdLib.List_Nil();");
         stream.println("String connection_string = \"jdbc:sqlite:" + dbname + "\";");
         stream.println("try (java.sql.Connection connection = java.sql.DriverManager.getConnection(connection_string);");
@@ -212,23 +232,23 @@ public class JavaGeneratorHelper {
             if (t.isBoolType()) {
                 stream.print("statement.setInt(" + (i - 2) + ", (");
                 e.generateJava(stream);
-                stream.println(").toBoolean() ? 1 : 0);");
+                stream.println(") ? 1 : 0);");
             } else if (t.isIntType()) {
                 stream.print("statement.setBigDecimal(" + (i - 2) + ", new java.math.BigDecimal((");
                 e.generateJava(stream);
-                stream.println(").getBigInteger()));");
+                stream.println(").toBigInteger()));");
             } else if (t.isRatType()) {
                 stream.print("statement.setDouble(" + (i - 2) + ", (");
                 e.generateJava(stream);
-                stream.println(").toDouble());");
+                stream.println(").doubleValue());");
             } else if (t.isFloatType()) {
                 stream.print("statement.setDouble(" + (i - 2) + ", (");
                 e.generateJava(stream);
-                stream.println(").getDouble());");
+                stream.println("));");
             } else if (t.isStringType()) {
                 stream.print("statement.setString(" + (i - 2) + ", (");
                 e.generateJava(stream);
-                stream.println(").getString());");
+                stream.println("));");
             } else {
                 // unreachable because of type checking:
                 // Typecheckerhelper.isValidSQLite3ArgumentType won't let us
@@ -244,15 +264,15 @@ public class JavaGeneratorHelper {
             // handle singleton return value
             stream.print("acc.add(0, ");
             if (query_type.isBoolType()) {
-                stream.print("rs.getBoolean(1) ? " + ABSBool.class.getName() + ".TRUE : " + ABSBool.class.getName() + ".FALSE");
+                stream.print("rs.getBoolean(1)");
             } else if (query_type.isIntType()) {
-                stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(1).toBigInteger())");
+                stream.print("new " + Apint.class.getName() + "(rs.getBigDecimal(1).toBigInteger())");
             } else if (query_type.isFloatType()) {
-                stream.print(ABSFloat.class.getName() + ".fromDouble(rs.getDouble(1))");
+                stream.print("rs.getDouble(1)");
             } else if (query_type.isRatType()) {
-                stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(1))");
+                stream.print("new " + Aprational.class.getName() + "(rs.getDouble(1))");
             } else if (query_type.isStringType()) {
-                stream.print(ABSString.class.getName() + ".fromString(rs.getString(1))");
+                stream.print("rs.getString(1)");
             } else {
                 // unreachable: query result is type-checked before code
                 // generation starts
@@ -274,15 +294,15 @@ public class JavaGeneratorHelper {
                 // ResultSet is 1-indexed, args is 0-indexed
                 Type t = args.get(i-1);
                 if (t.isBoolType()) {
-                    stream.print("rs.getBoolean(" + i + ") ? " + ABSBool.class.getName() + ".TRUE : " + ABSBool.class.getName() + ".FALSE");
+                    stream.print("rs.getBoolean(" + i + ")");
                 } else if (t.isIntType()) {
-                    stream.print(ABSInteger.class.getName() + ".fromBigInt(rs.getBigDecimal(" + i + ").toBigInteger())");
+                    stream.print("new " + Apint.class.getName() + "(rs.getBigDecimal(" + i + ").toBigInteger())");
                 } else if (t.isFloatType()) {
-                    stream.print(ABSFloat.class.getName() + ".fromDouble(rs.getDouble(" + i + "))");
+                    stream.print("rs.getDouble(" + i + ")");
                 } else if (t.isRatType()) {
-                    stream.print(ABSRational.class.getName() + ".fromDouble(rs.getDouble(" + i + "))");
+                    stream.print("new " + Aprational.class.getName() + "(rs.getDouble(" + i + "))");
                 } else if (t.isStringType()) {
-                    stream.print(ABSString.class.getName() + ".fromString(rs.getString(" + i + "))");
+                    stream.print("rs.getString(" + i + ")");
                 } else {
                     // unreachable because of type checking
                 }
@@ -295,10 +315,87 @@ public class JavaGeneratorHelper {
         stream.println("System.err.println(e);");
         stream.println("System.exit(1);");
         stream.println("}");
-        stream.println("for (org.abs_models.backend.java.lib.types.ABSValue row : acc) {");
+        stream.println("for (Object row : acc) {");
         stream.println("result = new ABS.StdLib.List_Cons(row, result);");
         stream.println("}");
         stream.println("return result;");
+    }
+
+    public static void generateDataConstructor(PrintStream stream, DataConstructor c, String datatypeName, DataTypeDecl dataTypeDecl) {
+        String constructorClassName = JavaBackend.getConstructorName(c);
+        JavaGeneratorHelper.generateHelpLine(stream,c);
+
+        stream.print("public record " + constructorClassName);
+        if (dataTypeDecl != null) JavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl);
+        stream.print("("
+                       + IntStream
+                               .range(0, c.getNumConstructorArg())
+                               .mapToObj(i -> JavaBackend.getJavaType(c.getConstructorArg(i)) + " arg" + i)
+                               .collect(Collectors.joining(", "))
+                     + ")");
+        stream.print(" implements " + datatypeName);
+
+        stream.println(" {");
+
+        stream.println("public Object[] getArgs() { return new Object[] { "
+                       + IntStream
+                               .range(0, c.getNumConstructorArg())
+                               .mapToObj(i -> "arg" + i)
+                               .collect(Collectors.joining(", "))
+                       + " }; }");
+        stream.println("public Object getArg(int i) {");
+        stream.println("switch (i) {");
+        for (int i = 0; i < c.getNumConstructorArg(); i++) {
+            stream.println("case " + i + ": return arg" + i + ";");
+        }
+        stream.println("default: throw new IllegalArgumentException(i+ \" is not a valid constructor argument index\");");
+        stream.println("}");
+        stream.println("}");
+        stream.println("public java.lang.String getConstructorName() { return \"" + c.getName() + "\";}");
+
+        stream.println("public java.lang.String toString() {");
+        stream.println("StringBuilder sb = new StringBuilder();");
+        stream.println("sb.append(\"" + c.getName() + "\");");
+        if (c.getNumConstructorArg() > 0) {
+            String separator = "";
+            stream.println("sb.append(\"(\");");
+            for (int i = 0; i < c.getNumConstructorArg(); i++) {
+                if (!separator.isEmpty()) {
+                    stream.println("sb.append(\"" + separator + "\");");
+                }
+                separator = ",";
+                ConstructorArg a = c.getConstructorArg(i);
+                if (a.getType().isStringType()) {
+                    stream.println("sb.append(\"\\\"\" + arg" + i + " + \"\\\"\");");
+                } else {
+                    stream.println("sb.append(" + ABSBuiltInFunctions.class.getName() + ".toString(arg" + i + "));");
+                }
+            }
+            stream.println("sb.append(\")\");");
+        }
+        stream.println("return sb.toString();");
+        stream.println("}");
+
+        // eq method
+        stream.println("public boolean eq(" + ABSValue.class.getName() + " o) {");
+        stream.println("if (o instanceof " + constructorClassName + " other) {");
+        stream.println("return true"
+                       + IntStream.range(0, c.getNumConstructorArg())
+                               .mapToObj(i -> " && "
+                                              + BinOp.class.getName()
+                                              + ".eq(arg" + i + ", other.arg" + i + ")")
+                               .collect(Collectors.joining())
+                       + ";");
+        stream.println("} else {");
+        stream.println("return false;");
+        stream.println("}");
+        stream.println("}");
+        stream.println();
+
+        // toJSON method
+        JavaGeneratorHelper.generateDataTypeConstructorToJsonMethod(stream, c);
+
+        stream.println("}");
     }
 
     /**
@@ -366,7 +463,7 @@ public class JavaGeneratorHelper {
                 org.abs_models.backend.java.lib.types.ABSDataType value = this;
                 while (className.equals("ABS.StdLib.Map_InsertAssoc")) {
                     org.abs_models.backend.java.lib.types.ABSDataType entry = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(0); // guaranteed to be Pair
-                    result.putIfAbsent(org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions.toString(entry.getArg(0)).getString(),
+                    result.putIfAbsent(org.abs_models.backend.java.lib.runtime.ABSBuiltInFunctions.toString(entry.getArg(0)),
                         org.abs_models.backend.java.lib.runtime.ModelApi.absToJson(entry.getArg(1)));
                     value = (org.abs_models.backend.java.lib.types.ABSDataType)value.getArg(1);
                     className = value.getClass().getName();
@@ -377,7 +474,7 @@ public class JavaGeneratorHelper {
             stream.println("return java.util.Map.of();");
         } else if (useToString) {
             // no accessors or HTTPName annotations
-            stream.println("return " + ABSBuiltInFunctions.class.getName() + ".toString(this).getString();");
+            stream.println("return " + ABSBuiltInFunctions.class.getName() + ".toString(this);");
         } else {
             stream.println("java.util.HashMap<java.lang.String, java.lang.Object> result = new java.util.HashMap<>();");
             for (int elem = 0; elem < c.getNumConstructorArg(); elem++) {
@@ -392,7 +489,7 @@ public class JavaGeneratorHelper {
                 }
                 if (key != null) {
                     stream.println("result.put(\"" + key + "\", "
-                                   + ModelApi.class.getName() + ".absToJson(this.allArgs[" + elem + "]));");
+                                   + ModelApi.class.getName() + ".absToJson(arg" + elem + "));");
                 }
             }
             stream.println("return result;");
@@ -432,7 +529,7 @@ public class JavaGeneratorHelper {
     }
 
     public static void generateMethodSig(PrintStream stream, MethodSig sig, boolean async, String modifier, String prefix) {
-        JavaGeneratorHelper.generateHelpLine(sig,stream);
+        JavaGeneratorHelper.generateHelpLine(stream,sig);
         stream.print("public " + modifier + " ");
         if (async) {
             prefix = "async_";
@@ -444,7 +541,7 @@ public class JavaGeneratorHelper {
         if (async)
             stream.print(">");
         stream.print(" " + prefix+JavaBackend.getMethodName(sig.getName()));
-        JavaGeneratorHelper.generateParams(stream, sig.getParams());
+        JavaGeneratorHelper.generateParams(stream, sig.getParams(), false);
     }
 
     public static void generateAsyncMethod(PrintStream stream, MethodImpl method) {
@@ -506,7 +603,7 @@ public class JavaGeneratorHelper {
         stream.print("new ABS.StdLib.Duration_InfDuration()");
         stream.println(",");
         rtAttr = AnnotationHelper.getAnnotationValueFromSimpleName(annotations, "Critical");
-        if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream);
+        if (rtAttr == null) stream.print("false"); else rtAttr.generateJava(stream);
 
         stream.println(")");
         stream.println("{");
@@ -581,7 +678,7 @@ public class JavaGeneratorHelper {
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.println("public java.util.List<" + ABSValue.class.getName() + "> getArgs() {");
+        stream.println("public java.util.List<Object> getArgs() {");
         stream.print("return java.util.List.of(");
         generateArgStringList(stream, n);
         stream.println(");");
@@ -652,6 +749,44 @@ public class JavaGeneratorHelper {
     }
 
     /**
+     * Emit common statement preamble.  Maybe emit debug helper
+     * statement (mostly inactive).  Emit final bindings of local
+     * variables that are pattern-matched against.
+     */
+    public static void generateStmtPreamble(PrintStream stream, Stmt stmt) {
+        if (stmt.getModel().includeDebug) {
+            stream.println(JavaGeneratorHelper.getDebugString(stmt));
+        }
+        Set<String> vars = stmt.freshBoundPatternVarNames();
+        if (!vars.isEmpty()) {
+            // The statement contains a switch expression with one or
+            // more pattern variables bound to (comparing against)
+            // local variables.  We can only compare against `final`
+            // variables in switch conditions, so we have to create
+            // final bindings for the affected variables.
+            //
+            // Note that we only need to establish the uppermost level
+            // of `final` bindings: any variables defined by
+            // pattern-matching will be effectively final already and
+            // do not need to be rebound.
+            stream.println("{ // via StmtPreamble"); // the matching brace will be printed in the epilogue
+            for (String pvar : vars) {
+                stream.println("final var $$" + pvar + " = " + pvar + ";");
+            }
+        }
+    }
+
+    /**
+     * Emit statement epilogue.  Emit close brace matching the
+     * preamble if necessary.
+     */
+    public static void generateStmtEpilogue( PrintStream stream, Stmt stmt) {
+        if (!stmt.freshBoundPatternVarNames().isEmpty()) {
+            stream.println("} // via StmtEpilogue"); // the matching brace will be printed in the epilogue
+        }
+    }
+
+    /**
      * Ensures that the folder for generated source exists.
      *
      * We used to delete this directory, but do not anymore because of
@@ -662,43 +797,52 @@ public class JavaGeneratorHelper {
      */
     public static void createGenFolder(JavaCode code) throws IOException {
         File genDir = code.getSrcDir();
-        // TODO (rudi): clean up Java files below genDir/, maybe only when it's
-        // located below the current directory
+        // TODO (rudi): consider cleaning up Java files below genDir/,
+        // but that's risky.  On the one hand, we don't want stale
+        // Java files lying around (such as when an ABS class gets
+        // renamed); on the other hand, this is a recipe for deleting
+        // arbitrary directories.
         genDir.mkdirs();
     }
 
-    public static void printEscapedString(PrintStream stream, String content) {
+    public static String escapedString(String content) {
+        StringBuffer result = new StringBuffer();
         for (int i=0; i<content.length(); i++) {
             char c = content.charAt(i);
             switch (c) {
             case '\t':
-                stream.append('\\').append('t');
+                result.append('\\').append('t');
                 break;
             case '\b':
-                stream.append('\\').append('b');
+                result.append('\\').append('b');
                 break;
             case '\n':
-                stream.append('\\').append('n');
+                result.append('\\').append('n');
                 break;
             case '\r':
-                stream.append('\\').append('r');
+                result.append('\\').append('r');
                 break;
             case '\f':
-                stream.append('\\').append('f');
+                result.append('\\').append('f');
                 break;
             case '\'':
-                stream.append('\\').append('\'');
+                result.append('\\').append('\'');
                 break;
             case '\"':
-                stream.append('\\').append('\"');
+                result.append('\\').append('\"');
                 break;
             case '\\':
-                stream.append('\\').append('\\');
+                result.append('\\').append('\\');
                 break;
             default:
-                stream.append(c);
+                result.append(c);
             }
         }
+        return result.toString();
+    }
+
+    public static void printEscapedString(PrintStream stream, String content) {
+        stream.print(escapedString(content));
     }
 
     public static void generateExprGuard(ExpGuard expGuard, PrintStream beforeAwaitStream, PrintStream stream) {
@@ -706,7 +850,7 @@ public class JavaGeneratorHelper {
 
         replaceLocalVariables((PureExp)expr.copy(), beforeAwaitStream);
 
-        stream.print("new " + JavaBackendConstants.EXPGUARD + "() { public " + ABSBool.class.getName() + " evaluateExp() { return ");
+        stream.print("new " + JavaBackendConstants.EXPGUARD + "() { public boolean evaluateExp() { return ");
         expGuard.getPureExp().generateJava(stream);
         stream.print("; }}");
     }
@@ -741,7 +885,6 @@ public class JavaGeneratorHelper {
         }
         return false;
     }
-
 
     private static long tempCounter = 0;
 

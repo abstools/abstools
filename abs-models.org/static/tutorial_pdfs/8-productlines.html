@@ -1,0 +1,307 @@
+<h3>8 Product Line Modeling with ABS</h3>
+<h4>8.1 Product Line Engineering</h4>
+One of the aims of ABS is to provide a uniform and formal framework for
+product line engineering (PLE) <a href="http://dx.doi.org/10.1007/3-540-28901-1">[35]</a>, a practically highly successful software reuse
+methodology. In PLE one distinguishes two separate development phases (see
+<a href="fig11.png">Fig. 11</a>).
+During family engineering one attempts to distill the commonality among
+different products into a set of reusable artifacts. At the same time, the variability
+of the product line is carefully planned. This is typically done in a feature-driven
+manner, and the relation of features, as well as constraints in their combination is
+documented in a feature model with the help of feature description languages <a href="http://doi.ieeecomputersociety.org/10.1109/RE.2006.23">[40]</a>.
+In the application engineering phase, individual products are being built by
+selecting features and by combining the artifacts that implement them in a
+suitable way.
+One drawback of current practice in PLE is that feature description languages
+make no formal connection between features and their implementation. This
+renders products assembly ad hoc and error-prone. That issue is addressed in
+ABS with language extensions for modeling of features, for connecting features
+to their realization, as well as for feature selection and product specification <a href="http://dx.doi.org/10.1007/978-3-642-25271-6_11">[10]</a>.
+In this section we introduce the PLE extensions of ABS. A fuller discussion of
+various approaches to achieve greater flexibility in object-oriented modeling is
+contained in the chapter by Clarke in this volume <a href="http://ijcai.org/Past%20Proceedings/IJCAI-73/PDF/027B.pdf ">[8]</a>.
+If one wants to maintain a connection between features and code, then the
+central issue are the mechanisms being used to compose the code corresponding
+to new features with the existing code. In current practice, this is often done by
+“glue code” written in scripting languages. ABS has the ambition that models
+can be statically analyzed. This means that the feature composition mechanism
+must be well-structured and represent a suitable match for the analysis methods
+used in ABS <a href="http://www.hats-project.eu/sites/default/files/Deliverable27.pdf">[14]</a>. Such a mechanism is delta-oriented programming (DOP) <a href="http://dx.doi.org/10.1007/978-3-642-15579-6_6">[36,</a>
+<a href="http://ceur-ws.org/Vol-557/paper3.pdf ">38]</a>, because it allows to modify object-oriented code in a structured manner at
+
+<a href="fig12.png"><img src="fig12-418x183.png" alt="fig12-418x183" width="418" height="183" class="alignnone size-medium wp-image-764" /></a>
+
+<strong>Fig. 12.</strong> Graphical representation of the Account feature model
+
+the granularity of fields and methods, which is adequate for the contract-based
+specification approach in ABS <a href="http://dx.doi.org/10.1007/978-3-642-34026-0_4">[21]</a>.
+To summarize, the ABS-extensions used to model product lines consist of
+four elements <a href="http://dx.doi.org/10.1007/978-3-642-21455-4_13">[9,</a><a href="http://dx.doi.org/10.1007/978-3-642-25271-6_11"> 10]</a>, which we describe now in turn:
+<ol>
+	<li>A feature description language</li>
+	<li>A language for deltas that modify ABS models</li>
+	<li>A configuration language connecting features with the deltas that realize
+them</li>
+	<li>A language for product configuration</li>
+</ol>
+<h4>8.2 Feature Description</h4>
+Modern software development processes, notably agile processes and PLE, tend
+to be feature-driven. A number of mature and useful formalisms for feature
+description have been developed in the last decade. For ABS we use a slight
+modification of the textual variability language (TVL) <a href="http://dx.doi.org/10.1016/j.scico.2010.10.005">[11]</a>, which has the ad-
+vantage of having a formal semantics and a textual representation. The feature
+description language used in ABS is called μTVL and differs from TVL in that
+(i) attribute types that are not needed are omitted and (ii) the possibility to
+have multiple root features. These are useful to model orthogonal variability in
+product lines.
+Let us build a product line based on the Account interface from Sect. 6.4. As-
+sume we want to distinguish between checking and saving accounts. The latter
+may pay interest, whereas the former usually don’t. Optionally, a checking ac-
+count (but not a saving account) may permit an overdraft or incur fees for trans-
+actions. A graphical representation of the Account feature model is in <a href="fig12.png">Fig. 12</a>.
+The textual rendering in μTVL looks as follows:
+<pre>root Account {
+   group allof {
+      Type {
+         group oneof {
+            Check {ifin: Type.i == 0;},
+            Save {ifin: Type.i &gt; 0;
+            exclude: Overdraft;}
+         }
+         Int i; // interest rate
+      },
+      opt Fee {Int amount in [0..5];},
+      opt Overdraft
+   }
+}</pre>
+n μTVL one represents each subhierarchy in the feature tree by a group
+of features, which can be further qualified as inclusive (allof) or alternative
+(oneof). Within a group there is a comma-separated list of feature declarations.
+Each feature declaration may be optional (opt) and have restrictions (ifin:), ex-
+clusions (exclude:), or requirements (include:). Feature parameters are declared
+after the declaration of a subhierarchy. A feature model appears in a separate
+file with extension .abs. The Eclipse editor supports syntax and parse error
+highlighting. There can be several feature files with feature declarations. These
+are interpreted as orthogonal feature hierarchies that are all part of the same
+feature model.
+The semantics of feature models is straightforward by translation into a
+boolean/integer constraint formula, see <a href="http://dx.doi.org/10.1007/978-3-642-25271-6_11">[10,</a><a href="http://dx.doi.org/10.1016/j.scico.2010.10.005"> 11]</a>. For example, the feature model
+above is characterized by the following formula:
+
+0 ≤ Account ≤ 1 ∧ Type → Account ∧
+Overdraft† → Account ∧ Fee† → Account ∧
+Type + Fee† + Overdraft† = 3 ∧ 0 ≤ Type ≤ 1 ∧
+Check → Type ∧ Save → Type ∧ Save → ¬Overdraft ∧
+Check + Save = 1 ∧
+0 ≤ Check ≤ 1 ∧ 0 ≤ Save ≤ 1 ∧ 0 ≤ Fee† ≤ 1 ∧ 0 ≤ Overdraft† ≤ 1 ∧
+Fee → Fee† ∧ Overdraft → Overdraft† ∧
+0 ≤ Save ≤ 1 ∧ 0 ≤ Check ≤ 1 ∧
+Fee → (Fee.amount &gt;= 0 ∧ Fee.amount &lt;= 5) ∧
+Check → (Type.i = 0) ∧ Save → (Type.i &gt; 0).
+
+It is easy to check validity of a given feature selection for a feature model F : for
+any selected feature f and parameter value p := v one simply adds f = 1 ∧ p = v
+to the semantics of F and checks for satisfiability with a constraint solver. The
+constraint solver of ABS can:
+<ul>
+	<li>find all possible solutions for a given feature model and</li>
+	<li>check whether a feature selection is a solution of a feature model.</li>
+</ul>
+<a href="fig13.png"><img src="fig13-498x132.png" alt="fig13-498x132" width="498" height="132" class="alignnone size-medium wp-image-765" /></a>
+
+<strong>Fig. 13.</strong> Application of delta modules to a core product
+
+The latter check is performed implicitly in the ABS Eclipse plugin, whenever
+the user requests to build a product based on a specific feature selection (see
+Sect. 8.5).
+<h4>8.3 Delta Modeling</h4>
+As mentioned above, the realization of features in ABS is done with delta mod-
+ules (or deltas, for short), a variant of delta-oriented programming (DOP). This
+constitutes the main reuse principle of ABS and replaces other mechanisms such
+as code inheritance, traits, or mixins.
+In delta modeling we assume that one outcome of the family engineering
+phase (see <a href="fig11.png">Fig. 11</a>) is a core or base product with minimal functionality. Product
+variants with additional features are obtained from it by applying one or more
+deltas that realize the desired features, as illustrated in <a href="fig13.png">Fig. 13</a>. In ABS, deltas
+have the following capabilities:
+
+– Delta modules may add, remove or modify classes and interfaces
+– Permitted class modifications are:
+• adding and removal of fields
+• adding, removal and modification of methods
+• extending the list of implemented interfaces
+
+The actual reuse mechanism is located in the modification of methods: the
+description of a method modification in a delta can access the most recent in-
+carnation of that method in a previous delta by the statement original(...);.
+This will cause the compiler to insert the body of the referred method at the
+time when the deltas are applied. The signature of original() must be iden-
+tical to the one of the modified method. The compiler checks the applicability
+of deltas and ensures well-typedness of the resulting code. It is because of this
+reuse mechanism that once can say that the granularity of delta application is
+at the level of methods.
+There is a certain analogy between original() in DOP and super()-calls in
+OO languages with code inheritance. The crucial difference is that original()
+references are resolved at compile time (product build time), while super()-calls
+occur at runtime. As a consequence, there is a runtime penalty for the latter.
+Assume we have the following implementation of the withdraw(Int) method
+of the Account interface, which ensures that we cannot withdraw more than the
+current balance:
+<pre>class AccountImpl(Int aid, Int balance, Customer owner)
+implements Account {
+   Int withdraw(Int x) {
+      if (balance - x &gt;= 0) { balance = balance - x; }
+      return balance;
+   }
+}</pre>
+Now we would like to create a delta module that realizes the feature Fee. We
+need to modify withdraw(Int), which can be achieved by the following delta:
+<pre>delta DFee(Int fee); // Implements feature Fee
+uses Account;
+modifies class AccountImpl {
+   modifies Int withdraw(Int x) {
+      Int result = x;
+      if (x&gt;=fee) result = original(x+fee);
+      return result;
+   }
+}</pre>
+One or more features can be put into a file with extension .abs. The con-
+nection between different deltas and a base implementation is given via the uses
+clause that refers to the module where the base is found. Like classes, deltas can
+have parameters, however, these are not fields, but are instantiated at product
+build time. Normally, there is a correspondence between the parameters of deltas
+and those of the features they are supposed to implement.
+The modified withdraw(Int) method is implemented by a suitable call to the
+original version after a check that the withdrawn amount is not trivially small.
+We must declare a result variable to ensure that the return statement is last.
+Assume further we want to realize the Save feature. One must ensure that
+the interest rate is set to 0. ABS deltas at this time do not support to add or
+modify class initialization blocks. To change the initial value of a field, we simply
+remove the field declaration and add it again with a suitable initial value:
+<pre>delta DSave(Int i); // Implements feature Save
+uses Account;
+modifies class AccountImpl {
+   removes Int interest;
+   adds Int interest = i;
+}</pre>
+Of course, we assume here that the interest field has been added in the
+first place in the earlier delta DType. This requires to specify and check temporal
+constraints on the application of deltas as we shall see in the following section.
+Application of a concrete delta is illustrated with DSave in <a href="fig14.png">Fig. 14</a>.
+Syntax and parse error highlighting for delta modules works as usual. Auto-
+matic completion works as well, but it is only done relative to the base product.
+
+<a href="fig14.png"><img src="fig14-412x327.png" alt="fig14-412x327" width="412" height="327" class="alignnone size-medium wp-image-766" /></a>
+
+<strong>Fig. 14.</strong> Application of delta DSave
+<a href="fig15.png"><img src="fig15-424x136.png" alt="fig15-424x136" width="424" height="136" class="alignnone size-medium wp-image-767" /></a>
+
+<strong>Fig. 15.</strong> Schema of product line configuration in ABS
+
+The reason is that before product build time, the compiler cannot know which
+deltas have been applied before. For the same reason, only a limited amount of
+type checking is done. Research to lift type checking to the family level is under
+way <a href="http://doi.acm.org/10.1145/2110147.2110161">[29,</a><a href="http://link.springer.com/article/10.1007%2Fs00236-012-0173-z"> 37]</a>.
+<h4>8.4 Product Line Configuration</h4>
+So far, we have two models relating to product lines: the feature model and the
+delta model, that is, the feature implementation. Unlike any other formalism we
+are aware of, in ABS we can make a formal connection between these. This is
+the key to being able to analyze whole product lines and not merely individual
+products.
+
+In ABS, the connection between features and their realization (illustrated
+in <a href="fig15.png">Fig. 15</a>) is done in a dedicated product line configuration file. This makes
+debugging easy, because all information about the realization of a given feature
+model is collected in one place. To establish a connection between features and
+deltas, the configuration files need to specify three things:
+<ol>
+	<li>they must associate features with their implementing delta modules by ap-
+plication conditions;</li>
+	<li>they need to resolve conflicts in the application order by giving partial tem-
+poral constraints on delta application;</li>
+	<li>they need to pass the attribute values of features to the parameters of the
+delta modules.</li>
+</ol>
+We can illustrate all three aspects with our running example. The following
+file (again, use file extension .abs) defines a product line named Accounts based
+on the five features of the feature model in<a href="fig12.png"> Fig. 12</a>.
+<pre>productline Accounts;
+features Type, Fee, Overdraft, Check, Save;
+delta DType (Type.i) when Type;
+delta DFee (Fee.amount) when Fee;
+delta DOverdraft after DCheck when Overdraft;
+delta DSave (Type.i) after DType when Save;
+delta DCheck after DType when Check;</pre>
+For each delta that is to be used for implementing any of the features one
+specifies:
+<ul>
+	<li>the application conditions (when clauses), that is, the feature(s) that are be-
+ing realized by each delta and whose presence triggers delta application;</li>
+	<li>the delta parameters which are derived from feature attribute values;</li>
+	<li>a strict partial order of delta application (after clauses) to ensure well-de-
+finedness of delta applications and resolve conflicts.</li>
+</ul>
+In the example, there is a one-to-one correspondence between deltas and
+features, which is reflected in the application conditions. Likewise, the feature
+attributes Type.i and Fee.amount directly can be used as parameters of the cor-
+responding deltas. The temporal constraints of DSave and DCheck ensure that the
+field interest is present. The constraint of DOverdraft makes sure that this delta
+is only applied to checking accounts. It would also have been possible to express
+this constraint at the level of the feature model with an includes: clause. It is up
+to the modeler to decide whether a given constraint is a property of the feature
+model or of the product line.
+<h4>8.5 Product Selection</h4>
+The final step in PLE with ABS is product selection. Whereas the activities that
+took place until now can be viewed as mostly being part of family engineering,
+the selection process is always part of application engineering.
+
+<a href="fig16.png"><img src="fig16-415x240.png" alt="fig16-415x240" width="415" height="240" class="alignnone size-medium wp-image-768" /></a>
+
+<strong>Fig. 16.</strong> The role of product line configuration in product selection and compilation
+
+To create a product it is sufficient to list the features that should be realized
+in it and to instantiate the feature attributes with concrete values. The syntax
+is very simple and self-explaining. As any other ABS file, product selection files
+have the .abs extension and there is Eclipse support for syntax and parse error
+highlighting. Some examples for the Accounts product line are as follows:
+<pre>product CheckingAccount (Type{i=0},Check);
+product AccountWithFee (Type{i=0},Check,Fee{amount=1});
+product AccountWithOverdraft (Type{i=0},Check,Overdraft);
+product SavingWithOverdraft (Type{i=1},Save,Overdraft);</pre>
+The simplest product that can be built is CheckingAccount. The second prod-
+uct above extends it by charging a fee of one unit per transaction. The ABS
+compiler uses the product selection file and the other related files to create a
+“flattened” ABS model where all deltas have been applied such that it contains
+only core ABS code. In a first step, the compiler checks that the product selec-
+tion is valid for the given feature model as described in Sect. 8.2. It then uses the
+product line configuration file to decide which deltas need to be applied and how
+they are instantiated. The partial order on the deltas is linearized. It is up to
+the modeller to ensure (possibly, by adding temporal constraints) that different
+linearizations do not lead to conflicting results. Finally, the resulting core ABS
+model is type-checked and compiled to one of the ABS backends in the standard
+way. As all parts of the ABS language the product line modeling languages have
+a formal semantics—the details are found in <a href="http://dx.doi.org/10.1007/978-3-642-25271-6_11">[10]</a>.
+Different products can be selected in the Run|Run Configurations ... dialog
+from the ABS Product menu. Invalid product selections or type errors in the
+configuration files will be displayed at this stage. For example, selection of the
+SavingWithOverdraft product above results in an error, because the constraints
+in the feature model are not satisfied. After selection of a valid product one
+
+<a href="fig17.png"><img src="fig17-415x253.png" alt="fig17-415x253" width="415" height="253" class="alignnone size-medium wp-image-769" /></a>
+
+<strong>Fig. 17.</strong> Choice of different layers when modeling with ABS
+
+can run and debug the resulting core ABS model as described earlier. The ABS
+compiler additionally creates always as base product that corresponds to the
+given ABS model without any features or deltas. This product appears under
+the name &lt;base&gt; in the product selection menu.
+If we execute the main class of the Account module in Sect. 6.4 in the base
+product, we obtain the result 37 in the variable net, whereas if we run the
+product AccountWithFee, we obtain 34.
+A current limitation of the Eclipse ABS plugin is that the debugger correctly
+displays the runtime configuration and the values of variables of products, but
+in the editor window only the core product is displayed.
+
+&nbsp;
+
+<center><a href="http://www.abs-models.org/?page_id=666">Prev</a> | <a href="http://www.abs-models.org/?page_id=670">Next</a></center>

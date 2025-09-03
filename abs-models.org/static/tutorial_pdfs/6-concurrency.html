@@ -1,0 +1,249 @@
+<h3>6 The Concurrency Layers</h3>
+<h4>6.1 Background</h4>
+One of the most distinctive features of ABS is its concurrency model. If we
+look at commercial programming languages such as C, C++, or Java, one can
+observe that, despite intense efforts in the last decade, none of them has a fully
+formalized concurrency model. Even though there are promising efforts towards
+a formal concurrency model of Java <a href="http://doi.acm.org/10.1145/2103776.2103785">[5]</a>, the details are so complex that they
+are likely to compromise usability of any resulting system. The reason is that
+current industrial programming languages have a very low-level concurrency
+model and do not natively support distributed computation. This has practical
+consequences, such as burdening the programmer with, for example, prevention
+of data races.
+A more fundamental problem is the impossibility to design a compositional
+proof system for such languages. By <em>compositionality</em> we mean that one can
+specify and verify the behavior of a single method in isolation from the rest
+of the system. This is a prerequisite for being able to deduce global behavior
+from the composition of local behavior. In a setting, where concurrent objects
+can arbitrarily cross-reference each other, this is hardly possible. Arbitrarily
+
+<a href="fig6.png"><img src="fig6-361x161.png" alt="fig6-361x161" width="361" height="161" class="alignnone size-medium wp-image-750" /></a>
+
+<strong>Fig. 6.</strong> Illustration of an ABS Component Group
+
+complex, global invariants, might be needed to describe behavior. One approach
+to tackle the problem is to impose structure on concurrent objects and to make
+their dependencies syntactically explicit. In the realm of Java, JCoBox <a href="http://dx.doi.org/10.1007/978-3-642-14107-2_13">[39]</a> is a
+suitable framework. It has been simplified and renamed into <em>Concurrent Object
+Group</em> (COG) in the context of ABS. COGs constitute the <em>lower tier</em> of the ABS
+concurrency model and are intended for closely cooperating concurrent tasks.
+A second shortcoming of mainstream programming languages is the lack
+of support for distributed computation, that is, asynchronous communication
+among nodes that do not share memory. This form of concurrency has been
+abstracted into the <em>Actor</em> model <a href="http://ijcai.org/Past%20Proceedings/IJCAI-73/PDF/027B.pdf">[23]</a> and is realized with first-class support
+in recent languages such as Scala. ABS implements a version of Actor-based
+distributed computation where COGs form the primitive units of distribution.
+This constitutes the <em>upper</em> tier of the ABS concurrency model. Its main ideas
+are derived from the modeling language Creol <a href="http://dx.doi.org/10.1016/j.tcs.2006.07.031">[26]</a>.
+<h4>6.2 Component Object Groups</h4>
+An ABS Concurrent Object Group (COG) is a collection of tasks with shared
+memory and processor. This means that exactly one task is active at any given
+time and tasks can cross-reference each other. The situation can be visualized
+as in <a href="fig6.png">Fig. 6</a>.
+Within a COG, synchronous as well as asynchronous method calls are permit-
+ted. For the former, we use the standard syntax <strong>target.method(arg1,arg2,...)</strong>.
+<em>Synchronous method calls</em> within COGs represent sequential execution of code,
+that is, they block the caller and execute the code of the target until control is
+returned.
+<em>Asynchronous method calls</em> use the syntax <strong>target!method(arg1,arg2,...)</strong> and
+they cause the creation of a new task that is to execute the code of the target.
+Unlike in synchronous calls, execution of the code of the caller continues.
+The main point to understand about COGs is that multitasking is not <em>pre-
+emptive</em> (decided by a scheduler). Rather it is an explicit decision of the ABS
+modeler when control is transferred to another task. To this end, ABS provides
+scheduling statements that allow <em>cooperative multitasking</em>. In between the ex-
+plicit scheduling points, only one task is active, signified by the (single) <em>lock</em> of
+a COG being set to &amp;#8868. As a consequence, data races between synchronization
+points simply cannot happen, which was an important design goal of ABS.
+<h4>6.3 Scheduling and Synchronization</h4>
+So, how are scheduling points specified in ABS? It is here that we encounter a
+second, central concurrency principle of ABS: <em>communication and synchroniza-
+tion are decoupled</em>. This is done via <em>future types</em> <a href="http://dx.doi.org/10.1007/978-3-540-71316-6_22">[12]</a>. For any ABS type <strong>T</strong> a legal
+type name is <strong>Fut&lt;T&gt;</strong> and one can assign to it the result of any asynchronous
+method call with return type <strong>T</strong>. A variable declared with type <strong>Fut&lt;T&gt;</strong> serves as
+a reference to the future result of an asynchronous call and allows to retrieve it
+once it will have been computed. For example, the final line of the example on
+p. 15 can be rewritten to:
+<pre>Fut&lt;Customer&gt; e = c!findCustomer(l);
+&lt;do something else&gt;</pre>
+Now the call creates a new task in the current COG and declares <strong>e</strong> as a future
+reference to its final result. The following code is executed immediately.
+The future mechanism allows to dispatch asynchronous calls, continue with
+the execution, and then synchronize on the result, whenever it is needed. Syn-
+chronization is achieved by the command <strong>await g</strong>, where <strong>g</strong> is a polling <em>guard</em>.
+A guard is a conjunction of either side-effect free boolean expressions or <em>future
+guards</em> of the form <strong>f?</strong>. In the latter, <strong>f</strong> is a variable that has a future type. If
+the result to which <strong>f?</strong> is a reference is ready and available, then the expression
+evaluates to true. When the guard of an await statement evaluates to true, the
+computation simply continues. If, however, a guard is not true, then the current
+task releases the lock of its COG and gives another task in that COG the chance
+to continue. When later the task is scheduled gain, the guard is re-evaluated,
+and so on, until it finally becomes true. We call this a <em>conditional scheduling
+point</em> or <em>conditional release point</em>. To continue the previous example we could
+write:
+<pre>await e?;</pre>
+If the asynchronous call to <strong>findCustomer(l)</strong> has finished, then execution sim-
+ply continues. Otherwise, the lock of the current COG is set to ⊥ and the pro-
+cessor is free to proceed with another task. For efficiency reasons ABS allows
+only <em>monotonic</em> guards and only conjunctive composition. Once the result from
+an asynchronous call is available, it can be retrieved with a <strong>get</strong>-expression that
+has a future variable as its argument. In the example this may look as follows:
+<pre>Customer f = e.get;</pre>
+In summary, the following programming idiom for asynchronous calls and
+retrieving their results is common in ABS:
+<pre>Fut&lt;T&gt; v = o!m(e); ... ; await v?; r = v.get;</pre>
+ABS does not attempt to check that each <strong>get</strong> expression is guarded by an
+<strong>await</strong> statement. So what happens when the result of an asynchronous call is
+
+<a href="fig7.png"><img src="fig7-433x133.png" alt="fig7-433x133" width="455" height="131" class="alignnone size-medium wp-image-752" /></a>
+
+<strong>Fig. 7.</strong> Illustration of object and COG creation (gray boundaries represent COGs)
+
+not ready when <strong>get</strong> is executed? The answer is that the execution of the COG
+<em>blocks</em>. The difference between suspension and blocking is that in the latter case
+<em>no</em> task in same COG can continue until the blocking future is resolved.
+Sometimes it is convenient to create an <em>unconditional scheduling point</em>, for
+example, to insert release points into long running sequential tasks. The syntax
+for unconditional scheduling statements in ABS is “<strong>suspend;</strong>”.
+<h4>6.4 Object and COG Creation</h4>
+In the previous section we discussed the fundamental concurrency model of ABS,
+which is based on COGs. Whenever we create an object with the <strong>new</strong> statement,
+it is by default created in the same COG as the current task (see upper part
+of <a href="fig7.png">Fig. 7</a>). This is not adequate for modeling <em>distributed computing</em>, where each
+node has its own computing resources (processor) and nodes are loosely coupled.
+In an ABS model of a distributed scenario we associate one COG with each
+node. New COGs are implicitly created when specifying the <strong>cog</strong> keyword at
+object creation (see lower part of <a href="fig7.png">Fig. 7</a>): this creates a new COG and places the
+new object inside it. At the moment, COGs are not first-class objects in ABS
+and are accessible only implicitly through their objects.(Foot: There is an extension for ABS runtime objects that allows explicit and dynamic
+grouping of COGs <a href="http://dx.doi.org/10.1007/978-3-642-34026-0_6">[28]</a>.) As a consequence, it is
+not possible to re-enter via recursive calls into the same execution thread. This
+is the reason why a simple binary lock for each COG is sufficient. Let us extend
+our running example with an <strong>Account</strong> class and COG creation:
+<pre>module Account;
+interface Account {
+   Int getAid();
+   Int deposit(Int x);
+   Int withdraw(Int x);
+}
+
+class AccountImpl(Int aid, Int balance, Customer owner)
+implements Account { ... }</pre>
+
+<a href="ABSDebugPerspective.jpg"><img src="ABSDebugPerspective-424x270.jpg" alt="ABSDebugPerspective-424x270" width="424" height="270" class="alignnone size-medium wp-image-756" /></a>
+
+<strong>Fig. 8.</strong> Screenshot of ABS Debug Perspective in Eclipse plugin
+<pre>{
+   [Near] Customer c = new CorpIndvCustomerImpl(3);
+   [Far] Account a = new cog AccountImpl(1,0,c);
+   Fut&lt;Int&gt; dep = a!deposit(17);
+   Fut&lt;Int&gt; with = a!withdraw(17);
+   await dep? &amp; with?;
+   Int x = dep.get;
+   Int y = with.get;
+   Int net = x + y;
+}</pre>
+We create an account objects in a different COG from the current one. Note
+that there is no sharing of objects between COGs, so that the variable c provides
+no alias to the object parameter c in the constructor <strong>AccountImpl(1,0,c)</strong>. The
+tasks resulting from the two asynchronous calls will be executed on the same
+node, which is different from the current one. A conjunctive guard ensures that
+the retrieval of the results is safe.
+It is possible to <em>visualize</em> the execution of ABS code in two ways. To start
+the graphical ABS Debugger, simply right click on the file with the <strong>Account</strong>
+module in the explorer and select <strong>Run As|ABS Java Backend (Debug)</strong>. This will
+automatically switch to the ABS Debug Perspective (see <a href="ABSDebugPerspective.jpg">Fig. 8</a>) and start the
+
+<a href="ABSSequenceDiagram.jpg"><img src="ABSSequenceDiagram-338x315.jpg" alt="ABSSequenceDiagram-338x315" width="338" height="315" class="alignnone size-medium wp-image-758" /></a>
+
+<strong>Fig. 9.</strong> Sequence diagram generated from an ABS simulation
+
+Eclipse debugger. All the usual features of a graphical debugger are available:
+navigation, breakpoints, state inspection, etc.
+If instead, the backend <strong>Run As|ABS Java Backend (Debug with Sequence Di-
+agram)</strong> is chosen, then in addition a UML sequence diagram that has a lifeline
+for each created COG is created and dynamically updated after each debugger
+step, see <a href="ABSSequenceDiagram.jpg">Fig. 9</a>.
+Synchronous method calls to targets not in the current COG make no sense
+and are forbidden. For example, if we replace one of the asynchronous calls above
+with <strong>a.deposit(17)</strong>, a runtime error results. One possibility to avoid this is to
+<em>annotate</em> declarations with one of the types <strong>Near</strong> or <strong>Far</strong>, as shown above. This
+tells the compiler that, for example, <strong>a</strong> is in a different COG and cannot be the
+target of a synchronous call. Obviously, it is tedious to annotate all declarations;
+moreover, the annotations tend to clutter the models. To address this problem,
+ABS implements a far/near analysis, which automatically <em>infers</em> a safely approx-
+imated (in case of doubt, use “far”) location type <a href="http://dx.doi.org/10.1007/978-3-642-21952-8_15">[41]</a>. The inferred types are
+displayed in the Eclipse editor as superscripts (“N” for near, “F” for far) above
+the declared types. All annotations in the example can be inferred automati-
+cally: simply delete the annotations to see it. It is also possible to annotate a
+declaration with <strong>Somewhere</strong>, which overrides the type inference mechanism and
+tells the compiler not to make any assumptions. Default is the annotation <strong>Infer</strong>,
+but this can be changed in the ABS project properties.
+It is entirely possible that execution of an ABS model results in a <em>deadlock</em>
+during runtime, as is exemplified by the model in Fig. 10. Objects <strong>c</strong>, <strong>e</strong> and <strong>d</strong> are
+in different COGs, say cog_c and cog_d . The task that executes <strong>m1</strong> is in cog_c while
+the task executing <strong>m2</strong> is put into the second COG cog_d . During this execution <strong>m3</strong>
+is called on <strong>e</strong>, which is located in the first COG cog_c . For <strong>m3</strong> to proceed it needs
+to obtain the lock of cog_c , but this is not possible, because <strong>m1</strong> still waits for the
+result of <strong>m2</strong>. Hence, neither COG can progress.
+Deadlocks are very difficult to avoid in general. Deadlock-free concurrent
+languages tend to be too restrictive to be usable and, unlike data race-freeness,
+<pre>class C {
+   C m1(C b, C c) { Fut&lt;C&gt; r = b!m2(c); return r.get; }
+   C m2(C c) { Fut&lt;C&gt; r = c!m3(); return r.get; }
+   C m3() { return new C(); }
+}
+{
+   C c = new C(); C d = new cog C(); C e = new C();
+   c!m1(d,e);
+}</pre>
+<strong>Fig. 10.</strong> Example for deadlock in ABS
+
+are not a practical option. In ABS many deadlocks can be avoided by supplying
+enough release points. In the example above it is sufficient to guard one of the
+<strong>get</strong> expressions. In addition, there is an automatic deadlock analysis for ABS <a href="http://dx.doi.org/10.1007/978-3-642-21461-5_11">[18]</a>
+that is currently being implemented.
+<h4>6.5 Formal Semantics of Concurrent ABS</h4>
+The ABS language has a mathematically rigorous, SOS-style semantics <a href="http://www.hats-project.eu/sites/default/files/Deliverable12.pdf">[13,</a><a href="http://dx.doi.org/10.1007/978-3-642-25271-6_8"> 25]</a>.
+This tutorial introduction is not the place go into the details, but we sketch
+the main ideas. The central issue is to give an appropriate structure to the
+terms that represent ABS <em>runtime configurations</em>. They are collections over the
+following items:
+
+<a href="6.5.cogs_.png"><img src="6.5.cogs_412x114.png" alt="6.5.cogs_412x114" width="412" height="114" class="alignnone size-medium wp-image-760" /></a>
+
+<strong>COGs</strong> are identified simply by a name <em>b</em> for their <em>lock</em> whose value can be either
+&amp;#8868 or ⊥.
+<strong>Objects</strong> have a name <em>o</em>, need to have a reference to their COG <em>b</em>, to their class
+<em>C</em>, and they also have a local state σ that holds the current field values.
+<strong>Tasks</strong> have a name n, a reference to their COG b and to the object o whose code
+they are executing. They also have a state σ withe values of local variables
+and a <em>program counter s</em> that gives the next executable instruction. Task
+names <em>n</em> also double as futures, because they contain exactly the required
+information.
+
+A runtime configuration may consist of any number of the above items. The
+operational semantics of ABS is given by rewrite rules that match the next
+executable statement of a task (and thereby also the current COG and object).
+A typical example is the rewrite rule that realizes <em>creation of a new COG</em>:
+
+<a href="6.5.formula.png"><img src="6.5.formula-388x37.png" alt="6.5.formula-388x37" width="388" height="37" class="alignnone size-medium wp-image-762" /></a>
+
+where:
+–<a href="6.5.where_.1.png"><img class="alignnone size-full wp-image-623" alt="6.5.where.1" src="where_.1.png" width="57" height="18" /></a> new;
+–<a href="6.5.where_.2.1.png"><img class="alignnone size-full wp-image-629" alt="6.5.where.2.1" src="6.5.where_.2.1.png" width="41" height="21" /></a> init block of class <em>C</em> and <a href="6.5.where_.2.2.png"><img class="alignnone size-full wp-image-630" alt="6.5.where.2.2" src="6.5.where_.2.2.png" width="31" height="18" /></a> binds constructor parameters <a href="6.5.where_.2.3.png"><img class="alignnone size-full wp-image-631" alt="6.5.where.2.3" src="6.5.where_.2.3.png" width="18" height="13" /></a>
+–<a href="6.5.where_.3.png"><img class="alignnone size-full wp-image-628" alt="6.5.where.3" src="6.5.where_.3.png" width="73" height="21" /></a>
+–<a href="6.5.where_.4.png"><img class="alignnone size-full wp-image-626" alt="6.5.where.4" src="6.5.where_.4.png" width="175" height="15" /></a>
+
+The rule matches a new cog statement in task n, COG b, current object o,
+and subsequent statements s. First we need to create a new COG with a fresh
+name b and a new object o in class C. The new COG starts immediately to
+execute the initialization code of its class C in a new task n , therefore, b ’s lock
+is set to . Note that the current object this must be instantiated now to the
+actual object o . After initialization, execution is suspended. The original task n
+immediately continues to execute the remaining code as there is no release point
+here. The value of the object reference z is replaced with the new object o .
+
+&nbsp;
+
+<center><a href="http://www.abs-models.org/?page_id=662">Prev</a> | <a href="http://www.abs-models.org/?page_id=666">Next</a></center>

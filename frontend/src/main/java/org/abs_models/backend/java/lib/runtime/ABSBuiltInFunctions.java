@@ -10,23 +10,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.Scanner;
 
+import org.abs_models.backend.java.lib.expr.BinOp;
+import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
 import org.abs_models.backend.java.lib.runtime.metaABS.ObjectMirror;
 import org.abs_models.backend.java.lib.runtime.metaABS.ProductLine;
 import org.abs_models.backend.java.lib.types.ABSInterface;
-import org.abs_models.backend.java.utils.DynamicClassUtils;
-import org.apfloat.Aprational;
-import org.apfloat.AprationalMath;
-import org.abs_models.backend.java.lib.expr.BinOp;
-import org.abs_models.backend.java.lib.expr.UnmatchedCaseException;
-import org.abs_models.backend.java.lib.types.ABSBool;
-import org.abs_models.backend.java.lib.types.ABSDataType;
-import org.abs_models.backend.java.lib.types.ABSInteger;
 import org.abs_models.backend.java.lib.types.ABSProcess;
-import org.abs_models.backend.java.lib.types.ABSRational;
-import org.abs_models.backend.java.lib.types.ABSFloat;
-import org.abs_models.backend.java.lib.types.ABSString;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
+import org.abs_models.backend.java.utils.DynamicClassUtils;
+import org.apfloat.Apint;
+import org.apfloat.Aprational;
+import org.apfloat.AprationalMath;
 
 public class ABSBuiltInFunctions {
 
@@ -34,62 +29,63 @@ public class ABSBuiltInFunctions {
 
     private static final PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
 
-    public static ABSInteger strlen(ABSString s) {
-        return s.strlen();
+    public static Apint strlen(String s) {
+        return new Apint(s.length());
     }
 
-    public static ABSString substr(ABSString s, ABSInteger from, ABSInteger length) {
-        return s.substr(from, length);
+    public static String substr(String s, Apint from, Apint length) {
+        return s.substring(from.intValue(), from.intValue() + length.intValue());
     }
 
-    public static ABSUnit print(ABSString s) {
-        out.print(s.getString());
+    public static ABSUnit print(String s) {
+        out.print(s);
         return ABSUnit.UNIT;
     }
 
-    public static ABSRational currentms() {
-        return ABSRational.fromAprational(ABSRuntime.getRuntime().getClock());
+    public static Aprational currentms() {
+        return ABSRuntime.getRuntime().getClock();
     }
 
-    public static ABSInteger ms_since_model_start() {
-        return ABSInteger.fromLong(System.currentTimeMillis() - ms_at_model_start);
+    public static Apint ms_since_model_start() {
+        return new Apint(System.currentTimeMillis() - ms_at_model_start);
     }
 
-    public static ABSRational lowlevelDeadline() {
+    public static Aprational lowlevelDeadline() {
         Aprational deadline_t = ABSThread.getCurrentTask().getDeadlineAbsolute();
         if (deadline_t.signum() >= 0) {
             Aprational clock = ABSRuntime.getRuntime().getClock();
             Aprational deadline_r = deadline_t.subtract(clock);
             // We clamp the deadline at 0, since lowlevelDeadline() < 0 means no deadline given.
-            return ABSRational.fromAprational(AprationalMath.max(deadline_r, Aprational.ZERO));
+            return AprationalMath.max(deadline_r, Aprational.ZERO);
         } else {
-            return ABSRational.fromLong(-1);
+            return new Aprational(-1);
         }
     }
 
-    public static ABSInteger random(ABSInteger i) {
-        if (BinOp.ltEq(i, ABSInteger.ZERO).toBoolean()) {
+    public static Apint random(Apint i) {
+        if (BinOp.ltEq(i, Apint.ZERO)) {
             throw new UnmatchedCaseException("Random function called with non positive upper bound " + i);
         }
-        BigInteger n = i.getBigInteger();
+        // TODO: use ApintMath.random(digits)
+        BigInteger n = i.toBigInteger();
         Random rand = ABSRuntime.getRuntime().getRandom();
 
         BigInteger result = new BigInteger(n.bitLength(), rand);
         while (result.compareTo(n) >= 0) {
             result = new BigInteger(n.bitLength(), rand);
         }
-        return ABSInteger.fromBigInt(result);
+        return new Apint(result);
     }
 
     public static ABSInterface thisDC() {
         return ABSThread.getCurrentCOG().getDC();
     }
 
-    public static <T> ABSString toString(T t) {
+    public static <T> String toString(T t) {
         if (t == null) {
-            return ABSString.fromString("null");
+            return "null";
         } else {
-            return ABSString.fromString(t.toString());
+            return t.toString();
         }
     }
 
@@ -97,52 +93,51 @@ public class ABSBuiltInFunctions {
      * functions related to user-defined schedulers (see abslang, module
      * ABS.Scheduler)
      */
-    public static ABSString method(ABSProcess p) {
-        return ABSString.fromString(p.getMethodName());
+    public static String method(ABSProcess p) {
+        return p.getMethodName();
     }
 
-    public static ABSDataType arrival(ABSProcess p) {
+    public static Object arrival(ABSProcess p) {
         Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
-        return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getArrivalTime()));
+        return DynamicClassUtils.instance(type, new Aprational(p.getArrivalTime()));
     }
 
-    public static ABSDataType cost(ABSProcess p) {
+    public static Object cost(ABSProcess p) {
         if (p.getCost().signum() == -1) {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
             return DynamicClassUtils.instance(type);
         } else {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_Duration");
-            return DynamicClassUtils.instance(type, ABSRational.fromAprational(p.getCost()));
+            return DynamicClassUtils.instance(type, p.getCost());
         }
     }
 
-    public static ABSDataType proc_deadline(ABSProcess p) {
+    public static Object proc_deadline(ABSProcess p) {
         if (p.getDeadlineAbsolute().signum() == -1) {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
             return DynamicClassUtils.instance(type);
         } else {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_Duration");
-            return DynamicClassUtils.instance(type, ABSRational.fromAprational(p.getDeadlineAbsolute()
-                                                                               .subtract(ABSRuntime.getRuntime().getClock())));
+            return DynamicClassUtils.instance(type, p.getDeadlineAbsolute().subtract(ABSRuntime.getRuntime().getClock()));
         }
     }
 
-    public static ABSDataType start(ABSProcess p) {
+    public static Object start(ABSProcess p) {
         Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
-        return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getStartTime()));
+        return DynamicClassUtils.instance(type, new Aprational(p.getStartTime()));
     }
 
-    public static ABSDataType finish(ABSProcess p) {
+    public static Object finish(ABSProcess p) {
         Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
-        return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getFinishTime()));
+        return DynamicClassUtils.instance(type, new Aprational(p.getFinishTime()));
     }
 
-    public static ABSBool critical(ABSProcess p) {
-        return ABSBool.fromBoolean(p.isCritical());
+    public static boolean critical(ABSProcess p) {
+        return p.isCritical();
     }
 
-    public static ABSInteger value(ABSProcess p) {
-        return ABSInteger.fromInt(p.getValue());
+    public static Apint value(ABSProcess p) {
+        return new Apint(p.getValue());
     }
 
     /*
@@ -154,11 +149,11 @@ public class ABSBuiltInFunctions {
     public static <T> ABSDynamicObject reflect(T t) {
         String name = "$mirror";
         try {
-            ABSValue existingMirror = ((ABSDynamicObject) t).getFieldValue(name);
+            Object existingMirror = ((ABSDynamicObject) t).getFieldValue(name);
             return (ABSDynamicObject) existingMirror;
         } catch (NoSuchFieldException e) {
             ABSDynamicObject mirror = new ABSDynamicObject(ObjectMirror.singleton());
-            mirror.setFieldValue("object", (ABSValue) t);
+            mirror.setFieldValue("object", t);
             ((ABSDynamicObject) t).setFieldValue(name, mirror);
             return mirror;
         }
@@ -172,16 +167,16 @@ public class ABSBuiltInFunctions {
     /*
      * Convenience functions, to be removed
      */
-    public static ABSUnit println(ABSString s) {
-        out.println(s.getString());
+    public static ABSUnit println(String s) {
+        out.println(s);
         return ABSUnit.UNIT;
     }
 
-    public static ABSString readln() {
+    public static String readln() {
         try (Scanner scanner = new Scanner(System.in)) {
-	    String line = scanner.nextLine();
-	    return ABSString.fromString(line.trim());
-	}
+	        String line = scanner.nextLine();
+	        return line.trim();
+	    }
     }
 
     /*
@@ -215,43 +210,79 @@ public class ABSBuiltInFunctions {
         return val;
     }
 
-    public static ABSInteger truncate(ABSRational r) {
+    public static Aprational min(Aprational r1, Aprational r2) {
+        return r1.compareTo(r2) < 0 ? r1 : r2;
+    }
+
+    public static Apint min(Apint i1, Apint i2) {
+        return i1.compareTo(i2) < 0 ? i1 : i2;
+    }
+
+    public static Double min(Double d1, Double d2) {
+        return d1 < d2 ? d1 : d2;
+    }
+
+    public static Aprational max(Aprational r1, Aprational r2) {
+        return r1.compareTo(r2) > 0 ? r1 : r2;
+    }
+
+    public static Apint max(Apint i1, Apint i2) {
+        return i1.compareTo(i2) > 0 ? i1 : i2;
+    }
+
+    public static Double max(Double d1, Double d2) {
+        return d1 > d2 ? d1 : d2;
+    }
+
+    public static Aprational abs(Aprational r) {
+        return r.compareTo(Aprational.ZERO) < 0 ? r.negate() : r;
+    }
+
+    public static Apint abs(Apint i) {
+        return i.compareTo(Apint.ZERO) < 0 ? i.negate() : i;
+    }
+
+    public static Double abs(Double d) {
+        return Math.abs(d);
+    }
+
+    public static Apint truncate(Aprational r) {
         return r.truncate();
     }
 
-    public static ABSInteger numerator(ABSRational r) {
+    public static Apint numerator(Aprational r) {
         return r.numerator();
     }
 
-    public static ABSInteger denominator(ABSRational r) {
+    public static Apint denominator(Aprational r) {
         return r.denominator();
     }
 
-    public static ABSFloat float__(ABSRational r) {
-        return r.toFloat();
+    public static double float__(Aprational r) {
+        return r.doubleValue();
     }
 
-    public static ABSRational rat(ABSFloat f) {
-        return ABSRational.fromDouble(f.getDouble());
+    public static Aprational rat(double f) {
+        return new Aprational(f);
     }
 
-    public static ABSInteger floor(ABSFloat f) {
-        return ABSInteger.floor(f);
+    public static Apint floor(double f) {
+        return new Apint(Math.round(Math.floor(f)));
     }
 
-    public static ABSInteger ceil(ABSFloat f) {
-        return ABSInteger.ceil(f);
+    public static Apint ceil(double f) {
+        return new Apint(Math.round(Math.ceil(f)));
     }
 
-    public static ABSFloat sqrt(ABSFloat f) {
-        return ABSFloat.fromDouble(StrictMath.sqrt(f.getDouble()));
+    public static double sqrt(double f) {
+        return StrictMath.sqrt(f);
     }
 
-    public static ABSFloat log(ABSFloat f) {
-        return ABSFloat.fromDouble(StrictMath.log(f.getDouble()));
+    public static double log(double f) {
+        return StrictMath.log(f);
     }
 
-    public static ABSFloat exp(ABSFloat f) {
-        return ABSFloat.fromDouble(StrictMath.exp(f.getDouble()));
+    public static double exp(double f) {
+        return StrictMath.exp(f);
     }
 }

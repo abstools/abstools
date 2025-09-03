@@ -1,0 +1,46 @@
+<h3>9 Concluding Remarks</h3>
+In this tutorial we gave an introduction to the abstract modeling language ABS.
+Uniquely among current modeling languages, ABS has a formal semantics and
+covers the whole spectrum from feature modeling to the generation of executable
+code in Java. Development of ABS models is supported by an Eclipse plugin.
+A very important point is that ABS offers a wide variety of modeling options
+in a uniform, homogeneous framework, see <a href="fig17.png">Fig. 17</a>. This allows to select an
+appropriate modeling style for each modeled artifact. It also supports rapid
+prototyping and design-time analysis, because ADT-based models can be refined
+later (dashed arrow).
+Of course, as any other formalism, ABS has also limitations: it is not suitable
+to model low-level, thread-based concurrency with shared data. Hence, ABS is
+not suitable to model multi-core applications or system libraries. In this sense,
+approaches such as <a href="http://doi.acm.org/10.1145/2103776.2103785">[5] </a>are complementary to ABS.
+As mentioned earlier, the analysis capabilities and the ABS runtime compo-
+nent layer are beyond this tutorial, but some chapters in this volume cover part
+of the material.
+<h4>Acknowledgments</h4>
+The development and implementation of ABS was a collaborative effort of the
+many researchers involved in the HATS project. While the text of this tutorial
+has been written from scratch by the author, it could never have been done with-
+out the background of all the papers, presentations, and discussions provided by
+many colleagues. Special thanks go to the main contributors to Work Package 8:
+Frank de Boer, Einar Broch Johnsen, and Ina Schaefer.
+<h4>Further Reading</h4>
+This paper is a tutorial on ABS and not a language specification nor a formal
+definition. A more technical and more detailed description of ABS and its tool
+set is contained in the paper trio <a href="http://dx.doi.org/10.1007/978-3-642-25271-6_11">[10,</a><a href="http://dx.doi.org/10.1007/978-3-642-35887-6_6"> 20,</a><a href="http://dx.doi.org/10.1007/978-3-642-25271-6_8"> 25]</a>. The most detailed document about
+ABS that also contains a formal semantics is <a href="http://www.hats-project.eu/sites/default/files/Deliverable12.pdf">[13]</a>. The official ABS Language
+
+<a href="fig1.png"><img src="fig1-445x296.png" alt="fig1-445x296" width="445" height="296" class="alignnone size-medium wp-image-732" /></a>
+<strong>Fig. 1.</strong> The gap in the landscape of software modeling languages
+
+Specification is <a href="http://tools.hats-project.eu/download/absrefmanual.pdf">[2]</a>. Finally, for several case studies done with ABS, please look
+here <a href="http://www.hats-project.eu/sites/default/files/Deliverable5.3.pdf">[15]</a>.
+It is stressed at several places in this tutorial that ABS has been designed
+with the goal of permitting automatic static analyses of various kinds. This
+tutorial concentrates on the ABS language and its development environment. In
+the paper by Albert in this volume <a href="http://link.springer.com/chapter/10.1007/978-3-642-40615-7_4">[4]</a> automated resource analysis for ABS is
+explained in detail. Information on deadlock analysis and formal verification of
+ABS can be found in <a href="http://www.hats-project.eu/sites/default/files/Deliverable27.pdf">[14]</a>. The chapter by Poetzsch-Heffter in this volume <a href="http://dx.doi.org/10.1007/978-3-642-40615-7_3">[34]</a>
+contains a general discussion of verification of concurrent open systems.
+
+&nbsp;
+
+<center><a href="http://www.abs-models.org/?page_id=668">Prev</a></center>

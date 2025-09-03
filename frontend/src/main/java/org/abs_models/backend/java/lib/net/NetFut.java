@@ -5,9 +5,8 @@
 package org.abs_models.backend.java.lib.net;
 
 import org.abs_models.backend.java.lib.runtime.ABSFut;
-import org.abs_models.backend.java.lib.types.ABSValue;
 
-public class NetFut<V extends ABSValue> extends ABSFut<V> {
+public class NetFut<V> extends ABSFut<V> {
 
     private final Promise promise;
 

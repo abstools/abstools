@@ -132,6 +132,17 @@ public class StdLibTests extends SemanticTests {
     }
 
     @Test
+    public void mapPutIntIntoRat() throws Exception {
+        assertEvalTrue("""
+            {
+                Map<Int, Rat> m = map[];
+                m = put(m, 0, 10);
+                Bool testresult = lookupUnsafe(m, 0) == 10;
+            }
+            """);
+    }
+
+    @Test
     public void mapKeys() throws Exception {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = keys(map) == set[1, 2, 3]; }");
     }
@@ -281,6 +292,21 @@ public class StdLibTests extends SemanticTests {
     @Test
     public void minFloat() throws Exception {
         assertEvalTrue("{Bool testresult = min(-2.0, 3.0) == -2.0;}");
+    }
+
+    @Test
+    public void absInt() throws Exception {
+        assertEvalTrue("{ Bool testresult = abs(-5) == 5; }");
+    }
+
+    @Test
+    public void absRat() throws Exception {
+        assertEvalTrue("{ Bool testresult = abs(-5/2) == 5/2; }");
+    }
+
+    @Test
+    public void absFloat() throws Exception {
+        assertEvalTrue("{ Bool testresult = abs(-5.2) == 5.2; }");
     }
 
     @Test

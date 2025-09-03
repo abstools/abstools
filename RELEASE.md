@@ -21,6 +21,13 @@
 
 - Manually compile and run a small model on macOS, Linux, Windows
 
+- Check that the manual looks ok, including the updated version number
+  -- open `abs-docs/build/docs/asciidoc/index.html` in a browser.
+
+- update [https://abs-models.org/manual/]: copy the content of
+  `abs-docs/build/docs/asciidoc/` into the
+  `abs-models.org/static/manual/` subdirectory, then redeploy the
+  website as described in `abs-models.org/README.org`
 
 - Create docker
   - remove current docker images to ensure everything gets rebuilt
@@ -34,9 +41,6 @@
   - check that absc container works / was created: `docker run --rm
     abslang/absc:latest -h` should produce the same output as `absc
     -h` on the local machine
-
-- Check that the manual looks ok -- open
-  `abs-docs/build/docs/asciidoc/index.html` in a browser.
 
 ## Release steps
 
@@ -78,21 +82,17 @@
   
   - check the output of `absc -V`; it should output the new version
     number
+
+- Update the website with the new version of the language manual:
+  - `cp -r abs-docs/build/docs/asciidoc/* abs-models.org/static/manual`
   - check the header of `abs-docs/build/docs/asciidoc/index.html`, it
     should contain the new version number
 
 - push the release commit (`git push`)
-
-- update [https://abs-models.org/manual/]: copy the content of
-  `abs-docs/build/docs/asciidoc/` into the `static/manual/`
-  subdirectory of the repository at
-  [https://github.com/abstools/abs-models.org], then redeploy the
-  website
+- push the release tag (`git push --tags`)
 
 - finalize release on github (automating these steps would involve
   handling github API keys, so we keep it manual.)
-
-  - push the release tag (`git push --tags`)
 
   - upload `absfrontend.jar`: go to
     [https://github.com/abstools/abstools/releases/tag/vx.y.z].  Click

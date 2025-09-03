@@ -4,19 +4,17 @@
  */
 package org.abs_models.backend.java.lib.expr;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public class PatternValue extends Pattern {
 
-    private final ABSValue value;
+    private final Object value;
 
-    public PatternValue(ABSValue value) {
+    public PatternValue(Object value) {
         this.value = value;
     }
 
     @Override
-    public boolean match(ABSValue dt, PatternBinding binding) {
-        return BinOp.eq(value, dt).toBoolean();
+    public boolean match(Object dt, PatternBinding binding) {
+        return BinOp.eq(value, dt);
     }
 
 }

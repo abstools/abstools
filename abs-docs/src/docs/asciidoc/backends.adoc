@@ -13,38 +13,24 @@ models.
 Resource Models:: Specification of resource availability (processor power,
 bandwidth) of _Deployment Components_ and simulation of resource usage
 deployed thereon.  Builds on the semantics of Real-Time ABS.
-Deployment:: Running ABS code on a number of physical or virtual machines,
-with support for creating new cogs remotely.
 FLI:: Foreign-Language Interface, the ability to call backend-specific native
 code from ABS.
-
+User-defined Schedulers:: Specification of per-cog task priorities
+using ABS functions.
+Model API:: Interacting with a running ABS model via HTTP requests.
 
 .Backend Capabilities
 |===
-| Backend | Maude | Erlang | Haskell | Java
+| Backend | Maude | Erlang | Java
 
 
 | Real-Time ABS
 | yes
 | yes
-| -
 | yes
-
-| User-defined Schedulers
-| yes
-| partial
-| -
-| -
 
 | Resource Models
 | yes
-| yes
-| -
-| yes
-
-| Deployment
-| -
-| -
 | yes
 | yes
 
@@ -52,59 +38,192 @@ code from ABS.
 | -
 | -
 | yes
-| planned
+
+| User-defined Schedulers
+| yes
+| yes
+| -
 
 | Model API
 | -
 | yes
-| -
 | yes
 
 |===
 
+[[sec:java-backend]]
+=== Java Backend
 
-=== Maude Backend
+The Java backend runs ABS models on the JVM by translating them into Java and
+combining them with a runtime library implementing key ABS concepts.
 
-The Maude backend is a high-level, executable semantics in rewriting logic of
-the ABS language.  Due to its relatively compact nature, it serves as a
-test-bed for new language features.
+==== How to run the Java backend
 
-Executing a model on the Maude backend results in a complete snapshot of the system state after execution has finished.
+Compiling all files in the current directory into Java and starting the
+resulting model is done with the following commands:
 
-The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.
+  $ absc --java *.abs -o model.jar
+  $ java -jar model.jar
 
-Features:
+The first command compiles the ABS model, the second command starts Java and
+runs the code contained in `model.jar`.  In case more than one abs file
+contains a main block, an arbitrary main block is executed.
 
-* CPU and bandwidth resources
-* Simulation of resource usage on deployment components
-* Timed semantics
-* Executable formal semantics of the ABS language
+The model accepts a number of command-line arguments; see the output
+of `java -jar model.jar -h` for a list.
 
+The source code of the generated classes can be inspected below the `gen/`
+directory.
 
-==== How to run the Maude backend
+==== Compiling ABS Code from Gradle
 
-Running a model on Maude involves compiling the code, then starting Maude with
-the resulting file as input.
+The gradle build system can compile ABS code by adding the below
+fragment to a Java project's `build.gradle` file.  This does the
+following:
 
-Compiling all files in the current directory into Maude is done with the following command:
+* Downloads the latest released version of the ABS compiler
+* Compiles all ABS files below `src/main/abs`
+* Adds a dependency such that ABS code is compiled before Java code
+* Adds the resulting Java source directory `build/abs` so that
+  generated ABS classes can be referenced from Java.
 
-  $ absc --maude *.abs -o model.maude
+[source,groovy]
+----
+// Use Gradle's cache directory for downloaded files
+ext {
+    absToolsDir = new File("${gradle.gradleUserHomeDir}/caches/abstools")
+}
 
-The model is started with the following commands:
+dependencies {
+    // Any other dependencies here ...
+    implementation files(new File(project.ext.absToolsDir, "absfrontend.jar"))
+}
 
-  $ maude
-  Maude> in model.maude
-  Maude> frew start .
+task downloadAbsFrontend {
+    description 'Downloads the latest absfrontend.jar from GitHub releases'
+    def taskAbsToolsDir = project.ext.absToolsDir
+    def taskAbsDownloadsDir = new File(taskAbsToolsDir, "/downloads")
 
-This sequence of commands starts Maude, then loads the compiled model and
-starts it.  The resulting output is a dump of the complete system state after
-execution of the model finishes.
+    doLast {
+        logger.lifecycle("Checking for latest absfrontend.jar...")
+        taskAbsDownloadsDir.mkdirs()
+        def apiUrl = new java.net.URL("https://api.github.com/repos/abstools/abstools/releases/latest")
+        def connection = apiUrl.openConnection()
+        // GitHub API may require a User-Agent header
+        connection.setRequestProperty("User-Agent", "Gradle Build")
 
-In case of problems, check the following:
+        def jsonText = connection.getInputStream().getText()
+        def json = new groovy.json.JsonSlurper().parseText(jsonText)
+        def version = json.tag_name.toString()
+        if (version.startsWith('v')) {
+            version = version.substring(1)  // Remove 'v' prefix if present
+        }
+        def jarAsset = json.assets.find { it.name == "absfrontend.jar" }
+        if (jarAsset) {
+            def versionedJarName = "absfrontend-${version}.jar"
+            def versionedJarFile = new File(taskAbsDownloadsDir, versionedJarName)
+            def jarFile = new File(taskAbsToolsDir, "absfrontend.jar")
+            if (versionedJarFile.exists()) {
+                logger.lifecycle("Version ${version} already downloaded at ${versionedJarFile.absolutePath}")
+            } else {
+                def downloadUrl = jarAsset.browser_download_url
+                logger.lifecycle("Found latest version ${version} at: ${downloadUrl}")
+                // Delete any previous absfrontend jar files
+                taskAbsDownloadsDir.listFiles().each { file ->
+                    if (file.name.startsWith("absfrontend-") && file.name.endsWith(".jar")) {
+                        logger.lifecycle("Deleting old version: ${file.name}")
+                        file.delete()
+                    }
+                }
+                def jarConnection = new java.net.URL(downloadUrl).openConnection()
+                jarConnection.setRequestProperty("User-Agent", "Gradle Build")
+                try (def inputStream = jarConnection.getInputStream()) {
+                    java.nio.file.Files.copy(inputStream, versionedJarFile.toPath(),
+                                             java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                }
+                logger.lifecycle("Successfully downloaded absfrontend.jar version ${version} to ${versionedJarFile.absolutePath}")
+            }
+            java.nio.file.Files.copy(versionedJarFile.toPath(), jarFile.toPath(),
+                                     java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            logger.lifecycle("Copied ${versionedJarFile.absolutePath} to ${jarFile.absolutePath}")
+        } else {
+            throw new GradleException("Could not find absfrontend.jar in the latest release")
+        }
+    }
+}
 
-- `absc` should be in the path; check the `PATH` environment variable.
-- `absfrontend.jar` should be in the environment variable `CLASSPATH`.
+// Compile ABS
+task compileAbs(type: Exec, dependsOn: downloadAbsFrontend) {
+    description = 'Compiles ABS.'
+    inputs.dir 'src/main/abs'
+    outputs.dir 'build/abs'
+    commandLine 'java', '-jar', project.ext.absToolsDir.toString() + '/absfrontend.jar', '--java', '-d', 'build/abs/', '--sourceonly',
+        *fileTree(dir: 'src/main/abs', include: '**/*.abs').collect { it.absolutePath }
+}
 
+// Also, add build/abs to the runtime classpath
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/abs'
+        }
+        runtimeClasspath += files('build/abs')
+    }
+}
+
+tasks.withType(JavaCompile) {
+    dependsOn compileAbs
+    source('build/abs')
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+----
+
+==== Running an ABS Model from Java
+
+An ABS model can be started from a Java program by calling the main
+method of a special class `Main` in the generated Java code.
+
+Here is a simple ABS program that waits for 15 time unites, then prints a greeting.
+
+[source,abs]
+----
+module ABS;
+{
+    await duration(15);
+    println(`Hello world!  The time is $now()$`);
+}
+----
+
+If the generated ABS Java code is included in the Java project's
+source path, this ABS model can be started from Java as follows, and
+the generated output captured in a string:
+
+[source,java]
+----
+package org.example;
+
+public class App {
+    public static void main(String[] args) throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintStream printStream = new PrintStream(outputStream);
+        PrintStream originalOut = System.out;
+        try {
+            System.setOut(printStream);
+            ABS.Main.main(new String[0]);
+        } finally {
+            System.setOut(originalOut);
+        }
+        System.out.println("Captured Output:");
+        System.out.println(outputStream.toString());
+    }
+}
+----
 
 [[sec:erlang-backend]]
 === Erlang Backend
@@ -171,201 +290,46 @@ To generate code coverage information, compile an abs model with the
 For each `.abs` file, running the model will generate a `.abs.gcov` file in
 the directory `gen/erl/absmodel` after the simulation finishes.
 
-=== Java Backend
+=== Maude Backend
 
-The Java backend runs ABS models on the JVM by translating them into Java and
-combining them with a runtime library implementing key ABS concepts.
+The Maude backend is a high-level, executable semantics in rewriting logic of
+the ABS language.  Due to its relatively compact nature, it serves as a
+test-bed for new language features.
 
-==== How to run the Java backend
+Executing a model on the Maude backend results in a complete snapshot of the system state after execution has finished.
 
-Compiling all files in the current directory into Java and starting the
-resulting model is done with the following commands:
+The main drawback of the Maude backend is its relatively poor performance, making it not very suitable to simulate large models.
 
-  $ absc --java *.abs -o model.jar
-  $ java -jar model.jar
+Features:
 
-The first command compiles the ABS model, the second command starts Java and
-runs the code contained in `model.jar`.  In case more than one abs file
-contains a main block, an arbitrary main block is executed.
-
-The source code of the generated classes can be inspected below the `gen/`
-directory.
-
-=== Haskell Backend
-
-The Haskell backend translates ABS models to Haskell source code, 
-consequently compiled through a Haskell compiler and executed by the machine.
-The backend, albeit  a work in progress, already supports most ABS constructs
-and, above that, augments the language with extra features, such as `Type Inference`,
-`Foreign Imports` and real `Deployment Components`.
-
-.Type Inference
-
-With the feature of `Type Inference` enabled, the user can _optionally_ leave out
-the declaration of types of certain expressions; the backend will be responsible
-to infer those types and type-check them in the ABS program. The type inference
-is _safe_, in the sense that it will not infer any wrong types (soundness property).
-
-To make use of this feature, the user puts an underscore `_` in place
-of where a type would normally be, as in this ABS block of code:
-
-[source, java]
-
-----
-{ _ x = 3;
-  Int y = 4; // type inference is optional
-  x = x+y;
-  _ l = Cons(x, Cons(y, Nil));
-  _ s = length(l) + 4; }
-----
-
-NOTE: At the moment, the type inference cannot infer
-_interface types_ as in `_ o = new Class();`.
-It can however infer all the other types, that is Builtin, Algebraic, and Exception data types.
-There is a plan to support this in the future.
-
-.Foreign Imports
-
-The Haskell backend extends the ABS module system with the ability
-to include Haskell-written code inside the ABS program itself.
-This feature is provided by the `foreign_import` keyword,
-which syntactically follows that of the normal `import` keyword. To illustrate this:
-
-[source, java]
-
-----
-module Bar;
-...
-foreign_import Vertex from Data.Graph;
-foreign_import vertices from Data.Graph;
-----
-
-the programmer has imported the `Vertex` algebraic datatype and
-the `vertices` function from the `Data.Graph` Haskell library module into an ABS module
-named `Bar`. Any imported Haskell term will be treated as its ABS
-counterpart. In the example case, the programmer may re-export the foreign terms
-or use them as normal ABS terms:
-
-[source]
-----
-{
-  Graph g = empty_graph();
-  List<Vertex> vs = vertices(g);
-} 
-----
-
-NOTE: At the moment, the ABS programmer can reuse (with `foreign_import`)  Haskell's _Algebraic Data types_
-and _Pure functions_, but not monadic IO code (Haskell code with side-effects). This restriction
-is planned to be lifted in a later release of the backend.
-
-.Deployment Components
-
-The Haskell backend implements the ABS feature of Deployment Components, faithfully as described in Chapter 8.
-The backend follows the view that Deployment Components are _virtual machines_ running in the Cloud.
-As such, each single DC corresponds to one Cloud virtual machine (VM).
-
-Two DC classes (implementations) are provided to support the http://opennebula.org/[OpenNebula] and
-http://azure.microsoft.com[Microsoft Azure] cloud computing platforms accordingly:
-
-[source, java]
-
-----
-class NebulaDC(CPU cpu, Mem memory) implements DC {
-  ...      
-}
-----
-
-[source, java]
-
-----
-class AzureDC(CPU cpu, Mem memory) implements DC {
-  ...
-}
-----
-
-The `CPU` and `Mem` datatypes are passed as arguments when creating the DC to parameterize
-its computing resources. These datatypes are simple defined as type synonyms to
-Int, but you can expect more sophisticated resource encodings for a future backend release.
-
-[source]
-----
-type CPU = Int; // processor cores
-type Mem = Int; // RAM measured in MB
-----
-
-[WARNING]
-The backend has only been developed on and tested against the OpenNebula platform.
-This hopefully will change when more cloud providers will be supported.
-
-==== How to obtain and install
-
-The compiler itself is written in Haskell and distributed as a normal Haskell package. Therefore to build abs2haskell you need either
-
-1) a recent release of the https://www.haskell.org/platform/[Haskell platform] (version >= 2013.2.0.0),
-
-2) the GHC compiler accompanied by the Cabal packaging system:
-
-    - GHC compiler (version >=7.6)
-    - Cabal package (version >=1.4)
-    - `cabal-install` program. The compiler depends on other community
-packages/libraries. This program will automatically fetch
-and install any library dependencies.
-
-.Downloading, building and installing the compiler
-
-Clone the repository with the command:
-
-      $ git clone git://github.com/bezirg/abs2haskell
-
-To build and install the abs2haskell backend run inside the `abs2haskell/` directory:
-
-[source]
-
-----
-sudo make install
-----
-
-==== How to run the Haskell backend
-
-After installing the compiler, you should
-have the program `abs2haskell` under your `PATH`.
-
-Examples of running:
-
-[source]
-
-----
-$ abs2haskell Example.abs 
-
-# An ABS program may have multiple main blocks in different modules. 
-# So you have to specify in which module is the main block you want to build with
-
-$ abs2haskell --main-is=Example.abs Example.abs 
-
-$ abs2haskell examples/   # will compile all ABS files under examples directory
-----
+* CPU and bandwidth resources
+* Simulation of resource usage on deployment components
+* Timed semantics
+* Executable formal semantics of the ABS language
 
 
-The compiler will generate ".hs" files for each compiled ABS module.
-No other runtime system libraries and dependencies will be generated.
+==== How to run the Maude backend
+
+Running a model on Maude involves compiling the code, then starting Maude with
+the resulting file as input.
+
+Compiling all files in the current directory into Maude is done with the following command:
+
+  $ absc --maude *.abs -o model.maude
+
+The model is started with the following commands:
+
+  $ maude
+  Maude> in model.maude
+  Maude> frew start .
+
+This sequence of commands starts Maude, then loads the compiled model and
+starts it.  The resulting output is a dump of the complete system state after
+execution of the model finishes.
+
+In case of problems, check the following:
+
+- `absc` should be in the path; check the `PATH` environment variable.
+- `absfrontend.jar` should be in the environment variable `CLASSPATH`.
 
 
-The final step before running the ABS program is to compile the generated Haskell code to machine code, as the example:
-
-[source]
-
-----
-ghc --make -threaded Example.hs # put the generated haskell file that has the main block here
-----
-
-.Running the final program
-
-[source]
-
-----
-./Example -O # means run it on 1 core with default optimizations
-./Example -O +RTS -N1 # the same as the above
-./Example -O +RTS -N2 # run it on 2 cores
-./Example -O +RTS -N4 # run it on 4 cores
-./Example -O +RTS -NK # run it on K cores
-----

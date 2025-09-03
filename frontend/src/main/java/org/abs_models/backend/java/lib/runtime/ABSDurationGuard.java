@@ -4,9 +4,9 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
-import org.abs_models.backend.java.lib.types.ABSRational;
-import org.apfloat.Aprational;
 import java.util.logging.Logger;
+
+import org.apfloat.Aprational;
 
 /**
  * A guard that suspends until the logical clock has advanced by at least the
@@ -36,10 +36,10 @@ public class ABSDurationGuard extends ABSGuard {
      * @param maxduration The maximum duration to suspend the process; if no
      *   other process waits, the clock will advance by this amount.
      */
-    public ABSDurationGuard(ABSRational minduration, ABSRational maxduration) {
+    public ABSDurationGuard(Aprational minduration, Aprational maxduration) {
         Aprational current_time = ABSRuntime.getRuntime().getClock();
-        this.min_time = current_time.add(minduration.toAprational());
-        this.max_time = current_time.add(maxduration.toAprational());
+        this.min_time = current_time.add(minduration);
+        this.max_time = current_time.add(maxduration);
     }
 
     /**

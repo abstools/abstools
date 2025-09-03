@@ -7,7 +7,6 @@ package org.abs_models.backend.java.observing;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.utils.StringUtil;
 
 /**
@@ -39,11 +38,11 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     @Override
     public void objectCreated(ObjectView o) {
         super.objectCreated(o);
-        show(objectString(o)+" created in COG["+o.getCOG().getID()+"]");
+        show(objectString(o)+" created in COG["+o.getCOGView().getID()+"]");
     }
     
     @Override
-    public void methodCalled(ObjectView object, String method, List<ABSValue> args) {
+    public void methodCalled(ObjectView object, String method, List<Object> args) {
         show("Method called: "+method+"("+StringUtil.iterableToString(args, ",")+")");
     }
     
@@ -54,14 +53,14 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     @Override
     public void taskCreated(TaskView task) {
         show("Task["+task.getID()+"] created ("
-                +objectString(task.getTarget())+
+                +objectString(task.getTargetObjectView())+
                 "!"+task.getMethodName()+
                 "("+StringUtil.iterableToString(task.getArgs(), ",")+
                 ")"+
                 ")");
 
         task.registerTaskListener(this);
-        task.getFuture().registerFutObserver(this);
+        task.getFutView().registerFutObserver(this);
     }
     
     @Override
@@ -70,7 +69,7 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     }
 
     @Override
-    public void onResolved(FutView fut, ABSValue value) {
+    public void onResolved(FutView fut, Object value) {
         show("Future["+fut.getID()+"] resolved with value '"+value+"'");
     }
 
@@ -107,11 +106,11 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
 
     @Override
     public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
-        show("Task["+task.getID()+"] called "+stackFrame.getMethod().getClassView().getName()+"."+stackFrame.getMethod().getName());
+        show("Task["+task.getID()+"] called "+stackFrame.getMethodView().getClassView().getName()+"."+stackFrame.getMethodView().getName());
     }
 
     @Override
-    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, Object v) {
         // TODO Auto-generated method stub
         
     }

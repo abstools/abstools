@@ -1,0 +1,58 @@
+* The abs-models.org website source
+
+This is the source code for the abs-models.org website.  The site is
+built using [[https://gohugo.io/][Hugo]], and deployed both inside collaboratory docker
+containers and at https://abs-models.org/.
+
+** Testing changes
+
+Run =hugo server= and open a browser at ~localhost:1313~ to test changes locally.
+
+** Updating the theme
+
+Newer hugo releases might emit warnings or errors for our theme.  In
+that case, run =themes/update-theme.sh=
+
+** Deploying on the website
+
+The website is deployed into the repository
+https://github.com/abstools/abstools.github.io.  If that repository is
+checked out in the same directory as the abstools repository, the
+following command will prepare a new version:
+
+: hugo --cleanDestinationDir -d ../../abstools.github.io/
+
+To deploy, commit and push the changes in the ~abstools.github.io~ repository.
+
+** Updating the manual
+
+The ~static/manual/~ subdirectory is updated manually for each release
+of the basic tools.  See `../RELEASE.md` for instructions on how to
+update the language manual.  (The manual is not updated for each build
+because we want to update the website without updating to a version of
+the manual that corresponds to an unreleased version of ABS.)
+
+** Linking to files in tutorials
+
+The files in https://github.com/abstools/absexamples/tree/master/collaboratory
+are automatically installed in the collaboratory and can be linked from tutorials in this
+site.
+
+To create a link that opens such a file in the collaboratory, use the
+=eifilelink= shortcode, which opens the specified file in the collaboratory in
+a new tab.  The =eifilelink= shortcode comes in two variants, with positional
+and named parameters.
+
+With positional parameters, the first parameter gives the relative url of the
+file and the second parameter the link text.  If an app is to be specified,
+append it to the relative url.
+#+BEGIN_SRC
+{{< eifilelink "/collaboratory/hello_world.abs&app=cost" "hello_world.abs" >}}
+#+END_SRC
+
+With named parameters, the =path= parameter gives the relative path.  The
+=title= parameter gives the link text; it is set to the filename if omitted.
+The =app= parameter gives the app to select; it can be omitted.
+#+BEGIN_SRC
+{{< eifilelink path="/collaboratory/hello_world.abs" app="cost" title="The hello world example" >}}
+#+END_SRC

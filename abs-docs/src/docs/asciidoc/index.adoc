@@ -8,6 +8,7 @@ ABS Development Team
 :copyright: CC-BY-SA 3.0
 :imagesdir: images
 :front-cover-image: image:Title_logo.png[width=1050,height=1600]
+:source-highlighter: rouge
 
 include::{includedir}/introduction.adoc[]
 

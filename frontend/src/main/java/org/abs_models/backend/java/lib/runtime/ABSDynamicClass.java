@@ -13,10 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.abs_models.backend.java.codegeneration.dynamic.DynamicException;
-import org.abs_models.backend.java.lib.expr.BinOp;
-import org.abs_models.backend.java.lib.types.ABSBool;
 import org.abs_models.backend.java.lib.types.ABSClass;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.manipulation.ClassManipulator;
 
 public class ABSDynamicClass implements ABSClass {
@@ -131,12 +128,16 @@ public class ABSDynamicClass implements ABSClass {
         return nextVersion;
     }
 
-    private View __view;
-    public synchronized ClassManipulator getView() {
-        if (__view == null) {
-            __view = new View();
+    private View view;
+    public ClassManipulator getView() {
+        if (view == null) {
+            synchronized(this) {
+                if (view == null) {
+                    view = new View();
+                }
+            }
         }
-        return __view;
+        return view;
     }
 
     private class View implements ClassManipulator {

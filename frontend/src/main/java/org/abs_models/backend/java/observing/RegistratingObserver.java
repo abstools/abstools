@@ -13,12 +13,12 @@ package org.abs_models.backend.java.observing;
  * @author Jan Schäfer
  *
  */
-public abstract class RegistratingObserver extends EmptyCompleteObserver {
+public abstract class RegistratingObserver extends DefaultCompleteObserver {
     
     @Override
     public void newCOGCreated(COGView cog, ObjectView initialObject) {
         cog.registerObjectCreationListener(this);
-        cog.getScheduler().registerTaskSchedulerObserver(this);
+        cog.getSchedulerView().registerTaskSchedulerObserver(this);
         initialObject.registerObjectObserver(this);
     }
 

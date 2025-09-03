@@ -4,7 +4,6 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
-import org.abs_models.backend.java.lib.types.ABSBool;
 import java.util.logging.Logger;
 
 /**
@@ -26,7 +25,7 @@ public abstract class ABSExpGuard extends ABSGuard {
      */
     private boolean wasPreviouslyTrue = true;
 
-    public abstract ABSBool evaluateExp();
+    public abstract boolean evaluateExp();
 
     @Override
     public boolean staysTrue() {
@@ -42,7 +41,7 @@ public abstract class ABSExpGuard extends ABSGuard {
      */
     @Override
     public boolean isTrue() {
-        return evaluateExp().toBoolean();
+        return evaluateExp();
     }
 
     /**

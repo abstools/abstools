@@ -5,7 +5,6 @@
 package org.abs_models.backend.java.lib.runtime;
 
 import org.abs_models.backend.java.lib.types.ABSBuiltInDataType;
-import org.abs_models.backend.java.lib.types.ABSValue;
 import org.abs_models.backend.java.observing.FutObserver;
 import org.abs_models.backend.java.observing.FutView;
 import org.abs_models.backend.java.observing.TaskView;
@@ -23,7 +22,7 @@ import java.util.logging.Logger;
 /**
  * The ABS Future datatype.
  */
-public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
+public abstract class ABSFut<V> extends ABSBuiltInDataType
     implements Future<V>
 {
     protected static final Logger log = Logging.getLogger(ABSFut.class.getName());
@@ -259,11 +258,15 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
     }
 
 
-    protected volatile View view;
+    protected View view;
 
-    public synchronized FutView getView() {
+    public FutView getView() {
         if (view == null) {
-            view = createView();
+            synchronized(this) {
+                if (view == null) {
+                    view = createView();
+                }
+            }
         }
         return view;
     }
@@ -282,7 +285,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
             return futObserver;
         }
 
-        synchronized void onResolved(ABSValue v) {
+        synchronized void onResolved(Object v) {
             for (FutObserver f : getObservers()) {
                 f.onResolved(this, v);
             }
@@ -290,7 +293,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
 
 
         @Override
-        public TaskView getResolvingTask() {
+        public TaskView getResolvingTaskView() {
             return null;
         }
 
@@ -305,7 +308,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType
         }
 
         @Override
-        public ABSValue getValue() {
+        public Object getValue() {
             return ABSFut.this.getValue();
         }
 

@@ -189,8 +189,10 @@ aspect GenerateErlang {
       "ABS.StdLib.truncate", "ABS.StdLib.numerator", "ABS.StdLib.denominator",
       "ABS.StdLib.float", "ABS.StdLib.rat",
       "ABS.StdLib.floor", "ABS.StdLib.ceil",
+      "ABS.StdLib.min", "ABS.StdLib.max", "ABS.StdLib.abs",
       "ABS.StdLib.sqrt", "ABS.StdLib.log", "ABS.StdLib.exp",
-      "ABS.Scheduler.method", "ABS.Scheduler.destinyOf", "ABS.Scheduler.arrival","ABS.Scheduler.proc_deadline");
+      "ABS.Scheduler.method", "ABS.Scheduler.destinyOf",
+      "ABS.Scheduler.arrival","ABS.Scheduler.proc_deadline");
   public  void FnApp.generateErlangCode(CodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     boolean emitBuiltinHeader = false;

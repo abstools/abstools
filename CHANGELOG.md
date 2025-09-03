@@ -8,11 +8,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The expressions `x implements I` and `x as I` are now implemented by
+  the Java backend.
+
 ### Changed
 
 ### Removed
 
 ### Fixed
+
+## [1.10.1] - 2025-06-25
+
+### Added
+
+- Added documentation for compiling and running ABS models inside a
+  Java project using the gradle build tool.
+
+### Changed
+
+- Refactor the Java backend to use Java-native datatypes directly
+  instead of wrapping them inside subclasses of `ABSDataType`:
+  - Instead of `ABSString`, use `java.lang.String`
+  - Instead of `ABSBool`, use `java.lang.Boolean`
+  - Instead of `ABSFloat`, use `java.lang.Double`
+  - Instead of `ABSRational`, use `org.apfloat.Aprational`
+  - Instead of `ABSInteger`, use `org.apfloat.Apint`
+  - Implement ABS user-defined datatypes as Java `record`s
+
+- Refactor the Java backend to use Java 21 pattern matching and record
+  patterns to implement the ABS `switch` statement and `case`
+  expression instead of creating temporary matcher and binding
+  objects.  This should significantly reduce memory use when
+  processing large datastructures.
+
+### Removed
+
+### Fixed
+
+Various bug fixes and minor refactorings.
 
 ## [1.10.0] - 2024-11-07
 
@@ -459,7 +492,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/abstools/abstools/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/abstools/abstools/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/abstools/abstools/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/abstools/abstools/compare/v1.9.1...v1.9.2

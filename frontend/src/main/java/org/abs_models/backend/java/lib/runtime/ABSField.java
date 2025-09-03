@@ -4,12 +4,10 @@
  */
 package org.abs_models.backend.java.lib.runtime;
 
-import org.abs_models.backend.java.lib.types.ABSValue;
-
 public class ABSField {
 
     // to be overridden
-    public ABSValue init(ABSDynamicObject t) {
+    public Object init(ABSDynamicObject t) {
         return null;
     }
 }
