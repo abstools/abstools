@@ -18,7 +18,7 @@ jobs:
       with:
         # version is used for download URL (see https://github.com/gleam-lang/setup-erlang/blob/main/main.sh)
         # Available versions: see https://www.erlang-solutions.com/downloads/
-        otp-version: '24.0.5'
+        otp-version: '26'
     - name: Run tests
       uses: eskatos/gradle-command-action@v1
       env:
