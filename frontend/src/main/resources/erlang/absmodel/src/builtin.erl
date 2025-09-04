@@ -146,7 +146,9 @@ float(_Cog, A) when is_integer(A) ->
     float(A).
 
 rat(_Cog, F) ->
-    %% this is slightly ugly.
+    %% this is slightly ugly.  TODO: implement the readable algorithm
+    %% in https://shreevatsa.net/fraction/best
+    %% https://github.com/larsbrinkhoff/emacs-cl/blob/master/src/cl-numbers.el#L953
     Rest = lists:dropwhile(fun(E) -> E /= $. end, mochinum:digits(F)),
     case Rest of
         ".0" ->
