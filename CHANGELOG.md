@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- A new function `range(a, b)` in the standard library returns a list
+  of integers ranging from a to b (inclusive).
+
 - The expressions `x implements I` and `x as I` are now implemented by
   the Java backend.
 
