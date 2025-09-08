@@ -33,7 +33,7 @@ export contains, emptySet, size, elements, union, intersection, difference,
 
 // Lists
 export List, Nil, Cons, head, tail, list;
-export length, isEmpty, nth, without, concatenate, appendright, reverse, copy;
+export length, isEmpty, nth, without, concatenate, appendright, reverse, copy, range;
 
 // Maps
 export Map, EmptyMap, InsertAssoc, map; // TODO: don't export EmptyMap, InsertAssoc
@@ -423,6 +423,16 @@ def List<A> reverse<A>(List<A> list) =
 def List<A> copy<A>(A p, Int n) =
    case n { 0 => Nil; m => Cons(p,copy(p,m-1)); };
 
+/**
+ * Returns a list of integers [lower..upper] (both inclusive)
+ */
+def List<Int> range(Int lower, Int upper) =
+    when lower > upper
+    then Nil
+    else
+        when lower == upper
+        then list[lower]
+        else Cons(lower, range(lower + 1, upper));
 
 
 

@@ -343,4 +343,20 @@ public class StdLibTests extends SemanticTests {
     public void durationLessThan() throws Exception {
         assertEvalTrue("{ Bool testresult = durationLessThan(Duration(5), InfDuration); }");
     }
+
+    @Test
+    public void rangeNormal() throws Exception {
+        assertEvalTrue("{ Bool testresult = range(-1, 1) == list[-1, 0, 1]; }");
+    }
+
+    @Test
+    public void rangeSingleton() throws Exception {
+        assertEvalTrue("{ Bool testresult = range(1, 1) == list[1]; }");
+    }
+
+    @Test
+    public void rangeEmpty() throws Exception {
+        assertEvalTrue("{ Bool testresult = range(1, -1) == list[]; }");
+    }
+
 }

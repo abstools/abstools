@@ -632,6 +632,19 @@ a value of type `B`.
 def B foldr<A, B>(accumulate)(List<A> l, B init);
 ----
 
+===== range
+
+Returns a list of integers ranging from the first to the second
+argument, inclusive.  If `lower` is equal to `upper`, returns a list
+of one element; if `lower` is larger than `upper`, returns an empty
+list.
+
+[source]
+----
+def Int range(Int lower, Int upper);
+----
+
+
 [[type-set]]
 === Sets
 
