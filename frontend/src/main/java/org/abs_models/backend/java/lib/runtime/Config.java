@@ -93,6 +93,9 @@ public class Config {
         if (options.clockLimit.wasSet()) {
             runtime.initializeClockLimit(options.clockLimit.longValue());
         }
+        if (options.datadir.wasSet()) {
+            runtime.setDatadir(options.datadir.stringValue());
+        }
         loadRandomSeed();
     }
 

@@ -189,6 +189,14 @@ java {
 An ABS model can be started from a Java program by calling the main
 method of a special class `Main` in the generated Java code.
 
+NOTE: Some ABS models might contain relative filenames, for example to
+specify the location of a SQLite database to query.  When the
+surrounding Java code sets the system property `abs.datadir` to an
+absolute path naming an existing directory, that directory will be
+used to resolve such filenames.  If the property is not set or
+contains an invalid value, relative filenames are resolved against the
+JVM's current directory.
+
 Here is a simple ABS program that waits for 15 time unites, then prints a greeting.
 
 [source,abs]

@@ -214,13 +214,14 @@ public class JavaGeneratorHelper {
         // Type checking ensures that decl has a type `List<X>'; get the X
         Type query_type = ((DataTypeType)decl.getType()).getTypeArg(0);
 
-        stream.println("if (!java.nio.file.Files.isReadable(java.nio.file.Paths.get(\"" + dbname + "\"))) {");
-        stream.println("throw new RuntimeException(\"Database file " + dbname + " not found\");");
+        stream.println("java.nio.file.Path __dbFile = " + ABSRuntime.class.getName() + ".getRuntime().getDatadir().resolve(\"" + dbname + "\");");
+        stream.println("if (!java.nio.file.Files.isReadable(__dbFile)) {");
+        stream.println("throw new RuntimeException(\"Database file \" + __dbFile + \" not found\");");
         stream.println("}");
         stream.println("// Not all databases support reading a resultset in reverse, use accumulator to preserve row order");
         stream.println("java.util.List<Object> acc = new java.util.ArrayList<>();");
         stream.println("ABS.StdLib.List result = new ABS.StdLib.List_Nil();");
-        stream.println("String connection_string = \"jdbc:sqlite:" + dbname + "\";");
+        stream.println("String connection_string = \"jdbc:sqlite:\" + __dbFile.toString();");
         stream.println("try (java.sql.Connection connection = java.sql.DriverManager.getConnection(connection_string);");
         stream.println("java.sql.PreparedStatement statement = connection.prepareStatement(\"" + query + "\")) {");
         stream.println("if (!connection.isValid(0)) {");
