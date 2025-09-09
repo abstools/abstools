@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The expressions `x implements I` and `x as I` are now implemented by
   the Java backend.
 
+- In the Java backend, relative filenames such as sqlite databases are
+  now resolved against the directory given by the `--datadir`
+  parameter or `abs.datadir` property.  If no directory is specified,
+  such filenames are resolved against the current directory as before.
+
 ### Changed
 
 ### Removed

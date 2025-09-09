@@ -14,6 +14,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -156,6 +158,14 @@ public class ABSRuntime {
     private Apint clockLimit = null;
 
     /**
+     * The directory that contains data files such as sqlite files;
+     * defaults to the VM's notion of current directory.  Settable via
+     * the {@code --datadir} CLI option or the {@code abs.datadir}
+     * system property.
+     */
+    private Path datadir = Paths.get("").toAbsolutePath();
+
+    /**
      * Starts a new ABS program by giving a generated Main class
      * @param mainClass the Main class to be used
      * @throws InstantiationException if the Main class could not be instantiated
@@ -271,6 +281,28 @@ public class ABSRuntime {
 
     public boolean debuggingEnabled() {
         return debugging;
+    }
+
+    /**
+     * Use {@code newDatadir} as the directory to resolve relative
+     * paths named in ABS programs.  Does nothing if {@code
+     * newDatadir} does not name an existing directory.
+     */
+    public void setDatadir(String newDatadir) {
+        Path newPath = Path.of(newDatadir).toAbsolutePath().normalize();
+        if (newPath.toFile().isDirectory()) {
+            datadir = newPath;
+        } else {
+            log.warning("The value " + newDatadir + "is not a directory; ignoring");
+        }
+    }
+
+    /**
+     * Return the directory used to resolve relative paths named in
+     * ABS programs.
+     */
+    public Path getDatadir() {
+        return datadir;
     }
 
     /**
