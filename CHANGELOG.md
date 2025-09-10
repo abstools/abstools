@@ -25,6 +25,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [1.10.2] - 2025-09-10
+
+### Added
+
+- A new function `range(a, b)` in the standard library returns a list
+  of integers ranging from a to b (inclusive).
+
+- The expressions `x implements I` and `x as I` are now implemented by
+  the Java backend.
+
+- In the Java backend, relative filenames such as sqlite databases are
+  now resolved against the directory given by the `--datadir`
+  parameter or `abs.datadir` property.  If no directory is specified,
+  such filenames are resolved against the current directory as before.
+
 ## [1.10.1] - 2025-06-25
 
 ### Added
@@ -500,7 +515,8 @@ Various bug fixes and minor refactorings.
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.2...HEAD
+[1.10.2]: https://github.com/abstools/abstools/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/abstools/abstools/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/abstools/abstools/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/abstools/abstools/compare/v1.9.2...v1.9.3
