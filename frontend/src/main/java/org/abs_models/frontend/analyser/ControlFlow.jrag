@@ -80,6 +80,9 @@ aspect ControlFlow {
 	eq MainBlock.getStmt(int i).entry() = entry();
 	eq MainBlock.getStmt(int i).exit() = exit();
 
+	syn nta Stmt FieldDecl.virtualStmt() = new VirtualStmt();
+	eq FieldDecl.getInitExp().parentStmt() = virtualStmt();
+
 	//== Predecessors ==
 	/**
 	 * The predecessor nodes of the current one
@@ -331,6 +334,13 @@ aspect ControlFlow {
 
 	syn nta Stmt LetExp.virtualStmt() = new VirtualStmt();
 	eq LetExp.getExp().parentStmt() = virtualStmt();
+
+	syn nta Stmt CaseBranch.virtualStmt() = new VirtualStmt();
+	eq CaseBranch.getLeft().parentStmt() = virtualStmt();
+	eq CaseBranch.getRight().parentStmt() = virtualStmt();
+
+	inh CaseExp CaseBranch.caseExp();
+	eq CaseExp.getBranch(int i).caseExp() = this;
 
 	eq MoveCogToStmt.getTarget().parentStmt() = this;
 
