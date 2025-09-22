@@ -599,6 +599,7 @@ public class NullableTests extends FrontendTest {
         assertEquals(PrimitiveNullableType.Nullable, f0.getNullableType());
         assertEquals(PrimitiveNullableType.Nonnull, f1.getNullableType());
         assertEquals(DataTypeNullableType.EMPTY, f2.getNullableType());
+        assertEquals(3, skip.nullableTypes_in().size());
         assertEquals(PrimitiveNullableType.Null, skip.nullableTypes_in().get(f0));
         assertEquals(PrimitiveNullableType.Null, skip.nullableTypes_in().get(f1));
     }

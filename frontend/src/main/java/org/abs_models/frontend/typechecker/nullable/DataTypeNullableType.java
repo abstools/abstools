@@ -20,6 +20,10 @@ public class DataTypeNullableType implements NullableType {
         this.params = params;
     }
 
+    public DataTypeNullableType(NullableType nt) {
+        this(List.of(nt));
+    }
+
     public List<NullableType> getParams() {
         return params;
     }

@@ -162,6 +162,13 @@ aspect NewNullable {
             }
         }
 
+        if (parent instanceof InitBlock) {
+            // Fields are not initialized for the init block
+            for (FieldDecl f : c.getFields()) {
+                builder = builder.put(f, NullCheckerExtension.emptyInitialNullableType(f.getType()));
+            }
+        }
+
         return builder.build();
     }
     // AssertStmt can propagate conditional information
@@ -525,7 +532,7 @@ aspect NewNullable {
         for (int i = 1; i < getNumPureExp(); i++) {
             nt = nt.getMostCommon(getPureExp(i).getNullableType());
         }
-        return nt;
+        return new DataTypeNullableType(nt);
     }
 
     eq NullExp.getNullableType() = PrimitiveNullableType.Null;
