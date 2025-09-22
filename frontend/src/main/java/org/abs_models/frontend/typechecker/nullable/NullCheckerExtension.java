@@ -1,6 +1,5 @@
 package org.abs_models.frontend.typechecker.nullable;
 
-import org.abs_models.frontend.analyser.BitVec;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticWarning;
 import org.abs_models.frontend.analyser.TypeError;
@@ -10,17 +9,16 @@ import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import com.google.common.collect.ImmutableMap;
 import org.jspecify.annotations.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Checks whether all assignments, calls, etc. adhere to the declared nullable types
- */
+/// Checks whether all assignments, calls, etc. adhere to the declared nullable types
 public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public static String NULLABLE_KEY = "NULLABLE_KEY";
     private PrimitiveNullableType defaultType = PrimitiveNullableType.Nullable;
+    /// Whether warnings should be emitted for missing annotations.
     private boolean warnAboutMissingAnnotation = false;
+    /// Whether to emit an error when a call on `null` is found.
     private boolean checkNullCall = false;
 
     public NullCheckerExtension(Model m) {
@@ -263,6 +261,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         return defaultIfNull(getNullableType(t));
     }
 
+    /// Constructs a map from type parameters from `dtt` to their respective nullable types in `dnt`.
     public static ImmutableMap<@NonNull TypeParameterDecl, @NonNull NullableType> nullableTypeMapping(DataTypeType dtt, DataTypeNullableType dnt) {
         ImmutableMap.Builder<@NonNull TypeParameterDecl, @NonNull NullableType> builder = new ImmutableMap.Builder<>();
         for (int i = 0; i < dtt.numTypeArgs(); i++) {
@@ -271,6 +270,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         return builder.build();
     }
 
+    /// Computes the nullable type from a type `t`.
     public static NullableType getNullableType(Type t) {
         var annotated = (PrimitiveNullableType) t.getMetaData(NULLABLE_KEY);
         if (annotated != null)
@@ -312,6 +312,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         return as;
     }
 
+    /// Computes the default, worst case nullable type.
     public static NullableType emptyInitialNullableType(Type t) {
         if (t instanceof ReferenceType) return PrimitiveNullableType.Null;
         if (t instanceof DataTypeType dtt) {
@@ -324,6 +325,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         return PrimitiveNullableType.Unknown;
     }
 
+    /// Computes the strongest nullable type of `t`'s structure.
     public static NullableType strongestNullableType(Type t) {
         if (t instanceof ReferenceType) return PrimitiveNullableType.Nonnull;
         if (t instanceof DataTypeType dtt) {

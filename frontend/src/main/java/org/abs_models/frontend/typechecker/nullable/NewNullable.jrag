@@ -16,7 +16,6 @@ aspect NewNullable {
      *    - MainBlock: All declarations in the block
      */
     syn lazy ImmutableMap<VarOrFieldDecl, NullableType> CFGEntry.getInitialNullableTypes() {
-        //return ImmutableMap.of();
         ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
         ASTNode parent = getParent();
 
@@ -245,7 +244,7 @@ aspect NewNullable {
         return builder.buildKeepingLast();
     }
 
-    // Add decl if the value is Nonnull
+    // Add the declaration with the nullable type of init (or an empty nullable type if no init exists)
     eq VarDeclStmt.nullableTypes_out() {
         VarDecl d = getVarDecl();
 
@@ -363,6 +362,7 @@ aspect NewNullable {
         return nt;
     }
 
+    // Get the type from the constructor's decl with the type parameters instantiated with the corresponding nullable type.
     eq DataConstructorExp.getNullableType() {
         DataTypeType ty = (DataTypeType) getType();
         if (!(ty.getDecl() instanceof ParametricDataTypeDecl)) {
@@ -377,11 +377,13 @@ aspect NewNullable {
             paramNts.add(param.getNullableType());
         }
 
+        // Each type parameter is matched to a nullable type
         for (TypeParameterDecl param : decl.getTypeParameters()) {
             boolean foundNt = false;
             for (int i = 0; i < cons.getNumConstructorArg(); ++i) {
                 Type arg = cons.getConstructorArg(i).getType();
                 if (arg instanceof TypeParameter) {
+                    // We found a parameter where the type is a type parameter: Set the type parameter's nullable type to the arguments nullable type.
                     TypeParameter tp = (TypeParameter) arg;
                     if (tp.getDecl() == param) {
                         nts.add(paramNts.get(i));
@@ -483,11 +485,15 @@ aspect NewNullable {
         return builder.build();
     }
 
+    // When we deconstruct an ADT with pattern matching, we must also deconstruct the nullable type.
+    // Therefore, we store which nullable type we match on.
     inh NullableType Pattern.matchedNullableType();
     inh NullableType CaseBranch.matchedNullableType();
     eq CaseExp.getBranch(int i).matchedNullableType() = getExpr().getNullableType();
     eq CaseBranch.getLeft().matchedNullableType() = matchedNullableType();
     eq ConstructorPattern.getParam(int i).matchedNullableType() {
+        // Here, we deconstruct the nullable type. Say we have an ADT with nullable types <NT_1, ..., NT_n> and
+        // the constructor is D(A_1, ..., A_m). Then, the i-th parameter we deconstruct is of type A_i and nullable type NT_i.
         DataConstructor dc = getDataConstructor();
         DataTypeType dtt = (DataTypeType) dc.getType();
         DataTypeNullableType mnt = (DataTypeNullableType) matchedNullableType();
@@ -495,8 +501,10 @@ aspect NewNullable {
         return dc.getConstructorArg(i).getType().instantiateNullableType(inst);
     }
 
+    // Most patterns are irrelevant for nullable types.
     syn lazy ImmutableMap<VarOrFieldDecl, NullableType> Pattern.getNullableTypes() = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>().build();
     eq PatternVar.getNullableTypes() {
+        // This a variable declaration in a constructor pattern. See the ConstructorPattern's #matchedNullableType() as to why this makes sense.
         ImmutableMap.Builder<VarOrFieldDecl, NullableType> builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
         builder = builder.put(getVar(), matchedNullableType());
         return builder.build();
@@ -509,6 +517,8 @@ aspect NewNullable {
         return builder.build();
     }
 
+    // We create a virtual stmt in function definitions, so we can have minimal control flow.
+    // We just put the parameters into the map and use their declared nullable types where possible.
     eq ExpFunctionDef.virtualStmt().nullableTypes_in() {
         FunctionDecl d = (FunctionDecl) getParent();
 
@@ -545,6 +555,7 @@ aspect NewNullable {
 
     eq ThisExp.getNullableType() = PrimitiveNullableType.Nonnull;
 
+    // A destiny expr is essentially a future.
     eq DestinyExp.getNullableType() = DataTypeNullableType.DT_OF_EMPTY;
 
     eq Unary.getNullableType() {
