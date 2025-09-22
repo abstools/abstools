@@ -394,6 +394,10 @@ aspect NewNullable {
     }
 
     eq FnApp.getNullableType() {
+        // Special treatment: For list literals we can take the computed nullable type directly
+        if (getNumChild() == 1 && getParam(0) instanceof ListLiteral) {
+            return getParam(0).getNullableType();
+        }
         // We cannot get the NullableType from the decl, because of generics
         Type t = getType();
         return NullCheckerExtension.getNullableType(t);
@@ -511,6 +515,18 @@ aspect NewNullable {
     }
 
     eq LiteralExp.getNullableType() = DataTypeNullableType.EMPTY;
+    eq ListLiteral.getNullableType() {
+        // For empty lists we can take the strongest versions
+        if (getNumPureExp() == 0) {
+            return NullCheckerExtension.strongestNullableType(getType());
+        }
+        // Compute the nullable type as the intersection of all param's nullable types.
+        NullableType nt = getPureExp(0).getNullableType();
+        for (int i = 1; i < getNumPureExp(); i++) {
+            nt = nt.getMostCommon(getPureExp(i).getNullableType());
+        }
+        return nt;
+    }
 
     eq NullExp.getNullableType() = PrimitiveNullableType.Null;
 

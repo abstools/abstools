@@ -323,4 +323,16 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         }
         return PrimitiveNullableType.Unknown;
     }
+
+    public static NullableType strongestNullableType(Type t) {
+        if (t instanceof ReferenceType) return PrimitiveNullableType.Nonnull;
+        if (t instanceof DataTypeType dtt) {
+            var args = new ArrayList<NullableType>(dtt.numTypeArgs());
+            for (int i = 0; i < dtt.numTypeArgs(); i++) {
+                args.add(strongestNullableType(dtt.getTypeArg(i)));
+            }
+            return new DataTypeNullableType(args);
+        }
+        return PrimitiveNullableType.Unknown;
+    }
 }
