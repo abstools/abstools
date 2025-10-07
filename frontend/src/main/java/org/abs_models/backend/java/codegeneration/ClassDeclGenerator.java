@@ -92,7 +92,7 @@ public class ClassDeclGenerator {
         if (implementedSignatures.values().stream().noneMatch(MethodSig::isHTTPCallable)) return;
         stream.println("private static final java.util.Map<java.lang.String, java.lang.invoke.MethodHandle> __modelApiMethodCache = new java.util.HashMap<>();");
         stream.println();
-        stream.println("public org.abs_models.backend.java.lib.runtime.ABSFut invokeMethod(java.lang.String name, java.util.List<org.abs_models.backend.java.lib.types.ABSValue> arguments) {");
+        stream.println("public org.abs_models.backend.java.lib.runtime.ABSFut invokeMethod(java.lang.String name, java.util.List<Object> arguments) {");
         stream.println("java.lang.invoke.MethodHandle handle = __modelApiMethodCache.get(name);");
         stream.println("if (handle == null) return null;");
         stream.println("else  try {");
