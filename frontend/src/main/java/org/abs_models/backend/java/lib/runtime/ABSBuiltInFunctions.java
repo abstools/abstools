@@ -82,11 +82,12 @@ public class ABSBuiltInFunctions {
     }
 
     public static <T> String toString(T t) {
-        if (t == null) {
-            return "null";
-        } else {
-            return t.toString();
-        }
+        return switch (t) {
+            case null -> "null";
+            case Boolean b when b -> "True";
+            case Boolean b when !b -> "False";
+            default -> t.toString();
+        };
     }
 
     /*
