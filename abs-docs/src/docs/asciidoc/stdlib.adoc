@@ -2,9 +2,15 @@
 == The Standard Library
 
 This chapter documents the ABS standard library.  All definitions, except
-where noted otherwise, are contained in the module `ABS.StdLib` which is
-included by default in every module.  Therefore, no `import` statement is
-necessary to use these definitions.
+where noted otherwise, are contained in the module `ABS.StdLib`.
+
+The module `ABS.StdLib` is included by default in every module.
+Therefore, no `import` statement is necessary to use these
+definitions.  Note that if a module explicitly imports some
+identifiers from `ABS.StdLib`, only those identifiers will be
+available.
+
+
 
 [[type-bool]]
 === Boolean values
@@ -79,8 +85,11 @@ types.
 
 [source]
 ----
-A max<A>(A a, A b)
-A min<A>(A a, A b)
+max(5, 3)
+// => 5
+
+min(2.5, 1.5)
+// => 1.5
 ----
 
 ===== abs
@@ -89,7 +98,8 @@ This function calculates the absolute (positive) value of its argument.
 
 [source]
 ----
-Rat abs(Rat x)
+max(-2)
+// => 2
 ----
 
 ===== truncate
@@ -98,7 +108,8 @@ Converts a rational number to an integer by truncating towards zero.
 
 [source]
 ----
-Int truncate(Rat a)
+truncate(7/5)
+// => 1
 ----
 
 ===== float
@@ -107,7 +118,10 @@ Converts an integer or rational number into a floating-point number.
 
 [source]
 ----
-Float float(Rat a)
+float(1)
+// => 1.0
+float(1/2)
+// => 0.5
 ----
 
 CAUTION: Very large integers and some rational numbers cannot be converted
@@ -120,7 +134,8 @@ Converts  a floating-point number into a rational number.
 
 [source]
 ----
-Rat rat(Float f)
+rat(0.5)
+// => 1/2
 ----
 
 CAUTION: Conversion from floating-point to rational numbers is inexact and
@@ -128,21 +143,23 @@ backend-specific.  In general, `float(rat(x)) == x` might not be true.
 
 ===== floor
 
-Returns the largest integer smaller or equal to the argument.
+Returns the largest integer smaller or equal to the floating-point argument.
 
 [source]
 ----
-Int floor(Float f)
+floor(5.3)
+// => 5
 ----
 
 
 ===== ceil
 
-Returns the smallest integer larger or equal to the argument.
+Returns the smallest integer larger or equal to the floating-point argument.
 
 [source]
 ----
-Int ceil(Float f)
+ceil(5.3)
+// => 6
 ----
 
 ===== numerator
@@ -152,7 +169,8 @@ integer.
 
 [source]
 ----
-Int numerator(Rat a)
+numerator(1/2)
+// => 1
 ----
 
 ===== denominator
@@ -161,7 +179,8 @@ Returns the denominator of a rational number, or `1` for an integer.
 
 [source]
 ----
-Int denominator(Rat a)
+denominator(1/2)
+// => 2
 ----
 
 ===== pow
@@ -170,7 +189,8 @@ This function calculates `b` to the power of `n`.
 
 [source]
 ----
-Rat pow(Rat b, Int n)
+pow(1/2, 4)
+// => 1/16
 ----
 
 ===== sqrt_newton
@@ -181,7 +201,8 @@ square root.
 
 [source]
 ----
-Rat sqrt_newton(Rat x, Rat estimate, Rat epsilon)
+sqrt_newton(4, 2, 1/100)
+// => 2
 ----
 
 ===== exp_newton
@@ -191,7 +212,8 @@ estimates (as per Newton's algorithm) differ by less than `epsilon`.
 
 [source]
 ----
-Rat exp_newton(Rat x, Rat epsilon)
+exp_newton(1, 1/100)
+// => 163/60
 ----
 
 ===== sqrt
@@ -201,7 +223,8 @@ negative.
 
 [source]
 ----
-Float sqrt(Float x)
+sqrt(4.0)
+// => 2.0
 ----
 
 ===== log
@@ -210,7 +233,8 @@ This function returns the natural logarithm of its argument.
 
 [source]
 ----
-Float log(Float x)
+log(1.0)
+// => 0.0
 ----
 
 ===== exp
@@ -219,7 +243,8 @@ This function returns Euler’s number _e_ raised to the power of `x`.
 
 [source]
 ----
-Float exp(Float x)
+exp(1.0)
+// => 2.7182818284590455
 ----
 
 ===== random
@@ -228,7 +253,8 @@ Returns an integer between 0 (inclusive) and its argument (exclusive).
 
 [source]
 ----
-Int random(Int below)
+random(5)
+// => 4
 ----
 
 [[type-string]]
@@ -263,7 +289,10 @@ This function converts any data into a printable string representation.
 
 [source]
 ----
-def String toString<T>(T t)
+toString(5)
+// => "5"
+toString(True)
+// => "True"
 ----
 
 ===== substr
@@ -273,7 +302,8 @@ position `start` (inclusive).  The first character in a string has position 0.
 
 [source]
 ----
-def String substr(String str, Int start, Int length)
+substr("Hello world", 0, 5)
+// => "Hello"
 ----
 
 ===== strlen
@@ -283,7 +313,8 @@ length 0.
 
 [source]
 ----
-def Int strlen(String str)
+strlen("Hello")
+// => 5
 ----
 
 ===== println
@@ -293,7 +324,9 @@ that the next output will not continue on the same line.
 
 [source]
 ----
-def Unit println(String s)
+println("Hello")
+// => Unit
+// As a side effect, prints its argument to standard output
 ----
 
 ===== print
@@ -303,7 +336,9 @@ output to begin on a new line.
 
 [source]
 ----
-def Unit print(String s)
+print("Hello")
+// => Unit
+// As a side effect, prints its argument to standard output
 ----
 
 [[type-unit]]
@@ -492,7 +527,8 @@ Returns the head of a list.
 
 [source]
 ----
-def A head(List<A> l);
+head(list[1, 2, 3])
+// => 1
 ----
 
 ===== tail
@@ -501,7 +537,8 @@ Returns the tail (rest) of a list.
 
 [source]
 ----
-def List<A> tail(List<A> l);
+tail(list[1, 2, 3])
+// => list[2, 3]
 ----
 
 ===== length
@@ -510,7 +547,8 @@ Returns the length of a list.  The length of `Nil` is 0.
 
 [source]
 ----
-def Int length(List<A> l);
+length(list[1, 2, 3])
+// => 3
 ----
 
 
@@ -520,7 +558,10 @@ Checks if a list is empty.  Returns `True` for `Nil`, `False` otherwise.
 
 [source]
 ----
-def Bool isEmpty(List<A> l);
+isEmpty(list[1, 2, 3])
+// => False
+isEmpty(list[])
+// => True
 ----
 
 ===== nth
@@ -532,7 +573,8 @@ It is an error if `n` is equal to or larger than `length(l)`.
 
 [source]
 ----
-def A nth(List<A> l, Int n);
+nth(list[1, 2, 3], 2)
+// => 3
 ----
 
 
@@ -542,7 +584,8 @@ Returns a fresh list where all occurrences of `a` have been removed.
 
 [source]
 ----
-def List<A> without<A>(List<A> list, A a);
+without(list[1, 2, 3, 3, 5], 3)
+// => list[1, 2, 5]
 ----
 
 ===== concatenate
@@ -552,7 +595,8 @@ elements of list `list2`.
 
 [source]
 ----
-def List<A> concatenate<A>(List<A> list1, List<A> list2);
+concatenate(list[1, 2, 3], list[4, 5])
+// => list[1, 2, 3, 4, 5]
 ----
 
 
@@ -563,7 +607,8 @@ in the last position.
 
 [source]
 ----
-def List<A> appendright<A>(List<A> l, A p);
+appendright(list[1, 2], 3)
+// => list[1, 2, 3]
 ----
 
 ===== reverse
@@ -572,7 +617,8 @@ Returns a list containing all elements of `l` in reverse order.
 
 [source]
 ----
-def List<A> reverse<A>(List<A> l);
+reverse(list[1, 2, 3])
+// => list[3, 2, 1]
 ----
 
 ===== copy
@@ -581,7 +627,8 @@ Returns a list of length `n` containing `p` n times.
 
 [source]
 ----
-def List<A> copy<A>(A p, Int n);
+copy(-1, 4)
+// => list[-1, -1, -1,  -1]
 ----
 
 ===== map
@@ -592,7 +639,8 @@ return a value of type `B`.
 
 [source]
 ----
-def List<B> map<A, B>(fn)(List<A> l);
+map((Int x) => x + 1)(list[1, 2, 3])
+// => list[2, 3, 4]
 ----
 
 ===== filter
@@ -603,7 +651,8 @@ argument of type `T` and return a Boolean value.
 
 [source]
 ----
-def List<T> filter<T>(predicate)(List<T> l);
+filter((Int x) => x < 4)(list[1, 2, 3, 4, 5])
+// => list[1, 2, 3]
 ----
 
 ===== foldl
@@ -616,7 +665,8 @@ a value of type `B`.
 
 [source]
 ----
-def B foldl<A, B>(accumulate)(List<A> l, B init);
+foldl((Int x, String res) => res + toString(x))(list[1, 2, 3], "")
+// => "123"
 ----
 
 ===== foldr
@@ -629,7 +679,8 @@ a value of type `B`.
 
 [source]
 ----
-def B foldr<A, B>(accumulate)(List<A> l, B init);
+foldl((Int x, String res) => res + toString(x))(list[1, 2, 3], "")
+// => "321"
 ----
 
 ===== range
@@ -641,7 +692,8 @@ list.
 
 [source]
 ----
-def Int range(Int lower, Int upper);
+range(2, 5)
+// => list[2, 3, 4, 5]
 ----
 
 
@@ -657,7 +709,7 @@ To add an element to a set, use the function `insertElement`, to remove an
 element, use `remove`.  To test for set membership, use the function
 `contains`.
 
-The `takeMaybe` function can be used to iterate through a set.  It is used as follows:
+The `takeMaybe` function can be used to iterate through a set as follows:
 
 [source]
 ----
@@ -669,10 +721,19 @@ def Unit printAll<A>(Set<A> set) =
   };
 ----
 
+Alternatively, `map` and other functions that operate on lists can be
+used on sets by obtaining a list of the set's elements via the
+`elements` function.
 
 ==== Datatypes and Constructors
 
 The datatype for sets with elements of type `A` is `Set<A>`.  The `set` constructor function is used to construct sets.
+
+[source]
+----
+set[1, 2, 3, 3, 3]
+// => set[1, 2, 3]
+----
 
 
 ==== Functions
@@ -683,7 +744,8 @@ Returns `True` if set `ss` contains element `e`, `False` otherwise.
 
 [source]
 ----
-def Bool contains<A>(Set<A> ss, A e);
+contains(set[1, 2, 3], 2)
+// => True
 ----
 
 ===== emptySet
@@ -692,7 +754,8 @@ Returns `True` if set `xs` is empty, `False`  otherwise.
 
 [source]
 ----
-def Bool emptySet<A>(Set<A> ss);
+emptySet(set[])
+// => True
 ----
 
 ===== size
@@ -701,7 +764,8 @@ Returns the number of elements in set `xs`.
 
 [source]
 ----
-def Int size<A>(Set<A> xs);
+size(set[1, 2, 3])
+// => 3
 ----
 
 ===== elements
@@ -710,7 +774,8 @@ Returns a list with all elements in set `xs`.
 
 [source]
 ----
-def List<A> elements<A>(Set<A> xs);
+elements(set[1, 2, 3])
+// => list[1, 2, 3]
 ----
 
 ===== union
@@ -719,7 +784,8 @@ Returns a set containing all elements of sets `set1` and `set2`.
 
 [source]
 ----
-def Set<A> union<A>(Set<A> set1, Set<A> set2);
+union(set[1, 2, 3], set[4, 3, 5])
+// => set[1, 2, 3, 4, 5]
 ----
 
 ===== intersection
@@ -729,7 +795,8 @@ Returns a set containing all elements that are present in both sets `set1` and
 
 [source]
 ----
-def Set<A> intersection<A>(Set<A> set1, Set<A> set2);
+intersection(set[1, 2, 3], set[4, 3, 5])
+// => set[3]
 ----
 
 ===== difference
@@ -738,7 +805,8 @@ Returns a set containing all elements of set `set1` not present in set `set2`.
 
 [source]
 ----
-def Set<A> difference<A>(Set<A> set1, Set<A> set2);
+difference(set[1, 2, 3], set[4, 3, 5])
+// => set[1, 2]
 ----
 
 ===== isSubset
@@ -748,7 +816,8 @@ otherwise.
 
 [source]
 ----
-def Bool isSubset<A>(Set<A> maybe_subset, Set<A> set);
+isSubset(set[1], set[1, 2, 3])
+// => True
 ----
 
 ===== insertElement
@@ -758,7 +827,8 @@ with the same elements as `xs` if `xs` already contains `e`.
 
 [source]
 ----
-def Set<A> insertElement<A>(Set<A> xs, A e);
+insertElement(set[2, 3], 1)
+// => set[1, 2, 3]
 ----
 
 ===== remove
@@ -768,7 +838,8 @@ with the same elements as `xs` if `xs` did not contain `e`.
 
 [source]
 ----
-def Set<A> remove<A>(Set<A> xs, A e);
+remove(set[1, 2, 3], 1)
+// => set[2, 3]
 ----
 
 ===== take
@@ -778,7 +849,8 @@ empty set; consider using `takeMaybe` in that case.
 
 [source]
 ----
-def A take<A>(Set<A> ss);
+take(set[1, 2, 3])
+// => 1 // or 2 or 3
 ----
 
 ===== takeMaybe
@@ -787,7 +859,10 @@ Returns one element from a set, or `Nothing` for an empty set.
 
 [source]
 ----
-def Maybe<A> takeMaybe<A>(Set<A> ss);
+takeMaybe(set[1, 2, 3])
+// => Just(1) // or Just(2) or Just(3)
+takeMaybe(set[])
+// => Nothing
 ----
 
 // .hasNext
@@ -798,11 +873,12 @@ def Maybe<A> takeMaybe<A>(Set<A> ss);
 [[type-map]]
 === Maps
 
-Maps are dictionaries storing a _value_ for each _key_.  
+Maps are dictionaries storing a _value_ for each _key_.
 
-Maps are constructed using by passing a list of type `Pair<A, B>` to the `map`
-constructor function.  The keys of the resulting map are of type `A` and
-values are of type `B`.  The expression `map[]` produces an empty map.
+Maps are constructed using by passing a list containing elements of
+type `Pair<A, B>` to the `map` constructor function.  The keys of the
+resulting map are of type `A` and values are of type `B`.  The
+expression `map[]` produces an empty map.
 
 The following example produces a map with two entries `1 -> "ABS"` and `3 ->
 "SACO"`.
@@ -818,9 +894,10 @@ contain for a given key.
 The value associated with a key can be obtained using the `lookup` and
 `lookupDefault` functions.
 
-A map can be iterated over via the functions `keys`, `values` and `entries`,
-which return the set of keys and the list of values and entries of the map,
-respectively.
+A map can be iterated over via the functions `keys`, `values` and
+`entries`, which return the set of keys and the list of values and
+entries of the map, respectively, and can be passed, for example, to
+the `foreach` statement or the `map` function.
 
 ==== Datatypes and Constructors
 
@@ -835,7 +912,8 @@ Returns `True` if the map is empty, `False` otherwise.
 
 [source]
 ----
-def Bool emptyMap<A, B>(Map<A, B> map);
+emptyMap(map[Pair(1, 2)])
+// => False
 ----
 
 ===== removeKey
@@ -844,7 +922,8 @@ Returns a map with the first occurrence of `key` removed.
 
 [source]
 ----
-def Map<A, B> removeKey<A, B>(Map<A, B> map, A key);
+removeKey(map[Pair(1, "One"), Pair(2, "Two")], 1)
+// => map[Pair(2, "Two")]
 ----
 
 ===== values
@@ -853,7 +932,8 @@ Returns a list of all values within the map.
 
 [source]
 ----
-def List<B> values<A, B>(Map<A, B> map);
+values(map[Pair(1, "One"), Pair(2, "Two")])
+// => list["One", "Two"]
 ----
 
 ===== keys
@@ -862,7 +942,8 @@ Returns a set of all keys of the map.
 
 [source]
 ----
-def Set<A> keys<A, B>(Map<A, B> map);
+keys(map[Pair(1, "One"), Pair(2, "Two")])
+// => set[1, 2]
 ----
 
 ===== entries
@@ -871,7 +952,8 @@ Returns a list of all entries (i.e., pairs of key and value) of the map.
 
 [source]
 ----
-def List<Pair<A, B>> entries<A, B>(Map<A, B> map);
+entries(map[Pair(1, "One"), Pair(2, "Two")])
+// => list[Pair(1,"One"), Pair(2,"Two")]
 ----
 
 ===== lookup
@@ -881,21 +963,26 @@ return `Nothing`.
 
 [source]
 ----
-def Maybe<B> lookup<A, B>(Map<A, B> ms, A k);
+lookup(map[Pair(1, "One"), Pair(2, "Two")], 1)
+// => Just("One")
+lookup(map[Pair(1, "One"), Pair(2, "Two")], 3)
+// => Nothing
 ----
 
 ===== lookupDefault
 
-Returns the value associated with key `k`.  If the map does not contain an
-entry with key `k`, return the value `d`.
+Returns the value associated with a given key `k`.  If the map does not contain an
+entry with key `k`, return the default value `d`.
 
 [source]
 ----
-def B lookupDefault<A, B>(Map<A, B> ms, A k, B d);
+lookupDefault(map[Pair(1, "One"), Pair(2, "Two")], 3, "(not found)")
+// => "(not found)"
 ----
 
-NOTE: If you need to know whether the map contains an entry for key `k`, use the
-function `lookup` instead.
+NOTE: If you need to know whether the map actually contains an entry
+for key `k`, even if it maps to `d`, consider using the function
+`lookup` instead.
 
 
 ===== lookupUnsafe
@@ -905,31 +992,35 @@ contain an entry with key `k`.
 
 [source]
 ----
-def B lookupUnsafe<A, B>(Map<A, B> ms, A k);
+lookupUnsafe(map[Pair(1, "One"), Pair(2, "Two")], 1)
+// => "One"
 ----
 
 ===== lookupReverse
 
-If there is an entry `k,v` in the map, return its key `Just(k)`.
-Otherwise, return `Nothing`.
+Given a value `v`, if there is an entry `Pair(k,v)` in the map return
+`Just(k)`.  Otherwise, return `Nothing`.
 
 [source]
 ----
-def Maybe<A> lookupReverse<A, B>(Map<A, B> ms, B v);
+lookupReverse(map[Pair(1, "One"), Pair(2, "Two")], "One")
+// => Just(1)
 ----
 
 ===== lookupReverseDefault
 
-If there is an entry `k,v` in the map, return its key `Just(k)`.
-Otherwise, return the value `d`.
+Given a value `v`, if there is an entry `Pair(k,v)` in the map return
+`k`.  Otherwise, return the default value `d`.
 
 [source]
 ----
-def A lookupReverseDefault<A, B>(Map<A, B> ms, B v, A d);
+lookupReverseDefault(map[Pair(1, "One"), Pair(2, "Two")], "Three", -1)
+// => -1
 ----
 
-NOTE: If you need to know whether the map contains an entry with value
-`v`, use the function `lookupReverse` instead.
+NOTE: If you need to know whether the map actually contains an entry
+with value `v`, even if its key is `d`, consider using the function
+`lookupReverse` instead.
 
 
 ===== insert
@@ -943,7 +1034,8 @@ the first entry for a given key and thus “undoes” the effect of calling
 
 [source]
 ----
-def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p);
+insert(map[Pair(1, "One"), Pair(2, "Two")], Pair(1, "OneTwo"))
+// => map[Pair(1,"OneTwo"), Pair(1,"One"), Pair(2,"Two")]
 ----
 
 
@@ -954,7 +1046,8 @@ the first entry already mapping `k` to a value.
 
 [source]
 ----
-def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v);
+put(map[Pair(1, "One"), Pair(2, "Two")], 1, "OneTwo")
+// => map[Pair(1,"OneTwo"), Pair(2,"Two")]
 ----
 
 [[type-pair]]
@@ -977,9 +1070,21 @@ Pair<Int, String> pair = Pair(15, "Hello World");
 
 The function `fst` returns the first value in a pair.
 
+[source]
+----
+fst(Pair(1, "Two"))
+// => 1
+----
+
 ===== snd
 
 The function `snd` returns the second value in a pair.
+
+[source]
+----
+snd(Pair(1, "Two"))
+// => "Two"
+----
 
 [[type-triple]]
 === Triples
@@ -1000,13 +1105,31 @@ Triple<Int, String, Bool> triple = Triple(15, "Hello World", False);
 
 The function `fstT` returns the first value in a triple.
 
+[source]
+----
+fstT(Triple(1, "Two", 3.0))
+// => 1
+----
+
 ===== sndT
 
 The function `sndT` returns the second value in a triple.
 
+[source]
+----
+sndT(Triple(1, "Two", 3.0))
+// => "Two"
+----
+
 ===== trdT
 
 The function `trdT` returns the third value in a triple.
+
+[source]
+----
+trdT(Triple(1, "Two", 3.0))
+// => 3.0
+----
 
 [[type-optionals]]
 === Optionals
@@ -1031,7 +1154,10 @@ The function `isJust` returns `False` if the `Maybe` value is `Nothing`,
 
 [source]
 ----
-def Bool isJust<A>(Maybe<A> a);
+isJust(Nothing)
+// => False
+isJust(Just(1))
+// => True
 ----
 
 ===== fromJust
@@ -1040,7 +1166,8 @@ The function `fromJust` returns the wrapped value of a `Maybe`.  It is an error 
 
 [source]
 ----
-def A fromJust<A>(Maybe<A> m);
+fromJust(Just(1))
+// => 1
 ----
 
 ===== fromJustDefault
@@ -1050,7 +1177,8 @@ argument, or the second argument if the first argument is `Nothing`.
 
 [source]
 ----
-def A fromJustDefault<A>(Maybe<A> m, A default);
+fromJustDefault(Nothing, False)
+// => False
 ----
 
 
@@ -1064,3 +1192,9 @@ This subsection lists definitions of the standard library that do not fit in any
 ===== ms_since_model_start
 
 The function `ms_since_model_start` returns a non-negative integer containing the number of milliseconds elapsed since the model was started.  It is useful mainly for benchmarking.
+
+[source]
+----
+ms_since_model_start()
+// => 15
+----
