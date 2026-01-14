@@ -178,6 +178,14 @@ clean {
 }
 jar.dependsOn 'compileErlangBackend'
 processTestResources.dependsOn 'compileErlangBackend'
+task copyErlangHtmlFiles(type: Copy) {
+    description = 'Copies the Model API default html file into the erlang build location.'
+    group = 'build'
+    from 'src/main/resources/java/modelapi'
+    into 'build/resources/main/erlang/absmodel/_build/default/lib/absmodel/priv'
+}
+processResources.dependsOn 'copyErlangHtmlFiles'
+processTestResources.dependsOn 'copyErlangHtmlFiles'
 
 tasks.withType(AbstractArchiveTask) {
     // Try to create reproducible builds
