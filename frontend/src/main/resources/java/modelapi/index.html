@@ -1,128 +1,280 @@
 <!DOCTYPE html>
-<html>
-
-  <head>
-    <title>Deployment Component Visualization</title>
-    <script type="text/javascript" src="static/js/d3.5.7.0.js"></script>
-    <script type="text/javascript" src="static/js/jquery.3.3.1.js"></script>
-    <style>
-      path {
-          fill: none;
-          stroke: #aaa;
-      }
-      path.cpu-values {
-          stroke: blue;
-          stroke-width: 5;
-      }
-      path.cpu-totals {
-          stroke: red;
-          stroke-width: 2;
-          stroke-dasharray: "5";
-      }
-    </style>
-  </head>
-
-  <body>
-      <h1>Deployment Component Visualization</h1>
-    <div id="graphs"></div>
-  </body>
-
-  <script type='text/javascript'>
-    'use strict';
-    function generateCpuGraphs(container_div_id, cpudata) {
-        const container_div = $(container_div_id);
-        const size = { x: 900, y: 350 };
-        const margin = { top: 20, right: 20, bottom: 30, left: 50 };
-        const graph_size = { x: size.x - margin.left - margin.right,
-                             y: size.y - margin.top - margin.bottom };
-        cpudata.forEach(function(dc_data, dc_index) {
-            // either 1 or 2: we receive dc data with or without max values
-            const max_index = dc_data.values[0].length - 1;
-            const svg_id = 'svg' + dc_index;
-            const clip_id = 'clip' + dc_index;
-            const value_id = 'value' + dc_index;
-            const total_id = 'total' + dc_index;
-            container_div.append(`<h3>${dc_data.name}</h3>`);
-            container_div.append(`<svg id=${svg_id} width=${size.x} height=${size.y}></svg>`);
-            const svg = d3.select('#' + svg_id);
-            svg.append("defs").append("clipPath")
-                .attr("id", clip_id)
-                .append("rect")
-                .attr("width", graph_size.x)
-                .attr("height", graph_size.y);
-            const graph = svg.append("g")
-                .attr("transform", `translate(${margin.left}, ${margin.top})`);
-            const x = d3.scaleLinear()
-                .domain(d3.extent(dc_data.values, d => d[0]))
-                .range([0, graph_size.x]);
-            const xaxis = d3.axisBottom(x);
-            // normally maximum total, but maximum value in case the DC has
-            // unlimited total
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(dc_data.values, d => d[max_index])])
-                .range([graph_size.y, 0]);
-            const valueLineGenerator = d3.line()
-                .curve(d3.curveStepAfter)
-                .x(d => Math.trunc(x(d[0])))
-                .y(d => Math.trunc(y(d[1])));
-            graph.append("g")
-                .attr("transform", `translate(0, ${graph_size.y})`)
-                .attr("class", "axis axis-x")
-                .call(xaxis)
-                .append("text")
-                .attr("fill", "#000")
-                .attr("x", graph_size.x)
-                .attr("dy", "2ex")
-                .attr("text-anchor", "end")
-                .text("Time");
-            graph.append("g")
-                .call(d3.axisLeft(y))
-                .append("text")
-                .attr("fill", "#000")
-                .attr("transform", "rotate(-90)")
-                .attr("y", 6)
-                .attr("dy", "0.71em")
-                .attr("text-anchor", "end")
-                .text("CPU");
-            const mainarea = graph.append("g")
-                .attr("clip-path", `url(#${clip_id})`);
-            mainarea.append("path")
-                .datum(dc_data.values)
-                .attr("class", "cpu-values zoomable")
-                .attr("d", valueLineGenerator(dc_data.values));
-            if (max_index > 1) {
-                const totalLineGenerator = d3.line()
-                    .curve(d3.curveStepAfter)
-                    .x(d => Math.trunc(x(d[0])))
-                    .y(d => Math.trunc(y(d[2])))
-                    .defined(d => d.length > 2);
-                mainarea.append("path")
-                    .datum(dc_data.values)
-                    .attr("class", "cpu-totals zoomable")
-                    .attr("d", totalLineGenerator(dc_data.values));
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" >
+        <title>Deployment Component Visualization</title>
+        <script type="text/javascript" src="static/js/d3.v7.js"></script>
+        <style>
+            * {
+                box-sizing: border-box;
             }
-            svg.call(d3.zoom()
-                     .scaleExtent([1, Infinity])
-                     .translateExtent([[margin.left, margin.top], [graph_size.x, graph_size.y]])
-                     .on("zoom", () => {
-                         let t = d3.event.transform;
-                         graph.selectAll(".zoomable")
-                             .attr("transform",
-                                   `translate(${t.x}, 0) scale(${t.k}, 1)`);
-                         graph.select(".axis-x")
-                             .call(xaxis.scale(t.rescaleX(x)));
-                     }));
-        });
-    }
 
-    $(document).ready(() => {
-        $.when($.getJSON("/dcs"))
-            .done(cpudata => {
-                generateCpuGraphs('#graphs', cpudata);
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+
+            h1 {
+                color: #333;
+                margin-bottom: 30px;
+            }
+
+            h3 {
+                color: #555;
+                margin: 30px 0 10px 0;
+            }
+
+            #graphs {
+                max-width: 1200px;
+            }
+
+            .graph-container {
+                background: white;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 30px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            svg {
+                display: block;
+            }
+
+            path {
+                fill: none;
+                stroke: #aaa;
+            }
+
+            path.cpu-values {
+                stroke: #2563eb;
+                stroke-width: 3;
+            }
+
+            path.cpu-totals {
+                stroke: #dc2626;
+                stroke-width: 2;
+                stroke-dasharray: 5, 5;
+            }
+
+            .axis text {
+                font-size: 12px;
+                fill: #666;
+            }
+
+            .axis line,
+            .axis path {
+                stroke: #ddd;
+            }
+
+            .axis-label {
+                font-size: 13px;
+                font-weight: 500;
+                fill: #333;
+            }
+
+            .loading {
+                text-align: center;
+                padding: 40px;
+                color: #666;
+            }
+
+            .error {
+                background: #fee;
+                border: 1px solid #fcc;
+                border-radius: 4px;
+                padding: 15px;
+                color: #c33;
+                margin: 20px 0;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Deployment Component Visualization</h1>
+        <div id="graphs">
+            <div class="loading">Loading data...</div>
+        </div>
+        <script type='text/javascript'>
+            'use strict';
+
+            class DeploymentVisualizer {
+                constructor(containerId) {
+                    this.container = document.getElementById(containerId);
+                    this.config = {
+                        size: { x: 900, y: 350 },
+                        margin: { top: 20, right: 20, bottom: 30, left: 50 }
+                    };
+                    this.config.graphSize = {
+                        x: this.config.size.x - this.config.margin.left - this.config.margin.right,
+                        y: this.config.size.y - this.config.margin.top - this.config.margin.bottom
+                    };
+                }
+
+                async fetchData() {
+                    try {
+                        const response = await fetch('/dcs');
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        this.showError(`Failed to load data: ${error.message}`);
+                        throw error;
+                    }
+                }
+
+                showError(message) {
+                    this.container.innerHTML = `<div class="error">${message}</div>`;
+                }
+
+                render(cpuData) {
+                    this.container.innerHTML = '';
+                    
+                    cpuData.forEach((dcData, index) => {
+                        this.createGraph(dcData, index);
+                    });
+                }
+
+                createGraph(dcData, index) {
+                    const maxIndex = dcData.values[0].length - 1;
+                    const clipId = `clip${index}`;
+
+                    // Create container
+                    const graphContainer = document.createElement('div');
+                    graphContainer.className = 'graph-container';
+                    
+                    const title = document.createElement('h3');
+                    title.textContent = dcData.name;
+                    graphContainer.appendChild(title);
+
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('width', this.config.size.x);
+                    svg.setAttribute('height', this.config.size.y);
+                    graphContainer.appendChild(svg);
+
+                    this.container.appendChild(graphContainer);
+
+                    // Use D3 for the actual charting
+                    this.renderD3Graph(svg, dcData, maxIndex, clipId);
+                }
+
+                renderD3Graph(svgElement, dcData, maxIndex, clipId) {
+                    const { margin, graphSize } = this.config;
+                    const svg = d3.select(svgElement);
+
+                    // Create clip path
+                    svg.append('defs')
+                        .append('clipPath')
+                        .attr('id', clipId)
+                        .append('rect')
+                        .attr('width', graphSize.x)
+                        .attr('height', graphSize.y);
+
+                    // Create main graph group
+                    const graph = svg.append('g')
+                          .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+                    // Create scales
+                    const x = d3.scaleLinear()
+                          .domain(d3.extent(dcData.values, d => d[0]))
+                          .range([0, graphSize.x]);
+
+                    const y = d3.scaleLinear()
+                          .domain([0, d3.max(dcData.values, d => d[maxIndex])])
+                          .range([graphSize.y, 0]);
+
+                    // Create axes
+                    const xAxis = d3.axisBottom(x);
+                    const yAxis = d3.axisLeft(y);
+
+                    // X axis
+                    graph.append('g')
+                        .attr('transform', `translate(0, ${graphSize.y})`)
+                        .attr('class', 'axis axis-x')
+                        .call(xAxis)
+                        .append('text')
+                        .attr('class', 'axis-label')
+                        .attr('x', graphSize.x)
+                        .attr('y', 25)
+                        .attr('text-anchor', 'end')
+                        .text('Time');
+
+                    // Y axis
+                    graph.append('g')
+                        .attr('class', 'axis')
+                        .call(yAxis)
+                        .append('text')
+                        .attr('class', 'axis-label')
+                        .attr('transform', 'rotate(-90)')
+                        .attr('y', -40)
+                        .attr('x', 0)
+                        .attr('text-anchor', 'end')
+                        .text('CPU');
+
+                    // Create clipped area for lines
+                    const mainArea = graph.append('g')
+                          .attr('clip-path', `url(#${clipId})`);
+
+                    // Line generator for values
+                    const valueLineGenerator = d3.line()
+                          .curve(d3.curveStepAfter)
+                          .x(d => Math.trunc(x(d[0])))
+                          .y(d => Math.trunc(y(d[1])));
+
+                    // Draw values line
+                    mainArea.append('path')
+                        .datum(dcData.values)
+                        .attr('class', 'cpu-values zoomable')
+                        .attr('d', valueLineGenerator);
+
+                    // Draw totals line if present
+                    if (maxIndex > 1) {
+                        const totalLineGenerator = d3.line()
+                              .curve(d3.curveStepAfter)
+                              .x(d => Math.trunc(x(d[0])))
+                              .y(d => Math.trunc(y(d[2])))
+                              .defined(d => d.length > 2);
+
+                        mainArea.append('path')
+                            .datum(dcData.values)
+                            .attr('class', 'cpu-totals zoomable')
+                            .attr('d', totalLineGenerator);
+                    }
+
+                    // Add zoom behavior
+                    const zoom = d3.zoom()
+                          .scaleExtent([1, Infinity])
+                          .translateExtent([[margin.left, margin.top], [graphSize.x, graphSize.y]])
+                          .on('zoom', (event) => {
+                              const t = event.transform;
+                              
+                              graph.selectAll('.zoomable')
+                                  .attr('transform', `translate(${t.x}, 0) scale(${t.k}, 1)`);
+                              
+                              graph.select('.axis-x')
+                                  .call(xAxis.scale(t.rescaleX(x)));
+                          });
+
+                    svg.call(zoom);
+                }
+            }
+
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', async () => {
+                const visualizer = new DeploymentVisualizer('graphs');
+                
+                try {
+                    const cpuData = await visualizer.fetchData();
+                    visualizer.render(cpuData);
+                } catch (error) {
+                    console.error('Visualization failed:', error);
+                }
             });
-    });
 
-  </script>
-
+        </script>
+    </body>
 </html>
 
