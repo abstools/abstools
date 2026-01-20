@@ -60,10 +60,13 @@ dependencies {
     implementation 'org.apfloat:apfloat:1.14.0'
     // SQLite library for the Java backend
     implementation 'org.xerial:sqlite-jdbc:3.50.3.0'
-    // // Logging backend used by SQLite library
-    // implementation 'org.slf4j:slf4j-jdk14:2.0.16'
+    // Adding a logging backend so Jena doesn't complain
+    implementation 'org.slf4j:slf4j-jdk14:2.0.17'
     // JSON library for the Java backend Model API
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+
+    // Apache Jena, for semantic querying in the Java backend
+    implementation 'org.apache.jena:apache-jena-libs:5.5.0'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
@@ -211,7 +214,7 @@ jar {
 }
 
 shadowJar {
-    
+    mergeServiceFiles() // https://jena.apache.org/documentation/notes/jena-repack.html
 }
 
 // this is necessary for the `absc` scripts

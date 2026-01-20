@@ -6,8 +6,13 @@ package org.abs_models.backend.java.observing;
 
 public interface ObjectCreationObserver {
     /**
-     * Is called after an object has been created, but before
-     * it has been initialized
+     * This method is called after an object has been created, but
+     * before it has been initialized.
+     *
+     * <p>Note that this method is not called for the first object of
+     * a cog; instead, the first object is passed as the second
+     * parameter of {@link SystemObserver#newCOGCreated}.
+     *
      * @param o the object that was created
      */
     void objectCreated(ObjectView o);

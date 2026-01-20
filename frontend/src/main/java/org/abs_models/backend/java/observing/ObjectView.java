@@ -6,6 +6,8 @@ package org.abs_models.backend.java.observing;
 
 import java.util.List;
 
+import org.abs_models.backend.java.lib.runtime.ABSObject;
+
 public interface ObjectView {
     COGView getCOGView();
 
@@ -20,4 +22,6 @@ public interface ObjectView {
     List<String> getFieldNames();
 
     long getID();
+
+    ABSObject getObject();
 }
