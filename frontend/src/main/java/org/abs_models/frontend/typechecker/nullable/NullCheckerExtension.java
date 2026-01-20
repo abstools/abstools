@@ -1,45 +1,41 @@
 package org.abs_models.frontend.typechecker.nullable;
 
-import org.abs_models.frontend.analyser.BitVec;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticWarning;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.*;
-import org.abs_models.frontend.typechecker.Type;
-import org.abs_models.frontend.typechecker.TypeAnnotation;
+import org.abs_models.frontend.typechecker.*;
 import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
+import com.google.common.collect.ImmutableMap;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Checks whether all assignments, calls, etc. adhere to the declared nullable types
- */
+/// Checks whether all assignments, calls, etc. adhere to the declared nullable types
 public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public static String NULLABLE_KEY = "NULLABLE_KEY";
-    private NullableType defaultType = NullableType.Nullable;
+    private PrimitiveNullableType defaultType = PrimitiveNullableType.Nullable;
+    /// Whether warnings should be emitted for missing annotations.
     private boolean warnAboutMissingAnnotation = false;
+    /// Whether to emit an error when a call on `null` is found.
     private boolean checkNullCall = false;
 
     public NullCheckerExtension(Model m) {
         super(m);
     }
 
-    public NullCheckerExtension(Model m, NullableType defaultType) {
+    public NullCheckerExtension(Model m, PrimitiveNullableType defaultType) {
         super(m);
         this.defaultType = defaultType;
     }
 
-    public void setDefaultType(NullableType nt) {
+    public void setDefaultType(PrimitiveNullableType nt) {
         defaultType = nt;
     }
 
     public void setWarnAboutMissingAnnotation(boolean v) {
         warnAboutMissingAnnotation = v;
-    }
-
-    public void checkNullCall() {
-        this.checkNullCall = true;
     }
 
     @Override
@@ -51,7 +47,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         List<FieldDecl> nonNullFields = new ArrayList<>();
         for (FieldDecl f : decl.getFields()) {
             setAnnotatedType(f.getType(), f);
-            if (f.nonnull() && !f.hasInitExp()) {
+            if (f.getNullableType() == PrimitiveNullableType.Nonnull && !f.hasInitExp()) {
                 nonNullFields.add(f);
             }
         }
@@ -62,19 +58,20 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
             errors.add(new TypeError(
                 nonNullFields.get(0),
                 ErrorMessage.NULLABLE_TYPE_MISMATCH,
-                NullableType.Nonnull.toString(),
-                NullableType.Nullable.toString()));
+                PrimitiveNullableType.Nonnull.toString(),
+                PrimitiveNullableType.Nullable.toString()));
             return;
         }
         // Get all fields that are nonNull at the end of the init block
-        BitVec<VarOrFieldDecl> out = decl.getInitBlock().exit().nonnull_in();
+        ImmutableMap<@NonNull VarOrFieldDecl, @NonNull NullableType> out =
+            decl.getInitBlock().exit().nullableTypes_out();
         for (FieldDecl f : nonNullFields) {
-            if (!out.contains(f)) {
+            if (out.get(f) != PrimitiveNullableType.Nonnull) {
                 errors.add(new TypeError(
                     f,
                     ErrorMessage.NULLABLE_TYPE_MISMATCH,
-                    NullableType.Nonnull.toString(),
-                    NullableType.Nullable.toString()));
+                    PrimitiveNullableType.Nonnull.toString(),
+                    PrimitiveNullableType.Nullable.toString()));
             }
         }
     }
@@ -118,7 +115,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     @Override
     public void checkMethodCall(Call call) {
         PureExp callee = call.getCallee();
-        if (checkNullCall && callee.isNull()) {
+        if (checkNullCall && callee.getNullableType() == PrimitiveNullableType.Null) {
             errors.add(new TypeError(call, ErrorMessage.NULLABLETYPE_NULLCALL, callee.toString()));
         }
     }
@@ -144,20 +141,20 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
     public void checkCondition(PureExp cond) {
         VarOrFieldDecl d = cond.testsNotNull();
         if (d != null) {
-            if (cond.nonnull_in().contains(d)) {
+            if (cond.nullableTypes_in().get(d) == PrimitiveNullableType.Nonnull) {
                 errors.add(new SemanticWarning(cond, ErrorMessage.NULLABLE_TYPE_COND_ALWAYS_SAME, "true"));
             }
-            if (cond.null_in().contains(d)) {
+            if (cond.nullableTypes_in().get(d) == PrimitiveNullableType.Null) {
                 errors.add(new SemanticWarning(cond, ErrorMessage.NULLABLE_TYPE_COND_ALWAYS_SAME, "false"));
             }
             return;
         }
         d = cond.testsNull();
         if (d != null) {
-            if (cond.nonnull_in().contains(d)) {
+            if (cond.nullableTypes_in().get(d) == PrimitiveNullableType.Nonnull) {
                 errors.add(new SemanticWarning(cond, ErrorMessage.NULLABLE_TYPE_COND_ALWAYS_SAME, "false"));
             }
-            if (cond.null_in().contains(d)) {
+            if (cond.nullableTypes_in().get(d) == PrimitiveNullableType.Null) {
                 errors.add(new SemanticWarning(cond, ErrorMessage.NULLABLE_TYPE_COND_ALWAYS_SAME, "true"));
             }
         }
@@ -176,8 +173,8 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         setAnnotatedType(t, varDeclStmt);
         if (!shouldHaveNullableType(t)) return;
         NullableType nt = getNullableTypeDefault(t);
-        if (nt == NullableType.Nonnull && !d.hasInitExp()) {
-            errors.add(new TypeError(varDeclStmt, ErrorMessage.NULLABLE_TYPE_MISMATCH, NullableType.Null.toString(), nt.toString()));
+        if (nt == PrimitiveNullableType.Nonnull && !d.hasInitExp()) {
+            errors.add(new TypeError(varDeclStmt, ErrorMessage.NULLABLE_TYPE_MISMATCH, PrimitiveNullableType.Null.toString(), nt.toString()));
         }
     }
 
@@ -205,7 +202,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
 
     private void setAnnotatedType(Type t, ASTNode<?> originatingNode) {
         try {
-            NullableType nt = getNullableTypeFromAnnotation(t);
+            PrimitiveNullableType nt = getNullableTypeFromAnnotation(t);
             if (shouldWarn(t, nt, originatingNode)) {
                 errors.add(new SemanticWarning(originatingNode, ErrorMessage.NULLABLETYPE_MISSING_ANNOTATION, new String[0]));
             }
@@ -230,8 +227,8 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
             && !(originatingNode instanceof VarDeclStmt);
     }
 
-    public static NullableType getNullableTypeFromAnnotation(Type t) {
-        NullableType res = null;
+    public static PrimitiveNullableType getNullableTypeFromAnnotation(Type t) {
+        PrimitiveNullableType res = null;
         for (TypeAnnotation an : t.getTypeAnnotations()) {
             if (an.getType().getQualifiedName().equals("ABS.StdLib.NullableType")) {
                 DataConstructorExp de = (DataConstructorExp) an.getValue();
@@ -242,7 +239,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
                     if (!shouldHaveNullableType(t)) {
                         throw new NullCheckerException(new TypeError(an.getValue(), ErrorMessage.NULLABLE_TYPE_ONLY_REF_OR_FUT, t.toString()));
                     }
-                    res = NullableType.fromName(name);
+                    res = PrimitiveNullableType.fromName(name);
                 }
             }
         }
@@ -256,7 +253,7 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         return nt;
     }
 
-    private void setNullableType(Type t, NullableType nt) {
+    private void setNullableType(Type t, PrimitiveNullableType nt) {
         t.addMetaData(NULLABLE_KEY, defaultIfNull(nt));
     }
 
@@ -264,24 +261,80 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         return defaultIfNull(getNullableType(t));
     }
 
+    /// Constructs a map from type parameters from `dtt` to their respective nullable types in `dnt`.
+    public static ImmutableMap<@NonNull TypeParameterDecl, @NonNull NullableType> nullableTypeMapping(DataTypeType dtt, DataTypeNullableType dnt) {
+        ImmutableMap.Builder<@NonNull TypeParameterDecl, @NonNull NullableType> builder = new ImmutableMap.Builder<>();
+        for (int i = 0; i < dtt.numTypeArgs(); i++) {
+            builder.put(((TypeParameter) dtt.getTypeArg(i)).getDecl(), dnt.getParam(i));
+        }
+        return builder.build();
+    }
+
+    /// Computes the nullable type from a type `t`.
     public static NullableType getNullableType(Type t) {
-        return (NullableType) t.getMetaData(NULLABLE_KEY);
+        var annotated = (PrimitiveNullableType) t.getMetaData(NULLABLE_KEY);
+        if (annotated != null)
+            return annotated;
+        if (t.isReferenceType())
+            return PrimitiveNullableType.Nullable;
+        if (t.isDataType()) {
+            var dtt = (DataTypeType) t;
+            List<NullableType> list = new ArrayList<>(dtt.numTypeArgs());
+            for (var arg : dtt.getTypeArgs()) {
+                list.add(getNullableType(arg));
+            }
+            if (dtt.isDestinyType()) {
+                list = List.of(new DataTypeNullableType(list));
+            }
+            return new DataTypeNullableType(list);
+        }
+        if (t.isBoundedType()) {
+            var bt = (BoundedType) t;
+            if (bt.hasBoundType()) return getNullableType(bt.getBoundType());
+            return PrimitiveNullableType.Unknown;
+        } else return PrimitiveNullableType.NonApplicable;
     }
 
     public static boolean shouldHaveNullableType(Type t) {
-        return t.isFutureType() || t.isDestinyType() || t.isReferenceType();
+        return t.isReferenceType();
     }
 
     public static org.abs_models.frontend.ast.List<Annotation> getAnnotations(Type t) {
         org.abs_models.frontend.ast.List<Annotation> as = new org.abs_models.frontend.ast.List<>();
-        NullableType nt = NullCheckerExtension.getNullableTypeFromAnnotation(t);
+        PrimitiveNullableType nt = NullCheckerExtension.getNullableTypeFromAnnotation(t);
         if (nt == null && NullCheckerExtension.shouldHaveNullableType(t)) {
-            nt = NullableType.Nullable;
+            nt = PrimitiveNullableType.Nullable;
         }
         if (nt != null) {
             // We may have to add an annotation for nullable types
             as.add(nt.toAnnotation());
         }
         return as;
+    }
+
+    /// Computes the default, worst case nullable type.
+    public static NullableType emptyInitialNullableType(Type t) {
+        if (t instanceof ReferenceType) return PrimitiveNullableType.Null;
+        if (t instanceof DataTypeType dtt) {
+            var args = new ArrayList<NullableType>(dtt.numTypeArgs());
+            for (int i = 0; i < dtt.numTypeArgs(); i++) {
+                args.add(emptyInitialNullableType(dtt.getTypeArg(i)));
+            }
+            return new DataTypeNullableType(args);
+        }
+        return PrimitiveNullableType.Unknown;
+    }
+
+    /// Computes the strongest nullable type of `t`'s structure.
+    public static NullableType strongestNullableType(Type t) {
+        if (t instanceof ReferenceType) return PrimitiveNullableType.Nonnull;
+        if (t instanceof DataTypeType dtt) {
+            var args = new ArrayList<NullableType>(dtt.numTypeArgs());
+            for (int i = 0; i < dtt.numTypeArgs(); i++) {
+                args.add(strongestNullableType(dtt.getTypeArg(i)));
+            }
+            return new DataTypeNullableType(args);
+        }
+        return PrimitiveNullableType.Unknown;
     }
 }

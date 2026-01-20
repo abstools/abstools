@@ -4,6 +4,11 @@
  */
 package org.abs_models.frontend.typechecker;
 
+import com.google.common.collect.ImmutableMap;
+import org.abs_models.frontend.ast.TypeParameterDecl;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.PrimitiveNullableType;
+
 public final class UnknownType extends Type {
     public static final UnknownType INSTANCE = new UnknownType();
 
@@ -44,5 +49,10 @@ public final class UnknownType extends Type {
     @Override
     public Type copy() {
         return new UnknownType();
+    }
+
+    @Override
+    public NullableType instantiateNullableType(ImmutableMap<TypeParameterDecl, NullableType> inst) {
+        return PrimitiveNullableType.Unknown;
     }
 }
