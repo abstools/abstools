@@ -79,6 +79,7 @@ import org.abs_models.frontend.ast.VarDeclStmt;
 import org.abs_models.frontend.ast.VarOrFieldDecl;
 import org.abs_models.frontend.ast.VarOrFieldUse;
 import org.abs_models.frontend.parser.Main;
+import org.abs_models.frontend.mtvl.ChocoSolver;
 
 public class TypeCheckerHelper {
 
@@ -328,7 +329,7 @@ public class TypeCheckerHelper {
 
         // Check solution from getProduct()
         if (prod.getProduct() != null) {
-            java.util.List<String> errors = prod.getModel().instantiateCSModel().checkSolutionWithErrors(
+            java.util.List<String> errors = ChocoSolver.fromModel(prod.getModel()).checkSolutionWithErrors(
                     prod.getProduct().getSolution(),
                     prod.getModel());
 

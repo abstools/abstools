@@ -13,10 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.abs_models.frontend.ast.AttrAssignment;
 import org.abs_models.frontend.ast.BoundaryInt;
 import org.abs_models.frontend.ast.BoundaryVal;
+import org.abs_models.frontend.ast.Feature;
 import org.abs_models.frontend.ast.Limit;
 import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.Product;
 import choco.Choco;
 import choco.cp.model.CPModel;
 import choco.cp.solver.CPSolver;
@@ -41,7 +44,31 @@ public class ChocoSolver {
     private List<Constraint> constraints = new ArrayList<>();
     private final Model absmodel;
 
-    public ChocoSolver(Model m) {
+    public static ChocoSolver fromModel(Model m) {
+        ChocoSolver solver = new ChocoSolver(m);
+
+        // new int variable for all int variables
+        for (java.util.Map.Entry<String, BoundaryInt[]> entry : m.ints().entrySet()) {
+            String st = entry.getKey();
+            if (entry.getValue().length == 2) {
+                BoundaryInt b1 = entry.getValue()[0];
+                BoundaryInt b2 = entry.getValue()[1];
+                solver.addBoundedVar(st, b1, b2);
+            }
+            else {
+                solver.addSetVar(st, entry.getValue());
+            }
+        }
+        for (String st : m.bools())
+            solver.addBoolVar(st);
+        for (String st : m.features())
+            solver.addBoolVar(st);
+
+        m.collectConstraints(solver); // is adding intvars to the model!
+        return solver;
+    }
+
+    private ChocoSolver(Model m) {
         absmodel = m;
         if (m.debug)
             ChocoLogging.setVerbosity(Verbosity.DEFAULT);
@@ -146,6 +173,22 @@ public class ChocoSolver {
         vars.put(name, v);
         defaultvals.put(name, 1);
         cpmodel.addVariable(v);
+    }
+
+    /**
+     * Add all feature constraints of a product.  Note that the
+     * features must have been added already.
+     */
+    public void addProductConstraints(Product m) {
+        HashSet<Constraint> newcs = new HashSet<>();
+        for (Feature f: m.getFeatures()) {
+            addConstraint(isTrue(vars.get(f.getName())));
+            for (AttrAssignment aa: f.getAttrAssignments()) {
+                String fname = f.getName() + "." + aa.getName();
+                if (vars.containsKey(fname))
+                    addConstraint(eqeq(vars.get(fname), aa.getValue().getIntValue().intValue()));
+            }
+        }
     }
 
     /** add choco constraint **/

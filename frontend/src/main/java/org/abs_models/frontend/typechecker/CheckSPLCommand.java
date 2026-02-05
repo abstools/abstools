@@ -1,26 +1,28 @@
 package org.abs_models.frontend.typechecker;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
+import choco.Choco;
+import choco.kernel.model.constraints.Constraint;
+import choco.kernel.model.variables.integer.IntegerExpressionVariable;
+import choco.kernel.model.variables.integer.IntegerVariable;
 import org.abs_models.Absc;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.SemanticCondition;
 import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.ast.Feature;
 import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.Product;
 import org.abs_models.frontend.ast.ProductDecl;
 import org.abs_models.frontend.delta.ProductLineAnalysisHelper;
 import org.abs_models.frontend.mtvl.ChocoSolver;
 import org.abs_models.frontend.parser.Main;
-
-import choco.kernel.model.constraints.Constraint;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
+
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.Callable;
 
 @Command(name = "checkspl",
          description = "Perform software product line checking for abs models",
@@ -90,27 +92,65 @@ public class CheckSPLCommand implements Callable<Void> {
         }
     }
 
+    private void addMaxConstraint(ChocoSolver s, Model m, String maxVar) {
+        HashSet<Constraint> newcs = new HashSet<>();
+        Map<String, IntegerVariable> vars = s.getVars();
+        IntegerExpressionVariable v = Choco.ZERO;
+        for(String fname: m.features()){
+            if (vars.containsKey(fname))
+                v = Choco.plus(v, vars.get(fname));
+        }
+        s.addConstraint(ChocoSolver.eqeq(vars.get(maxVar),v));
+    }
+
+    private void addDiffConstraint(ChocoSolver s, Model m, Product p, String diffVar) {
+        Map<String,IntegerVariable> vars = s.getVars();
+        //calculating deselected features, initially initialized by all features
+        ArrayList<String> deselectedFeatures = new ArrayList();
+        for (String fname: m.features()) {
+            deselectedFeatures.add(fname);
+        }
+
+        //removing the selected features to get deselected features
+        //
+        IntegerExpressionVariable v = Choco.ZERO;
+        for (Feature f: p.getFeatures()) {
+            v = Choco.plus(v, Choco.abs(Choco.minus(vars.get(f.getName()), 1)));
+            for (String fname: deselectedFeatures) {
+                if(f.getName().equalsIgnoreCase(fname)) {
+                    deselectedFeatures.remove(fname);
+                    break;
+                }
+            }
+        }
+
+        for(String fname: deselectedFeatures){
+            v = Choco.plus(v, vars.get(fname));
+        }
+        s.addConstraint(ChocoSolver.eqeq(vars.get(diffVar),v));
+    }
+
     private void analyzeMTVL(Model m) {
         if (m.hasMTVL()) {
             if (solve) {
                 if (parent.verbose)
                     System.out.println("Searching for solutions for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
+                ChocoSolver s = ChocoSolver.fromModel(m);
                 System.out.print(s.getSolutionsAsString());
             }
             if (minimise != null) {
                 if (parent.verbose)
                     System.out.println("Searching for minimum solutions of "+minimise+" for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
+                ChocoSolver s = ChocoSolver.fromModel(m);
                 System.out.print(s.minimiseToString(minimise));
             }
             if (maximise != null) {
                 if (parent.verbose)
                     System.out.println("Searching for maximum solutions of "+maximise+" for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
+                ChocoSolver s = ChocoSolver.fromModel(m);
                 //System.out.print(s.maximiseToInt(product));
                 s.addConstraint(ChocoSolver.eqeq(s.getVars().get(maximise), s.maximiseToInt(maximise)));
-                ChocoSolver s1 = m.instantiateCSModel();
+                ChocoSolver s1 = ChocoSolver.fromModel(m);
                 int i=1;
                 while(s1.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
@@ -120,7 +160,7 @@ public class CheckSPLCommand implements Callable<Void> {
             if (solveall) {
                 if (parent.verbose)
                     System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver solver = m.instantiateCSModel();
+                ChocoSolver solver = ChocoSolver.fromModel(m);
                 System.out.print(solver.getSolutionsAsString());
             }
             if (solveWithProduct != null) {
@@ -133,11 +173,8 @@ public class CheckSPLCommand implements Callable<Void> {
                 if (solveWithDecl != null) {
                     if (parent.verbose)
                         System.out.println("Searching for solution that includes " + solveWithProduct + "...");
-                    ChocoSolver s = m.instantiateCSModel();
-                    HashSet<Constraint> newcs = new HashSet<>();
-                    solveWithDecl.getProduct().getProdConstraints(s.getVars(), newcs);
-                    for (Constraint c: newcs)
-                        s.addConstraint(c);
+                    ChocoSolver s = ChocoSolver.fromModel(m);
+                    s.addProductConstraints(solveWithDecl.getProduct());
                     System.out.println("checking solution:\n" + s.getSolutionsAsString());
                 } else {
                     System.out.println("Product '" + solveWithProduct + "' not found.");
@@ -153,11 +190,9 @@ public class CheckSPLCommand implements Callable<Void> {
                 if (minWithDecl != null) {
                     if (parent.verbose)
                         System.out.println("Searching for solution that includes " + minWith + "...");
-                    ChocoSolver s = m.instantiateCSModel();
-                    HashSet<Constraint> newcs = new HashSet<>();
+                    ChocoSolver s = ChocoSolver.fromModel(m);
                     s.addIntVar("difference", 0, 50);
-                    m.getDiffConstraints(minWithDecl.getProduct(), s.getVars(), newcs, "difference");
-                    for (Constraint c: newcs) s.addConstraint(c);
+                    addDiffConstraint(s, m, minWithDecl.getProduct(), "difference");
                     System.out.println("checking solution: " + s.minimiseToString("difference"));
                 } else {
                     System.out.println("Product '" + minWith + "' not found.");
@@ -167,17 +202,10 @@ public class CheckSPLCommand implements Callable<Void> {
             if (maxProduct) {
                 if (parent.verbose)
                     System.out.println("Searching for solution with maximum number of features ...");
-                ChocoSolver s = m.instantiateCSModel();
-                HashSet<Constraint> newcs = new HashSet<>();
+                ChocoSolver s = ChocoSolver.fromModel(m);
                 s.addIntVar("noOfFeatures", 0, 50);
-                if (m.getMaxConstraints(s.getVars(),newcs, "noOfFeatures")) {
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
-                }
-                else {
-                    System.out.println("---No solution-------------");
-                }
-
+                addMaxConstraint(s, m, "noOfFeatures");
+                System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
             }
             if (checkProduct != null) {
 
@@ -190,13 +218,13 @@ public class CheckSPLCommand implements Callable<Void> {
                 if (checkProductDecl == null ){
                     System.out.println("Product '" + checkProduct + "' not found, cannot check.");
                 } else {
-                    ChocoSolver s = m.instantiateCSModel();
+                    ChocoSolver s = ChocoSolver.fromModel(m);
                     Map<String,Integer> guess = checkProductDecl.getProduct().getSolution();
                     System.out.println("checking solution: "+s.checkSolution(guess,m));
                 }
             }
             if (numbersol) {
-                ChocoSolver s = m.instantiateCSModel();
+                ChocoSolver s = ChocoSolver.fromModel(m);
                 // did we call m.dropAttributes() previously?
                 if (ignoreattr) {
                     System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
