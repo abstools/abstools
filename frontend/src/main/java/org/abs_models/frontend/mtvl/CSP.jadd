@@ -17,44 +17,6 @@ Checks type errors, and if all variables are properly declared.
 
 aspect CSP {
 
-    refine ProductFlattener public void Model.flattenForProduct(ProductDecl prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
-        if (check && hasMTVL()) {
-            java.util.List<String> errors = instantiateCSModel().checkSolutionWithErrors(prod.getProduct().getSolution(), this);
-            if (!errors.isEmpty()) {
-                String msg = "Product [" + prod.getName() + "] does not satisfy the feature model. Constraints failed:";
-                for (String s: errors)
-                    msg = msg + "\n- " + s;
-                throw new WrongProgramArgumentException(msg);
-            }
-        }
-        /* call original: */
-        refined(prod,check);
-    }
-
-    public ChocoSolver Model.instantiateCSModel() {
-        ChocoSolver solver = new ChocoSolver(this);
-
-        // new int variable for all int variables
-        for (java.util.Map.Entry<String, BoundaryInt[]> entry : ints().entrySet()) {
-            String st = entry.getKey();
-            if (entry.getValue().length == 2) {
-                BoundaryInt b1 = entry.getValue()[0];
-                BoundaryInt b2 = entry.getValue()[1];
-                solver.addBoundedVar(st, b1, b2);
-            }
-            else {
-                solver.addSetVar(st, entry.getValue());
-            }
-        }
-        for (String st : bools())
-            solver.addBoolVar(st);
-        for (String st : features())
-            solver.addBoolVar(st);
-
-        collectConstraints(solver); // is adding intvars to the model!
-        return solver;
-    }
-
     public void Model.dropAttributes() {
         // ints and bools store integer and boolean (feature) attributes. Need to be ran twice to be the same collection.
         //System.out.println("ints: " + ints());

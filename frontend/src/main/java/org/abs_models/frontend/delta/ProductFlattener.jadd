@@ -14,7 +14,7 @@ aspect ProductFlattener {
      */
     public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,DeltaModellingException {
         ProductDecl decl = this.findProduct(id);
-        flattenForProduct(decl);
+        flattenForProduct(decl, true);
         flushTreeCache();
     }
     /**************************************************************************
@@ -25,21 +25,20 @@ aspect ProductFlattener {
         ProductDecl prod = this.findProduct(id);
         flattenForProduct(prod, false);
     }
-    public void Model.flattenForProduct(ProductDecl decl) throws WrongProgramArgumentException,DeltaModellingException {
-        flattenForProduct(decl, true);
-    }
-    public void Model.flattenForProduct(String id, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
-        ProductDecl prod = this.findProduct(id);
-        flattenForProduct(prod, check);
-    }
 
-    /**
-     * Refined with MTVL-check in CSP.jadd.
-     */
-    public void Model.flattenForProduct(ProductDecl decl, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
-	assert decl != null;
+    private void Model.flattenForProduct(ProductDecl decl, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+        assert decl != null;
         if (verbose)
             System.out.println("--- configuring product: " + decl.getName());
+        if (check && hasMTVL()) {
+            java.util.List<String> errors = ChocoSolver.fromModel(this).checkSolutionWithErrors(decl.getProduct().getSolution(), this);
+            if (!errors.isEmpty()) {
+                String msg = "Product [" + decl.getName() + "] does not satisfy the feature model. Constraints failed:";
+                for (String s: errors)
+                    msg = msg + "\n- " + s;
+                throw new WrongProgramArgumentException(msg);
+            }
+        }
         flattenForProduct(decl.getProduct());
         // remember which product was generated
         productName = decl.getName();
@@ -147,8 +146,8 @@ aspect ProductFlattener {
      */
     public Set<String> ProductLine.findApplicableDeltas(Product prod) {
 
-	assert prod != null;
-	assert prod.getFeatures() != null;
+    assert prod != null;
+    assert prod.getFeatures() != null;
 
         HashSet<String> deltaids = new HashSet<String>();
 

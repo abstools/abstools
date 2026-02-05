@@ -237,11 +237,8 @@ public class ProductLineAnalysisHelper {
             System.out.println("\u23F1 Flattening product: " + product.getFeatureSetAsString());
 
             // Find a solution to the feature model that satisfies the product feature selection
-            ChocoSolver s = m.instantiateCSModel();
-            HashSet<Constraint> newcs = new HashSet<>();
-            product.getProdConstraints(s.getVars(), newcs);
-            for (Constraint c: newcs)
-                s.addConstraint(c);
+            ChocoSolver s = ChocoSolver.fromModel(m);
+            s.addProductConstraints(product);
 
             Map<String, Integer> solution = s.getSolution();
             System.out.println("\u23F1 Full product configuration: " + solution);

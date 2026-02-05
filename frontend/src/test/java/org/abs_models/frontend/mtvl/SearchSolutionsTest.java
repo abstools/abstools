@@ -53,7 +53,7 @@ public class SearchSolutionsTest extends FrontendTest {
         Model model = assertParse(helloprogram);
         model.setNullPrintStream();
 
-        ChocoSolver s = model.instantiateCSModel();
+        ChocoSolver s = ChocoSolver.fromModel(model);
         model.evaluateAllProductDeclarations();
 
         assertEquals(78,s.countSolutions());
@@ -68,7 +68,7 @@ public class SearchSolutionsTest extends FrontendTest {
         Model model = assertParse(helloprogram);
         model.dropAttributes();
 
-        ChocoSolver s = model.instantiateCSModel();
+        ChocoSolver s = ChocoSolver.fromModel(model);
 
         assertEquals(8,s.countSolutions());
     }
@@ -80,7 +80,7 @@ public class SearchSolutionsTest extends FrontendTest {
     public void CheckEmptyProduct() throws WrongProgramArgumentException {
         Model model = assertParse(withoutProducLine);
 
-        ChocoSolver s = model.instantiateCSModel();
+        ChocoSolver s = ChocoSolver.fromModel(model);
         model.evaluateAllProductDeclarations();
 
         ProductDecl product = model.findProduct("P");
