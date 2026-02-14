@@ -1,6 +1,5 @@
 module Crawling;
 import * from ABS.DC;
-import println from ABS.Meta;
 
 // A crawler can ask for the head or the full document.
 data DocHead = Head(Int lastUpdated, Int headsize);

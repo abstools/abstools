@@ -81,8 +81,8 @@ def Process sjf_h(Process p1, List<Process> l1) =
 def Bool sjf_comp(Process p1, Process p2) = durationValue(cost(p1)) <= durationValue(cost(p2));
 
 // scheduler which switches strategy based on a boolean condition
-def Process flagsensitive(Bool switch, List<Process> l) =
-    case switch {
+def Process flagsensitive(Bool switch_, List<Process> l) =
+    case switch_ {
         True  => sjf(l);
         False => fifo(l);
     };
@@ -118,9 +118,9 @@ class ServerImp (Int limit) implements Server {
         Bool request(String job, Rat bc, Rat wc) {
             duration(bc, wc);
             //     history = Cons(Pair(job,deadline),history); // record the name of the executing task
-            if (durationValue(deadline) <= 0) {misses = misses + 1;}
-            congestion = (durationValue(deadline) < limit);
-            return (durationValue(deadline) >= 0);
+            if (durationValue(deadline()) <= 0) {misses = misses + 1;}
+            congestion = (durationValue(deadline()) < limit);
+            return (durationValue(deadline()) >= 0);
         }
 }
 
@@ -134,13 +134,13 @@ class ServerImp (Int limit) implements Server {
 class AsyncClientImp (String job, Int cycles, Int frequency, Duration bc, Duration wc, Duration limit, Server s) implements Client {
     Int replies = 0; Int successes = 0; Int counter = 1;
     Unit run() {
-        await Delay (frequency);
+        await duration(frequency);
         [Deadline: limit]
             Fut<Bool> res = s!request((job+intToString(counter)), durationValue(bc), durationValue(wc));
         cycles = cycles - 1;
         if (cycles > 0) {
             counter = counter + 1;
-            await Delay (frequency);
+            await duration(frequency);
             this!run();
         }
         await res?; replies = replies + 1;

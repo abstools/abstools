@@ -1,6 +1,5 @@
 module M;
 import * from ABS.Scheduler;
-import * from ABS.Meta;
 
 interface C { Unit m(); }
 class CImpl(Int xx) implements C {
