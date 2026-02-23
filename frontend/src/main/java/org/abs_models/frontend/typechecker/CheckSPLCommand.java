@@ -92,44 +92,6 @@ public class CheckSPLCommand implements Callable<Void> {
         }
     }
 
-    private void addMaxConstraint(ChocoSolver s, Model m, String maxVar) {
-        HashSet<Constraint> newcs = new HashSet<>();
-        Map<String, IntegerVariable> vars = s.getVars();
-        IntegerExpressionVariable v = Choco.ZERO;
-        for(String fname: m.features()){
-            if (vars.containsKey(fname))
-                v = Choco.plus(v, vars.get(fname));
-        }
-        s.addConstraint(ChocoSolver.eqeq(vars.get(maxVar),v));
-    }
-
-    private void addDiffConstraint(ChocoSolver s, Model m, Product p, String diffVar) {
-        Map<String,IntegerVariable> vars = s.getVars();
-        //calculating deselected features, initially initialized by all features
-        ArrayList<String> deselectedFeatures = new ArrayList();
-        for (String fname: m.features()) {
-            deselectedFeatures.add(fname);
-        }
-
-        //removing the selected features to get deselected features
-        //
-        IntegerExpressionVariable v = Choco.ZERO;
-        for (Feature f: p.getFeatures()) {
-            v = Choco.plus(v, Choco.abs(Choco.minus(vars.get(f.getName()), 1)));
-            for (String fname: deselectedFeatures) {
-                if(f.getName().equalsIgnoreCase(fname)) {
-                    deselectedFeatures.remove(fname);
-                    break;
-                }
-            }
-        }
-
-        for(String fname: deselectedFeatures){
-            v = Choco.plus(v, vars.get(fname));
-        }
-        s.addConstraint(ChocoSolver.eqeq(vars.get(diffVar),v));
-    }
-
     private void analyzeMTVL(Model m) {
         if (m.hasMTVL()) {
             if (solve) {
@@ -147,9 +109,15 @@ public class CheckSPLCommand implements Callable<Void> {
             if (maximise != null) {
                 if (parent.verbose)
                     System.out.println("Searching for maximum solutions of "+maximise+" for the feature model...");
-                ChocoSolver s = ChocoSolver.fromModel(m);
-                //System.out.print(s.maximiseToInt(product));
-                s.addConstraint(ChocoSolver.eqeq(s.getVars().get(maximise), s.maximiseToInt(maximise)));
+                // (rudi 2026-02-24): the following three lines of
+                // code seem to be dead; removing the last instance of
+                // external addConstraint.  If creating the constraint
+                // is necessary, they should be made into a method of
+                // the ChocoSolver class.
+
+                // ChocoSolver s = ChocoSolver.fromModel(m);
+                // //System.out.print(s.maximiseToInt(product));
+                // s.addConstraint(ChocoSolver.eqeq(s.getVars().get(maximise), s.maximiseToInt(maximise)));
                 ChocoSolver s1 = ChocoSolver.fromModel(m);
                 int i=1;
                 while(s1.solveAgain()) {
@@ -192,7 +160,7 @@ public class CheckSPLCommand implements Callable<Void> {
                         System.out.println("Searching for solution that includes " + minWith + "...");
                     ChocoSolver s = ChocoSolver.fromModel(m);
                     s.addIntVar("difference", 0, 50);
-                    addDiffConstraint(s, m, minWithDecl.getProduct(), "difference");
+                    s.addDiffConstraint(m, minWithDecl.getProduct(), "difference");
                     System.out.println("checking solution: " + s.minimiseToString("difference"));
                 } else {
                     System.out.println("Product '" + minWith + "' not found.");
@@ -204,7 +172,7 @@ public class CheckSPLCommand implements Callable<Void> {
                     System.out.println("Searching for solution with maximum number of features ...");
                 ChocoSolver s = ChocoSolver.fromModel(m);
                 s.addIntVar("noOfFeatures", 0, 50);
-                addMaxConstraint(s, m, "noOfFeatures");
+                s.addMaxConstraint(m, "noOfFeatures");
                 System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
             }
             if (checkProduct != null) {

@@ -13,13 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.abs_models.frontend.ast.AttrAssignment;
-import org.abs_models.frontend.ast.BoundaryInt;
-import org.abs_models.frontend.ast.BoundaryVal;
-import org.abs_models.frontend.ast.Feature;
-import org.abs_models.frontend.ast.Limit;
-import org.abs_models.frontend.ast.Model;
-import org.abs_models.frontend.ast.Product;
+import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.ast.*;
 import choco.Choco;
 import choco.cp.model.CPModel;
 import choco.cp.solver.CPSolver;
@@ -64,7 +59,7 @@ public class ChocoSolver {
         for (String st : m.features())
             solver.addBoolVar(st);
 
-        m.collectConstraints(solver); // is adding intvars to the model!
+        solver.collectConstraints(m); // is adding intvars to the model!
         return solver;
     }
 
@@ -78,7 +73,7 @@ public class ChocoSolver {
 
     /** The variables added to the model.
      */
-    public Map<String, IntegerVariable> getVars() {
+    private Map<String, IntegerVariable> getVars() {
         return vars;
     };
 
@@ -105,13 +100,13 @@ public class ChocoSolver {
         // to be solved.
     }
 
-    public void addBoolVar(String name) {
+    private void addBoolVar(String name) {
         IntegerVariable v = Choco.makeBooleanVar(name);
         vars.put(name, v);
         defaultvals.put(name, 0);
         if (absmodel.debug)
             absmodel.println("  adding Bool var '" + name + "' (default -> False)");
-        // m.addVariable(v); // not needed - if variable is not constrained in
+        // cpmodel.addVariable(v); // not needed - if variable is not constrained in
         // any way, it should not be considered when solving.
     }
 
@@ -123,7 +118,7 @@ public class ChocoSolver {
                 defaultvals.put(name, 0);
                 if (absmodel.debug)
                     absmodel.println("  adding Int var '" + name + "' (default -> 0)");
-                // m.addVariable(v); // not needed - if variable is not constrained in
+                // cpmodel.addVariable(v); // not needed - if variable is not constrained in
                 // any way, it should not be considered when solving.
             } else {
                 IntegerVariable v = Choco.makeIntVar(name);
@@ -133,7 +128,7 @@ public class ChocoSolver {
                 defaultvals.put(name, b);
                 if (absmodel.debug)
                     absmodel.println("  adding Int var '" + name + "' (default -> " + b + ")");
-                // m.addVariable(v); // not needed, since v is used in the constraints
+                // cpmodel.addVariable(v); // not needed, since v is used in the constraints
             }
         else if (b2 instanceof Limit) {
             IntegerVariable v = Choco.makeIntVar(name);
@@ -143,15 +138,13 @@ public class ChocoSolver {
             defaultvals.put(name, b);
             if (absmodel.debug)
                 absmodel.println("  adding Int var '" + name + "' (default -> " + b + ")");
-            // m.addVariable(v); // not needed, since v is used in the constraints
+            // cpmodel.addVariable(v); // not needed, since v is used in the constraints
             }
         else
             addIntVar(name, ((BoundaryVal) b1).getValue(), ((BoundaryVal) b2).getValue());
     }
 
-    // Is this method ever called??
-    // The mTVL syntax does not seem to allow constraining an attribute to a given set.
-    public void addSetVar(String name, BoundaryInt[] bs) {
+    private void addSetVar(String name, BoundaryInt[] bs) {
         int bsize = bs.length - 1;
         int[] vals = new int[bsize];
         // addSetVar only called if bs has only BoundaryVals
@@ -168,7 +161,7 @@ public class ChocoSolver {
     }
 
     /** set a bool variable to true **/
-    public void forceTrue(String name) {
+    private void forceTrue(String name) {
         IntegerVariable v = Choco.makeIntVar(name, 1, 1);
         vars.put(name, v);
         defaultvals.put(name, 1);
@@ -186,18 +179,265 @@ public class ChocoSolver {
             for (AttrAssignment aa: f.getAttrAssignments()) {
                 String fname = f.getName() + "." + aa.getName();
                 if (vars.containsKey(fname))
-                    addConstraint(eqeq(vars.get(fname), aa.getValue().getIntValue().intValue()));
+                    addConstraint(Choco.eq(vars.get(fname), aa.getValue().getIntValue().intValue()));
             }
         }
     }
 
-    /** add choco constraint **/
-    public void addConstraint(Constraint c) {
-        constraints.add(c);
-        // m.addConstraint(c);
+    /**
+     * Add constraints to solver, or construct them from
+     * subconstraints.  The return value is ignorable in some branches
+     * since we call addConstraint where appropriate and return
+     * Choco.TRUE.  In other branches, we assemble constraints from
+     * non-trivial constraint subexpressions so the return value is
+     * significant.
+     */
+    public Constraint collectConstraints(ASTNode s) {
+        switch (s) {
+            // ROOT: has to be present
+            case CompilationUnit c: {
+                for (int i = 0; i < c.getNumFeatureDecl(); i++) {
+                    forceTrue(c.getFeatureDecl(i).getName());
+                }
+                for(int i = 0; i < c.getNumChild(); i++)
+                    collectConstraints(c.getChildNoTransform(i));
+                return Choco.TRUE;
+            }
+            // FNODE
+            case FNode f:
+                return collectConstraints(f.getFeatureDecl());
+            // FEATURE -> collect constraints, check cardinality, and check children.
+            case FeatureDecl f: {
+                AttrConstraints acl = f.getAttrConstraints();
+                for(int i = 0; i < acl.getNumConstr(); i++)
+                    addConstraint(collectConstraints(acl.getConstr(i)));
+                if (f.hasGroup())
+                    includeGroupConstraints(f.getGroup(),f.getName());
+                return Choco.TRUE;
+            }
+            // FExt
+            case FExt f: {
+                AttrConstraints acl = f.getAttrConstraints();
+                for(int i = 0; i < acl.getNumConstr(); i++)
+                    addConstraint(collectConstraints(acl.getConstr(i)));
+                if (f.hasGroup())
+                    includeGroupConstraints(f.getGroup(),f.getName());
+                return Choco.TRUE;
+            }
+            // IFIN/IFOUT
+            case IfIn i:
+                return Choco.implies(isTrue(getVar(i.pname())), collectConstraints(i.getExpr()));
+            case IfOut i:
+                return Choco.implies(Choco.not(isTrue(getVar(i.pname()))), collectConstraints(i.getExpr()));
+            // REQUIRE
+            case Require r:
+                return Choco.implies(isTrue(getVar(r.pname())), isTrue(getVar(r.getFeatVar().getFName())));
+            // EXCLUDE
+            case Exclude e:
+                return Choco.nand(getVar(e.pname()), getVar(e.getFeatVar().getFName()));
+            // EXPRESSIONS
+            // EXP:VARS
+            case Variable v:
+                return isTrue(getVar(v.getFullName()));
+            //EXP:VALUES
+            // > ????
+            case MValue m:
+                return collectConstraints(m.getValue());
+            // < ?????
+            case BoolVal b:
+                if (b.getValue())
+                    return Choco.TRUE;
+                else
+                    return Choco.FALSE;
+            // EXP: Unary
+            case MNegExp m:
+                return Choco.not(collectConstraints(m.getOperand()));
+            // EXP: EqualityExpr
+            case MEqExp m:
+                // Need to type check JUST the equality of
+                // expressions, to know if the constraints should
+                // produce '==' or '<->'.  All other type checking
+                // should be done after flattening.
+                m.checkType(Types.BOOL, new SemanticConditionList());
+                if (m.isInt)
+                    return Choco.eq(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+                else            // boolean
+                    return Choco.ifOnlyIf(collectConstraints(m.getLeft()),collectConstraints(m.getRight()));
+            // EXP: RelationalExpr
+            // >=
+            case MGTEQExp m:
+                return Choco.geq(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+            // <=
+            case MLTEQExp m:
+                return Choco.leq(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+            // >
+            case MGTExp m:
+                return Choco.gt(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+            // <
+            case MLTExp m:
+                return Choco.lt(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+            // EXP: BoolExp
+            // <=>
+            case  MEquivExp m:
+                return Choco.ifOnlyIf(collectConstraints(m.getLeft()),collectConstraints(m.getRight()));
+            // =>
+            case MImpliesExp m:
+                return Choco.implies(collectConstraints(m.getLeft()),collectConstraints(m.getRight()));
+            // \/
+            case  MOrBoolExp m:
+                return Choco.or(collectConstraints(m.getLeft()),collectConstraints(m.getRight()));
+                // /\
+            case MAndBoolExp m:
+                return Choco.and(collectConstraints(m.getLeft()),collectConstraints(m.getRight()));
+            // EXP: GENERAL (always overwritten when the program type-checks)
+            case MExp m:
+                return Choco.TRUE;
+            case Value v:
+                // null is overwritten always for well-typed elements
+                return Choco.TRUE;
+            // GENERAL NODE: propagate
+            case ASTNode s1: {
+                for(int i = 0; i < s1.getNumChild(); i++)
+                    collectConstraints(s.getChildNoTransform(i));
+                return Choco.TRUE;
+            }
+        }
     }
 
-    public IntegerVariable getVar(String var) {
+    private IntegerExpressionVariable collectIntExpr(ASTNode mexp) {
+        // argument can be MExp or Value
+        switch (mexp) {
+            // EXPRESSIONS
+            // EXP:VARS
+            case Variable v:
+                return getVar(v.getFullName());
+            //EXP:VALUES
+            // > ????
+            case MValue m:
+                return collectIntExpr(m.getValue());
+            // < ?????
+            case IntVal v:
+                return Choco.constant(v.getValue());
+            // EXP: AddExp
+            case MAddAddExp m:
+                return Choco.plus(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+            case MSubAddExp m:
+                return Choco.minus(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+            // EXP: MultExp
+            case  MMultMultExp m:
+                return Choco.mult(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+            case  MDivMultExp m:
+                return Choco.div(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+            case  MModMultExp m:
+                return Choco.mod(collectIntExpr(m.getLeft()),collectIntExpr(m.getRight()));
+                // EXP: Unary
+            case  MMinusExp m:
+                return Choco.neg(collectIntExpr(m.getOperand()));
+            // EXP: GENERAL (always overwritten when the program type-checks)
+            case MExp m:
+                return null;
+            case Value v:
+                // null is overwritten always for well-typed elements
+                return null;
+            default:
+                return null;
+        }
+    }
+
+    public void includeGroupConstraints(Group g, String varName) {
+        IntegerVariable fvar = getVar(varName);
+        int nfeats = g.getNumFNode();
+        String fname = "";
+        IntegerVariable[] feats = new IntegerVariable[nfeats];
+        for (int i = 0; i < nfeats; i++) {
+            fname = g.getFNode(i).getFeatureDecl().getName();
+            IntegerVariable v = null;
+            // add intermediate variable $f if f is optional.
+            if (g.getFNode(i) instanceof OptFeat) {
+                v = Choco.makeBooleanVar("$"+fname);
+                // f -> $f
+                addConstraint(
+                    Choco.implies(isTrue(getVar(fname)),isTrue(v)));
+            } else {
+                v = getVar(fname);
+            }
+            // f -> fparent
+            addConstraint(Choco.implies(isTrue(v),isTrue(fvar)));
+            // rec - FNode
+            addConstraint(collectConstraints(g.getFNode(i)));
+            feats[i] = v;
+            // f -> $f /\ f -> fparent /\ [f]
+        }
+        // n1 <= $f1 + ... + $fn <= n2
+        if (g.getCard() instanceof AllOf)
+            // f ->  #feats = nfeats
+            addConstraint(Choco.implies(isTrue(fvar),
+                Choco.eq(Choco.sum(feats),nfeats)));
+        else if (g.getCard() instanceof Minim)
+            // f ->  #feats >= from
+            addConstraint(Choco.implies(
+                isTrue(fvar),
+                Choco.geq(Choco.sum(feats),((Minim) g.getCard()).getCFrom())));
+        else {
+            // f ->  to >= #feats >= from
+            addConstraint(Choco.implies(
+                isTrue(fvar),
+                Choco.geq(Choco.sum(feats),((CRange) g.getCard()).getCFrom())));
+            addConstraint(Choco.implies(
+                isTrue(fvar),
+                Choco.leq(Choco.sum(feats),((CRange) g.getCard()).getCTo())));
+        }
+    }
+
+    public void addMaxConstraint(Model m, String maxVar) {
+        HashSet<Constraint> newcs = new HashSet<>();
+        Map<String, IntegerVariable> vars = getVars();
+        IntegerExpressionVariable v = Choco.ZERO;
+        for(String fname: m.features()){
+            if (vars.containsKey(fname))
+                v = Choco.plus(v, vars.get(fname));
+        }
+        addConstraint(Choco.eq(vars.get(maxVar),v));
+    }
+
+    public void addDiffConstraint(Model m, Product p, String diffVar) {
+        Map<String,IntegerVariable> vars = getVars();
+        //calculating deselected features, initially initialized by all features
+        ArrayList<String> deselectedFeatures = new ArrayList();
+        for (String fname: m.features()) {
+            deselectedFeatures.add(fname);
+        }
+
+        //removing the selected features to get deselected features
+        //
+        IntegerExpressionVariable v = Choco.ZERO;
+        for (Feature f: p.getFeatures()) {
+            v = Choco.plus(v, Choco.abs(Choco.minus(vars.get(f.getName()), 1)));
+            for (String fname: deselectedFeatures) {
+                if(f.getName().equalsIgnoreCase(fname)) {
+                    deselectedFeatures.remove(fname);
+                    break;
+                }
+            }
+        }
+
+        for(String fname: deselectedFeatures){
+            v = Choco.plus(v, vars.get(fname));
+        }
+        addConstraint(Choco.eq(vars.get(diffVar),v));
+    }
+
+    /** add choco constraint **/
+    private void addConstraint(Constraint c) {
+        constraints.add(c);
+        // cpmodel.addConstraint(c);
+    }
+
+    private static Constraint isTrue(IntegerExpressionVariable v1) {
+        return Choco.eq(v1, 1);
+    }
+
+    private IntegerVariable getVar(String var) {
         return vars.get(var);
     }
 
@@ -211,7 +451,7 @@ public class ChocoSolver {
         // show the problem
         if (absmodel.debug) {
             absmodel.println("## The constraints:");
-            // ast.println(m.pretty());
+            // ast.println(cpmodel.pretty());
             for (Constraint c : constraints) {
                 if (!c.pretty().startsWith("true"))
                     absmodel.println(prettyConst(c));
@@ -254,7 +494,7 @@ public class ChocoSolver {
                 // model.collectParents(newFeatures,newParents);
                 // }
                 // // add newParents and default values to the solution
-                // Iterator<IntegerVariable> it = m.getIntVarIterator();
+                // Iterator<IntegerVariable> it = cpmodel.getIntVarIterator();
                 // while (it.hasNext()) { // for all variables in the
                 // constraints (model): round 2
                 // IntegerVariable var2 = it.next();
@@ -263,7 +503,7 @@ public class ChocoSolver {
                 // if (newParents.contains(var2.getName())) {
                 // if (ast.debug)
                 // ast.println("  "+var2+" (parent) -> 1");
-                // m.addConstraint(Choco.eq(var2, 1));
+                // cpmodel.addConstraint(Choco.eq(var2, 1));
                 // }
                 // }
             }
@@ -272,7 +512,6 @@ public class ChocoSolver {
         // show the problem
         if (absmodel.debug) {
             absmodel.println("## The constraints:");
-            // ast.println(m.pretty());
             for (Constraint c : constraints) {
                 if (!c.pretty().startsWith("true"))
                     absmodel.println(prettyConst(c));
@@ -613,7 +852,7 @@ public class ChocoSolver {
 
         // if (debug) {
         // String result = "";
-        // it = m.getIntVarIterator();
+        // it = cpmodel.getIntVarIterator();
         // while (it.hasNext()) {
         // IntegerVariable var = (IntegerVariable) it.next();
         // result = result + var.getName() + " -> "+s.getVar(var).getVal() +
@@ -623,21 +862,5 @@ public class ChocoSolver {
         // }
 
         return s.checkSolution();
-    }
-
-    public static Constraint eqeq(IntegerVariable v1, IntegerVariable v2) {
-        return Choco.eq(v1, v2);
-    }
-
-    public static Constraint eqeq(IntegerExpressionVariable v1, IntegerExpressionVariable v2) {
-        return Choco.eq(v1, v2);
-    }
-
-    public static Constraint eqeq(IntegerExpressionVariable v1, int v2) {
-        return Choco.eq(v1, v2);
-    }
-
-    public static Constraint isTrue(IntegerExpressionVariable v1) {
-        return Choco.eq(v1, 1);
     }
 }
