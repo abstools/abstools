@@ -329,9 +329,7 @@ public class TypeCheckerHelper {
 
         // Check solution from getProduct()
         if (prod.getProduct() != null) {
-            java.util.List<String> errors = ChocoSolver.fromModel(prod.getModel()).checkSolutionWithErrors(
-                    prod.getProduct().getSolution(),
-                    prod.getModel());
+            java.util.List<String> errors = ChocoSolver.checkProduct(prod.getProduct(), prod.getModel());
 
             if (!errors.isEmpty()) {
                 String failedConstraints = "";

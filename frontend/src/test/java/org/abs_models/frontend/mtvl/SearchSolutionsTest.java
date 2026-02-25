@@ -18,49 +18,42 @@ import org.abs_models.frontend.ast.ProductDecl;
 
 public class SearchSolutionsTest extends FrontendTest {
 
-    static private boolean checkSol(ChocoSolver s, Model m, String prod) throws Exception {
-        Product p = m.findProduct(prod).getProduct();
-        assertNotNull(p);
-        Map<String,Integer> guess = p.getSolution();
-        return s.checkSolution(guess,m);
-    }
-
-    static private String helloprogram =
-        " module Helloworld;" +
-        " product P1 (English);" +
-        " product P2 (French);" +
-        " product P3 (French, Repeat{times=10});" +
-        " product P4 (English, Repeat{times=6});" +
-        " root MultiLingualHelloWorld {" +
-        "   group allof {" +
-        "      Language {" +
-        "        group oneof { English, Dutch, French, German }" +
-        "      }," +
-        "      opt Repeat {" +
-        "        Int times in [0 .. 10];" +
-        "        ifin: times > 0; " +
-        "      } " +
-        "    } " +
-        " }" +
-        " extension English {" +
-        "    ifin: Repeat ->" +
-        "          (Repeat.times >= 2 && Repeat.times <= 5);" +
-        " }";
-
+    static private String helloprogram = """
+        module Helloworld;
+        product P1 (English);
+        product P2 (French);
+        product P3 (French, Repeat{times=10});
+        product P4 (English, Repeat{times=6}); // wrong
+        root MultiLingualHelloWorld {
+          group allof {
+             Language {
+               group oneof { English, Dutch, French, German }
+             },
+             opt Repeat {
+               Int times in [0 .. 10];
+               ifin: times > 0;
+             }
+           }
+        }
+        extension English {
+           ifin: Repeat ->
+                 (Repeat.times >= 2 && Repeat.times <= 5);
+        }
+        """;
 
     @Test
     public void SearchSolutions() throws Exception {
         Model model = assertParse(helloprogram);
         model.setNullPrintStream();
 
-        ChocoSolver s = ChocoSolver.fromModel(model);
         model.evaluateAllProductDeclarations();
-
+        ChocoSolver s = ChocoSolver.fromModel(model);
         assertEquals(78,s.countSolutions());
-        assertTrue(checkSol(s,model,"P1"));
-        assertTrue(checkSol(s,model,"P2"));
-        assertTrue(checkSol(s,model,"P3"));
-        assertTrue(!checkSol(s,model,"P4"));
+
+        assertTrue(ChocoSolver.checkProduct(model.findProduct("P1").getProduct(), model).isEmpty());
+        assertTrue(ChocoSolver.checkProduct(model.findProduct("P2").getProduct(),model).isEmpty());
+        assertTrue(ChocoSolver.checkProduct(model.findProduct("P3").getProduct(),model).isEmpty());
+        assertFalse(ChocoSolver.checkProduct(model.findProduct("P4").getProduct(),model).isEmpty());
     }
 
     @Test
@@ -80,11 +73,9 @@ public class SearchSolutionsTest extends FrontendTest {
     public void CheckEmptyProduct() throws WrongProgramArgumentException {
         Model model = assertParse(withoutProducLine);
 
-        ChocoSolver s = ChocoSolver.fromModel(model);
         model.evaluateAllProductDeclarations();
 
         ProductDecl product = model.findProduct("P");
-        Map<String,Integer> guess = product.getProduct().getSolution();
-        assertEquals(true, s.checkSolution(guess,model));
+        assertEquals(true, ChocoSolver.checkProduct(product.getProduct(), model).isEmpty());
     }
 }

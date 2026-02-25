@@ -31,7 +31,7 @@ aspect ProductFlattener {
         if (verbose)
             System.out.println("--- configuring product: " + decl.getName());
         if (check && hasMTVL()) {
-            java.util.List<String> errors = ChocoSolver.fromModel(this).checkSolutionWithErrors(decl.getProduct().getSolution(), this);
+            java.util.List<String> errors = ChocoSolver.checkProduct(decl.getProduct(), this);
             if (!errors.isEmpty()) {
                 String msg = "Product [" + decl.getName() + "] does not satisfy the feature model. Constraints failed:";
                 for (String s: errors)

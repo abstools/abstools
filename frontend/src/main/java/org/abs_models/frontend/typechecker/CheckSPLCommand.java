@@ -1,14 +1,12 @@
 package org.abs_models.frontend.typechecker;
 
-import choco.Choco;
-import choco.kernel.model.constraints.Constraint;
-import choco.kernel.model.variables.integer.IntegerExpressionVariable;
-import choco.kernel.model.variables.integer.IntegerVariable;
 import org.abs_models.Absc;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.SemanticCondition;
 import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.ast.AttrAssignment;
 import org.abs_models.frontend.ast.Feature;
+import org.abs_models.frontend.ast.IntVal;
 import org.abs_models.frontend.ast.Model;
 import org.abs_models.frontend.ast.Product;
 import org.abs_models.frontend.ast.ProductDecl;
@@ -41,13 +39,13 @@ public class CheckSPLCommand implements Callable<Void> {
 
     // mTVL options
     @Option(names = { "--solve" },
-            description = "solve constraint satisfaction problem (CSP) for the feature model and print a solution")
+            description = "solve constraint satisfaction problem (CSP) for the feature model and print all solutions")
     public boolean solve = false ;
     @Option(names = { "--solve-all" },
             description = "solve all solutions for the CSP and print timing information")
     public boolean solveall = false ;
     @Option(names = { "--solve-with" },
-            description = "solve CSP by finding a product that includes @|italic PID|@",
+            description = "solve CSP by finding all feature configurations for product @|italic PID|@",
             paramLabel = "product")
     public String solveWithProduct ;
     @Option(names = { "--min" },
@@ -78,7 +76,6 @@ public class CheckSPLCommand implements Callable<Void> {
 
     private void typeCheckProductLine(Model m) {
 
-        //int n = m.getFeatureModelConfigurations().size();
         int n = m.getProductList().getNumChild();
         if (n == 0)
             return;
@@ -125,12 +122,6 @@ public class CheckSPLCommand implements Callable<Void> {
                     System.out.print(s1.getSolutionsAsString());
                 }
             }
-            if (solveall) {
-                if (parent.verbose)
-                    System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver solver = ChocoSolver.fromModel(m);
-                System.out.print(solver.getSolutionsAsString());
-            }
             if (solveWithProduct != null) {
                 ProductDecl solveWithDecl = null;
                 try {
@@ -158,10 +149,7 @@ public class CheckSPLCommand implements Callable<Void> {
                 if (minWithDecl != null) {
                     if (parent.verbose)
                         System.out.println("Searching for solution that includes " + minWith + "...");
-                    ChocoSolver s = ChocoSolver.fromModel(m);
-                    s.addIntVar("difference", 0, 50);
-                    s.addDiffConstraint(m, minWithDecl.getProduct(), "difference");
-                    System.out.println("checking solution: " + s.minimiseToString("difference"));
+                    System.out.println("checking solution: " + ChocoSolver.calculateMinFeaturesOfProduct(m, minWithDecl.getProduct()));
                 } else {
                     System.out.println("Product '" + minWith + "' not found.");
                 }
@@ -170,10 +158,7 @@ public class CheckSPLCommand implements Callable<Void> {
             if (maxProduct) {
                 if (parent.verbose)
                     System.out.println("Searching for solution with maximum number of features ...");
-                ChocoSolver s = ChocoSolver.fromModel(m);
-                s.addIntVar("noOfFeatures", 0, 50);
-                s.addMaxConstraint(m, "noOfFeatures");
-                System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
+                System.out.println("checking solution: "+ChocoSolver.calculateMaxProductFeatures(m));
             }
             if (checkProduct != null) {
 
@@ -186,9 +171,11 @@ public class CheckSPLCommand implements Callable<Void> {
                 if (checkProductDecl == null ){
                     System.out.println("Product '" + checkProduct + "' not found, cannot check.");
                 } else {
-                    ChocoSolver s = ChocoSolver.fromModel(m);
-                    Map<String,Integer> guess = checkProductDecl.getProduct().getSolution();
-                    System.out.println("checking solution: "+s.checkSolution(guess,m));
+                    List<String> errors = ChocoSolver.checkProduct(checkProductDecl.getProduct(), m);
+                    System.out.println("checking solution...");
+                    for (String error : errors)
+                        System.out.println("Constraint failed: " + error);
+                    if (errors.isEmpty()) System.out.println("No constraints failed.");
                 }
             }
             if (numbersol) {
@@ -224,10 +211,65 @@ public class CheckSPLCommand implements Callable<Void> {
             // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
             if (parent.verbose)
                 System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
-            ProductLineAnalysisHelper.buildAndPrintAllConfigurations(m);
+            buildAndPrintAllConfigurations(m);
         }
         // TODO: check if there were errors
         analyzeMTVL(m);
+    }
+
+    /*
+     * Build all SPL configurations (valid feature selections, ignoring attributes), one by one
+     * The purpose is to measure how long this takes, so we can compare it with the performance of type checking the SPL.
+     *
+     */
+    private static void buildAndPrintAllConfigurations(Model m) {
+
+        long timeSum = 0;
+        for (Product product : m.getProductList()) {
+
+            long time0 = System.currentTimeMillis();
+            System.out.println("\u23F1 Flattening product: " + product.getFeatureSetAsString());
+
+            // Find a solution to the feature model that satisfies the product feature selection
+            ChocoSolver s = ChocoSolver.fromModel(m);
+            s.addProductConstraints(product);
+
+            Map<String, Integer> solution = s.getSolution();
+            System.out.println("\u23F1 Full product configuration: " + solution);
+            long time1 = System.currentTimeMillis();
+
+            // map the solution to the product,
+            // i.e. add attribute assignments to features
+            for (String fname : solution.keySet()) {
+                if (fname.startsWith("$")) // ignore internal ChocoSolver variable
+                    continue;
+                if (fname.contains(".")) {
+                    String[] parts = fname.split("\\.");
+                    String fid = parts[0];
+                    String aid = parts[1];
+                    Integer val = solution.get(fname);
+                    for (Feature feature : product.getFeatures()) {
+                        if (feature.getName().equals(fid)) {
+                            feature.addAttrAssignment(new AttrAssignment(aid, new IntVal(val)));
+                            break;
+                        }
+                    }
+                }
+            }
+
+            long time2 = System.currentTimeMillis();
+
+            Model thisModel = m.treeCopyNoTransform();
+
+            long time3 = System.currentTimeMillis();
+            if (thisModel.getProductLine() != null) thisModel.flattenForProduct(product);
+
+            long time4 = System.currentTimeMillis();
+            timeSum += (time4 - time3);
+            System.out.println("\u23F1 Time: " + (time1 - time0) + " | " + (time2 - time1) + " | " + (time3 - time2) + " | " + (time4 - time3) + " | " + "Total(s): " + ((time4 - time0)/1000.0));
+        }
+        System.out.println("\u23F1 Flattening total time (s): " + timeSum/1000.0);
+        if (m.getProductLine() == null) System.out.println("Note: model has no productline definition, so no flattening performed.");
     }
 
     @Override
