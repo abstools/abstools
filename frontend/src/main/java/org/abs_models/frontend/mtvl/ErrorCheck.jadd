@@ -127,6 +127,8 @@ aspect ErrorCheck {
     public boolean MEqualityExpr.isInt  = false;
     public boolean MEqualityExpr.isBool = false;
     public void MEqualityExpr.checkType(Types type, SemanticConditionList c) {
+        // FIXME: this "type check" has a side effect of assigning boolean
+        // or int to the expression!
         SemanticConditionList lint  = new SemanticConditionList();
         SemanticConditionList lbool = new SemanticConditionList();
         // TODO: use getLeft().isIntType() instead if possible

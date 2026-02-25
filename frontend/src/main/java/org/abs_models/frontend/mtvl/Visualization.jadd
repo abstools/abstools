@@ -1,13 +1,6 @@
 import java.util.Collection;
 import java.util.ArrayList;
 import org.abs_models.frontend.mtvl.ChocoSolver;
-//import mtvl.analyser.*;
-import choco.Choco;
-// import choco.Choco.MAX_UPPER_BOUND;
-// import choco.Choco.MIN_LOWER_BOUND;
-import choco.kernel.model.constraints.Constraint;
-import choco.kernel.model.variables.integer.IntegerVariable;
-import choco.kernel.model.variables.integer.IntegerExpressionVariable;
 
 /**
 Builds constraints and solve them.

@@ -185,7 +185,7 @@ MSubAddExp: MAddExp ;
 // Variables and values
 abstract Variable: SimpleExp;
 MValue : SimpleExp ::= Value;
-// Concrete values (IntVal, BoolVal, StringVal) are in abs.ast
+// See above for concrete values (IntVal, BoolVal, StringVal)
 
 // variables
 AttVar:  Variable ::= <AName>;
