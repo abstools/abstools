@@ -117,9 +117,9 @@ public class CheckSPLCommand implements Callable<Void> {
                 // s.addConstraint(ChocoSolver.eqeq(s.getVars().get(maximise), s.maximiseToInt(maximise)));
                 ChocoSolver s1 = ChocoSolver.fromModel(m);
                 int i=1;
-                while(s1.solveAgain()) {
+                for (Map<String, Integer> solution : s1.getSolutions()) {
                     System.out.println("------ "+(i++)+"------");
-                    System.out.print(s1.getSolutionsAsString());
+                    System.out.print(solution);
                 }
             }
             if (solveWithProduct != null) {

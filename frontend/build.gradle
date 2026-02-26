@@ -51,11 +51,8 @@ dependencies {
     implementation 'org.sat4j:org.sat4j.core:2.3.1'
     implementation 'org.sat4j:org.sat4j.pb:2.3.1'
     implementation 'org.sat4j:org.sat4j.maxsat:2.3.1'
-    // Outdated version of choco-solver for μTVL; note that there does
-    // not seem to be source code available anymore for this library.
-    // Should be replaced by more up-to-date version of choco-solver,
-    // or JSR331
-    implementation files('lib/choco-solver-2.1.1.jar')
+    // Constraint solver for product line analysis
+    implementation 'org.choco-solver:choco-solver:5.0.0'
     // Rational numbers for the Java backend
     implementation 'org.apfloat:apfloat:1.15.0'
     // SQLite library for the Java backend
