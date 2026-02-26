@@ -54,7 +54,8 @@ public class DeltaTrie {
             this.deltaID = "core";
             this.children = new HashMap<>();
             this.ta = new ProgramAbstraction(errors);
-            model.buildCoreAbstraction(ta);
+
+            ta.buildCoreAbstraction(model);
         }
 
         // Constructor for child node
