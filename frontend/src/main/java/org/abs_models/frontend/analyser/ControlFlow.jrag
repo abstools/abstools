@@ -319,17 +319,21 @@ aspect ControlFlow {
 
 	eq ForeachStmt.getListExp().parentStmt() = this;
 
-	syn nta Stmt ExpFunctionDef.virtualStmt() = new VirtualStmt();
+	syn nta VirtualStmt ExpFunctionDef.virtualStmt() = new VirtualStmt();
 	eq ExpFunctionDef.getRhs().parentStmt() = virtualStmt();
+	syn nta VirtualStmt PartialFunctionDef.virtualStmt() = new VirtualStmt();
+	eq PartialFunctionDef.getPureExp().parentStmt() = virtualStmt();
+	syn nta VirtualStmt BuiltinFunctionDef.virtualStmt() = new VirtualStmt();
+	eq BuiltinFunctionDef.getArgument(int i).parentStmt() = virtualStmt();
 
 	eq IfStmt.getCondition().parentStmt() = this;
 
-	syn nta Stmt IfExp.virtualThenStmt() = new VirtualStmt();
-	syn nta Stmt IfExp.virtualElseStmt() = new VirtualStmt();
+	syn nta VirtualStmt IfExp.virtualThenStmt() = new VirtualStmt();
+	syn nta VirtualStmt IfExp.virtualElseStmt() = new VirtualStmt();
 	eq IfExp.getThenExp().parentStmt() = virtualThenStmt();
 	eq IfExp.getElseExp().parentStmt() = virtualElseStmt();
 
-	syn nta Stmt LetExp.virtualStmt() = new VirtualStmt();
+	syn nta VirtualStmt LetExp.virtualStmt() = new VirtualStmt();
 	eq LetExp.getExp().parentStmt() = virtualStmt();
 
 	eq MoveCogToStmt.getTarget().parentStmt() = this;
@@ -344,6 +348,19 @@ aspect ControlFlow {
 	eq VarDeclStmt.getVarDecl().parentStmt() = this;
 
 	eq WhileStmt.getCondition().parentStmt() = this;
+
+        // Refine JastAdd compile warnings for expressions in
+        // non-statement contexts -- the `virtualStmt` equation adds a
+        // Stmt attribute to expression nodes which is not shown in
+        // the `CoreAbs.ast` definition file and makes the JastAdd
+        // complaints quite confusing, so we make the type of
+        // `virtualStmt` be VirtualStmt so we can at least grep for
+        // what's happening.
+        syn nta VirtualStmt FieldDecl.virtualStmt() = new VirtualStmt();
+        eq FieldDecl.getInitExp().parentStmt() = virtualStmt();
+        syn nta VirtualStmt Annotation.virtualStmt() = new VirtualStmt();
+        eq Annotation.getValue().parentStmt() = virtualStmt();
+
 
 	//== Exceptions ==
 

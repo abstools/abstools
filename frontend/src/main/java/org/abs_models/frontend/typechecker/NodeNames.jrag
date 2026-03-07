@@ -1,12 +1,12 @@
 // Inform node about the name of the Module where it was declared
 aspect ModuleName {
     syn String Decl.moduleName() = getModuleDecl().getName();
-    
+
     syn lazy String ModuleModifier.getModuleName();
-    
+
     // By default look it up in the delta's 'uses' clause
     eq ModuleModifier.getModuleName() = (getDelta().hasImportedModule()) ? getDelta().getImportedModule().getModuleName() : null;
-    
+
     eq AddClassModifier.getModuleName() {
         // search in class name
         String prefix = (new Name(getClassDecl().getName())).getModuleName();
@@ -24,7 +24,7 @@ aspect ModuleName {
         else
             return super.getModuleName();
     }
-    
+
     eq RemoveClassModifier.getModuleName() {
         // search in class name
         String prefix = (new Name(getName())).getModuleName();
@@ -33,19 +33,11 @@ aspect ModuleName {
         else
             return super.getModuleName();
     }
-    
-    /* TODO: define equations for other ModuleModifiers: 
+
+    /* TODO: define equations for other ModuleModifiers:
      * AddTypeSynModifier ModifyTypeSynModifier AddDataTypeModifier ModifyDataTypeModifier AddFunctionModifier AddInterfaceModifier RemoveInterfaceModifier ModifyInterfaceModifier
      * Note: superclass behaviour adequate for: AddImportModifier AddExportModifier
      */
-}
-
-aspect DeltaName {
-    inh String ModuleModifier.deltaName();
-    eq DeltaDecl.getModuleModifier().deltaName() = this.getName();
-
-    inh String Modifier.deltaName();
-    eq ModifyClassModifier.getModifier().deltaName() = this.deltaName();
 }
 
 // Set the name of ModuleModifier to name of entity that is being modified by ModuleModifier
@@ -64,7 +56,7 @@ aspect Name {
 //Inform modifier node about the module to which it applies
 aspect TargetModuleName {
     syn String ModuleModifier.targetModuleName() = getModule() == null ? null : getModule().getName();
- 
+
     inh String Modifier.targetModuleName();
     eq ModifyClassModifier.getModifier().targetModuleName() = this.targetModuleName();
 }
