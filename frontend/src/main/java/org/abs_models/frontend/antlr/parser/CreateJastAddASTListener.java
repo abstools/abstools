@@ -125,7 +125,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         result.setProductLineOpt(o(ctx.productline_decl()));
         result.setProductDeclList(l(ctx.product_decl()));
         result.setFeatureDeclList(l(ctx.feature_decl()));
-        result.setFExtList(l(ctx.fextension()));
+        result.setFeatureExtensionList(l(ctx.feature_extension()));
     }
 
 
@@ -1084,8 +1084,8 @@ public class CreateJastAddASTListener extends ABSBaseListener {
     }
 
     //  mTVL
-	@Override public void exitFextension(ABSParser.FextensionContext ctx) {
-        setV(ctx, new FExt(ctx.TYPE_IDENTIFIER().getText(),
+	@Override public void exitFeature_extension(ABSParser.Feature_extensionContext ctx) {
+        setV(ctx, new FeatureExtension(ctx.TYPE_IDENTIFIER().getText(),
                            o(ctx.feature_decl_group()),
                            new AttrConstraints(l(ctx.feature_decl_attribute()),
                                                       l(ctx.feature_decl_constraint()))));
@@ -1100,7 +1100,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
 
     @Override public void exitFeature_decl_group(ABSParser.Feature_decl_groupContext ctx) {
         Cardinality c = null;
-        if (ctx.o != null) c = new CRange(1,1);
+        if (ctx.o != null) c = new OneOf();
         else if (ctx.a != null) c = new AllOf();
         else if (ctx.s != null) c = new Minim(Integer.parseInt(ctx.l.getText()));
         else c = new CRange(Integer.parseInt(ctx.l.getText()),

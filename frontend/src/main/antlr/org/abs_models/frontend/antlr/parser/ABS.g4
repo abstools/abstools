@@ -459,7 +459,7 @@ product_expr
     ;
 
 // mTVL Feature model
-fextension : TYPE_IDENTIFIER '{'
+feature_extension : TYPE_IDENTIFIER '{'
         feature_decl_group? (feature_decl_attribute | feature_decl_constraint)* '}' ;
 
 feature_decl : TYPE_IDENTIFIER
@@ -512,7 +512,7 @@ main_block : annotations '{' stmt* '}' ;
 
 compilation_unit : module_decl* delta_decl*
         productline_decl? product_decl*
-        ('root' feature_decl | 'extension' fextension)*
+        ('root' feature_decl | 'extension' feature_extension)*
     ;
 
 goal : compilation_unit EOF ;

@@ -7,7 +7,7 @@
 
 // Hook into CoreAbs.ast definitions
 Model : CoreModel ::= /Product*/ ;
-CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
+CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FeatureExtension*;
 
 // Deltas
 
@@ -104,7 +104,7 @@ Product ::= Feature* ;
 /// mTVL - root and extension ///
 /////////////////////////////////
 
-FExt ::= <Name> [Group] AttrConstraints;
+FeatureExtension ::= <Name> [Group] AttrConstraints;
 
 FeatureDecl ::= <Name> [Group] AttrConstraints;
 
@@ -117,6 +117,7 @@ OptFeat:  FNode;
 MandFeat: FNode;
 
 abstract Cardinality;
+OneOf:   Cardinality;
 AllOf:   Cardinality;
 Minim:   Cardinality ::= <CFrom:int>;
 CRange:  Cardinality ::= <CFrom:int> <CTo:int>;
