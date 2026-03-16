@@ -43,7 +43,7 @@ public class ChocoSolver {
         ChocoSolver solver = new ChocoSolver(m);
 
         // new int variable for all int variables
-        for (java.util.Map.Entry<String, BoundaryInt[]> entry : m.ints().entrySet()) {
+        for (java.util.Map.Entry<String, BoundaryInt[]> entry : m.mtvlIntVariables().entrySet()) {
             String st = entry.getKey();
             if (entry.getValue().length == 2) {
                 BoundaryInt b1 = entry.getValue()[0];
@@ -54,9 +54,9 @@ public class ChocoSolver {
                 solver.addSetVar(st, entry.getValue());
             }
         }
-        for (String st : m.bools())
+        for (String st : m.mtvlBoolVariables())
             solver.addBoolVar(st);
-        for (String st : m.features())
+        for (String st : m.mtvlFeatures())
             solver.addBoolVar(st);
 
         solver.addConstraints(m); // is adding intvars to the model!
@@ -204,8 +204,8 @@ public class ChocoSolver {
                     includeGroupConstraints(f.getGroup(),f.getName());
                 return;
             }
-            // FExt
-            case FExt f: {
+            // FeatureExtension
+            case FeatureExtension f: {
                 AttrConstraints acl = f.getAttrConstraints();
                 for(int i = 0; i < acl.getNumConstr(); i++)
                     addConstraint(constructConstraint(acl.getConstr(i)));
@@ -312,33 +312,34 @@ public class ChocoSolver {
 
     private void includeGroupConstraints(Group g, String varName) {
         IntegerVariable fvar = vars.get(varName);
-        int nfeats = g.getNumFNode();
-        String fname = "";
-        IntegerVariable[] feats = new IntegerVariable[nfeats];
-        for (int i = 0; i < nfeats; i++) {
-            fname = g.getFNode(i).getFeatureDecl().getName();
-            IntegerVariable v;
-            // add intermediate variable $f if f is optional.
-            if (g.getFNode(i) instanceof OptFeat) {
-                v = Choco.makeBooleanVar("$"+fname);
-                // f -> $f
-                addConstraint(
-                    Choco.implies(isTrue(vars.get(fname)),isTrue(v)));
-            } else {
-                v = vars.get(fname);
-            }
-            // f -> fparent
-            addConstraint(Choco.implies(isTrue(v),isTrue(fvar)));
-            // rec - FNode
-            addConstraints(g.getFNode(i));
-            feats[i] = v;
-            // f -> $f /\ f -> fparent /\ [f]
-        }
+        // Note: FNodes of type OptFeat are only allowed inside AllOf
+        // groups (ensured by the type checker), so in all other cases
+        // allFeatures and mandatoryFeatures will be identical.
+        List<FNode> allFeatures = ListUtils.toJavaList(g.getFNodes());
+        List<FNode> mandatoryFeatures = allFeatures.stream()
+            .filter(fnode -> !(fnode instanceof OptFeat))
+            .toList();
+        allFeatures.forEach(fnode -> {
+            IntegerVariable v = vars.get(fnode.getFeatureDecl().getName());
+            addConstraint(Choco.implies(isTrue(v), isTrue(fvar)));
+            addConstraints(fnode);
+        });
+        // only in case of AllOf, this does not contain optional
+        // feature variables; in all other cases this contains all
+        // feature variables.
+        IntegerVariable[] feats = mandatoryFeatures.stream()
+            .map(fnode -> vars.get(fnode.getFeatureDecl().getName()))
+            .toArray(IntegerVariable[]::new);
         // n1 <= $f1 + ... + $fn <= n2
-        if (g.getCard() instanceof AllOf)
+        if (g.getCard() instanceof OneOf)
+            // f ->  #feats = 1
+            addConstraint(Choco.implies(isTrue(fvar),
+                Choco.eq(Choco.sum(feats),1)));
+        else if (g.getCard() instanceof AllOf)
             // f ->  #feats = nfeats
             addConstraint(Choco.implies(isTrue(fvar),
-                Choco.eq(Choco.sum(feats),nfeats)));
+                // note that in this case we only check the mandatory features
+                Choco.eq(Choco.sum(feats), feats.length)));
         else if (g.getCard() instanceof Minim)
             // f ->  #feats >= from
             addConstraint(Choco.implies(
@@ -346,6 +347,7 @@ public class ChocoSolver {
                 Choco.geq(Choco.sum(feats),((Minim) g.getCard()).getCFrom())));
         else {
             // f ->  to >= #feats >= from
+            // Note: OneOf is translated into CRange(1, 1)
             addConstraint(Choco.implies(
                 isTrue(fvar),
                 Choco.geq(Choco.sum(feats),((CRange) g.getCard()).getCFrom())));
@@ -363,7 +365,7 @@ public class ChocoSolver {
         ChocoSolver s = ChocoSolver.fromModel(m);
         IntegerVariable res = s.addIntVar("noOfFeatures", 0, 50);
         IntegerExpressionVariable v = Choco.ZERO;
-        for(String fname: m.features()){
+        for(String fname: m.mtvlFeatures()){
             if (s.vars.containsKey(fname))
                 v = Choco.plus(v, s.vars.get(fname));
         }
@@ -388,7 +390,7 @@ public class ChocoSolver {
 
     private void addDiffConstraint(Model m, Product p, String diffVar) {
         List<Feature> productFeatures = ListUtils.toJavaList(p.getFeatures());
-        List<String> unusedFeatures = m.features()
+        List<String> unusedFeatures = m.mtvlFeatures()
             .stream()
             .filter(fname -> productFeatures
                 .stream()
@@ -569,8 +571,7 @@ public class ChocoSolver {
         for (Map<String,Integer> sol : solutions) {
             result.append("------ ").append(i++).append(" ------\n");
             for (String var : sol.keySet()) {
-                if (absmodel.debug || !var.startsWith("$"))
-                    result.append(var).append(" -> ").append(sol.get(var)).append("\n");
+                result.append(var).append(" -> ").append(sol.get(var)).append("\n");
             }
         }
         return result.toString();
@@ -699,13 +700,8 @@ public class ChocoSolver {
                 }
                 // ELSE use default value
                 else if (!configuration.containsKey(var.getName())) {
-                    // By default, the optional wrapper "$..." is ALWAYS true
-                    if (var.getName().startsWith("$")) {
-                        if (model.debug)
-                            model.println("  " + var + " (default) -> 1");
-                        s.getVar(var).setVal(1);
+                    if (defaultvals.containsKey(var.getName())) {
                         // By default, unrefered features & attributes are false
-                    } else if (defaultvals.containsKey(var.getName())) {
                         int defval = defaultvals.get(var.getName());
                         if (model.debug)
                             model.println("  " + var.getName() + " (default) -> " + defval);

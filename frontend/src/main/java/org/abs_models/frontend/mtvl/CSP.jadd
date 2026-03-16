@@ -13,14 +13,14 @@ aspect CSP {
 
     public void Model.dropAttributes() {
         // ints and bools store integer and boolean (feature) attributes. Need to be ran twice to be the same collection.
-        //System.out.println("ints: " + ints());
-        ints();
-        ints().clear();
-        //System.out.println("ints: " + ints());
-        //System.out.println("bools: " + bools());
-        bools();
-        bools().clear();
-        //System.out.println("bools: " + bools());
+        //System.out.println("ints: " + mtvlIntVariables());
+        mtvlIntVariables();
+        mtvlIntVariables().clear();
+        //System.out.println("ints: " + mtvlIntVariables());
+        //System.out.println("bools: " + mtvlBoolVariables());
+        mtvlBoolVariables();
+        mtvlBoolVariables().clear();
+        //System.out.println("bools: " + mtvlBoolVariables());
         for (CompilationUnit c: getCompilationUnits())
             c.dropAttributes();
     }
@@ -28,7 +28,7 @@ aspect CSP {
     public void CompilationUnit.dropAttributes() {
         for (FeatureDecl f: getFeatureDecls())
             f.dropAttributes();
-        for (FExt f: getFExts())
+        for (FeatureExtension f: getFeatureExtensions())
             f.dropAttributes();
     }
 
@@ -43,7 +43,7 @@ aspect CSP {
                 f.getFeatureDecl().dropAttributes();
     }
 
-    public void FExt.dropAttributes() {
+    public void FeatureExtension.dropAttributes() {
         List<Constr> constrs = getAttrConstraints().getConstrs();
         for (int i = constrs.getNumChildNoTransform()-1; i>=0; i--) {
             if (constrs.getChild(i).hasAttributes())
