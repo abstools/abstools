@@ -185,10 +185,14 @@ public class FunctionalTests extends SemanticTests {
 
     @Test
     public void dataTypeSelector() throws Exception {
-        assertEvalTrue("data Foo = Bar(Bool isTrue); " +
-        		"{ Bool testresult = False; " +
-        		"  Foo foo = Bar(True);  " +
-        		"  testresult = isTrue(foo); }");
+        assertEvalTrue(
+            """
+            data Foo = Bar(Bool isTrue);
+            { Bool testresult = False;
+              Foo foo = Bar(True);
+              testresult = isTrue(foo); }
+            """
+        );
     }
     
     @Test
@@ -274,6 +278,21 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void ifExp2() throws Exception {
         assertEvalTrue("def Bool f(Bool x) = when !x then False else True ; " + CALL_F_TRUE);
+    }
+
+    @Test
+    public void bug55() throws Exception {
+        assertEvalTrue(
+            """
+            interface Interf1 { Bool m1(); }
+            class Cls1 implements Interf1 { Bool m1() { return True; } }
+            {
+              Interf1 o1 = new local Cls1();
+              Bool testresult = (when True then o1 else o1).m1();
+            }
+
+            """
+        );
     }
 
     @Test
