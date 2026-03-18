@@ -779,11 +779,13 @@ aspect GenerateJava {
     }
 
     public void IfExp.generateJava(PrintStream stream) {
+        stream.print("(");
         getCondExp().generateJava(stream);
         stream.print(" ? ");
         getThenExp().generateJava(stream);
         stream.print(" : ");
         getElseExp().generateJava(stream);
+        stream.print(")");
     }
 
     public void CaseExp.generateJava(PrintStream stream) {
