@@ -17,6 +17,4 @@ else
     exit 1
 fi
 
-# This `--add-opens` is necessary until choco-solver is updated; see
-# https://github.com/abstools/abstools/issues/334
 java -jar "$ABSFRONTENDJAR" "$@"
