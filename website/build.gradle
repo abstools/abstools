@@ -1,0 +1,14 @@
+plugins {
+    // https://codeberg.org/miurahr/gradle-sphinx
+    id("tokyo.northside.sphinx") version "1.0.4"
+}
+apply plugin: 'base'
+
+sphinx {
+    // sourceDirectory = "${projectDir}/website/source"
+    // configDirectory = "${projectDir}/website/source"
+    // outputDirectory = "${projectDir}/website/build/html"
+    // builder = "html"
+}
+
+assemble.dependsOn sphinx

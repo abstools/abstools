@@ -29,11 +29,14 @@ Folders
   instructions.
 
 * `abs-models.org` - Source for the https://abs-models.org website.
-  See the README.org file in that subdirectory for deployment information.
+  See the README.org file in that subdirectory for deployment
+  information.  DEPRECATED: content will be moved below `website/` and
+  put under sphinx.
 
 * `abs-docs` - the ABS language manual, available online at
   <http://abs-models.org/manual/>.  To generate the manual locally,
-  run `make manual`.
+  run `make manual`.  DEPRECATED: asciidoc content will be moved below
+  `website/` and maintained with the rest of the website.
 
   * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual,
     now mostly of historical interest
