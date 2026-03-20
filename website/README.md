@@ -7,8 +7,8 @@ nreference manual.
 
 - [X] Set up basic build infrastructure
 - [ ] Implement links to examples (local vs online collaboratory)
-- [ ] Convert Overview
-- [ ] Convert Getting Started
+- [X] Convert Overview
+- [X] Convert Getting Started
 - [ ] Convert Documentation/Examples
 - [ ] Convert Documentation/Tutorials
 - [ ] Convert ABS Language Manual
