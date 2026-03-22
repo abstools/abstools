@@ -885,13 +885,9 @@ aspect GenerateJava {
     public void PatternVar.generateJavaConditions(PrintStream stream, AtomicInteger counter, AtomicBoolean first, Set<String> boundVars) { }
 
     public void UnderscorePattern.generateJava(PrintStream stream, AtomicInteger counter) {
-        // when we use java >= 24, we can use `_` instead.
-        int depth = distanceTo(Decl.class);
-        stream.print("java.lang.Object $" + counter.incrementAndGet() + "$" + depth);
+        stream.print("_");
     }
-    public void UnderscorePattern.generateJavaConditions(PrintStream stream, AtomicInteger counter, AtomicBoolean first, Set<String> boundVars) {
-        counter.incrementAndGet();
-    }
+    public void UnderscorePattern.generateJavaConditions(PrintStream stream, AtomicInteger counter, AtomicBoolean first, Set<String> boundVars) { }
 
     public void PatternVarUse.generateJava(PrintStream stream, AtomicInteger counter) {
         int depth = distanceTo(Decl.class);
