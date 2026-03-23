@@ -5,21 +5,11 @@ ABS Tools
 [![Gitter](https://badges.gitter.im/abstools/general.svg)](https://gitter.im/abstools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Inside this repository we develop the core tools of the ABS modelling
-language.  The current language manual is at <https://abs-models.org/manual/>.
+language.  The current language manual is at
+<https://abs-models.org/manual/>.
 
-To compile the command-line compiler and manual, run `./gradlew assemble` (See <https://abs-models.org/getting_started/local-install/> for more information).
-
-To run the ABS collaboratory (a browser-based IDE for ABS) locally using
-Docker, execute the following command:
-
-    docker run -p 8080:80 --rm abslang/collaboratory:latest
-
-Then connect your browser to <http://localhost:8080/>.  It is not necessary to
-clone the repository or compile the toolchain to run the ABS collaboratory in this way.
-
-To run the absc compiler locally using docker, create a script such as
-<https://github.com/abstools/abstools/blob/master/frontend/src/main/resources/bash/absc-docker>
-and put it in your path.
+See <https://abs-models.org/getting_started/> on how to install or
+compile the tools.
 
 Folders
 -------
@@ -79,3 +69,4 @@ instead of adding a new local commit that merges the `master` and
 `origin/master` branches.  Conflicts have to be resolved per patch
 (via `git add` + `git rebase --continue`) instead of in one go, but we
 get a cleaner history.
+
