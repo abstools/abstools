@@ -16,7 +16,7 @@ docker collaboratory container and at https://abs-models.org.
 - [ ] Convert ABS Language Manual
 - [X] Convert Publications
 - [X] Convert Contact
-- [ ] Convert Acknowledgments
+- [X] Convert Acknowledgments
 
 
 
