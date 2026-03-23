@@ -1,0 +1,398 @@
+
+*********************************
+Software Product Line Engineering
+*********************************
+
+ABS supports the development of software product lines with a set of
+language constructs for defining system variants.  Following a
+feature-oriented software development approach, variants are described
+as sets of features.  Features and their dependencies are specified in
+a feature model.  Each feature has its corresponding ABS
+implementation.  A feature's implementation is specified in terms of
+the code modifications (i.e., additions and removals) that need to be
+performed to a variant of the system that does not include that
+feature in order to add it.  This style of programming is called
+delta-oriented programming.  The ABS code modules that encapsulate
+feature implementations are called delta modules (deltas).
+
+
+Delta-Oriented Programming
+==========================
+
+ABS supports the delta-oriented programming model, an approach that
+aids the development of a set of programs simultaneously from a single
+code base, following the software product line engineering approach.
+In delta-oriented programming, features defined by a feature model are
+associated with code modules that describe modifications to a core
+program.  In ABS, these modules are called *delta modules*.  Hence the
+implementation of a software product line in ABS is divided into a
+*core* and a set of delta modules.
+
+The core consists of a set of ABS modules that implement a complete
+software product of the corresponding software product line.  Delta
+modules (or *deltas* in short) describe how to change the core program
+to obtain new products.  This includes adding new classes and
+interfaces, modifying existing ones, or even removing some classes
+from the core.  Delta modules can also modify the functional entities
+of an ABS program, that is, they can add and modify data types and
+type synonyms, and add functions.
+
+Deltas are applied to the core program by the ABS compiler front
+end.  The choice of which delta modules to apply depends on the
+selection of a set of features, that is, a particular product of the
+SPL.  The role of the ABS compiler front end is to translate textual
+ABS models into an internal representation and check the models for
+syntax and semantic errors.  The role of the back ends is to generate
+code for the models targeting some suitable execution or simulation
+environment.
+
+.. table:: Syntax
+   :align: left
+   :class: syntax
+
+   =======================   =======================
+   *DeltaDecl* ::=           ``delta`` *SimpleTypeIdentifier*
+   \                         [ ``(`` *DeltaParam* { ``,`` *DeltaParam* } ``)`` ] ``;``
+   \                         [ *ModuleAccess* ] { *ModuleModifier* }
+   *DeltaParam* ::=          *Type* ( *SimpleIdentifier* | *QualifiedTypeIdentifier* )
+   \                         *HasCondition*
+   *HasCondition* ::=        ``hasField`` FieldDecl
+   \                         \| ``hasMethod`` MethSig
+   \                         \| ``hasInterface`` TypeId
+   *ModuleAccess* ::=        ``uses`` *TypeId* ``;``
+   *ModuleModifier* ::=      ``adds`` *ClassDecl*
+   \                         \| ``removes`` ``class`` *TypeIdentifier* ``;``
+   \                         \| ``modifies`` ``class`` *TypeIdentifier*
+   \                         \ [``adds`` *TypeIdentifier* { ``,`` *TypeIdentifier* } ]
+   \                         \ [``removes`` *TypeIdentifier* { ``,`` *TypeIdentifier* } ]
+   \                         \ ``{`` { ClassModifier } ``}``
+   \                         \| ``adds`` *InterfaceDecl*
+   \                         \| ``removes`` ``interface`` *TypeIdentifier* ``;``
+   \                         \| ``modifies`` ``interface`` *TypeIdentifier*
+   \                         \ ``{`` { *InterfaceModifier* } ``}``
+   \                         \| ``adds`` *FunctionDecl*
+   \                         \| ``adds`` *DataTypeDecl*
+   \                         \| ``modifies`` *DataTypeDecl*
+   \                         \| ``adds`` *TypeSynDecl*
+   \                         \| ``modifies`` *TypeSynDecl*
+   \                         \| ``adds`` *Import*
+   \                         \| ``adds`` *Export*
+   *ClassModifier* ::=       ``adds`` *FieldDecl*
+   \                         \| ``removes`` *FieldDecl*
+   \                         \| ``adds`` *Method*
+   \                         \| ``modifies`` *Method*
+   \                         \| ``removes`` *MethodSig*
+   *InterfaceModifier* ::=   ``adds`` *MethodSig*
+   \                         \| ``removes`` *MethodSig*
+   =======================   =======================
+
+
+The *DeltaDecl* clause specifies the syntax of delta modules,
+consisting of a unique identifier, an optional list of delta
+parameters, an optional module access directive, and a sequence of
+module modifiers.
+
+The *ModuleAccess* clause specifies the semantics of unqualified
+identifiers within a delta.  Any identifiers without namespace prefix
+will be resolved as if they occurred in the module named in the
+*ModuleAccess* clause.  A delta can always make additions and
+modifications in any module by fully qualifying the *TypeName* within
+module modifiers.  New program elements (classes, interfaces, etc.)
+with unqualified names are added to the module given in the ``uses``
+clause; it is an error to add new program elements with unqualified
+names in a delta that does not have a ``uses`` clause.
+
+While delta modeling supports a broad range of ways to modify an ABS
+model, not all ABS program entities are modifiable.  These unsupported
+modifications are listed here for completeness.  While these
+modifications could be easily specified and implemented, we opted not
+to overload the language with features that have not been regarded as
+necessary so far.
+
+Class parameters and init block
+  Deltas currently do not support the modification of class parameter
+  lists or class init blocks.
+
+Functions
+  Deltas currently only support adding functions, and adding and
+  modifying data types and type synonyms. Removal is not supported.
+
+Modules
+  Deltas currently do not support adding new modules or removing
+  modules.
+
+Imports and Exports
+  While deltas do support the addition of import and export statements
+  to modules, they do not support their modification or removal.
+
+Main block
+  Deltas currently do not support the modification of the program's
+  main block.
+
+
+The Feature Model
+=================
+
+Software variability is commonly expressed using features which can be
+present or absent from a product of the product line.  Features are
+defined and organised in a feature model, which is essentially a set
+of logical constraints expressing the dependencies between
+features.  Thus the feature model defines a set of legal feature
+combinations, which represent the set of valid software variants that
+can be built.
+
+Specifying the Feature Model
+----------------------------
+
+The *FeatureModel* clause specifies a number of "orthogonal" root feature
+models along with a number of extensions that specify additional constraints,
+typically cross-tree dependencies.  Its grammar is as follows:
+
+.. table:: Syntax
+   :align: left
+   :class: syntax
+
+   ======================   ==========================
+   *FeatureModel* ::=       { ``root`` *FeatureDecl* } { *FeatureExtension* }
+   *FeatureDecl*  ::=       *FName* [ ``{`` [ *Group* ] { *AttributeDecl* } { *Constraint* } ``}`` ]
+   *FeatureExtension* ::=   ``extension`` *FName* ``{`` { *AttributeDecl* } { *Constraint* } ``}``
+   *Group* ::=              ``group`` *Cardinality*
+   \                        ``{`` [ ``opt`` ] *FeatureDecl* { ``,`` [ ``opt`` ] *FeatureDecl* } ``}``
+   *Cardinality* ::=        ``allof`` | ``oneof`` | ``[`` *IntLiteral* ``..`` *Limit* ``]``
+   *AttributeDecl* ::=      ``Int`` *AName* ``;``
+   \                        \| ``Int`` *AName* ``in`` ``[`` *Limit* ``..`` *Limit* ``]`` ``;``
+   \                        \| ``Int`` *AName* ``in`` ``{`` *IntLiteral* { ``,`` *IntLiteral* } ``}`` ``;``
+   \                        \| ``Bool`` *AName* ``;``
+   \                        \| ``String`` *AName* ``;``
+   *Limit* ::=              *IntLiteral* | ``*``
+   *Constraint* ::=         *Expr* ``;``
+   \                        \| ``ifin`` ``:``  *Expr* ``;``
+   \                        \| ``ifout`` ``:`` *Expr* ``;``
+   \                        \| ``require`` ``:`` *FName* ``;``
+   \                        \| ``exclude`` ``:`` *FName* ``;``
+   *Expr* ::=               ``True``
+   \                        \| ``False``
+   \                        \| *IntLiteral*
+   \                        \| *StringLiteral*
+   \                        \| *FName*
+   \                        \| *AName*
+   \                        \| *FName* ``.`` *AName*
+   \                        \| *UnOp* *Expr*
+   \                        \| *Expr* *BinOp* *Expr*
+   \                        \| ``(`` *Expr* ``)``
+   *UnOp* ::=               ``!`` | ``-``
+   *BinOp* ::=              ``||`` | ``&&`` | ``\->`` | ``<->`` | ``==`` | ``!=`` | ``>`` | ``<`` | ``>=`` | ``<=`` | ``+`` | ``-`` | ``*`` | ``/`` | ``%``
+   ======================   ==========================
+
+
+Attributes and values range over integers, strings or booleans.
+
+The *FeatureDecl* clause specifies the details of a given feature,
+firstly by giving it a name (*FName*), followed by a number of
+possibly optional sub-features, the feature's attributes and any
+relevant constraints.
+
+The *FeatureExtension* clause specifies additional constraints and
+attributes for a feature, and if the extended feature has no children
+a group can also be specified.  This is particularly useful for
+specifying constraints that do not fit into the tree structure given
+by the root feature model.
+
+Here is an example feature model for the ``DeltaResourceExample``
+product line, defining valid combinations of features and valid ranges
+of parameters for cost, capacity and number of machines::
+
+  root Calculations {
+    group oneof {
+      Wordcount,
+      Wordsearch
+    }
+  }
+
+  root Resources {
+    group oneof {
+      NoCost,
+      Cost { Int cost in [ 0 .. 10000 ] ; }
+    }
+  }
+
+  root Deployments {
+    group oneof {
+      NoDeploymentScenario,
+      UnlimitedMachines { Int capacity in [ 0 .. 10000 ] ; },
+      LimitedMachines { Int capacity in [ 0 .. 10000 ] ;
+        Int machinelimit in [ 0 .. 100 ] ; }
+    }
+  }
+
+
+Feature Model Reflection
+------------------------
+
+There is support for limited reflection on the feature model and
+configured product in the module ``ABS.Productline``.  The datatype
+``Feature`` contains constructors for all feature names.  The function
+``product_features`` returns a list of features contained in the
+current product, and ``product_name`` returns the name of the product,
+or the empty string if no product was specified.
+
+The following sample code shows the usage, assuming that product
+``Product`` was generated::
+
+  module Test;
+  import * from ABS.Productline;
+
+  {
+    List<Feature> foo = product_features(); // => Cons(FeatureA, Cons(FeatureC, Nil))
+    String name = product_name();           // => "Product"
+  }
+
+  productline Test;
+  features FeatureA, FeatureB, FeatureC;
+
+  product Product(FeatureA, FeatureC);
+
+
+Software Product Lines and Products
+===================================
+
+A (software) product line is a set of software variants that can be
+built by selecting any combination of features allowed by the feature
+model and applying the deltas that provide the implementation for
+those features to the core program.  How features are associated with
+their implementation is defined in ABS with a *SPL configuration*.
+
+An ABS *product* is simply a set of features associated with a name.
+
+
+Specifying the Product Line
+---------------------------
+
+The ABS configuration language links feature models, which describe
+the structure of a SPL, to delta modules which implement behavior.
+The configuration defines, for each selection of features satisfied by
+the product selection, which delta modules should be applied to the
+core.  Furthermore, it guides the code generation by ordering the
+application of the delta modules.
+
+.. table:: Syntax
+   :align: left
+   :class: syntax
+
+   ===================   ===================
+   *Configuration* ::=   ``productline`` *TypeId* ``;`` *Features* ``;`` { *DeltaClause* }
+   *Features*      ::=   ``features`` *FName* { ``,`` *FName* }
+   *DeltaClause*   ::=   ``delta`` *DeltaSpec* [ *AfterClause* ] [ *WhenClause* ] ``;``
+   *DeltaSpec*     ::=   *DeltaName* [ ``(`` *DeltaParams* ``)`` ]
+   *DeltaName*     ::=   *TypeId*
+   *DeltaParams*   ::=   *DeltaParam* { ``,`` *DeltaParam* }
+   *DeltaParam*    ::=   *FName* {vbar} *FName* ``.`` *AName*
+   *AfterClause*   ::=   ``after`` *DeltaName* { ``,`` *DeltaName* }
+   *WhenClause*    ::=   ``when`` *AppCond*
+   *AppCond*       ::=   *AppCond* ``&&`` *AppCond*
+   \                     \| *AppCond* ``{vbar}{vbar}`` *AppCond*
+   \                     \| ``!`` *AppCond*
+   \                     \| ``(`` *AppCond* ``)``
+   \                     \| *FName*
+   ===================   ===================
+
+
+Features and delta modules are associated through *application
+conditions* (a.k.a. *activation conditions*), which are logical
+expressions over the set of features and attributes in a feature
+model.  The collection of applicable delta modules is given by the
+application conditions that are true for a particular feature and
+attribute selection.  By not associating the delta modules directly
+with features, a degree of flexibility is obtained.
+
+Each delta clause has a *DeltaSpec*, specifying the name of a delta
+module name and, optionally, a list of parameters; an *AfterClause*,
+specifying the delta modules that the current delta must be applied
+after; and an application condition *AppCond*, specifying an arbitrary
+predicate over the feature names (*FName*) and attribute names
+(*AName*) in the feature model that describes when the given delta
+module is applied.
+
+Example::
+
+  productline DeltaResourceExample;
+  features Cost, NoCost, NoDeploymentScenario, UnlimitedMachines, LimitedMachines, Wordcount, Wordsearch;
+  delta DOccurrences when Wordsearch;
+  delta DFixedCost(Cost.cost) when Cost;
+  delta DUnboundedDeployment(UnlimitedMachines.capacity) when UnlimitedMachines;
+  delta DBoundedDeployment(LimitedMachines.capacity, LimitedMachines.machinelimit) when LimitedMachines;
+
+
+Specifying Products
+-------------------
+
+ABS allows the developer to name products that are of particular
+interest, in order to easily refer to them later when the actual code
+needs to be generated.  A product definition states which features are
+to be included in the product and sets attributes of those features to
+concrete values.  In the simplest case products are declared directly,
+by listing the features that they include.  It is also possible to
+declare products based on other products using *product expressions*.
+Product expressions use set-theoretic operations (union, intersection,
+complement) over products and sets of features.
+
+
+.. table:: Syntax
+   :align: left
+   :class: syntax
+
+   ==========================   ==================
+   *Selection* ::=              ``product`` *TypeId* ( ``(`` *FeatureSpecs* ``)`` ``;`` | ``=`` *ProductExpr* ``;`` )
+   *ProductExpr* ::=            ``{`` *FeatureSpecs* ``}``
+   \                            \| *ProductExpr* ``&&`` *ProductExpr*
+   \                            \| *ProductExpr* ``{vbar}{vbar}`` *ProductExpr*
+   \                            \| *ProductExpr* ``-`` *ProductExpr*
+   \                            \| *TypeId*
+   \                            \| ``(`` *ProductExpr* ``)``
+   *FeatureSpecs* ::=           *FeatureSpec* { ``,`` *FeatureSpec* }
+   *FeatureSpec* ::=            *FName* [ *AttributeAssignments* ]
+   *AttributeAssignments* ::=   ``{`` *AttributeAssignment* { ``,`` *AttributeAssignment* } ``}``
+   *AttributeAssignment* ::=    *AName* ``=`` *Literal*
+   ==========================   ==================
+
+Here are some product definitions for the ``DeltaResourceExample``
+product line::
+
+  product WordcountModel (Wordcount, NoCost, NoDeploymentScenario);
+  product WordcountFull (Wordcount, Cost{cost=10}, UnlimitedMachines{capacity=20});
+  product WordsearchFull (Wordsearch, Cost{cost=10}, UnlimitedMachines{capacity=20});
+  product WordsearchDemo (Wordsearch, Cost{cost=10}, LimitedMachines{capacity=20, machinelimit=2});
+
+Here are some product definitions for the ``CharityOrganizationExample`` with ``ProductExpr``::
+
+  product Org1 = SekolahBermainMatahari || {Continuous};
+  product Org2 = SekolahBermainMatahari || {Continuous, Automatic_Report};
+  product Org3 = SekolahBermainMatahari || PKPU;
+  product Org4 = SekolahBermainMatahari || PKPU || RamadhanForKids;
+  product Org5 = SekolahBermainMatahari || PKPU || RamadhanForKids || BeriBuku;
+  product Org6 = SekolahBermainMatahari && RamadhanForKids;
+  product Org7 = SekolahBermainMatahari && BeriBuku;
+  product Org8 = SekolahBermainMatahari - {Eventual};
+  product Org9 = SekolahBermainMatahari - {Eventual, Income};
+  product Org10 = SekolahBermainMatahari && RamadhanForKids || {Money, Item};
+  product Org11 = SekolahBermainMatahari && (RamadhanForKids || {Money, Item});
+
+
+Checking the SPL
+----------------
+
+Because the number of variants in an SPL can be very large, checking
+them efficiently (e.g., to ensure that they are all well-typed) is
+challenging.  Building each variant in order to type-check it is
+usually not feasible from a performance perspective.  Instead, the ABS
+compiler employs a number of efficient consistency checks. These fall
+into two categories.
+
+* *Family-based* analysis steps operate on the SPL definition itself,
+* Analysis steps operate on lightweight *abstractions* of the SPL
+  variants.
+
+These checks are performed automatically upon compilation and help
+ensure that all variants defined by an SPL specified in ABS can be
+built and are well-typed ABS programs.
+

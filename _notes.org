@@ -1,0 +1,1416 @@
+#+Title: Notes for ABS
+#+TODO: TODO | DONE
+#+TODO: | ARCHIVED
+#+Time-stamp: <2026-03-26 21:43>
+
+* TODOs [17/51]
+** TODO Integrate manual into website
+
+See [[file:~/Sync/Documents/Org/roam/markup.org::*reStructured Text][reStructured Text]] for language server, emacs support
+
+Configuration: [[https://www.sphinx-doc.org/en/master/usage/configuration.html][Configuration — Sphinx documentation]]
+- html_logo
+- html_favicon
+- html_show_copyright
+- html_math_renderer
+
+** TODO Implement ~destiny~ in Java backend
+** TODO Fix hang in Java-backend in resource-overload example
+
+file:~/Sync/Source/abs/absexamples/collaboratory/examples/resource-modeling/basic-model-resources-v3.abs
+
+Will hang nondeterministically; thankfully both with and without logging.
+
+- [ ] Check how to get backtrace of all threads
+
+** TODO Document productlines
+
+Transfer contents from old Latex manual at [[file:abs-docs/ReferenceManual/featuremodel.tex::\chapter{Feature Modelling}][featuremodel.tex]]
+
+In-the-wild code examples:
+- [[file:examples/T4.3/D4.3.1/FredhopperCloudServices.abs::productline ProduceLine;][FredhopperCloudServices.abs]]
+- [[file:frontend/examples/MapReduce.abs::productline DeltaResourceExample;][MapReduce.abs]]
+- [[file:examples/T4.2/D4.2.1/Indexing.abs::productline DeltaResourceExample;][Indexing.abs]]
+- [[file:frontend/examples/chatPL/][chatPL files]]
+- [[file:frontend/examples/fredhopper-replication-abssingle-vamos2012/ReplicationSystem.abs::productline RS;][ReplicationSystem.abs]]
+
+** TODO Adapt Java backend to Java 25
+
+- Investigate scoped values
+- Investigate ~Console~ class
+- Investigate ~Reader.readAllLines()~
+
+- See comment in GenerateJava.jadd re Java 21
+- See comment in TypeCheckerHelper.java
+
+** TODO Fix trait-related JastAdd warnings
+
+#+begin_example
+Warning at /Users/rudi/Sync/Source/abstools/frontend/src/main/java/org/abs_models/frontend/typechecker/NodeNames.jrag:47: missing inherited equation for attribute deltaName in class MethodModifier when being child of TraitModifyExpr (path: CoreCompilationUnit->ModuleDecl->TraitDecl->TraitModifyExpr->MethodModifier)
+
+#+end_example
+
+** TODO In the manual, explain cogs before using the term
+** TODO Research non-string query language embeding
+
+... for SQL and SPARQL
+
+- linq
+- [[https://kirancodes.me/posts/log-ways-of-sql-in-ocaml.html][Petrol: embedding a type-safe SQL API in OCaml using GADTs]]
+
+** TODO Implement semantic lifting
+
+- Documentation at [[https://smolang.org/language/semantic-access.html][Semantic Access — The SMOL Language documentation]]
+
+- Implementation at https://github.com/smolang/SemanticObjects/blob/master/src/main/kotlin/no/uio/microobject/data/TripleManager.kt ?
+
+- [X] Use ~SystemObserver~ class, register object listeners when cog is created
+- [X] Use [[https://www.w3.org/TR/2014/REC-turtle-20140225/][RDF 1.1 Turtle]] Section 2.5 to serialize data values, Sections 2.7, 2.8 for ADTs
+- [X] Emit ABS namespaces for class, constructor names
+- [X] Note each cog's deployment component
+- [X] Emit program ontology: types for constructors, interfaces for classes, fields for classes
+- [ ] Design, emit ABS ontology: what's a class, interface, cog, field, datatype, data constructor
+- [ ] Implement in-ABS SELECT queries -- done in principle, with single-variable string results for now
+
+  [[file:frontend/src/main/java/org/abs_models/backend/java/codegeneration/JavaGeneratorHelper.java::public static void generateSparqlBody(PrintStream stream, BuiltinFunctionDef body) {][generateSparqlBody]] -- see ~generateSqlite3Body~ directly above
+
+  [[https://jena.apache.org/documentation/query/parameterized-sparql-strings.html][Apache Jena - Parameterized SPARQL String]] -- use this instead of string concatenation (Claude chat: [[https://claude.ai/chat/4f58ad95-13a2-4cc2-8c1c-7d73117f1c08][Java Code Generation for SPARQL Queries - Claude]])
+
+- [ ] Implement in-ABS ASK (boolean) queries
+- [ ] Add domain ontology: SMOL bedreflyt, GeoAssistant, ...
+- [ ] Add predicates / modeling bridge (like ~containtsPositive~ in smol)
+- [X] Use hashes for classes and interfaces, use rdf:label to name them (labels do not need to be unique)
+- [ ] Make abs:class, abs:interface, abs:datatype subclasses of owl:class
+- [ ] Fix stack overflow addDataValueTriples <-> addFieldTriples lines (246->231)*->242 then into jena
+
+- [[https://www.w3.org/TR/owl2-overview/][OWL 2 Web Ontology Language Document Overview (Second Edition)]]
+- [[https://www.w3.org/TR/2012/REC-owl2-mapping-to-rdf-20121211/][OWL 2 Web Ontology Language Mapping to RDF Graphs (Second Edition)]]
+
+- ecoop paper: three-part ontology
+
+- Anton Haubner's thesis: Java introspection
+  - Pg. 58 arrays
+  - Pg. 66 runtime state
+  - Pg. 76 language ontology
+  - Pg. 92 libraries used
+
+- [[https://link.springer.com/chapter/10.1007/978-3-030-33223-5_3][OOC-O: A Reference Ontology on Object-Oriented Code | SpringerLink]] -- too abstract?
+- [[https://link.springer.com/chapter/10.1007/978-3-319-68204-4_2][CodeOntology: RDF-ization of Source Code | SpringerLink]] -- gives RDF examples
+- [[https://link.springer.com/chapter/10.1007/978-3-030-77385-4_8][Programming and Debugging with Semantically Lifted States | SpringerLink]] and [[https://www.duo.uio.no/bitstream/handle/10852/85662/report.pdf?sequence=1&isAllowed=y][https://www.duo.uio.no/bitstream/handle/10852/85662/report.pdf?sequence=1&isAllowed=y]]: smol
+
+** TODO Implement ~try-catch-finally~, ~abort~, ~die~ in Java backend
+
+- Add two slots to futures: for value and exception
+- re-throw exceptions during ~get~; unblock ~await~
+- Figure out pattern-matching of exceptions: is it possible when we
+  inherit from Exception instead of being a record datatype?
+  - Otherwise introduce JavaAbsRuntimeException class: wrap when doing
+    throw, unwrap in catch
+- Implement recover block: implement as Java method, call it from
+  top-level catch
+
+[[file:frontend/src/main/java/org/abs_models/backend/java/lib/runtime/ABSFut.java::public synchronized void await(COG cog, Task<?> task)]] seems to throw the received exception?
+
+** TODO Revive abs-foreign-interface
+
+- Convert to new-style datatypes
+  - ABSString to String
+  - ABSBool to Boolean
+  - ABSFloat to Float
+  - ABSInteger to Apint
+  - ABSRational to Aprational
+
+- Document
+
+- Move into =examples/=, integrate into unit tests
+
+PyMetabiosis {LWN.net}]]
+#+begin_quote
+Ultimately, though, PyMetabiosis is just another slow compatibility layer that
+has different properties from other choices, he said. He would like to see an
+effort to incrementally improve the C extension API. He suggested looking at
+the APIs provided by other languages, such as those for Java (using the Java
+Native Interface), V8 JavaScript, Lua, or Julia, which are "way more"
+implementation independent.
+[...]
+Nick Coghlan said that the C Foreign Function Interface (CFFI) should be
+refactored so that it can serve as an extension module generator. CFFI is
+based on Lua's C API. Glyph Lefkowitz suggested that extension developers are
+often ignoring CFFI; when they actually try to use it, CFFI generally solves
+their problems, he said. The key is to get people to stop hand coding their C
+extensions, Coghlan said.
+#+end_quote
+
+** TODO Update erlang dependencies
+
+Updating cowboy to 2.11.0 fails the unit tests for model api and record/replay
+
+** TODO Add producer-consumer, regex examples to website
+** TODO Support csv files as data source
+
+Implement this via importing the csv files into an in-memory SQLite database, then continuing with the existing code path :)
+
+** TODO Support parameterized datatypes as query result
+
+This should work:
+
+#+begin_src abs
+def List<Triple<String, Rat, Rat>> componentCosts() =
+    builtin(sqlite3, "calibration.db",
+            "SELECT component, constant_factor, variable_factor FROM factors");
+#+end_src
+
+** TODO Add Java backend to collaboratory
+** TODO Revive SimpleGlobalScheduler in Java backend
+
+Check by starting with =--totalscheduler= or =--globalscheduler
+simpleGlobalScheduler= command-line arguments
+
+** TODO Check crashing SACO etc.
+
+The prolog backend seems to produce invalid/unexpected syntax for the old tools
+
+** TODO Revise handling of ~HTTPName~ annotations
+
+- Only consider them on variable or field declarations, /not/ on assignment
+  statements
+- At assignment statements, check if variable/field declaration has a ~HTTPName~
+  declaration, and update export map if so
+- Fix / clarify documentation
+
+** TODO Investigate conflicting ~map~ function definitions
+
+We have ~map~ as Map constructor, and ~map~ as higher-order function.  How
+did the tests ever work?
+
+** TODO Investigate erlang.crash_dump file for erlang exception handling
+
+Tests leave a crash dump during "division by zero" test
+
+** TODO Update ReplicationSystem.abs testfile
+
+Identify how it uses maps, and add missing functions to standard
+library.
+
+** TODO Forbid ~new local~ in main block
+
+- Adapt unit tests
+
+** TODO Eliminate all JastAdd rewrite rules
+
+... they are too problematic wrt type checker etc., contributors need
+to know when to use ~NoRewrite~ method variants and when not
+
+** TODO Add vale style checking for documentation
+
+[[https://lwn.net/Articles/964623/][LWN.net Weekly Edition for March 14, 2024 [LWN.net]​]]
+
+** TODO Research "runnable" documentation examples for website / manual
+
+This means checking if code runs while compiling the documentation
+
+Use sphinx custom directives?
+
+- check SMOL manual / website
+
+Hillel Wayne about Sphinx:
+- [[https://buttondown.com/hillelwayne/archive/software-im-thankful-for/][Software I'm Thankful For • Buttondown]]
+- [[https://buttondown.com/hillelwayne/archive/new-workshop-some-data-ish-pipeline-tricks/][New Workshop, Some Data-ish Pipeline Tricks • Buttondown]]
+- [[https://buttondown.com/hillelwayne/archive/software-mise-en-place/][Software Mise en Place • Buttondown]]
+- [[https://github.com/hwayne/sphinx-github-action-test][hwayne/sphinx-github-action-test]]: ｢A quick repo for testing compiling a sphinx doc and syncing it with S3｣
+
+- Create an index from Sphinx
+
+- Sphinx documentation formats (info, epub): see https://github.com/Ravenbrook/mps/blob/master/manual/Makefile
+
+** TODO Check out codapi for live code in documentation
+
+This means running code in the browser
+
+[[https://codapi.org/][codapi: Interactive code examples]]: ｢Codapi has two implementations: one completely browser-based and one with a Docker container on the backend. The first implementation uses WebAssembly to run Python, PHP, Ruby, Lua, or SQLite code in a sandboxed execution environment, completely in-browser. The other implementation connects to a Docker container on a server, which can run other language environments.｣
+
+[[https://fosdem.org/2024/schedule/event/fosdem-2024-2125-embeddable-code-playgrounds-for-fun-and-profit/][FOSDEM 2024 - Embeddable code playgrounds for fun and profit]] (presentation)
+
+[[https://lwn.net/Articles/963037/][Treating documentation as code [LWN.net]​]]
+
+** TODO ABS documentation generator
+
+Check if we can use markdown-flavored Javadoc format, see [[https://openjdk.org/jeps/467][JEP 467: Markdown Documentation Comments]]
+
+Implement pbook approach: use customized prefix/suffix/per-line prefix
+
+: absc -doc -output=markdown
+: absc -doc -output=org
+: absc -doc -line-prefix=": "
+: absc -doc -code-prefix="#+begin_src abs" -code-suffix="#+end_src"
+
+OR
+
+implement comment syntax ~/**~ that isn't skipped by antlr, is saved
+as ~Comment~ annotation; create new backend that looks for comments
+hanging off classes etc.
+
+Check antlr book pg. 208 (“Accessing hidden channels”) on how to find
+comments connected to a syntactic entity
+
+** TODO Get =fly= running with abstools
+
+[[https://fly.io/][Deploy app servers close to your users · Fly]]
+
+Check =flyctl= command
+
+** TODO Investigate dagger to implement CI/CD
+
+Check if it's possible to compile, deploy with [[id:F1B2ADF4-CE4F-4662-9ABC-71BC3FC873AB][Dagger]]
+
+** TODO Publish vs code plugin on Open VSX
+
+[[https://www.eclipse.org/community/eclipse_newsletter/2020/march/1.php][Eclipse Open VSX: A Free Marketplace for VS Code Extensions | The Eclipse Foundation]]
+
+** TODO Query running machines from CloudProvider (getMachines())
+
+   [[file:~/Source/abstools/frontend/src/abs/lang/abslang.abs:://%20launchInstance%20might%20hand%20out%20an%20already-running%20instance%20if%20it%20has][file:~/Source/abstools/frontend/src/abs/lang/abslang.abs::// launchInstance might hand out an already-running instance if it has]]
+
+** TODO Machine lifecycle for deployment components: query it from the DC
+
+   [[file:~/Source/abstools/frontend/src/abs/lang/abslang.abs:://%20consumption%3B%20they%20are%20changed%20by%20the%20underlying%20runtime%20system.][file:~/Source/abstools/frontend/src/abs/lang/abslang.abs::// consumption; they are changed by the underlying runtime system.]]
+
+** TODO Fix stack overflow in JastAdd
+
+Related error:
+[[https://bitbucket.org/jastadd/jastadd2/issue/91/iterative-evaluation-of-inherited][jastadd / jastadd2 / issues / #91 - Iterative evaluation of inherited attributes — Bitbucket]]
+
+Test case:
+[[file:~/Source/tmp/stackoverflow.abs::"would","better","complement","complement%20its","its%20wednesday","wednesday",][file:~/Source/tmp/stackoverflow.abs]]
+or
+file:~/Source/envisage/WP4/T4.2/integrated/10wikipediadocstokenized.abs::module%20Texts%3B
+
+** DONE Set up devcontainer
+
+see [[https://containers.dev/][Development containers]]
+
+Currently fails at Sphinx build step on MacOS
+
+- brew install devcontainer or similar
+- devcontainer up
+- devcontainer exec --workspace-folder . ./gradlew assemble
+
+** DONE Switch constraint solver
+
+- Grep for ~import choco~
+
+- Add all constraints immediately
+
+*** Use JSR331 library?
+
+JSR331 documentation:
+- pg. 18: constraint types
+- pg. 28: constrainedVariable.set|getObject; integer variables; always have bounds; boolean xor: constraint AllDifferent
+- pg. 29, 30: implication: constraint IfThen, implies, negation
+- pg. 33: example
+
+*** ChocoSolver.java
+
+Only instantiated in CSP.jadd ~Model.instantiateCSModel~
+
+- Expose inner model; we need it to add constraints since there's no classes for them anymore.
+- ✅ Identify entrypoints
+- Rewrite to use newer libraries
+- Figure out what to do with unconstrained variables
+  - don't add to model, only record default value? (there's a pretty-printer somewhere that checks the value)
+
+*** CSP.jadd
+
+- We seem to use boolean and integer variables interchangeably, e.g.,
+  in ~Group.includeGroupConstraints~ where we use boolean feature variables
+
+- Rewrite to use newer libraries
+- Add higher-level interface for constraint construction
+- Constraints, and their surface syntax:
+  - ~AllOf~ -- ~allof~
+  - ~Minim(from)~ -- ~[from .. *]~
+  - ~CRange(from, to)~ -- ~oneof~ OR ~[from .. to]~
+
+*** ProductConstraints.jadd
+
+file:frontend/src/main/java/org/abs_models/frontend/mtvl/ProductConstraints.jadd
+
+** DONE Use Java virtual threads
+
+See docs in Java 21: [[https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html#GUID-2BCFC2DD-7D84-4B0C-9222-97F9C7C6C521][Virtual Threads]]
+
+- We subclass ~Thread~ as ~ABSThread~; this does not seem to be supported?
+- Introduce static methods to create ~ABSThread~ instances; use ~ABSThread.ofVirtual~ and
+  #+begin_src java
+  ThreadFactory factory = ABSThread.ofVirtual().factory();
+  #+end_src
+
+  NOTE: this likely won't work
+- OR: use thread-local variables
+
+- OR: create an explicit Runnable subclass; use that to hold
+  variables, methods that used to be in ABSThread
+
+- Introduce a flag to use virtual threads or not
+
+** DONE Implement recording of all output of model
+
+- Synchronize: only exit main block after all objects are done
+
+** DONE Use Java Records, pattern matching, instanceof pattern matching
+
+see [[https://docs.oracle.com/en/java/javase/21/language/records.html][Record Classes]], [[https://docs.oracle.com/en/java/javase/21/language/sealed-classes-and-interfaces.html][Sealed Classes]]
+
+see  [[https://docs.oracle.com/en/java/javase/21/language/pattern-matching-switch.html][Pattern Matching for switch Expressions and Statements]], [[https://docs.oracle.com/en/java/javase/21/language/record-patterns.html][Record Patterns]] for recursive matching
+
+Implement like this: [[https://docs.oracle.com/en/java/javase/21/language/sealed-classes-and-interfaces.html#GUID-0C709461-CC33-419A-82BF-61461336E65F__RECORDS_AS_PERMITTED_SUBCLASSES][Sealed Classes]] -- or use local classes?
+- Datatype: sealed interface, enumerating the constructors
+- Constructors: record class, implementing that interface
+
+- OR use inner records for each constructor, abstract class for datatype -- no, cannot pattern-match against qualified record names (only qualified enum constants)
+
+- To compare against literals: use ~case String s when s.equals("value") ->~ ...
+
+- [[https://docs.oracle.com/en/java/javase/21/language/pattern-matching.html][Pattern Matching]] -- without ~_~ (wildcard) support, sadly
+
+- Need to figure out how to match against local variables -- likely we'll need to establish binding patterns "outside" the statement containing the expression :(
+
+** DONE Make Cog not be a subclass of ABSValue
+** DONE Merge website repo into abstools repo [3/3]
+
+Put website into main repository?: https://stackoverflow.com/questions/1683531/how-to-import-existing-git-repository-into-another/62104099#62104099
+
+- [X] Merge repo using this technique: [[https://stackoverflow.com/questions/1683531/how-to-import-existing-git-repository-into-another][merge - How to import existing Git repository into another? - Stack Overflow]]
+- [X] Adapt docker scripts
+- [X] Adapt deployment instruction in =website/README.md=
+
+** DONE revise logging
+
+Loggin on FINE:
+- Clock advanced
+- Method call sent
+- Method call finished
+- Object created
+
+** DONE Investigate race condition in test case =resource_accounting=
+
+~notifyCogInactive~ is sometimes called before ~notifyCogActive~.  Once
+the clock is updating, it's inside a synchronized method and will run
+its course.
+
+
+Test file: file:~/Sync/Source/abstools/frontend/src/test/resources/abssamples/backend/TimeTests/resource_accounting.abs
+
+- We sometimes get accumulated cost 6 instead of 5
+
+- Check if signalling future completion synchronously would fix it?
+
+- When we call ~await~ or ~get~:
+  - register task or process with the future
+  - after ~wait~ has returned, register busy state with cog and afterwards
+    confirm to future.
+  - Future filling (i.e., the ~return~ statement) becomes a two-phase affair:
+    first fill future, then wait for every listener to confirm.
+
+- Use a ~java.util.concurrent.CountDownLatch~ instance instead: future waits for confirmation from all threads without every thread having to synchronize on the future object
+  - ... a ~CountDownLatch~ did not help, at least without synchronizing with the cog before responding to the future; maybe it is the method calls in addition to the return statements that are "unsynchronized"?
+
+** DONE Implement Model API in Java backend [12/15]
+
+- [X] Add web listener
+- [X] Default 404 handler
+- [X] handle =HTTPName= annotation
+- [X] handle =HTTPCallable= annotation
+- [X] Handle =/= (send back ~index.html~)
+- [X] Handle =/static=: send back file from resources
+- [X] Handle =/quit=: exit cleanly
+- [X] Handle =/o= (send back object state)
+- [X] Handle =/call=
+- [X] Handle =--modelapi-index-file=, =--modelapi-static-dir= parameters
+- [X] Handle =/clock=, =/clock/now=, =/clock/advance?by=5=
+- [X] Handle =/dcs=
+- [ ] Handle =/v2=
+- [ ] Handle =--url-prefix=
+- [ ] Test, especially with 0 and >1 parameters
+  - Print port number when starting with =-v=
+  - Move modelapi start/stop code into BackendTestDriver subclasses
+  - Rewrite using Jackson JSON library
+
+** DONE Java backend: change command-line parsing
+
+Use =-p 8080= instead of =-p=8080=
+
+** DONE Check Java versions > 11
+
+ChocoSolver doesn't play nice when testing with Java 17?
+
+** DONE Investigate hanging test case =time_advance_multiple_await1=
+
+- hangs without output
+
+- Do we count the main block as an active cog?  Seems we advance time before
+  we send out all requests!
+
+- The "worker" cog seems to send two =notifyInactive= calls without a paired
+  =notifyActive= call!
+  - Seems =activeTask= isn't properly cleared for =await duration= somehow?
+
+ABSRuntime.await(new ABSDurationGuard ...)
+- we set =activeTask= to =null= but another task might step in before we manage to
+  tell the cog about us..
+- Fix via letting the cog know /which/ cog sends the =notifyInactive= /
+  =notifyActive= call, so we can check for "is the currently running task
+  sending us this" and not only "is any task running currently".
+
+** DONE Investigate hanging test case =caseExpr1=
+
+- This test case and one other were run a different way than all others, and
+  it was unclear what they are testing -- delete them.
+
+** DONE Investigate failing unit test =TimeTests#resource_and_methods()=
+
+- Activate logging in [[file:~/Sync/Source/abstools/frontend/src/main/java/org/abs_models/backend/java/lib/runtime/StartUp.java::Logging.setLogLevel(options.logLevel.stringValue());][Startup.java]]: add =Logging.setLogLevel("finest");=
+- Test file is at ~abssamples/backend/TimeTests/resource_and_methods.abs~
+
+The relevant output is at the end of the log; no need to step through.
+
+Time never advances, since the cog has 49 other tasks "ready" to run--even
+though the current task is blocked the cog waiting on a resource.
+- How does =future.get= not deadlock time advance in a similar situation? (If
+  one task does a blocking =get= while other fresh tasks are in the inqueue?)
+
+- Should we have the thread set =cog.runningThread= to =null= before calling
+  await?  Then the cog notices an incoming =notifyAwait= call and knows the
+  process is blocked, not suspended.
+
+** DONE Implement =duration= *statement* in Java backend
+
+Protocol sketch for cog idle / blocked behavior:
+
+- The thread frees the cog's token, then calls =guard.await=.
+- The guard calls =cog.notifySuspend= etc.
+- The cog calls =runtime.notifyIdle= if it has 0 runnable tasks, OR if it got a
+  =notifySuspend= call with the token held
+  - TODO: implement a way for the cog to ask its scheduler if it's idle, or if
+    a process / thread / task currently owns the token -- probably use
+    =TaskScheduler.getActiveTask= but reimplement it as =runningThread.getTask()=
+    because otherwise we have a race condition between the =runningThread= and
+    =activeTask= fields of =DefaultTaskScheduler=!
+- Reverse in the other side: the cog calls =runtime.notifyBusy= when it gets a
+  =notifyRunning= (from the guard) with either 0 runnable tasks before, OR if
+  the token is held.
+- The thread grabs the cog's token after the guard has returned from =await=.
+
+** DONE Add test cases
+
+* Daggerization of CI/CD pipeline
+
+Gradle plugin: https://daggerverse.dev/mod/github.com/matipan/daggerverse/gradle (redirects to current version)
+
+Currently blocked: we need a container with Java and Erlang installed
+
+#+begin_src sh
+brew install dagger
+dagger init
+dagger install github.com/matipan/daggerverse/gradle
+dagger -m gradle functions
+dagger -m gradle call directory
+dagger -m gradle call build
+
+dagger -m gradle call with-wrapper with-directory --src . build
+#+end_src
+
+* Xtext frontend / language server
+
+- [[https://dslmeinte.wordpress.com/2011/04/08/checklist-for-xtext-dsl-implementations/][Checklist for Xtext DSL implementations | Meinte's DSL Blog]]
+
+- [ ] Handle fields and methods uniformly via common prefix; disallow invalid
+  orders in validation
+
+[[file:~/Sync/Source/abs/eclipse-dsl][Implementation sketch]]
+
+** Questions
+- How can we split the core and full abs grammars?
+- Can/should we use the Xtext AST for rewriting, or stay with JastAdd for
+  this?
+- Check ~AbsImportedNamespaceAwareLocalScopeProvider~: does it do the right
+  thing wrt index, re-imports, ...
+- Check ~XtextToJastAdd~: does it do the right thing wrt index, finding
+  qualified names, ...
+
+** Layered grammar
+
+We want the core - full abs language structure reflected in the xtext grammar.
+
+Forum https:
+
+- [[//www:threads.eclipse.org/forums/index.php/t/1096655/][Eclipse Community Forums: TMF (Xtext) » Configure single Language Server with multiple grammars (IResourceServiceProvider)]] (no code sample but good info)
+- [[https://www.eclipse.org/forums/index.php/t/384018/][Eclipse Community Forums: TMF (Xtext) » Split grammar (multiple grammars) in 1 project?]] (example of old-style mwe setup - non-working)
+- [[https://www.eclipse.org/forums/index.php/t/1096592/][Eclipse Community Forums: TMF (Xtext) » Creating two xtext grammar files within one project]] (again, two grammar files in one mwe2 workflow, with source)
+- [[https://stackoverflow.com/questions/37447810/xtext-define-2-dsls-in-one-project][eclipse - Xtext: define 2 DSL's in one project - Stack Overflow]] (simple mwe2 example code - 2 languages in one workflow)
+
+- [[https://stackoverflow.com/questions/53284732/xtext-multiple-grammars-and-example-web-editor][eclipse - XText - Multiple grammars and example web editor - Stack Overflow]] (how to initialize the web editor for multiple grammars)
+- [[https://www.eclipse.org/forums/index.php?t=msg&th=1096166&goto=1798287&#msg_1798287][Eclipse Community Forums: TMF (Xtext) » Multiple grammars and example web editor]] (more source code for the above question)
+
+** Lexing issues
+
+- Xtext does not do lexer state - careful with the grammar design!
+- Multi-line strings, general grammar design: see Xtend.xtext at https://github.com/eclipse/xtext-xtend/blob/master/org.eclipse.xtend.core/src/org/eclipse/xtend/core/Xtend.xtext#L409
+- Replacing the lexer with antlr4: https://typefox.io/taming-the-lexer
+  - points to https://github.com/crapo/sadlos2/blob/master/sadl3/com.ge.research.sadl.parent/com.ge.research.sadl.xtextgenerator/src/com/ge/research/sadl/xtextgenerator/JFlexFragment.
+
+- [[https://www.eclipse.org/forums/index.php/t/520834/][Eclipse Community Forums: TMF (Xtext) » Help parsing 4.1+3., with a '.' at the end]] -- parsing floats as datatype rules instead of lexer rules; we likely cannot use this approach since it grabs ~e~ as a keyword
+
+** Parsing etc.
+
+- [[http://www.lorenzobettini.it/2014/02/switching-from-an-inferred-ecore-model-to-an-imported-one-in-your-xtext-grammar/][Switching from an inferred Ecore model to an imported one in your Xtext grammar | Lorenzo Bettini]]
+
+- [[https://dslmeinte.wordpress.com/2011/12/22/xtext-tip-synthetic-parser-rules/][Xtext tip: “synthetic” parser rules | Meinte's DSL Blog]]
+
+*** Fixing ambiguous grammar rules
+
+- [[http://blog.dietmar-stoll.de/2011/08/xtext-grammar-visualization.html][Dietmar Stoll's Blog: Xtext Grammar Visualization]]
+
+- [[https://dslmeinte.wordpress.com/2011/12/05/using-syntactic-predicates-in-xtext-part-1/][Using syntactic predicates in Xtext, part 1 | Meinte's DSL Blog]]
+
+- [[https://zarnekow.blogspot.com/2012/10/xtext-corner-5-backtracking-vs.html][Sebastian Zarnekow's Blog: Xtext Corner #5 - Backtracking vs Syntactic Predicates]]
+
+** Validation
+
+- [[https://github.com/eclipse/xtext-core/blob/c2b20283fbd2057d9c4ae1b90ec907c813c7372e/org.eclipse.xtext/src/org/eclipse/xtext/validation/DiagnosticConverterImpl.java][xtext-core/DiagnosticConverterImpl.java at c2b20283fbd2057d9c4ae1b90ec907c813c7372e · eclipse/xtext-core]] -- see ~getLocationForNode~ in that file for source locations, validation locations
+
+** [0/3] Scoping
+
+- [[https://www.eclipse.org/forums/index.php/t/359674/][Eclipse Community Forums: TMF (Xtext) » How to support implicit imports?]] -- for ~abslang.abs~?
+
+- [[https://github.com/eclipse/xtext-core/blob/master/org.eclipse.xtext/src/org/eclipse/xtext/scoping/impl/ImportedNamespaceAwareLocalScopeProvider.java][xtext-core/ImportedNamespaceAwareLocalScopeProvider.java at master · eclipse/xtext-core]]
+- [[https://www.euclideanspace.com/software/development/eclipse/xtext/infrastructure/importing/index.htm][Eclipse Xtext Importing- Martin Baker]] -- uses the above class
+
+
+- [[https://dslmeinte.wordpress.com/2010/12/08/getting-alternative-cross-references-to-work-with-existing-epackages/][Getting alternative cross-references to work with existing EPackages | Meinte's DSL Blog]] -- cross-reference an EObject, refine with scoping rules
+
+- [[https://dslmeinte.wordpress.com/2010/09/06/tricks-for-implementing-scoping/][Tricks for implementing scoping]] -- debugging ASTs, including: “Eclipse EMF happens to come bundled with the ‘Generic EMF Form Editor’ as well as the ‘Sample Reflective Ecore Model Editor’ both of which present a folded-tree view of the AST. Just select the DSL file, rightclick and select “Open With > Other…” and select any of the two editors mentioned to visualize the AST. By splitting the editor pane (just click-hold the EMF tree editor and drag far enough to some other area of the Eclipse window), you’ll even have a parallel/simultaneous view of both the text as well as the tree.” and “override the getScope method from IScopeProvider to print out some useful debugging info as follows. [code in screenshot follows]  This will print the method predicates/signatures the Xtext runtime tries to call (through the Java-based polymorphic dispatch mechanism shipped with Xtext) on the console of the primary Eclipse instance.”
+
+- [[https://blogs.itemis.com/en/in-five-minutes-to-transitive-imports-within-a-dsl-with-xtext][In five minutes to transitive imports within a DSL with Xtext]]
+
+*** Implement Qualified Name Provider?
+
+- see [[https://github.com/xtext/seven-languages-xtext/blob/master/documentation/04_mongodb.md][seven-languages-xtext/04_mongodb.md at master · xtext/seven-languages-xtext]]
+
+** Language Server
+
+- Language server example: https://github.com/theia-ide/yang-lsp
+- Main class for language server: org.eclipse.xtext.ide.server.ServerLauncher
+- http://typefox.io/how-and-why-use-xtext-without-the-ide: xtext runtime without ide
+- http://typefox.io/tutorial-building-a-language-server-for-your-dsl
+- http://typefox.io/building-a-vs-code-extension-with-xtext-and-the-language-server-protocol
+* Master topics
+
+https://www.mn.uio.no/ifi/studier/masteroppgaver/psy/ -> login -> Administrer denne mappen -> 
+
+- revitalize Cog proofs / Ott semantics
+- Xtext eclipse plugin
+- GUI / visualizer for model api
+
+** Editor and IDE support for a Java-like modeling language
+
+https://www-adm.mn.uio.no/ifi/studier/masteroppgaver/psy/editor-and-ide-support-for-a-java-like-modeling-la.html?vrtx=admin
+
+* Big Features
+** Represent JSON and/or other schemaless data natively in ABS
+** Multi-file models
+
+For a file, we need to discover which other files are needed to compile this
+file.  Needs to handle subdirectories and multiple files defining the same
+module (so it’s not as simple as including *.abs).
+
+- Comment / annotation near the top?
+- We certainly don’t want ~#include~ semantics
+
+- Investigate python, swift, rust, go, others?
+
+** More than one class initializer
+
+This would be mutually exclusive with unnamed init blocks + class
+parameters next to the class name (caught during typechecking).  We
+would need method overriding (compile-time dispatching using type
+information) to call the right init method.  Since all members must be
+initialized already anyway, we don't need to check for completeness of
+the init blocks.
+
+#+begin_src abs
+class C implements I {
+  Unit init(Int x) {
+    ...
+  }
+
+  Unit init(String x, Int y) {
+    ...
+  }
+}
+{
+  new C(5);
+  new C("hello", 10);
+}
+#+end_src
+
+** Beef up futures: ~.available~, multicast
+
+~await~ on list of futures, return all enabled ones
+** Fix Resource model
+- Callee doesn’t consume bandwidth, only caller
+- Memory: declarative, per-method, with acquire/release semantics (process acquires memory when starting, releases it when terminating)
+- User-defined resources: mutex semantics
+** Arrays
+See copy-on-write semantics of Swift here: [[https://mjtsai.com/blog/2021/04/12/high-performance-numeric-programming-with-swift/][Michael Tsai - Blog - High Performance Numeric Programming With Swift]]
+
+** Generate code from Mermaid sequence / class / state diagrams
+
+- Mermaid parser here: [[https://github.com/mermaid-js/mermaid/issues/4][Provide parser as separate module · Issue #4 · mermaid-js/mermaid]]
+- Find a way to run that javascript code in Java OR extract the grammar
+  - Grammar here: [[https://github.com/mermaid-js/mermaid/blob/develop/src/diagrams/sequence/parser/sequenceDiagram.jison][mermaid/sequenceDiagram.jison at develop · mermaid-js/mermaid]]
+
+** Traits on the functional level
+** Plans saved from annual report
+
+- Provide systematic path exploration: finds all possible behaviors (work in progress)
+- Integrate ABS into co-simulation scenarios
+- Have ABS models act as parts of larger models
+- Support industry standards; integrates with e.g. Modelica models
+- Provides technical foundation for [[id:A7BCDC48-26B1-430F-BF5A-6287BC1AD076][digital twin]] scenarios
+- Implement interaction with structured complex data
+- Check whether to add unit support
+  - [[https://www.semanticscholar.org/paper/Types-for-Units-of-Measure%3A-Theory-and-Practice-Kennedy/f3596638ddf4c6d987e2c1ef0ddb4872e63e1f2d][[PDF] Types for Units-of-Measure: Theory and Practice | Semantic Scholar]] (F#)
+
+** Fine-grained Deltas
+
+Annotate blocks with names, replace them in deltas
+
+* Small changes
+** Do not export constructors for Set, Map from standard library
+** Implement ~Bool sameCog()~
+** Implement ~auto~
+** Object parameters in Model API
+** Implement DC shutdown
+
+- Terminate processes, kill objects during DC shutdown
+- Make it impossible to create objects / call objects after DC has shut down
+
+** Warn for unknown annotations
+** Exception model: allow / disallow ~throw~ / ~die~ in Atomic methods
+* [[id:E1350255-59C8-4A33-A35D-83F38B4BB5AC][Emacs]] mode
+** Transient / Hydra menu
+
+dotnet command transient: [[https://github.com/sebasmonia/sharper][sebasmonia/sharper: .NET Core for Emacs (via transient)]]
+
+Small transient tutorial here: https://gist.github.com/abrochard/dd610fc4673593b7cbce7a0176d897de
+
+Big transient thread here: [[https://www.reddit.com/r/emacs/comments/m518xh/transient_api_example_alternative_bindings_part_1/][Transient API Example (Alternative Bindings Part 1) : emacs]]
+
+[[https://www.reddit.com/r/emacs/comments/m518xh/transient_api_example_alternative_bindings_part_1/][Transient API Example (Alternative Bindings Part 1) : emacs]]
+
+#+BEGIN_SRC elisp
+(defun test-function (&optional args)
+  (interactive
+   (list (transient-args 'test-transient)))
+  (message "args %s" args))
+
+(define-transient-command test-transient ()
+  "Test Transient Title"
+  :incompatible '(("--erlang" "--java" "--maude"))
+  [:description "Backend"
+   :class transient-row
+   ("-e" "Erlang" "--erlang")
+   ("-j" "Java" "--java")
+   ("-m" "Maude" "--maude")]
+  ["Arguments"
+   ("-s" "Switch" "--switch")
+   ("-a" "Another switch" "--another")
+   ("-M" "Message" "--message=")
+   ("--debug" "Even more verbose output" "--debug")]
+  ["Actions"
+   ("RET" "Action d" test-function)])
+
+(define-transient-command abs-compile-transient ()
+  "Compile model"
+  :incompatible '(("--erlang" "--java" "--maude"))
+  ["Backend"
+   :class transient-row
+   ("-e" "Erlang" "--erlang")
+   ("-j" "Java" "--java")
+   ("-m" "Maude" "--maude")]
+  ["Arguments"
+   ("-d" "Output directory" "--directory=")
+   ("-v" "Verbose output" "--verbose")
+   ("-p" "Choose product" "--product=")
+   ("--debug" "Even more verbose output")]
+  ["Erlang arguments"
+   :if (lambda () (eq abs-target-language 'erlang))
+   ()]
+  ["Actions"
+   ("RET" "Compile" test-function)])
+#+END_SRC
+
+** Support non-C-style indentation
+:PROPERTIES:
+:ID:       64249D8A-7CCE-4E30-825B-C7C01BAF3CC4
+:END:
+
+Example of a derived language at http://cc-mode.sourceforge.net/derived-mode-ex.el
+
+List of cc-mode languages at [[file:/usr/share/emacs/26.3/lisp/progmodes/cc-defs.el.gz::(defvar%20c-buffer-is-cc-mode%20nil][<cc-defs>]]
+
+Mode-specific propertize hooks: [[file:/usr/share/emacs/26.3/lisp/progmodes/cc-langs.el.gz::(c-lang-defconst%20c-get-state-before-change-functions][c-get-state-before-change-functions]], [[file:/usr/share/emacs/26.3/lisp/progmodes/cc-langs.el.gz::(c-lang-defconst%20c-before-font-lock-functions][c-before-font-lock-functions]]
+
+Some inspiration at https://github.com/hlim88/ATPESC18/blob/a53d47217610fdcba95e83eebbd564ba485f5d6d/gpu/occa/editorTools/emacs/oklTest-mode.el
+
+
+- Use ~c-show-syntactic-information~, ~c-syntactic-information-on-region~ to see what’s going on
+
+- TODO set ~[[file:/usr/share/emacs/26.3/lisp/progmodes/cc-langs.el.gz::(c-lang-defconst%20c-opt-cpp-symbol][c-opt-cpp-symbol]]~, ~c-opt-cpp-prefix~, ~c-anchored-cpp-prefix~ to nil
+
+- TODO properly set ~c-assignment-operators~, ~c-operators~, ~[[file:/usr/share/emacs/26.3/lisp/progmodes/cc-langs.el.gz::(c-lang-defconst%20c-other-op-syntax-tokens][c-other-op-syntax-tokens]]~
+
+- TODO figure out how to add new items to what ~c-show-syntactic-information~ calculates
+
+- TODO inspect, use cc-mode keyword definitions, starting [[file:/usr/share/emacs/26.3/lisp/progmodes/cc-langs.el.gz::;;;%20Keyword%20lists.][<here>]], e.g., ~[[file:/usr/share/emacs/26.3/lisp/progmodes/cc-langs.el.gz::(c-lang-defconst%20c-typeof-kwds][c-typeof-kwds]]~, ~[[file:/usr/share/emacs/26.3/lisp/progmodes/cc-langs.el.gz::(c-lang-defconst%20c-type-prefix-kwds][c-type-prefix-kwds]]~, ~c-class-decl-kwds~, ~c-other-decl-kwds~ (for module etc.), ~c-postfix-decl-spec-kwds~, ~c-type-list-kwds~, ~c-block-stmt-1-kwds~, ~c-block-stmt-2-kwds~, ~c-simple-stmt-kwds~, ~c-case-kwds~, ~c-constant-kwds~
+
+
+
+- ~c-lang-defconst~ to add abs definitions to existing cc-mode variables
+- ~c-set-offset~ to interactively change indentation once syntax elements are properly set up
+
+* VS Code plugin
+
+- Check if it works on Theia: [[https://theia-ide.org/][Theia - Cloud and Desktop IDE Platform]]
+  : brew install theiaide
+
+* Jupyter Notebook / REPL
+
+- [[https://blog.llvm.org/posts/2020-12-21-interactive-cpp-for-data-science/][The LLVM Project Blog]] -- “Interactive [[id:572479F3-C781-4029-A88C-533309DD34D3][C++]] for Data Science”: describes semantics of REPL-oriented C++ and its Jupyter kernel
+
+* [[id:AF2E3467-3644-4E0A-84C3-2EFB6C23A3B1][Erlang]] Backend
+
+[[https://stackoverflow.com/questions/11796941/how-do-you-compile-an-erlang-program-into-a-standalone-windows-executable][How do you compile an Erlang program into a standalone windows executable? - Stack Overflow]]
+
+** Precompile SQLite NIFs
+
+See https://github.com/xerial/sqlite-jdbc/blob/master/.github/workflows/build-native.yml
+
+** Potential bugs
+
+*** Protect gc from ~noproc~ crashes (trying to mark in crashed / terminated process)
+
+** ABS erlang backend tools
+
+To get an erlang shell for all the tools below, run the following:
+
+#+BEGIN_SRC shell
+erl `find gen -type d -name ebin -exec echo -n "-pa {} " \;`
+#+END_SRC
+
+** Debugging
+
+(See Armstrong p. 350)
+
+1. Compile with debugging turned on: ~absc -e --debug ...~
+2. Start an erlang shell, as above
+3. Start the debugger: ~im().~
+4. load modules: ~ii(cog).~ etc.
+5. if modules don’t load: recompile via ~c(cog, [debug_info]).~
+6. Start the module: ~runtime:start().~
+
+*** Logging
+
+- ~cd gen/erl ; ./link_sources ~/Source/abstools~
+- Run via ~C-c C-c~ in emacs (automatically recompiles)
+- Add ~{debug, [trace]}~ or ~{debug, [trace, log]}~ to ~gen_statem:start_link~ last parameter
+- Add print output with ~io:format("~w~n", [State]),~ -- do not use ~standard_error~ since trace output goes to stdout; printing to stderr will not mix properly
+
+*** TODO Visualize internal state
+
+Visualize state a la [[https://twitter.com/thingskatedid/status/1386077306381242371][Kate on Twitter]]: “🧵 Make yours and everybody else's lives slightly less terrible by having all your programs print out their internal stuff as pictures; ✨ a thread ✨ https://t.co/NjQ42bXN2E”
+
+** Profiling
+
+There are three profilers in the [[id:AF2E3467-3644-4E0A-84C3-2EFB6C23A3B1][erlang]] distribution, with various levels of detail and runtime influence.
+
+*** fprof
+http://erlang.org/doc/man/fprof.html
+
+Uses trace information for profiling.  Most detailed & slow.  See http://blog.equanimity.nl/blog/2013/04/24/fprof-kcachegrind/ for how to visualize the results.
+
+#+BEGIN_SRC erlang
+fprof:apply(runtime, start, []).
+fprof:profile().
+fprof:analyse().
+#+END_SRC
+
+Install erlgrind from https://github.com/isacssouza/erlgrind.  Install qcachegrind via homebrew.  Generate profile info via ~fprof:analyse ({dest, "outfile.fprof"}).~.  Convert via ~erlgrind outfile.fprof outfile.callgrind~.
+
+*** eprof
+
+http://erlang.org/doc/man/eprof.html
+
+Uses trace information for profiling; shows total and per-process information on call count and elapsed time.
+
+#+BEGIN_SRC erlang
+eprof:start().
+eprof:profile(fun runtime:start/0).
+eprof:log("eprof_totals.txt").
+eprof:analyze(total).
+eprof:log("eprof_procs.txt").
+eprof:analyze(procs).
+eprof:stop().
+#+END_SRC
+
+
+*** cprof
+
+http://erlang.org/doc/man/cprof.html
+Call counts only, uses breakpoints for profiling
+
+#+BEGIN_SRC erlang
+cprof:start().
+runtime:start().
+cprof:pause().
+cprof:analyse().
+cprof:stop().
+#+END_SRC
+
+*** eflame
+
+https://github.com/slfritchie/eflame.git
+
+(old version below)
+
+https://github.com/proger/eflame
+Flame graphs from tracing API; one process only?
+
+Start with:
+
+#+BEGIN_SRC shell
+erl `find gen -type d -name ebin -exec echo -n "-pa {} " \;` -pa ~/Documents/Source/erlang/eflame/ebin/
+#+END_SRC
+
+First argument can be ~like_fprof~, ~normal~, ~normal_with_children~ (default)
+
+#+BEGIN_SRC erlang
+eflame:apply(normal_with_children, "eflame.out", fun runtime:start/0, []).
+#+END_SRC
+
+Visualize the result:
+
+#+BEGIN_SRC shell
+~/Documents/Source/erlang/eflame/stack_to_flame.sh --width=2000 --minwidth=0.05 < eflame.out > eflame.svg
+open flame.svg
+#+END_SRC
+
+(see ~flamegraph.pl~ for a list of options)
+
+* Maude backend
+
+** implement failures for evaluation errors
+   :PROPERTIES:
+   :ID:       76013F82-CFBE-4595-AB28-DECCE4E790A5
+   :END:
+
+Make eval return either Data or Stmt.  Unhandled cases will block as
+before; throwing exceptions can be inserted into evaluation rules as
+needed.
+
+** Redefine abs-interpreter mte to be maximal time elapse instead.
+  :PROPERTIES:
+  :ID:       BD83C5F3-1621-4523-8AA6-47404BEBBB89
+  :END:
+   [2014-12-11 Thu]
+
+in $duration, use the MAX value instead of MIN.  (Also in the guard.)
+   [[file:~/Source/abstools/frontend/src/abs/backend/maude/abs-interpreter.maude::eq%20mte($duration(MIN%20%3B%20MAX)%20%3B%20SL,%20S,%20CN,%20MAC)%20%3D%20max(MIN,%200)%20.%20***%20do%20we%20want%20max(0,%20min(MAX,%201))%20instead?][
+file:~/Source/abstools/frontend/src/abs/backend/maude/abs-interpreter.maude::eq mte($duration(MIN ; MAX) ; SL, S, CN, MAC) = max(MIN, 0) . *** do we want max(0, min(MAX, 1)) instead?]]
+
+** eliminate clock, separate timed/untimed interpreter versions
+  :PROPERTIES:
+  :ID:       0B693292-3E4C-40D2-81DA-27281F9F64F3
+  :END:
+
+Use semantics as discussed in Bologna.  This lets us eliminate the
+"clock-limit" variable, and avoids a separate timed/untimed
+compilation option.
+
+Implement semantics as in Erlang: let =canAdvance= calculate MTE, tell
+the clock and DCs about it, if =canAdvance= MTE = \infinity, terminate
+simulation.
+
+** remove second (environment) argument from abs-interpreter
+  :PROPERTIES:
+  :ID:       F8313931-DA07-435B-A58A-22A7F4CB51C0
+  :END:
+   [2014-12-14 Sun]
+   [[file:~/Source/abstools/frontend/src/abs/backend/maude/abs-interpreter.maude::op%20eval%20:%20Expr%20Subst%20Configuration%20SSubst%20->%20Data%20.][file:~/Source/abstools/frontend/src/abs/backend/maude/abs-interpreter.maude::op eval : Expr Subst Configuration SSubst -> Data .]]
+
+Points to consider:
+- The fields of the current object need to be accessible directly (for
+  ~eval(@ Qid)~), currently they are stored as the first element.
+- The auxiliary environment needs to be accessible directly (for
+  augmenting the function evaluation environment), we can store it in
+  the last element.
+- Currently, adding a new variable to an environment adds it to the
+  last binding map on the stack.  Also, ~$beginscope~ and friends
+  operate this way.
+This might be more trouble than it's worth.
+
+* [[id:9C60BDF7-0A74-4597-8113-13F20578B005][Java]] backend
+** Debugging
+
+- Generate Java code: =absc --java model.abs=
+- Open ~gen/~ directory in IntelliJ
+- Setup SDK ... (in the upper right-hand corner) -> choose a Java 21 one
+
+- File -> Project Structure ...
+  - Libraries -> + -> add absfrontend.jar
+  - In absfrontend Sources entry: + abstools/frontend/src/main/java, - absfrontend.jar
+
+After these steps, setting breakpoints and stepping into library sources should work
+
+** Structure of a Java model
+
+- Main block of ~module~ is translated into class ~module.Main~; this class contains the ~public static void main~ method; there can be multiple main classes in a model.
+- That class calls ~lib.runtime.StartUp.startup(args, Main.class)~.
+- ~StartUp.startup~ parses arguments, then creates an object of type ~Runtime~ (can be a subclass)
+
+calls back into the ~Main.run~ method that contains the main block.
+
+** Lifecycle of an asynchronous call in the Java backend
+
+- How many =SchedulerThread= instances does =DefaultTaskScheduler= start? -> one, probably (see =addTask=)
+
+  #+begin_src abs
+  I o = new C();
+  o!m();
+  #+end_src
+
+- In generated code:
+
+    #+begin_src java
+  Fut f = ABSRuntime.asyncCall(new AbstractAsyncCallRT(this, o).init()) // init is defined at call site, returns this
+    #+end_src
+
+  =AbstractAsyncCall= has ABSObject source, C target, sending Task<?> sender
+
+- In =ABSRuntime.asyncCall=:
+
+  #+begin_src java
+  Task task = new Task(call);
+  task.schedule();
+  return task.getFut();
+  #+end_src
+
+- ~Task.java~: implements =Runnable= (but not Thread)
+
+  has ~getExecutingThread()~, ~getCall()~, ~getCOG()~, ...
+
+  Task#schedule -> getCOG().addTask(this); // getCOG returns =o='s cog
+
+  Later: in Task.run() (called by =DefaultTaskScheduler.SchedulerThread=):
+  - res = call.call() -> AbstractAsyncCall.call() -> instantiated by generated code
+  - future.resolve(res) // plus catch ABSException e, future.smash(e)
+
+- Cog.java: addTask(Task task)
+  calls scheduler.addTask(task)
+
+- DefaultTaskScheduler: addTask(task)
+
+  has SchedulerThread thread
+  has Task activeTask
+  has newTasks
+
+  - newTasks.add(task);
+  - if (thread == null) thread = new SchedulerThread(); thread.start()
+    else notifyAll()
+
+- DefaultTaskScheduler.SchedulerThread#run():
+
+  - Picks up tasks from =newTasks=, terminates itself when no new tasks are available.
+  - How do we run many tasks interleaved?
+
+* [[id:B498011F-F64B-4FF4-A092-935E5E707718][Scala]] backend
+:PROPERTIES:
+:ID:       9C97058E-DF40-4946-A513-F3422C9A4EE2
+:END:
+
+- Properly credit [[https://github.com/square/javapoet/blob/javawriter_2/src/main/java/com/squareup/javawriter/JavaWriter.java][javapoet/JavaWriter.java at javawriter_2 · square/javapoet]]
+- Fix syntax errors in generated code
+- Fix location of compiled files
+- Find out how to run it
+
+  #+begin_quote
+  vlad (June 28, Slack, private communication)
+  so you need to clone this: https://github.com/JaacRepo/JAAC
+  switch to push-mechanism branch
+  and move the following:
+  : cd ../generated-sources/jabsc; rm -rf ABS/JUnit; rm -rf ABS/Meta; rm -rf ABS/Scheduler; mv * path/to/JAAC/src/test/
+  run main and at least hello world should be fine
+  I usually run it from intellij
+  actually run ~src/test/Module.Main.scala~
+  where ~Module~ is the name of the abs file where the ~{}~ block is defined
+  #+end_quote
+
+** DONE create tracking bug
+[[https://github.com/abstools/abstools/issues/282][Tracking: Getting the Scala backend to work · Issue #282 · abstools/abstools]]
+
+* Testing
+
+- [[https://github.com/rec0de/crowbar-investigator-experiments/blob/master/mockABS.rb][crowbar-investigator-experiments/mockABS.rb at master · rec0de/crowbar-investigator-experiments]] -- ABS program generator, usable for [[id:6F17D696-8509-472F-8E5E-AF087F6513D6][Fuzzing]]
+
+* Performance monitoring
+** Other languages
+
+- [[https://speed.pypy.org/about/][PyPy Speed : About this site]]
+- [[https://github.com/tobami/codespeed][tobami/codespeed: A web application to monitor and analyze the performance of your code]]
+- [[https://github.com/rust-timer/rustc-timing][rust-timer/rustc-timing: Scripts and data for timing rustc]]
+
+* Development with Docker, Vagrant
+** Docker
+
+See here: [[https://www.ardanlabs.com/blog/2020/02/docker-images-part1-reducing-image-size.html][Docker Images : Part I - Reducing Image Size]] -- explains ~FROM~, ~WORKDIR~ etc.
+
+: make docker
+: docker login
+: docker push abslang/collaboratory
+
+: docker run -p 8080:80 --rm abslang/collaboratory
+
+See setup with SW install, sshd start here:
+[[https://github.com/rcarmo/docker-templates/blob/master/jekyll-playground/Dockerfile][docker-templates/Dockerfile at master . rcarmo/docker-templates]]
+
+[[http://taoofmac.com/space/blog/2014/12/08/1930#containment-strategies][Containment Strategies - Tao of Mac]] for discussion of approach (in the
+"DevOps Nirvana" subsection): create Dockerfile in the Erlang backend,
+base it off an image with Erlang + runtime pre-installed.  Advertise
+it using Erlang mechanisms.
+
+- run absc (or any other program) as command-line:
+
+: docker run -v $PWD:/volume -w /volume -t <container> sh -c "<command>"
+
+** podman
+
+Podman on Linux: doesn’t use daemon, doesn’t need root
+
+- Install: https://computingforgeeks.com/how-to-install-podman-on-debian/
+- Add docker registry (hint found at https://podman.io/getting-started/installation, also https://github.com/containers/image/blob/master/docs/containers-registries.conf.5.md):
+  : curl https://raw.githubusercontent.com/projectatomic/registries/master/registries.fedora -o /etc/containers/registries.conf
+- Tutorial: https://github.com/containers/libpod/blob/master/docs/tutorials/podman_tutorial.md
+
+** Multi-host docker network
+
+[[http://wiredcraft.com/blog/multi-host-docker-network/][Multi-Host Docker Network | Wiredcraft]]
+
+** Vagrant + LXC on Mac
+
+[[http://the.taoofmac.com/space/HOWTO/Vagrant][HOWTO Run Vagrant with LXC on your Mac - Tao of Mac]]
+
+After fooling around with Vagrant and LXC for a few days (thanks to
+Fabio Rehm’s awesome plug-in) , I decided to pull everything together
+into a working, reproducible setup that allows me to develop and test
+on four different Linux distributions, as well as prepare Puppet
+scripts for production deployments — and all without the hassle of
+running multiple VirtualBox instances on my Mac,
+
+* Abs on [[id:A3CA8F08-7683-4EBD-B177-384EF0CD91FB][Windows]]
+
+- [[https://developer.microsoft.com/en-us/windows/downloads/virtual-machines/][Download a Windows virtual machine - Windows app development | Microsoft Developer]]
+
+- update VirtualBox guest additions
+
+** Installing Dependencies
+
+*** Dependencies with winget
+
+- Needs administrator access when installing packages
+
+- Is installed on recent Windows 11
+
+- Install winget:
+  - From the Windows Store: search for "winget"; install the "App Installer" package
+  - From github: https://github.com/microsoft/winget-cli, specifically https://github.com/microsoft/winget-cli/releases/latest
+
+#+begin_src powershell
+winget install Git.Git
+winget install EclipseAdoptium.Temurin.17.JDK
+winget install Erlang.ErlangOTP
+setx PATH "$env:PATH;C:\Program Files\Erlang OTP\bin"
+winget install Microsoft.VisualStudio.2022.BuildTools --override "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22000 --passive"
+#+end_src
+
+Alternatively, run in an elevated shell:
+: & "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vs_installer.exe" modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" --add Microsoft.VisualStudio.Component.VCTools --passive
+
+
+Sources:
+- [[https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2022#use-winget-to-install-or-modify-visual-studio][Use command-line parameters to install Visual Studio | Microsoft Learn]]
+- [[https://learn.microsoft.com/en-us/visualstudio/install/workload-and-component-ids?view=vs-2022][Visual Studio workload and component IDs | Microsoft Learn]]
+
+Afterwards all installation commands have completed, open a "Developer PowerShell for VS 2022" tab in Terminal and type:
+
+#+begin_src powershell
+git clone https://github.com/abstools/abstools
+cd abstools
+./gradlew assemble
+#+end_src
+
+You will find the generated ~absfrontend.jar~ file in ~frontend/dist/~.
+
+*** Dependencies with scoop
+
+Does not need admin access, but Visual Studio build tools not installable
+
+- Install scoop: [[https://scoop.sh/][Scoop]]
+
+#+begin_src powershell
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser # Optional: Needed to run a remote script the first time
+irm get.scoop.sh | iex
+scoop install git
+scoop bucket add java
+scoop install openjdk11 erlang
+scoop install visualstudio2019buildtools # TODO: doesn't seem to exist anymore; check on the other machine
+#+end_src
+
+** Compiling
+
+continue with =git clone=, =./gradlew assemble=, etc. 
+
+** Adjust path
+
+- Append abstools the program location to system-wide path: The
+  variable should look like this (replace ~USERNAME~ with the name of
+  the user):
+
+: %PATH%;C:\Users\USERNAME\Source\abstools\frontend\bin\win
+
+* Abs on [[id:83ACCD4C-F2F1-40E4-9634-805EB7BAB2E8][Linux]]
+
+See mostly the =server= target in the Makefile
+
+Old script:
+
+#+begin_src sh
+#!/bin/bash
+wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
+sudo dpkg -i erlang-solutions_1.0_all.deb && rm erlang-solutions_1.0_all.deb
+sudo apt-get update
+sudo apt-get install make openjdk-8-jdk openjdk-8-jre ant maven maude erlang emacs25
+
+git clone https://github.com/abstools/abstools /home/ubuntu/abstools
+make -f /home/ubuntu/abstools/Makefile frontend
+
+sudo apt-get install eclipse
+
+sudo echo "127.0.0.1 abs-linux" >> /etc/hosts
+
+sudo snap install rg            # ripgrep
+#+end_src
+
+* Amsterdam 2015-05-29
+
+- ~destiny~ is not typed for synchronous method calls
+
+** Builtin classes (FFI)
+
+- specify new ~builtin~ /functions/ from the command line
+
+  use it in fredhopper case study to invoke SMT solver at runtime
+
+- Investigate on how to specify new ~builtin~ /classes/
+
+  We need to provide information per backend on how to create this class
+
+- investigate Peter Wong’s FFI again
+
+*** DC shutdown
+
+- State machine: running -> shutting down -> stopped
+
+  ABS sets state fron “running” to “shutting down”, backend handles shutdown
+  and sets state to “stopped”.
+
+- Valid operations
+
+| State                  | Running | Shutting down | Stopped |
+|------------------------+---------+---------------+---------|
+| Create objects         | yes     | no            | no      |
+| Invoke methods         | yes     | no            | no      |
+| Processes keep running | yes     | yes/no        | no      |
+
+** fredhopper case study
+
+- hangs if ~[DC: null]~ is used
+
+- Needs exception model for ~launchInstanceNamed("someunknownname");~ - ask
+  Stijn for it
+
+* Simple monitoring for ABS
+
+- Two/three containers: Influxdb, Grafana, running model
+
+- Setting up InfluxDB and Grafana:
+
+  - [[https://www.brianchristner.io/how-to-setup-docker-monitoring/][How to setup Docker Monitoring | A Tutorial on setting up Docker Monitoring using cAdvisor, InfluxDB, and Grafana.]]
+
+  - InfluxDB image doc: [[https://hub.docker.com/r/tutum/influxdb/][https://hub.docker.com/r/tutum/influxdb/]]
+
+  - sample docker-compose.yml:
+    https://gist.githubusercontent.com/anonymous/7810ba23b52ba7476c6a/raw/cd25a878bb1dada111f59f6008e1b0e64f76ccb1/docker-compose.yml
+
+#+BEGIN_SRC yaml
+InfluxSrv:
+  image: "tutum/influxdb:0.8.8"
+  ports:
+    - "8083:8083"
+    - "8086:8086"
+  expose:
+    - "8090"
+    - "8099"
+  environment:
+    - PRE_CREATE_DB=cadvisor
+cadvisor:
+  image: "google/cadvisor:0.14.0"
+  volumes:
+    - "/:/rootfs:ro"
+    - "/var/run:/var/run:rw"
+    - "/sys:/sys:ro"
+    - "/var/lib/docker/:/var/lib/docker:ro"
+  links:
+    - "InfluxSrv:influxsrv"
+  ports:
+    - "8080:8080"
+  command: "-storage_driver=influxdb -storage_driver_db=cadvisor -storage_driver_host=influxsrv:8086"
+grafana:
+  image: "grafana/grafana:2.0.2"
+  ports:
+    - "3000:3000"
+  environment:
+    - INFLUXDB_HOST=localhost
+    - INFLUXDB_PORT=8086
+    - INFLUXDB_NAME=cadvisor
+    - INFLUXDB_USER=root
+    - INFLUXDB_PASS=root
+  links:
+    - "InfluxSrv:influxsrv"
+#+END_SRC
+
+** Running the thing
+
+: docker-compose up
+
+** Writing values to InfluxDB
+
+#+BEGIN_SRC shell
+curl -i -XPOST 'http://localhost:8086/write?db=absmodel' --data-binary 'cpu_load,dc=server01,provider=Amazon value=20 1422568543702900257
+cpu_total,dc=server01,provider=Amazon value=80 1422568543702900257
+cpu_load,dc=server02,provider=Amazon value=30 1422568543702900257
+cpu_total,dc=server02,provider=Amazon value=80 1422568543702900257
+cpu_load,dc=server03,provider=Amazon value=30 1422568543702900257
+cpu_total,dc=server03,provider=Amazon value=50 1422568543702900257'
+#+END_SRC
+
+OR:
+
+#+BEGIN_SRC shell
+curl -i -XPOST 'http://localhost:8086/write?db=absmodel' --data-binary 'cpu,dc=server01,provider=Amazon load=20,total=80 1422568543702900257
+cpu,dc=server02,provider=Amazon load=30,total=80 1422568543702900257
+cpu,dc=server03,provider=Amazon load=30,total=50 1422568543702900257'
+#+END_SRC
+
+[[https://docs.influxdata.com/influxdb/v0.13/write_protocols/write_syntax/][InfluxData | Documentation | Write Syntax]]
+
+** Connecting Grafana
+
+Grafana Dockerfile: [[https://github.com/grafana/grafana-docker/blob/master/run.sh][grafana-docker/run.sh at master · grafana/grafana-docker]]
+
+Data source influxdb; name absmodel; url http://localhost:8086; access=direct; Database=absmodel; user=password=root (see =docker-compose.yml=)
+
+Without clicking into the GUI each time we start the model: We need to copy
+=config.js= into the container, but can use constants since we're only running
+locally.
+
+tutum provided ready-made =/app/config.js=, the default values are overwritten via a shell script
+
+[[https://github.com/tutumcloud/grafana/blob/master/config.js][grafana/config.js at master · tutumcloud/grafana]]
+
+#+BEGIN_SRC javascript
+define(['settings'],
+function (Settings) {
+  return new Settings({
+    //elasticsearch: "http://"+window.location.hostname+":9200",
+    datasources: {
+      influx: {
+        default: true,
+        grafanaDB: <--GRAFANADB-->,
+        type: 'influxdb',
+        url: "<--PROTO-->://<--ADDR-->:<--PORT-->/db/<--DB_NAME-->",
+        username: "<--USER-->",
+        password: "<--PASS-->",
+      }
+    },
+    default_route: '/dashboard/file/default.json',
+    timezoneOffset: null,
+    grafana_index: "grafana-dash",
+    unsaved_changes_warning: true,
+    panel_names: ['text','graphite']
+  });
+});
+#+END_SRC
+
+Here's another example of =config.js=: [[https://gist.github.com/ryan-williams/21fe3d602e6e83c76063#file-src-config-js][Grafana quick-start files]]
+
+** Current sketch
+
+#+BEGIN_SRC yaml
+InfluxSrv:
+  image: "tutum/influxdb"
+  ports:
+    - "8083:8083"
+    - "8086:8086"
+  environment:
+    - PRE_CREATE_DB=absmodel
+    - ADMIN_USER=root
+    - INFLUXDB_INIT_PWD=root
+grafana:
+  image: "grafana/grafana"
+  ports:
+    - "3000:3000"
+  environment:
+    - HTTP_USER=admin
+    - HTTP_PASS=admin
+  links:
+    - "InfluxSrv:influxsrv"
+#+END_SRC
+
+* SACO
+
+Runs only on Linux.  Getting it to run:
+
+- ~curl http://costa.fdi.ucm.es/download/saco.colab.zip~
+
+- ~export ABSFRONTEND=/home/ubuntu/.../absfrontend.jar~
+
+- costabs expects ~generateProlog~ in ~~/Systems/costa/costabs/bin~:
+
+  ~mkdir -p ~/Systems/costa ; cd ~/Systems/costa ; ln -s costabs ../../saco~
+
+(From paper notes:)
+- unzip SACO: location in Dockerfile
+- set ~ABSFRONTEND~ to ~absfrontend.jar~
+- get ~VendingMachine_init.abs~ from tutorial
+- Run costabs:
+  : costabs VendingMachine_init.abs -entries IMain.main
+- fixup:
+  : mkdir -p Systems/costa ; cd Systems/costa
+  : ln -s costabs ../../saco
+- There’s no shell exit code
+- check ~generateProlog~ scripts
+  - -fn vs -o
+  - -d vs -o
+  - if -o given: check that it’s writable
+  - if -destDir given: use code from Java backend to create, check
