@@ -1,0 +1,192 @@
+= ABSC Compiler Internals
+ABS Development Team
+:doctype: book
+:creator: ABS Development Team
+:lang: en
+:keywords: ABS, manual, modeling languages, programming languages
+:sectnumlevels: 2
+:copyright: CC-BY-SA 3.0
+:imagesdir: images
+:front-cover-image: image:Title_logo.png[width=1050,height=1600]
+
+// See https://rust-lang.github.io/rustc-guide/about-this-guide.html for an
+// example of where we want this document to be
+
+.About this guide
+
+This guide is meant to help document how absc -- the ABS compiler -- works, as
+well as to help new contributors get involved in development, and for using
+ABS as basis for their own research.  It is meant as a high-level overview,
+presenting the kinds of things that (ideally) do not change frequently.
+
+Part 1 contains general information that should be useful no matter how you
+are contributing.  Part 2 contains information about how various parts of the
+compiler work.
+
+This guide is currently a work-in-progress.  Contributions and corrections to
+this guide are very welcome!
+
+== Building, debugging, and contributing to absc
+
+=== About the compiler team
+
+=== How to build and run absc
+
+=== The testing framework
+
+=== Debugging the compiler
+
+=== Profiling the compiler
+
+=== Coding conventions
+
+=== Emitting errors and other diagnostics
+
+== How absc works
+
+=== High-level overview of the compiler source
+
+=== The command-line parser and dispatcher
+
+The main entry point of the compiler is the class `org.abs_models.Absc`.  This class parses command-line arguments, parses the files given on the command line and dispatches to the desired backend.  There is also a possibility to register _sub-commands_ for distinct functionality; for example, software product line type checking is done by invoking the `checkspl` subcommand.  Subcommands have their own command-line options and help output.
+
+The `Absc` class uses https://picocli.info[the picocli library] for command-line parsing.
+
+=== Lexing and parsing
+
+We currently use antlr4 for parsing ABS source code.  The grammar is at `frontend/src/main/antlr/org/abs_models/frontend/antlr/parser/ABS.g4`.
+
+=== Abstract syntax tree rewriting
+
+We use http://jastadd.org/web/[JastAdd] for the AST.  The AST node definitions for Core ABS are in `frontend/src/main/java/org/abs_models/frontend/ast/CoreAbs.ast`; AST node definitions for Full ABS are in `frontend/src/main/java/org/abs_models/frontend/ast/FullAbs.ast`.
+
+The antlr parse tree is converted into JastAdd by the class `org.abs_models.frontend.antlr.parser.CreateJastAddASTListener`.
+
+Tree attributes and aspects (for type checking, code generation etc.) are added via `.jadd` and `.jrag` files; these files can be added in any directory below `frontend/src/main/java`.
+
+=== Typechecking
+
+Code below `frontend/src/main/java/org/abs_models/frontend/typechecker/`.
+
+Type checking is done in
+`org.abs_models.frontend.parser:analyzeFlattenAndRewriteModel`, which should
+be called by all backends.  For historical reasons, there are two passes of
+type checking: `Model.getErrors` and `Main.typeCheckModel`.  The latter method
+nrelies on some errors not being present that are detected by the former one,
+so they should always be called in the same sequence as in
+`analyzeFlattenAndRewriteModel`.
+
+Types are represented as their own class hierarchy, separate from the AST node
+classes.  See
+`frontend/src/main/java/org/abs_models/frontend/typechecker/Type.java` and its
+subclasses.
+
+Many AST nodes can calculate information about their type, via the `getType`
+method that returns a `Type` object.  This is implemented in
+`frontend/src/main/java/org/abs_models/frontend/typechecker/Typing.jrag`
+
+Type checking itself uses `Type` objects and the `getType` method to collect
+type errors.  The methods `typeCheck` fill a `SemanticConditionList` with
+`SemanticCondition` objects.
+
+==== Type checker extensions
+
+Note the possibility to write type checker extensions; see the `frontend/src/main/java/org/abs_models/frontend/typechecker/ext/` directory.
+
+To implement a new type system extension, inherit from
+`DefaultTypeSystemExtension` and override some of its methods.  Then, register
+the extension by adding it to the `registerDefaultExtensions` method of the
+`TypeExtensionHelper` class.
+
+=== Backends and code generation
+
+== The Erlang backend
+
+=== Code Generation
+
+The main entry point of the Erlang code generation system is the method `org.abs_models.backend.erlang.ErlangBackend.doMain`, which will be invoked by the `Absc` class.  Given a type-checked and preprocessed AST, the Erlang backend generates code in a subdirectory (by default `gen/erl/`) and then invokes the Erlang compiler.
+
+The `gen/erl/` directory is pre-populated with the contents of `frontend/src/main/resources/erlang`, which includes both ABS runtime files in the subdirectory `absmodel/src/` and third-party support libraries below `absmodel/deps/`.
+
+=== The Runtime System
+
+== The Java backend
+
+=== Code Generation
+
+=== The Runtime System
+
+==== ABS Classes, Datatypes in Java
+
+The ABS standard library pre-defines various functions, classes,
+datatypes etc.  Depending on the usage pattern, there are various ways of
+making them available to the Java backend at compile time.
+
+- Built-in functions: These functions must be defined per backend.  The Java
+  backend defines these functions in the file `ABSBuiltInFunctions.java`.
+- Primitive datatypes: `Bool`, `String` and `Float` are translated to
+  their Java counterparts.  `Unit` is used as-is, `Int` and `Rat` are
+  translated to types from the Apfloat library.  The other types
+  (`Unit`, `Fut<A>`) are implemented as subclasses of
+  `ABSBuiltinDatatype`.
+- Using other ABS functions, datatypes, classes etc. from Java: This can be
+  done via reflection; see `ABSDCMirror.java` for an example.
+
+==== Task Scheduling and Execution
+
+A running ABS model has a singleton class of type
+`org.abs_models.backend.java.lib.runtime.ABSRuntime` or one of its subclasses.
+
+Each cog is an instance of `org.abs_models.backend.java.lib.runtime.COG`.
+Each cog has one associated instance of type
+`org.abs_models.backend.java.scheduling.TaskScheduler`, by default this is
+`org.abs_models.backend.java.scheduling.DefaultTaskScheduler` but this is
+customizable by the user when starting a model.
+
+In the following, we describe the behavior of `DefaultTaskScheduler`;
+reverse-engineering `SimpleTaskScheduler` remains to be done.
+
+`DefaultTaskScheduler` contains an inner class `SchedulerThread`.
+Instances of this class run ABS tasks, each running ABS process is
+handled by a Java thread of this class.  `SchedulerThread` instances
+`wait` on the enclosing DefaultTaskScheduler instance when they are
+ready to run.  `SchedulerThread` instances are responsible for calling
+`notifyAll` when they suspend or exit.
+
+A `SchedulerThread` instance is created either by the method
+`SchedulerThread.addTaskToScheduler` (if no task is running), or by a running
+`SchedulerThread` when the running thread suspends.  The running thread will
+not create a fresh thread when its task terminates; instead, it will pick up a
+waiting task and execute it.
+
+The "token" or lock of the cog is the field `runningThread`.  This field
+contains the running thread, or `null` if the cog has no running thread.  When
+encountering a scheduling point, the running thread sets this field to `null`
+and notifies all threads, which race to check if the lock `runningThread` is
+available and their guard evaluates to `true`.
+
+==== Timed Semantics
+
+Each cog contains a counter `activeThreads` that is increased and decreased as
+processes suspend and wake up via the cog methods `notifyAwait`,
+`notifyWakeup`.  A guard's `await` method will call these methods let the cog
+know about the task's status (runnable or not).  Care must be taken to only
+call `await` on a guard when actually awaiting for the purpose of making a
+scheduling decision, and call the method `isTrue` when checking for a guard's
+status outside of scheduling.
+
+A cog deems itself to be inactive in two cases when receiving `notifyAwait`:
+- Its `activeThreads` counter is `0` (all tasks are suspended)
+- Its scheduler returns non-`null` from `getActiveTask` (the active task is
+  blocked).
+
+Upon becoming inactive, the cog will signal the `ABSRuntime` singleton via the
+methods `notifyCogActive`, `notifyCogInactive`.  The runtime keeps track of
+the amount to increase the clock in the variable `wake_time`.  When the number
+of active cogs reaches zero, the runtime will try to increase the clock; this
+happens only when one or more `ABSDurationGuard` guards have registered
+themselves via `addDurationGuard`.  If so, the runtime increases the clock and
+notifies (as with `Object.notify`) the guards whose `min_time` is less than or
+equal to the current clock.  A duration guard, once notified, will notify its
+cog that the task is ready to run and return from its `await` method (which
+was called from the `SchedulerThread` running the ABS task).

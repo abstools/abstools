@@ -11,10 +11,11 @@ nreference manual.
 - [X] Convert Getting Started
 - [ ] Convert Documentation/Examples
 - [ ] Convert Documentation/Tutorials
-- [ ] Convert ABS Language Manual
+- [X] Convert ABS Language Manual
 - [X] Convert Publications
 - [X] Convert Contact
 - [X] Convert Acknowledgments
+- [ ] Implement bibliography
 
 
 
