@@ -12,8 +12,8 @@ nreference manual.
 - [ ] Convert Documentation/Examples
 - [ ] Convert Documentation/Tutorials
 - [ ] Convert ABS Language Manual
-- [ ] Convert Publications
-- [ ] Convert Contact
+- [X] Convert Publications
+- [X] Convert Contact
 - [ ] Convert Acknowledgments
 
 
