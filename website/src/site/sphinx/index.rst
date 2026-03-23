@@ -27,3 +27,4 @@ language that features functional data-types.
    getting-started/getting-started
    publications-and-workshops
    contact
+   acknowledgments
