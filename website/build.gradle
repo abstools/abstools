@@ -1,0 +1,16 @@
+plugins {
+    // https://codeberg.org/miurahr/gradle-sphinx
+    id("tokyo.northside.sphinx") version "1.0.4"
+}
+apply plugin: 'base'
+
+// To use Sphinx from the command line (builds faster):
+// sphinx-build -M html src/site/sphinx build
+sphinx {
+    // sourceDirectory = "${projectDir}/website/source"
+    // configDirectory = "${projectDir}/website/source"
+    outputDirectory = "${projectDir}/build/html"
+    // builder = "html"
+}
+
+assemble.dependsOn sphinx
