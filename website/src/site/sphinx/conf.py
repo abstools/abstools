@@ -3,6 +3,9 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import sys
+import os
+
 # -- Project information -----------------------------------------------------
 
 project = 'The ABS Language'
@@ -10,15 +13,22 @@ html_short_title = "ABS"
 copyright = 'CC-BY-SA 3.0'
 author = 'The ABS Development Team'
 
-
 # -- General configuration ---------------------------------------------------
+
+# Are we building the collaboratory:
+collaboratory = os.environ.get("SPHINX_COLLABORATORY", "false").lower() == "true"
+if collaboratory:
+    eifilelink_base = "/ei/clients/web/index.html?file="
+else:
+    eifilelink_base = "http://ei.abs-models.org:8082/clients/web/index.html?file="
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 # extensions = [ 'sphinx.ext.mathjax', 'sphinxcontrib.mermaid' ]
 
-extensions = [ 'sphinxcontrib.plantuml' ]
+sys.path.append(os.path.abspath("_extensions"))
+extensions = [ 'sphinxcontrib.plantuml', 'eifilelink' ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -27,7 +37,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
