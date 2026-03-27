@@ -8,7 +8,7 @@ docker collaboratory container and at https://abs-models.org.
 # TODOs
 
 - [X] Set up basic build infrastructure
-- [ ] Implement links to examples (local vs online collaboratory)
+- [X] Implement links to examples (local vs online collaboratory)
 - [X] Convert Overview
 - [X] Convert Getting Started
 - [X] Convert Documentation/Examples
@@ -55,3 +55,22 @@ See <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#sec
 - `-` for subsections
 - `^` for subsubsections
 - `"` for paragraphs
+
+# Collaboratory links
+
+To build for local collaboratory: `SPHINX_COLLABORATORY=true
+sphinx-build -M html src/site/sphinx build`
+
+```rst
+:eifilelink:`/collaboratory/examples/Deadlock/BOL/uglyChain.abs`
+:eifilelink:`uglyChain </collaboratory/examples/Deadlock/BOL/uglyChain.abs>`
+:eifilelink:`/collaboratory/examples/Deadlock/BOL/uglyChain.abs|app=dsa`
+:eifilelink:`uglyChain </collaboratory/examples/Deadlock/BOL/uglyChain.abs|app=dsa>`
+```
+
+```md
+{eifilelink}`/collaboratory/examples/Deadlock/BOL/uglyChain.abs`
+{eifilelink}`uglyChain </collaboratory/examples/Deadlock/BOL/uglyChain.abs>`
+{eifilelink}`/collaboratory/examples/Deadlock/BOL/uglyChain.abs|app=dsa`
+{eifilelink}`uglyChain </collaboratory/examples/Deadlock/BOL/uglyChain.abs|app=dsa>`
+```
