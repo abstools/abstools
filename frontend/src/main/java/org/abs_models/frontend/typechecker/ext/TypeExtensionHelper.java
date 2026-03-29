@@ -174,6 +174,11 @@ public class TypeExtensionHelper implements TypeSystemExtension {
                 tse.checkAssignableBehaviorType(l, r, n);
             }
         }
+        if (l.isDataType() && r.getType().isDataType()) {
+            for (TypeSystemExtension tse : obs) {
+                tse.checkAssignableBehaviorType(l, r, n);
+            }
+        }
     }
 
     public void annotateType(Type t, ASTNode<?> originatingNode) {
