@@ -1,3 +1,5 @@
+.. _sec:model-api:
+
 *************
 The Model API
 *************
