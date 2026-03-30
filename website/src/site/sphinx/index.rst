@@ -25,6 +25,7 @@ language that features functional data-types.
 
    overview
    getting-started/getting-started
+   examples/index
    manual/index
    publications-and-workshops
    contact

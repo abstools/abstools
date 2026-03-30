@@ -11,7 +11,7 @@ docker collaboratory container and at https://abs-models.org.
 - [ ] Implement links to examples (local vs online collaboratory)
 - [X] Convert Overview
 - [X] Convert Getting Started
-- [ ] Convert Documentation/Examples
+- [X] Convert Documentation/Examples
 - [ ] Convert Documentation/Tutorials
 - [X] Convert ABS Language Manual
 - [X] Convert Publications
@@ -20,24 +20,25 @@ docker collaboratory container and at https://abs-models.org.
 - [ ] Implement bibliography
 
 
-
 # References
 
 [reStructuredText Markup Specification](https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html)
 
 [Sphinx — Sphinx documentation](https://www.sphinx-doc.org/en/master/)
 
+[PlantUML sequence diagrams](https://plantuml.com/sequence-diagram)
+
 # Compiling
 
-If Python, Sphinx are not installed: in the `abstools/` root
-directory, run `./gradlew sphinx`.
+- Using gradle: in the `abstools/` root directory, run `./gradlew
+  sphinx`.
 
-If Python, Sphinx are installed: in this directory, run `sphinx-build
--M html src/site/sphinx build`
+- Using [uv](https://docs.astral.sh/uv/): in this directory, run `uvx
+  --from sphinx --with sphinxcontrib-plantuml sphinx-build -M html
+  src/site/sphinx build`
 
-When using [uv](https://docs.astral.sh/uv/), run this command:
-
-    uvx --from sphinx sphinx-build -M html src/site/sphinx build
+- Using Python: Install sphinx, sphinxcontrib-plantuml, then in this
+  directory run `sphinx-build -M html src/site/sphinx build`
 
 # Document structure
 
