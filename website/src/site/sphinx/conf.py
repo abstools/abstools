@@ -42,5 +42,19 @@ exclude_patterns = []
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'alabaster'
+html_theme_options = {
+    'body_text_align': 'justify',
+    'description': 'A timed actor-based modeling language',
+    # 'fixed_sidebar': True,
+    'logo': 'ABS_logo_colors.png',
+    # 'logo_name': True,
+    'github_user': 'abstools',
+    'github_repo': 'abstools',
+    # 'github_banner': True,
+    'github_button': True,
+    'sidebar_collapse': True,
+    # 'show_relbars': True,
+}
 html_static_path = ['_static']
-html_logo = 'images/ABS_logo_colors.png'
+html_baseurl = 'https://abs-models.org/'
+# html_logo = '_static/ABS_logo_colors.png'
