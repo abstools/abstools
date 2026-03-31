@@ -38,19 +38,18 @@ ifeq (,$(DOCKER))
 	endif
 endif
 
-default: help frontend manual
+default: help frontend website
 
 frontend:			## Build ABS compiler (default)
 	$(MAKE) -C $(ROOT_DIR)/frontend
 
-manual:				## Build the ABS manual
-	./gradlew asciidoc
+manual:				## Build the ABS website and manual
+	./gradlew sphinx
 	@echo "Finished."
-	@echo "HTML: abs-docs/build/asciidoc/html5/index.html"
-	@echo "PDF: abs-docs/build/asciidoc/pdf/index.pdf"
+	@echo "HTML: website/build/html/index.html"
 
 docker:				## Build docker images for collaboratory and absc
-	$(DOCKER) pull erlang:26-alpine
+	$(DOCKER) pull erlang:28-alpine
 	$(DOCKER) pull php:8.3.9-apache-bookworm
 	$(DOCKER) build -t abslang/collaboratory -f docker/collaboratory.Dockerfile $(ROOT_DIR)
 	$(DOCKER) build -t abslang/absc -f docker/absc.Dockerfile $(ROOT_DIR)

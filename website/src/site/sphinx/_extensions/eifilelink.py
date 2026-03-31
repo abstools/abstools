@@ -92,6 +92,19 @@ class EifileLinkDirective(Directive):
         para += node
         return [para]
 
+class IfCollaboratoryDirective(Directive):
+    has_content = True
+    required_arguments = 0
+    optional_arguments = 0
+
+    def run(self):
+        env = self.state.document.settings.env
+        if not env.config.collaboratory:
+            return []
+        # Parse the directive body as normal RST
+        node = nodes.paragraph()
+        self.state.nested_parse(self.content, self.content_offset, node)
+        return [node]
 
 # ---------------------------------------------------------------------------
 # Sphinx wiring
@@ -99,9 +112,11 @@ class EifileLinkDirective(Directive):
 
 def setup(app):
     app.add_config_value("eifilelink_base", "", "env")
+    app.add_config_value("collaboratory", False, "env")
 
     app.add_role("eifilelink", eifilelink_role)
     app.add_directive("eifilelink", EifileLinkDirective)
+    app.add_directive("if-collaboratory", IfCollaboratoryDirective)
 
     return {
         "version": "0.1",
