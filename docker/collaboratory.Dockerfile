@@ -2,22 +2,34 @@
 
 # NOTE: check .dockerignore if builds fail with missing files
 
-FROM erlang:26-alpine AS jdk-erlang
+FROM erlang:28-alpine AS jdk-erlang
+    # - jdk, libc-dev needed for building the erlang sqlite plugin.
+    #
+    # - git for extracting the version number
+    #
+    # - plantuml for the website
+    #
+    # TODO: instead of creating a venv during build, install
+    # py3-sphinx and py3-sphinxcontrib-plantuml (currently in alpine
+    # testing) here
 RUN <<EOF
-    apk --update --no-cache add bash nss openjdk25-jdk gcc libc-dev git
-    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community hugo
+    apk --update --no-cache add bash nss openjdk25-jdk gcc libc-dev git plantuml python3
 EOF
 
 FROM jdk-erlang AS builder
 COPY ./ /appSrc/
 WORKDIR /appSrc
+ENV SPHINX_COLLABORATORY true
 RUN <<EOF
     chmod +x gradlew
     ./gradlew --no-daemon frontend:assemble
-    hugo -s abs-models.org -e collaboratory
+    python3 -m venv /tmp/sphinx-venv
+    . /tmp/sphinx-venv/bin/activate
+    pip install sphinx sphinxcontrib.plantuml
+    sphinx-build -M html website/src/site/sphinx website/build
 EOF
 
-FROM php:8.3.9-apache-bookworm
+FROM php:8.4-apache-trixie
 LABEL maintainer="Rudolf Schlatte <rudi@ifi.uio.no>"
 
 COPY <<EASYINTERFACE_SITE_CONF /etc/apache2/sites-available/easyinterface-site.conf
@@ -40,9 +52,7 @@ EASYINTERFACE_SITE_CONF
 
 RUN <<EOF
     apt-get -y update
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863199
-    mkdir -p /usr/share/man/man1
-    apt-get -y install apt-utils gawk git graphviz libgl1 netcat-openbsd unzip
+    apt-get -y install apt-utils gawk git graphviz libgl1 netcat-openbsd unzip openjdk-25-jdk-headless erlang-base erlang-nox
     git clone https://github.com/abstools/absexamples.git /var/www/absexamples
     chmod -R 755 /var/www/absexamples
     git clone https://github.com/abstools/easyinterface.git /var/www/easyinterface
@@ -52,36 +62,7 @@ RUN <<EOF
     chmod -R 755 /var/www/easyinterface
     a2ensite easyinterface-site
     a2enmod headers
-    # Installation of erlang 26, which is not in unstable yet as of
-    # 2024-07-29, so we follow
-    # https://www.rabbitmq.com/docs/install-debian#apt-cloudsmith
-    apt-get -y install curl gnupg apt-transport-https
-    ## Team RabbitMQ's main signing key
-    curl -1sLf "https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA" | gpg --dearmor | tee /usr/share/keyrings/com.rabbitmq.team.gpg > /dev/null
-    ## Community mirror of Cloudsmith: modern Erlang repository
-    curl -1sLf https://github.com/rabbitmq/signing-keys/releases/download/3.0/cloudsmith.rabbitmq-erlang.E495BB49CC4BBE5B.key | gpg --dearmor | tee /usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg > /dev/null
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa1.novemberain.com/rabbitmq/rabbitmq-erlang/deb/debian bookworm main" >> /etc/apt/sources.list.d/rabbitmq.list
-    echo "deb-src [signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa1.novemberain.com/rabbitmq/rabbitmq-erlang/deb/debian bookworm main" >> /etc/apt/sources.list.d/rabbitmq.list
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa2.novemberain.com/rabbitmq/rabbitmq-erlang/deb/debian bookworm main" >> /etc/apt/sources.list.d/rabbitmq.list
-    echo "deb-src [signed-by=/usr/share/keyrings/rabbitmq.E495BB49CC4BBE5B.gpg] https://ppa2.novemberain.com/rabbitmq/rabbitmq-erlang/deb/debian bookworm main" >> /etc/apt/sources.list.d/rabbitmq.list
-    apt-get -y update
-    ## Install Erlang packages
-    apt-get install -y erlang-base erlang-nox
-
     rm -rf /var/lib/apt/lists/*
-EOF
-
-COPY <<DEBIAN_BACKPORTS /etc/apt/sources.list.d/bookworm-backports.list
-deb http://deb.debian.org/debian bookworm-backports main
-DEBIAN_BACKPORTS
-COPY <<DEBIAN_UNSTABLE /etc/apt/sources.list.d/unstable.list
-deb http://ftp.de.debian.org/debian sid main
-DEBIAN_UNSTABLE
-# Java 25 is currently (as of 2024-07-29) not in bookworm-backports,
-# so we fall back to unstable temporarily
-RUN <<EOF
-    apt-get -y update
-    apt-get -y install -t unstable openjdk-25-jdk-headless
 EOF
 
 COPY <<ENVISAGE_CONFIG_FILE /var/www/easyinterface/server/bin/envisage/ENVISAGE_CONFIG
@@ -99,7 +80,7 @@ EC_APETHOME="/usr/local/lib/apet"
 EC_SYCOHOME="/usr/local/lib/apet"
 ENVISAGE_CONFIG_FILE
 
-COPY --from=builder /appSrc/abs-models.org/collaboratory/ /var/www/html/
+COPY --from=builder /appSrc/website/build/html/ /var/www/html/
 COPY ./binaries/ /binaries/
 RUN <<EOF
 set -e

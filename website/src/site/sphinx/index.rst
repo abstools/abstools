@@ -20,6 +20,14 @@ language that features functional data-types.
 * ABS supports a range of techniques for model exploration and
   analysis, based on formal semantics
 
+.. if-collaboratory::
+
+   .. raw:: html
+
+      <h3>Go to the Collaboratory</h3>
+
+   :eifilelink:`Local Collaboratory Installation </collaboratory/helloworld.abs|app=erlangbackend>`
+
 .. toctree::
    :maxdepth: 2
 

@@ -32,6 +32,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The toolchain now requires Java 25.
 
+- The language reference and website have been merged, and ported to
+  the Sphinx website generator and rST (reStructured Text) format.
+
 ### Removed
 
 ### Fixed

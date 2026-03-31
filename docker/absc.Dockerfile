@@ -1,16 +1,17 @@
 # syntax=docker/dockerfile:1.3-labs
-FROM erlang:26-alpine AS jdk-erlang
+FROM erlang:28-alpine AS jdk-erlang
 RUN <<EOF
-apk --update add bash nss openjdk25-jdk gcc libc-dev git
-rm -rf /var/cache/apk/*
+    # - jdk, libc-dev needed for building the erlang sqlite plugin.
+    apk --update add bash nss openjdk25-jdk gcc libc-dev git
+    rm -rf /var/cache/apk/*
 EOF
 
 FROM jdk-erlang AS builder
 COPY ./ /appSrc/
 WORKDIR /appSrc
 RUN <<EOF
-chmod +x gradlew
-./gradlew --no-daemon frontend:assemble
+    chmod +x gradlew
+    ./gradlew --no-daemon frontend:assemble
 EOF
 
 # A dockerfile for running the `absc` command-line compiler and the analysis

@@ -21,14 +21,6 @@
 
 - Manually compile and run a small model on macOS, Linux, Windows
 
-- Check that the manual looks ok, including the updated version number
-  -- open `abs-docs/build/docs/asciidoc/index.html` in a browser.
-
-- update [https://abs-models.org/manual/]: copy the content of
-  `abs-docs/build/docs/asciidoc/` into the
-  `abs-models.org/static/manual/` subdirectory, then redeploy the
-  website as described in `abs-models.org/README.org`
-
 - Create docker
   - remove current docker images to ensure everything gets rebuilt
   - run `make docker ; make run-collaboratory`
@@ -83,11 +75,6 @@
   - check the output of `absc -V`; it should output the new version
     number
 
-- Update the website with the new version of the language manual:
-  - `cp -r abs-docs/build/docs/asciidoc/* abs-models.org/static/manual`
-  - check the header of `abs-docs/build/docs/asciidoc/index.html`, it
-    should contain the new version number
-
 - push the release commit (`git push`)
 - push the release tag (`git push --tags`)
 
@@ -121,6 +108,9 @@
   - `docker rm easyinterface`
   - `docker pull abslang/collaboratory:latest`
   - `docker run -d -p 8080:80 --restart unless-stopped --name easyinterface abslang/collaboratory:latest`
+
+- Update the abs-models.org website
+  - Deploy contents of `website/build/html` into that repository
 
 # Version numbering
 

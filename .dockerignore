@@ -4,7 +4,7 @@
 !abs-docs/
 !build.gradle
 !frontend/
-!abs-models.org/
+!website/
 !binaries/
 !gradle/
 !gradlew
