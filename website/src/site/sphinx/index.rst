@@ -29,7 +29,6 @@ language that features functional data-types.
    :eifilelink:`Local Collaboratory Installation </collaboratory/helloworld.abs|app=erlangbackend>`
 
 .. toctree::
-   :maxdepth: 2
 
    overview
    getting-started/getting-started
