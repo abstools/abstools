@@ -8,17 +8,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The Java backend now implements semantic lifting, i.e., representing
+  model structure and runtime state as RDF.
+  - Running a model with the argument `--printRDF` will print the RDF
+    graph after the model has finished.
+  - Running a model with the argument `--sparqlQuery` followed by a
+    SPARQL query will run and print the result of the query after the
+    model has finished.
+  - The Model API offers an additional URL `/sparql` that implements a
+    SPARQL endpoint.
+
 - A new function `range(a, b)` in the standard library returns a list
   of integers ranging from a to b (inclusive).  This is useful, for
   example, to write `foreach (i in range(1, 5)) { ... }`.
-
-- The expressions `x implements I` and `x as I` are now implemented by
-  the Java backend.
-
-- In the Java backend, relative filenames such as sqlite databases are
-  now resolved against the directory given by the `--datadir`
-  parameter or `abs.datadir` property.  If no directory is specified,
-  such filenames are resolved against the current directory as before.
+ 
+ - The expressions `x implements I` and `x as I` are now implemented by
+   the Java backend.
+ 
+ - In the Java backend, relative filenames such as sqlite databases are
+   now resolved against the directory given by the `--datadir`
+   parameter or `abs.datadir` property.  If no directory is specified,
+   such filenames are resolved against the current directory as before.
 
 ### Changed
 

@@ -31,6 +31,7 @@ aspect GenerateJava {
                 throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e);
             }
         }
+        code.writeOntology(this);
     }
 
 
