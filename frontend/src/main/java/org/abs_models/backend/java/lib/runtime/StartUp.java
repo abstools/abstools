@@ -22,8 +22,6 @@ public class StartUp {
             NetworkImpl network = new NetworkImpl();
             network.addNode(new NodeImpl(0));
             runtime = ABSNetRuntime.getRuntime(network);
-        } else if (options.dynamicUpdates.isTrue()) {
-            runtime = ABSDynamicRuntime.getRuntime();
         } else {
             runtime = ABSRuntime.getRuntime();
         }

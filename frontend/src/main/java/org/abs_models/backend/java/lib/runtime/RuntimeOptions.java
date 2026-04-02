@@ -214,8 +214,6 @@ public class RuntimeOptions {
         addOption(CLASSLIST, "loggedClasses", "--loggedClasses", "comma-separated list of classes to be logged", new String[0]);
     public final Option schedulableTasksFilter =
         addOption(CLASS, "schedulableTasksFilter", "--schedulableTasksFilter", "sets a filter class for schedulable tasks", null);
-    public final Option dynamicUpdates =
-        addOption(BOOLEAN, "dynamic", "--dynamic", "enables dynamic program updates (not supported)", false);
     public final Option datadir =
         addOption(STRING, "datadir", "--datadir", "The directory to resolve paths for sqlite databases and other data files", ".");
 
