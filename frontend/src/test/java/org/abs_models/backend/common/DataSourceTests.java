@@ -6,6 +6,7 @@ package org.abs_models.backend.common;
 
 import java.io.File;
 
+import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.junit.Assume;
 import org.junit.Test;
@@ -17,6 +18,16 @@ public class DataSourceTests extends SemanticTests {
 
     public DataSourceTests(BackendTestDriver d) {
         super(d);
+    }
+
+    @Test
+    public void testQueryContainingStringLiteral() throws Exception {
+        ABSTest.assertParse(
+            """
+            def List<String> fstring_with_literal() = builtin(sqlite3,
+            "test.sqlite3",
+            `SELECT string_value FROM test_table WHERE string_value = "hello"`);
+            """);
     }
 
     @Test
