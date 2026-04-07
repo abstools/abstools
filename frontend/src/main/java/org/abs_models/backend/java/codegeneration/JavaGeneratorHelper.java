@@ -209,7 +209,7 @@ public class JavaGeneratorHelper {
         String dbname = ((StringLiteral)body.getArgument(1)).getContent();
         String query = ((StringLiteral)body.getArgument(2)).getContent()
             .replaceAll("[\r\n]+\\s*", " ")
-            .replaceAll("\"", "\\\"");
+            .replace("\"", "\\\"");
         FunctionDecl decl = body.closestParent(FunctionDecl.class);
         // Type checking ensures that decl has a type `List<X>'; get the X
         Type query_type = ((DataTypeType)decl.getType()).getTypeArg(0);
