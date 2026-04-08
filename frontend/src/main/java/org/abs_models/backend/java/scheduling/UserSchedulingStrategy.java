@@ -22,7 +22,7 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
         System.out.println(scheduler.getCOG().toString() + " Scheduling (" + schedulableTasks.size() + " processes in queue)...");
 
         // Remember TaskInfos based on their Pids to speed things up a little
-        HashMap<Integer, SimpleTaskScheduler.TaskInfo> taskMap = new HashMap<>();
+        HashMap<Long, SimpleTaskScheduler.TaskInfo> taskMap = new HashMap<>();
 
         // Convert List<TaskInfo> to ArrayList<ABSProcess>
         ArrayList<ABSProcess> processes = new ArrayList<>();
@@ -51,7 +51,7 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
         ABSProcess result = userschedule(queue);
 
         // Convert returned ABSValue (actually an ABSProcess) to TaskInfo
-        int selectedPid = result.getPid();
+        long selectedPid = result.getPid();
         logger.info("scheduling Task " + selectedPid);
         return taskMap.get(selectedPid);
     }

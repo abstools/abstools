@@ -25,7 +25,7 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
     private final TestModel model;
     private final ABSUnitGUI gui;
 
-    private Map<Integer, LinkedList<SyncTestInfo>> syncTests = new HashMap<>();
+    private Map<Long, LinkedList<SyncTestInfo>> syncTests = new HashMap<>();
 
     class SyncTestInfo {
         public TaskView task;
@@ -130,7 +130,7 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
         }
     }
 
-    private SyncTestInfo peek(int taskID) {
+    private SyncTestInfo peek(long taskID) {
         synchronized (syncTests) {
             LinkedList<SyncTestInfo> testsOfTask = syncTests.get(taskID);
             if (testsOfTask == null || testsOfTask.size() == 0) {
@@ -140,7 +140,7 @@ public class ABSTestObserver extends RegistratingObserver implements FutObserver
         }
     }
 
-    private SyncTestInfo pop(int taskID) {
+    private SyncTestInfo pop(long taskID) {
         synchronized (syncTests) {
             LinkedList<SyncTestInfo> testsOfTask = syncTests.get(taskID);
             if (testsOfTask == null || testsOfTask.size() == 0) {
