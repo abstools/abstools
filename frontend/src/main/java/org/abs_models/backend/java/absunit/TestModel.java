@@ -19,7 +19,7 @@ public class TestModel {
     private List<TaskView> error = new LinkedList<>();
     private List<TaskView> deadlocked = new LinkedList<>();
 
-    private final HashMap<Integer, LinkedList<TestStatus>> activeTests = new HashMap<>();
+    private final HashMap<Long, LinkedList<TestStatus>> activeTests = new HashMap<>();
     private final LinkedList<TestStatus> finishedTests = new LinkedList<>();
     private TestModelListener listener;
 
@@ -61,7 +61,7 @@ public class TestModel {
         informListenersTestStarted(newTest);
     }
 
-    private TestStatus peek(int taskID) {
+    private TestStatus peek(long taskID) {
         synchronized (activeTests) {
             LinkedList<TestStatus> testsOfTask = activeTests.get(taskID);
             if (testsOfTask == null || testsOfTask.size() == 0) {
@@ -71,7 +71,7 @@ public class TestModel {
         }
     }
 
-    private TestStatus pop(int taskID) {
+    private TestStatus pop(long taskID) {
         synchronized (activeTests) {
             LinkedList<TestStatus> testsOfTask = activeTests.get(taskID);
             if (testsOfTask == null || testsOfTask.size() == 0) {

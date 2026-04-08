@@ -23,7 +23,7 @@ public class COG {
 
     private final TaskScheduler scheduler;
     private final Class<?> initialClass;
-    private final int id;
+    private final long id;
     private ABSInterface dc;
     /**
      * The number of active threads, incremented and decremented by schedulers
@@ -142,7 +142,7 @@ public class COG {
         }
     }
 
-    public int getID() {
+    public long getID() {
         return id;
     }
 
@@ -236,7 +236,7 @@ public class COG {
         }
 
         @Override
-        public int getID() {
+        public long getID() {
             return id;
         }
 

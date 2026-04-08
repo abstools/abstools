@@ -21,7 +21,7 @@ import org.apfloat.Aprational;
 
 public class Task<T extends ABSRef> implements Runnable {
     private final ABSFut<Object> future;
-    private final int id;
+    private final long id;
     private Thread executingThread;
     private ABSException exception;
 
@@ -72,7 +72,7 @@ public class Task<T extends ABSRef> implements Runnable {
         this.value = 0;         // TODO
     }
 
-    public int getID() {
+    public long getID() {
         return id;
     }
 
@@ -349,7 +349,7 @@ public class Task<T extends ABSRef> implements Runnable {
         }
 
         @Override
-        public int getID() {
+        public long getID() {
             return id;
         }
 
