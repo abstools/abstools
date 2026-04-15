@@ -3,10 +3,10 @@ Introduction
 ************
 
 
-The ABS Language
+The ABS language
 ================
 
-The *ABS language* is an actor-based, object-oriented, executable modeling
+:term:`ABS` is an actor-based, object-oriented, executable modeling
 language.  Its prime features are:
 
 Algebraic user-defined data types and side effect-free functions
@@ -19,8 +19,7 @@ Algebraic user-defined data types and side effect-free functions
    counterparts.
 
 A syntax that is close to Java
-   Programmers that are used to Java can easily learn the ABS
-   language.
+   Programmers familiar with Java can easily learn the ABS language.
 
 Distributed, actor-based semantics
    Method calls are asynchronous and create a new process in the
@@ -35,18 +34,17 @@ Interfaces for specifying object behavior
 Safe concurrency
    Processes run cooperatively within one object and do not have
    access to other objects' state, and data structures are immutable.
-   The most common error causes of concurrent systems (aliasing,
-   insufficient locking) are avoided by the language semantics.
+   The language semantics avoids most common error causes of
+   concurrent systems (aliasing, insufficient locking).
 
 Distributed computing
    The combination of asynchronous method calls, immutability and
-   strong encapsulation makes it very easy to model distributed
-   systems.
+   strong encapsulation makes it easy to model distributed systems.
 
 A formal semantics and compositional proof theory
    ABS is designed to be amenable to program analysis and
    verification.  A variety of tools (deadlock checker, resource
-   analysis, formal verification) have been developed.
+   analysis, formal verification) exist.
 
 Non-goals
 ---------
@@ -65,17 +63,17 @@ Close-to-the-metal programming
 
 .. _sec:concurrency-model:
 
-The ABS Actor and Concurrency Model
+The ABS actor and concurrency model
 ===================================
 
 As mentioned, ABS method calls are asynchronous and create a new
 process in the target, while the caller process continues to run in
 parallel, as shown in Figure :ref:`fig-future-await`.  At point ①, P1
-issues an asynchronous call to some object residing on another cog.
-In response, a new process P2 is created; P1 and P2 can run in
+issues an asynchronous call to some object residing on Cog 2.  In
+response, Cog 2 creates a new process P2; P1 and P2 can run in
 parallel.  At point ②, P1 needs the result of the method call and
-suspends itself.  At point ③, P2 finishes and returns a value.  P1’s
-cog then reactivates P1 to continue execution.
+suspends itself.  At point ③, P2 finishes and returns a value.  Cog 1
+then reactivates P1 to continue execution.
 
 .. _fig-future-await:
 
@@ -84,23 +82,24 @@ cog then reactivates P1 to continue execution.
 
    Process call semantics
 
-The paragraph above elides some details.  An asynchronous method call
-(see :ref:`async-call-expression`) produces a *future variable*, which is
-used both to synchronize with the callee process (see :ref:`await-stmt`)
-and to get the result (see :ref:`get-expression`).  Future variables are
-first-class objects that can be passed along, so multiple processes
+The paragraph above elides some details.  An :ref:`asynchronous method
+call <async-call-expression>` produces a *future variable*, which is
+used both to :ref:`synchronize with the callee process <await-stmt>`
+and to :ref:`get the result <get-expression>`.  Future variables are
+first-class objects that can be passed along, so several processes
 can synchronize on the same future.
 
 
 The processes created by method calls are scheduled cooperatively and
-run within the scope of the target object.  Objects are grouped into
-COGs (Concurrent Object Groups).  Each cog runs one process at a time,
-while processes on different cogs run in parallel, as shown in Figure
+run within the scope of the target object, that is, ``this`` evaluates
+to the object.  All Objects are contained in a :term:`COG` (Concurrent
+Object Group).  Each cog runs one process at a time, while processes
+on different cogs run in parallel, as shown in Figure
 :ref:`fig-cog-scheduling`.  This means that each cog is a *unit of
 concurrency* and is in charge of scheduling the processes running on
 its objects.  Each process runs until it suspends itself (see
-:ref:`await-stmt` and :ref:`suspend-stmt`) or terminates, at which point the
-cog chooses the next process to run.
+:ref:`await-stmt` and :ref:`suspend-stmt`) or terminates, at which
+point the cog chooses the next process to run.
 
 .. _fig-cog-scheduling:
 
