@@ -74,3 +74,15 @@ sphinx-build -M html src/site/sphinx build`
 {eifilelink}`/collaboratory/examples/Deadlock/BOL/uglyChain.abs|app=dsa`
 {eifilelink}`uglyChain </collaboratory/examples/Deadlock/BOL/uglyChain.abs|app=dsa>`
 ```
+
+# Style checking with vale
+
+The file `.vale.ini` in this directory contains
+[vale](https://vale.sh) rules that can be used to check the language
+of the website.  Vale's suggestions should not be seen as mandatory,
+but can help to write our documentation with decent style.
+
+Run `vale sync` to download the style files specified by `.vale.ini`,
+and see the "Integrations" section of [the vale
+documentation](https://vale.sh/docs) for setting it up in your
+preferred editing environment.

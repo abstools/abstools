@@ -25,3 +25,4 @@ This section contains the language manual.
    schedulers
    feature-modeling
    backends
+   glossary
