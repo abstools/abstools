@@ -46,3 +46,6 @@ gen/
 /frontend/src/main/resources/erlang/absmodel/_build/default/lib/ranch/
 /frontend/src/main/resources/erlang/absmodel/_build/default/plugins/
 erl_crash.dump
+
+# Vale (https://vale.sh) data files, downloaded via `vale sync`
+/website/styles/
