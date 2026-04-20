@@ -384,6 +384,9 @@ The following namespaces are always defined:
 ``run:``
    the runtime ontology, containing object references
 
+Additionally, the lifted program state includes all namespace
+definitions of an included domain ontology.
+
 ::
 
   module Test;

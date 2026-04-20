@@ -249,6 +249,12 @@ An ABS model can query its own state at runtime -- see
 with semantically-lifted models from outside, i.e., from the command
 line or the Model API.
 
+When an ABS model is compiled with an argument ``--domain-ontology
+domain.ttl`` to the compiler, the content of the file named by that
+argument (``domain.ttl`` in the example) is added to the lifted
+program state and is visible to all SPARQL queries.  All namespaces of
+the domain ontology can be used to formulate a SPARQL query.
+
 When an ABS model is started with the ``--printRDF`` argument, this
 semantic representation is printed to the terminal in `TRTL format
 <https://www.w3.org/TR/turtle/>`__ after the model finishes.

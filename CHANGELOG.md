@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - The Model API offers an additional URL `/sparql` that implements a
     SPARQL endpoint as specified in Section 2.1 of
     <https://www.w3.org/TR/sparql11-protocol/>.
+  - Running the abs compiler with `--domain-ontology ontology.ttl`
+    adds the content of `ontology.ttl` to the lifted program state.
 
 - In the Java backend, it is now possible to define functions that
   query the lifted program state, for example, to find objects that
