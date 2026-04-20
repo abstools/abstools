@@ -39,6 +39,7 @@ public class JavaCode {
     private final File output_jar;
     private final File httpIndexFile;
     private final File httpStaticDir;
+    private final File domainOntology;
     private final List<File> files = new ArrayList<>();
     private final List<String> mainClasses = new ArrayList<>();
 
@@ -84,14 +85,15 @@ public class JavaCode {
 
 
     public JavaCode() throws IOException {
-        this(Files.createTempDirectory("absjavabackend").toFile(), null, null, null);
+        this(Files.createTempDirectory("absjavabackend").toFile(), null, null, null, null);
     }
 
-    public JavaCode(File srcDir, File output_jar, File http_index_file, File http_static_dir) {
+    public JavaCode(File srcDir, File output_jar, File http_index_file, File http_static_dir, File domain_ontology_file) {
         this.srcDir = srcDir;
         this.output_jar = output_jar;
         this.httpIndexFile = http_index_file;
-	    this.httpStaticDir = http_static_dir;
+        this.httpStaticDir = http_static_dir;
+        this.domainOntology = domain_ontology_file;
     }
 
     public String[] getFileNames() {
@@ -290,8 +292,15 @@ public class JavaCode {
         try (FileOutputStream out = new FileOutputStream(file, false)) {
             JavaGeneratorHelper.generateProgramOntology(model).write(out, "TURTLE");
         } catch (IOException e) {
-			throw new RuntimeException("Error while creating program ontology " + file);
-		}
+            throw new RuntimeException("Error while creating program ontology " + file);
+        }
+        if (domainOntology != null) {
+            try {
+                Files.copy(domainOntology.toPath(), new File(dir, "domain.ttl").toPath());
+            } catch (IOException e) {
+                throw new RuntimeException("Error while copying domain ontology " + domainOntology);
+            }
+        }
     }
 
     public boolean hasMainClasses() {

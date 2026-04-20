@@ -38,34 +38,50 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
     protected static final Logger log = Logging.getLogger(GraphObserver.class.getName());
 
     /** The namespace prefixes used by the ABS ontology. */
-    public static final Map<String, String> absNamespaces = Map.of(
-        "rdfs", RDFS.label.getNameSpace(),
-        // the abs language ontology prefix
-        "abs", "http://abs-models.org/ns/abs/",
-        "prog", "http://abs-models.org/ns/prog/",
-        "run", "http://abs-models.org/ns/run/");
+    public static final Map<String, String> absNamespaces;
 
-    public static String sparqlPrefix = absNamespaces.entrySet()
-        .stream()
-        .map(e -> "PREFIX " + e.getKey() + ": <" + e.getValue() + ">\n")
-        .collect(Collectors.joining());
+    public static String sparqlPrefix;
 
-    /** The program model, generated at compile time */
+    /// The program model, generated at compile time
     static Model progModel = ModelFactory.createDefaultModel();
     static Map<String, Resource> knownClasses = new HashMap<>();
     static Map<String, Resource> knownInterfaces = new HashMap<>();
     static Map<String, Resource> knownDatatypes = new HashMap<>();
     static Map<String, Resource> knownConstructors = new HashMap<>();
 
+    /// The domain ontology, specified via command line
+    static Model domainModel = ModelFactory.createDefaultModel();
+
     static {
+        try (InputStream is = GraphObserver.class.getResourceAsStream("/resources/domain.ttl")) {
+            if (is != null) {
+                String domainModelString = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                domainModel.read(new StringReader(domainModelString), null, "TURTLE");
+            }
+        } catch (IOException e) {
+            log.warning("Failed to read the domain ontology, will be missing from lifted state");
+        }
         try (InputStream is = GraphObserver.class.getResourceAsStream("/resources/prog.ttl")) {
             if (is != null) {
                 String progModelString = new String(is.readAllBytes(), StandardCharsets.UTF_8);
                 progModel.read(new StringReader(progModelString), null, "TURTLE");
             }
         } catch (IOException e) {
-            log.warning("Failed to read the abs and program ontologies, RDF model only contains the runtime ontology");
+            log.warning("Failed to read the abs and program ontologies, will be missing from lifted state");
         }
+
+        absNamespaces = progModel.getNsPrefixMap(); // getNsPrefixMap returns a modifiable copy per its documentation
+        absNamespaces.putAll(
+            Map.of("rdfs", RDFS.label.getNameSpace(),
+                "abs", "http://abs-models.org/ns/abs/",
+                "prog", "http://abs-models.org/ns/prog/",
+                "run", "http://abs-models.org/ns/run/"));
+
+        sparqlPrefix = absNamespaces.entrySet()
+            .stream()
+            .map(e -> "PREFIX " + e.getKey() + ": <" + e.getValue() + ">\n")
+            .collect(Collectors.joining());
+
         String absns = absNamespaces.get("abs");
         progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "class"))
             .forEach(
@@ -225,16 +241,8 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         for (COGView view : cogs) {
             addCogTriples(model, view);
         }
-        try (InputStream is = GraphObserver.class.getResourceAsStream("/resources/prog.ttl")) {
-            if (is != null) {
-                String progModelString = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-                Model progModel = ModelFactory.createDefaultModel();
-                progModel.read(new StringReader(progModelString), null, "TURTLE");
-                model.add(progModel);
-            }
-        } catch (IOException e) {
-            log.warning("Failed to read the abs and program ontologies, RDF model only contains the runtime ontology");
-        }
+        model.add(progModel);
+        model.add(domainModel);
         return model;
     }
 

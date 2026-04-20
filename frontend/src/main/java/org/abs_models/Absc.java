@@ -152,6 +152,11 @@ public class Absc implements Callable<Integer> {
     @Option(names = { "--sourceonly" },
             description = "@|bold Java backend:|@ do not generate Java .class files")
     public boolean java_sourceOnly = false;
+    @Option(names = { "--domain-ontology" },
+        description = "@|bold Java backend:|@ the domain ontology file in semantic lifting, must be in .ttl format",
+        paramLabel = "file"
+    )
+    public File domain_ontology;
 
     // Pretty-printer
     @Option(names = { "-f", "--force" },
