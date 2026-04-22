@@ -58,6 +58,7 @@ export Spec, ObjInv, Ensures, Requires, WhileInv, Resolves, Local, Role, Succeed
 export Annotation, TypeAnnotation, LocationType, Far, Near, Somewhere, Infer, NullableType, Nonnull, Nullable;
 export COG, Plain, Final, Atomic, Readonly;
 export HTTPName, HTTPCallable;
+export DomainClass;
 export Expansion, ExpansionCall;
 
 // Higher order functions
@@ -726,6 +727,11 @@ def String readln() = builtin;
 
 // Annotation for marking objects, interface methods as accessible via HTTP
 type HTTPName = String;
+
+// Annotation for semantic lifting: used for annotating class
+// definitions with an expression evaluating to an owl class of the
+// domain ontology
+type DomainClass = String;
 
 module ABS.StdLib.Exceptions;
 export *;

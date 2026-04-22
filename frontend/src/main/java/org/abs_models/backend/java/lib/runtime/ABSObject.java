@@ -6,6 +6,7 @@ package org.abs_models.backend.java.lib.runtime;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.abs_models.backend.java.lib.types.ABSRef;
 import org.abs_models.backend.java.lib.types.ABSUnit;
@@ -152,6 +153,12 @@ public abstract class ABSObject implements ABSRef {
 
     // Return value is serializable by the Jackson JSON library
     public abstract List<Map<String, Object>> getHttpCallableMethodInfo();
+
+    /// The resource URI of a domain class linked to a specific ABS
+    /// object instance.
+    public java.util.Optional<String> $domainClass() {
+        return Optional.empty();
+    }
 
     public ABSFut<? extends Object> invokeMethod(String name, List<Object> arguments) {
         return null;

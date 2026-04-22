@@ -134,6 +134,7 @@ public enum ErrorMessage {
     WRONG_DEADLINE_TYPE("Wrong type %s in deadline annotation, should be ABS.StdLib.Duration."),
     WRONG_SIZE_ANNOTATION_TYPE("Wrong type %s in size annotation, should be a number."),
     WRONG_COST_ANNOTATION_TYPE("Wrong type %s in cost annotation, should be a number."),
+    WRONG_DOMAIN_CLASS_ANNOTATION_TYPE("Wrong type %s in domain class annotation, should evaluate to a string."),
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s."),
     WRONG_SCHEDULER_ANNOTATION_TYPE("Invalid scheduler expression, should be function invocation of type ABS.Scheduler.Process and first argument of type List<ABS.Scheduler.Process>."),
     WRONG_SCHEDULER_FUN_TYPE("Function %s invalid as scheduler function, first argument must be of type List<ABS.Scheduler.Process>, return type must be ABS.Scheduler.Process."),

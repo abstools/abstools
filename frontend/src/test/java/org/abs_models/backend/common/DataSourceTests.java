@@ -57,4 +57,10 @@ public class DataSourceTests extends SemanticTests {
         assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql.abs"));
     }
 
+    @Test
+    public void domainAnnotation() throws Exception {
+        Assume.assumeTrue("Only meaningful with SPARQL support", driver.supportsSPARQL());
+        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql_domainclasses.abs"));
+    }
+
 }
