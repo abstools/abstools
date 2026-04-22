@@ -755,4 +755,20 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         // https://github.com/abstools/abstools/issues/323
         assertTypeErrors("{ foreach (string in snd(entries)) skip; }");
     }
+
+    @Test
+    public void domainAnnotationWrongType() {
+        assertTypeErrors("""
+            [DomainClass: 15]
+            class C { }
+            """);
+    }
+
+    @Test
+    public void domainAnnotationUnknownVariable() {
+        assertTypeErrors("""
+            [DomainClass: noFieldWithThisName]
+            class C { }
+            """);
+    }
 }

@@ -21,6 +21,7 @@ import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.types.ABSClass;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
+import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.FieldDecl;
@@ -28,6 +29,7 @@ import org.abs_models.frontend.ast.InterfaceTypeUse;
 import org.abs_models.frontend.ast.MethodImpl;
 import org.abs_models.frontend.ast.MethodSig;
 import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.PureExp;
 import org.abs_models.frontend.typechecker.InterfaceType;
 
 public class ClassDeclGenerator {
@@ -68,6 +70,8 @@ public class ClassDeclGenerator {
         generateHttpCallableMethodInfoMethod();
         stream.println();
         generateHttpCallableMethods();
+        stream.println();
+        generateDomainClassMethod();
         stream.println();
         generateFields();
         if (decl.hasParam() || decl.hasField()) {
@@ -125,6 +129,21 @@ public class ClassDeclGenerator {
         }
         stream.println("} catch (NoSuchMethodException | IllegalAccessException e) {");
         stream.println("            throw new ExceptionInInitializerError(e);");
+        stream.println("}");
+        stream.println("}");
+    }
+
+    private void generateDomainClassMethod() {
+        PureExp domainClassAnnotation = AnnotationHelper.getAnnotationValueFromName(decl.getAnnotations(), "ABS.StdLib.DomainClass");
+        if (domainClassAnnotation == null) return;
+        stream.println("public java.util.Optional<String> $domainClass() {");
+        stream.println("try {");
+        stream.println("String result = ");
+        domainClassAnnotation.generateJava(stream);
+        stream.println(";");
+        stream.println("return java.util.Optional.of(result);");
+        stream.println("} catch (Exception e) {");
+        stream.println("return java.util.Optional.empty();");
         stream.println("}");
         stream.println("}");
     }

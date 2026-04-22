@@ -48,6 +48,8 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
     static Map<String, Resource> knownInterfaces = new HashMap<>();
     static Map<String, Resource> knownDatatypes = new HashMap<>();
     static Map<String, Resource> knownConstructors = new HashMap<>();
+    /// Domain classes referenced by `DomainClass` annotation
+    static Map<String, Resource> knownDomainClasses = new HashMap<>();
 
     /// The domain ontology, specified via command line
     static Model domainModel = ModelFactory.createDefaultModel();
@@ -267,9 +269,14 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         String absNS = absNamespaces.get("abs");
         String progNS = absNamespaces.get("prog");
         String runNS = absNamespaces.get("run");
+        Optional<String> domainClass = obj.$domainClass();
         Resource classRes = knownClasses.getOrDefault(type, model.createResource(progNS + type));
         Resource objRes = model.createResource(objectResourceName(obj), classRes);
         Property inProp = model.createProperty(absNS + "in");
+        if (domainClass.isPresent()) {
+            Resource domainClassRes = knownDomainClasses.getOrDefault(domainClass.get(), model.createResource(domainClass.get()));
+            objRes.addProperty(RDF.type, domainClassRes);
+        }
         objRes.addProperty(inProp, model.createResource(runNS + "cog" + obj.getCOG().hashCode()));
         for (String fieldName : obj.getFieldNames()) {
             Property fieldProp = model.createProperty(progNS + packagename + "." + fieldName);
