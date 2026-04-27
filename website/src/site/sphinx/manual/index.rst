@@ -20,6 +20,7 @@ This section contains the language manual.
    modules
    stdlib/index
    modelapi
+   semantic-lifting
    timed
    deployment
    schedulers

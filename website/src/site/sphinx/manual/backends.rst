@@ -35,18 +35,18 @@ ABS backends.
 
 .. table:: Backend Capabilities
 
-   =======================    ======   ======   ======
-   Feature                    Maude    Erlang   Java
-   =======================    ======   ======   ======
-   Real-Time ABS              yes      yes      yes
-   Resource Models            yes      yes      yes
-   FLI                        -        -        yes
-   SQLite queries             -        yes      yes
-   SPARQL queries             -        -        yes
-   User-defined Schedulers    yes      yes      -
-   Model API                  -        yes      yes
-   Trace record/replay        -        yes      -
-   =======================    ======   ======   ======
+   ==============================================  ======   ======   ======
+   Feature                                         Maude    Erlang   Java
+   ==============================================  ======   ======   ======
+   :ref:`Real-Time ABS <sec:timed-abs>`            yes      yes      yes
+   :ref:`Resource Models <sec:deployment>`         yes      yes      yes
+   FLI                                             -        -        yes
+   :ref:`SQLite queries <sec:sqlite>`              -        yes      yes
+   :ref:`Semantic lifting <sec:semantic-lifting>`  -        -        yes
+   User-defined Schedulers                         yes      yes      -
+   :ref:`Model API <sec:model-api>`                -        yes      yes
+   Trace record/replay                             -        yes      -
+   ==============================================  ======   ======   ======
 
 .. _sec:java-backend:
 
@@ -235,41 +235,6 @@ the generated output captured in a string:
           such filenames.  If the property is not set or contains an
           invalid value, relative filenames are resolved against the
           JVM's current directory.
-
-
-RDF Representation of Runtime State
------------------------------------
-
-The Java backend supports *semantic lifting*, i.e., obtaining a
-semantic representation of aspects of the model and the runtime state.
-The data is provided in RDF form.
-
-An ABS model can query its own state at runtime -- see
-:ref:`sparql-queries`.  The rest of this section describes how to work
-with semantically-lifted models from outside, i.e., from the command
-line or the Model API.
-
-When an ABS model is compiled with an argument ``--domain-ontology
-domain.ttl`` to the compiler, the content of the file named by that
-argument (``domain.ttl`` in the example) is added to the lifted
-program state and is visible to all SPARQL queries.  All namespaces of
-the domain ontology can be used to formulate a SPARQL query.
-
-When an ABS model is started with the ``--printRDF`` argument, this
-semantic representation is printed to the terminal in `TRTL format
-<https://www.w3.org/TR/turtle/>`__ after the model finishes.
-
-When an ABS model is started with the ``--sparqlQuery`` argument
-followed by a valid SPARQL query, that query is run after the model
-finishes, and its result is printed in TRTL form.
-
-When an ABS model is running with the :ref:`Model API <sec:model-api>`
-active, it provides a SPARQL endpoint under the ``/sparql`` URL.  The
-endpoint accepts SPARQL queries as specified in `Section 2.1
-<https://www.w3.org/TR/sparql11-protocol/#query-operation>`__ of the
-`SPARQL 1.1 Protocol <https://www.w3.org/TR/sparql11-protocol/>`__.
-The sparql endpoint returns results in `JSON format
-<https://www.w3.org/TR/sparql11-results-json/>`__ by default.
 
 
 .. _sec:erlang-backend:
