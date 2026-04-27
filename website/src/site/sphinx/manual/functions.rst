@@ -206,6 +206,8 @@ Built-in functions in the standard library include:
 - The ``random`` function
 
 
+.. _sec:sqlite:
+
 Embedded SQLite Database Queries
 ================================
 
@@ -328,108 +330,3 @@ directory is the value of the erlang function
 backend, the path to the database file is resolved relative to the
 current path of the process running the model.
 
-
-.. _sparql-queries:
-
-SPARQL Queries over Semantic State
-==================================
-
-The Java backend supports *semantic lifting*, i.e., obtaining a
-semantic representation of aspects of the model and the runtime state.
-The data is provided in RDF form.
-
-ABS models using the Java backends can use the :term:`SPARQL` query
-language to query the runtime state as an RDF triple graph.  A SPARQL
-query is defined by writing a function with a ``builtin`` body with
-two arguments: a literal ``sparql`` followed by the query as a SPARQL
-string.
-
-The result of a SPARQL query is converted into an ABS list of values.
-
-Currently only the first SPARQL variable listed in the ``SELECT``
-clause is used to construct the ABS return value.  Valid return types
-of ``builtin`` SPARQL query functions are:
-
-- ``List<Int>`` when the first SPARQL variable is a RDF literal that
-  can be converted to an integer;
-
-- ``List<Float>`` when the first SPARQL variable is a RDF literal that
-  can be converted to a float;
-
-- ``List<Rat>`` ditto;
-
-- ``List<Bool>`` when the first SPARQL variable is a RDF literal that
-  can be converted to a Boolean;
-
-- ``List<String>`` when the first SPARQL variable is a RDF literal;
-
-- ``List<I>`` when ``I`` names an interface, and the first SPARQL
-  variable is a RDF resource that names an ABS object whose class
-  implements that interface.
-
-.. note:: It is an error if the resources found by a query where ABS
-          expects objects of type ``I`` do not represent ABS objects
-          that implement ``I``, but currently such objects are
-          silently dropped when creating the result.
-
-The following namespaces are always defined:
-
-``abs:``
-   the ABS language ontology
-
-``prog:``
-   the program ontology; this ontology contains the names of all
-   classes, interfaces, members, datatypes and datatype constructors
-
-``run:``
-   the runtime ontology, containing object references
-
-Additionally, the lifted program state includes all namespace
-definitions of an included domain ontology.
-
-::
-
-  module Test;
-
-  interface I {}
-
-  class C(Int i) implements I {}
-
-  def List<String> all_integer_field_values() = builtin(sparql, ①
-      `SELECT ?i
-       WHERE { ?obj a/rdfs:label "Test.C" . ②
-               ?obj prog:Test.i ?i . }`); ③
-
-  def List<I> all_I_instances() = builtin(sparql,
-      `SELECT ?o WHERE {
-         ?o a/abs:implements/rdfs:label "BackendTest.I" . ④
-       }`);
-
-
-  {
-      I o1 = new C(5);
-      I o2 = new C(4);
-      I o3 = new C(2);
-      List<String> result = all_integer_field_values(); ⑤
-      List<I> all_I = all_I_instances(); ⑥
-  }
-
-| ① A ``builtin`` function with first argument ``sparql`` takes an
-  additional argument, a SPARQL query string.
-| ② The lifted representation of an ABS class has the ABS qualified
-  name as an ``rdfs:label`` property, so we use a property path
-  `a/rdfs:label` to find class instances.
-| ③ The ``prog:`` namespace contains, among others, all class and
-  attribute definitions.  The ``prog`` ontology uses fully qualified
-  ABS names.
-| ④ This query uses SPARQL *property paths*
-  `<https://www.w3.org/TR/sparql11-property-paths/>`__ to succinctly
-  find resources of a class that implements an interface with a label
-  ``"BackendTest.I"``.
-| ⑤ This query returns a list containing "2", "4", "5" in some
-  permutation.  Since the function returns ``List<String>``, the RDF
-  literals are converted to ABS strings.
-| ⑥ This query returns the list of all objects implementing the
-  interface ``I``.  Note that ABS objects are subject to garbage
-  collection, so otherwise unreferenced objects may or may not be
-  found by the query.
