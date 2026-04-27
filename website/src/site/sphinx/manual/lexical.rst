@@ -1,5 +1,5 @@
 *****************
-Lexical Structure
+Lexical structure
 *****************
 
 This section describes the lexical structure of the ABS language.  We
@@ -46,7 +46,7 @@ elements.
      - Grouping
 
 
-Line Terminators and White Spaces
+Line terminators and white spaces
 =================================
 
 Line terminators and white spaces are defined as in Java.

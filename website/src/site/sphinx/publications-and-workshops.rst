@@ -1,12 +1,11 @@
 **************************
-Publications and Workshops
+Publications and workshops
 **************************
 
-This page links ABS workshops, as well as selected research papers on
-the development and usage of the ABS modeling language and analysis
-tools.
+This page lists ABS workshops and selected research papers on the
+development and usage of the ABS modeling language and analysis tools.
 
-ABS Workshops
+ABS workshops
 =============
 
 - **2025** APM Workshop 2025: October 1-3, 2025, Porto,
@@ -32,7 +31,7 @@ ABS Workshops
 - **2017** First International ABS Workshop: May 31--June 2, 2017,
   Oslo, Norway.
 
-Case Studies
+Case studies
 ============
 
 - | G. Turin, A. Borgarelli, S. Donetti, F. Damiani, E. B. Johnsen,
@@ -60,7 +59,7 @@ Case Studies
   | DOI: `10.1007/s11761-013-0148-0 <http://dx.doi.org/10.1007/s11761-013-0148-0>`__. Download a `preprint <https://ebjohnsen.org/publication/14-soca/14-soca.pdf>`__.
 
 
-Language Development
+Language development
 ====================
 
 - | L. Tveito, E. B. Johnsen, and R. Schlatte.
@@ -98,7 +97,7 @@ Language Development
   | Proc. 20th International Conference on Fundamental Approaches to Software Engineering (FASE 2017), LNCS 10202. Springer, 2017.
   | DOI: `10.1007/978-3-662-54494-5_25 <https://doi.org/10.1007/978-3-662-54494-5_25>`__.  Download a [postprint <http://hdl.handle.net/2318/1633390>`__.
 
-Software Product Lines
+Software product lines
 ======================
 
 
@@ -112,7 +111,7 @@ Software Product Lines
   | Proc. 13th International Conference on Integrated Formal Methods (IFM 2017), LNCS 10510. Springer, 2017.
   | DOI: `10.1007/978-3-319-66845-1_8 <https://doi.org/10.1007/978-3-319-66845-1_8>`__.  Download a [postprint <http://hdl.handle.net/2318/1649744>`__.
 
-Deductive Verification
+Deductive verification
 ======================
 
 - | E. Kamburjan, C. C. Din, R. Hähnle and E. B. Johnsen.
@@ -153,7 +152,7 @@ Analysis
   | Journal of Software and Systems Modeling, Volume 15(4), Springer, 2015.
   | DOI: `10.1007/s10270-014-0444-y <http://dx.doi.org/10.1007/s10270-014-0444-y>`__.
 
-ABS Tools
+ABS tools
 =========
 
 - | Rudolf Schlatte, Einar Broch Johnsen, Eduard Kamburjan and S. Lizeth Tapia Tarifa
@@ -161,7 +160,7 @@ ABS Tools
   | Science of Computer Programming. Volume 233. Elsevier, 2022.
   | DOI: `10.1016/j.scico.2022.102861 <https://doi.org/10.1016/j.scico.2022.102861>`__.
 
-Code Generation from ABS
+Code generation from ABS
 ========================
 
 - | B. Nobakht and F. S. de Boer.
@@ -169,7 +168,7 @@ Code Generation from ABS
   | In Proc. of the 6th Intl. Symposium on Leveraging Applications of Formal Methods, Verification and Validation (ISoLA’14). LNCS 8803. Springer, 2014.
   | DOI: `10.1007/978-3-662-45231-8_4 <http://dx.doi.org/10.1007/978-3-662-45231-8_4>`__. Download a `preprint <http://envisage-project.eu/wp-content/uploads/2015/02/paper-j8-isola.pdf>`__.
 
-Model-based Deployment and Monitoring
+Model-based deployment and monitoring
 =====================================
 
 - | R. Hähnle and E. B. Johnsen.

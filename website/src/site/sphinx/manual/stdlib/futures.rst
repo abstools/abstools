@@ -1,6 +1,6 @@
 .. _type-future:
 
-The Future Type
+The future type
 ===============
 
 Futures are placeholders for return values of asynchronous methods
@@ -39,7 +39,7 @@ statements::
 
 .. _type-destiny:
 
-The Destiny Type
+The destiny type
 ----------------
 
 .. note:: This feature is currently only available in the Erlang

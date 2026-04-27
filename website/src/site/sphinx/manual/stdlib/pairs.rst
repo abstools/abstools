@@ -3,7 +3,7 @@
 Pairs
 =====
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 The ``Pair<A, B>`` datatype holds a pair of values of types ``A`` and

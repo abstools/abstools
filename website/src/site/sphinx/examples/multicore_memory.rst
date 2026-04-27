@@ -1,4 +1,4 @@
-ABS Model of a Multicore Memory System
+ABS model of a multicore memory system
 ======================================
 
 This page presents a model of the MSI cache coherency protocol.  The
@@ -39,7 +39,7 @@ line can be either modified, shared or invalid.  A modified cache line
 has the most recent value of the memory block, therefore all other
 copies are invalid (including the one in main memory).  A shared cache
 line indicates that all copies of the block are consistent.  The
-protocol’s messages are broadcasted to the cores.  Following standard
+protocol’s messages are broadcast to the cores.  Following standard
 nomenclature, ``Rd`` messages request read access and ``RdX`` messages
 read exclusive access to a memory block.  The latter invalidates other
 copies of the same block in other caches to provide write access.

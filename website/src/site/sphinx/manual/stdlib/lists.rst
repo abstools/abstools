@@ -18,7 +18,7 @@ execute some statements for each element in a list, use a ``foreach``
 loop (see :ref:`foreach-loop`).
 
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 A list is defined either as the empty list (``Nil``) or as a value

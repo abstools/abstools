@@ -27,7 +27,7 @@ entries of the map, respectively, and can be passed, for example, to
 the ``foreach`` statement or the ``map`` function.
 
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 The datatype for a map from type ``A`` to type ``B`` is is ``Map<A,

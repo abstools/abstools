@@ -7,15 +7,14 @@ display the map in a browser, we use `OpenStreetmap
 <https://www.openstreetmap.org/>`__ via the `Leaflet
 <https://leafletjs.com/>`__ library.
 
-The complete code for this example can be found at
+The complete code for this example is at
 `<https://github.com/abstools/absexamples/tree/master/collaboratory/examples/gis-modeling/>`__.
 
 
-In OpenStreetmap, coordinates are given as a ``(lat, long)`` pair of
-floating-point numbers. We model map data as
-``MapData(Float lat, Float long, String description)``, which is then
-returned via the Model API. The complete code of the ABS part is as
-follows::
+In OpenStreetmap, coordinates are expressed as a ``(lat, long)`` pair
+of floating point numbers. We model map data as ``MapData(Float lat,
+Float long, String description)``, which is then returned from the
+Model API. The complete code of the ABS part is as follows::
 
    module MapObjects;
 
@@ -44,8 +43,8 @@ follows::
 Accessing and displaying coordinates
 ------------------------------------
 
-When the running model is accessed via a browser, the ``createMap``
-function in the model’s `index.html
+When the running model is accessed from a browser, the ``createMap``
+function in the model's `index.html
 <https://github.com/abstools/absexamples/blob/master/collaboratory/examples/gis-modeling/index.html>`__
 file is called. This function creates a map, sets its initial location
 according to the ``getInitialCoordinates`` method (Lines 6-12), then
@@ -81,10 +80,10 @@ adds the objects returned by the ``getMapObjects`` method (Lines
    }
 
 
-Running the Example
+Running the example
 -------------------
 
-Since the model includes a custom html page and support library, the
+Because the model includes a custom html page and support library, the
 compiler needs to run with the ``--modelapi-index-file`` and
 ``--modelapi-static-dir`` arguments. See the `Makefile
 <https://github.com/abstools/absexamples/tree/master/collaboratory/examples/gis-modeling/Makefile>`__

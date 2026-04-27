@@ -5,7 +5,7 @@ The ABS Language
 
 ABS is a language for Abstract Behavioral Specification, which
 combines implementation-level specifications with verifiability,
-high-level design with executablity, and formal semantics with
+high-level design with executability, and formal semantics with
 practical usability. ABS is a concurrent, object-oriented, modeling
 language that features functional data-types.
 

@@ -1,5 +1,5 @@
 
-Modeling Time in ABS
+Modeling time in ABS
 ====================
 
 ABS provides a logical clock, a rational-valued global counter
@@ -8,7 +8,7 @@ details. This example shows how to use ABS to run simulations modeling
 real (calendar) time and visualize the resulting data in a timeline.
 
 The code can be found at
-`<https://github.com/abstools/absexamples/tree/master/collaboratory/examples/time-and-date/>`__
+`<https://github.com/abstools/absexamples/tree/master/collaboratory/examples/time-and-date/>`__.
 
 The following short ABS model creates a list of values together with
 the time when the value was produced. The results are stored in a
@@ -62,7 +62,7 @@ be interpreted as *offset* from that point in time::
 The main block records in-between advancing the clock by ¼ (0.25).
 
 
-Converting Time Values
+Converting time values
 ----------------------
 
 To visualize times properly, they must be converted to a format that
@@ -93,7 +93,7 @@ returns a Javascript ``Date`` object:
    }
 
 
-Visualizing the Time Series
+Visualizing the time series
 ---------------------------
 
 The following is a complete HTML file that uses the `Highcharts
@@ -158,7 +158,7 @@ values.
    </html>
 
 
-Running the Example
+Running the example
 -------------------
 
 The following small Makefile can be used to compile and start the model.

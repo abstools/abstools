@@ -112,7 +112,7 @@ Example::
 
 .. _sec:active-classes:
 
-Active Classes
+Active classes
 ==============
 
 A class can be active or passive. Active classes start an activity on
@@ -129,7 +129,7 @@ periodically suspend itself so that the object can execute other
 methods.
 
 
-Constant Fields
+Constant fields
 ===============
 
 Similar to variable declarations, field declarations and class
@@ -151,7 +151,7 @@ trying to assign new values to two fields declared as ``Final``::
   ``Final``.
 | ② compile-time error since the field was declared ``Final``.
 
-Read-only Methods
+Read-only methods
 =================
 
 For any method definition annotated with ``[Readonly]``, the compiler
@@ -175,7 +175,7 @@ that will lead to a compile error::
   modifies a field.
 
 
-Atomic Methods
+Atomic methods
 ==============
 
 For any method definition annotated with ``[Atomic]``, the compiler

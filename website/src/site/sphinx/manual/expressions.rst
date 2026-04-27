@@ -56,7 +56,7 @@ Literals
 
 Literals, as defined in :ref:`sec:literals`, are expressions.
 
-Template Strings
+Template strings
 ================
 
 Template strings are strings allowing embedded expressions.  In
@@ -95,7 +95,7 @@ local variables `name` and `price` in place.
 
 .. _sec:operator-expressions:
 
-Operator Expressions
+Operator expressions
 ====================
 
 ABS has a range of unary and binary operators working on pre-defined
@@ -142,7 +142,7 @@ low precedence to high precedence.
    =============   ================   =============   ==============   ===========
 
 
-Semantics of Comparison Operators
+Semantics of comparison operators
 ---------------------------------
 
 ABS has generic equality and less-than comparison between two values
@@ -211,7 +211,7 @@ Example::
 | ① The value of this expression is 10 (``((2 + 2) + 1) * 2``)
 
 
-Data Constructor Expressions
+Data constructor expressions
 ============================
 
 Data Constructor Expressions are expressions that create data values
@@ -241,7 +241,7 @@ Defining new data types and their constructors is described in
 :ref:`sec:algebraic-data-types`.
 
 
-Function Calls
+Function calls
 ==============
 
 Function calls apply arguments to functions, producing a value.
@@ -263,7 +263,7 @@ Example::
   head(list)
 
 
-N-ary Function Calls
+N-ary function calls
 --------------------
 
 Calls to n-ary Constructors (see :ref:`sec:n_ary-constructors`) are
@@ -283,7 +283,7 @@ Example::
   map[Pair(1, True), Pair(2, False)]
 
 
-Partially-Defined-Function Calls
+Partially-defined-function calls
 ================================
 
 Calls to partially defined functions (see
@@ -314,7 +314,7 @@ Example::
 | ② evalutes to ``list[1, 2]``
 
 
-Conditional Expressions
+Conditional expressions
 =======================
 
 The value of the conditional expression ``when c then e1 else e2`` is either the
@@ -375,7 +375,7 @@ There are four different kinds of patterns available in ABS:
    ===================   =============================
 
 
-Variable Patterns
+Variable patterns
 -----------------
 
 Variable patterns are written as identifiers starting with a
@@ -425,7 +425,7 @@ Example::
 
 
 
-Literal Patterns
+Literal patterns
 ----------------
 
 Literals can be used as patterns.  The pattern matches if the value of
@@ -446,7 +446,7 @@ Example::
   branch.
 
 
-Data Constructor Patterns
+Data constructor patterns
 -------------------------
 
 A data constructor pattern is written like a standard data constructor
@@ -470,7 +470,7 @@ Example::
 
 
 
-The Wildcard Pattern
+The wildcard pattern
 --------------------
 
 The wildcard pattern, written with an underscore (``_``) matches any
@@ -493,8 +493,8 @@ The wildcard pattern can be used as the last pattern in a case
 expression to define a default case.
 
 
-Typing of Case Expressions
---------------------------
+Typing of ``case`` Expressions
+------------------------------
 
 A case expression is type-correct if and only if all its expressions
 and all its branches are type-correct and the right-hand side of all
@@ -508,7 +508,7 @@ match the corresponding case expression.
 
 .. _typecheck-expression:
 
-Type-Check Expressions
+Type-check expressions
 ======================
 
 Variables pointing to objects are typed by interface, which means that
@@ -542,7 +542,7 @@ Example::
 
 .. _typecast-expression:
 
-Type-Cast Expressions
+Type-cast expressions
 =====================
 
 Variables pointing to objects are typed by interface, which means that
@@ -610,7 +610,7 @@ new object begins receiving method calls.  Classes can also declare a
 and subject to the normal scheduling rules for processes.
 
 
-Synchronous Method Calls
+Synchronous method calls
 ========================
 
 A synchronous call consists of a target expression evaluating to an
@@ -649,7 +649,7 @@ callee tries to call back to an object of the caller cog.
 
 .. _async-call-expression:
 
-Asynchronous Method Calls
+Asynchronous method calls
 =========================
 
 An asynchronous call consists of a target expression evaluating to an
@@ -725,7 +725,7 @@ variable ``b``.  In case of any error, ``b`` is assigned ``False``.
 
 .. _await-expression:
 
-Await (Expression)
+Await (expression)
 ==================
 
 An await expression is a way to asynchronously call a method, wait for
@@ -753,7 +753,7 @@ The statement above is equivalent to these three statements::
   A x = fx.get;
 
 
-Exception Propagation and the Await Expression
+Exception propagation and the await expression
 ----------------------------------------------
 
 As explained in Section :ref:`get-expression`, exceptions propagate from
@@ -778,7 +778,7 @@ expression`)::
 
 .. _destiny-expression:
 
-Destiny (Expression)
+Destiny (expression)
 ====================
 
 .. note:: This feature is only available in the Erlang backend.

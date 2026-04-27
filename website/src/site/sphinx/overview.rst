@@ -2,7 +2,7 @@
 Overview
 ********
 
-Design Principles of ABS
+Design principles of ABS
 ========================
 
 ABS targets the modeling of software systems that are concurrent,
@@ -16,7 +16,7 @@ the modeling of variability in terms of feature models as a
 first-class language concept.  ABS thus provides language-based
 support for product line engineering (PLE).
 
-As an abstract language ABS is well suited to model software that is
+As an abstract language, ABS is well suited to model software that is
 supposed to be deployed in a virtualized environment.  To close the
 gap between design and deployment it is necessary to represent
 low-level concepts such as system time, memory, latency, or scheduling
@@ -31,7 +31,7 @@ process.  Tools are useless, however, unless they ensure
 predictability of results, interoperability, and usability.  A
 fundamental requirement for the first two criteria is a uniform,
 formal semantics.  But interoperability also involves the capability
-to connect with other notations than ABS. This is ensured by providing
+to use other notations than ABS. This is ensured by providing
 numerous language interfaces from and to ABS. These are realized by
 various import, export, and code generation tools.
 
@@ -70,6 +70,6 @@ Java and Erlang.
    ABS language architecture
 
 In addition to the simulation tools, a number of analysis and
-generation tools are available as well.  An overview of the ABS tool
-suite is given in `[42]
-<http://dx.doi.org/10.1007/s10009-012-0250-1>`__.
+generation tools are available as well.  See `[42]
+<http://dx.doi.org/10.1007/s10009-012-0250-1>`__ for an overview of
+the ABS tool suite.

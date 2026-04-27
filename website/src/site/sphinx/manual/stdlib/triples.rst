@@ -3,7 +3,7 @@
 Triples
 =======
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 The ``Triple<A, B, C>`` datatype holds a triple of values of types

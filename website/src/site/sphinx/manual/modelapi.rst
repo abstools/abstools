@@ -1,7 +1,7 @@
 .. _sec:model-api:
 
 *************
-The Model API
+The model API
 *************
 
 ABS includes support for querying a running model.  When creating
@@ -16,7 +16,7 @@ returned from such methods.
           (loopback) addresses, i.e., from the same machine.
 
 
-Starting the Model API
+Starting the model API
 ======================
 
 When an ABS model is started with the ``-p`` parameter naming a port
@@ -32,7 +32,7 @@ the model API on port 8080::
   $ gen/erl/run -p 8080
 
 
-Shutting down the Model API
+Shutting down the model API
 ===========================
 
 When running a model with the model API activated, it will not return
@@ -86,7 +86,7 @@ method call itself.
 
 
 
-Encoding Method Parameters
+Encoding method parameters
 --------------------------
 
 Exposed methods can be called via HTTP requests, with parameters
@@ -113,7 +113,7 @@ are not supported.
    ==================     ============================================   ===========
 
 
-Return Value Format
+Return value format
 -------------------
 
 The method's return value is returned in the body of the query
@@ -272,7 +272,7 @@ When the invoked method throws an exception, the HTTP request will
 produce a 500 response code.
 
 
-The Model API and Timed ABS
+The model API and timed ABS
 ===========================
 
 The simulated clock of Timed ABS (:ref:`sec:timed-abs`) is accessible
@@ -305,7 +305,7 @@ Note that increasing the clock limit if the model was not started with
 an initial limit has no effect.
 
 
-Customizing the Browser-Based Visualization
+Customizing the browser-based visualization
 ===========================================
 
 Since the Model API is implemented via HTTP, it can be accessed from a
@@ -339,7 +339,7 @@ the ``index.html`` file like this:
 
 .. _sec:customizing-url-prefixes:
 
-Customizing the Model API URL
+Customizing the model API URL
 =============================
 
 .. note:: This functionality is currently only available in the Erlang

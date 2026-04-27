@@ -3,7 +3,7 @@
 Boolean values
 ==============
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 The literals for Boolean values are ``True`` and ``False``.  The name

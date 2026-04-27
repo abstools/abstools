@@ -1,6 +1,6 @@
 
 ###################
-ABS Language Manual
+ABS language manual
 ###################
 
 This section contains the language manual.

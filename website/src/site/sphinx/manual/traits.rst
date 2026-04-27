@@ -39,7 +39,7 @@ The effect of applying a trait ``T`` to a class (using ``uses T``
 inside the class body) is to add the methods in that trait to the
 class definition.
 
-Trait Operations
+Trait operations
 ================
 
 The trait operation ``adds`` adds all the elements of its *MethodSet*

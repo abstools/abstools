@@ -1,5 +1,5 @@
 ***************
-Getting Started
+Getting started
 ***************
 
 There are various ways of editing and running ABS models, in a browser

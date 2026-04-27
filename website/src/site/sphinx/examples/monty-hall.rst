@@ -1,18 +1,18 @@
 
-The Monty Hall Problem
+The Monty Hall problem
 ======================
 
 One reason to model systems is to gain insight into and predict
-complex behavior. Ideally, the components of the system are reasonably
-easy to understand in isolation, while assembling them together
-results in surprising behavior that can provide insight or support for
-a theory about the whole system.
+complex behavior.  Ideally, the components of the system are
+reasonably easy to understand in isolation, while assembling them
+together results in surprising behavior that can give insight or
+support for a theory about the whole system.
 
 The Monty Hall problem is usually defined as follows:
 
-   Suppose you’re on a game show, and you’re given the choice of three
+   Suppose you’re on a game show, and you're given the choice of three
    doors: Behind one door is a car; behind the others, goats. You pick
-   a door, say No. 1, and the host, who knows what’s behind the doors,
+   a door, say No. 1, and the host, who knows what's behind the doors,
    opens another door, say No. 3, which has a goat. He then says to
    you, “Do you want to pick door No. 2?” Is it to your advantage to
    switch your choice?
@@ -21,13 +21,13 @@ The Monty Hall problem is usually defined as follows:
     <https://en.wikipedia.org/wiki/Monty_Hall_problem>`__
 
 The “intuitive” assumption from many people would be that changing
-one’s guess cannot make a difference to the outcome. But is this true?
+one's guess cannot make a difference to the outcome. But is this true?
 Let us model this system and find out!
 
-The code for this example can be found at
+The code for this example is at
 `<https://github.com/abstools/absexamples/tree/master/collaboratory/examples/monty-hall/>`__
 
-Modeling the Participants
+Modeling the participants
 -------------------------
 
 Each round in the game is played between a participant and a host. First
@@ -49,7 +49,7 @@ interaction:
    Note right of Contestant: prize is Car or Goat
 
 
-The Host
+The host
 --------
 
 For simplicity, we model the three doors as the numbers ``0..2``. The
@@ -81,20 +81,18 @@ method ``open`` takes a door and returns its content: ``Car`` or
    }
 
 
-The Contestants
+The contestants
 ---------------
 
-The Contestants “drive” the interaction. The method ``play`` implements
+The Contestants "drive" the interaction. The method ``play`` implements
 the sequence of interactions shown above: the contestant picks a number,
 submits it to the host, receives information about another door, and
 finally asks the host to open the chosen door. Each contestant keeps
 track of the number of rounds and wins they have played.
 
-The code below shows the contestant that switches their guess after
-shown the incorrect door; the non-switching contestant is similar except
-for one line.
-
-::
+The following code shows the contestant that switches their guess
+after shown the incorrect door; the non-switching contestant is
+similar except for one line::
 
    interface Contestant {
        Unit play(Host host);
@@ -117,14 +115,12 @@ for one line.
        }
    }
 
-Running the Example
+Running the example
 -------------------
 
 Since we want to investigate whether the results for switching and
 non-switching strategies are different, we create one participant of
-each type and let them play against 1000 hosts:
-
-::
+each type and let them play against 1000 hosts::
 
    {
        Int nRounds = 1000;
@@ -148,6 +144,6 @@ Running the model produces output similar to the following:
    I never switched, won 333 out of 1000 rounds.
 
 As we see, the intuitive expectation about the outcome is not supported
-by the simulation! The composition of simple components with
+by the simulation!  The composition of simple components with
 understandable behavior can indeed lead to observation of surprising
 behavior, which is the goal of modeling a system.

@@ -1,5 +1,5 @@
 ************
-ABS Backends
+ABS backends
 ************
 
 This section describes the available and supported backends for ABS.
@@ -50,8 +50,8 @@ ABS backends.
 
 .. _sec:java-backend:
 
-Java Backend
-============
+Java
+====
 
 The Java backend runs ABS models on the JVM by translating them into
 Java and combining them with a runtime library implementing key ABS
@@ -77,7 +77,7 @@ of ``java -jar model.jar -h`` for a list.
 The source code of the generated classes can be inspected below the
 ``gen/`` directory.
 
-Compiling ABS Code from Gradle
+Compiling ABS code from gradle
 ------------------------------
 
 The gradle build system can compile ABS code by adding the below
@@ -187,7 +187,7 @@ following:
    }
 
 
-Running an ABS Model from Java
+Running an ABS model from java
 ------------------------------
 
 An ABS model can be started from a Java program by calling the main
@@ -239,8 +239,8 @@ the generated output captured in a string:
 
 .. _sec:erlang-backend:
 
-Erlang Backend
-==============
+Erlang
+======
 
 The Erlang backend runs ABS models on the Erlang virtual machine by
 translating them into Erlang and combining them with a small runtime
@@ -314,8 +314,8 @@ For each ``.abs`` file, running the model will generate a
 simulation finishes.
 
 
-Maude Backend
-=============
+Maude
+=====
 
 The Maude backend is a high-level, executable semantics in rewriting
 logic of the ABS language.  Due to its relatively compact nature, it

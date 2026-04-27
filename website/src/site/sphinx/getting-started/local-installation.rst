@@ -1,5 +1,5 @@
 
-Installing Command-Line Tools
+Installing command-line tools
 =============================
 
 Many of the tools can be run from the command line.  This section
@@ -65,7 +65,7 @@ To compile an ABS model ``model.abs``, invoke the compiler with ``java
 -jar absfrontend.jar --java model.abs -o model.jar``, then run the
 model with ``java -jar model.jar``.
 
-Using Docker to run the ABS compiler
+Using docker to run the ABS compiler
 ------------------------------------
 
 The latest released ABS compiler is always published as a docker image

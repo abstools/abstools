@@ -45,7 +45,7 @@ Example::
   skip;
 
 
-Variable Declarations
+Variable declarations
 =====================
 
 A variable declaration statement is used to declare variables.
@@ -79,7 +79,7 @@ Example::
 Note that the initialization expression does not need to be a pure expression.
 
 
-Constant Declarations
+Constant declarations
 ---------------------
 
 Variable and field declarations can carry a ``Final`` annotation.  The
@@ -122,7 +122,7 @@ Example::
 Note that the expression does not need to be pure.
 
 
-Expressions as Statements
+Expressions as statements
 =========================
 
 An expression statement is a statement that consists of a single
@@ -176,7 +176,7 @@ Example::
 
 .. _await-stmt:
 
-Await (Statement)
+Await (statement)
 =================
 
 An await statement suspends the current task until the given guard
@@ -233,7 +233,7 @@ Example::
 
 .. _suspend-stmt:
 
-Unconditional Release: Suspend
+Unconditional release: suspend
 ==============================
 
 The suspend statement causes the current task to be suspended.
@@ -328,7 +328,7 @@ originate from functional code.  See
 :ref:`stdlib:predefined-exceptions` for a list of built-in exceptions.
 
 
-Blocks of Statements
+Blocks of statements
 ====================
 
 A sequence of statements is called a *block*.  A block introduces a
@@ -388,7 +388,7 @@ Example::
 
 .. _switch-stmt:
 
-Switch: Pattern Matching
+Switch: pattern matching
 ========================
 
 The switch statement, like the case expression (see
@@ -427,8 +427,8 @@ Example::
 
 
 
-The While Loop
-==============
+The ``while`` loop
+==================
 
 The while loop repeats its body while the condition evaluates to
 ``True``.  The condition is re-evaluated after each iteration of the
@@ -451,8 +451,8 @@ Example::
 
 .. _foreach-loop:
 
-The Foreach Loop
-================
+The ``foreach`` loop
+====================
 
 The foreach loop repeatedly executes its body with a loop value
 variable bound to each element of the given list, in sequence.  An
@@ -491,7 +491,7 @@ Example::
 
 .. _try-catch-finally-stmt:
 
-Handling Exceptions with Try-Catch-Finally
+Handling exceptions with try-catch-finally
 ==========================================
 
 Executing a statement can result in an exception, either explicitly
