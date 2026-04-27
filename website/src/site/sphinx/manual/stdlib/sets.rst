@@ -25,7 +25,7 @@ Alternatively, ``map`` and other functions that operate on lists, as
 well as the ``foreach`` statement, can be used on sets by obtaining a
 list of the set's elements via the ``elements`` function.
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 The datatype for sets with elements of type ``A`` is ``Set<A>``.  The

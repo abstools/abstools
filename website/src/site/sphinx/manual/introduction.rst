@@ -131,7 +131,7 @@ An object in an existing cog is created via the `new local` expression (see Figu
 
 .. _sec:error-model:
 
-Error Propagation and Recovery in ABS
+Error propagation and recovery in ABS
 =====================================
 
 ABS models exceptional (unforeseen and erroneous) situations using

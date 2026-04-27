@@ -45,7 +45,7 @@ Example::
 
 .. _sec:builtin-types:
 
-Built-in Types
+Built-in types
 ==============
 
 ABS offers the following built-in datatypes:
@@ -100,7 +100,7 @@ Example::
 
 .. _sec:algebraic-data-types:
 
-Algebraic Data Types
+Algebraic data types
 ====================
 
 Algebraic Data Types in ABS are used to implement user-defined,
@@ -139,7 +139,7 @@ Example::
 
 .. _sec:accessor-functions:
 
-Accessor Functions
+Accessor functions
 ------------------
 
 Data constructor arguments can optionally have a name, which needs to
@@ -169,7 +169,7 @@ Example::
 | ② The call to `age` returns 34.
 
 
-Parametric Data Types
+Parametric data types
 ---------------------
 
 Algebraic data types can carry *type parameters*.  Data types with
@@ -192,7 +192,7 @@ Example::
 
 .. _sec:n_ary-constructors:
 
-N-ary Constructors
+N-ary constructors
 ------------------
 
 Literal values of recursive data types like lists and sets can be
@@ -225,7 +225,7 @@ constructing.  For example, a value of type `Set` is constructed via
 the function `set`.
 
 
-Fully Abstract Data Types
+Fully abstract data types
 -------------------------
 
 Using the module system it is possible to define abstract data types.
@@ -236,7 +236,7 @@ only exporting the data type and its functions, without exporting the
 constructors.
 
 
-Interface Types
+Interface types
 ===============
 
 Interfaces in ABS describe the functionality of objects.  Thus,
@@ -294,7 +294,7 @@ exception in a process via its recovery block (see :ref:`sec:classes`).
 
 
 
-Type Synonyms
+Type synonyms
 =============
 
 A *Type Synonym* is an alternative type name for a type.  Type synonyms are
@@ -319,7 +319,7 @@ Example::
   type Catalog = List<Pair<Servername,Filenames>>;
 
 
-Location Types
+Location types
 ==============
 
 A *Location Type* is an interface type annotated with a location.  The

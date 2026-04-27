@@ -2,7 +2,7 @@
 .. _sec:deployment:
 
 ********************************
-Deployment and Resource Modeling
+Deployment and resource modeling
 ********************************
 
 This chapter describes how to model non-functional properties of
@@ -74,7 +74,7 @@ other modules by default.
 
 .. _sec:deployment-components:
 
-Deployment Components
+Deployment components
 =====================
 
 In ABS, processes run inside cogs.  Deployment components are used to
@@ -312,7 +312,7 @@ cloud provider.  If no cloud provider is set, returns ``True``.  See
 
 .. _sec:resources:
 
-Resource Types
+Resource types
 ==============
 
 The term “Resource” can be understood in different ways.  In ABS, we
@@ -396,7 +396,7 @@ does not have influence on the timing behavior of simulations (use the
 ``Speed`` resource type for this purpose).
 
 
-Modeling Resource Usage
+Modeling resource usage
 =======================
 
 As described above, resource information is added to statements of an
@@ -436,8 +436,8 @@ Example::
 
 .. _sec:cloudprovider:
 
-The CloudProvider API
-=====================
+The ``CloudProvider`` API
+=========================
 
 Deployment components can be managed by a *Cloud Provider* instance.
 The Cloud Provider implements the life cycle shown in Figure
@@ -472,8 +472,8 @@ lifecycle are summarized in Table :ref:`table-dc-lifecycle`.
    ====================   ========   =======   ===========   ==========
 
 
-Using the CloudProvider
------------------------
+Using the cloud provider
+------------------------
 
 To use deployment components via a cloud provider, follow these steps:
 
@@ -504,7 +504,7 @@ To use deployment components via a cloud provider, follow these steps:
   }
 
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 The type for cloud provider instances is ``ABS.DC.CloudProvider``.

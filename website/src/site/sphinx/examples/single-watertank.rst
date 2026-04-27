@@ -1,4 +1,4 @@
-Modeling a Water Tank
+Modeling a water tank
 =====================
 
 This example shows a model of a small cyber-physical system consisting
@@ -64,7 +64,7 @@ annotated to be callable via the :ref:`sec:model-api`, and will be
 used to visualize the tank level over time.
 
 
-Modeling the Controller
+Modeling the controller
 -----------------------
 
 The task of the controller is to open and close a tank’s valve to keep
@@ -99,7 +99,7 @@ object, makes it visible to the Model API, and creates a controller
 object.
 
 
-Visualizing the Water Level over Time
+Visualizing the water level over time
 -------------------------------------
 
 The visualization uses the `Highcharts <https://www.highcharts.com>`__
@@ -153,17 +153,17 @@ passed to Highchart to be plotted.
    </html>
 
 
-Running the Example
+Running the example
 -------------------
 
 As mentioned, the code of this example resides at
-https://github.com/abstools/absexamples/tree/master/collaboratory/examples/single-watertank/.
-Place the files ``Watertank.abs``, ``index.html`` and ``Makefile`` into
-the same directory and run the command ``make`` to compile and start the
-model. Then, connect a browser to the URL ``http://localhost:8080/`` to
-see the resulting graph. The resulting plot shows the water level
-decreasing when the valve is open, and increasing again when the valve
-is closed.
+`<https://github.com/abstools/absexamples/tree/master/collaboratory/examples/single-watertank/>`__.
+Place the files ``Watertank.abs``, ``index.html`` and ``Makefile``
+into the same directory and run the command ``make`` to compile and
+start the model. Then, connect a browser to the URL
+``http://localhost:8080/`` to see the resulting graph. The resulting
+plot shows the water level decreasing when the valve is open, and
+increasing again when the valve is closed.
 
 .. figure:: images/single-watertank.png
    :alt: Plot of water level and valve status over time

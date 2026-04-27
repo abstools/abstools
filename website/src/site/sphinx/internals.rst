@@ -1,7 +1,7 @@
 :orphan:
 
 **********************
-ABS Compiler Internals
+ABS compiler internals
 **********************
 
 ..
@@ -11,11 +11,10 @@ ABS Compiler Internals
 About this guide
 ================
 
-This guide is meant to help document how absc -- the ABS compiler --
-works, as well as to help new contributors get involved in
-development, and for using ABS as basis for their own research.  It is
-meant as a high-level overview, presenting the kinds of things that
-(ideally) do not change frequently.
+This guide helps document how absc -- the ABS compiler -- works, and
+helps new contributors get involved in development and use ABS as
+basis for their own research.  It is a high-level overview, presenting
+the kinds of things that (ideally) do not change often.
 
 Part 1 contains general information that should be useful no matter
 how you are contributing.  Part 2 contains information about how

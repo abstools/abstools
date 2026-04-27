@@ -1,5 +1,5 @@
 
-Use On-Line Tools
+Use on-line tools
 =================
 
 The simplest way to use the ABS tools is on-line, in the
@@ -22,7 +22,7 @@ A collaboratory instance is hosted online at
 instance responsibly, and consider running the collaboratory on your
 local machine.
 
-Running the Collaboratory Locally
+Running the collaboratory locally
 ---------------------------------
 
 To run the collaboratory on a local machine, first install docker from

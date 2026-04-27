@@ -1,6 +1,6 @@
 
 *********************************
-Software Product Line Engineering
+Software product line engineering
 *********************************
 
 ABS supports the development of software product lines with a set of
@@ -16,7 +16,7 @@ delta-oriented programming.  The ABS code modules that encapsulate
 feature implementations are called delta modules (deltas).
 
 
-Delta-Oriented Programming
+Delta-oriented programming
 ==========================
 
 ABS supports the delta-oriented programming model, an approach that
@@ -130,7 +130,7 @@ Main block
   main block.
 
 
-The Feature Model
+The feature model
 =================
 
 Software variability is commonly expressed using features which can be
@@ -141,7 +141,7 @@ features.  Thus the feature model defines a set of legal feature
 combinations, which represent the set of valid software variants that
 can be built.
 
-Specifying the Feature Model
+Specifying the feature model
 ----------------------------
 
 The *FeatureModel* clause specifies a number of "orthogonal" root feature
@@ -226,7 +226,7 @@ of parameters for cost, capacity and number of machines::
   }
 
 
-Feature Model Reflection
+Feature model reflection
 ------------------------
 
 There is support for limited reflection on the feature model and
@@ -253,7 +253,7 @@ The following sample code shows the usage, assuming that product
   product Product(FeatureA, FeatureC);
 
 
-Software Product Lines and Products
+Software product lines and products
 ===================================
 
 A (software) product line is a set of software variants that can be
@@ -265,7 +265,7 @@ their implementation is defined in ABS with a *SPL configuration*.
 An ABS *product* is simply a set of features associated with a name.
 
 
-Specifying the Product Line
+Specifying the product line
 ---------------------------
 
 The ABS configuration language links feature models, which describe
@@ -323,7 +323,7 @@ Example::
   delta DBoundedDeployment(LimitedMachines.capacity, LimitedMachines.machinelimit) when LimitedMachines;
 
 
-Specifying Products
+Specifying products
 -------------------
 
 ABS allows the developer to name products that are of particular

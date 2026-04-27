@@ -15,7 +15,7 @@ it is imported in another module or referenced by its qualified name.
           the same name cannot export only the interface.
 
 
-Defining a Module
+Defining a module
 =================
 
 .. table:: Syntax
@@ -61,7 +61,7 @@ to the module ``MyModule``.
           that module.
 
 
-Exporting Identifiers
+Exporting identifiers
 =====================
 
 By default, modules do not export any names.  In order to make names
@@ -93,7 +93,7 @@ clauses)::
   export * from OtherModule;
 
 
-Importing Identifiers
+Importing identifiers
 =====================
 
 In order to use exported names of a module in another module, the
@@ -128,7 +128,7 @@ the current module::
   without the ``Drinks.`` prefix.
 
 
-Re-exporting Imported Names
+Re-exporting imported names
 ---------------------------
 
 It is possible to re-export names that are imported from another

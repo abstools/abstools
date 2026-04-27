@@ -1,5 +1,5 @@
 
-Installing Editor Support
+Installing editor support
 =========================
 
 We provide support for Emacs, Atom and Visual Studio Code.

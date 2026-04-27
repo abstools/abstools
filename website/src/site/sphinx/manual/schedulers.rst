@@ -2,7 +2,7 @@
 .. _sec:schedulers:
 
 ***********************
-User-Defined Schedulers
+User-defined schedulers
 ***********************
 
 User-defined schedulers are an experimental feature of Timed ABS.
@@ -16,7 +16,7 @@ See `<https://doi.org/10.1007/s11334-012-0184-5>`__ for a discussion
 of ABS user-defined schedulers and process attributes.
 
 
-Defining Schedulers
+Defining schedulers
 ===================
 
 A scheduler is a function that takes a list of processes and chooses
@@ -35,7 +35,7 @@ A random scheduler chooses a process non-deterministically::
 
 
 
-Using Schedulers
+Using schedulers
 ================
 
 A scheduler is not called by code within the ABS model.  Instead, the
@@ -72,7 +72,7 @@ different scheduler::
   [Scheduler: randomscheduler(queue)] I instance = new C();
 
 
-Using Object State in Schedulers
+Using object state in schedulers
 ================================
 
 Schedulers can have more than one argument.  The first argument must
@@ -109,7 +109,7 @@ influence the scheduler.
 
 .. _sec:process-attributes:
 
-Processes and Process Attributes
+Processes and process attributes
 ================================
 
 A *process* is an ABS abstract datatype; i.e., there is no constructor

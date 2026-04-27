@@ -3,7 +3,8 @@
 Examples
 ########
 
-This page features a list of examples -- small and large complete ABS models that illustrate various modeling techniques.
+This page features a list of examples -- small and large complete ABS
+models that illustrate various modeling techniques.
 
 .. toctree::
 

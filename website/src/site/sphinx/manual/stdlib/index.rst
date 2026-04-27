@@ -1,7 +1,7 @@
 .. _sec:standard-library:
 
 ********************
-The Standard Library
+The standard library
 ********************
 
 This chapter documents the ABS standard library.  All definitions,

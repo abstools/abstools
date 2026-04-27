@@ -1,4 +1,4 @@
-Modeling Resources in ABS
+Modeling resources in ABS
 =========================
 
 This example shows a high-level model of a typical three-layer system
@@ -7,7 +7,7 @@ multiple web workers and an underlying database server. The model also
 contains one or more clients, which send requests to the load
 balancer.
 
-The complete code to this example can be found here:
+The complete code to this example is here:
 `<https://github.com/abstools/absexamples/blob/master/collaboratory/examples/resource-modeling/>`__.
 
 The basic architecture is as follows:
@@ -23,7 +23,7 @@ worker, in turn, calls the ``query`` method of the ``Database``
 instance, then returns a result to the client via the load balancer.
 
 
-Functional Model without Resources
+Functional model without resources
 ----------------------------------
 
 The ABS model discussed in this section is here:
@@ -118,7 +118,7 @@ Finally, the main block sets up and starts the model::
        await duration(100, 100);
    }
 
-Adding Resources to the Model
+Adding resources to the model
 -----------------------------
 
 We now add resource locations and resource consumption to the model of
@@ -129,7 +129,7 @@ The ABS model discussed in this section is here:
 
 The basic idea is to create objects at resource-carrying *locations*
 (see :ref:`sec:deployment-components`).  ``DeploymentComponent`` is a
-pre-defined ABS class that models a virtual machine, or in general a
+predefined ABS class that models a virtual machine, or in general a
 location that supplies computation resources to the cogs running on
 it.
 
@@ -153,8 +153,8 @@ parts unspecified or abstract.  In the example, we make use of the
 ``CloudProvider`` class from the standard library, but deployment
 components can be directly created as well.
 
-In the main block, we create a ``CloudProvider`` instance, tell it
-which instance types are available, and use it to create a deployment
+In the main block, we create a ``CloudProvider`` instance, tell it the
+instance types that are available, and use it to create a deployment
 component for running the database on. The ``[DC: database_c]``
 annotation creates the fresh ``Database`` object on that deployment
 component::
@@ -191,9 +191,9 @@ the web workers::
 
 The ``Database`` and ``Webworker`` classes now consume resources when
 processing requests. Each ``query`` call consumes a constant 3 ``Speed``
-resources from the database’s deployment component, each
+resources from the database's deployment component, each
 ``processRequest`` call to a web worker consumes 16 resources from the
-web worker’s deployment component::
+web worker's deployment component::
 
    class Database implements Database {
        String query() {
@@ -208,7 +208,7 @@ web worker’s deployment component::
        }
    }
 
-To run the model on the Java backend, execute the following:
+To run the model on the Java backend, use the following commands:
 
 .. code:: sh
 
@@ -232,7 +232,7 @@ deployment component has a Speed capacity of 15 but the cost of one
 processRequest execution is 16, each request takes two time units.
 
 
-Changing Load Balancing Strategies
+Changing load balancing strategies
 ----------------------------------
 
 The ABS model discussed in this section is here:
@@ -251,7 +251,7 @@ load balancing strategy: we switch from round-robin to a LIFO
        return result;
    }
 
-To run the model on the Java backend, execute the following:
+To run the model on the Java backend, run the following commands:
 
 .. code:: sh
 
@@ -269,12 +269,12 @@ to see more deployment components):
    Screenshot of resource consumption over time of the database and 2
    webworkers, with LIFO scheduling of the load balancer
 
-It can be seen that one web worker is enough to carry the load of the
-given client scenario; all web workers except the first one are idle
-over the course of the simulation.
+The output shows that one web worker is enough to carry the load of
+the given client scenario: all web workers except the first one are
+idle over the course of the simulation.
 
 
-Changing the Client Load Scenario
+Changing the client load scenario
 ---------------------------------
 
 The ABS model discussed in this section is here:
@@ -303,7 +303,7 @@ following main block::
        provider!shutdown();
    }
 
-To run the model on the Java backend, execute the following:
+To run the model on the Java backend, run the following commands:
 
 .. code:: sh
 
@@ -325,10 +325,10 @@ In this last example, the database server is running at approximately
 50% load, and all 5 web workers are running near capacity.
 
 
-Further Possibilities for Resource Modeling
+Further possibilities for resource modeling
 -------------------------------------------
 
-Note that the scenarios presented above are somewhat static, but that
+Note that the scenarios presented in this chapter are somewhat static, but that
 does not need to be the case:
 
 - We can dynamically add deployment components and add and remove

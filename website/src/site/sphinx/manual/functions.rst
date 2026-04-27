@@ -1,5 +1,5 @@
 ********************
-Function Definitions
+Function definitions
 ********************
 
 Functions take a list of arguments and evaluate the expression in
@@ -50,7 +50,7 @@ Example::
 
 .. _sec:partially-defined-functions:
 
-Partial Function Definitions
+Partial function definitions
 ============================
 
 For reasons of simplicity and analyzability, ABS does not offer
@@ -131,7 +131,7 @@ Example::
 
 .. _sec:anonymous-functions:
 
-Anonymous Functions
+Anonymous functions
 ===================
 
 To reduce the need to declare a function with a new function name
@@ -182,7 +182,7 @@ the context of the partial function call::
           original source code.
 
 
-Built-In Functions
+Built-in functions
 ==================
 
 Some special "functions" cannot be defined with pure expressions, for
@@ -208,7 +208,7 @@ Built-in functions in the standard library include:
 
 .. _sec:sqlite:
 
-Embedded SQLite Database Queries
+Embedded SQLite database queries
 ================================
 
 The Erlang and Java backends can read from a relational database and

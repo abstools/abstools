@@ -3,7 +3,7 @@
 Strings
 =======
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 The datatype for strings is ``String``.

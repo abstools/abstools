@@ -20,10 +20,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     <https://www.w3.org/TR/sparql11-protocol/>.
   - Running the abs compiler with `--domain-ontology ontology.ttl`
     adds the content of `ontology.ttl` to the lifted program state.
+  - Adding an annotation `[DomainClass: e]` to a class definition,
+    with `e` an expression over the object state returning a string,
+    will add a triple `o rdf:type c` to all lifted objects of class
+    `C` (where `c` is the result of evaluating `e` at runtime).
 
 - In the Java backend, it is now possible to define functions that
-  query the lifted program state, for example, to find objects that
-  implement an interface `Test.I`:
+  query the lifted program state.  For example, the following function
+  find objects that implement an interface `Test.I`:
 
   ```
   def List<I> find_objects() = builtin(sparql, 

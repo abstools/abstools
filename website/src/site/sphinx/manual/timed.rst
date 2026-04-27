@@ -30,7 +30,7 @@ clock advances.  The current deadline of a method is available via the
 function ``deadline`` and decreases down to zero.
 
 
-Semantics of Time Advancement
+Semantics of time advancement
 =============================
 
 Time only advances when all processes are blocked or suspended and no process
@@ -73,7 +73,7 @@ unblocked and ready to run.
 
 
 
-Datatypes and Constructors
+Datatypes and constructors
 ==========================
 
 Time is expressed as a datatype ``Time``, durations are expressed
@@ -318,7 +318,7 @@ Example::
 
 .. _timed-abs-and-model-api:
 
-Timed ABS and the Model API
+Timed ABS and the model API
 ===========================
 
 By default, the clock will advance when all processes within the model

@@ -3,7 +3,7 @@
 Optionals
 =========
 
-Datatypes and Constructors
+Datatypes and constructors
 --------------------------
 
 The datatype ``Maybe<A>`` wraps a concrete value of type A.  The value
