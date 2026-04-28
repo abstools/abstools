@@ -254,7 +254,8 @@ public class JavaCode {
                 manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, getFirstMainClass());
             }
 
-            try (JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(output_jar), manifest);
+            Path tempJar = Files.createTempFile("model", ".jar");
+            try (JarOutputStream jarOutputStream = new JarOutputStream(Files.newOutputStream(tempJar), manifest);
                  JarFile absfrontend_jar = new JarFile(absfrontend_jarfile)) {
                 for (Iterator<JarEntry> it = absfrontend_jar.entries().asIterator(); it.hasNext(); ) {
                     JarEntry entry = it.next();
@@ -281,6 +282,12 @@ public class JavaCode {
                             throw new RuntimeException("Error while creating jar " + output_jar);
                         }
                     });
+            }
+            try {
+                Files.move(tempJar, output_jar.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException e) {
+                Files.deleteIfExists(tempJar);
+                throw new RuntimeException("Error while creating jar " + output_jar);
             }
         }
     }
