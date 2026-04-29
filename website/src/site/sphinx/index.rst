@@ -26,7 +26,7 @@ language that features functional data-types.
 
       <h3>Go to the Collaboratory</h3>
 
-   :eifilelink:`Local Collaboratory Installation </collaboratory/helloworld.abs|app=erlangbackend>`
+   :eifilelink:`Local Collaboratory Installation </collaboratory/helloworld.abs|app=javabackend>`
 
 .. toctree::
 
