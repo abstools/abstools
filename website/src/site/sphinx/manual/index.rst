@@ -25,5 +25,6 @@ This section contains the language manual.
    deployment
    schedulers
    feature-modeling
+   foreign-language-interface
    backends
    glossary

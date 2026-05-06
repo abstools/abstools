@@ -52,12 +52,6 @@ interface ForeignInterface {
 }
 
 
-delta MyMock {
-  adds class ForeignClass {
-  
-  }
-}
-
 interface Ping {
     String ping(String s);
 }

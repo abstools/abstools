@@ -575,7 +575,7 @@ public class ABSRuntime {
             return classLoader.loadClass(className);
         } catch (ClassNotFoundException e) {
             if (!ignoreMissingFLIClasses) {
-                errStream.println("Could not load foreign class for " + name + "!");
+                log.warning("Could not load foreign class " + className + " for ABS class " + name + ", continuing with ABS implementation");
             }
         }
         return null;
@@ -669,7 +669,7 @@ public class ABSRuntime {
     }
 
     public PrintStream getErrStream() {
-        return  errStream;
+        return errStream;
     }
 
     public void setErrStream(PrintStream stream) {
