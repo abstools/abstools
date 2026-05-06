@@ -40,7 +40,7 @@ ABS backends.
    ==============================================  ======   ======   ======
    :ref:`Real-Time ABS <sec:timed-abs>`            yes      yes      yes
    :ref:`Resource Models <sec:deployment>`         yes      yes      yes
-   FLI                                             -        -        yes
+   :ref:`FLI <sec:fli>`                            -        -        yes
    :ref:`SQLite queries <sec:sqlite>`              -        yes      yes
    :ref:`Semantic lifting <sec:semantic-lifting>`  -        -        yes
    User-defined Schedulers                         yes      yes      -
