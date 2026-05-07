@@ -126,16 +126,16 @@ aspect GenerateErlang {
               ecs.println("DbName = \"" + dbname + "\",");
           }
           ecs.println("{ok, Db} = esqlite3:open(DbName),");
-          ecs.print("Result = esqlite3:map(");
+          ecs.print("Result = lists:map(");
           if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType()) {
-              ecs.print("fun ({I}) -> ");
+              ecs.print("fun ([I]) -> ");
               ecs.print(ErlUtil.sqlDataTypeTransformerFunction(query_type, "I"));
-              ecs.print(" end");
+              ecs.print(" end, ");
           } else {
               // We're a datatype with suitable arguments - the type checker
               // makes sure of this.  For now, we arbitrarily pick the first
               // constructor.
-              ecs.print("fun ({");
+              ecs.print("fun ([");
               DataConstructor c = ((DataTypeType)query_type).getDecl().getDataConstructor(0);
               java.util.List<org.abs_models.frontend.typechecker.Type> args = c.getTypes();
               String comma = "";
@@ -145,30 +145,30 @@ aspect GenerateErlang {
                   ecs.print(i);
                   comma = ",";
               }
-              ecs.print("}) -> { data");
+              ecs.print("]) -> { data");
               ecs.print(c.getName());
               for (int i = 0; i < args.size(); i++) {
                   ecs.print(",");
                   ecs.print(ErlUtil.sqlDataTypeTransformerFunction(args.get(i), "V" + i));
               }
-              ecs.print(" } end");
+              ecs.print(" } end, ");
           }
-          ecs.print(", \"");
+          ecs.print("esqlite3:q(Db, \"");
           ecs.print(query);
-          ecs.print("\", ");
+          ecs.print("\"");
           if (getNumArgument() > 3) {
               String comma = "";
-              ecs.print("[");
+              ecs.print(", [");
               for (int i = 3; i < getNumArgument(); i++) {
-                  ecs.print(comma); comma = ", ";
+                  ecs.print(comma); comma = ",";
                   PureExp e = getArgument(i);
                   ecs.print("util:abs_value_to_sql(");
                   e.generateErlangCode(ecs, vars);
                   ecs.print(")");
               }
-              ecs.print("], ");
+              ecs.print("]");
           }
-          ecs.println("Db),");
+          ecs.println(")),");
           ecs.println("esqlite3:close(Db),");
           ecs.print("Result");
       } else {

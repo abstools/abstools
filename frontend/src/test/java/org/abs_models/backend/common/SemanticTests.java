@@ -89,7 +89,7 @@ public abstract class SemanticTests {
      * @param model The file containing the ABS test case.
      * @param f The files to be made accessible.
      */
-    public void assertEvalTrueWithTestfiles(File model, File ...f) throws Exception {
+    public void assertEvalTrueWithTestfiles(File model, File... f) throws Exception {
         Model m = ABSTest.assertParseFileOk(model.getPath());
         assertFalse(m.hasParserErrors());
         assertFalse(m.hasTypeErrors());
