@@ -234,15 +234,9 @@ public class Absc implements Callable<Integer> {
 
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {
-            String version = Absc.class.getPackage().getImplementationVersion();
-            String gitversion = Absc.class.getPackage().getSpecificationVersion();
-            if (version == null)
-                version = "HEAD";
-            if (gitversion == null)
-                gitversion = "HEAD-dirty";
             return new String[] {
-                "ABS Tool Suite version " + version,
-                "Built from git tree " + gitversion
+                "ABS Tool Suite version " + Main.getVersion(),
+                "Built from git tree " + Main.getGitVersion()
             };
         }
     }
