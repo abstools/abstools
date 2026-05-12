@@ -29,7 +29,7 @@ def absVersion() {
     // Returns (tag name)-(commits since tag)-(commit id)
     // e.g., v1.10.0-1-10123abc
     def version = "unknown-not_compiled_in_git_repo-unknown"
-    def proc = "git describe --tags --long".execute()
+    def proc = "git describe --tags --always --dirty".execute()
     // We use this longer form so we print any git error messages.
     proc.in.eachLine { line -> version = line }
     proc.err.eachLine { line -> println line }
