@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.11.0] - 2026-05-12
+
+### Added
+
 - The Java backend now implements semantic lifting, i.e., representing
   model structure and runtime state as RDF.
   - Running a model with the argument `--printRDF` will print the RDF
@@ -39,17 +49,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   See the manual for more details.  Note that this querying facility
   is provisional and its semantics might change.
 
-- A new function `range(a, b)` in the standard library returns a list
-  of integers ranging from a to b (inclusive).  This is useful, for
-  example, to write `foreach (i in range(1, 5)) { ... }`.
- 
- - The expressions `x implements I` and `x as I` are now implemented by
+- The expressions `x implements I` and `x as I` are now implemented by
    the Java backend.
  
- - In the Java backend, relative filenames such as sqlite databases are
-   now resolved against the directory given by the `--datadir`
+- In the Java backend, relative filenames (such as sqlite databases)
+   are now resolved against the directory given by the `--datadir`
    parameter or `abs.datadir` property.  If no directory is specified,
-   such filenames are resolved against the current directory as before.
+   such filenames are resolved against the current directory as
+   before.
 
 ### Changed
 
@@ -63,16 +70,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The toolchain now requires Java 25.
 
-- The language reference and website have been merged, and ported to
-  the Sphinx website generator and rST (reStructured Text) format.
-
-### Removed
+- The source for the language manual and the abs-models.org website
+  have been merged, and ported to the Sphinx website generator and rST
+  (reStructured Text) format.
 
 ### Fixed
 
-- We now use ChocoSolver 5 instead of the vendored ChocoSolver 2.0
-  library.  The old version used deprecated private APIs that were
-  removed in Java 25, and neither source nor documentation was
+- We now use upstream ChocoSolver 5 instead of a vendored jar archive
+  of ChocoSolver 2.  ChocoSolver 2.0 used deprecated private APIs that
+  were removed in Java 25, and neither source nor documentation was
   available.
 
 ## [1.10.2] - 2025-09-10
@@ -565,7 +571,8 @@ Various bug fixes and minor refactorings.
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.2...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/abstools/abstools/compare/v1.10.2...v1.11.0
 [1.10.2]: https://github.com/abstools/abstools/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/abstools/abstools/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/abstools/abstools/compare/v1.9.3...v1.10.0
