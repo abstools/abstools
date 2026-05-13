@@ -56,5 +56,6 @@ html_theme_options = {
     # 'show_relbars': True,
 }
 html_static_path = ['_static']
+html_extra_path = ['CNAME']
 html_baseurl = 'https://abs-models.org/'
 # html_logo = '_static/ABS_logo_colors.png'

@@ -109,8 +109,7 @@
   - `docker pull abslang/collaboratory:latest`
   - `docker run -d -p 8080:80 --restart unless-stopped --name easyinterface abslang/collaboratory:latest`
 
-- Update the abs-models.org website
-  - Deploy contents of `website/build/html` into that repository
+- Update the abs-models.org website; see `website/README.md` for details.
 
 # Version numbering
 

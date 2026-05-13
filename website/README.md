@@ -42,6 +42,15 @@ docker collaboratory container and at https://abs-models.org.
 - Using Python: Install sphinx, sphinxcontrib-plantuml, then in this
   directory run `sphinx-build -M html src/site/sphinx build`
 
+## Deploying
+
+To deploy into a website repository checked out below `../../abs/`,
+clear that directory then run this command:
+
+```sh
+uvx --from sphinx --with sphinxcontrib-plantuml sphinx-build src/site/sphinx ../../abs/abstools.github.io
+```
+
 # Document structure
 
 See <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#sections>
