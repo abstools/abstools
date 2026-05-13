@@ -70,6 +70,7 @@ import org.abs_models.frontend.ast.VarUse;
 import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.InterfaceType;
 import org.abs_models.frontend.typechecker.Type;
+import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.RDFS;
 import org.apfloat.Apint;
@@ -347,16 +348,47 @@ public class JavaGeneratorHelper {
         String query = (GraphObserver.sparqlPrefix + ((StringLiteral)body.getArgument(1)).getContent())
             .replaceAll("[\r\n]+\\s*", " ")
             .replace("\"", "\\\"");
+
         FunctionDecl decl = body.closestParent(FunctionDecl.class);
         // Type checking ensures that decl has a type `List<X>'; get the X
-        // TODO: currently we assume String
         Type query_type = ((DataTypeType)decl.getType()).getTypeArg(0);
 
         String obs = GraphObserver.class.getName();
 
         stream.println("java.util.List<Object> acc = new java.util.ArrayList<>();");
         stream.println("ABS.StdLib.List result = new ABS.StdLib.List_Nil();");
-        stream.println("var solutions = " + obs + ".runQuery(" + obs + ".getModel(), \"" + query + "\");");
+        stream.println(ParameterizedSparqlString.class.getName() + " query = new " + ParameterizedSparqlString.class.getName() + "(\"" + query + "\");");
+        for (int i = 2; i < body.getNumArgument(); i++) {
+            // skip 'sparql' and query string
+            PureExp e = body.getArgument(i);
+            Type t = e.getType();
+            if (t.isBoolType()) {
+                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println("));");
+            } else if (t.isIntType()) {
+                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println(").longValueExact());"); // crash rather than return wrong info
+            } else if (t.isRatType()) {
+                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println(").doubleValue());");
+            } else if (t.isFloatType()) {
+                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println("));");
+            } else if (t.isStringType()) {
+                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println("));");
+            } else {
+                // unreachable because of type checking:
+                // Typecheckerhelper.isValidSparqlArgumentType won't let us
+                // proceed to code generation
+            }
+        }
+        stream.println("var solutions = " + obs + ".runQuery(" + obs + ".getModel(), query.toString());");
         stream.println("for (var solution : solutions) {");
         if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType()) {
             // handle singleton literal return value
