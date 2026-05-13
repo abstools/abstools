@@ -779,11 +779,7 @@ public class TypeCheckerHelper {
             DataTypeType lt = (DataTypeType)dt.getTypeArg(0);
             if (lt.isBoolType())
                 return true;
-            if (lt.isIntType())
-                return true;
-            if (lt.isRatType())
-                return true;
-            if (lt.isFloatType())
+            if (lt.isNumericType())
                 return true;
             if (lt.isStringType())
                 return true;
@@ -795,13 +791,32 @@ public class TypeCheckerHelper {
             for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
                 Type cat = ca.getTypeUse().getType();
                 if (!(cat.isBoolType()
-                          || cat.isIntType()
-                          || cat.isRatType()
-                          || cat.isFloatType()
-                          || cat.isStringType()))
+                      || cat.isNumericType()
+                      || cat.isStringType()))
                         return false;
             }
             return true;
+    }
+
+    /**
+     * Check whether argument t can be an argument to a SPARQL query.
+     *
+     * <p>This method returns true if t is a string, numeric or boolean type.
+     */
+    public static boolean isValidSparqlArgumentType(Type t) {
+        if (t.isUnknownType())
+            return false;
+        else if (!t.isDataType())
+            return false;       // TODO: implement object arguments
+        DataTypeType lt = (DataTypeType) t;
+        if (lt.isBoolType())
+            return true;
+        else if (lt.isNumericType())
+            return true;
+        else if (lt.isStringType())
+            return true;
+        else
+            return false;
     }
 
     /**

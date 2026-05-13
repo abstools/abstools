@@ -5,12 +5,12 @@ Semantic lifting
 ****************
 
 ABS implements *semantic lifting*, i.e., obtaining a semantic
-representation of aspects of the model and the runtime state.  The
-data is provided in :term:`RDF` form.
+representation of aspects of the model and the runtime state in
+:term:`RDF` form.
 
 Semantically-lifted program state can be queried from the command
-line, via a SPARQL endpoint implemented in the Model API, or from
-within the model itself.
+line, a SPARQL endpoint implemented in the :ref:`Model API
+<sec:model-api>`, or within the model itself.
 
 Semantic lifting is supported in the Java backend.
 
@@ -235,5 +235,53 @@ of ``builtin`` SPARQL query functions are:
 
 | ⑥ This query returns the list of all objects implementing the
   interface ``I``.  Note that ABS objects are subject to garbage
-  collection, so objects that are not referenced may have vanished by
+  collection, so objects that are not referenced might have vanished by
   the time the query executes.
+
+Parameterized queries
+---------------------
+
+It is possible to pass parameters to SPARQL queries.  Currently
+parameters of type ``Bool``, ``Int``, ``Rat`` (converted to floating
+point), ``Float`` and ``String`` are supported.
+
+A SPARQL query can contain one or more placeholders, written as ``?``.
+Each of these placeholders must be supplied with a value::
+
+  module Test;
+
+  class C(String s, Int i) {
+  }
+
+    def List<String> query_string(Int i) = builtin(sparql,
+        `SELECT ?s WHERE {
+           ?o a/rdfs:label "Test.C" ;
+              prog:Test.s ?s ;
+              prog:Test.i ? . ①
+         }`, i); ②
+
+  {
+      Object o = new C("hello", 15);
+      Object o2 = new C("world", 1);
+      List<String> world_string = query_string(1); ③
+      println(`query_string(1): $world_string$`);
+  }
+
+| ① The SPARQL query contains a placeholder ``?``.
+
+| ② The value of the function parameter ``i`` replaces the placeholder
+  before the query is executed.
+
+| ③ The query will return a one-element list containing ``"world"``.
+
+
+.. note:: The following caveats apply to query parameters:
+
+          - Integer numbers beyond the range of the Java ``long`` type
+            lead to a run-time exception
+
+          - String parameters are susceptible to SPARQL injection; see
+            the note at the bottom of the `documentation
+            <https://jena.apache.org/documentation/query/parameterized-sparql-strings.html>`_
+            of the underlying Jena library.
+

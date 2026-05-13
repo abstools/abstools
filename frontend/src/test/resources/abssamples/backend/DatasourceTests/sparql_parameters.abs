@@ -1,0 +1,21 @@
+module BackendTest;
+
+interface I {}
+
+class C(String s, Int i) implements I {
+}
+
+  def List<String> query_string(Int i) = builtin(sparql,
+      `SELECT ?s WHERE {
+         ?o a/abs:implements/rdfs:label "BackendTest.I" ;
+            prog:BackendTest.s ?s ;
+            prog:BackendTest.i ? .
+       }`, i);
+
+{
+    I o = new local C("hello", 15);
+    I o2 = new C("world", 1);
+
+    Bool testresult = query_string(15) == list["hello"]
+        && query_string(1) == list["world"];
+}

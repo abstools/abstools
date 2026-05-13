@@ -378,10 +378,21 @@ aspect TypeChecker {
                     if (!TypeCheckerHelper.isValidSparqlReturnType(getTypeUse().getType())) {
                         e.add(new TypeError(getTypeUse(), ErrorMessage.SPARQL_INCORRECT_RETURN_TYPE, ""));
                     }
-                    if (def.getNumArgument() != 2) {
+                    // check `builtin' parameters
+                    if (def.getNumArgument() < 2) {
                         e.add(new TypeError(def, ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
                     } else if (!(def.getArgument(1) instanceof StringLiteral)) {
                         e.add(new TypeError(def.getArgument(1), ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
+                    }
+                    for (int i = 2; i < def.getNumArgument(); i++) {
+                        if (!(def.getArgument(i) instanceof PureExp)) {
+                            e.add(new TypeError(def.getArgument(i), ErrorMessage.SPARQL_INCORRECT_QUERY_ARGUMENT, ""));
+                            continue;
+                        }
+                        PureExp arg = (PureExp)def.getArgument(i);
+                        if (!TypeCheckerHelper.isValidSparqlArgumentType(arg.getType())) {
+                            e.add(new TypeError(def.getArgument(i), ErrorMessage.SPARQL_INCORRECT_QUERY_ARGUMENT, ""));
+                        }
                     }
                 }
             }
