@@ -243,7 +243,8 @@ Parameterized queries
 
 It is possible to pass parameters to SPARQL queries.  Currently
 parameters of type ``Bool``, ``Int``, ``Rat`` (converted to floating
-point), ``Float`` and ``String`` are supported.
+point), ``Float``, ``String`` and ``Object`` (object references) are
+supported.
 
 A SPARQL query can contain one or more placeholders, written as ``?``.
 Each of these placeholders must be supplied with a value::
@@ -253,18 +254,27 @@ Each of these placeholders must be supplied with a value::
   class C(String s, Int i) {
   }
 
-    def List<String> query_string(Int i) = builtin(sparql,
+    def List<String> query_via_int(Int i) = builtin(sparql,
         `SELECT ?s WHERE {
            ?o a/rdfs:label "Test.C" ;
               prog:Test.s ?s ;
               prog:Test.i ? . ①
          }`, i); ②
 
+    def List<String> query_via_object(I o) = builtin(sparql,
+          `SELECT ?s WHERE {
+             ? a/abs:implements/rdfs:label "BackendTest.I" ; ③
+               prog:BackendTest.s ?s .
+           }`, o);
+
+
   {
       Object o = new C("hello", 15);
       Object o2 = new C("world", 1);
-      List<String> world_string = query_string(1); ③
-      println(`query_string(1): $world_string$`);
+      List<String> world_string = query_via_int(1); ④
+      println(`query_via_int(1): $world_string$`);
+      List<String> hello_string = query_via_object(o); ⑤
+      println(`query_via_object(o): $hello_string$`);
   }
 
 | ① The SPARQL query contains a placeholder ``?``.
@@ -272,16 +282,23 @@ Each of these placeholders must be supplied with a value::
 | ② The value of the function parameter ``i`` replaces the placeholder
   before the query is executed.
 
-| ③ The query will return a one-element list containing ``"world"``.
+| ③ The parameter ``o`` is converted into an RDF resource IRI and
+  inserted as subject of the two search triples.
 
+| ④ The query will return a one-element list containing ``"world"``.
 
-.. note:: The following caveats apply to query parameters:
+| ⑤ The query will return a one-element list containing ``"hello"``.
 
-          - Integer numbers beyond the range of the Java ``long`` type
-            lead to a run-time exception
+.. note:: The following caveats apply to SPARQL queries with
+          parameters:
 
-          - String parameters are susceptible to SPARQL injection; see
-            the note at the bottom of the `documentation
+          - Querying for integer numbers beyond the range of the Java
+            ``long`` type results in a runtime exception rather than
+            silently wrong query results
+
+          - Queries are susceptible to SPARQL injection; see the
+            section "SPARQL Injection Notes" at the bottom of the
+            `documentation
             <https://jena.apache.org/documentation/query/parameterized-sparql-strings.html>`_
             of the underlying Jena library.
 

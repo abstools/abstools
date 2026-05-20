@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- ABS embedded SPARQL queries over lifted program state can now be
+  parameterized, supplying values for parts of the query at runtime
+  based on model state.
+
 ### Changed
 
 ### Removed

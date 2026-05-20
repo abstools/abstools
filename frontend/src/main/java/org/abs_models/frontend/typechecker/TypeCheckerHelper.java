@@ -801,22 +801,14 @@ public class TypeCheckerHelper {
     /**
      * Check whether argument t can be an argument to a SPARQL query.
      *
-     * <p>This method returns true if t is a string, numeric or boolean type.
+     * <p>This method returns true if t is a string, numeric, boolean
+     * or interface type.
      */
     public static boolean isValidSparqlArgumentType(Type t) {
-        if (t.isUnknownType())
-            return false;
-        else if (!t.isDataType())
-            return false;       // TODO: implement object arguments
-        DataTypeType lt = (DataTypeType) t;
-        if (lt.isBoolType())
-            return true;
-        else if (lt.isNumericType())
-            return true;
-        else if (lt.isStringType())
-            return true;
-        else
-            return false;
+        return t.isBoolType()
+               || t.isNumericType()
+               || t.isStringType()
+               || t.isInterfaceType();
     }
 
     /**

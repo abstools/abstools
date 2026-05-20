@@ -355,58 +355,61 @@ public class JavaGeneratorHelper {
 
         String obs = GraphObserver.class.getName();
 
-        stream.println("java.util.List<Object> acc = new java.util.ArrayList<>();");
-        stream.println("ABS.StdLib.List result = new ABS.StdLib.List_Nil();");
-        stream.println(ParameterizedSparqlString.class.getName() + " query = new " + ParameterizedSparqlString.class.getName() + "(\"" + query + "\");");
+        stream.println("java.util.List<Object> $acc = new java.util.ArrayList<>();");
+        stream.println("ABS.StdLib.List $result = new ABS.StdLib.List_Nil();");
+        stream.println("var $query = new " + ParameterizedSparqlString.class.getName() + "(\"" + query + "\");");
         for (int i = 2; i < body.getNumArgument(); i++) {
             // skip 'sparql' and query string
             PureExp e = body.getArgument(i);
             Type t = e.getType();
             if (t.isBoolType()) {
-                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                stream.print("$query.setLiteral(" + (i - 2) + ", (");
                 e.generateJava(stream);
                 stream.println("));");
             } else if (t.isIntType()) {
-                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                stream.print("$query.setLiteral(" + (i - 2) + ", (");
                 e.generateJava(stream);
                 stream.println(").longValueExact());"); // crash rather than return wrong info
             } else if (t.isRatType()) {
-                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                stream.print("$query.setLiteral(" + (i - 2) + ", (");
                 e.generateJava(stream);
                 stream.println(").doubleValue());");
             } else if (t.isFloatType()) {
-                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                stream.print("$query.setLiteral(" + (i - 2) + ", (");
                 e.generateJava(stream);
                 stream.println("));");
             } else if (t.isStringType()) {
-                stream.print("query.setLiteral(" + (i - 2) + ", (");
+                stream.print("$query.setLiteral(" + (i - 2) + ", (");
+                e.generateJava(stream);
+                stream.println("));");
+            } else if (t.isInterfaceType()) {
+                stream.print("$query.setIri(" + (i - 2) + ", " + GraphObserver.class.getName() + ".objectResourceName(");
                 e.generateJava(stream);
                 stream.println("));");
             } else {
-                // unreachable because of type checking:
-                // Typecheckerhelper.isValidSparqlArgumentType won't let us
-                // proceed to code generation
+                // unreachable: query parameters are type-checked
+                // before code generation starts
+                throw new JavaBackendException(body, "Unexpected argument type for SPARQL query; probably a type-checking bug");
             }
         }
-        stream.println("var solutions = " + obs + ".runQuery(" + obs + ".getModel(), query.toString());");
-        stream.println("for (var solution : solutions) {");
+        stream.println("var $solutions = " + obs + ".runQuery(" + obs + ".getModel(), $query.toString());");
+        stream.println("for (var $solution : $solutions) {");
         if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType()) {
             // handle singleton literal return value
-            stream.println("String varName = solution.varNames().next();");
-            stream.println("var o = solution.get(varName);");
-            stream.println("if (o.isLiteral()) {");
-            stream.println("var l = o.asLiteral();");
-            stream.print("acc.add(0, ");
+            stream.println("var $o = $solution.get($solution.varNames().next());");
+            stream.println("if ($o.isLiteral()) {");
+            stream.println("var $l = $o.asLiteral();");
+            stream.print("$acc.add(0, ");
             if (query_type.isBoolType()) {
-                stream.print("l.getBoolean()");
+                stream.print("$l.getBoolean()");
             } else if (query_type.isIntType()) {
-                stream.print("new " + Apint.class.getName() + "(l.getLong())");
+                stream.print("new " + Apint.class.getName() + "($l.getLong())");
             } else if (query_type.isFloatType()) {
-                stream.print("l.getDouble()");
+                stream.print("$l.getDouble()");
             } else if (query_type.isRatType()) {
-                stream.print("new " + Aprational.class.getName() + "(l.getDouble())");
+                stream.print("new " + Aprational.class.getName() + "($l.getDouble())");
             } else if (query_type.isStringType()) {
-                stream.print("l.getString()");
+                stream.print("$l.getString()");
             } else {
                 // unreachable: query result is type-checked before code
                 // generation starts
@@ -417,12 +420,11 @@ public class JavaGeneratorHelper {
         } else if (query_type.isInterfaceType()) {
             InterfaceType int_query_t = (InterfaceType)query_type;
             // handle singleton interface return value
-            stream.println("String varName = solution.varNames().next();");
-            stream.println("var o = solution.get(varName);");
-            stream.println("if (o.isResource()) {");
-            stream.println("var absObject = " + obs + ".findObjectForResource(o.asResource().getURI());");
-            stream.println("if (absObject instanceof " + JavaBackend.getQualifiedString(int_query_t) + ") {");
-            stream.print("acc.add(0, absObject);");
+            stream.println("var $o = $solution.get($solution.varNames().next());");
+            stream.println("if ($o.isResource()) {");
+            stream.println("var $absObject = " + obs + ".findObjectForResource($o.asResource().getURI());");
+            stream.println("if ($absObject instanceof " + JavaBackend.getQualifiedString(int_query_t) + ") {");
+            stream.print("$acc.add(0, $absObject);");
             stream.println("}");
             stream.println("}");
         } else {
@@ -430,10 +432,10 @@ public class JavaGeneratorHelper {
             throw new JavaBackendException(body, "Unexpected return type for SPARQL query; probably a type-checking bug");
         }
         stream.println("}");
-        stream.println("for (Object row : acc) {");
-        stream.println("result = new ABS.StdLib.List_Cons(row, result);");
+        stream.println("for (Object $row : $acc) {");
+        stream.println("$result = new ABS.StdLib.List_Cons($row, $result);");
         stream.println("}");
-        stream.println("return result;");
+        stream.println("return $result;");
     }
 
     public static void generateDataConstructor(PrintStream stream, DataConstructor c, String datatypeName, DataTypeDecl dataTypeDecl) {
