@@ -5,17 +5,26 @@ interface I {}
 class C(String s, Int i) implements I {
 }
 
-  def List<String> query_string(Int i) = builtin(sparql,
+def List<String> query_via_int(Int i) = builtin(sparql,
       `SELECT ?s WHERE {
          ?o a/abs:implements/rdfs:label "BackendTest.I" ;
             prog:BackendTest.s ?s ;
             prog:BackendTest.i ? .
        }`, i);
 
+def List<String> query_via_object(I o) = builtin(sparql,
+      `SELECT ?s WHERE {
+         ? a/abs:implements/rdfs:label "BackendTest.I" ;
+           prog:BackendTest.s ?s .
+       }`, o);
+
+
 {
     I o = new local C("hello", 15);
     I o2 = new C("world", 1);
 
-    Bool testresult = query_string(15) == list["hello"]
-        && query_string(1) == list["world"];
+    Bool testresult = query_via_int(15) == list["hello"]
+        && query_via_int(1) == list["world"]
+        && query_via_object(o) == list["hello"]
+        && query_via_object(o2) == list["world"];
 }

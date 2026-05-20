@@ -143,7 +143,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
     }
 
     /// Create the URI of a resource representing an ABS object.
-    private static String objectResourceName(Object o) {
+    public static String objectResourceName(Object o) {
         return absNamespaces.get("run") + "obj" + o.hashCode();
     }
 
