@@ -15,7 +15,6 @@ import org.abs_models.backend.java.lib.runtime.ABSAndGuard;
 import org.abs_models.backend.java.lib.runtime.ABSDurationGuard;
 import org.abs_models.backend.java.lib.runtime.ABSFutureGuard;
 import org.abs_models.backend.java.lib.runtime.ABSGuard;
-import org.abs_models.backend.java.lib.runtime.ABSInitObjectCall;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
 import org.abs_models.backend.java.lib.runtime.ABSThread;
 import org.abs_models.backend.java.lib.runtime.ABSThreadManager;
@@ -170,20 +169,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             view.taskAdded(task.getView());
 
         if (activeTask == null) {
-            if (runtime.hasGlobalScheduler() &&
-                (task.getCall() instanceof ABSInitObjectCall)) {
-                    runtime.addScheduleAction(new ActivateTask(cog,task) {
-                        @Override
-                        public void execute() {
-                            synchronized (SimpleTaskScheduler.this) {
-                                TaskInfo ti = readyTasks.remove(0);
-                                activateTask(ti);
-                            }
-                        }
-                    });
-            } else {
-                schedule();
-            }
+            schedule();
         }
     }
 
