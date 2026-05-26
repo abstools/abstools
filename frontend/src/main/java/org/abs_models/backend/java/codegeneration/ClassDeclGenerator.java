@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.abs_models.backend.java.JavaBackend;
-import org.abs_models.backend.java.lib.runtime.ABSInitObjectCall;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.ABSRunMethodCall;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
@@ -231,8 +230,7 @@ public class ClassDeclGenerator {
         generateObjectConstruction("__ABS_runtime");
 
         stream.println("__ABS_runtime.cogCreated(__ABS_result);");
-        stream.println("__ABS_cog.addTask(new " + Task.class.getName() + "(new " +
-                ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");
+        stream.println("__ABS_result.__ABS_init();");
 
         if (decl.isActiveClass()) {
             stream.println("__ABS_runtime.asyncCall(new " + ABSRunMethodCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
