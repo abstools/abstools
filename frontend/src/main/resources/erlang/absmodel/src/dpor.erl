@@ -341,12 +341,14 @@ add_new_traces_to_db(Trace, Explored, NewTraces) ->
 %% Simulation
 
 start_simulation(Module, Clocklimit, Id, Trace) ->
-    {ok, Node} = slave:start_link(localhost, Id, ?CMD_ARGS),
+    {ok, Peer, Node} = peer:start_link(#{name => Id,
+                                         host => "localhost",
+                                         args => string:tokens(?CMD_ARGS, " ")}),
     {ExploredTrace, NewTraces} = rpc:call(Node, runtime, run_dpor_slave,
                                           [Module, Clocklimit, Trace]),
     completed_simulation(Trace, ExploredTrace, NewTraces),
     %% Do DPOR and update DB
-    slave:stop(Node).
+    peer:stop(Peer).
 
 %% gen_statem interface
 
