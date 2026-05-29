@@ -1,11 +1,13 @@
 package org.abs_models.backend.java.observing;
 
 import org.abs_models.backend.java.lib.WeakValueHashMap;
+import org.abs_models.backend.java.lib.runtime.ABSFut;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.runtime.Logging;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSInterface;
+import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -42,13 +44,23 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
 
     public static String sparqlPrefix;
 
-    /// The program model, generated at compile time
+    /// The program model, generated at compile time.
     static Model progModel = ModelFactory.createDefaultModel();
+    /// Class resources, indexed by the fully-qualified class name.
+    /// Initialized during model start.
     static Map<String, Resource> knownClasses = new HashMap<>();
+    /// Interface resources, indexed by the fully-qualified interface
+    /// name.  Initialized during model start.
     static Map<String, Resource> knownInterfaces = new HashMap<>();
+    /// Datatype resources, indexed by the fully-qualified datatype
+    /// name.  Initialized during model start.
     static Map<String, Resource> knownDatatypes = new HashMap<>();
+    /// Constructor resources, indexed by the fully-qualified
+    /// constructor name.  Initialized during model start.
     static Map<String, Resource> knownConstructors = new HashMap<>();
-    /// Domain classes referenced by `DomainClass` annotation
+    /// Domain class resources that are referenced by a `DomainClass`
+    /// annotation.  Initially empty, filled on-demand when lifting a
+    /// mirrored class.
     static Map<String, Resource> knownDomainClasses = new HashMap<>();
 
     /// The domain ontology, specified via command line
@@ -274,7 +286,11 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         Resource objRes = model.createResource(objectResourceName(obj), classRes);
         Property inProp = model.createProperty(absNS + "in");
         if (domainClass.isPresent()) {
-            Resource domainClassRes = knownDomainClasses.getOrDefault(domainClass.get(), model.createResource(domainClass.get()));
+            String domainClassUri = domainClass.get();
+            if (!knownDomainClasses.containsKey(domainClassUri)) {
+                knownDomainClasses.put(domainClassUri, model.createResource(domainClassUri));
+            }
+            Resource domainClassRes = knownDomainClasses.get(domainClassUri);
             objRes.addProperty(RDF.type, domainClassRes);
         }
         objRes.addProperty(inProp, model.createResource(runNS + "cog" + obj.getCOG().hashCode()));
@@ -297,6 +313,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
     static void addFieldTriples(Model model, Resource res, Property fieldProp, Object value) {
         String runNS = absNamespaces.get("run");
         String progNS = absNamespaces.get("prog");
+        String absNS = absNamespaces.get("abs");
 
         Deque<WorkItem> queue = new ArrayDeque<>();
         queue.addLast(new WorkItem(res, fieldProp, value));
@@ -319,6 +336,21 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                     break;
                 case ABSObject o2:
                     currentRes.addProperty(currentProp, model.createResource(objectResourceName(o2)));
+                    break;
+                case ABSUnit u:
+                    Resource unitClass = knownDatatypes.getOrDefault("ABS.StdLib.Unit", model.createResource(progNS + "ABS.StdLib.Unit"));
+                    Resource unitRes = model.createResource(unitClass);
+                    currentRes.addProperty(currentProp, unitRes);
+                    break;
+                case ABSFut f:
+                    Resource futureClass = knownDatatypes.getOrDefault("ABS.StdLib.Fut", model.createResource(progNS + "ABS.StdLib.Fut"));
+                    Resource futureRes = model.createResource(futureClass);
+                    currentRes.addProperty(currentProp, futureRes);
+                    if (f.isDone()) {
+                        Property futureValueProperty = model.createProperty(absNS + "hasValue");
+                        Object result = f.getValue();
+                        queue.addLast(new WorkItem(futureRes, futureValueProperty, result));
+                    }
                     break;
                 case ABSAlgebraicDataType a:
                     // Create the resource for this algebraic data type
