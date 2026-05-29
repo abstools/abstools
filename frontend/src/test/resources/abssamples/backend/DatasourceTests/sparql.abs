@@ -24,10 +24,10 @@ def List<I> query_objs() = builtin(sparql,
        ?o a/rdfs:label "BackendTest.C" .
      }`);
 
-  def List<I> query_interfaces() = builtin(sparql,
-      `SELECT ?o WHERE {
-         ?o a/abs:implements/rdfs:label "BackendTest.I" .
-       }`);
+def List<I> query_interfaces() = builtin(sparql,
+    `SELECT ?o WHERE {
+       ?o a/abs:implements/rdfs:label "BackendTest.I" .
+     }`);
 
 {
     I o = new local C("hello", 15);
