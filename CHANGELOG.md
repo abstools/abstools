@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Fixed a race condition between object initialization and method call
+  scheduling in the Java backend.
+
 ## [1.11.0] - 2026-05-12
 
 ### Added
