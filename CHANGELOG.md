@@ -8,13 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- ABS embedded SPARQL queries over lifted program state can now be
-  parameterized, supplying values for parts of the query at runtime
-  based on model state.
-
 ### Changed
 
 ### Removed
+
+### Fixed
+
+## [1.11.1] - 2026-06-02
+
+### Added
+
+- ABS embedded SPARQL queries over lifted program state can now take
+  parameters, similar to the existing SQLite queries.
 
 ### Fixed
 
@@ -578,7 +583,8 @@ Various bug fixes and minor refactorings.
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.11.1...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/abstools/abstools/compare/v1.10.2...v1.11.0
 [1.10.2]: https://github.com/abstools/abstools/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/abstools/abstools/compare/v1.10.0...v1.10.1
