@@ -48,6 +48,51 @@ lifted.
 .. note:: The lifting ontology might change as we gain experience
           applying semantic lifting to concrete case studies.
 
+.. list-table:: RDF representations for ABS language constructs
+   :header-rows: 1
+   :widths: auto
+
+   * - ABS construct
+
+     - RDF representation
+
+   * - interface
+
+     - resource of type ``abs:interface``
+
+   * - class
+
+     - resource of type ``abs:class``
+
+   * - datatype
+
+     - resource of type ``abs:datatype``
+
+   * - data constructor
+
+     - resource of type ``abs:dataconstructor``
+
+   * - future
+
+     - resource of type ``prog:ABS.StdLib.Fut``
+
+   * - string
+
+     - RDF string
+
+   * - number
+
+     - RDF int or float number
+
+   * - Boolean
+
+     - RDF boolean
+
+   * - null value
+
+     - RDF string ``"null"``
+
+
 We consider the following small ABS model::
 
   module Test;
@@ -247,7 +292,7 @@ point), ``Float``, ``String`` and ``Object`` (object references) are
 supported.
 
 A SPARQL query can contain one or more placeholders, written as ``?``.
-Each of these placeholders must be supplied with a value::
+The query function must supply a value for each of these placeholders::
 
   module Test;
 
