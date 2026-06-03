@@ -51,13 +51,11 @@ public class StmtTests extends SemanticTests {
     
     @Test
     public void declWhenExpStmt() throws Exception {
-        // dynamic Java backend generated invalid code for this case
         assertEvalTrue("{Bool x = True; Int i = when x then 1 else 2; Bool testresult = (i == 1); }");
     }
 
     @Test
     public void assignWhenExpStmt() throws Exception {
-        // dynamic Java backend generated invalid code for this case
         assertEvalTrue("{Bool x = True; Int i = 0; i = when x then 1 else 2; Bool testresult = (i == 1); }");
     }
 

@@ -93,21 +93,6 @@ public class PartialFunctionTest extends AbstractPartialFunctionTest {
     }
 
     @Test
-    public void noDynamicJavaCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
-        Model model = expand(parse(
-            "apply(inc)(0);",
-            applyFunction(),
-            incFunction()
-        ));
-        PartialFunctionDecl func = getPartialFunction(model, "apply");
-        assertNotNull(func);
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        func.generateJavaDynamic(new PrintStream(os));
-        assertEquals("", os.toString("utf-8"));
-    }
-
-    @Test
     public void noMaudeCodeGenerated() throws NotImplementedYetException, UnsupportedEncodingException {
         Model model = testExpand(parse(
             "apply(inc)(0);",
