@@ -34,7 +34,8 @@ public class ABSResourceGuard extends ABSGuard {
      *
      * @param resources The amount of resources needed.
      */
-    public ABSResourceGuard(Aprational resources) {
+    public ABSResourceGuard(COG cog, Aprational resources) {
+        super(cog);
         this.resources_needed = resources;
         this.resources_consumed = Aprational.ZERO;
         if (resources_needed.signum() < 0) {
@@ -76,16 +77,15 @@ public class ABSResourceGuard extends ABSGuard {
 
     /**
      * {@inheritDoc}
-     * <p>
-     
-     * The Duration "guard" is only ever used for blocking the whole cog.  If
-     * the guard evaluates to false, this method calls {@link
-     * ABSRuntime#addResourceGuard} and waits.  The runtime will signal once
-     * the guard has been given the required amount of resources, then this
-     * guard will unblock the cog.
+     *
+     * <p>The Duration "guard" is only ever used for blocking the
+     * whole cog.  If the guard evaluates to false, this method calls
+     * {@link ABSRuntime#addResourceGuard} and waits.  The runtime
+     * will signal once the guard has been given the required amount
+     * of resources, then this guard will unblock the cog.
      */
     @Override
-    public synchronized boolean await(COG cog, Task<?> task) {
+    public synchronized boolean await() {
         log.finest(() -> "Consuming " + resources_needed + " resources ");
 
         boolean mustSuspend = !isTrue();

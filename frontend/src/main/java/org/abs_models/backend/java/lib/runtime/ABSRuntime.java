@@ -20,13 +20,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSRef;
@@ -119,10 +122,13 @@ public class ABSRuntime {
     public List<ABSDCMirror> getDeploymentComponents() { return deployment_components; }
 
     /**
-     * Queue of all pending resource requests.
+     * For each dc, a queue of all pending resource requests for that
+     * dc.
      *
-     * TODO: figure out locking scheme for this; it will be used from both
-     * advanceClock and addResourceGuard.
+     * TODO: figure out locking scheme for this; it will be used from
+     * both advanceClock and addResourceGuard.  Should be safe without
+     * locking because advanceClock is only called when no tasks are
+     * running.
      */
     private final Map<ABSInterface, List<ABSResourceGuard>> resource_guards
         = new HashMap<>();
@@ -460,7 +466,8 @@ public class ABSRuntime {
     }
 
     public static void suspend() {
-        ABSThread.getCurrentCOG().getScheduler().await(new ABSTrueGuard());
+        COG cog = ABSThread.getCurrentCOG();
+        cog.getScheduler().await(new ABSTrueGuard(cog));
     }
 
     public static void await(ABSGuard g) {
@@ -731,14 +738,14 @@ public class ABSRuntime {
      * <p>
      * NOTE: this method is supposed to be called during clock advance only.
      *
-     * @return the number of guards woken
+     * @return A modifiable set containing the guards that were woken.
      */
-    protected synchronized int handResourcesToWaitingGuards() {
+    protected synchronized Set<ABSGuard> handResourcesToWaitingGuards() {
+        Set<ABSGuard> guardsWoken = new HashSet<>();
         if (resource_guards.isEmpty()) {
             log.finest("No tasks waiting for resources");
-            return 0;
+            return guardsWoken;
         }
-        int guardsWoken = 0;
         log.finest("Handing out resources to waiting tasks");
         var iterator = resource_guards.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -766,7 +773,7 @@ public class ABSRuntime {
                     synchronized(guard) {
                         guard.notify();
                     }
-                    guardsWoken = guardsWoken + 1;
+                    guardsWoken.add(guard);
                 } else {
                     // We got some resources but not everything the
                     // current guard wanted; next call to
@@ -810,10 +817,16 @@ public class ABSRuntime {
                          + clock + ", clockLimit = " + (clockLimit == null ? "none" : clockLimit)
                          + ", durationGuards: " + duration_guards.size()
                          + ", resourceGuards: " + resource_guards.size());
-        int guardsWoken = handResourcesToWaitingGuards();
-        while (guardsWoken == 0 && (clockLimit != null ? clock.compareTo(clockLimit) < 0 : true)) {
-            int durationGuardsWoken = 0;
-            int resourceGuardsWoken = 0;
+        Set<ABSGuard> guardsWoken = handResourcesToWaitingGuards();
+        // This is a while loop since we advance time by 1 tick to
+        // update the deployment component histories.
+        while (guardsWoken.isEmpty() // if we already woke someone by
+                                     // giving them resources, no need
+                                     // to advance the clock
+               && (clockLimit != null ? clock.compareTo(clockLimit) < 0 : true))
+        {
+            Set<ABSGuard> durationGuardsWoken = new HashSet<>();
+            Set<ABSGuard> resourceGuardsWoken = new HashSet<>();
             Aprational next_integer = clock.isInteger()
                 ? clock.add(Aprational.ONE)
                 : clock.ceil();
@@ -827,7 +840,7 @@ public class ABSRuntime {
             log.fine(() -> "Clock advanced to " + clock);
             if (clock.compareTo(next_integer) == 0) {
                 deployment_components.forEach(ABSDCMirror::advanceTimeBy1Tick);
-                resourceGuardsWoken = resourceGuardsWoken + handResourcesToWaitingGuards();
+                resourceGuardsWoken.addAll(handResourcesToWaitingGuards());
             }
             log.finest("Checking for threads to wake that are waiting on duration guards");
             while (!duration_guards.isEmpty() && clock.compareTo(duration_guards.peek().getMinTime()) >= 0) {
@@ -835,21 +848,23 @@ public class ABSRuntime {
                 synchronized(guard) {
                     guard.notify();
                 }
-                durationGuardsWoken = durationGuardsWoken + 1;
+                durationGuardsWoken.add(guard);
             }
-            if (durationGuardsWoken > 0 && !duration_guards.isEmpty()) {
+            if (!durationGuardsWoken.isEmpty() && !duration_guards.isEmpty()) {
                 wake_time_for_duration_guards =
-                    duration_guards.stream()
-                    .map(ABSDurationGuard::getMaxTime)
-                    .reduce(duration_guards.peek().getMaxTime(), (t1, t2) -> t1.compareTo(t2) < 0 ? t1 : t2);
+                  duration_guards.stream()
+                      .map(ABSDurationGuard::getMaxTime)
+                      .reduce(duration_guards.peek().getMaxTime(), (t1, t2) -> t1.compareTo(t2) < 0 ? t1 : t2);
             }
-            // stupid java "lambdas"
-            var nRG = resourceGuardsWoken;
-            var nDG = durationGuardsWoken;
-            log.finest(() -> "Woke " + nRG + " tasks waiting for resources and " + nDG + " tasks waiting for time");
-            guardsWoken = guardsWoken + resourceGuardsWoken + durationGuardsWoken;
+            log.finest(() -> "Woke " + resourceGuardsWoken.size() + " tasks waiting for resources and " + durationGuardsWoken.size() + " tasks waiting for time");
+            guardsWoken.addAll(resourceGuardsWoken);
+            guardsWoken.addAll(durationGuardsWoken);
         }
-        this.nWakingCogs = guardsWoken;
+        Set<COG> cogsWoken = guardsWoken.stream()
+            .map(ABSGuard::getCog)
+            .collect(Collectors.toSet());
+        this.nWakingCogs = cogsWoken.size();
+        log.finest(() -> "Finished clock advance, expecting " + this.nWakingCogs + " cog wake events (for " + guardsWoken.size() + " tasks) before advancing clock again");
     }
 
     /**
@@ -895,7 +910,7 @@ public class ABSRuntime {
             // clock advance.
             nWakingCogs = Math.max(0, nWakingCogs - 1);
         }
-        log.finest(() -> "Cog became active, now " + nActiveCogs + " active cogs.");
+        log.finest(() -> "Cog became active, now " + nActiveCogs + " active cogs, " + nWakingCogs + " more wake events before clock can advance.");
     }
 
     public void notifyCogInactive() {
@@ -904,11 +919,7 @@ public class ABSRuntime {
         }
         if (nActiveCogs == 0) {
             log.finest(() -> "Cog became inactive, no active cogs left.");
-            if (nWakingCogs > 0) {
-                log.finest(() -> "Waiting for " + nWakingCogs + " more cogs to wake before trying clock advance.");
-            } else {
-                maybeAdvanceClock();
-            }
+            maybeAdvanceClock();
         } else if (nActiveCogs > 0) {
             log.finest(() -> "Cog became inactive, now " + nActiveCogs + " active cogs.");
         } else {

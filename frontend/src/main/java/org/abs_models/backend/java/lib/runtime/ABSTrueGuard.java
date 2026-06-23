@@ -9,6 +9,10 @@ package org.abs_models.backend.java.lib.runtime;
  */
 public class ABSTrueGuard extends ABSGuard {
 
+    public ABSTrueGuard(COG cog) {
+        super(cog);
+    }
+
     @Override
     public boolean isTrue() {
         return true;
@@ -20,7 +24,7 @@ public class ABSTrueGuard extends ABSGuard {
     }
 
     @Override
-    public boolean await(COG cog, Task<?> task) {
+    public boolean await() {
         return true;
     }
 
