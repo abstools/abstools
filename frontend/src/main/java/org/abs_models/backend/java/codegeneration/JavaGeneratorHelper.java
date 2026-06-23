@@ -962,7 +962,7 @@ public class JavaGeneratorHelper {
 
         replaceLocalVariables((PureExp)expr.copy(), beforeAwaitStream);
 
-        stream.print("new " + JavaBackendConstants.EXPGUARD + "() { public boolean evaluateExp() { return ");
+        stream.print("new " + JavaBackendConstants.EXPGUARD + "(__cog) { public boolean evaluateExp() { return ");
         expGuard.getPureExp().generateJava(stream);
         stream.print("; }}");
     }

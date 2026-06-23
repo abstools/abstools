@@ -15,6 +15,10 @@ import java.util.logging.Logger;
  */
 public abstract class ABSExpGuard extends ABSGuard {
 
+    public ABSExpGuard(COG cog) {
+        super(cog);
+    }
+
     protected static final Logger log = Logging.getLogger(ABSExpGuard.class.getName());
     /**
      * This flag keeps track on whether we have to tell the cog that we
@@ -47,11 +51,11 @@ public abstract class ABSExpGuard extends ABSGuard {
     /**
      * {@inheritDoc}
      *
-     * ONLY call this method to make scheduling decisions, since it
+     * <p>ONLY call this method to make scheduling decisions, since it
      * communicates readiness changes to the runtime.  Call {@link #isTrue}
      * instead to print or otherwise display the guard's status.
      */
-    public boolean await(COG cog, Task<?> task) {
+    public boolean await() {
         boolean isTrue = isTrue();
         if (!isTrue && wasPreviouslyTrue) {
             log.finest(() -> "Condition of " + this + " changed from true to false; telling cog we can't run...");

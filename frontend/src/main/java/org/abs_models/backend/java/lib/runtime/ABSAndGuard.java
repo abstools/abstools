@@ -12,7 +12,9 @@ public class ABSAndGuard extends ABSGuard {
     public final ABSGuard left;
     public final ABSGuard right;
 
-    public ABSAndGuard(ABSGuard l, ABSGuard r) {
+    public ABSAndGuard(COG cog, ABSGuard l, ABSGuard r) {
+        assert l.getCog() == cog && r.getCog() == cog : "Trying to assemble an AndGuard with guards on different cogs";
+        super(cog);
         left = l;
         right = r;
     }
@@ -39,7 +41,7 @@ public class ABSAndGuard extends ABSGuard {
         return right;
     }
 
-    public boolean await(COG cog, Task<?> task) {
+    public boolean await() {
         // We don't ourselves notify the cog about idleness; the nested guards
         // will take care of it sequentially.  (I.e., we only call right.await
         // after left.await is done.)
@@ -47,8 +49,8 @@ public class ABSAndGuard extends ABSGuard {
         // FIXME: this is wrong in general; if both guards are of type
         // DurationGuard, we need to unify their intervals, *not* execute them
         // sequentially.
-        boolean b = left.await(cog, task);
-        boolean b2 = right.await(cog, task);
+        boolean b = left.await();
+        boolean b2 = right.await();
         return b && b2;
 
     }

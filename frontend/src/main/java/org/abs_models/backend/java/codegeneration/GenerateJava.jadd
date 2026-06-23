@@ -313,9 +313,9 @@ aspect GenerateJava {
         for (Stmt stmt : getStmts()) {
             PureExp cost = AnnotationHelper.getAnnotationValueFromName(stmt.getAnnotationList(), "ABS.DC.Cost");
             if (cost != null) {
-                stream.print("new " + ABSResourceGuard.class.getName() + "(");
+                stream.print("new " + ABSResourceGuard.class.getName() + "(__cog, ");
                 cost.generateJava(stream);
-                stream.println(").await(" + ABSThread.class.getName() + ".getCurrentCOG(), " + ABSThread.class.getName() + ".getCurrentTask());");
+                stream.println(").await();");
             }
             stmt.generateJava(stream);
         }
@@ -466,11 +466,11 @@ aspect GenerateJava {
 
     public void DurationStmt.generateJava(PrintStream stream) {
         JavaGeneratorHelper.generateStmtPreamble(stream, this);
-        stream.print("new " + ABSDurationGuard.class.getName() + "(");
+        stream.print("new " + ABSDurationGuard.class.getName() + "(__cog, ");
         getMin().generateJava(stream);
         stream.print(", ");
         getMax().generateJava(stream);
-        stream.println(").await(" + ABSThread.class.getName() + ".getCurrentCOG(), " + ABSThread.class.getName() + ".getCurrentTask());");
+        stream.println(").await();");
         stream.println(";");
         JavaGeneratorHelper.generateStmtEpilogue(stream, this);
     }
@@ -576,7 +576,7 @@ aspect GenerateJava {
     public abstract void Guard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream);
 
     public void AndGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
-        stream.print("new " + JavaBackendConstants.ANDGUARD + "(");
+        stream.print("new " + JavaBackendConstants.ANDGUARD + "(__cog, ");
         getLeft().generateJavaGuard(beforeAwaitStream, stream);
         stream.print(",");
         getRight().generateJavaGuard(beforeAwaitStream, stream);
@@ -584,7 +584,7 @@ aspect GenerateJava {
     }
 
     public void ClaimGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
-        stream.print("new " + JavaBackendConstants.CLAIMGUARD + "(");
+        stream.print("new " + JavaBackendConstants.CLAIMGUARD + "(__cog, ");
         getVar().generateJava(stream);
         stream.print(")");
     }
@@ -594,7 +594,7 @@ aspect GenerateJava {
     }
 
     public void DurationGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
-        stream.print("new " + JavaBackendConstants.DURATIONGUARD + "(");
+        stream.print("new " + JavaBackendConstants.DURATIONGUARD + "(__cog, ");
         getMin().generateJava(stream);
         stream.print(", ");
         getMax().generateJava(stream);

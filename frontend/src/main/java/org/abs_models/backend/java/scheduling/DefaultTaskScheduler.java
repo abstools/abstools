@@ -103,6 +103,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
          * @param g The guard that is waited on
          */
         private void acquireLock(ABSGuard g) {
+            assert myTask == g.getTask() : "Trying to await on a guard that is not from the current task";
             if (g == null || g.staysTrue()) {
                 synchronized (DefaultTaskScheduler.this) {
                     log.finest(() -> myTask + " ENTERING ACQUIRE LOOP");
@@ -125,7 +126,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
                     // TODO: figure out what happens when we suspend
                     // in g.await() -- are we staying inside this
                     // synchronized block or releasing it?
-                    while (DefaultTaskScheduler.this.runningThread != null || !g.await(cog, myTask)) {
+                    while (DefaultTaskScheduler.this.runningThread != null || !g.await()) {
                         // Sleep when someone else is running, or g not ready
                         try {
                             log.finest(() -> myTask + " WAITING FOR TOKEN");
@@ -161,6 +162,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
          * again...
          */
         public void suspendTask(ABSGuard g) {
+            assert myTask == g.getTask() : "Trying to await on a guard that is not from the current task";
             log.finest(() -> myTask + " on " + g + " SUSPENDING");
             releaseLockAndSignal();
             View v = view;
@@ -168,7 +170,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
                 v.taskSuspended(myTask.getView(), g);
             }
             log.finest(() -> myTask + " AWAITING " + g);
-            boolean taskReady = g.await(cog, myTask); // Note that this might suspend the thread again
+            boolean taskReady = g.await(); // Note that this might suspend the thread again
             log.finest(() -> myTask + " " + g + " READY");
             if (v != null)
                 v.taskReady(myTask.getView()); // ignoring non-monitonic tasks here ...

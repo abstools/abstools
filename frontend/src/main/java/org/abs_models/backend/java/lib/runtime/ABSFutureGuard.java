@@ -11,12 +11,13 @@ public class ABSFutureGuard extends ABSGuard {
     public final ABSFut<?> fut;
     private boolean isDone;
 
-    public ABSFutureGuard(ABSFut<?> f) {
+    public ABSFutureGuard(COG cog, ABSFut<?> f) {
+        super(cog);
         this.fut = f;
         this.isDone = f.isDone();
     }
 
-    public boolean await(COG cog, Task<?> task) {
+    public boolean await() {
         if (!isDone) {
             fut.await(cog, task);
             isDone = true;

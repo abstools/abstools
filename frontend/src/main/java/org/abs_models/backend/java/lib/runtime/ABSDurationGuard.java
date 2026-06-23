@@ -36,7 +36,8 @@ public class ABSDurationGuard extends ABSGuard {
      * @param maxduration The maximum duration to suspend the process; if no
      *   other process waits, the clock will advance by this amount.
      */
-    public ABSDurationGuard(Aprational minduration, Aprational maxduration) {
+    public ABSDurationGuard(COG cog, Aprational minduration, Aprational maxduration) {
+        super(cog);
         Aprational current_time = ABSRuntime.getRuntime().getClock();
         this.min_time = current_time.add(minduration);
         this.max_time = current_time.add(maxduration);
@@ -68,13 +69,14 @@ public class ABSDurationGuard extends ABSGuard {
 
     /**
      * {@inheritDoc}
-     * <p>
-     * If the guard evaluates to false, this method calls {@link
-     * ABSRuntime#addDurationGuard} and waits.  The runtime will signal once
-     * the clock advances to this guard's minimum wakeup time.
+     *
+     * <p>If the guard evaluates to false, this method calls {@link
+     * ABSRuntime#addDurationGuard} and waits.  The runtime will
+     * signal once the clock advances to this guard's minimum wakeup
+     * time.
      */
     @Override
-    public synchronized boolean await(COG cog, Task<?> task) {
+    public synchronized boolean await() {
         log.finest(() -> "Awaiting until time between " + getMinTime() + " and " + getMaxTime());
 
         boolean mustSuspend = !isTrue();
