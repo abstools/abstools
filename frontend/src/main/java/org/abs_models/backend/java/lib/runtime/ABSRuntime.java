@@ -29,7 +29,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSRef;
@@ -80,8 +79,11 @@ public class ABSRuntime {
     /** The number of currently active cogs in the system. */
     private long nActiveCogs = 0;
 
-    /** The number of cogs that need to wake up before the next clock advance. */
-    private long nWakingCogs = 0;
+    /** The cogs that need to wake up at least once before the clock
+     * can advance.  We make this a set instead of a counter since one
+     * cog waking up two times could lead to premature clock
+     * advance. */
+    private Set<COG> cogsToWake = new HashSet<>();
 
     /**
      * The current clock value.
@@ -805,8 +807,8 @@ public class ABSRuntime {
         // where either a duration guard wakes up or a resource boundary
         // occurs (and hence, a resource guard might receive enough resources
         // to unblock), whichever comes earlier.
-        if (nWakingCogs > 0) {
-            log.finest(() -> "Not advancing clock before " + nWakingCogs + " more cogs have woken up");
+        if (!cogsToWake.isEmpty()) {
+            log.finest(() -> "Not advancing clock: waiting for " + cogsToWake.size() + " cogs to wake up.");
             return;
         }
         if (duration_guards.isEmpty() && resource_guards.isEmpty()) {
@@ -860,11 +862,10 @@ public class ABSRuntime {
             guardsWoken.addAll(resourceGuardsWoken);
             guardsWoken.addAll(durationGuardsWoken);
         }
-        Set<COG> cogsWoken = guardsWoken.stream()
-            .map(ABSGuard::getCog)
-            .collect(Collectors.toSet());
-        this.nWakingCogs = cogsWoken.size();
-        log.finest(() -> "Finished clock advance, expecting " + this.nWakingCogs + " cog wake events (for " + guardsWoken.size() + " tasks) before advancing clock again");
+        guardsWoken.stream()
+                .map(ABSGuard::getCog)
+                .forEach(cogsToWake::add);
+        log.finest(() -> "Finished clock advance, expecting " + cogsToWake.size() + " cog wake events (for " + guardsWoken.size() + " tasks) before advancing clock again");
     }
 
     /**
@@ -900,17 +901,12 @@ public class ABSRuntime {
         }
     }
 
-    public void notifyCogActive() {
+    public void notifyCogActive(COG cog) {
         synchronized(this) {
             nActiveCogs++;
-            // Note that this is still kind of an approximation: when we
-            // signal all guards after clock advance, in theory one cog could
-            // wake up, go to sleep, wake up, go to sleep before the other cog
-            // has woken up a first time, which would result in a spurious
-            // clock advance.
-            nWakingCogs = Math.max(0, nWakingCogs - 1);
+            cogsToWake.remove(cog);
         }
-        log.finest(() -> "Cog became active, now " + nActiveCogs + " active cogs, " + nWakingCogs + " more wake events before clock can advance.");
+        log.finest(() -> "Cog became active, now " + nActiveCogs + " active cogs, " + cogsToWake.size() + " more cogs to wake before clock can advance.");
     }
 
     public void notifyCogInactive() {

@@ -78,7 +78,7 @@ public class COG {
         synchronized(this) {
             if (activeThreads == 0) {
                 log.finest(() -> this + " notifying runtime that it became active");
-                ABSRuntime.getRuntime().notifyCogActive();
+                ABSRuntime.getRuntime().notifyCogActive(this);
             }
             activeThreads++;
         }
@@ -122,7 +122,7 @@ public class COG {
             // If we just woke up but are already the active task, we were the
             // task that blocked.
             log.finest(() -> this + " notifying runtime that it became active");
-            ABSRuntime.getRuntime().notifyCogActive();
+            ABSRuntime.getRuntime().notifyCogActive(this);
         }
         activeThreads++;
         log.finest(() -> this + " now has " + activeThreads + " active threads.");
