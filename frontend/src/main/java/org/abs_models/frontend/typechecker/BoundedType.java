@@ -3,6 +3,10 @@
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.abs_models.frontend.typechecker;
+import com.google.common.collect.ImmutableMap;
+import org.abs_models.frontend.ast.TypeParameterDecl;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.PrimitiveNullableType;
 
 public class BoundedType extends Type {
     private Type boundType;
@@ -91,6 +95,8 @@ public class BoundedType extends Type {
         if (hasBoundType())
             return boundType.equals(o);
 
+        if (!(o instanceof BoundedType))
+            return false;
         return true;
     }
 
@@ -146,4 +152,11 @@ public class BoundedType extends Type {
             return super.fullCopy();
     }
 
+    @Override
+    public NullableType instantiateNullableType(ImmutableMap<TypeParameterDecl, NullableType> inst) {
+        if (hasBoundType()) {
+            return boundType.instantiateNullableType(inst);
+        }
+        return PrimitiveNullableType.NonApplicable;
+    }
 }
