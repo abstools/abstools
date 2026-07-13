@@ -1,6 +1,5 @@
 module Management;
 export *;
-import * from ABS.Meta;
 
 
 data Bandwidth = Low | Mid | High;
