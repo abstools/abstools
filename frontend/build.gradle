@@ -196,7 +196,7 @@ tasks.withType(AbstractArchiveTask) {
 jar {
     // https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
     archiveBaseName='absfrontend'
-    archiveAppendix=gitBranch()
+    archiveAppendix=rootProject.gitBranch()
     duplicatesStrategy='exclude'
     manifest {
         attributes 'Main-Class': 'org.abs_models.Absc',

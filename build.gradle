@@ -44,5 +44,5 @@ subprojects {
         mavenCentral()
     }
     group = 'org.abs_models'
-    version = absVersion()
+    version = rootProject.absVersion()
 }
