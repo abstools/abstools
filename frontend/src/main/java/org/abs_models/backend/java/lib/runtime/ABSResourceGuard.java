@@ -86,7 +86,7 @@ public class ABSResourceGuard extends ABSGuard {
      */
     @Override
     public synchronized boolean await() {
-        log.finest(() -> "Consuming " + resources_needed + " resources ");
+        log.finest(() -> "Consuming " + resources_needed + " resources");
 
         boolean mustSuspend = !isTrue();
 

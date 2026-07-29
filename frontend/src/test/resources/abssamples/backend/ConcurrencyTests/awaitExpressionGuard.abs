@@ -1,0 +1,178 @@
+// This test case was reduced from a larger, database-backed case
+// study.  We check if the model successfully finishes running -- the
+// `waitUntilFinished' method would hang in the Java backend.
+module BackendTest;
+import * from ABS.DC;
+
+// Database-related types
+
+def Int minEventTime() = 1730132726930;
+
+data DBNode = DBNode(String nodeName, Int nodeCpu, Int nodeMemory, Int nodeReplicas);
+
+data Event = Event(String eventLocalComponent, String eventLocalId,
+                   String eventRemoteComponent,
+                   String eventActivityId, String eventType,
+                   Int eventTime, Int eventPayloadSize);
+
+// Generate a jsonl line (JSON object) for the event at the current time.
+//
+// Note that since we start with time t=0 when replaying events, we use `now()
+// + minTime` instead of just the current time.  This means that recorded and
+// replayed trace start at the same time point (but events after the first
+// ones will occur at different times).
+def String eventJsonl(Event event, Int minTime) =
+    `{"CompName":"$eventLocalComponent(event)$","ReplicaID":"$eventLocalId(event)$","EventType":"$eventType(event)$","EventTime":$timeValue(now()) + minTime$,"PayloadSize":$eventPayloadSize(event)$,"ActivityID":"$eventActivityId(event)$","RemoteCompName":"$eventRemoteComponent(event)$"}`;
+
+def List<Event> startingEvents(String activityId) =
+    case activityId {
+    | "81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930" => list[Event("firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba","firecoat-persist","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726930,1952),Event("firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba","firecoat-persist","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726930,1952)]
+    | _ => list[]
+    };
+
+def List<Event> outgoingEventsForIncoming(Event in_event) =
+    case in_event {
+    | Event("firecoat-persist","96bf56cc0818","firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","in",1730132726948,1952) => list[Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726950,785),Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726950,785)]
+    | Event("firecoat-persist","96bf56cc0818","firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","in",1730132726948,1952) => list[Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726950,785),Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726950,785)]
+    | Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0) => Nil
+    | Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0) => Nil
+    | _ => Nil
+    };
+
+
+def List<Event> incomingEventForOutgoing(Event out_event) =
+    case out_event {
+    | Event("firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba","firecoat-persist","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726930,1952) => list[Event("firecoat-persist","96bf56cc0818","firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","in",1730132726948,1952),Event("firecoat-persist","96bf56cc0818","firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","in",1730132726948,1952)]
+    | Event("firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba","firecoat-persist","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726930,1952) => list[Event("firecoat-persist","96bf56cc0818","firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","in",1730132726948,1952),Event("firecoat-persist","96bf56cc0818","firecoat-sensor","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","in",1730132726948,1952)]
+    | Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726950,785) => list[Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0),Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0)]
+    | Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726950,785) => list[Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0),Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0)]
+    | Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726950,785) => list[Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0),Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0)]
+    | Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","out",1730132726950,785) => list[Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0),Event("firecoat-persist","96bf56cc0818","firecoat-postgis","81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930","ack",1730132726954,0)]
+    | _ => Nil
+    };
+
+// The event processing costs for each component.
+data CalibrationEntry = CalibrationEntry(String entryName, Rat entryConstant, Rat entryVariable);
+
+// Model nodes
+
+interface Component {
+    Unit execute(Int cost);
+}
+class Component(String name,
+                Int replicaId,
+                Rat constantFactor,
+                Rat variableFactor)
+    implements Component
+{
+    Unit execute(Int cost) {
+        await duration(constantFactor);
+        [Cost: cost * variableFactor] skip;
+    }
+}
+
+interface Activity {
+    Unit waitUntilFinished();
+}
+
+class Activity(String activityId, Map<String, List<Component>> components)
+    implements Activity
+{
+    Int minEventTime = minEventTime();
+    Int eventsInFlight = 0;
+    Bool started = False;       // Stays True after the activity has started
+
+    Unit waitUntilFinished() {
+        await started;
+        await eventsInFlight == 0;
+    }
+
+    Unit run() {
+        foreach (event in startingEvents(activityId)) {
+            this!processStartingEvent(event, eventTime(event) - minEventTime);
+        }
+        started = True;
+    }
+
+    Unit processStartingEvent(Event event, Int delay) {
+        await duration(delay);
+        this!processEvent(event);
+    }
+
+    Unit processEvent(Event event) {
+        eventsInFlight = eventsInFlight + 1;
+        // TODO: generate Event from what actually happened; do not echo input
+        // trace here, otherwise we don't see the right ReplicaID values
+        println(eventJsonl(event, minEventTime));
+        switch (eventType(event)) {
+            "out" => {
+                List<Event> followingEvents = incomingEventForOutgoing(event);
+                if (!isEmpty(followingEvents)) {
+                    // should be only one event, since we don't
+                    // broadcast (do we?), but can be empty in case of
+                    // incomplete trace
+                    Event followingEvent = head(followingEvents);
+                    Int t = eventTime(followingEvent) - eventTime(event);
+                    await duration(t);
+                    this!processEvent(followingEvent);
+                }
+            }
+            _ => {
+                // "in" or "ack"
+                List<Event> resultingEvents = outgoingEventsForIncoming(event);
+                Rat meanTime =
+                  when length(resultingEvents) > 0
+                  then foldl((Event e, Int acc) => acc + eventTime(e) - eventTime(event))(resultingEvents, 0)
+                    / length(resultingEvents)
+                  else 0;
+                List<Component> cl = lookupDefault(components, eventLocalComponent(event), Nil);
+                // Choose random replica for this component for now
+                Maybe<Component> c = when cl == Nil then Nothing else Just(nth(cl, random(length(cl))));
+                foreach (e in resultingEvents) {
+                    Int t = eventTime(e) - eventTime(event);
+                    if (isJust(c)) { // should always be true
+                        await fromJust(c)!execute(t);
+                    }
+                    this!processEvent(e);
+                }
+            }
+        }
+        eventsInFlight = eventsInFlight - 1;
+    }
+}
+
+{
+    Map<String, Rat> constantFactors = map[Pair("firecoat-sensor",1),Pair("firecoat-persist",2),Pair("firecoat-postgis",3)];
+    Map<String, Rat> variableFactors = map[Pair("firecoat-sensor",3/2),Pair("firecoat-persist",5/2),Pair("firecoat-postgis",7/2)];
+    Map<String, List<Component>> components = map[];
+    foreach (nodetype in list[DBNode("firecoat-sensor",1,512,1),DBNode("firecoat-persist",4,2048,2),DBNode("firecoat-postgis",2,4096,1)]) {
+        List<Component> nodeComponents = Nil;
+        foreach (nodeId in range(1, nodeReplicas(nodetype))) {
+            DeploymentComponent dc = null;
+            String nodeName = nodeName(nodetype);
+            // If the factors are unspecified (should not happen), assume only
+            // constant delays.
+            Rat constantFactor = lookupDefault(constantFactors, nodeName, 1);
+            Rat variableFactor = lookupDefault(variableFactors, nodeName, 0);
+            if (nodeCpu(nodetype) > 0) {
+                dc = new DeploymentComponent(`$nodeName(nodetype)$-$nodeId$`, map[Pair(Speed, nodeCpu(nodetype) * 10)]);
+            } else {
+                // TODO: Unspecified node size, read node default values from somewhere
+                dc = new DeploymentComponent(`$nodeName(nodetype)$-$nodeId$`, map[Pair(Speed, 10)]);
+            }
+            [DC: dc] Component component = new Component(nodeName, nodeId, constantFactor, variableFactor);
+            nodeComponents = Cons(component, nodeComponents);
+        }
+        components = put(components, nodeName(nodetype), nodeComponents);
+    }
+    List<Activity> activityObjects = Nil;
+    List<String> activities = list["81c8b96d-1fcb-40b1-ad2d-d75967f95dba#1730132726930"];
+    foreach (activity_id in activities) {
+        Activity a = new Activity(activity_id, components);
+        activityObjects = Cons(a, activityObjects);
+    }
+    foreach (a in activityObjects) {
+        await a!waitUntilFinished();
+    }
+    Bool testresult = True;
+}

@@ -906,18 +906,18 @@ public class ABSRuntime {
             nActiveCogs++;
             cogsToWake.remove(cog);
         }
-        log.finest(() -> "Cog became active, now " + nActiveCogs + " active cogs, " + cogsToWake.size() + " more cogs to wake before clock can advance.");
+        log.finest(() -> cog + " became active, now " + nActiveCogs + " active cogs, " + cogsToWake.size() + " more cogs to wake before clock can advance.");
     }
 
-    public void notifyCogInactive() {
+    public void notifyCogInactive(COG cog) {
         synchronized(this) {
             nActiveCogs--;
         }
         if (nActiveCogs == 0) {
-            log.finest(() -> "Cog became inactive, no active cogs left.");
+            log.finest(() -> cog + " became inactive, no active cogs left.");
             maybeAdvanceClock();
         } else if (nActiveCogs > 0) {
-            log.finest(() -> "Cog became inactive, now " + nActiveCogs + " active cogs.");
+            log.finest(() -> cog + " became inactive, now " + nActiveCogs + " active cogs.");
         } else {
             log.severe(() -> "Count of active cogs became negative (" + nActiveCogs + "), this should never happen");
         }
