@@ -51,9 +51,14 @@ public abstract class ABSExpGuard extends ABSGuard {
     /**
      * {@inheritDoc}
      *
-     * <p>ONLY call this method to make scheduling decisions, since it
-     * communicates readiness changes to the runtime.  Call {@link #isTrue}
-     * instead to print or otherwise display the guard's status.
+     * <p>NOTE: only call this method to make scheduling decisions,
+     * since it communicates readiness changes to the runtime.  Call
+     * {@link #isTrue} instead to print or otherwise display the
+     * guard's status.
+     *
+     * <p>NOTE: this method is called by the runtime inside a {@code
+     * synchronized} block.  Make sure that none of the call paths try
+     * to call back into the runtime.
      */
     public boolean await() {
         boolean isTrue = isTrue();

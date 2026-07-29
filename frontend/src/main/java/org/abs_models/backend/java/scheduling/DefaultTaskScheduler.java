@@ -89,7 +89,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
             } finally {
                 finished();
                 releaseLockAndSignal();
-                cog.notifyEnded();
+                cog.notifyEnded(myTask);
                 log.finest(() -> "Task " + myTask + " FINISHED");
             }
         }
@@ -123,9 +123,8 @@ public class DefaultTaskScheduler implements TaskScheduler {
             } else {
                 synchronized(DefaultTaskScheduler.this) {
                     log.finest(() -> myTask + " ENTERING ACQUIRE LOOP WITH GUARD");
-                    // TODO: figure out what happens when we suspend
-                    // in g.await() -- are we staying inside this
-                    // synchronized block or releasing it?
+                    // NOTE: if g.await() blocks, directly or
+                    // indirectly, this can lead to deadlocks.
                     while (DefaultTaskScheduler.this.runningThread != null || !g.await()) {
                         // Sleep when someone else is running, or g not ready
                         try {
@@ -190,9 +189,13 @@ public class DefaultTaskScheduler implements TaskScheduler {
     }
 
     @Override
-    public synchronized Task<?> getActiveTask() {
-        if (runningThread == null) return null;
-        else return runningThread.getTask();
+    public Task<?> getActiveTask() {
+        // NOTE: this method is not synchronized, since it is called
+        // by ExpGuard.await, which is called by
+        // SchedulerThread.acquireLock inside a synchronized block
+        SchedulerThread _runningThread = runningThread;
+        if (_runningThread == null) return null;
+        else return _runningThread.getTask();
     }
 
     @Override
