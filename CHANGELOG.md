@@ -14,6 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+## [1.11.2] - 2026-08-04
+
+### Fixed
+
+- Fixed deadlocks involving blocking guards and task creation in the
+  Java backend.
+
 ## [1.11.1] - 2026-06-02
 
 ### Added
@@ -583,8 +590,9 @@ Various bug fixes and minor refactorings.
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.11.1...HEAD
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.11.0...v1.11.1
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.11.2...HEAD
+[1.11.2]: https://github.com/abstools/abstools/compare/v1.11.1...v1.11.2
+[1.11.1]: https://github.com/abstools/abstools/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/abstools/abstools/compare/v1.10.2...v1.11.0
 [1.10.2]: https://github.com/abstools/abstools/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/abstools/abstools/compare/v1.10.0...v1.10.1
