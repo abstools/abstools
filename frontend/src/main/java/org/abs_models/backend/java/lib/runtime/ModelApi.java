@@ -3,6 +3,7 @@ package org.abs_models.backend.java.lib.runtime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 import java.net.FileNameMap;
@@ -111,6 +112,7 @@ public class ModelApi {
         server.createContext("/clock", new ModelApi.ClockHandler());
         server.createContext("/dcs", new ModelApi.DCHandler());
         server.createContext("/sparql", new ModelApi.SparqlHandler());
+        server.createContext("/ttl", new ModelApi.TtlHandler());
         // this is a catch-all handler so should be last
         server.createContext("/", new ModelApi.RootHandler());
         server.setExecutor(Executors.newCachedThreadPool(r -> {
@@ -223,6 +225,16 @@ public class ModelApi {
             return Lang.RDFJSON; // should never be reached
         }
 
+    }
+
+    private static class TtlHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            Lang lang = RDFLanguages.TTL;
+            StringWriter result = new StringWriter();
+            GraphObserver.getModel().write(result, lang.getName());
+            sendResponse(exchange, 200, lang.getHeaderString(), result.toString());
+        }
     }
 
     /**

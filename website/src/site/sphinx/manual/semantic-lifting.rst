@@ -181,17 +181,24 @@ When an ABS model is started with the ``--printRDF`` argument, the
 complete semantic representation is printed to the terminal in
 :term:`TRTL` format after the model finishes.
 
-When an ABS model is started with the ``--sparqlQuery`` argument
-followed by a valid SPARQL query, that query is run after the model
-finishes and its result is printed in TRTL format.
+When an ABS model is started with the ``--sparqlQuery`` argument, the
+given query is run after the model finishes and its result is printed
+in TRTL format.
 
-When an ABS model is running with the :ref:`Model API <sec:model-api>`
-active, it provides a SPARQL endpoint under the ``/sparql`` URL.  The
-endpoint accepts SPARQL queries as specified in `Section 2.1
-<https://www.w3.org/TR/sparql11-protocol/#query-operation>`__ of the
-`SPARQL 1.1 Protocol <https://www.w3.org/TR/sparql11-protocol/>`__.
-The sparql endpoint returns results in `JSON format
-<https://www.w3.org/TR/sparql11-results-json/>`__ by default.
+The :ref:`Model API <sec:model-api>` also provides two ways of
+accessing the lifted model state:
+
+* The complete lifted state is accessible under the ``/ttl`` URL, in
+  TRTL format.  For example, if the Model API runs on port 8080,
+  `Protégé <https://protege.stanford.edu>`__ and similar tools can
+  read the ontology by opening the URL ``https://localhost:8080/ttl``.
+
+* A SPARQL endpoint runs under the ``/sparql`` URL.  The endpoint
+  accepts SPARQL queries as specified in `Section 2.1
+  <https://www.w3.org/TR/sparql11-protocol/#query-operation>`__ of the
+  `SPARQL 1.1 Protocol <https://www.w3.org/TR/sparql11-protocol/>`__.
+  The SPARQL endpoint returns results in `JSON format
+  <https://www.w3.org/TR/sparql11-results-json/>`__ by default.
 
 
 
