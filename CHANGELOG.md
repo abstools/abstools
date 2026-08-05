@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- The semantic lifting RDF graph is now accessible from the Model API,
+  and can be directly imported into Protégé by opening
+  `http://localhost:<port>/ttl`.
+
 ### Changed
 
 ### Removed
