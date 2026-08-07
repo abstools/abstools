@@ -10,7 +10,9 @@ representation of aspects of the model and the runtime state in
 
 Semantically-lifted program state can be queried from the command
 line, a SPARQL endpoint implemented in the :ref:`Model API
-<sec:model-api>`, or within the model itself.
+<sec:model-api>`, within the model itself through embedded SPARQL
+queries, and can be opened in tools such as `Protégé
+<https://protege.stanford.edu>`__.
 
 Semantic lifting is supported in the Java backend.
 
@@ -23,7 +25,7 @@ The following namespaces are always defined:
 ``abs:``
 
    The ABS language ontology, containing definitions for ABS
-   interfaces, classes, fields, datatypes and constructors.
+   interfaces, classes, fields, datatypes, and constructors.
 
 ``prog:``
 
@@ -58,19 +60,23 @@ lifted.
 
    * - interface
 
-     - resource of type ``abs:interface``
+     - resource that subclasses ``abs:Interface``, with a label naming the ABS interface
 
    * - class
 
-     - resource of type ``abs:class``
+     - resource that subclasses ``abs:Class``, with a label naming the ABS class
 
    * - datatype
 
-     - resource of type ``abs:datatype``
+     - resource that subclasses ``abs:Datatype``, with a label naming the ABS datatype
 
    * - data constructor
 
-     - resource of type ``abs:dataconstructor``
+     - resource that subclasses ``abs:Dataconstructor``, with a label naming the ABS constructor
+
+   * - object
+
+     - resource of type of the ABS class resource
 
    * - future
 
@@ -78,15 +84,15 @@ lifted.
 
    * - string
 
-     - RDF string
+     - RDF string literal
 
    * - number
 
-     - RDF int or float number
+     - RDF int or float literal
 
    * - Boolean
 
-     - RDF boolean
+     - RDF boolean literal
 
    * - null value
 
@@ -105,46 +111,52 @@ We consider the following small ABS model::
     I o = new C(Just(1));
   }
 
-All datatypes are represented as resources of type ``abs:datatype``,
-their dataconstructors are represented via ``abs:dataconstructor``::
+All datatypes are represented as resources of type ``abs:Datatype``,
+their dataconstructors are represented via ``abs:Dataconstructor``::
 
-  prog:ABS.StdLib.1985362663
-        rdf:type            abs:datatype;
-        rdfs:label          "ABS.StdLib.Maybe";
-        abs:hasConstructor  prog:ABS.StdLib.Just , prog:ABS.StdLib.Nothing .
+  prog:ABS.StdLib.1198513669
+          rdfs:subClassOf  abs:Datatype .
+          rdfs:label       "ABS.StdLib.Maybe" .
 
-  prog:ABS.StdLib.Just  rdf:type  abs:dataconstructor;
-        rdfs:label  "ABS.StdLib.Just" .
+  prog:ABS.StdLib.2059701776
+          rdfs:subClassOf  abs:Dataconstructor;
+          rdfs:label       "ABS.StdLib.Just";
+          abs:constructs   prog:ABS.StdLib.1198513669 .
 
-All interfaces are represented as resources of type ``abs:interface``,
+  prog:ABS.StdLib.1360125564
+          rdfs:subClassOf  abs:Dataconstructor;
+          rdfs:label       "ABS.StdLib.Nothing";
+          abs:constructs   prog:ABS.StdLib.1198513669 .
+
+All interfaces are represented as resources of type ``abs:Interface``,
 with a label containing the fully-qualified name of the interface::
 
-  prog:Test.823775087  a  abs:interface;
-        rdfs:label   "Test.I";
-        abs:extends  prog:ABS.StdLib.2078396010 .  # ABS.StdLib.Object
+  prog:Test.1466066315  rdfs:label  "Test.I";
+          rdfs:subClassOf  abs:Interface;
+          abs:extends      prog:ABS.StdLib.1874919946 .  # ABS.StdLib.Object
 
-All classes are represented as resources of type ``abs:class``, again
+All classes are represented as resources of type ``abs:Class``, again
 with a label with the class name::
 
-  prog:Test.1041552272  a  abs:class;
-        rdfs:label      "Test.C";
-        abs:hasField    prog:Test.i;
-        abs:implements  prog:Test.823775087 .
+  prog:Test.266196910  rdfs:label      "Test.C";
+          rdfs:subClassOf  abs:Class;
+          abs:hasField     prog:Test.i;
+          abs:implements   prog:Test.1466066315 .
 
-  prog:Test.i  a      abs:field;
-        rdfs:label  "Test.i" .
+  prog:Test.i  rdf:type  abs:Field;
+          rdfs:label  "Test.i" .
 
 All the information above is static and calculated at compile-time.
 At runtime, the object created in the main block is lifted as
 follows::
 
-  run:obj1719860023  rdf:type prog:Test.1041552272;
-        abs:in       run:cog1652764753;
-        prog:Test.i  [ rdf:type   prog:ABS.StdLib.Just;
-                       prog:arg0  1
-                     ] .
+  run:obj584963808  rdf:type  prog:Test.266196910;  # Test.C
+          abs:in       run:cog855700733;
+          prog:Test.i  [ rdf:type   prog:ABS.StdLib.2059701776;  # ABS.StdLib.Just
+                         prog:arg0  1
+                       ] .
 
-  run:cog1652764753  rdf:type  abs:cog .
+  run:cog855700733  rdf:type  abs:Cog .
 
 Numeric and string data values are represented directly, user-defined
 datatypes are lifted as anonymous resources referencing the
