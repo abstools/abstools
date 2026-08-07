@@ -19,6 +19,7 @@ import org.apache.jena.sparql.core.Prologue;
 import org.apache.jena.sparql.resultset.ResultsWriter;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.OWL2;
 import org.apfloat.Apint;
 import org.apfloat.Aprational;
 
@@ -86,10 +87,12 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
 
         absNamespaces = progModel.getNsPrefixMap(); // getNsPrefixMap returns a modifiable copy per its documentation
         absNamespaces.putAll(
-            Map.of("rdfs", RDFS.label.getNameSpace(),
-                "abs", "http://abs-models.org/ns/abs/",
-                "prog", "http://abs-models.org/ns/prog/",
-                "run", "http://abs-models.org/ns/run/"));
+            Map.of("rdf", RDF.getURI(),
+                "rdfs", RDFS.getURI(),
+                "owl", OWL2.getURI(),
+                "abs", "http://abs-models.org/ns/abs#",
+                "prog", "http://abs-models.org/ns/prog#",
+                "run", "http://abs-models.org/ns/run#"));
 
         sparqlPrefix = absNamespaces.entrySet()
             .stream()
@@ -97,28 +100,28 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
             .collect(Collectors.joining());
 
         String absns = absNamespaces.get("abs");
-        progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "class"))
+        progModel.listSubjectsWithProperty(RDFS.subClassOf, progModel.createResource(absns + "Class"))
             .forEach(
                 classres -> {
                     if (classres.hasProperty(RDFS.label)) {
                         knownClasses.put(classres.getProperty(RDFS.label).getString(), classres);
                     }
                 });
-        progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "interface"))
+        progModel.listSubjectsWithProperty(RDFS.subClassOf, progModel.createResource(absns + "Interface"))
             .forEach(
                 interfaceres -> {
                     if (interfaceres.hasProperty(RDFS.label)) {
                         knownInterfaces.put(interfaceres.getProperty(RDFS.label).getString(), interfaceres);
                     }
                 });
-        progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "datatype"))
+        progModel.listSubjectsWithProperty(RDFS.subClassOf, progModel.createResource(absns + "Datatype"))
             .forEach(
                 datatyperes -> {
                     if (datatyperes.hasProperty(RDFS.label)) {
                         knownDatatypes.put(datatyperes.getProperty(RDFS.label).getString(), datatyperes);
                     }
                 });
-        progModel.listSubjectsWithProperty(RDF.type, progModel.createResource(absns + "dataconstructor"))
+        progModel.listSubjectsWithProperty(RDFS.subClassOf, progModel.createResource(absns + "Dataconstructor"))
             .forEach(
                 constructorres -> {
                     if (constructorres.hasProperty(RDFS.label)) {
@@ -266,7 +269,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         String absNS = absNamespaces.get("abs");
         String runNS = absNamespaces.get("run");
         Resource cogRes = model.createResource(runNS + "cog" + cog.hashCode(),
-            model.createResource(absNS + "cog"));
+            model.createResource(absNS + "Cog"));
         Property inProp = model.createProperty(absNS + "in");
         cogRes.addProperty(inProp, model.createResource(objectResourceName(dc)));
     }
@@ -355,6 +358,9 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                 case ABSAlgebraicDataType a:
                     // Create the resource for this algebraic data type
                     String type = a.getClass().getPackageName() + "." + a.getConstructorName();
+                    if (!knownConstructors.containsKey(type)) {
+                        log.warning("Did not find constructor " + type);
+                    }
                     Resource cons = knownConstructors.getOrDefault(type, model.createResource(progNS + type));
                     Resource dataRes = model.createResource(cons);
                     // Link it to the parent
