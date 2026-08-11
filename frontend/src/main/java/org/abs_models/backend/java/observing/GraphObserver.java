@@ -12,6 +12,7 @@ import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.sparql.ARQConstants;
@@ -308,73 +309,81 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         }
     }
 
-    /**
-     * Queue entry for data structure reflection method
-     */
+    /** Queue entry for `addFieldTriples`: that method is deeply
+      * recursive and might experience stack overflow otherwise */
     private record WorkItem(Resource resource, Property property, Object value) {}
 
-    static void addFieldTriples(Model model, Resource res, Property fieldProp, Object value) {
-        String runNS = absNamespaces.get("run");
+    /**
+     * Convert an ABS value to an RDF node; if it's a compound value,
+     * fill queue with the value's contents and where to link the
+     * resulting RDFNodes in the RDF graph.
+     */
+    private static RDFNode valueToNode(Model model, Object value, Deque<WorkItem> queue) {
         String progNS = absNamespaces.get("prog");
         String absNS = absNamespaces.get("abs");
 
-        Deque<WorkItem> queue = new ArrayDeque<>();
-        queue.addLast(new WorkItem(res, fieldProp, value));
-
-        while (!queue.isEmpty()) {
-            WorkItem item = queue.removeFirst();
-            Resource currentRes = item.resource;
-            Property currentProp = item.property;
-            Object currentValue = item.value;
-
-            switch (currentValue) {
-                case null:
-                    currentRes.addLiteral(currentProp, model.createTypedLiteral("null"));
-                    break;
-                case Apint i:
-                    currentRes.addLiteral(currentProp, model.createTypedLiteral(i.toBigInteger()));
-                    break;
-                case Aprational r:
-                    currentRes.addLiteral(currentProp, model.createTypedLiteral(r.doubleValue()));
-                    break;
-                case ABSObject o2:
-                    currentRes.addProperty(currentProp, model.createResource(objectResourceName(o2)));
-                    break;
-                case ABSUnit u:
-                    Resource unitClass = knownDatatypes.getOrDefault("ABS.StdLib.Unit", model.createResource(progNS + "ABS.StdLib.Unit"));
-                    Resource unitRes = model.createResource(unitClass);
-                    currentRes.addProperty(currentProp, unitRes);
-                    break;
-                case ABSFut f:
-                    Resource futureClass = knownDatatypes.getOrDefault("ABS.StdLib.Fut", model.createResource(progNS + "ABS.StdLib.Fut"));
-                    Resource futureRes = model.createResource(futureClass);
-                    currentRes.addProperty(currentProp, futureRes);
-                    if (f.isDone()) {
-                        Property futureValueProperty = model.createProperty(absNS + "hasValue");
-                        Object result = f.getValue();
-                        queue.addLast(new WorkItem(futureRes, futureValueProperty, result));
-                    }
-                    break;
-                case ABSAlgebraicDataType a:
-                    // Create the resource for this algebraic data type
-                    String type = a.getClass().getPackageName() + "." + a.getConstructorName();
-                    if (!knownConstructors.containsKey(type)) {
-                        log.warning("Did not find constructor " + type);
-                    }
+        switch (value) {
+            case null:
+                return model.createTypedLiteral("null");
+            case Apint i:
+                return model.createTypedLiteral(i.toBigInteger());
+            case Aprational r:
+                return model.createTypedLiteral(r.doubleValue());
+            case ABSObject o2:
+                return model.createResource(objectResourceName(o2));
+            case ABSUnit u: {
+                Resource unitClass = knownDatatypes.getOrDefault("ABS.StdLib.Unit", model.createResource(progNS + "ABS.StdLib.Unit"));
+                return model.createResource(unitClass);
+            }
+            case ABSFut f: {
+                Resource futureClass = knownDatatypes.getOrDefault("ABS.StdLib.Fut", model.createResource(progNS + "ABS.StdLib.Fut"));
+                Resource futureRes = model.createResource(futureClass);
+                if (f.isDone()) {
+                    Property futureValueProperty = model.createProperty(absNS + "hasValue");
+                    Object result = f.getValue();
+                    queue.addLast(new WorkItem(futureRes, futureValueProperty, result));
+                }
+                return futureRes;
+            }
+            case ABSAlgebraicDataType a: {
+                String type = a.getClass().getPackageName() + "." + a.getConstructorName();
+                if (type.equals("ABS.StdLib.Cons")) {
+                    Object it = a;
+                    List<RDFNode> rdfElems = new ArrayList<>();
+                    do {
+                        ABSAlgebraicDataType current = (ABSAlgebraicDataType)it;
+                        rdfElems.add(valueToNode(model, current.getArg(0), queue));
+                        it = current.getArg(1);
+                    } while (it instanceof ABSAlgebraicDataType aa
+                             && aa.getClass().getPackageName().equals("ABS.StdLib")
+                             && aa.getConstructorName().equals("Cons"));
+                    return model.createList(rdfElems.iterator());
+                } else if (type.equals("ABS.StdLib.Nil")) {
+                    return RDF.nil;
+                } else {
                     Resource cons = knownConstructors.getOrDefault(type, model.createResource(progNS + type));
                     Resource dataRes = model.createResource(cons);
-                    // Link it to the parent
-                    currentRes.addProperty(currentProp, dataRes);
-                    // Add all of its arguments to the queue
                     for (int i = 0; i < a.getNumArgs(); i++) {
                         Property argProp = model.createProperty(progNS + "arg" + i);
                         Object argValue = a.getArg(i);
                         queue.addLast(new WorkItem(dataRes, argProp, argValue));
                     }
-                    break;
-                default:
-                    currentRes.addLiteral(currentProp, model.createTypedLiteral(currentValue));
+                    return dataRes;
+                }
             }
+            default:
+                return model.createTypedLiteral(value);
+        }
+    }
+
+    static void addFieldTriples(Model model, Resource res, Property fieldProp, Object value) {
+        Deque<WorkItem> queue = new ArrayDeque<>();
+        queue.addLast(new WorkItem(res, fieldProp, value));
+
+        while (!queue.isEmpty()) {
+            WorkItem item = queue.removeFirst();
+            RDFNode node = valueToNode(model, item.value, queue);
+            item.resource.addProperty(item.property, node);
         }
     }
 }
