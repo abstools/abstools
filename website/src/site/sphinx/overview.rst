@@ -65,9 +65,55 @@ model-based context, are generative ones: ABS is fully executable
 (albeit in a non-deterministic manner) and supports code generation to
 Java and Erlang.
 
-.. figure:: images/abs-layers.png
+.. mermaid::
+   :caption: ABS language architecture
 
-   ABS language architecture
+   block
+     columns 1
+
+     block
+       columns 3
+
+       block
+         columns 1
+         a2["<a href='manual/feature-modeling.html#specifying-products'>Product Modeling</a>"]
+         a1["<a href='manual/feature-modeling.html#the-feature-model'>Feature Modeling</a>"]
+         a3["<a href='manual/feature-modeling.html#delta-oriented-programming'>Deltas</a>"]
+       end
+
+       block
+         columns 1
+         b1["<a href='manual/deployment.html'>Resource Models</a>"]
+         b2["<a href='manual/timed.html'>Real-Time Modeling</a>"]
+       end
+
+       block
+         columns 1
+         d["Behavioral interface specifications"]
+         e["Local contracts, assertions"]
+       end
+     end
+
+     block
+       f["<a href='manual/modules.html'>Syntactic modules</a>"]
+     end
+
+     block
+       columns 1
+       g["<a href='manual/introduction.html#the-abs-actor-and-concurrency-model'>Asynchronous communication</a>"]
+       h["Concurrent object groups"]
+     end
+     block
+       columns 1
+       i["Object model: <a href='manual/interfaces.html'>interfaces</a> and <a href='manual/classes.html'>classes</a>"]
+       j["<a href='manual/statements.html'>Imperative language</a>"]
+     end
+
+     block
+       columns 1
+       k["<a href='manual/functions.html'>Functional language</a>"]
+       l["<a href='manual/types.html#algebraic-data-types'>Algebraic parametric datatypes</a>"]
+     end
 
 In addition to the simulation tools, a number of analysis and
 generation tools are available as well.  See `[42]
