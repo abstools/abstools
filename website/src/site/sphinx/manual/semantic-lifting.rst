@@ -92,7 +92,7 @@ lifted.
 
    * - number
 
-     - RDF int or float literal
+     - int, float, or owl:rational literal
 
    * - Boolean
 
