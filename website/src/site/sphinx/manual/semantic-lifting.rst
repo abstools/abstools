@@ -60,19 +60,23 @@ lifted.
 
    * - interface
 
-     - resource that subclasses ``abs:Interface``, with a label naming the ABS interface
+     - resource that subclasses ``abs:Interface``, with a label naming
+       the ABS interface
 
    * - class
 
-     - resource that subclasses ``abs:Class``, with a label naming the ABS class
+     - resource that subclasses ``abs:Class``, with a label naming the
+       ABS class
 
    * - datatype
 
-     - resource that subclasses ``abs:Datatype``, with a label naming the ABS datatype
+     - resource that subclasses ``abs:Datatype``, with a label naming
+       the ABS datatype
 
    * - data constructor
 
-     - resource that subclasses ``abs:Dataconstructor``, with a label naming the ABS constructor
+     - resource that subclasses ``abs:Dataconstructor``, with a label
+       naming the ABS constructor
 
    * - object
 
@@ -98,6 +102,19 @@ lifted.
 
      - RDF string ``"null"``
 
+   * - empty list
+
+     - ``rdf:nil``
+
+   * - non-empty list
+
+     - an ``rdf:List``
+
+   * - Other algebraic datatype value
+
+     - anonymous resource with type of the value's dataconstructor,
+       with attributes ``prog:arg0`` to ``prog:arg``\ *n-1* containing
+       the constructor arguments, if any
 
 We consider the following small ABS model::
 
