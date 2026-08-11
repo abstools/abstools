@@ -8,7 +8,12 @@ import org.abs_models.backend.java.lib.runtime.Logging;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSInterface;
 import org.abs_models.backend.java.lib.types.ABSUnit;
+import org.apache.jena.datatypes.DatatypeFormatException;
+import org.apache.jena.graph.impl.LiteralLabel;
 import org.apache.jena.query.*;
+import org.apache.jena.datatypes.BaseDatatype;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -41,6 +46,54 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
 
     protected static final Logger log = Logging.getLogger(GraphObserver.class.getName());
 
+    /**
+     * A mapping from Aprational to owl:rational, closely following
+     * https://jena.apache.org/documentation/notes/typed-literals.html#user-defined-xsd-data-types
+     */
+    static class RationalType extends BaseDatatype {
+        public static final String theTypeURI = OWL2.rational.getURI();
+        public static final RDFDatatype theRationalType = new RationalType();
+
+        /** private constructor - single global instance */
+        private RationalType() {
+            super(theTypeURI);
+        }
+
+        /** Convert a value of this datatype out to lexical form. */
+        public String unparse(Object value) {
+            Aprational r = (Aprational) value;
+            return r.numerator().toString() + "/" + r.denominator().toString();
+        }
+
+        /**
+         * Parse a lexical form of this datatype to a value
+         * @throws DatatypeFormatException if the lexical form is not legal
+         */
+        public Object parse(String lexicalForm) throws DatatypeFormatException {
+            int index = lexicalForm.indexOf("/");
+            if (index == -1) {
+                throw new DatatypeFormatException(lexicalForm, theRationalType, "");
+            }
+            try {
+                Apint numerator = new Apint(lexicalForm.substring(0, index));
+                Apint denominator = new Apint(lexicalForm.substring(index+1));
+                return new Aprational(numerator, denominator);
+            } catch (NumberFormatException e) {
+                throw new DatatypeFormatException(lexicalForm, theRationalType, "");
+            }
+        }
+
+        /**
+         * Compares two instances of values of the given datatype.
+         * This does not allow rationals to be compared to other number
+         * formats, Lang tag is not significant.
+         */
+        public boolean isEqual(LiteralLabel value1, LiteralLabel value2) {
+            return value1.getDatatype() == value2.getDatatype()
+                   && value1.getValue().equals(value2.getValue());
+        }
+    }
+
     /** The namespace prefixes used by the ABS ontology. */
     public static final Map<String, String> absNamespaces;
 
@@ -69,6 +122,8 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
     static Model domainModel = ModelFactory.createDefaultModel();
 
     static {
+        TypeMapper.getInstance().registerDatatype(RationalType.theRationalType);
+
         try (InputStream is = GraphObserver.class.getResourceAsStream("/resources/domain.ttl")) {
             if (is != null) {
                 String domainModelString = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -236,16 +291,12 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         return result;
     }
 
-    /**
-     * Print an RDF graph of the current ABS state, in TRTL format.
-     */
+    /** Print an RDF graph of the current ABS state in TRTL format. */
     public static void printGraph(Model model) {
         model.write(System.out, "TURTLE");
     }
 
-    /**
-     * Return an RDF model of the current ABS state.
-     */
+    /** Return an RDF model of the current ABS state. */
     public static Model getModel() {
         // Copy the weak map and set to pacify the gc
         Map<String, ObjectView> objects = Map.copyOf(objectMap);
@@ -275,10 +326,8 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         cogRes.addProperty(inProp, model.createResource(objectResourceName(dc)));
     }
 
-    /**
-     * Add all triples defining the given object to the model.
-     */
-    static void addObjectTriples(Model model, ObjectView view) {
+    /** Add all triples defining the given object to the model. */
+    private static void addObjectTriples(Model model, ObjectView view) {
         ABSObject obj = view.getObject();
         String packagename = obj.getClass().getPackageName();
         String type = packagename + "." + obj.getClassName();
@@ -328,7 +377,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
             case Apint i:
                 return model.createTypedLiteral(i.toBigInteger());
             case Aprational r:
-                return model.createTypedLiteral(r.doubleValue());
+                return model.createTypedLiteral(r, RationalType.theRationalType);
             case ABSObject o2:
                 return model.createResource(objectResourceName(o2));
             case ABSUnit u: {
@@ -376,7 +425,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         }
     }
 
-    static void addFieldTriples(Model model, Resource res, Property fieldProp, Object value) {
+    private static void addFieldTriples(Model model, Resource res, Property fieldProp, Object value) {
         Deque<WorkItem> queue = new ArrayDeque<>();
         queue.addLast(new WorkItem(res, fieldProp, value));
 
