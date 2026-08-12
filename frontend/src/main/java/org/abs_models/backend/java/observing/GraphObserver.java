@@ -156,28 +156,40 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
             .collect(Collectors.joining());
 
         String absns = absNamespaces.get("abs");
-        progModel.listSubjectsWithProperty(RDFS.subClassOf, progModel.createResource(absns + "Class"))
+
+        progModel.listSubjectsWithProperty(RDF.type, progModel.getResource(absns + "MainBlock"))
+            .forEach(
+                // The Java backend puns and puts the main block into
+                // a special class -- do the same in the lifted
+                // ontology
+                mainblockres -> {
+                    if (mainblockres.hasProperty(RDFS.label)) {
+                        knownClasses.put(mainblockres.getProperty(RDFS.label).getString(), mainblockres);
+                    }
+                }
+            );
+        progModel.listSubjectsWithProperty(RDF.type, progModel.getResource(absns + "Class"))
             .forEach(
                 classres -> {
                     if (classres.hasProperty(RDFS.label)) {
                         knownClasses.put(classres.getProperty(RDFS.label).getString(), classres);
                     }
                 });
-        progModel.listSubjectsWithProperty(RDFS.subClassOf, progModel.createResource(absns + "Interface"))
+        progModel.listSubjectsWithProperty(RDF.type, progModel.getResource(absns + "Interface"))
             .forEach(
                 interfaceres -> {
                     if (interfaceres.hasProperty(RDFS.label)) {
                         knownInterfaces.put(interfaceres.getProperty(RDFS.label).getString(), interfaceres);
                     }
                 });
-        progModel.listSubjectsWithProperty(RDFS.subClassOf, progModel.createResource(absns + "Datatype"))
+        progModel.listSubjectsWithProperty(RDF.type, progModel.getResource(absns + "Datatype"))
             .forEach(
                 datatyperes -> {
                     if (datatyperes.hasProperty(RDFS.label)) {
                         knownDatatypes.put(datatyperes.getProperty(RDFS.label).getString(), datatyperes);
                     }
                 });
-        progModel.listSubjectsWithProperty(RDFS.subClassOf, progModel.createResource(absns + "Dataconstructor"))
+        progModel.listSubjectsWithProperty(RDF.type, progModel.getResource(absns + "Dataconstructor"))
             .forEach(
                 constructorres -> {
                     if (constructorres.hasProperty(RDFS.label)) {
@@ -320,9 +332,8 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         ABSInterface dc = cog.getDC();
         String absNS = absNamespaces.get("abs");
         String runNS = absNamespaces.get("run");
-        Resource cogRes = model.createResource(runNS + "cog" + cog.hashCode(),
-            model.createResource(absNS + "Cog"));
-        Property inProp = model.createProperty(absNS + "in");
+        Resource cogRes = model.createResource(runNS + "cog" + cog.hashCode(), model.getResource(absNS + "Cog"));
+        Property inProp = model.getProperty(absNS + "inDC");
         cogRes.addProperty(inProp, model.createResource(objectResourceName(dc)));
     }
 
@@ -335,9 +346,17 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         String progNS = absNamespaces.get("prog");
         String runNS = absNamespaces.get("run");
         Optional<String> domainClass = obj.$domainClass();
-        Resource classRes = knownClasses.getOrDefault(type, model.createResource(progNS + type));
-        Resource objRes = model.createResource(objectResourceName(obj), classRes);
-        Property inProp = model.createProperty(absNS + "in");
+        Resource classRes = knownClasses.get(type);
+        Resource objectClass = model.getResource(absNS + "Object");
+        Resource objRes = model.createResource(objectResourceName(obj), objectClass);
+        Property instantiatesProp = model.getProperty(absNS + "instantiates");
+        objRes.addProperty(instantiatesProp, classRes);
+        progModel.listObjectsOfProperty(classRes, model.getProperty(absNS + "implements"))
+            .forEach(
+                interfaceRes -> {
+                    objRes.addProperty(RDF.type, interfaceRes);
+                }
+            );
         if (domainClass.isPresent()) {
             String domainClassUri = domainClass.get();
             if (!knownDomainClasses.containsKey(domainClassUri)) {
@@ -346,9 +365,10 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
             Resource domainClassRes = knownDomainClasses.get(domainClassUri);
             objRes.addProperty(RDF.type, domainClassRes);
         }
+        Property inProp = model.getProperty(absNS + "inCog");
         objRes.addProperty(inProp, model.createResource(runNS + "cog" + obj.getCOG().hashCode()));
         for (String fieldName : obj.getFieldNames()) {
-            Property fieldProp = model.createProperty(progNS + packagename + "." + fieldName);
+            Property fieldProp = model.getProperty(progNS + packagename + "." + fieldName);
             try {
                 addFieldTriples(model, objRes, fieldProp, obj.getView().getFieldValue(fieldName));
             } catch (NoSuchFieldException e) {
@@ -410,7 +430,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                 } else if (type.equals("ABS.StdLib.Nil")) {
                     return RDF.nil;
                 } else {
-                    Resource cons = knownConstructors.getOrDefault(type, model.createResource(progNS + type));
+                    Resource cons = knownConstructors.get(type);
                     Resource dataRes = model.createResource(cons);
                     for (int i = 0; i < a.getNumArgs(); i++) {
                         Property argProp = model.createProperty(progNS + "arg" + i);
