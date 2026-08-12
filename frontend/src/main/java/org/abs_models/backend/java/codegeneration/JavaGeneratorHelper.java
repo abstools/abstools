@@ -1081,59 +1081,83 @@ public class JavaGeneratorHelper {
         GraphObserver.initNamespaces(ontology);
         var absNS = GraphObserver.absNamespaces.get("abs");
         var progNS = GraphObserver.absNamespaces.get("prog");
-        var classResource = ontology.createResource(absNS + "Class");
-        classResource.addProperty(RDFS.subClassOf, OWL2.Class);
-        var interfaceResource = ontology.createResource(absNS + "Interface");
-        interfaceResource.addProperty(RDFS.subClassOf, OWL2.Class);
-        var fieldResource = ontology.createResource(absNS + "Field");
-        var datatypeResource = ontology.createResource(absNS + "Datatype");
-        datatypeResource.addProperty(RDFS.subClassOf, OWL2.Class);
-        var dataconstructorResource = ontology.createResource(absNS + "Dataconstructor");
-        dataconstructorResource.addProperty(RDFS.subClassOf, OWL2.Class);
+
+        // ABS Classes
+        var classClass = ontology.createResource(absNS + "Class");
+        classClass.addProperty(RDFS.subClassOf, OWL2.Class);
+        var mainBlockClass = ontology.createResource(absNS + "MainBlock");
+        mainBlockClass.addProperty(RDFS.subClassOf, classClass);
+        var interfaceClass = ontology.createResource(absNS + "Interface");
+        interfaceClass.addProperty(RDFS.subClassOf, OWL2.Class);
+        var fieldClass = ontology.createResource(absNS + "Field");
+        var datatypeClass = ontology.createResource(absNS + "Datatype");
+        datatypeClass.addProperty(RDFS.subClassOf, OWL2.Class);
+        var dataconstructorClass = ontology.createResource(absNS + "Dataconstructor");
+        dataconstructorClass.addProperty(RDFS.subClassOf, OWL2.Class);
+        var objectClass = ontology.createResource(absNS + "Object");
+        var cogClass = ontology.createResource(absNS + "Cog");
+
+        // ABS Properties
         var hasFieldProperty = ontology.createProperty(absNS + "hasField");
+        hasFieldProperty.addProperty(RDFS.domain, classClass);
+        hasFieldProperty.addProperty(RDFS.range, fieldClass);
         var constructsProperty = ontology.createProperty(absNS + "constructs");
-        constructsProperty.addProperty(RDFS.domain, dataconstructorResource);
-        constructsProperty.addProperty(RDFS.range, datatypeResource);
+        constructsProperty.addProperty(RDFS.domain, dataconstructorClass);
+        constructsProperty.addProperty(RDFS.range, datatypeClass);
         constructsProperty.addProperty(RDFS.subPropertyOf, RDFS.subClassOf);
         var implementsProperty = ontology.createProperty(absNS + "implements");
-        // implementsProperty.addProperty(RDFS.subPropertyOf, RDFS.subClassOf); // ABS classes *implement* interfaces but *are* not interfaces
-        implementsProperty.addProperty(RDFS.domain, classResource);
-        implementsProperty.addProperty(RDFS.range, interfaceResource);
+        // implementsProperty.addProperty(RDFS.subPropertyOf, RDFS.subClassOf); // ABS classes *implement* interfaces but are not interfaces
+        implementsProperty.addProperty(RDFS.domain, classClass);
+        implementsProperty.addProperty(RDFS.range, interfaceClass);
         var extendsProperty = ontology.createProperty(absNS + "extends");
         extendsProperty.addProperty(RDFS.subPropertyOf, RDFS.subClassOf);
-        extendsProperty.addProperty(RDFS.domain, interfaceResource);
-        extendsProperty.addProperty(RDFS.range, interfaceResource);
+        extendsProperty.addProperty(RDFS.domain, interfaceClass);
+        extendsProperty.addProperty(RDFS.range, interfaceClass);
+        var instantiatesProperty = ontology.createProperty(absNS + "instantiates");
+        instantiatesProperty.addProperty(RDFS.domain, objectClass);
+        instantiatesProperty.addProperty(RDFS.range, classClass);
+        var inCogProperty = ontology.createProperty(absNS + "inCog");
+        inCogProperty.addProperty(RDFS.domain, objectClass);
+        inCogProperty.addProperty(RDFS.range, cogClass);
+        var inDCProperty = ontology.createProperty(absNS + "inDC");
+        inCogProperty.addProperty(RDFS.domain, cogClass);
+        inCogProperty.addProperty(RDFS.range, objectClass);
+
         for (ModuleDecl moduleDecl : model.getModuleDecls()) {
             var namePrefix = moduleDecl.getName() + ".";
+            if (moduleDecl.hasBlock()) {
+                String name = moduleDecl.getName() + ".Main";
+                var mainblockResource = ontology.createResource(progNS + name, mainBlockClass);
+                mainblockResource.addProperty(RDFS.label, name);
+            }
             for (Decl decl : moduleDecl.getDecls()) {
                 switch (decl) {
                     case ClassDecl classDecl:
-                        var classDeclResource = ontology.createResource(progNS + classDecl.getModuleDecl().getName() + "." + classDecl.hashCode());
+                        var classDeclResource = ontology.createResource(
+                            progNS + classDecl.getModuleDecl().getName() + "." + classDecl.hashCode(),
+                            classClass);
                         classDeclResource.addProperty(RDFS.label, namePrefix + classDecl.getName());
-                        classDeclResource.addProperty(RDFS.subClassOf, classResource);
                         for (InterfaceTypeUse interface__ : classDecl.getImplementedInterfaceUses()) {
                             var interface_ = interface__.getDecl();
                             String mname = interface_.getModuleDecl().getName() + ".";
-                            var classInterfaceResource = ontology.createResource(progNS + mname + interface_.hashCode());
+                            var classInterfaceResource = ontology.createResource(progNS + mname + interface_.hashCode(), interfaceClass);
                             classDeclResource.addProperty(implementsProperty, classInterfaceResource);
                         }
                         for (ParamDecl param : classDecl.getParams()) {
-                            var classFieldResource = ontology.createResource(progNS + namePrefix + param.getName(), fieldResource);
-                            // var classFieldResource = ontology.createResource(progNS + namePrefix + param.hashCode(), fieldResource);
+                            var classFieldResource = ontology.createResource(progNS + namePrefix + param.getName(), fieldClass);
                             classFieldResource.addProperty(RDFS.label, namePrefix + param.getName());
                             classDeclResource.addProperty(hasFieldProperty, classFieldResource);
                         }
                         for (FieldDecl field : classDecl.getFields()) {
-                            var classFieldResource = ontology.createResource(progNS + namePrefix + field.getName(), fieldResource);
-                            // var classFieldResource = ontology.createResource(progNS + namePrefix + field.hashCode(), fieldResource);
+                            var classFieldResource = ontology.createResource(progNS + namePrefix + field.getName(), fieldClass);
+                            // var classFieldResource = ontology.createResource(progNS + namePrefix + field.hashCode(), fieldClass);
                             classFieldResource.addProperty(RDFS.label, namePrefix + field.getName());
                             classDeclResource.addProperty(hasFieldProperty, classFieldResource);
                         }
                         break;
                     case InterfaceDecl interfaceDecl:
-                        var interfaceDeclResource = ontology.createResource(progNS + namePrefix + interfaceDecl.hashCode());
+                        var interfaceDeclResource = ontology.createResource(progNS + namePrefix + interfaceDecl.hashCode(), interfaceClass);
                         interfaceDeclResource.addProperty(RDFS.label, namePrefix + interfaceDecl.getName());
-                        interfaceDeclResource.addProperty(RDFS.subClassOf, interfaceResource);
                         for (InterfaceTypeUse superinterface_ : interfaceDecl.getExtendedInterfaceUses()) {
                             var superinterface = superinterface_.getDecl();
                             String mname = superinterface.getModuleDecl().getName() + ".";
@@ -1142,13 +1166,11 @@ public class JavaGeneratorHelper {
                         }
                         break;
                     case DataTypeDecl datatypeDecl:
-                        var datatypeDeclResource = ontology.createResource(progNS + namePrefix + datatypeDecl.hashCode());
+                        var datatypeDeclResource = ontology.createResource(progNS + namePrefix + datatypeDecl.hashCode(), datatypeClass);
                         datatypeDeclResource.addProperty(RDFS.label, namePrefix + datatypeDecl.getName());
-                        datatypeDeclResource.addProperty(RDFS.subClassOf, datatypeResource);
                         for (DataConstructor constructor : datatypeDecl.getDataConstructors()) {
-                            var dataconstructorDeclResource = ontology.createResource(progNS + namePrefix + constructor.hashCode());
+                            var dataconstructorDeclResource = ontology.createResource(progNS + namePrefix + constructor.hashCode(), dataconstructorClass);
                             dataconstructorDeclResource.addProperty(RDFS.label, namePrefix + constructor.getName());
-                            dataconstructorDeclResource.addProperty(RDFS.subClassOf, dataconstructorResource);
                             dataconstructorDeclResource.addProperty(constructsProperty, datatypeDeclResource);
                         }
                     default:
