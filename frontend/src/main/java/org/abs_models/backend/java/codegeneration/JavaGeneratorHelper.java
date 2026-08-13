@@ -1123,6 +1123,9 @@ public class JavaGeneratorHelper {
         inCogProperty.addProperty(RDFS.domain, cogClass);
         inCogProperty.addProperty(RDFS.range, objectClass);
 
+        // ABS Individuals
+        var nullResource = ontology.createResource(absNS + "null", objectClass);
+
         for (ModuleDecl moduleDecl : model.getModuleDecls()) {
             var namePrefix = moduleDecl.getName() + ".";
             if (moduleDecl.hasBlock()) {
