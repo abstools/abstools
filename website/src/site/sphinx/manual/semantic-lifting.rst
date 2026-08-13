@@ -100,7 +100,7 @@ lifted.
 
    * - null value
 
-     - RDF string ``"null"``
+     - A resource ``abs:null`` of type ``abs:Object``
 
    * - empty list
 

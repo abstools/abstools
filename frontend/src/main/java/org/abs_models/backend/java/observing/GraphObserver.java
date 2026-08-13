@@ -393,7 +393,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
 
         switch (value) {
             case null:
-                return model.createTypedLiteral("null");
+                return model.getResource(absNS + "null");
             case Apint i:
                 return model.createTypedLiteral(i.toBigInteger());
             case Aprational r:
