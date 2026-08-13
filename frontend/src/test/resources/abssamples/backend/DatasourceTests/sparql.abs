@@ -7,26 +7,26 @@ class C(String s, Int i) implements I {
 
 def List<String> query_strings() = builtin(sparql,
     `SELECT ?s WHERE {
-       ?o a/rdfs:label "BackendTest.C" ;
+       ?o abs:instantiates/rdfs:label "BackendTest.C" ;
           prog:BackendTest.s ?s .
      }
      ORDER BY ?s`);
 
 def List<Int> query_ints() = builtin(sparql,
     `SELECT ?i WHERE {
-       ?o a/rdfs:label "BackendTest.C" ;
+       ?o abs:instantiates/rdfs:label "BackendTest.C" ;
           prog:BackendTest.i ?i .
      }
      ORDER BY ?i`);
 
 def List<I> query_objs() = builtin(sparql,
     `SELECT ?o WHERE {
-       ?o a/rdfs:label "BackendTest.C" .
+       ?o abs:instantiates/rdfs:label "BackendTest.C" .
      }`);
 
 def List<I> query_interfaces() = builtin(sparql,
     `SELECT ?o WHERE {
-       ?o a/abs:implements/rdfs:label "BackendTest.I" .
+       ?o a/rdfs:label "BackendTest.I" .
      }`);
 
 {
@@ -35,7 +35,6 @@ def List<I> query_interfaces() = builtin(sparql,
 
     Bool testresult = query_strings() == list["hello", "world"]
         && query_ints() == list[1, 15];
-
     List<I> objs = query_objs();
     testresult = testresult && set[o, o2] == set(objs);
     List<I> interfaces = query_interfaces();
