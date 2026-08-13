@@ -7,14 +7,14 @@ class C(String s, Int i) implements I {
 
 def List<String> query_via_int(Int i) = builtin(sparql,
       `SELECT ?s WHERE {
-         ?o a/abs:implements/rdfs:label "BackendTest.I" ;
+         ?o a/rdfs:label "BackendTest.I" ;
             prog:BackendTest.s ?s ;
             prog:BackendTest.i ? .
        }`, i);
 
 def List<String> query_via_object(I o) = builtin(sparql,
       `SELECT ?s WHERE {
-         ? a/abs:implements/rdfs:label "BackendTest.I" ;
+         ? a/rdfs:label "BackendTest.I" ;
            prog:BackendTest.s ?s .
        }`, o);
 
