@@ -771,4 +771,48 @@ public class NegativeTypeCheckerTests extends FrontendTest {
             class C { }
             """);
     }
+
+    @Test
+    public void sparqlSelect() {
+        // query with syntax error
+        assertTypeErrors("""
+            class C (Int i) {}
+            def List<Int> query() = builtin(sparql,
+              `SELECTTTT ?i
+               WHERE { ?o a/rdfs:label "BackendTest.C" ;
+                          prog:BackendTest.i ?i .
+               }`);
+            """);
+        // Wrong number of parameters
+        assertTypeErrors("""
+            class C (Int p) {}
+            def List<Int> query() = builtin(sparql,
+              `SELECT ?i
+               WHERE { ?o a/rdfs:label "BackendTest.C" ;
+                          prog:BackendTest.i ?p .
+               }`,
+               p, p);
+            """);
+        // query with parameters
+        assertTypeErrors("""
+            class C (Int p) {}
+            def List<Int> query() = builtin(sparql,
+              `SELECT ?i
+               WHERE { ?o a/rdfs:label "BackendTest.C" ;
+                          prog:BackendTest.i ? .
+               }`,
+               p, p);
+            """);
+        // Invalid return type
+        assertTypeErrors("""
+            class C (Int p) {}
+            def List<List<Int>> query() = builtin(sparql,
+              `SELECT ?i
+               WHERE { ?o a/rdfs:label "BackendTest.C" ;
+                          prog:BackendTest.i ? .
+               }`,
+               p, p);
+            """);
+    }
+
 }

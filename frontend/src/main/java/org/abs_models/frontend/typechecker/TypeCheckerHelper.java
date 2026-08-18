@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.abs_models.backend.java.observing.GraphObserver;
 import org.abs_models.common.ListUtils;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticConditionList;
@@ -21,6 +22,10 @@ import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.mtvl.ChocoSolver;
+
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryException;
+import org.apache.jena.query.QueryFactory;
 
 public class TypeCheckerHelper {
 
@@ -793,16 +798,30 @@ public class TypeCheckerHelper {
         if (def.getNumArgument() > 0 && def.getArgument(0) instanceof VarOrFieldUse) {
             VarOrFieldUse queryType = (VarOrFieldUse)def.getArgument(0);
             if (queryType.getName().equals("sparql")) {
+                var sparqlParamPattern = java.util.regex.Pattern.compile("\\?(?=[\\s;,.])"); // ? followed by whitespace or ,;.
                 int errorCount = e.getErrorCount();
-                if (!TypeCheckerHelper.isValidSparqlReturnType(return_type.getType())) {
-                    e.add(new TypeError(return_type, ErrorMessage.SPARQL_INCORRECT_RETURN_TYPE, ""));
-                }
                 // check `builtin' parameters
                 if (def.getNumArgument() < 2) {
                     e.add(new TypeError(def, ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
                 } else if (!(def.getArgument(1) instanceof StringLiteral)) {
                     e.add(new TypeError(def.getArgument(1), ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
+                } else {
+                    String queryString = (GraphObserver.sparqlPrefix + ((StringLiteral)def.getArgument(1)).getContent());
+                    long nQueryParams = sparqlParamPattern.matcher(queryString).results().count();
+                    // Replace positional parameters with arbitrary
+                    // value so the parser can parse
+                    queryString = sparqlParamPattern.matcher(queryString).replaceAll("0");
+                    try {
+                        Query query = QueryFactory.create(queryString);
+                    } catch (QueryException err) {
+                        e.add(new SemanticError(def.getArgument(1), ErrorMessage.SPARQL_PARSE_ERROR, err.getMessage()));
+                    }
+                    if (nQueryParams != def.getNumArgument() - 2) {
+                        e.add(new SemanticError(def.getArgument(1), ErrorMessage.SPARQL_INCORRECT_ARGUMENT_NUMBER,
+                            Long.toString(nQueryParams), Integer.toString(def.getNumArgument() - 2)));
+                    }
                 }
+                TypeCheckerHelper.isValidSparqlReturnType(return_type.getType());
                 for (int i = 2; i < def.getNumArgument(); i++) {
                     if (!(def.getArgument(i) instanceof PureExp)) {
                         e.add(new TypeError(def.getArgument(i), ErrorMessage.SPARQL_INCORRECT_QUERY_ARGUMENT, ""));

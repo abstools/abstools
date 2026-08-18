@@ -515,4 +515,31 @@ public class TypeCheckerTest extends FrontendTest {
         // Query with parameters
         assertTypeOK("def List<Int> query() = builtin(sqlite3, `test.db`, `select * from table`, 1 + 2, `hello`);");
     }
+
+    @Test
+    public void sparqlSelect() {
+        // plain query
+        assertTypeOK("""
+            class C (Int i) {}
+            def List<Int> query() = builtin(sparql,
+              `SELECT ?i
+               WHERE { ?o a/rdfs:label "BackendTest.C" ;
+                          prog:BackendTest.i ?i .
+               }`);
+            """);
+    }
+    @Test
+    public void sparqlSelectWithParameters() {
+        // query with parameters
+        assertTypeOK("""
+            class C (Int p) {}
+            def List<Int> query(Int p) = builtin(sparql,
+              `SELECT ?i
+               WHERE { ?o a/rdfs:label "BackendTest.C" ;
+                          prog:BackendTest.i ? .
+               }`,
+               p);
+            """);
+    }
+
 }
