@@ -270,23 +270,58 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
     }
 
     /**
-     * Run a SPARQL query over the current ABS state.  The {@code
-     * abs:}, {@code prog:} and {@code run:} namespaces are added to
-     * the query string, so do not need to be defined.
+     * Prepare a query from a string.  For convenience, adds the
+     * following namespaces: {@code abs:}, {@code prog:}, {@code
+     * run:}, {@code rdf:}, {@code rdfs:}, {@code owl:}.
+     *
+     * <p>This is a separate method so the caller can check the type
+     * of query (ASK vs SELECT) before executing the query.
      */
-    public static List<QuerySolution> runQuery(Model model, String queryString) {
+    public static Query prepareQuery(Model model, String queryString) {
+        // TODO: extract prefixes from model
         queryString = sparqlPrefix + queryString;
-        Query query = QueryFactory.create(queryString);
+        return QueryFactory.create(queryString);
+    }
+
+    /**
+     * Run a SPARQL SELECT query over the current ABS state.
+     */
+    public static List<QuerySolution> runSelectQuery(Model model, Query query) {
         try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             ResultSet results = qexec.execSelect();
             return ResultSetFormatter.toList(results);
         }
     }
 
+    /**
+     * Run a SPARQL SELECT query over the current ABS state.
+     */
+    public static List<QuerySolution> runSelectQuery(Model model, String queryString) {
+        return runSelectQuery(model, prepareQuery(model, queryString));
+    }
+
+    /**
+     * Run a SPARQL ASK query over the current ABS state.
+     */
+    public static boolean runAskQuery(Model model, Query query) {
+        return QueryExecutionFactory.create(query, model).execAsk();
+    }
+
+    /**
+     * Run a SPARQL ASK query over the current ABS state.
+     */
+    public static boolean runAskQuery(Model model, String queryString) {
+        return runAskQuery(model, prepareQuery(model, queryString));
+    }
+
+    /**
+     * Run a query and return its result pretty-printed
+     * according to the given language.
+     */
     public static String runQuery(Model model, String queryString, Lang language) {
-        queryString = sparqlPrefix + queryString;
+        // TODO: discriminate between SELECT and ASK
         String result = "";
-        Query query = QueryFactory.create(queryString);
+        Query query = prepareQuery(model, queryString);
         try (QueryExecution qexec = QueryExecutionFactory.create(query, model);
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             ResultSet results = qexec.execSelect();

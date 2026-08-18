@@ -212,7 +212,7 @@ complete semantic representation is printed to the terminal in
 
 When an ABS model is started with the ``--sparqlQuery`` argument, the
 given query is run after the model finishes and its result is printed
-in TRTL format.
+in TRTL format.  Currently supports ``SELECT`` queries.
 
 The :ref:`Model API <sec:model-api>` also provides two ways of
 accessing the lifted model state:
@@ -228,18 +228,21 @@ accessing the lifted model state:
   `SPARQL 1.1 Protocol <https://www.w3.org/TR/sparql11-protocol/>`__.
   The SPARQL endpoint returns results in `JSON format
   <https://www.w3.org/TR/sparql11-results-json/>`__ by default.
+  Currently supports ``SELECT`` queries.
 
 
 
 Accessing lifted state within the model
 =======================================
 
-A SPARQL query that can be executed at runtime from within the model
-is defined by writing a function with a ``builtin`` body with two
-arguments: a literal ``sparql`` followed by the query as a SPARQL
-string.
+A SPARQL ``SELECT`` or ``ASK`` query can be executed at runtime from
+within the model.  Such queries are implemented via a function with a
+``builtin`` body with two arguments: a literal ``sparql`` followed by
+the query as a SPARQL string.
 
-The result of a SPARQL query is converted into an ABS list of values.
+Executing a SPARQL ``ASK`` query results in a Boolean value.  The
+result of a SPARQL ``SELECT`` query is converted into an ABS list of
+values as follows:
 
 Currently only the first SPARQL variable listed in the ``SELECT``
 clause is used to construct the ABS return value.  Valid return types
@@ -264,8 +267,9 @@ of ``builtin`` SPARQL query functions are:
 
 .. note:: It is an error if the resources found by a query where ABS
           expects objects of type ``I`` do not represent ABS objects
-          that implement ``I``, but currently such objects are
-          silently dropped when creating the result.
+          that implement ``I``, but currently such results are
+          silently dropped.  This might lead to fewer results than
+          expected, but the resulting list will be well-typed.
 
 ::
 
@@ -285,13 +289,16 @@ of ``builtin`` SPARQL query functions are:
          ?o a/abs:implements/rdfs:label "BackendTest.I" . ④
        }`);
 
+  def Bool exist_I_instances() = builtin(sparql,
+      `ASK { ?o a/abs:implements/rdfs:label "BackendTest.I" }` ⑤
+  );
 
   {
       I o1 = new C(5);
       I o2 = new C(4);
       I o3 = new C(2);
-      List<String> result = all_integer_field_values(); ⑤
-      List<I> all_I = all_I_instances(); ⑥
+      List<String> result = all_integer_field_values(); ⑥
+      List<I> all_I = all_I_instances(); ⑦
   }
 
 | ① A ``builtin`` function with first argument ``sparql`` takes an
@@ -310,11 +317,14 @@ of ``builtin`` SPARQL query functions are:
   find resources of a class that implements an interface with a label
   ``"BackendTest.I"``.
 
-| ⑤ This query returns a list containing "2", "4", "5" in some
+| ⑤ This query returns ``True`` if there exists at least one object
+  that implements ``I``.
+
+| ⑥ This query returns a list containing "2", "4", "5" in some
   permutation.  Since the function returns ``List<String>``, the RDF
   literals are converted to ABS strings.
 
-| ⑥ This query returns the list of all objects implementing the
+| ⑦ This query returns the list of all objects implementing the
   interface ``I``.  Note that ABS objects are subject to garbage
   collection, so objects that are not referenced might have vanished by
   the time the query executes.

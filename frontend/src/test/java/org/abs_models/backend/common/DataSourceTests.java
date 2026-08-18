@@ -52,21 +52,27 @@ public class DataSourceTests extends SemanticTests {
     }
 
     @Test
-    public void querySparql() throws Exception {
+    public void selectSparql() throws Exception {
         Assume.assumeTrue("Only meaningful with SPARQL support", driver.supportsSPARQL());
-        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql.abs"));
+        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql_select.abs"));
     }
 
     @Test
-    public void querySparqlWithParameters() throws Exception {
+    public void selectSparqlWithParameters() throws Exception {
         Assume.assumeTrue("Only meaningful with SPARQL support", driver.supportsSPARQL());
-        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql_parameters.abs"));
+        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql_select_parameters.abs"));
     }
 
     @Test
-    public void domainAnnotation() throws Exception {
+    public void selectSparqlWithDomainAnnotation() throws Exception {
         Assume.assumeTrue("Only meaningful with SPARQL support", driver.supportsSPARQL());
-        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql_domainclasses.abs"));
+        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql_select_domainclasses.abs"));
+    }
+
+    @Test
+    public void askSparql() throws Exception {
+        Assume.assumeTrue("Only meaningful with SPARQL support", driver.supportsSPARQL());
+        assertEvalTrue(new File("abssamples/backend/DatasourceTests/sparql_ask.abs"));
     }
 
 }

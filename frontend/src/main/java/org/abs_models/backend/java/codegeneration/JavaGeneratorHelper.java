@@ -71,6 +71,9 @@ import org.abs_models.frontend.typechecker.DataTypeType;
 import org.abs_models.frontend.typechecker.InterfaceType;
 import org.abs_models.frontend.typechecker.Type;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QueryType;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDFS;
@@ -347,19 +350,17 @@ public class JavaGeneratorHelper {
      */
     public static void generateSparqlBody(PrintStream stream, BuiltinFunctionDef body) {
 
-        String query = (GraphObserver.sparqlPrefix + ((StringLiteral)body.getArgument(1)).getContent())
+        String queryInAbs = GraphObserver.sparqlPrefix + ((StringLiteral)body.getArgument(1)).getContent();
+        String queryForCode = queryInAbs
             .replaceAll("[\r\n]+\\s*", " ")
-            .replace("\"", "\\\"");
-
-        FunctionDecl decl = body.closestParent(FunctionDecl.class);
-        // Type checking ensures that decl has a type `List<X>'; get the X
-        Type query_type = ((DataTypeType)decl.getType()).getTypeArg(0);
+            .replace("\"", "\\\""); // Make it a one-line string with escaped ""
 
         String obs = GraphObserver.class.getName();
+         // Eliminate query parameters so Jena can parse the query
+        String queryForAnalysis = org.abs_models.frontend.typechecker.TypeCheckerHelper.sparqlParamPattern.matcher(queryInAbs).replaceAll("0");
+        Query query = QueryFactory.create(queryForAnalysis);
 
-        stream.println("java.util.List<Object> $acc = new java.util.ArrayList<>();");
-        stream.println("ABS.StdLib.List $result = new ABS.StdLib.List_Nil();");
-        stream.println("var $query = new " + ParameterizedSparqlString.class.getName() + "(\"" + query + "\");");
+        stream.println("var $query = new " + ParameterizedSparqlString.class.getName() + "(\"" + queryForCode + "\");");
         for (int i = 2; i < body.getNumArgument(); i++) {
             // skip 'sparql' and query string
             PureExp e = body.getArgument(i);
@@ -394,50 +395,70 @@ public class JavaGeneratorHelper {
                 throw new JavaBackendException(body, "Unexpected argument type for SPARQL query; probably a type-checking bug");
             }
         }
-        stream.println("var $solutions = " + obs + ".runQuery(" + obs + ".getModel(), $query.toString());");
-        stream.println("for (var $solution : $solutions) {");
-        if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType()) {
-            // handle singleton literal return value
-            stream.println("var $o = $solution.get($solution.varNames().next());");
-            stream.println("if ($o.isLiteral()) {");
-            stream.println("var $l = $o.asLiteral();");
-            stream.print("$acc.add(0, ");
-            if (query_type.isBoolType()) {
-                stream.print("$l.getBoolean()");
-            } else if (query_type.isIntType()) {
-                stream.print("new " + Apint.class.getName() + "($l.getLong())");
-            } else if (query_type.isFloatType()) {
-                stream.print("$l.getDouble()");
-            } else if (query_type.isRatType()) {
-                stream.print("new " + Aprational.class.getName() + "($l.getDouble())");
-            } else if (query_type.isStringType()) {
-                stream.print("$l.getString()");
-            } else {
-                // unreachable: query result is type-checked before code
-                // generation starts
-                throw new JavaBackendException(body, "Unexpected return type for SPARQL query; probably a type-checking bug");
+
+        switch (query.queryType()) {
+            case QueryType.ASK: {
+                stream.println("return " + obs + ".runAskQuery(" + obs + ".getModel(), $query.toString());");
             }
-            stream.println(");");
-            stream.println("}");
-        } else if (query_type.isInterfaceType()) {
-            InterfaceType int_query_t = (InterfaceType)query_type;
-            // handle singleton interface return value
-            stream.println("var $o = $solution.get($solution.varNames().next());");
-            stream.println("if ($o.isResource()) {");
-            stream.println("var $absObject = " + obs + ".findObjectForResource($o.asResource().getURI());");
-            stream.println("if ($absObject instanceof " + JavaBackend.getQualifiedString(int_query_t) + ") {");
-            stream.print("$acc.add(0, $absObject);");
-            stream.println("}");
-            stream.println("}");
-        } else {
-            // TODO: implement datatype construction
-            throw new JavaBackendException(body, "Unexpected return type for SPARQL query; probably a type-checking bug");
+                break;
+            case QueryType.SELECT: {
+
+                FunctionDecl decl = body.closestParent(FunctionDecl.class);
+                // Type checking ensures that decl has a type `List<X>'; get the X
+                Type query_type = ((DataTypeType)decl.getType()).getTypeArg(0);
+                stream.println("java.util.List<Object> $acc = new java.util.ArrayList<>();");
+                stream.println("ABS.StdLib.List $result = new ABS.StdLib.List_Nil();");
+                stream.println("var $solutions = " + obs + ".runSelectQuery(" + obs + ".getModel(), $query.toString());");
+                stream.println("for (var $solution : $solutions) {");
+                if (query_type.isIntType() || query_type.isFloatType() || query_type.isStringType() || query_type.isBoolType() || query_type.isRatType()) {
+                    // handle singleton literal return value
+                    stream.println("var $o = $solution.get($solution.varNames().next());");
+                    stream.println("if ($o.isLiteral()) {");
+                    stream.println("var $l = $o.asLiteral();");
+                    stream.print("$acc.add(0, ");
+                    if (query_type.isBoolType()) {
+                        stream.print("$l.getBoolean()");
+                    } else if (query_type.isIntType()) {
+                        stream.print("new " + Apint.class.getName() + "($l.getLong())");
+                    } else if (query_type.isFloatType()) {
+                        stream.print("$l.getDouble()");
+                    } else if (query_type.isRatType()) {
+                        stream.print("new " + Aprational.class.getName() + "($l.getDouble())");
+                    } else if (query_type.isStringType()) {
+                        stream.print("$l.getString()");
+                    } else {
+                        // unreachable: query result is type-checked before code
+                        // generation starts
+                        throw new JavaBackendException(body, "Unexpected return type for SPARQL query; probably a type-checking bug");
+                    }
+                    stream.println(");");
+                    stream.println("}");
+                } else if (query_type.isInterfaceType()) {
+                    InterfaceType int_query_t = (InterfaceType)query_type;
+                    // handle singleton interface return value
+                    stream.println("var $o = $solution.get($solution.varNames().next());");
+                    stream.println("if ($o.isResource()) {");
+                    stream.println("var $absObject = " + obs + ".findObjectForResource($o.asResource().getURI());");
+                    stream.println("if ($absObject instanceof " + JavaBackend.getQualifiedString(int_query_t) + ") {");
+                    stream.print("$acc.add(0, $absObject);");
+                    stream.println("}");
+                    stream.println("}");
+                } else {
+                    // TODO: implement datatype construction
+                    throw new JavaBackendException(body, "Unexpected return type for SPARQL query; probably a type-checking bug");
+                }
+                stream.println("}");
+                stream.println("for (Object $row : $acc) {");
+                stream.println("$result = new ABS.StdLib.List_Cons($row, $result);");
+                stream.println("}");
+                stream.println("return $result;");
+            }
+                break;
+            default: {
+                throw new JavaBackendException(body, "Unexpected query type for SPARQL query; probably a type-checking bug");
+            }
         }
-        stream.println("}");
-        stream.println("for (Object $row : $acc) {");
-        stream.println("$result = new ABS.StdLib.List_Cons($row, $result);");
-        stream.println("}");
-        stream.println("return $result;");
+
     }
 
     public static void generateDataConstructor(PrintStream stream, DataConstructor c, String datatypeName, DataTypeDecl dataTypeDecl) {

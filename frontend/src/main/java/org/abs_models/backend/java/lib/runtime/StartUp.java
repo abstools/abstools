@@ -58,7 +58,7 @@ public class StartUp {
             Model model = GraphObserver.getModel();
             if (options.printRDF.isTrue()) GraphObserver.printGraph(model);
             if (options.sparqlQuery.wasSet()) {
-                List<QuerySolution> results = GraphObserver.runQuery(model,
+                List<QuerySolution> results = GraphObserver.runSelectQuery(model, // TODO: support ASK query here
                     options.sparqlQuery.stringValue());
                 // SELECT ?cog WHERE { ?obj abs:in ?cog }
                 results.forEach((solution) -> {
