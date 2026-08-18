@@ -18,66 +18,7 @@ import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.SemanticError;
 import org.abs_models.frontend.analyser.SemanticWarning;
 import org.abs_models.frontend.analyser.TypeError;
-import org.abs_models.frontend.ast.ASTNode;
-import org.abs_models.frontend.ast.AmbiguousDecl;
-import org.abs_models.frontend.ast.AttrAssignment;
-import org.abs_models.frontend.ast.Binary;
-import org.abs_models.frontend.ast.CaseBranch;
-import org.abs_models.frontend.ast.CaseExp;
-import org.abs_models.frontend.ast.ClassDecl;
-import org.abs_models.frontend.ast.CompilationUnit;
-import org.abs_models.frontend.ast.Const;
-import org.abs_models.frontend.ast.ConstructorArg;
-import org.abs_models.frontend.ast.ConstructorPattern;
-import org.abs_models.frontend.ast.DataConstructor;
-import org.abs_models.frontend.ast.DataConstructorExp;
-import org.abs_models.frontend.ast.DataTypeDecl;
-import org.abs_models.frontend.ast.DataTypeUse;
-import org.abs_models.frontend.ast.Decl;
-import org.abs_models.frontend.ast.DeltaClause;
-import org.abs_models.frontend.ast.DeltaDecl;
-import org.abs_models.frontend.ast.DeltaID;
-import org.abs_models.frontend.ast.DeltaParamDecl;
-import org.abs_models.frontend.ast.Deltaparam;
-import org.abs_models.frontend.ast.Deltaspec;
-import org.abs_models.frontend.ast.ExceptionDecl;
-import org.abs_models.frontend.ast.Exp;
-import org.abs_models.frontend.ast.Export;
-import org.abs_models.frontend.ast.Feature;
-import org.abs_models.frontend.ast.FieldDecl;
-import org.abs_models.frontend.ast.FieldUse;
-import org.abs_models.frontend.ast.FnApp;
-import org.abs_models.frontend.ast.FromExport;
-import org.abs_models.frontend.ast.FromImport;
-import org.abs_models.frontend.ast.GetExp;
-import org.abs_models.frontend.ast.HasActualParams;
-import org.abs_models.frontend.ast.HasParams;
-import org.abs_models.frontend.ast.HasType;
-import org.abs_models.frontend.ast.Import;
-import org.abs_models.frontend.ast.InitBlock;
-import org.abs_models.frontend.ast.MethodSig;
-import org.abs_models.frontend.ast.Model;
-import org.abs_models.frontend.ast.ModuleDecl;
-import org.abs_models.frontend.ast.Name;
-import org.abs_models.frontend.ast.NamedExport;
-import org.abs_models.frontend.ast.NamedImport;
-import org.abs_models.frontend.ast.ParamDecl;
-import org.abs_models.frontend.ast.ParametricDataTypeDecl;
-import org.abs_models.frontend.ast.ParametricDataTypeUse;
-import org.abs_models.frontend.ast.ParametricFunctionDecl;
-import org.abs_models.frontend.ast.Pattern;
-import org.abs_models.frontend.ast.PatternVar;
-import org.abs_models.frontend.ast.ProductDecl;
-import org.abs_models.frontend.ast.PureExp;
-import org.abs_models.frontend.ast.StarExport;
-import org.abs_models.frontend.ast.StarImport;
-import org.abs_models.frontend.ast.TypeSynDecl;
-import org.abs_models.frontend.ast.TypeUse;
-import org.abs_models.frontend.ast.UnderscorePattern;
-import org.abs_models.frontend.ast.Value;
-import org.abs_models.frontend.ast.VarDeclStmt;
-import org.abs_models.frontend.ast.VarOrFieldDecl;
-import org.abs_models.frontend.ast.VarOrFieldUse;
+import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.mtvl.ChocoSolver;
 
@@ -732,6 +673,47 @@ public class TypeCheckerHelper {
     }
 
     /**
+     * Check if {@code def} is a well-typed SQLite3 query function.
+     * Add error messages to {@code e} if not.
+     *
+     * @param def the built-in function definition body
+     * @param return_type the function's return type
+     * @param e the error list
+     * @return true if {@code def} is well-typed, false otherwise.
+     */
+    public static boolean checkValidSQLite3Query(BuiltinFunctionDef def, TypeUse return_type, SemanticConditionList e) {
+        if (def.getNumArgument() > 0 && def.getArgument(0) instanceof VarOrFieldUse) {
+            VarOrFieldUse queryType = (VarOrFieldUse)def.getArgument(0);
+            if (queryType.getName().equals("sqlite3")) {
+                int errorCount = e.getErrorCount();
+                if (!TypeCheckerHelper.isValidSQLite3ReturnType(return_type.getType())) {
+                    e.add(new TypeError(return_type, ErrorMessage.SQLITE3_INCORRECT_RETURN_TYPE, ""));
+                }
+                // check `builtin' parameters
+                if (def.getNumArgument() < 3) {
+                    e.add(new TypeError(def, ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                } else if (!(def.getArgument(1) instanceof StringLiteral)) {
+                    e.add(new TypeError(def.getArgument(1), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                } else if ((!(def.getArgument(2) instanceof StringLiteral))) {
+                    e.add(new TypeError(def.getArgument(2), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                }
+                for (int i = 3; i < def.getNumArgument(); i++) {
+                    if (!(def.getArgument(i) instanceof PureExp)) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                        continue;
+                    }
+                    PureExp arg = (PureExp)def.getArgument(i);
+                    if (!TypeCheckerHelper.isValidSQLite3ArgumentType(arg.getType())) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                    }
+                }
+                return errorCount == e.getErrorCount();
+            }
+        }
+        return false;
+    }
+
+    /**
      * Check whether argument t can be an argument to a SQLite3 query.
      *
      * <p>This method returns true if t is a string, numeric or boolean type.
@@ -796,6 +778,45 @@ public class TypeCheckerHelper {
                         return false;
             }
             return true;
+    }
+
+    /**
+     * Check if {@code def} is a well-typed SPARQL query function.
+     * Add error messages to {@code e} if not.
+     *
+     * @param def the built-in function definition body
+     * @param return_type the function's return type
+     * @param e the error list
+     * @return true if {@code def} is well-typed, false otherwise.
+     */
+    public static boolean checkValidSparqlQuery(BuiltinFunctionDef def, TypeUse return_type, SemanticConditionList e) {
+        if (def.getNumArgument() > 0 && def.getArgument(0) instanceof VarOrFieldUse) {
+            VarOrFieldUse queryType = (VarOrFieldUse)def.getArgument(0);
+            if (queryType.getName().equals("sparql")) {
+                int errorCount = e.getErrorCount();
+                if (!TypeCheckerHelper.isValidSparqlReturnType(return_type.getType())) {
+                    e.add(new TypeError(return_type, ErrorMessage.SPARQL_INCORRECT_RETURN_TYPE, ""));
+                }
+                // check `builtin' parameters
+                if (def.getNumArgument() < 2) {
+                    e.add(new TypeError(def, ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
+                } else if (!(def.getArgument(1) instanceof StringLiteral)) {
+                    e.add(new TypeError(def.getArgument(1), ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
+                }
+                for (int i = 2; i < def.getNumArgument(); i++) {
+                    if (!(def.getArgument(i) instanceof PureExp)) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SPARQL_INCORRECT_QUERY_ARGUMENT, ""));
+                        continue;
+                    }
+                    PureExp arg = (PureExp)def.getArgument(i);
+                    if (!TypeCheckerHelper.isValidSparqlArgumentType(arg.getType())) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SPARQL_INCORRECT_QUERY_ARGUMENT, ""));
+                    }
+                }
+                return errorCount == e.getErrorCount();
+            }
+        }
+        return false;
     }
 
     /**
