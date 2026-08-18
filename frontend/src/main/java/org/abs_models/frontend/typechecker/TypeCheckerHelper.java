@@ -20,12 +20,13 @@ import org.abs_models.frontend.analyser.SemanticError;
 import org.abs_models.frontend.analyser.SemanticWarning;
 import org.abs_models.frontend.analyser.TypeError;
 import org.abs_models.frontend.ast.*;
+import org.abs_models.backend.java.observing.GraphObserver;
 import org.abs_models.frontend.parser.Main;
 import org.abs_models.frontend.mtvl.ChocoSolver;
-
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryException;
 import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QueryType;
 
 public class TypeCheckerHelper {
 
@@ -785,6 +786,12 @@ public class TypeCheckerHelper {
             return true;
     }
 
+    /** Pattern for Sparql query string parameters.
+      *
+      * <p>This detects basically a bare ? without letter afterwards.
+      */
+    public static final java.util.regex.Pattern sparqlParamPattern = java.util.regex.Pattern.compile("\\?(?=[\\s;,.])"); // ? followed by whitespace or ,;.
+
     /**
      * Check if {@code def} is a well-typed SPARQL query function.
      * Add error messages to {@code e} if not.
@@ -798,7 +805,6 @@ public class TypeCheckerHelper {
         if (def.getNumArgument() > 0 && def.getArgument(0) instanceof VarOrFieldUse) {
             VarOrFieldUse queryType = (VarOrFieldUse)def.getArgument(0);
             if (queryType.getName().equals("sparql")) {
-                var sparqlParamPattern = java.util.regex.Pattern.compile("\\?(?=[\\s;,.])"); // ? followed by whitespace or ,;.
                 int errorCount = e.getErrorCount();
                 // check `builtin' parameters
                 if (def.getNumArgument() < 2) {
@@ -813,6 +819,7 @@ public class TypeCheckerHelper {
                     queryString = sparqlParamPattern.matcher(queryString).replaceAll("0");
                     try {
                         Query query = QueryFactory.create(queryString);
+                        TypeCheckerHelper.checkValidSparqlReturnType(def, query, return_type.getType(), e);
                     } catch (QueryException err) {
                         e.add(new SemanticError(def.getArgument(1), ErrorMessage.SPARQL_PARSE_ERROR, err.getMessage()));
                     }
@@ -821,7 +828,6 @@ public class TypeCheckerHelper {
                             Long.toString(nQueryParams), Integer.toString(def.getNumArgument() - 2)));
                     }
                 }
-                TypeCheckerHelper.isValidSparqlReturnType(return_type.getType());
                 for (int i = 2; i < def.getNumArgument(); i++) {
                     if (!(def.getArgument(i) instanceof PureExp)) {
                         e.add(new TypeError(def.getArgument(i), ErrorMessage.SPARQL_INCORRECT_QUERY_ARGUMENT, ""));
@@ -852,46 +858,60 @@ public class TypeCheckerHelper {
     }
 
     /**
-     * Check whether argument t can be the result of a SPARQL query.
+     * Check whether argument t can be the result of a SPARQL query,
+     * and add appropriate errors to the list if not..
      *
-     * <p>This method returns true if t is a list whose type parameter is
-     * a string, numeric or boolean type, an interface type, or an
+     * <p>This method discriminates between ASK and SELECT queries.
+     * For SELECT queries, t must be a list whose type parameter is a
+     * string, numeric or boolean type, an interface type, or an
      * algebraic datatype whose first constructor takes parameters of
-     * these types.
+     * these types.  For ASK queries, t must be Bool.
      */
-    public static boolean isValidSparqlReturnType(Type t) {
-        if (t.isUnknownType())
-            return false;
-        if (!t.isDataType())
-            return false;
-
-        DataTypeType dt = (DataTypeType) t;
-        if (!(dt.getDecl().getName().equals("List")))
-            return false;
-        if (!(dt.numTypeArgs() == 1))
-            return false;
-
-        Type at = dt.getTypeArg(0);
-
-        if (at.isBoolType() || at.isNumericType() || at.isStringType() || at.isInterfaceType())
-            return true;
-
-        if (!at.isDataType()) return false;
-        DataTypeType lt = (DataTypeType)at;
-        DataTypeDecl ltd = lt.getDecl();
-        if (ltd.getNumDataConstructor() != 1)
-            return false;
-        if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
-            return false;
-        for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
-            Type cat = ca.getTypeUse().getType();
-            if (!(cat.isBoolType()
-                  || cat.isNumericType()
-                  || cat.isStringType()
-                  || cat.isInterfaceType()))
-                return false;
+    public static void checkValidSparqlReturnType(BuiltinFunctionDef p, Query query, Type t, SemanticConditionList e) {
+        switch (query.queryType()) {
+            case QueryType.ASK: {
+                if (!t.isBoolType()) {
+                    e.add(new SemanticError(p, ErrorMessage.SPARQL_INCORRECT_ASK_RETURN_TYPE, t.toString()));
+                }
+            }
+                break;
+            case QueryType.SELECT: {
+                boolean result = false; // default
+                if (t.isDataType()) {
+                    DataTypeType dt = (DataTypeType) t;
+                    if (dt.getDecl().getName().equals("List") && dt.numTypeArgs() == 1) {
+                        Type at = dt.getTypeArg(0);
+                        if (at.isBoolType() || at.isNumericType() || at.isStringType() || at.isInterfaceType()) {
+                            result = true; // ok, list of basic type
+                        } else if (!at.isDataType()) {
+                            result = false; // not ok, list of futures or other strange things
+                        } else {
+                            result = true; // assume ok and check datatype correctness
+                            DataTypeType lt = (DataTypeType)at;
+                            DataTypeDecl ltd = lt.getDecl();
+                            if (ltd.getNumDataConstructor() != 1)
+                                result = false; // not ok, more than one constructor
+                            if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
+                                result = false; // not ok, constructor has no arguments
+                            for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
+                                Type cat = ca.getTypeUse().getType();
+                                if (!(cat.isBoolType()
+                                      || cat.isNumericType()
+                                      || cat.isStringType()
+                                      || cat.isInterfaceType()))
+                                    result = false; // not ok, constructor argument must be usable
+                            }
+                        }
+                    }
+                }
+                if (!result) {
+                    e.add(new SemanticError(p, ErrorMessage.SPARQL_INCORRECT_SELECT_RETURN_TYPE, t.toString()));
+                }
+            }
+                break;
+            default:
+                e.add(new SemanticError(p, ErrorMessage.SPARQL_UNSUPPORTED_QUERY_TYPE, query.queryType().toString()));
         }
-        return true;
     }
 
     /**

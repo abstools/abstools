@@ -169,9 +169,11 @@ public enum ErrorMessage {
     SQLITE3_INCORRECT_RETURN_TYPE("SQLite3 query functions must return a list of values that can be converted from SQL types."),
     SPARQL_PARSE_ERROR("Parse error in SPARQL query: %s"),
     SPARQL_INCORRECT_ARGUMENT_NUMBER("Incorrect number of parameters in SPARQL query: %s positional parameter(s) but %s query argument(s) in the function."),
+    SPARQL_UNSUPPORTED_QUERY_TYPE("Unsupported Sparql query type %s, must be SELECT or ASK."),
     SPARQL_INCORRECT_ARGUMENTS("Sparql query functions must have two or more arguments: `sparql', a string containing the SPARQL query, and an expression of type String, Boolean or numeric for each query parameter."),
     SPARQL_INCORRECT_QUERY_ARGUMENT("Sparql query arguments must be expressions of type String, Boolean, or numeric."),
-    SPARQL_INCORRECT_RETURN_TYPE("Sparql query functions must return a list of values that can be converted from Sparql.")
+    SPARQL_INCORRECT_SELECT_RETURN_TYPE("Sparql SELECT query functions must return a list of values that can be converted from Sparql."),
+    SPARQL_INCORRECT_ASK_RETURN_TYPE("Sparql ASK query functions must return Bool.")
     ;
 
     private String pattern;
