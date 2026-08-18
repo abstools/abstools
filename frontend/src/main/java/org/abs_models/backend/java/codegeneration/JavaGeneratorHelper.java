@@ -208,8 +208,9 @@ public class JavaGeneratorHelper {
             if (returnsGeneratedDataType)
                 stream.print(")");
         } else {
-            // We're (hopefully) an SQLite query; optimistically emit
-            // a call -- type-checking should have intervened already.
+            // We're (hopefully) an SQLite or SPARQL query;
+            // optimistically emit a call -- type-checking should have
+            // intervened already.
             stream.print(JavaBackend.getQualifiedString(d) + ".");
             stream.print("apply");
             JavaGeneratorHelper.generateArgs(stream, app.getParams(), d.getTypes());

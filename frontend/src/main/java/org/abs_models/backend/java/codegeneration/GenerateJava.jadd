@@ -213,8 +213,8 @@ aspect GenerateJava {
             // - "really" builtin functions. These occur only in the standard
             //   library and are known at compile-time (see class
             //   ABSBuiltInFunctions).
-            // - SQLite queries; for these, we need to generate a body that
-            //   runs the query.
+            // - SQLite and SPARQL queries; for these, we need to
+            //   generate a body that runs the query.
             BuiltinFunctionDef b = (BuiltinFunctionDef)getFunctionDef();
             if (!b.isSQLite3Query() && !b.isSparqlQuery()) {
                 return;
