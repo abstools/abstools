@@ -8,35 +8,30 @@ Inside this repository we develop the core tools of the ABS modelling
 language.  The current language manual is at
 <https://abs-models.org/manual/>.
 
-See <https://abs-models.org/getting_started/> on how to install or
-compile the tools.
+See <https://abs-models.org/getting-started/getting-started.html> on
+how to install or compile the tools.
 
 Folders
 -------
 
 * `frontend` - the ABS compiler and runtime support.  See
-  <https://abs-models.org/getting_started/local-install/> for installation
-  instructions.
+  <https://abs-models.org/getting-started/local-installation.html> for
+  installation instructions.
 
-* `abs-models.org` - Source for the https://abs-models.org website.
-  See the README.org file in that subdirectory for deployment
-  information.  DEPRECATED: content will be moved below `website/` and
-  put under sphinx.
+* `website` - Source for the https://abs-models.org website, including
+  the ABS reference manual.
 
-* `abs-docs` - the ABS language manual, available online at
-  <http://abs-models.org/manual/>.  To generate the manual locally,
-  run `make manual`.  DEPRECATED: asciidoc content will be moved below
-  `website/` and maintained with the rest of the website.
+* `abs-models.org` - An old version of the source for the website.
+  Kept around until the tutorials are be moved below `website/` and
+  converted to rST syntax.
 
-  * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual,
-    now mostly of historical interest
+* `abs-docs` - Contains an older LaTeX ABS reference manual, now
+  mostly of historical interest, and a formal Ott grammar for a large
+  subset of ABS, written in
+  [Ott](https://github.com/ott-lang/ott)
 
-  * `abs-docs/Ott` - a formal grammar for a large subset of ABS,
-    written in [Ott](https://www.cl.cam.ac.uk/~pes20/ott/)
-
-
-* `org.abs-models.releng` - Files used by Jenkins and Buckminster for
-  continuous integration at <https://envisage.ifi.uio.no:8080/jenkins/>.
+* `org.abs-models.releng` - Files previously used by Jenkins and
+  Buckminster for continuous integration.
 
 * `abs-unit` - demonstration, description and initial ideas about the
   ABSUnit (a unit testing framework for ABS) (with Maven dependencies
