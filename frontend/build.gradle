@@ -5,7 +5,7 @@ plugins {
     id 'application'
 
     id 'antlr'
-    id "com.github.spotbugs" version "6.5.8"
+    id "com.github.spotbugs" version "6.5.11"
     id 'com.gradleup.shadow'
     // add jshell support (https://github.com/mrsarm/jshell-plugin):
     // rlwrap ./gradlew --console plain jshell
@@ -40,7 +40,7 @@ dependencies {
     // General-purpose utility libraries; these could be replaced with
     // Java 25 standard library built-ins, if possible.
     implementation 'commons-io:commons-io:2.22.0'
-    implementation 'com.google.guava:guava:33.6.0-jre'
+    implementation 'com.google.guava:guava:33.7.1-jre'
     // Command-line parser library
     implementation 'info.picocli:picocli:4.7.7'
     // Parser library
@@ -56,23 +56,23 @@ dependencies {
     // Rational numbers for the Java backend
     implementation 'org.apfloat:apfloat:1.16.0'
     // SQLite library for the Java backend
-    implementation 'org.xerial:sqlite-jdbc:3.53.2.0'
+    implementation 'org.xerial:sqlite-jdbc:3.53.4.0'
     // Adding a logging backend so Jena doesn't complain
     implementation 'org.slf4j:slf4j-jdk14:2.0.18'
     // JSON library for the Java backend Model API
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.2'
 
     // Apache Jena, for semantic querying in the Java backend
-    implementation 'org.apache.jena:apache-jena-libs:6.1.0'
+    implementation 'org.apache.jena:apache-jena-libs:6.2.0'
 
     compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Executes JUnit Jupiter (~JUnit 5) tests
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.0")
-    testRuntimeOnly("org.junit.platform:junit-platform-engine:6.1.0")
-    testImplementation("org.junit.platform:junit-platform-launcher:6.1.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-engine:6.1.3")
+    testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
     testImplementation("junit:junit:4.13.2")
-    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:6.1.0")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:6.1.3")
 }
 
 // JastAdd
