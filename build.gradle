@@ -12,7 +12,7 @@ plugins {
     // running a Java model works
     id 'com.gradleup.shadow' version '8.3.9' apply false
     // ./gradlew dependencyUpdates to check for library updates
-    id "com.github.ben-manes.versions" version "0.54.0"
+    id "io.github.ben-manes.versions" version "0.61.0"
 }
 
 // https://stackoverflow.com/questions/15061277/how-can-i-get-the-current-git-branch-in-gradle/36760102#36760102
