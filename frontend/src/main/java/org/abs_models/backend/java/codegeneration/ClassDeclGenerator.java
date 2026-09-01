@@ -258,7 +258,7 @@ public class ClassDeclGenerator {
     }
 
     private void generateGetFieldValueMethod() {
-        stream.println("protected final Object getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
+        stream.println("public final Object getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
         for (ParamDecl p : decl.getParams()) {
             stream.println("if (__ABS_fieldName.equals(\"" + p.getName() + "\")) return " + JavaBackend.getVariableName(p.getName()) + ";");
         }
