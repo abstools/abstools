@@ -38,15 +38,16 @@ strategy: either decide to open the original door, or switching to the
 other closed door. The following sequence diagram illustrates the
 interaction:
 
-.. uml::
+.. mermaid::
    :caption: Interaction between participant and game show host
 
-   Contestant -> Host: guess(door1)
-   Host -> Contestant: goat_door
-   Contestant -> Host: open(door)
-   Note right of Contestant: depending on strategy, same as initial guess or different
-   Host-> Contestant: prize
-   Note right of Contestant: prize is Car or Goat
+   sequenceDiagram
+     Contestant ->> Host: guess(door1)
+     Host ->> Contestant: goat_door
+     Contestant ->> Host: open(door)
+     Note right of Contestant: depending on strategy, same as initial guess or different
+     Host->> Contestant: prize
+     Note right of Contestant: prize is Car or Goat
 
 
 The host

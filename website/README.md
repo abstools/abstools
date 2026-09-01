@@ -36,10 +36,10 @@ docker collaboratory container and at https://abs-models.org.
   sphinx`.
 
 - Using [uv](https://docs.astral.sh/uv/): in this directory, run `uvx
-  --from sphinx --with sphinxcontrib-plantuml sphinx-build -M html
+  --from sphinx --with sphinxcontrib-mermaid sphinx-build -M html
   src/site/sphinx build`
 
-- Using Python: Install sphinx, sphinxcontrib-plantuml, then in this
+- Using Python: Install sphinx and sphinxcontrib-mermaid, then in this
   directory run `sphinx-build -M html src/site/sphinx build`
 
 ## Deploying
@@ -48,7 +48,7 @@ To deploy into a website repository checked out below `../../abs/`,
 clear that directory then run this command:
 
 ```sh
-uvx --from sphinx --with sphinxcontrib-plantuml sphinx-build src/site/sphinx ../../abs/abstools.github.io
+uvx --from sphinx --with sphinxcontrib-mermaid sphinx-build src/site/sphinx ../../abs/abstools.github.io
 ```
 
 # Document structure
