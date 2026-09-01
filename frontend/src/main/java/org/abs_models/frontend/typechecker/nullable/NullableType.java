@@ -1,114 +1,58 @@
 package org.abs_models.frontend.typechecker.nullable;
 
-import org.abs_models.frontend.ast.Annotation;
-import org.abs_models.frontend.ast.DataConstructorExp;
+import com.google.common.collect.ImmutableMap;
+import org.abs_models.frontend.ast.VarOrFieldDecl;
 
-/**
- * The nullable types of expressions
- */
-public enum NullableType {
-    /**
-     * The expression is always null
-     */
-    Null,
-    /**
-     * The expression or declaration can never be null
-     */
-    Nonnull,
-    /**
-     * The expression or declaration may be null
-     */
-    Nullable;
-
-    public static final NullableType[] USER_TYPES = {Nonnull, Nullable};
-
-    /**
-     * Whether this is assignable to `n`
-     * @param n - The type to check against
-     * @return - True iff this is assignable to `n`
-     */
-    public boolean assignableTo(NullableType n) {
-        return NullableType.assignable(n, this);
-    }
-
-    /**
-     * Gets the most common nullable tyoe between this and `other`
-     * @param other - The other type
-     * @return - The most common type
-     */
-    public NullableType getMostCommon(NullableType other) {
-        if (this == Nullable || other == Nullable) {
-            return Nullable;
-        }
-
-        if (this == Nonnull) {
-            if (other == Nonnull) {
-                return Nonnull;
-            }
-            return Nullable;
-        }
-
-        if (this == Null) {
-            if (other == Null) {
-                return Null;
-            }
-        }
-        return Nullable;
-    }
-
-    /**
-     * @param lhs - The left hand type
-     * @param rhs - The right hand type
-     * @return - Whether the assignment lhs = rhs would be correct
-     */
-    public static boolean assignable(NullableType lhs, NullableType rhs) {
-        if (lhs == NullableType.Nonnull) {
-            return rhs == NullableType.Nonnull;
+/// A behavioral type denoting the nullability of types.
+/// It is either primitive ([PrimitiveNullableType]) or a data type ([DataTypeNullableType]).
+public interface NullableType {
+    /// @param lhs - The left hand type
+    /// @param rhs - The right hand type
+    /// @return - Whether the assignment lhs = rhs would be correct
+    static boolean assignable(NullableType lhs, NullableType rhs) {
+        if (lhs == PrimitiveNullableType.Nonnull) {
+            return rhs == PrimitiveNullableType.Nonnull;
         }
         return true;
     }
 
-    /**
-     * Tries to compute the nullable type from a string
-     * @param name - The name of the type
-     * @return - The converted type
-     */
-    public static NullableType fromName(String name) {
-        if (name.equals("Nonnull")) {
-            return NullableType.Nonnull;
+    /// Whether this nullable type is assignable to `n`.
+    boolean assignableTo(NullableType n);
+
+    /// The join operator of the type lattice. The rules are:
+    /// - UNKNOWN x NT = NT
+    /// - NULL x NULLABLE = NULLABLE
+    /// - NULL x NONNULL = NULLABLE
+    /// - NULLABLE x NONNULL = NULLABLE
+    /// - (NT_1, ..., NT_n) x (NT'_1, ..., NT'_n) = (NT_1 x NT'_1, ..., NT_n x NT'_n).
+    NullableType getMostCommon(NullableType other);
+
+    /// True iff we are [PrimitiveNullableType#Nonnull].
+    boolean isNonnull();
+
+    /// True iff we are [PrimitiveNullableType#Null].
+    boolean isNull();
+
+    /// True iff we are [PrimitiveNullableType#Nullable].
+    boolean isNullable();
+
+    /// Returns a builder that is the "intersection" of the two immutable maps.
+    ///
+    /// If both maps contain a nullable type for a key, the join of both entries is used.
+    static ImmutableMap.Builder<VarOrFieldDecl, NullableType> intersect(ImmutableMap<VarOrFieldDecl, NullableType> map1, ImmutableMap<VarOrFieldDecl, NullableType> map2) {
+        var builder = new ImmutableMap.Builder<VarOrFieldDecl, NullableType>();
+        for (var e1 : map1.entrySet()) {
+            var decl = e1.getKey();
+            var nt1 = e1.getValue();
+            var nt2 = map2.get(decl);
+            if (nt1 == null) {
+                builder = builder.put(decl, nt2);
+            } else if (nt2 == null) {
+                builder = builder.put(decl, nt1);
+            } else {
+                builder = builder.put(decl, nt1.getMostCommon(nt2));
+            }
         }
-        return NullableType.Nullable;
-    }
-
-    /**
-     * @return - Whether `this` is NonNull
-     */
-    public boolean isNonnull() {
-        return this == Nonnull;
-    }
-
-    /**
-     * @return - Whether `this` is Null
-     */
-    public boolean isNull() {
-        return this == Null;
-    }
-
-    /**
-     * @return - Whether `this` is Nullable
-     */
-    public boolean isNullable() {
-        return this == Nullable;
-    }
-
-    /**
-     *
-     * @return - The annotation for this type
-     */
-    public Annotation toAnnotation() {
-        if (isNull()) {
-            throw new IllegalArgumentException("Cannot turn Null into annotation.");
-        }
-        return new Annotation(new DataConstructorExp(toString(), new org.abs_models.frontend.ast.List<>()));
+        return builder;
     }
 }

@@ -9,6 +9,8 @@ import java.util.Map;
 import org.abs_models.frontend.ast.List;
 import org.abs_models.frontend.ast.TypeParameterDecl;
 import org.abs_models.frontend.ast.TypeParameterUse;
+import com.google.common.collect.ImmutableMap;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
 
 public class TypeParameter extends Type {
     private final TypeParameterDecl decl;
@@ -73,5 +75,10 @@ public class TypeParameter extends Type {
     @Override
     public TypeParameterUse toUse() {
         return new TypeParameterUse(getQualifiedName(), new List<>());
+    }
+
+    @Override
+    public NullableType instantiateNullableType(ImmutableMap<TypeParameterDecl, NullableType> inst) {
+        return inst.get(getDecl());
     }
 }
