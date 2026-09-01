@@ -85,7 +85,7 @@ public class BinOp {
             case ABSObject o1:
                 if (v2 instanceof ABSObject o2) {
                     int comp = o1.getClassName().compareTo(o2.getClassName());
-                    if (comp == 0) return o1.getView().getID() > o2.getView().getID();
+                    if (comp == 0) return o1.getID() > o2.getID();
                     else return comp > 0;
                 } else if (v2 == null) {
                     return true;

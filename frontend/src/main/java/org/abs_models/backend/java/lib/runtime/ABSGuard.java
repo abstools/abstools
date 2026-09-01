@@ -18,7 +18,7 @@ import org.apfloat.Aprational;
  * This is the context in which the {@code await} method is evaluated,
  * i.e., a guard object is tied to its cog and task.
  */
-public abstract class ABSGuard {
+public abstract class ABSGuard implements GuardView {
 
     /// The cog that this guard is waiting on.
     final COG cog;
@@ -86,66 +86,64 @@ public abstract class ABSGuard {
      */
     public abstract boolean await();
 
-    private GuardView view;
-
     public GuardView getView() {
-        if (view == null) {
-            synchronized(this) {
-                if (view == null) {
-                    view = new View();
-                }
-            }
-        }
-        return view;
+        return this;
     }
 
-    private class View implements GuardView {
+    public boolean isExpressionGuard() {
+        return this instanceof ABSExpGuard;
+    }
 
-        public boolean isTrue() {
-            return ABSGuard.this.isTrue();
+    public boolean isFutureGuard() {
+        return this instanceof ABSFutureGuard;
+    }
+
+    public boolean isDurationGuard() {
+        return this instanceof ABSDurationGuard;
+    }
+
+    public boolean isAndGuard() {
+        return this instanceof ABSAndGuard;
+    }
+
+    public GuardView getLeftGuardView() {
+        if (this instanceof ABSAndGuard andGuard) {
+            return andGuard.getLeftGuard().getView();
+        } else {
+            return null;
         }
+    }
 
-        public boolean isExpressionGuard() {
-            return ABSGuard.this instanceof ABSExpGuard;
+    public GuardView getRightGuardView() {
+        if (this instanceof ABSAndGuard andGuard) {
+            return andGuard.getRightGuard().getView();
+        } else {
+            return null;
         }
+    }
 
-        public boolean isFutureGuard() {
-            return ABSGuard.this instanceof ABSFutureGuard;
+    public FutView getFutView() {
+        if (this instanceof ABSFutureGuard futureGuard) {
+            return futureGuard.fut.getView();
+        } else {
+            return null;
         }
+    }
 
-        public boolean isDurationGuard() {
-            return ABSGuard.this instanceof ABSDurationGuard;
+    public Aprational getMinTime() {
+        if (this instanceof ABSDurationGuard durationGuard) {
+            return durationGuard.getMinTime();
+        } else {
+            return null;
         }
+    }
 
-        public boolean isAndGuard() {
-            return ABSGuard.this instanceof ABSAndGuard;
+    public Aprational getMaxTime() {
+        if (this instanceof ABSDurationGuard durationGuard) {
+            return durationGuard.getMaxTime();
+        } else {
+            return null;
         }
-
-        public GuardView getLeftGuardView() {
-            return ((ABSAndGuard) ABSGuard.this).getLeftGuard().getView();
-        }
-
-        public GuardView getRightGuardView() {
-            return ((ABSAndGuard) ABSGuard.this).getRightGuard().getView();
-        }
-
-        public FutView getFutView() {
-            return ((ABSFutureGuard) ABSGuard.this).fut.getView();
-        }
-
-        public Aprational getMinTime() {
-            return ((ABSDurationGuard) ABSGuard.this).getMinTime();
-        }
-
-        public Aprational getMaxTime() {
-            return ((ABSDurationGuard) ABSGuard.this).getMaxTime();
-        }
-
-        @Override
-        public String toABSString() {
-            return ABSGuard.this.toABSString();
-        }
-
     }
 
     public abstract String toABSString();
