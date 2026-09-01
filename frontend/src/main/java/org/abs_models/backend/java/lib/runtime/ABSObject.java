@@ -21,7 +21,7 @@ import org.abs_models.backend.java.observing.ObjectView;
  * @author Jan Schäfer
  *
  */
-public abstract class ABSObject implements ABSRef {
+public abstract class ABSObject implements ABSRef, ObjectView, ClassView {
     protected COG __cog;
     protected final long __id;
 
@@ -76,77 +76,40 @@ public abstract class ABSObject implements ABSRef {
         }
     }
 
-    protected ObjectView view;
-
     public ObjectView getView() {
-        if (view == null) {
-            synchronized(this) {
-                if (view == null) view = new View();
-            }
-        }
-        return view;
+        return this;
     }
 
-    protected Object getFieldValue(String fieldName) throws NoSuchFieldException {
+    public Object getFieldValue(String fieldName) throws NoSuchFieldException {
         throw new NoSuchFieldException(fieldName);
     }
 
-    private class View implements ObjectView, ClassView {
+    public COGView getCOGView() {
+        return __cog.getView();
+    }
 
-        @Override
-        public COGView getCOGView() {
-            return __cog.getView();
-        }
+    public ClassView getClassView() {
+        return this;
+    }
 
-        @Override
-        public ClassView getClassView() {
-            return this;
-        }
+    public void registerObjectObserver(ObjectObserver l) {
+        // FIXME: implement
+    }
 
-        @Override
-        public String getClassName() {
-            return ABSObject.this.getClassName();
-        }
+    public long getID() {
+        return __id;
+    }
 
-        @Override
-        public Object getFieldValue(String fieldName) throws NoSuchFieldException {
-            return ABSObject.this.getFieldValue(fieldName);
-        }
+    public ABSObject getObject() {
+        return this;
+    }
 
-        @Override
-        public void registerObjectObserver(ObjectObserver l) {
-            // FIXME: implement
-        }
+    public String getName() {
+        return getClassName();
+    }
 
-        @Override
-        public String toString() {
-            return ABSObject.this.toString();
-        }
-
-        public List<String> getFieldNames() {
-            return ABSObject.this.getFieldNames();
-        }
-
-        @Override
-        public long getID() {
-            return ABSObject.this.__id;
-        }
-
-        @Override
-        public ABSObject getObject() {
-            return ABSObject.this;
-        }
-
-        @Override
-        public String getName() {
-            return getClassName();
-        }
-
-        @Override
-        public List<String> getMethodNames() {
-            return null;
-        }
-
+    public List<String> getMethodNames() {
+        return null;
     }
 
     public abstract List<String> getFieldNames();

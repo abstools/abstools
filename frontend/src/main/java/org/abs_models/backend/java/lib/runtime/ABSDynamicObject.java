@@ -48,13 +48,9 @@ public class ABSDynamicObject extends ABSObject {
         }
         this.getCOG().objectCreated(this);
 
-//        for (String s : getFieldNames()) {
-//            System.out.println("*** Class " + clazz.getName() + ": Field " + s + " = " + getFieldValue_Internal(s));
-//        }
-    }
-
-    public String getClassName() {
-        return getClazz().getName();
+        //        for (String s : getFieldNames()) {
+        //            System.out.println("*** Class " + clazz.getName() + ": Field " + s + " = " + getFieldValue_Internal(s));
+        //        }
     }
 
     public void setCOG(COG cog) {
@@ -70,7 +66,11 @@ public class ABSDynamicObject extends ABSObject {
     }
 
     public List<String> getFieldNames() {
-        return new ArrayList<>(clazz.getFieldNames());
+        // return new ArrayList<>(clazz.getFieldNames());
+        if (fields == null)
+            return Collections.emptyList();
+        else
+            return new ArrayList<>(fields.keySet());
     }
 
     public Object getFieldValue(String field) throws NoSuchFieldException {
@@ -110,68 +110,43 @@ public class ABSDynamicObject extends ABSObject {
         return ABSUnit.UNIT;
     }
 
-
-    private final  View __dynamicView = new View();
-
     public ObjectView getView() {
-        if (view == null) {
-            synchronized(this) {
-                if (view == null) {
-                    view = new View();
-                }
-            }
-        }
-        return view;
+        return this;
     }
 
-    private class View implements ObjectView {
+    @Override
+    public COGView getCOGView() {
+        return __cog.getView();
+    }
 
-        @Override
-        public COGView getCOGView() {
-            return __cog.getView();
-        }
+    @Override
+    public ClassView getClassView() {
+        return clazz.getView();
+    }
 
-        @Override
-        public ClassView getClassView() {
-            return clazz.getView();
-        }
+    @Override
+    public void registerObjectObserver(ObjectObserver l) {
+        // FIXME: implement
+    }
 
-        @Override
-        public Object getFieldValue(String fieldName) throws NoSuchFieldException {
-            return ABSDynamicObject.this.getFieldValue(fieldName);
-        }
+    @Override
+    public String toString() {
+        return ABSDynamicObject.this.toString();
+    }
 
-        @Override
-        public void registerObjectObserver(ObjectObserver l) {
-            // FIXME: implement
-        }
+    @Override
+    public long getID() {
+        return ABSDynamicObject.this.__id;
+    }
 
-        @Override
-        public String toString() {
-            return ABSDynamicObject.this.toString();
-        }
+    @Override
+    public ABSObject getObject() {
+        return this;
+    }
 
-        @Override
-        public long getID() {
-            return ABSDynamicObject.this.__id;
-        }
-
-        @Override
-        public ABSObject getObject() {
-            return ABSDynamicObject.this;
-        }
-
-        @Override
-        public String getClassName() {
-            return clazz.getName();
-        }
-
-        @Override
-        public List<String> getFieldNames() {
-            if (fields == null) return Collections.emptyList();
-            return new ArrayList<>(fields.keySet());
-        }
-
+    @Override
+    public String getClassName() {
+        return clazz.getName();
     }
 
     public List<Map<String, Object>> getHttpCallableMethodInfo() {
