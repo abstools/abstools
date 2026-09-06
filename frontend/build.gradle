@@ -39,7 +39,6 @@ distributions {
 dependencies {
     // General-purpose utility libraries; these could be replaced with
     // Java 25 standard library built-ins, if possible.
-    implementation 'commons-io:commons-io:2.22.0'
     implementation 'com.google.guava:guava:33.7.1-jre'
     // Command-line parser library
     implementation 'info.picocli:picocli:4.7.7'
