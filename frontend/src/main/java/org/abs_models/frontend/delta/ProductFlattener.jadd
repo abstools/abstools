@@ -292,7 +292,6 @@ aspect ProductFlattener {
                 deltaSorter.addEdge(afterID, deltaID);
             }
         }
-        deltaSorter.sort();
     }
 
     public void Model.flattenTraitOnly(){

@@ -18,7 +18,6 @@ aspect ProductDeclaration {
                 productSorter.addEdge(high, low);
             }
         }
-        productSorter.sort();
         java.util.List<ProductDecl> sortedList = productSorter.getAnOrder();
 
         // Evaluate sorted list of ProductDecl
