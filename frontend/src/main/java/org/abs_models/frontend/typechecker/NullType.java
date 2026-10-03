@@ -3,6 +3,10 @@
  * This file is licensed under the terms of the Modified BSD License.
  */
 package org.abs_models.frontend.typechecker;
+import com.google.common.collect.ImmutableMap;
+import org.abs_models.frontend.ast.TypeParameterDecl;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.PrimitiveNullableType;
 
 public final class NullType extends ReferenceType {
     public final static NullType INSTANCE = new NullType();
@@ -50,5 +54,10 @@ public final class NullType extends ReferenceType {
     @Override
     public Type copy() {
         return new NullType();
+    }
+
+    @Override
+    public NullableType instantiateNullableType(ImmutableMap<TypeParameterDecl, NullableType> inst) {
+        return PrimitiveNullableType.Null;
     }
 }

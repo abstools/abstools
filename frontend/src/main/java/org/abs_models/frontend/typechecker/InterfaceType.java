@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.abs_models.frontend.ast.*;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
-import org.abs_models.frontend.typechecker.nullable.NullableType;
 
 public class InterfaceType extends ReferenceType {
     private final java.util.List<Type> supertypes;
