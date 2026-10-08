@@ -303,9 +303,9 @@ public class JavaCode {
         }
         if (domainOntology != null) {
             try {
-                Files.copy(domainOntology.toPath(), new File(dir, "domain.ttl").toPath());
+                Files.copy(domainOntology.toPath(), new File(dir, "domain.ttl").toPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
-                throw new RuntimeException("Error while copying domain ontology " + domainOntology);
+                throw new RuntimeException("Error while copying domain ontology " + domainOntology, e);
             }
         }
     }
