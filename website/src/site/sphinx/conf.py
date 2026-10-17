@@ -28,7 +28,7 @@ else:
 # extensions = [ 'sphinx.ext.mathjax', 'sphinxcontrib.mermaid' ]
 
 sys.path.append(os.path.abspath("_extensions"))
-extensions = [ 'sphinxcontrib.plantuml', 'eifilelink' ]
+extensions = [ 'sphinxcontrib.mermaid', 'eifilelink' ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
