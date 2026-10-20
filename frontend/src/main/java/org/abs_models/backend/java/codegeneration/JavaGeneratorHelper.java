@@ -1116,7 +1116,7 @@ public class JavaGeneratorHelper {
         datatypeClass.addProperty(RDFS.subClassOf, OWL2.Class);
         var dataconstructorClass = ontology.createResource(absNS + "Dataconstructor");
         dataconstructorClass.addProperty(RDFS.subClassOf, OWL2.Class);
-        var objectClass = ontology.createResource(absNS + "Object");
+        var objectClass = ontology.createResource(absNS + "Object", interfaceClass);
         var cogClass = ontology.createResource(absNS + "Cog");
 
         // ABS Properties
@@ -1142,8 +1142,8 @@ public class JavaGeneratorHelper {
         inCogProperty.addProperty(RDFS.domain, objectClass);
         inCogProperty.addProperty(RDFS.range, cogClass);
         var inDCProperty = ontology.createProperty(absNS + "inDC");
-        inCogProperty.addProperty(RDFS.domain, cogClass);
-        inCogProperty.addProperty(RDFS.range, objectClass);
+        inDCProperty.addProperty(RDFS.domain, cogClass);
+        inDCProperty.addProperty(RDFS.range, objectClass); // TODO: should be DeploymentComponent
 
         // ABS Individuals
         var nullResource = ontology.createResource(absNS + "null", objectClass);
