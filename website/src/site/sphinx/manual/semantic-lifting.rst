@@ -129,51 +129,58 @@ We consider the following small ABS model::
   }
 
 All datatypes are represented as resources of type ``abs:Datatype``,
-their dataconstructors are represented via ``abs:Dataconstructor``::
+their dataconstructors are lifted into resources of type
+``abs:Dataconstructor``::
 
-  prog:ABS.StdLib.1198513669
-          rdfs:subClassOf  abs:Datatype .
-          rdfs:label       "ABS.StdLib.Maybe" .
+  prog:ABS.StdLib.940938116
+          rdf:type    abs:Datatype;
+          rdfs:label  "ABS.StdLib.Maybe" .
 
-  prog:ABS.StdLib.2059701776
-          rdfs:subClassOf  abs:Dataconstructor;
-          rdfs:label       "ABS.StdLib.Just";
-          abs:constructs   prog:ABS.StdLib.1198513669 .
+  prog:ABS.StdLib.1916677384
+          rdf:type        abs:Dataconstructor;
+          rdfs:label      "ABS.StdLib.Just";
+          abs:constructs  prog:ABS.StdLib.940938116 .
 
-  prog:ABS.StdLib.1360125564
-          rdfs:subClassOf  abs:Dataconstructor;
-          rdfs:label       "ABS.StdLib.Nothing";
-          abs:constructs   prog:ABS.StdLib.1198513669 .
+  prog:ABS.StdLib.1434940020
+          rdf:type        abs:Dataconstructor;
+          rdfs:label      "ABS.StdLib.Nothing";
+          abs:constructs  prog:ABS.StdLib.940938116 .
 
 All interfaces are represented as resources of type ``abs:Interface``,
 with a label containing the fully-qualified name of the interface::
 
-  prog:Test.1466066315  rdfs:label  "Test.I";
-          rdfs:subClassOf  abs:Interface;
-          abs:extends      prog:ABS.StdLib.1874919946 .  # ABS.StdLib.Object
+  prog:Test.1720922681  rdf:type  abs:Interface;
+          rdfs:label   "Test.I";
+          abs:extends  prog:ABS.StdLib.1777381620 .
+
+  prog:ABS.StdLib.1777381620
+          rdf:type    abs:Interface;
+          rdfs:label  "ABS.StdLib.Object" .
 
 All classes are represented as resources of type ``abs:Class``, again
 with a label with the class name::
 
-  prog:Test.266196910  rdfs:label      "Test.C";
-          rdfs:subClassOf  abs:Class;
-          abs:hasField     prog:Test.i;
-          abs:implements   prog:Test.1466066315 .
+  prog:Test.1198513669  rdf:type  abs:Class;
+          rdfs:label      "Test.C";
+          abs:hasField    prog:Test.i;
+          abs:implements  prog:Test.1720922681 .
 
   prog:Test.i  rdf:type  abs:Field;
           rdfs:label  "Test.i" .
 
-All the information above is static and calculated at compile-time.
-At runtime, the object created in the main block is lifted as
-follows::
+All the information presented so far is static and calculated at
+compile time.  At runtime, the lifted representation of the object
+created in the main block looks as follows::
 
-  run:obj584963808  rdf:type  prog:Test.266196910;  # Test.C
-          abs:in       run:cog855700733;
-          prog:Test.i  [ rdf:type   prog:ABS.StdLib.2059701776;  # ABS.StdLib.Just
-                         prog:arg0  1
-                       ] .
+  run:obj638701988  rdf:type  prog:Test.1720922681 , abs:Object;
+          abs:inCog         run:cog85748029;
+          abs:instantiates  prog:Test.1198513669;
+          prog:Test.i       [ rdf:type   prog:ABS.StdLib.1916677384;
+                              prog:arg0  1
+                            ] .
 
-  run:cog855700733  rdf:type  abs:Cog .
+  run:cog85748029  rdf:type  abs:Cog;
+          abs:inDC  run:obj1233451203 .
 
 Numeric and string data values are represented by their RDF
 equivalents, user-defined datatypes are lifted as anonymous resources
@@ -181,19 +188,22 @@ naming the ABS constructor and its arguments.
 
 Note that the lifted representation of an object also references the
 cog that contains the object.  This information can be used to, for
-example, find all objects running on the same cog.
+example, find all objects running on the same cog.  The cog in turn
+references its containing deployment component.
 
 
 
 Linking ABS objects to domain classes
 -------------------------------------
 
-An ABS class can be linked to a domain concept via a ``DomainClass``
-annotation.  The value of the annotation must be an expression that
-evaluates to a string naming an Owl class in the domain ontology.  The
-expression has access to the object's current state.
+The lifted representation of an ABS object can be linked to a domain
+concept via a ``DomainClass`` annotation on the definition of its ABS
+class.  The annotation must contain an expression that evaluates to a
+string naming an Owl class in the domain ontology.  The expression has
+access to the object's current state.
 
-Typically, a domain ontology will define one or more classes::
+Typically, a domain ontology will define one or more classes, for
+example::
 
   PREFIX num:  <http://abs-models.org/ns/num#>
 
