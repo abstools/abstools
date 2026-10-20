@@ -351,14 +351,13 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
         Model model = ModelFactory.createDefaultModel();
         initNamespaces(model);
         model.add(progModel);
+        model.add(domainModel);
         for (ObjectView view : objects.values()) {
             addObjectTriples(model, view);
         }
         for (COGView view : cogs) {
             addCogTriples(model, view);
         }
-        model.add(progModel);
-        model.add(domainModel);
         return model;
     }
 
@@ -393,9 +392,9 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                 }
             );
         if (domainClass.isPresent()) {
-            String domainClassUri = domainClass.get();
+            String domainClassUri = model.expandPrefix(domainClass.get());
             if (!knownDomainClasses.containsKey(domainClassUri)) {
-                knownDomainClasses.put(domainClassUri, model.createResource(domainClassUri));
+                knownDomainClasses.put(domainClassUri, model.getResource(domainClassUri));
             }
             Resource domainClassRes = knownDomainClasses.get(domainClassUri);
             objRes.addProperty(RDF.type, domainClassRes);

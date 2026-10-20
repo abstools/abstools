@@ -37,9 +37,9 @@ The following namespaces are always defined:
    the runtime ontology, containing objects and object state.
 
 Additionally, when an ABS model is compiled with an argument
-``--domain-ontology domain.ttl`` to the compiler, the content of the
-file named by that argument (``domain.ttl`` in the example) is added
-to the lifted program state and is visible to all SPARQL queries.
+``--domain-ontology domain.ttl`` to the compiler, the lifted program
+state includes the content of the file named by that argument
+(``domain.ttl`` in the example).
 
 Representation of ABS language constructs
 -----------------------------------------
@@ -175,9 +175,9 @@ follows::
 
   run:cog855700733  rdf:type  abs:Cog .
 
-Numeric and string data values are represented directly, user-defined
-datatypes are lifted as anonymous resources referencing the
-constructor and its arguments.
+Numeric and string data values are represented by their RDF
+equivalents, user-defined datatypes are lifted as anonymous resources
+naming the ABS constructor and its arguments.
 
 Note that the lifted representation of an object also references the
 cog that contains the object.  This information can be used to, for
@@ -185,22 +185,47 @@ example, find all objects running on the same cog.
 
 
 
-Linking objects to domain concepts
-----------------------------------
+Linking ABS objects to domain classes
+-------------------------------------
 
-An ABS class can be linked to a domain concept via a ``DomainClass`` annotation::
+An ABS class can be linked to a domain concept via a ``DomainClass``
+annotation.  The value of the annotation must be an expression that
+evaluates to a string naming an Owl class in the domain ontology.  The
+expression has access to the object's current state.
 
-   [DomainClass: "domain:Housing"]
-   class House { } ①
+Typically, a domain ontology will define one or more classes::
 
-   [DomainClass: when i > 0 then ":containsPositive" else ":containsNonPositive"] ②
+  PREFIX num:  <http://abs-models.org/ns/num#>
+
+  num:ContainsPositive a owl:Class .
+  num:ContainsNonPositive a owl:Class .
+
+A ``DomainClass`` annotation can link instances of ABS classes to these Owl classes::
+
+   [DomainClass: when i > 0
+                 then "num:ContainsPositive"
+                 else "num:ContainsNonPositive"] ①
    class C(Int i) { }
 
-| ① All lifted instances ``x`` of ``House`` will have an additional
-  triple ``x rdf:type domain:Housing``.
+   {
+     Object o1 = new C(-1);  // will be num:ContainsNonPositive
+   }
 
-| ② The ``DomainClass`` annotation is an expression that must return a
-  string and can use all fields of the object to calculate its result.
+| ① All lifted instances ``x`` of instances of class ``C`` will have
+  an additional triple ``x rdf:type num:ContainsPositive`` or
+  ``num:ContainsNonPositive``, depending on the object's state.
+
+When evaluating SPARQL queries over the lifted model state, the
+following namespaces are already predefined and do not need to be
+introduced in the query text: ``rdf:``, ``rdfs:``, ``owl:``, ``abs:``,
+``prog:``, and ``run:``.
+
+All other namespaces, such as those used in a domain ontology, must be
+added to the SPARQL query::
+
+  PREFIX num:  <http://abs-models.org/ns/num#>
+  SELECT ?obj WHERE { ?obj a num:ContainsPositive . }
+
 
 
 Accessing lifted state externally
@@ -242,7 +267,7 @@ the query as a SPARQL string.
 
 Executing a SPARQL ``ASK`` query results in a Boolean value.  The
 result of a SPARQL ``SELECT`` query is converted into an ABS list of
-values as follows:
+values as described below.
 
 Currently only the first SPARQL variable listed in the ``SELECT``
 clause is used to construct the ABS return value.  Valid return types
@@ -267,9 +292,10 @@ of ``builtin`` SPARQL query functions are:
 
 .. note:: It is an error if the resources found by a query where ABS
           expects objects of type ``I`` do not represent ABS objects
-          that implement ``I``, but currently such results are
-          silently dropped.  This might lead to fewer results than
-          expected, but the resulting list will be well-typed.
+          that implement ``I``.  Currently such objects are silently
+          dropped when constructing the ABS result.  This might lead
+          to fewer results than expected, but the resulting list will
+          be well-typed.
 
 ::
 
