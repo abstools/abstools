@@ -271,10 +271,11 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         PartialFunctionDef d = new PartialFunctionDef(v(ctx.e));
         List<ParamDecl> params = v(ctx.params);
         List<FunctionParamDecl> funcParams = v(ctx.functions);
+        List<Annotation> annotations = v(ctx.annotations());
         TypeUse t = v(ctx.type_use());
         if(ctx.p != null && !ctx.p.isEmpty()) {
             ParametricPartialFunctionDecl fd =
-                setV(ctx, new ParametricPartialFunctionDecl(ctx.n.getText(), l(ctx.annotation()),
+                setV(ctx, new ParametricPartialFunctionDecl(ctx.n.getText(), annotations,
                     new List<>(), t, params, funcParams, d));
             for (Token tp : ctx.p) {
                 TypeParameterDecl tpd = new TypeParameterDecl(tp.getText());
@@ -282,7 +283,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
                 fd.addTypeParameter(tpd);
             }
         } else {
-            setV(ctx, new PartialFunctionDecl(ctx.n.getText(), l(ctx.annotation()), t, params, funcParams, d));
+            setV(ctx, new PartialFunctionDecl(ctx.n.getText(), annotations, t, params, funcParams, d));
         }
     }
 
