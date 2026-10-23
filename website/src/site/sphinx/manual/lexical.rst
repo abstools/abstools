@@ -21,7 +21,7 @@ elements.
 
      - Separator between left hand side and right hand side of a rule
 
-   * - |
+   * - `|`
 
      - Variant; either of the element(s) separated by the bar
 
@@ -49,15 +49,17 @@ elements.
 Line terminators and white spaces
 =================================
 
-Line terminators and white spaces are defined as in Java.
+Line terminators are defined as a linefeed character, optionally
+preceded by a carriage return character.  Whitespace is a line
+terminator, space character, form feed or tab character.
 
 .. table:: Syntax
    :align: left
    :class: syntax
 
    ====================   ==================
-   *LineTerminator* ::=   ``\n`` | ``\r`` | ``\r\n``
-   *WhiteSpace* ::=        *LineTerminator* | ``␣`` | ``\t`` | *Comment*
+   *LineTerminator* ::=   [ ``\r`` ] ``\n``
+   *WhiteSpace* ::=        *LineTerminator* | ``␣`` | ``\f`` | ``\t`` | *Comment*
    ====================   ==================
 
 ..
