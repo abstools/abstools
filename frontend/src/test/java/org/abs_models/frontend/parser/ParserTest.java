@@ -220,6 +220,7 @@ public class ParserTest extends FrontendTest {
         assertParse("class FooClass { Unit m([Test] T t) { }}");
         assertParse("class FooClass { Unit m() { [Test] T t; }}");
         assertParse("class FooClass { [Test] Unit m() { }}");
+        assertParse("[Test] def String x(f)(String v) = f(v);");
     }
 
     @Test
