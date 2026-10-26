@@ -276,7 +276,7 @@ public class CreateJastAddASTListener extends ABSBaseListener {
         if(ctx.p != null && !ctx.p.isEmpty()) {
             ParametricPartialFunctionDecl fd =
                 setV(ctx, new ParametricPartialFunctionDecl(ctx.n.getText(), annotations,
-                    new List<>(), t, params, funcParams, d));
+                    t, params, funcParams, d, new List<>()));
             for (Token tp : ctx.p) {
                 TypeParameterDecl tpd = new TypeParameterDecl(tp.getText());
                 setASTNodePosition(tp, tpd);

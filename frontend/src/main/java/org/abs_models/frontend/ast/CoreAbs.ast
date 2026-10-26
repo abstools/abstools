@@ -46,7 +46,7 @@ TraitUse ::= TraitExpr;
 
 PartialFunctionDef ::= PureExp ;
 PartialFunctionDecl : Decl ::= Annotation* TypeUse Param:ParamDecl* FuncParam:FunctionParamDecl* PartialFunctionDef ;
-ParametricPartialFunctionDecl : PartialFunctionDecl ::= TypeParameter:TypeParameterDecl* TypeUse Param:ParamDecl* FuncParam:FunctionParamDecl* PartialFunctionDef ;
+ParametricPartialFunctionDecl : PartialFunctionDecl ::= TypeParameter:TypeParameterDecl* ;
 
 UnknownDecl: Decl; // Unknown declarations
 AmbiguousDecl: UnknownDecl ::= <Alternative:java.util.List<Decl>>;
