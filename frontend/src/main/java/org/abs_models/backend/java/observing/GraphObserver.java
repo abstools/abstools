@@ -95,7 +95,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
     }
 
     /** The namespace prefixes used by the ABS ontology. */
-    public static final Map<String, String> absNamespaces;
+    public static final Map<String, String> absNamespaces = new HashMap<>();
 
     public static String sparqlPrefix;
 
@@ -129,8 +129,8 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                 String domainModelString = new String(is.readAllBytes(), StandardCharsets.UTF_8);
                 domainModel.read(new StringReader(domainModelString), null, "TURTLE");
             }
-        } catch (IOException e) {
-            log.warning("Failed to read the domain ontology, will be missing from lifted state");
+        } catch (IOException | org.apache.jena.riot.RiotException e) {
+            log.severe("Failed to read the domain ontology, will be missing from lifted state: " + e.getMessage());
         }
         try (InputStream is = GraphObserver.class.getResourceAsStream("/resources/prog.ttl")) {
             if (is != null) {
@@ -138,10 +138,10 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                 progModel.read(new StringReader(progModelString), null, "TURTLE");
             }
         } catch (IOException e) {
-            log.warning("Failed to read the abs and program ontologies, will be missing from lifted state");
+            log.severe("Failed to read the abs and program ontologies, will be missing from lifted state: " + e.getMessage());
         }
 
-        absNamespaces = progModel.getNsPrefixMap(); // getNsPrefixMap returns a modifiable copy per its documentation
+        // Add "well-known" namespaces just in case.
         absNamespaces.putAll(
             Map.of("rdf", RDF.getURI(),
                 "rdfs", RDFS.getURI(),
@@ -149,6 +149,7 @@ public class GraphObserver extends DefaultSystemObserver implements ObjectCreati
                 "abs", "http://abs-models.org/ns/abs#",
                 "prog", "http://abs-models.org/ns/prog#",
                 "run", "http://abs-models.org/ns/run#"));
+        absNamespaces.putAll(progModel.getNsPrefixMap());
 
         sparqlPrefix = absNamespaces.entrySet()
             .stream()
