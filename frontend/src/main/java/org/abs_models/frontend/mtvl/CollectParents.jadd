@@ -7,7 +7,7 @@ Given a set of features, collect in "newParents" all of its parents.
 
 aspect CollectParents {
 
-    //propagate request for getting parents: 
+    //propagate request for getting parents:
     public void ASTNode.collectParents(Set<String> features, Set<String> newParents) {
         for(int i = 0; i < getNumChild(); i++)
             getChild(i).collectParents(features, newParents);
@@ -15,23 +15,15 @@ aspect CollectParents {
 
     public void FeatureDecl.collectParents(Set<String> features, Set<String> newParents) {
         if (newParents.contains(getName())) return;
-        if (features.contains(getName())) getParent().collectParents(newParents);
+        if (features.contains(getName())) {
+            FeatureDecl parent = closestParent(FeatureDecl.class);
+            while (parent != null && newParents.add(parent.getName())) {
+                parent = parent.closestParent(FeatureDecl.class);
+            }
+        }
         super.collectParents(features, newParents);
     }
 
-    public void ASTNode.collectParents(Set<String> newParents) {
-        if (getParent() != null) getParent().collectParents(newParents); // go up!
-    }
-
-    public void FeatureDecl.collectParents(Set<String> newParents) {
-        if (newParents.add(getName())) {
-            getParent().collectParents(newParents); // go up!
-        }
-    }
-
-    public void CompilationUnit.collectParents(Set<String> newParents) {
-        // and stop going up
-    } 
 }
 
 

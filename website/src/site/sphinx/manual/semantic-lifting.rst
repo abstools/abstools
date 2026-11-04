@@ -1,0 +1,431 @@
+.. _sec:semantic-lifting:
+
+****************
+Semantic lifting
+****************
+
+ABS implements *semantic lifting*, i.e., obtaining a semantic
+representation of aspects of the model and the runtime state in
+:term:`RDF` form.
+
+Semantically-lifted program state can be queried from the command
+line, a SPARQL endpoint implemented in the :ref:`Model API
+<sec:model-api>`, within the model itself through embedded SPARQL
+queries, and can be opened in tools such as `Protégé
+<https://protege.stanford.edu>`__.
+
+Semantic lifting is supported in the Java backend.
+
+
+The lifting ontology
+====================
+
+The following namespaces are always defined:
+
+``abs:``
+
+   The ABS language ontology, containing definitions for ABS
+   interfaces, classes, fields, datatypes, and constructors.
+
+``prog:``
+
+   The program ontology, containing all classes, interfaces, members,
+   datatypes and datatype constructors of the model.
+
+``run:``
+
+   the runtime ontology, containing objects and object state.
+
+Additionally, when an ABS model is compiled with an argument
+``--domain-ontology domain.ttl`` to the compiler, the lifted program
+state includes the content of the file named by that argument
+(``domain.ttl`` in the example).
+
+Representation of ABS language constructs
+-----------------------------------------
+
+This section shows concretely how ABS model and state information is
+lifted.
+
+.. note:: The lifting ontology might change as we gain experience
+          applying semantic lifting to concrete case studies.
+
+.. list-table:: RDF representations for ABS language constructs
+   :header-rows: 1
+   :widths: auto
+
+   * - ABS construct
+
+     - RDF representation
+
+   * - interface
+
+     - resource that subclasses ``abs:Interface``, with a label naming
+       the ABS interface
+
+   * - class
+
+     - resource that subclasses ``abs:Class``, with a label naming the
+       ABS class
+
+   * - datatype
+
+     - resource that subclasses ``abs:Datatype``, with a label naming
+       the ABS datatype
+
+   * - data constructor
+
+     - resource that subclasses ``abs:Dataconstructor``, with a label
+       naming the ABS constructor
+
+   * - object
+
+     - resource of type of the ABS class resource
+
+   * - future
+
+     - resource of type ``prog:ABS.StdLib.Fut``
+
+   * - string
+
+     - RDF string literal
+
+   * - number
+
+     - int, float, or owl:rational literal
+
+   * - Boolean
+
+     - RDF boolean literal
+
+   * - null value
+
+     - A resource ``abs:null`` of type ``abs:Object``
+
+   * - empty list
+
+     - ``rdf:nil``
+
+   * - non-empty list
+
+     - an ``rdf:List``
+
+   * - Other algebraic datatype value
+
+     - anonymous resource with type of the value's dataconstructor,
+       with attributes ``prog:arg0`` to ``prog:arg``\ *n-1* containing
+       the constructor arguments, if any
+
+We consider the following small ABS model::
+
+  module Test;
+
+  interface I {}
+
+  class C (Maybe<Int> i) implements I {}
+
+  {
+    I o = new C(Just(1));
+  }
+
+All datatypes are represented as resources of type ``abs:Datatype``,
+their dataconstructors are lifted into resources of type
+``abs:Dataconstructor``::
+
+  prog:ABS.StdLib.940938116
+          rdf:type    abs:Datatype;
+          rdfs:label  "ABS.StdLib.Maybe" .
+
+  prog:ABS.StdLib.1916677384
+          rdf:type        abs:Dataconstructor;
+          rdfs:label      "ABS.StdLib.Just";
+          abs:constructs  prog:ABS.StdLib.940938116 .
+
+  prog:ABS.StdLib.1434940020
+          rdf:type        abs:Dataconstructor;
+          rdfs:label      "ABS.StdLib.Nothing";
+          abs:constructs  prog:ABS.StdLib.940938116 .
+
+All interfaces are represented as resources of type ``abs:Interface``,
+with a label containing the fully-qualified name of the interface::
+
+  prog:Test.1720922681  rdf:type  abs:Interface;
+          rdfs:label   "Test.I";
+          abs:extends  prog:ABS.StdLib.1777381620 .
+
+  prog:ABS.StdLib.1777381620
+          rdf:type    abs:Interface;
+          rdfs:label  "ABS.StdLib.Object" .
+
+All classes are represented as resources of type ``abs:Class``, again
+with a label with the class name::
+
+  prog:Test.1198513669  rdf:type  abs:Class;
+          rdfs:label      "Test.C";
+          abs:hasField    prog:Test.i;
+          abs:implements  prog:Test.1720922681 .
+
+  prog:Test.i  rdf:type  abs:Field;
+          rdfs:label  "Test.i" .
+
+All the information presented so far is static and calculated at
+compile time.  At runtime, the lifted representation of the object
+created in the main block looks as follows::
+
+  run:obj638701988  rdf:type  prog:Test.1720922681 , abs:Object;
+          abs:inCog         run:cog85748029;
+          abs:instantiates  prog:Test.1198513669;
+          prog:Test.i       [ rdf:type   prog:ABS.StdLib.1916677384;
+                              prog:arg0  1
+                            ] .
+
+  run:cog85748029  rdf:type  abs:Cog;
+          abs:inDC  run:obj1233451203 .
+
+Numeric and string data values are represented by their RDF
+equivalents, user-defined datatypes are lifted as anonymous resources
+naming the ABS constructor and its arguments.
+
+Note that the lifted representation of an object also references the
+cog that contains the object.  This information can be used to, for
+example, find all objects running on the same cog.  The cog in turn
+references its containing deployment component.
+
+
+
+Linking ABS objects to domain classes
+-------------------------------------
+
+The lifted representation of an ABS object can be linked to a domain
+concept via a ``DomainClass`` annotation on the definition of its ABS
+class.  The annotation must contain an expression that evaluates to a
+string naming an Owl class in the domain ontology.  The expression has
+access to the object's current state.
+
+Typically, a domain ontology will define one or more classes, for
+example::
+
+  PREFIX num:  <http://abs-models.org/ns/num#>
+
+  num:ContainsPositive a owl:Class .
+  num:ContainsNonPositive a owl:Class .
+
+A ``DomainClass`` annotation can link instances of ABS classes to these Owl classes::
+
+   [DomainClass: when i > 0
+                 then "num:ContainsPositive"
+                 else "num:ContainsNonPositive"] ①
+   class C(Int i) { }
+
+   {
+     Object o1 = new C(-1);  // will be num:ContainsNonPositive
+   }
+
+| ① All lifted instances ``x`` of instances of class ``C`` will have
+  an additional triple ``x rdf:type num:ContainsPositive`` or
+  ``num:ContainsNonPositive``, depending on the object's state.
+
+When evaluating SPARQL queries over the lifted model state, the
+following namespaces are already predefined and do not need to be
+introduced in the query text: ``rdf:``, ``rdfs:``, ``owl:``, ``abs:``,
+``prog:``, and ``run:``.
+
+All other namespaces, such as those used in a domain ontology, must be
+added to the SPARQL query::
+
+  PREFIX num:  <http://abs-models.org/ns/num#>
+  SELECT ?obj WHERE { ?obj a num:ContainsPositive . }
+
+
+
+Accessing lifted state externally
+=================================
+
+When an ABS model is started with the ``--printRDF`` argument, the
+complete semantic representation is printed to the terminal in
+:term:`TRTL` format after the model finishes.
+
+When an ABS model is started with the ``--sparqlQuery`` argument, the
+given query is run after the model finishes and its result is printed
+in TRTL format.  Currently supports ``SELECT`` queries.
+
+The :ref:`Model API <sec:model-api>` also provides two ways of
+accessing the lifted model state:
+
+* The complete lifted state is accessible under the ``/ttl`` URL, in
+  TRTL format.  For example, if the Model API runs on port 8080,
+  `Protégé <https://protege.stanford.edu>`__ and similar tools can
+  read the ontology by opening the URL ``https://localhost:8080/ttl``.
+
+* A SPARQL endpoint runs under the ``/sparql`` URL.  The endpoint
+  accepts SPARQL queries as specified in `Section 2.1
+  <https://www.w3.org/TR/sparql11-protocol/#query-operation>`__ of the
+  `SPARQL 1.1 Protocol <https://www.w3.org/TR/sparql11-protocol/>`__.
+  The SPARQL endpoint returns results in `JSON format
+  <https://www.w3.org/TR/sparql11-results-json/>`__ by default.
+  Currently supports ``SELECT`` queries.
+
+
+
+Accessing lifted state within the model
+=======================================
+
+A SPARQL ``SELECT`` or ``ASK`` query can be executed at runtime from
+within the model.  Such queries are implemented via a function with a
+``builtin`` body with two arguments: a literal ``sparql`` followed by
+the query as a SPARQL string.
+
+Executing a SPARQL ``ASK`` query results in a Boolean value.  The
+result of a SPARQL ``SELECT`` query is converted into an ABS list of
+values as described below.
+
+Currently only the first SPARQL variable listed in the ``SELECT``
+clause is used to construct the ABS return value.  Valid return types
+of ``builtin`` SPARQL query functions are:
+
+- ``List<Int>`` when the first SPARQL variable is a RDF literal that
+  can be converted to an integer;
+
+- ``List<Float>`` when the first SPARQL variable is a RDF literal that
+  can be converted to a float;
+
+- ``List<Rat>`` ditto;
+
+- ``List<Bool>`` when the first SPARQL variable is a RDF literal that
+  can be converted to a Boolean;
+
+- ``List<String>`` when the first SPARQL variable is a RDF literal;
+
+- ``List<I>`` when ``I`` names an interface, and the first SPARQL
+  variable is a RDF resource that names an ABS object whose class
+  implements that interface.
+
+.. note:: It is an error if the resources found by a query where ABS
+          expects objects of type ``I`` do not represent ABS objects
+          that implement ``I``.  Currently such objects are silently
+          dropped when constructing the ABS result.  This might lead
+          to fewer results than expected, but the resulting list will
+          be well-typed.
+
+::
+
+  module Test;
+
+  interface I {}
+
+  class C(Int i) implements I {}
+
+  def List<String> all_integer_field_values() = builtin(sparql, ①
+      `SELECT ?i
+       WHERE { ?obj a/rdfs:label "Test.C" . ②
+               ?obj prog:Test.i ?i . }`); ③
+
+  def List<I> all_I_instances() = builtin(sparql,
+      `SELECT ?o WHERE {
+         ?o a/abs:implements/rdfs:label "BackendTest.I" . ④
+       }`);
+
+  def Bool exist_I_instances() = builtin(sparql,
+      `ASK { ?o a/abs:implements/rdfs:label "BackendTest.I" }` ⑤
+  );
+
+  {
+      I o1 = new C(5);
+      I o2 = new C(4);
+      I o3 = new C(2);
+      List<String> result = all_integer_field_values(); ⑥
+      List<I> all_I = all_I_instances(); ⑦
+  }
+
+| ① A ``builtin`` function with first argument ``sparql`` takes an
+  additional argument, a SPARQL query string.
+
+| ② The lifted representation of an ABS class has the ABS qualified
+  name as an ``rdfs:label`` property, so we use a property path
+  `a/rdfs:label` to find class instances.
+
+| ③ The ``prog:`` namespace contains, among others, all class and
+  attribute definitions.  The ``prog`` ontology uses fully qualified
+  ABS names.
+
+| ④ This query uses SPARQL *property paths*
+  `<https://www.w3.org/TR/sparql11-property-paths/>`__ to succinctly
+  find resources of a class that implements an interface with a label
+  ``"BackendTest.I"``.
+
+| ⑤ This query returns ``True`` if there exists at least one object
+  that implements ``I``.
+
+| ⑥ This query returns a list containing "2", "4", "5" in some
+  permutation.  Since the function returns ``List<String>``, the RDF
+  literals are converted to ABS strings.
+
+| ⑦ This query returns the list of all objects implementing the
+  interface ``I``.  Note that ABS objects are subject to garbage
+  collection, so objects that are not referenced might have vanished by
+  the time the query executes.
+
+Parameterized queries
+---------------------
+
+It is possible to pass parameters to SPARQL queries.  Currently
+parameters of type ``Bool``, ``Int``, ``Rat`` (converted to floating
+point), ``Float``, ``String`` and ``Object`` (object references) are
+supported.
+
+A SPARQL query can contain one or more placeholders, written as ``?``.
+The query function must supply a value for each of these placeholders::
+
+  module Test;
+
+  class C(String s, Int i) {
+  }
+
+    def List<String> query_via_int(Int i) = builtin(sparql,
+        `SELECT ?s WHERE {
+           ?o a/rdfs:label "Test.C" ;
+              prog:Test.s ?s ;
+              prog:Test.i ? . ①
+         }`, i); ②
+
+    def List<String> query_via_object(I o) = builtin(sparql,
+          `SELECT ?s WHERE {
+             ? a/abs:implements/rdfs:label "BackendTest.I" ; ③
+               prog:BackendTest.s ?s .
+           }`, o);
+
+
+  {
+      Object o = new C("hello", 15);
+      Object o2 = new C("world", 1);
+      List<String> world_string = query_via_int(1); ④
+      println(`query_via_int(1): $world_string$`);
+      List<String> hello_string = query_via_object(o); ⑤
+      println(`query_via_object(o): $hello_string$`);
+  }
+
+| ① The SPARQL query contains a placeholder ``?``.
+
+| ② The value of the function parameter ``i`` replaces the placeholder
+  before the query is executed.
+
+| ③ The parameter ``o`` is converted into an RDF resource IRI and
+  inserted as subject of the two search triples.
+
+| ④ The query will return a one-element list containing ``"world"``.
+
+| ⑤ The query will return a one-element list containing ``"hello"``.
+
+.. note:: The following caveats apply to SPARQL queries with
+          parameters:
+
+          - Querying for integer numbers beyond the range of the Java
+            ``long`` type results in a runtime exception rather than
+            silently wrong query results
+
+          - Queries are susceptible to SPARQL injection; see the
+            section "SPARQL Injection Notes" at the bottom of the
+            `documentation
+            <https://jena.apache.org/documentation/query/parameterized-sparql-strings.html>`_
+            of the underlying Jena library.
+

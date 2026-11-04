@@ -3,6 +3,7 @@ import org.abs_models.common.TreeUtilsHelper;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 aspect TreeUtils {
 
@@ -156,6 +157,13 @@ aspect TreeUtils {
         }
         removeChild(index);
         return true;
+    }
+
+    /**
+     * Creates a stream from the given List.
+     */
+    public Stream<T> List.stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
 
     public Iterator<T> ASTNode.astChildIteratorNoTransform() {

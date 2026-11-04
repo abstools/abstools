@@ -7,7 +7,7 @@
 
 // Hook into CoreAbs.ast definitions
 Model : CoreModel ::= /Product*/ ;
-CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FExt*;
+CompilationUnit : CoreCompilationUnit ::= DeltaDecl* [ProductLine] ProductDecl* FeatureDecl* FeatureExtension*;
 
 // Deltas
 
@@ -100,23 +100,11 @@ ProductName : ProductExpr ::= <Name> ;
 
 Product ::= Feature* ;
 
-// Used in FlattenedProduct.jadd -- but seems to be dead code
-
-abstract InstNode;
-
-//intrinsic attributes
-InstModel : InstNode ::= <Model:Model>; 
-InstModuleDecl : InstNode ::= <ModuleDecl:ModuleDecl>;
-
-
 /////////////////////////////////
 /// mTVL - root and extension ///
 /////////////////////////////////
 
-// TODO: remove FeatureModelDecl when removing beaver parser, antlr doesn't need it
-FeatureModelDecl ::= FeatureDecl* FExt*;
-
-FExt ::= <Name> [Group] AttrConstraints;
+FeatureExtension ::= <Name> [Group] AttrConstraints;
 
 FeatureDecl ::= <Name> [Group] AttrConstraints;
 
@@ -129,6 +117,7 @@ OptFeat:  FNode;
 MandFeat: FNode;
 
 abstract Cardinality;
+OneOf:   Cardinality;
 AllOf:   Cardinality;
 Minim:   Cardinality ::= <CFrom:int>;
 CRange:  Cardinality ::= <CFrom:int> <CTo:int>;
@@ -197,7 +186,7 @@ MSubAddExp: MAddExp ;
 // Variables and values
 abstract Variable: SimpleExp;
 MValue : SimpleExp ::= Value;
-// Concrete values (IntVal, BoolVal, StringVal) are in abs.ast
+// See above for concrete values (IntVal, BoolVal, StringVal)
 
 // variables
 AttVar:  Variable ::= <AName>;

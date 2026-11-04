@@ -580,7 +580,7 @@ public class Main {
     }
 
     public static String getVersion() {
-        String version = Main.class.getPackage().getImplementationVersion();
+        String version = Main.class.getPackage().getImplementationVersion().split("-", 2)[0];
         if (version == null)
             return "HEAD";
         else
@@ -589,7 +589,7 @@ public class Main {
 
 
     public static String getGitVersion() {
-        String version = Main.class.getPackage().getSpecificationVersion();
+        String version = Main.class.getPackage().getImplementationVersion();
         if (version == null)
             return "HEAD-dirty";
         else

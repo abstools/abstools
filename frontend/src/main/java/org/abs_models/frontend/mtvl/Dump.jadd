@@ -2,9 +2,9 @@ aspect MyDumpMTVL {
     /* print variables used by mTVL */
     public void Model.dumpMVars() {
         if (hasMTVL()) {
-            println("free vars - int:  "+ints().keySet());
-            println("free vars - bool: "+bools());
-            println("free vars - feat: "+features());
+            println("free vars - int:  " + mtvlIntVariables().keySet());
+            println("free vars - bool: " + mtvlBoolVariables());
+            println("free vars - feat: " + mtvlFeatures());
         }
     }
 

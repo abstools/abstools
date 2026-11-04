@@ -1,5 +1,0 @@
-= Formal Semantics
-
-== A subsection
-
-To be developed.

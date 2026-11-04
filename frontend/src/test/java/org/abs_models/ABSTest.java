@@ -91,10 +91,14 @@ public class ABSTest {
         return Main.parse(null, new StringReader(s));
     }
 
-    protected static Model assertParse(String s, Config... config) {
+    public static Model assertParse(String s, Config... config) {
 
-        String preamble = "module UnitTest; export *; ";
-        preamble = preamble + " import * from ABS.StdLib;";
+        String preamble =
+            """
+            module UnitTest;
+            export *;
+            import * from ABS.StdLib;
+            """;
         if (!isSet(WITHOUT_MODULE_NAME, config))
             s = preamble + s;
         try {

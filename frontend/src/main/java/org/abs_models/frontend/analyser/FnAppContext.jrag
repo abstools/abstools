@@ -77,6 +77,7 @@ aspect FnAppContext {
     }
     eq ClassDecl.getChild().isVarUseContextImperative(VarUse v) = true;
     eq InterfaceDecl.getChild().isVarUseContextImperative(VarUse v) = true;
+    eq TraitDecl.getChild().isVarUseContextImperative(VarUse v) = true;
     eq VarDecl.getChild().isVarUseContextImperative(VarUse v) {
         if (getName().equals(v.getName())) return true;
         else return isVarUseContextImperative(v);
@@ -148,6 +149,9 @@ aspect FnAppContext {
     eq ClassDecl.getChild().isParamDeclImperative(ParamDecl p) {
         // The only declarations in enclosing contexts are field declarations
         // in classes, which are always imperative
+        return true;
+    }
+    eq TraitDecl.getChild().isParamDeclImperative(ParamDecl p) {
         return true;
     }
     eq MethodSig.getChild().isParamDeclImperative(ParamDecl p) {

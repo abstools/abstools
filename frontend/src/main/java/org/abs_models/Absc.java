@@ -153,6 +153,11 @@ public class Absc implements Callable<Integer> {
     @Option(names = { "--sourceonly" },
             description = "@|bold Java backend:|@ do not generate Java .class files")
     public boolean java_sourceOnly = false;
+    @Option(names = { "--domain-ontology" },
+        description = "@|bold Java backend:|@ the domain ontology file in semantic lifting, must be in .ttl format",
+        paramLabel = "file"
+    )
+    public File domain_ontology;
 
     // Pretty-printer
     @Option(names = { "-f", "--force" },
@@ -230,15 +235,9 @@ public class Absc implements Callable<Integer> {
 
     static class AbscVersionProvider implements IVersionProvider {
         public String[] getVersion() throws Exception {
-            String version = Absc.class.getPackage().getImplementationVersion();
-            String gitversion = Absc.class.getPackage().getSpecificationVersion();
-            if (version == null)
-                version = "HEAD";
-            if (gitversion == null)
-                gitversion = "HEAD-dirty";
             return new String[] {
-                "ABS Tool Suite version " + version,
-                "Built from git tree " + gitversion
+                "ABS Tool Suite version " + Main.getVersion(),
+                "Built from git tree " + Main.getGitVersion()
             };
         }
     }

@@ -2,29 +2,6 @@ import java.util.Map;
 
 aspect ProdSolution {
 
-//    //propagate request for getting solution:
-//    public boolean ASTNode.getSolution(String product, Map<String,Integer> sol) {
-//        boolean res = false;
-//        for(int i = 0; i < getNumChild(); i++)
-//            res = res || getChildNoTransform(i).getSolution(product, sol);
-//        return res;
-//    }
-    
-    public Map<String,Integer> Product.getSolution() {
-        Map<String,Integer> sol= new HashMap<String,Integer>();
-        for(Feature f : getFeatures())
-    		f.getSolution(true,sol);
-    	return sol;
-    }
-
-    void Feature.getSolution(Boolean found, Map<String,Integer> sol) {
-        if (found) {
-            sol.put(getName(), Integer.valueOf(1));
-            for(AttrAssignment attr : getAttrAssignments())
-                sol.put(getName()+"."+attr.getName(),attr.getValue().getIntValue());
-        }
-    }
-
     abstract public Integer Value.getIntValue();
     public Integer UnknownVal.getIntValue() {
             return -1;
@@ -39,4 +16,4 @@ aspect ProdSolution {
         // FIXME: is this used for constraint solving?  Maybe use a hash
             return -1;
     }
-}  
+}

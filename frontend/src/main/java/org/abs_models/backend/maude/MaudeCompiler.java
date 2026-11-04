@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.google.common.io.ByteStreams;
-
 import org.abs_models.Absc;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.common.NotImplementedYetException;
@@ -122,7 +120,8 @@ public class MaudeCompiler extends Main {
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
         stream.println("*** Generated " + dateFormat.format(new Date()));
-        ByteStreams.copy(is, stream);
+        is.transferTo(stream);
+        is.close(); // not using try..except since we terminate in case of error anyway
         model.generateMaude(stream, module, arguments.maude_mainBlock, arguments.maude_clocklimit, arguments.maude_defaultResources);
         if (arguments.verbose && arguments.outputfile != null) {
             System.out.println("Finished.  Start `maude " + arguments.outputfile.toString() + "' to run the model.");

@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.abs_models.backend.java.JavaBackend;
-import org.abs_models.backend.java.lib.runtime.ABSInitObjectCall;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.ABSRunMethodCall;
 import org.abs_models.backend.java.lib.runtime.ABSRuntime;
@@ -21,6 +20,7 @@ import org.abs_models.backend.java.lib.runtime.COG;
 import org.abs_models.backend.java.lib.runtime.Task;
 import org.abs_models.backend.java.lib.types.ABSClass;
 import org.abs_models.backend.java.scheduling.UserSchedulingStrategy;
+import org.abs_models.frontend.analyser.AnnotationHelper;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.ast.ClassDecl;
 import org.abs_models.frontend.ast.FieldDecl;
@@ -28,6 +28,7 @@ import org.abs_models.frontend.ast.InterfaceTypeUse;
 import org.abs_models.frontend.ast.MethodImpl;
 import org.abs_models.frontend.ast.MethodSig;
 import org.abs_models.frontend.ast.ParamDecl;
+import org.abs_models.frontend.ast.PureExp;
 import org.abs_models.frontend.typechecker.InterfaceType;
 
 public class ClassDeclGenerator {
@@ -69,6 +70,8 @@ public class ClassDeclGenerator {
         stream.println();
         generateHttpCallableMethods();
         stream.println();
+        generateDomainClassMethod();
+        stream.println();
         generateFields();
         if (decl.hasParam() || decl.hasField()) {
             stream.println();
@@ -92,7 +95,7 @@ public class ClassDeclGenerator {
         if (implementedSignatures.values().stream().noneMatch(MethodSig::isHTTPCallable)) return;
         stream.println("private static final java.util.Map<java.lang.String, java.lang.invoke.MethodHandle> __modelApiMethodCache = new java.util.HashMap<>();");
         stream.println();
-        stream.println("public org.abs_models.backend.java.lib.runtime.ABSFut invokeMethod(java.lang.String name, java.util.List<org.abs_models.backend.java.lib.types.ABSValue> arguments) {");
+        stream.println("public org.abs_models.backend.java.lib.runtime.ABSFut invokeMethod(java.lang.String name, java.util.List<Object> arguments) {");
         stream.println("java.lang.invoke.MethodHandle handle = __modelApiMethodCache.get(name);");
         stream.println("if (handle == null) return null;");
         stream.println("else  try {");
@@ -125,6 +128,21 @@ public class ClassDeclGenerator {
         }
         stream.println("} catch (NoSuchMethodException | IllegalAccessException e) {");
         stream.println("            throw new ExceptionInInitializerError(e);");
+        stream.println("}");
+        stream.println("}");
+    }
+
+    private void generateDomainClassMethod() {
+        PureExp domainClassAnnotation = AnnotationHelper.getAnnotationValueFromName(decl.getAnnotations(), "ABS.StdLib.DomainClass");
+        if (domainClassAnnotation == null) return;
+        stream.println("public java.util.Optional<String> $domainClass() {");
+        stream.println("try {");
+        stream.println("String result = ");
+        domainClassAnnotation.generateJava(stream);
+        stream.println(";");
+        stream.println("return java.util.Optional.of(result);");
+        stream.println("} catch (Exception e) {");
+        stream.println("return java.util.Optional.empty();");
         stream.println("}");
         stream.println("}");
     }
@@ -212,8 +230,7 @@ public class ClassDeclGenerator {
         generateObjectConstruction("__ABS_runtime");
 
         stream.println("__ABS_runtime.cogCreated(__ABS_result);");
-        stream.println("__ABS_cog.addTask(new " + Task.class.getName() + "(new " +
-                ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");
+        stream.println("__ABS_result.__ABS_init();");
 
         if (decl.isActiveClass()) {
             stream.println("__ABS_runtime.asyncCall(new " + ABSRunMethodCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
@@ -241,7 +258,7 @@ public class ClassDeclGenerator {
     }
 
     private void generateGetFieldValueMethod() {
-        stream.println("protected final Object getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
+        stream.println("public final Object getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
         for (ParamDecl p : decl.getParams()) {
             stream.println("if (__ABS_fieldName.equals(\"" + p.getName() + "\")) return " + JavaBackend.getVariableName(p.getName()) + ";");
         }

@@ -16,8 +16,6 @@ import org.abs_models.ABSTest;
 import org.abs_models.backend.BackendTestDriver;
 import org.abs_models.backend.erlang.ErlangTestDriver;
 import org.abs_models.backend.java.JavaTestDriver;
-import org.abs_models.backend.maude.MaudeCompiler;
-import org.abs_models.backend.maude.MaudeTestDriver;
 import org.abs_models.frontend.ast.Model;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -91,7 +89,7 @@ public abstract class SemanticTests {
      * @param model The file containing the ABS test case.
      * @param f The files to be made accessible.
      */
-    public void assertEvalTrueWithTestfiles(File model, File ...f) throws Exception {
+    public void assertEvalTrueWithTestfiles(File model, File... f) throws Exception {
         Model m = ABSTest.assertParseFileOk(model.getPath());
         assertFalse(m.hasParserErrors());
         assertFalse(m.hasTypeErrors());

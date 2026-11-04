@@ -13,7 +13,7 @@ public interface COGView {
 
     void registerObjectCreationListener(String className, ObjectCreationObserver e);
 
-    int getID();
+    long getID();
 
     COG getCOG();
 }

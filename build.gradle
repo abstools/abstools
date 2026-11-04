@@ -8,9 +8,11 @@
 // Make sure all subprojects use the same plugin versions; see
 // https://docs.gradle.org/current/userguide/plugins.html#sec:subprojects_plugins_dsl
 plugins {
+    // NOTE: do not update to version 9 without checking that compiling and
+    // running a Java model works
     id 'com.gradleup.shadow' version '8.3.9' apply false
     // ./gradlew dependencyUpdates to check for library updates
-    id "com.github.ben-manes.versions" version "0.52.0"
+    id "io.github.ben-manes.versions" version "0.61.0"
 }
 
 // https://stackoverflow.com/questions/15061277/how-can-i-get-the-current-git-branch-in-gradle/36760102#36760102
@@ -29,7 +31,7 @@ def absVersion() {
     // Returns (tag name)-(commits since tag)-(commit id)
     // e.g., v1.10.0-1-10123abc
     def version = "unknown-not_compiled_in_git_repo-unknown"
-    def proc = "git describe --tags --long".execute()
+    def proc = "git describe --tags --always --dirty".execute()
     // We use this longer form so we print any git error messages.
     proc.in.eachLine { line -> version = line }
     proc.err.eachLine { line -> println line }
@@ -42,5 +44,5 @@ subprojects {
         mavenCentral()
     }
     group = 'org.abs_models'
-    version = absVersion()
+    version = rootProject.absVersion()
 }

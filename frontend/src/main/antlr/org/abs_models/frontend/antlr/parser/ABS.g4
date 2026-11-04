@@ -243,7 +243,7 @@ function_name_decl: IDENTIFIER ;
 function_name_list: (function_name_decl (',' function_name_decl)*)? ;
 type_use_paramlist: ('<' p+=type_use (',' p+=type_use)* '>') ;
 
-par_function_decl : annotation*
+par_function_decl : annotations
         'def' type_use n=qualified_identifier
         ('<' p+=TYPE_IDENTIFIER (',' p+=TYPE_IDENTIFIER)*  '>')?
         '(' functions=function_name_list ')'
@@ -459,7 +459,7 @@ product_expr
     ;
 
 // mTVL Feature model
-fextension : TYPE_IDENTIFIER '{'
+feature_extension : TYPE_IDENTIFIER '{'
         feature_decl_group? (feature_decl_attribute | feature_decl_constraint)* '}' ;
 
 feature_decl : TYPE_IDENTIFIER
@@ -512,7 +512,7 @@ main_block : annotations '{' stmt* '}' ;
 
 compilation_unit : module_decl* delta_decl*
         productline_decl? product_decl*
-        ('root' feature_decl | 'extension' fextension)*
+        ('root' feature_decl | 'extension' feature_extension)*
     ;
 
 goal : compilation_unit EOF ;

@@ -43,7 +43,7 @@ public class TestStatus {
     private Status status;
 
     /* the id of the task executing the tracked test */
-    private final int taskID;
+    private final long taskID;
 
     /* the name of the test method and its class */
     private final String testMethod;
@@ -68,7 +68,7 @@ public class TestStatus {
      */
     private final int framesDepth;
 
-    public TestStatus(int id, String method, String className, List<Object> args,
+    public TestStatus(long id, String method, String className, List<Object> args,
             List<? extends TaskStackFrameView> frames, Status status) {
         taskID = id;
         testMethod = method;
@@ -122,7 +122,7 @@ public class TestStatus {
     }
 
     /* returns the id of the task running the test method */
-    public int getTaskID() {
+    public long getTaskID() {
         return taskID;
     }
 

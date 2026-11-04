@@ -18,21 +18,34 @@ import org.abs_models.backend.java.observing.TaskSchedulerView;
 import org.abs_models.backend.java.scheduling.TaskScheduler;
 import org.abs_models.backend.java.scheduling.TaskSchedulingStrategy;
 
+/**
+ * This class implements the unit of concurrency of ABS.  Scheduling
+ * policy is implemented by a pluggable scheduler stored in the
+ * `scheduler` field.
+ *
+ * The cog is informed by tasks and the scheduler about task state.
+ * The Cog in turn informs the `ABSRuntime` singleton about its state;
+ * based on all cogs' states the runtime will decide if time can be
+ * advanced or the model has finished.
+ */
 public class COG {
     protected static final Logger log = Logging.getLogger(COG.class.getName());
 
     private final TaskScheduler scheduler;
     private final Class<?> initialClass;
-    private final int id;
+    private final long id;
     private ABSInterface dc;
     /**
-     * The number of active threads, incremented and decremented by schedulers
-     * running on this cog.  This is used to detect when all schedulers on
-     * this cog have gone idle, and hence, time could be incremented.
-     * <p>
-     * NOTE: all access to this field must be synchronized
+     * The number of currently runnable threads.  This variable is
+     * used to detect when all tasks on this cog have gone idle, and
+     * hence, time could be incremented.
+     *
+     * <p> NOTE: all access to this field must be synchronized:
+     * depending on the scheduler, each ABS task might run on its own
+     * Java thread and multiple tasks can become runnable at the same
+     * time.
      */
-    private int activeThreads = 0;
+    private int runnableThreads = 0;
 
     public COG(ABSRuntime runtime, Class<?> clazz, ABSInterface dc) {
         initialClass = clazz;
@@ -74,75 +87,107 @@ public class COG {
         this.dc = dc;
     }
 
+    /**
+     * Add a task to the cog (and its scheduler), and inform the
+     * runtime that the cog became active if necessary.
+     */
     public void addTask(Task<?> task) {
         synchronized(this) {
-            if (activeThreads == 0) {
-                log.finest(() -> this + " notifying runtime that it became active");
-                ABSRuntime.getRuntime().notifyCogActive();
+            if (runnableThreads == 0) {
+                if (scheduler.getActiveTask() == null) {
+                    log.finest(() -> this + " notifying runtime that it became active");
+                    ABSRuntime.getRuntime().notifyCogActive(this);
+                } else {
+                    // a new task came in but we're currently blocked
+                    // on a task -- don't tell the runtime we can run
+                }
             }
-            activeThreads++;
+            runnableThreads++;
         }
-        log.finest(() -> this + " now has " + activeThreads + " active threads.");
+        log.finest(() -> this + " now has " + runnableThreads + " runnable threads.");
         scheduler.addTaskToScheduler(task);
     }
 
     /**
      * Notify the cog that a guard is awaiting and will suspend the thread.
-     * If the guard evaluates to true, this method should not be called (e.g.,
-     * if a DurationGuard awaits on t=0).
+     *
+     * <p> This method can be called either by the scheduler or by a
+     * guard directly.  In the former case, the scheduler will not
+     * have an active task ({@code scheduler.getActiveTask()} returns
+     * null), which means the task is suspended.  The latter case is
+     * {@emph blocking} behavior, called e.g. by future {@code get}
+     * and {@code ABSResourceGuard}, and does not involve the
+     * scheduler so {@code scheduler.getActiveTask()} will return
+     * non-null.
+     *
+     * <p> If the guard evaluates to true, this method should not be
+     * called (e.g., if a DurationGuard awaits on t=0).  In that case,
+     * execution should just continue without awaiting at all.
      */
     public synchronized void notifyAwait(Task<?> task) {
-        activeThreads--;
-        if (activeThreads < 0) {
-            log.severe(() -> this + " reached negative value for activeThreads (" + activeThreads + "), this should never happen");
-            throw new IllegalStateException("activeThreads counter reached negative value; this should never happen");
+        runnableThreads--;
+        if (runnableThreads < 0) {
+            log.severe(() -> this + " reached negative value for runnableThreads (" + runnableThreads + "), this should never happen");
+            throw new IllegalStateException("runnableThreads counter reached negative value; this should never happen");
         } else {
-            log.finest(() -> this + " now has " + activeThreads + " active threads.");
+            log.finest(() -> this + " now has " + runnableThreads + " runnable threads.");
         }
-        if (activeThreads == 0) {
+        if (runnableThreads == 0) {
             log.finest(() -> this + " notifying runtime that it became inactive -- all tasks suspended");
-            ABSRuntime.getRuntime().notifyCogInactive();
+            ABSRuntime.getRuntime().notifyCogInactive(this);
         } else if (scheduler.getActiveTask() == task) {
             // If we await, the active task is either null or another task; if
             // we block, the active task is the one calling `notifyAwait`.
             log.finest(() -> this + " notifying runtime that it became inactive -- active task is blocked");
-            ABSRuntime.getRuntime().notifyCogInactive();
+            ABSRuntime.getRuntime().notifyCogInactive(this);
+        } else {
+            // Nothing to do -- we're not blocked and there are
+            // runnable tasks; the scheduler will just pick one to
+            // run.
         }
     }
 
     /**
-     * Notify the cog that a guard has finished awaiting and the thread is
-     * runnable again.
-     * <p>
-     * If the guard did not actually suspend the task, this method should not
-     * be called (e.g., if a DurationGuard awaited on t=0).
+     * Notify the cog that a guard has finished awaiting and the
+     * task is runnable again.  Note that this method is called by
+     * any task whose guard became true, not just the currently
+     * running one.
+     *
+     * <p> If the guard did not actually suspend the task, this method
+     * should not be called (e.g., if a DurationGuard awaited on t=0).
      */
     public synchronized void notifyWakeup(Task<?> task) {
-        if (activeThreads == 0 || scheduler.getActiveTask() == task) {
-            // If we just woke up but are already the active task, we were the
-            // task that blocked.
+        if (runnableThreads == 0) {
+            // all tasks were suspended, but one woke up now
             log.finest(() -> this + " notifying runtime that it became active");
-            ABSRuntime.getRuntime().notifyCogActive();
+            ABSRuntime.getRuntime().notifyCogActive(this);
+        } else if (scheduler.getActiveTask() == task) {
+            // the blocked task got unblocked
+            log.finest(() -> this + " notifying runtime that it became unblocked");
+            ABSRuntime.getRuntime().notifyCogActive(this);
         }
-        activeThreads++;
-        log.finest(() -> this + " now has " + activeThreads + " active threads.");
+        runnableThreads++;
+        log.finest(() -> task + " ready, " + this + " now has " + runnableThreads + " runnable threads.");
     }
 
-    public synchronized void notifyEnded() {
-        activeThreads--;
-        if (activeThreads < 0) {
-            log.severe(() -> this + " reached negative value for activeThreads (" + activeThreads + "), this should never happen");
-            throw new IllegalStateException("activeThreads counter reached negative value; this should never happen");
+    /**
+     * Notify the cog that a task has finished executing.
+     */
+    public synchronized void notifyEnded(Task<?> task) {
+        runnableThreads--;
+        if (runnableThreads < 0) {
+            log.severe(() -> this + " reached negative value for runnableThreads (" + runnableThreads + "), this should never happen");
+            throw new IllegalStateException("runnableThreads counter reached negative value; this should never happen");
         } else {
-            log.finest(() -> this + " now has " + activeThreads + " active threads.");
+            log.finest(() -> task + " ended, " + this + " now has " + runnableThreads + " runnable threads.");
         }
-        if (activeThreads == 0) {
+        if (runnableThreads == 0) {
             log.finest(() -> this + " notifying runtime that it became inactive -- last task finished");
-            ABSRuntime.getRuntime().notifyCogInactive();
+            ABSRuntime.getRuntime().notifyCogInactive(this);
         }
     }
 
-    public int getID() {
+    public long getID() {
         return id;
     }
 
@@ -176,31 +221,26 @@ public class COG {
     }
 
     private class View implements COGView {
-        private List<ObjectCreationObserver> creationListeners;
-        private Map<String, List<ObjectCreationObserver>> creationClassListeners;
+        private List<ObjectCreationObserver> creationListeners = new ArrayList<>();
+        private Map<String, List<ObjectCreationObserver>> creationClassListeners = new HashMap<>();
 
         synchronized void notifyListeners(ABSObject absObject, boolean created) {
-            if (creationListeners != null) {
-                for (ObjectCreationObserver l : creationListeners) {
+            for (ObjectCreationObserver l : creationListeners) {
+                if (created)
+                    l.objectCreated(absObject.getView());
+                else
+                    l.objectInitialized(absObject.getView());
+            }
+
+            List<ObjectCreationObserver> list = creationClassListeners.get(absObject.getClassName());
+            if (list != null) {
+                for (ObjectCreationObserver l : list) {
                     if (created)
                         l.objectCreated(absObject.getView());
                     else
                         l.objectInitialized(absObject.getView());
                 }
             }
-
-            if (creationClassListeners != null) {
-                List<ObjectCreationObserver> list = creationClassListeners.get(absObject.getClassName());
-                if (list != null) {
-                    for (ObjectCreationObserver l : list) {
-                        if (created)
-                            l.objectCreated(absObject.getView());
-                        else
-                            l.objectInitialized(absObject.getView());
-                    }
-                }
-            }
-
         }
 
         synchronized void objectCreated(ABSObject absObject) {
@@ -213,18 +253,11 @@ public class COG {
 
         @Override
         public synchronized void registerObjectCreationListener(ObjectCreationObserver listener) {
-            if (creationListeners == null) {
-                creationListeners = new ArrayList<>(1);
-            }
             creationListeners.add(listener);
         }
 
         @Override
         public synchronized void registerObjectCreationListener(String className, ObjectCreationObserver e) {
-            if (creationClassListeners == null) {
-                creationClassListeners = new HashMap<>();
-            }
-
             List<ObjectCreationObserver> list
                 = creationClassListeners.computeIfAbsent(className, k -> new ArrayList<>(1));
             list.add(e);
@@ -236,7 +269,7 @@ public class COG {
         }
 
         @Override
-        public int getID() {
+        public long getID() {
             return id;
         }
 

@@ -10,7 +10,6 @@ import org.abs_models.backend.java.lib.runtime.ABSClosure;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicObject;
 import org.abs_models.backend.java.lib.runtime.ABSDynamicRuntime;
 import org.abs_models.backend.java.lib.runtime.ABSField;
-import org.abs_models.backend.java.lib.runtime.ABSInitObjectCall;
 import org.abs_models.backend.java.lib.runtime.ABSObject;
 import org.abs_models.backend.java.lib.runtime.ABSRunMethodCall;
 import org.abs_models.backend.java.lib.runtime.ABSThread;
@@ -164,8 +163,7 @@ public class ClassDeclGenerator {
 
         stream.println(";");
         stream.println("__ABS_runtime.cogCreated(__ABS_result);");
-        stream.println("__ABS_cog.getScheduler().addTask(new " + Task.class.getName() + "(new "
-                + ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");
+        stream.println("__ABS_result.__ABS_init();");
 
         if (decl.isActiveClass()) {
             stream.println("__ABS_runtime.asyncCall(new " + ABSRunMethodCall.class.getName()

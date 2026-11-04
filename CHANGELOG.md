@@ -8,14 +8,116 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- The expressions `x implements I` and `x as I` are now implemented by
-  the Java backend.
+- The semantic lifting RDF graph is now accessible from the Model API,
+  and can be directly imported into Protégé by opening
+  `http://localhost:<port>/ttl`.
 
 ### Changed
 
 ### Removed
 
 ### Fixed
+
+## [1.11.2] - 2026-08-04
+
+### Fixed
+
+- Fixed deadlocks involving blocking guards and task creation in the
+  Java backend.
+
+## [1.11.1] - 2026-06-02
+
+### Added
+
+- ABS embedded SPARQL queries over lifted program state can now take
+  parameters, similar to the existing SQLite queries.
+
+### Fixed
+
+- Fixed a race condition between object initialization and method call
+  scheduling in the Java backend.
+
+## [1.11.0] - 2026-05-12
+
+### Added
+
+- The Java backend now implements semantic lifting, i.e., representing
+  model structure and runtime state as RDF.
+  - Running a model with the argument `--printRDF` will print the RDF
+    graph after the model has finished.
+  - Running a model with the argument `--sparqlQuery` followed by a
+    SPARQL query will run and print the result of the query after the
+    model has finished.
+  - The Model API offers an additional URL `/sparql` that implements a
+    SPARQL endpoint as specified in Section 2.1 of
+    <https://www.w3.org/TR/sparql11-protocol/>.
+  - Running the abs compiler with `--domain-ontology ontology.ttl`
+    adds the content of `ontology.ttl` to the lifted program state.
+  - Adding an annotation `[DomainClass: e]` to a class definition,
+    with `e` an expression over the object state returning a string,
+    will add a triple `o rdf:type c` to all lifted objects of class
+    `C` (where `c` is the result of evaluating `e` at runtime).
+
+- In the Java backend, it is now possible to define functions that
+  query the lifted program state.  For example, the following function
+  find objects that implement an interface `Test.I`:
+
+  ```
+  def List<I> find_objects() = builtin(sparql, 
+    `SELECT ?o WHERE {
+       ?o a/abs:implements/rdfs:label "Test.I" .
+     }`)
+  ```
+
+  See the manual for more details.  Note that this querying facility
+  is provisional and its semantics might change.
+
+- The expressions `x implements I` and `x as I` are now implemented by
+   the Java backend.
+ 
+- In the Java backend, relative filenames (such as sqlite databases)
+   are now resolved against the directory given by the `--datadir`
+   parameter or `abs.datadir` property.  If no directory is specified,
+   such filenames are resolved against the current directory as
+   before.
+
+### Changed
+
+- The standard library section of the reference manual now contains
+  short usage examples for each function.
+
+- The Java backend now uses virtual threads instead of OS-native
+  threads to implement ABS processes.  This change lets the Java
+  backend run models of similar size as the Erlang backend in terms of
+  number of processes.
+
+- The toolchain now requires Java 25.
+
+- The source for the language manual and the abs-models.org website
+  have been merged, and ported to the Sphinx website generator and rST
+  (reStructured Text) format.
+
+### Fixed
+
+- We now use upstream ChocoSolver 5 instead of a vendored jar archive
+  of ChocoSolver 2.  ChocoSolver 2.0 used deprecated private APIs that
+  were removed in Java 25, and neither source nor documentation was
+  available.
+
+## [1.10.2] - 2025-09-10
+
+### Added
+
+- A new function `range(a, b)` in the standard library returns a list
+  of integers ranging from a to b (inclusive).
+
+- The expressions `x implements I` and `x as I` are now implemented by
+  the Java backend.
+
+- In the Java backend, relative filenames such as sqlite databases are
+  now resolved against the directory given by the `--datadir`
+  parameter or `abs.datadir` property.  If no directory is specified,
+  such filenames are resolved against the current directory as before.
 
 ## [1.10.1] - 2025-06-25
 
@@ -492,7 +594,11 @@ Various bug fixes and minor refactorings.
 ## [1.4.0] - 2016-09-30
 
 
-[Unreleased]: https://github.com/abstools/abstools/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/abstools/abstools/compare/v1.11.2...HEAD
+[1.11.2]: https://github.com/abstools/abstools/compare/v1.11.1...v1.11.2
+[1.11.1]: https://github.com/abstools/abstools/compare/v1.11.0...v1.11.1
+[1.11.0]: https://github.com/abstools/abstools/compare/v1.10.2...v1.11.0
+[1.10.2]: https://github.com/abstools/abstools/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/abstools/abstools/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/abstools/abstools/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/abstools/abstools/compare/v1.9.2...v1.9.3

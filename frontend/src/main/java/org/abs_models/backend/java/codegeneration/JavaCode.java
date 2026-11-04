@@ -39,6 +39,7 @@ public class JavaCode {
     private final File output_jar;
     private final File httpIndexFile;
     private final File httpStaticDir;
+    private final File domainOntology;
     private final List<File> files = new ArrayList<>();
     private final List<String> mainClasses = new ArrayList<>();
 
@@ -74,19 +75,25 @@ public class JavaCode {
             "META-INF/proguard/",
             "org/slf4j",
             // JSON support for Model API
-            "com/fasterxml/jackson"
+            "com/fasterxml/jackson",
+            // RDF support for semantic lifting, sparql endpoint
+            "org/apache/jena",
+            "org/apache/commons",
+            "org/apache/thrift",
+            "com/github/benmanes/caffeine"
     );
 
 
     public JavaCode() throws IOException {
-        this(Files.createTempDirectory("absjavabackend").toFile(), null, null, null);
+        this(Files.createTempDirectory("absjavabackend").toFile(), null, null, null, null);
     }
 
-    public JavaCode(File srcDir, File output_jar, File http_index_file, File http_static_dir) {
+    public JavaCode(File srcDir, File output_jar, File http_index_file, File http_static_dir, File domain_ontology_file) {
         this.srcDir = srcDir;
         this.output_jar = output_jar;
         this.httpIndexFile = http_index_file;
-	this.httpStaticDir = http_static_dir;
+        this.httpStaticDir = http_static_dir;
+        this.domainOntology = domain_ontology_file;
     }
 
     public String[] getFileNames() {
@@ -247,7 +254,8 @@ public class JavaCode {
                 manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, getFirstMainClass());
             }
 
-            try (JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(output_jar), manifest);
+            Path tempJar = Files.createTempFile("model", ".jar");
+            try (JarOutputStream jarOutputStream = new JarOutputStream(Files.newOutputStream(tempJar), manifest);
                  JarFile absfrontend_jar = new JarFile(absfrontend_jarfile)) {
                 for (Iterator<JarEntry> it = absfrontend_jar.entries().asIterator(); it.hasNext(); ) {
                     JarEntry entry = it.next();
@@ -274,6 +282,30 @@ public class JavaCode {
                             throw new RuntimeException("Error while creating jar " + output_jar);
                         }
                     });
+            }
+            try {
+                Files.move(tempJar, output_jar.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException e) {
+                Files.deleteIfExists(tempJar);
+                throw new RuntimeException("Error while creating jar " + output_jar);
+            }
+        }
+    }
+
+    public void writeOntology(final org.abs_models.frontend.ast.Model model) {
+        final File dir = new File(getSrcDir(), "resources");
+        dir.mkdirs();
+        final File file = new File(dir, "prog.ttl");
+        try (FileOutputStream out = new FileOutputStream(file, false)) {
+            JavaGeneratorHelper.generateProgramOntology(model).write(out, "TURTLE");
+        } catch (IOException e) {
+            throw new RuntimeException("Error while creating program ontology " + file);
+        }
+        if (domainOntology != null) {
+            try {
+                Files.copy(domainOntology.toPath(), new File(dir, "domain.ttl").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException("Error while copying domain ontology " + domainOntology, e);
             }
         }
     }

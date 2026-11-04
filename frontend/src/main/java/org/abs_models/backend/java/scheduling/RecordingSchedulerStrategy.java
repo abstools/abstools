@@ -16,7 +16,7 @@ public class RecordingSchedulerStrategy implements TaskSchedulingStrategy {
 
     @Override
     public SimpleTaskScheduler.TaskInfo schedule(TaskScheduler scheduler, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
-        int cogId = scheduler.getCOG().getID();
+        long cogId = scheduler.getCOG().getID();
 
         SimpleTaskScheduler.TaskInfo choosenTask = schedulingStrat.schedule(scheduler, schedulableTasks);
         long taskId = choosenTask.id;
@@ -27,7 +27,7 @@ public class RecordingSchedulerStrategy implements TaskSchedulingStrategy {
         return choosenTask;
     }
 
-    private String tasksToStringList(int cogid, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
+    private String tasksToStringList(long cogid, List<SimpleTaskScheduler.TaskInfo> schedulableTasks) {
         StringBuilder res = new StringBuilder();
         boolean first = true;
         for (SimpleTaskScheduler.TaskInfo info : schedulableTasks) {

@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.JarURLConnection;
 import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,9 +28,6 @@ import org.apache.commons.io.FileUtils;
 import org.abs_models.backend.common.CodeStream;
 import org.abs_models.backend.common.InternalBackendException;
 import org.abs_models.frontend.analyser.AnnotationHelper;
-
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 
 /**
  * Represents a to be generate Erlang application.
@@ -211,7 +210,7 @@ public class ErlApp {
                         if (!file.getParentFile().mkdirs() && !file.getParentFile().isDirectory()) {
                             throw new IOException("Could not create directory " + file.getParentFile().toString());
                         }
-                        Files.asByteSink(file).writeFrom(is);
+                        Files.copy(is, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     }
                 }
             }
@@ -248,13 +247,14 @@ public class ErlApp {
 
     private void copyJarDirectory(JarFile jarFile, String inname, String outname)
             throws IOException {
-        InputStream is = null;
         for (JarEntry entry : Collections.list(jarFile.entries())) {
             if (entry.getName().startsWith(inname)) {
                 String relFilename = entry.getName().substring(inname.length());
                 if (!entry.isDirectory()) {
-                    is = jarFile.getInputStream(entry);
-                    ByteStreams.copy(is, Files.asByteSink(new File(outname, relFilename)).openStream());
+                    try (InputStream is = jarFile.getInputStream(entry)) {
+                        Files.copy(is, new File(outname, relFilename).toPath(),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    }
                 } else {
                     File newDir = new File(outname, relFilename);
                     if (!newDir.mkdirs() && !newDir.isDirectory()) {
@@ -263,7 +263,6 @@ public class ErlApp {
                 }
             }
         }
-        is.close();
     }
 
     public void generateModuleDefinitions(String absModulename, String erlModulename) throws FileNotFoundException, UnsupportedEncodingException {

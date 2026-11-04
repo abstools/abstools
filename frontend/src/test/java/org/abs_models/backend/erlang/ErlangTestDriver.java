@@ -468,6 +468,9 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     public boolean supportsSQLite() { return true; }
 
     @Override
+    public boolean supportsSPARQL() { return false; }
+
+    @Override
     public boolean supportsModelApi() {
         return true;
     }

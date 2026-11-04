@@ -4,6 +4,12 @@ aspect Builtins {
     eq BuiltinFunctionDef.isSQLite3Query() = getNumArgument() >= 3
         && getArgument(0) instanceof VarUse
         && ((VarUse)getArgument(0)).getName().equals("sqlite3");
+
+    syn boolean BuiltinFunctionDef.isSparqlQuery();
+    eq BuiltinFunctionDef.isSparqlQuery() = getNumArgument() >= 2
+        && getArgument(0) instanceof VarUse
+        && ((VarUse)getArgument(0)).getName().equals("sparql");
+
 }
 // Local Variables:
 // mode: java

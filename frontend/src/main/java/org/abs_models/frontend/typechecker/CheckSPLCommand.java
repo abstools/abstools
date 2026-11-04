@@ -1,26 +1,26 @@
 package org.abs_models.frontend.typechecker;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
 import org.abs_models.Absc;
 import org.abs_models.common.WrongProgramArgumentException;
 import org.abs_models.frontend.analyser.SemanticCondition;
 import org.abs_models.frontend.analyser.SemanticConditionList;
+import org.abs_models.frontend.ast.AttrAssignment;
+import org.abs_models.frontend.ast.Feature;
+import org.abs_models.frontend.ast.IntVal;
 import org.abs_models.frontend.ast.Model;
+import org.abs_models.frontend.ast.Product;
 import org.abs_models.frontend.ast.ProductDecl;
 import org.abs_models.frontend.delta.ProductLineAnalysisHelper;
 import org.abs_models.frontend.mtvl.ChocoSolver;
 import org.abs_models.frontend.parser.Main;
-
-import choco.kernel.model.constraints.Constraint;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
+
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.Callable;
 
 @Command(name = "checkspl",
          description = "Perform software product line checking for abs models",
@@ -39,13 +39,13 @@ public class CheckSPLCommand implements Callable<Void> {
 
     // mTVL options
     @Option(names = { "--solve" },
-            description = "solve constraint satisfaction problem (CSP) for the feature model and print a solution")
+            description = "solve constraint satisfaction problem (CSP) for the feature model and print all solutions")
     public boolean solve = false ;
     @Option(names = { "--solve-all" },
             description = "solve all solutions for the CSP and print timing information")
     public boolean solveall = false ;
     @Option(names = { "--solve-with" },
-            description = "solve CSP by finding a product that includes @|italic PID|@",
+            description = "solve CSP by finding all feature configurations for product @|italic PID|@",
             paramLabel = "product")
     public String solveWithProduct ;
     @Option(names = { "--min" },
@@ -76,7 +76,6 @@ public class CheckSPLCommand implements Callable<Void> {
 
     private void typeCheckProductLine(Model m) {
 
-        //int n = m.getFeatureModelConfigurations().size();
         int n = m.getProductList().getNumChild();
         if (n == 0)
             return;
@@ -95,33 +94,33 @@ public class CheckSPLCommand implements Callable<Void> {
             if (solve) {
                 if (parent.verbose)
                     System.out.println("Searching for solutions for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
+                ChocoSolver s = ChocoSolver.fromModel(m);
                 System.out.print(s.getSolutionsAsString());
             }
             if (minimise != null) {
                 if (parent.verbose)
                     System.out.println("Searching for minimum solutions of "+minimise+" for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
+                ChocoSolver s = ChocoSolver.fromModel(m);
                 System.out.print(s.minimiseToString(minimise));
             }
             if (maximise != null) {
                 if (parent.verbose)
                     System.out.println("Searching for maximum solutions of "+maximise+" for the feature model...");
-                ChocoSolver s = m.instantiateCSModel();
-                //System.out.print(s.maximiseToInt(product));
-                s.addConstraint(ChocoSolver.eqeq(s.getVars().get(maximise), s.maximiseToInt(maximise)));
-                ChocoSolver s1 = m.instantiateCSModel();
+                // (rudi 2026-02-24): the following three lines of
+                // code seem to be dead; removing the last instance of
+                // external addConstraint.  If creating the constraint
+                // is necessary, they should be made into a method of
+                // the ChocoSolver class.
+
+                // ChocoSolver s = ChocoSolver.fromModel(m);
+                // //System.out.print(s.maximiseToInt(product));
+                // s.addConstraint(ChocoSolver.eqeq(s.getVars().get(maximise), s.maximiseToInt(maximise)));
+                ChocoSolver s1 = ChocoSolver.fromModel(m);
                 int i=1;
-                while(s1.solveAgain()) {
+                for (Map<String, Integer> solution : s1.getSolutions()) {
                     System.out.println("------ "+(i++)+"------");
-                    System.out.print(s1.getSolutionsAsString());
+                    System.out.print(solution);
                 }
-            }
-            if (solveall) {
-                if (parent.verbose)
-                    System.out.println("Searching for all solutions for the feature model...");
-                ChocoSolver solver = m.instantiateCSModel();
-                System.out.print(solver.getSolutionsAsString());
             }
             if (solveWithProduct != null) {
                 ProductDecl solveWithDecl = null;
@@ -133,11 +132,8 @@ public class CheckSPLCommand implements Callable<Void> {
                 if (solveWithDecl != null) {
                     if (parent.verbose)
                         System.out.println("Searching for solution that includes " + solveWithProduct + "...");
-                    ChocoSolver s = m.instantiateCSModel();
-                    HashSet<Constraint> newcs = new HashSet<>();
-                    solveWithDecl.getProduct().getProdConstraints(s.getVars(), newcs);
-                    for (Constraint c: newcs)
-                        s.addConstraint(c);
+                    ChocoSolver s = ChocoSolver.fromModel(m);
+                    s.addProductConstraints(solveWithDecl.getProduct());
                     System.out.println("checking solution:\n" + s.getSolutionsAsString());
                 } else {
                     System.out.println("Product '" + solveWithProduct + "' not found.");
@@ -153,12 +149,7 @@ public class CheckSPLCommand implements Callable<Void> {
                 if (minWithDecl != null) {
                     if (parent.verbose)
                         System.out.println("Searching for solution that includes " + minWith + "...");
-                    ChocoSolver s = m.instantiateCSModel();
-                    HashSet<Constraint> newcs = new HashSet<>();
-                    s.addIntVar("difference", 0, 50);
-                    m.getDiffConstraints(minWithDecl.getProduct(), s.getVars(), newcs, "difference");
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: " + s.minimiseToString("difference"));
+                    System.out.println("checking solution: " + ChocoSolver.calculateMinFeaturesOfProduct(m, minWithDecl.getProduct()));
                 } else {
                     System.out.println("Product '" + minWith + "' not found.");
                 }
@@ -167,17 +158,7 @@ public class CheckSPLCommand implements Callable<Void> {
             if (maxProduct) {
                 if (parent.verbose)
                     System.out.println("Searching for solution with maximum number of features ...");
-                ChocoSolver s = m.instantiateCSModel();
-                HashSet<Constraint> newcs = new HashSet<>();
-                s.addIntVar("noOfFeatures", 0, 50);
-                if (m.getMaxConstraints(s.getVars(),newcs, "noOfFeatures")) {
-                    for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
-                }
-                else {
-                    System.out.println("---No solution-------------");
-                }
-
+                System.out.println("checking solution: "+ChocoSolver.calculateMaxProductFeatures(m));
             }
             if (checkProduct != null) {
 
@@ -190,13 +171,15 @@ public class CheckSPLCommand implements Callable<Void> {
                 if (checkProductDecl == null ){
                     System.out.println("Product '" + checkProduct + "' not found, cannot check.");
                 } else {
-                    ChocoSolver s = m.instantiateCSModel();
-                    Map<String,Integer> guess = checkProductDecl.getProduct().getSolution();
-                    System.out.println("checking solution: "+s.checkSolution(guess,m));
+                    List<String> errors = ChocoSolver.checkProduct(checkProductDecl.getProduct(), m);
+                    System.out.println("checking solution...");
+                    for (String error : errors)
+                        System.out.println("Constraint failed: " + error);
+                    if (errors.isEmpty()) System.out.println("No constraints failed.");
                 }
             }
             if (numbersol) {
-                ChocoSolver s = m.instantiateCSModel();
+                ChocoSolver s = ChocoSolver.fromModel(m);
                 // did we call m.dropAttributes() previously?
                 if (ignoreattr) {
                     System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
@@ -228,10 +211,65 @@ public class CheckSPLCommand implements Callable<Void> {
             // Build all SPL configurations (valid feature selections, ignoring attributes), one by one (for performance measuring)
             if (parent.verbose)
                 System.out.println("Building ALL " + m.getProductList().getNumChild() + " feature model configurations...");
-            ProductLineAnalysisHelper.buildAndPrintAllConfigurations(m);
+            buildAndPrintAllConfigurations(m);
         }
         // TODO: check if there were errors
         analyzeMTVL(m);
+    }
+
+    /*
+     * Build all SPL configurations (valid feature selections, ignoring attributes), one by one
+     * The purpose is to measure how long this takes, so we can compare it with the performance of type checking the SPL.
+     *
+     */
+    private static void buildAndPrintAllConfigurations(Model m) {
+
+        long timeSum = 0;
+        for (Product product : m.getProductList()) {
+
+            long time0 = System.currentTimeMillis();
+            System.out.println("\u23F1 Flattening product: " + product.getFeatureSetAsString());
+
+            // Find a solution to the feature model that satisfies the product feature selection
+            ChocoSolver s = ChocoSolver.fromModel(m);
+            s.addProductConstraints(product);
+
+            Map<String, Integer> solution = s.getSolution();
+            System.out.println("\u23F1 Full product configuration: " + solution);
+            long time1 = System.currentTimeMillis();
+
+            // map the solution to the product,
+            // i.e. add attribute assignments to features
+            for (String fname : solution.keySet()) {
+                if (fname.startsWith("$")) // ignore internal ChocoSolver variable
+                    continue;
+                if (fname.contains(".")) {
+                    String[] parts = fname.split("\\.");
+                    String fid = parts[0];
+                    String aid = parts[1];
+                    Integer val = solution.get(fname);
+                    for (Feature feature : product.getFeatures()) {
+                        if (feature.getName().equals(fid)) {
+                            feature.addAttrAssignment(new AttrAssignment(aid, new IntVal(val)));
+                            break;
+                        }
+                    }
+                }
+            }
+
+            long time2 = System.currentTimeMillis();
+
+            Model thisModel = m.treeCopyNoTransform();
+
+            long time3 = System.currentTimeMillis();
+            if (thisModel.getProductLine() != null) thisModel.flattenForProduct(product);
+
+            long time4 = System.currentTimeMillis();
+            timeSum += (time4 - time3);
+            System.out.println("\u23F1 Time: " + (time1 - time0) + " | " + (time2 - time1) + " | " + (time3 - time2) + " | " + (time4 - time3) + " | " + "Total(s): " + ((time4 - time0)/1000.0));
+        }
+        System.out.println("\u23F1 Flattening total time (s): " + timeSum/1000.0);
+        if (m.getProductLine() == null) System.out.println("Note: model has no productline definition, so no flattening performed.");
     }
 
     @Override

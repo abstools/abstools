@@ -319,13 +319,19 @@ public class PrimitiveTypes extends SemanticTests {
     }
 
     @Test
+    public void boolToString() throws Exception {
+	    assertEvalTrue("{ Bool testresult = toString(True) == \"True\"; }");
+	    assertEvalTrue("{ Bool testresult = toString(False) == \"False\"; }");
+    }
+
+    @Test
     public void intToString() throws Exception {
-	assertEvalTrue("{ Bool testresult = toString(5) == \"5\"; }");
+	    assertEvalTrue("{ Bool testresult = toString(5) == \"5\"; }");
     }
 
     @Test
     public void ratToString() throws Exception {
-	assertEvalTrue("{ Bool testresult = toString(5/2) == \"5/2\"; }");
+	    assertEvalTrue("{ Bool testresult = toString(5/2) == \"5/2\"; }");
     }
 
     @Test

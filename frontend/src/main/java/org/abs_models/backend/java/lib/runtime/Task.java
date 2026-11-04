@@ -21,7 +21,7 @@ import org.apfloat.Aprational;
 
 public class Task<T extends ABSRef> implements Runnable {
     private final ABSFut<Object> future;
-    private final int id;
+    private final long id;
     private Thread executingThread;
     private ABSException exception;
 
@@ -56,23 +56,16 @@ public class Task<T extends ABSRef> implements Runnable {
             stack = null;
         }
 
-        this.arrival = System.currentTimeMillis();
-        if (call instanceof AbstractAsyncCallRT) {
-            AbstractAsyncCallRT<?> callRT = (AbstractAsyncCallRT<?>)call;
-            this.cost = callRT.getCost();
-            this.deadline_t = callRT.getDeadlineAbsolute();
-            this.critical = callRT.isCritical();
-        } else {
-            this.cost = new Aprational(-1);
-            this.deadline_t = new Aprational(-1);
-            this.critical = false;
-        }
+        this.arrival = System.currentTimeMillis(); // TODO set to abstract clock value
+        this.cost = call.getCost();
+        this.deadline_t = call.getDeadlineAbsolute();
+        this.critical = call.isCritical();
         this.start = -1;         // TODO set to time when task is first scheduled
         this.finish = 0;        // TODO
         this.value = 0;         // TODO
     }
 
-    public int getID() {
+    public long getID() {
         return id;
     }
 
@@ -349,7 +342,7 @@ public class Task<T extends ABSRef> implements Runnable {
         }
 
         @Override
-        public int getID() {
+        public long getID() {
             return id;
         }
 

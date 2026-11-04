@@ -265,6 +265,12 @@ public class ObjectTests extends SemanticTests {
     public void local_object_synccall_field_param() throws Exception {
         assertEvalTrue(new File("abssamples/backend/ObjectTests/local_object_synccall_field_param.abs"));
     }
+
+    @Test
+    public void remote_object_init_block_asynccall() throws Exception {
+        assertEvalTrue(new File("abssamples/backend/ObjectTests/remote_object_init_block_asynccall.abs"));
+    }
+
     // https://github.com/abstools/abstools/issues/251
     @Test
     public void implicit_unit_return() throws Exception {
@@ -274,4 +280,5 @@ public class ObjectTests extends SemanticTests {
     public void common_superinterface() throws Exception {
         assertEvalTrue(new File("abssamples/backend/ObjectTests/common_superinterface.abs"));
     }
+
 }

@@ -81,6 +81,32 @@ public class ProgramAbstraction {
         }
     }
 
+    public void buildCoreAbstraction(Model model) {
+        // Build type abstraction of the core program
+        for (Decl decl : model.getDecls()) {
+            if (decl.isClass()) {
+                String className = decl.getQualifiedName();
+                classAdd(className);
+                for (ParamDecl field : ((ClassDecl) decl).getParams())
+                    classFieldAdd(className, field.getName(), ProgramAbstraction.getVarType(field));
+                for (FieldDecl field : ((ClassDecl) decl).getFields())
+                    classFieldAdd(className, field.getName(), ProgramAbstraction.getVarType(field));
+                for (MethodImpl method : ((ClassDecl) decl).getMethods()) {
+                    java.util.List<String> types = ProgramAbstraction.getMethodParameterTypes(method.getMethodSig());
+                    classMethodAdd(className, method.getMethodSig().getName(), types);
+                }
+            } else if (decl.isInterface()) {
+                String ifName = decl.getQualifiedName();
+                interfaceAdd(ifName);
+                for (MethodSig sig : ((InterfaceDecl) decl).getBodys()) {
+                    java.util.List<String> types = ProgramAbstraction.getMethodParameterTypes(sig);
+                    interfaceMethodAdd(ifName, sig.getName(), types);
+                }
+            }
+            // TODO: record other elements (functions etc.) ?
+        }
+    }
+
     public void applyDelta(DeltaDecl delta, Product product) {
         deltas.add(delta);
         this.product = product;

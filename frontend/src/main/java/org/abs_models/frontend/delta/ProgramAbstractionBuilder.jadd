@@ -1,36 +1,5 @@
 aspect ProgramAbstractionBuilder {
 
-    /*******************************************************************************************************
-     *
-     * Build type abstraction of the core program
-     */
-    public void Model.buildCoreAbstraction(ProgramAbstraction ta) {
-        for (Decl decl : getDecls()) {
-            if (decl.isClass()) {
-                String className = decl.getQualifiedName();
-                ta.classAdd(className);
-                for (ParamDecl field : ((ClassDecl) decl).getParams())
-                    ta.classFieldAdd(className, field.getName(), ProgramAbstraction.getVarType(field));
-                for (FieldDecl field : ((ClassDecl) decl).getFields())
-                    ta.classFieldAdd(className, field.getName(), ProgramAbstraction.getVarType(field));
-                for (MethodImpl method : ((ClassDecl) decl).getMethods()) {
-                    java.util.List<String> types = ProgramAbstraction.getMethodParameterTypes(method.getMethodSig());
-                    ta.classMethodAdd(className, method.getMethodSig().getName(), types);
-                }
-            } else if (decl.isInterface()) {
-                String ifName = decl.getQualifiedName();
-                ta.interfaceAdd(ifName);
-                for (MethodSig sig : ((InterfaceDecl) decl).getBodys()) {
-                    java.util.List<String> types = ProgramAbstraction.getMethodParameterTypes(sig);
-                    ta.interfaceMethodAdd(ifName, sig.getName(), types);
-                }
-            }
-
-            // TODO: record other elements (functions etc.) ?
-        }
-    }
-
-
     abstract public void ModuleModifier.applyToProgramAbstraction(ProgramAbstraction ta);
     abstract public void Modifier.applyToProgramAbstraction(ProgramAbstraction ta, String className);
 

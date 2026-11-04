@@ -1,0 +1,19 @@
+module BackendTest;
+
+[DomainClass: when i > 0 then ":containsPositive" else ":containsNonPositive"]
+class C(Int i) { }
+
+def List<Object> positives() =
+    builtin(sparql, "SELECT ?o WHERE { ?o a <:containsPositive> }" );
+
+def List<Object> non_positives() =
+    builtin(sparql, "SELECT ?o WHERE { ?o a <:containsNonPositive> }");
+
+{
+    Object o1 = new C(1);
+    Object o2 = new C(-1);
+
+    Bool testresult =
+        positives() == list[o1]
+        && non_positives() == list[o2];
+}

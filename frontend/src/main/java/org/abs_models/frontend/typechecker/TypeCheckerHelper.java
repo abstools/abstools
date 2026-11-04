@@ -12,73 +12,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.abs_models.backend.java.observing.GraphObserver;
 import org.abs_models.common.ListUtils;
 import org.abs_models.frontend.analyser.ErrorMessage;
 import org.abs_models.frontend.analyser.SemanticConditionList;
 import org.abs_models.frontend.analyser.SemanticError;
 import org.abs_models.frontend.analyser.SemanticWarning;
 import org.abs_models.frontend.analyser.TypeError;
-import org.abs_models.frontend.ast.ASTNode;
-import org.abs_models.frontend.ast.AmbiguousDecl;
-import org.abs_models.frontend.ast.AttrAssignment;
-import org.abs_models.frontend.ast.Binary;
-import org.abs_models.frontend.ast.CaseBranch;
-import org.abs_models.frontend.ast.CaseExp;
-import org.abs_models.frontend.ast.ClassDecl;
-import org.abs_models.frontend.ast.CompilationUnit;
-import org.abs_models.frontend.ast.Const;
-import org.abs_models.frontend.ast.ConstructorArg;
-import org.abs_models.frontend.ast.ConstructorPattern;
-import org.abs_models.frontend.ast.DataConstructor;
-import org.abs_models.frontend.ast.DataConstructorExp;
-import org.abs_models.frontend.ast.DataTypeDecl;
-import org.abs_models.frontend.ast.DataTypeUse;
-import org.abs_models.frontend.ast.Decl;
-import org.abs_models.frontend.ast.DeltaClause;
-import org.abs_models.frontend.ast.DeltaDecl;
-import org.abs_models.frontend.ast.DeltaID;
-import org.abs_models.frontend.ast.DeltaParamDecl;
-import org.abs_models.frontend.ast.Deltaparam;
-import org.abs_models.frontend.ast.Deltaspec;
-import org.abs_models.frontend.ast.ExceptionDecl;
-import org.abs_models.frontend.ast.Exp;
-import org.abs_models.frontend.ast.Export;
-import org.abs_models.frontend.ast.Feature;
-import org.abs_models.frontend.ast.FieldDecl;
-import org.abs_models.frontend.ast.FieldUse;
-import org.abs_models.frontend.ast.FnApp;
-import org.abs_models.frontend.ast.FromExport;
-import org.abs_models.frontend.ast.FromImport;
-import org.abs_models.frontend.ast.GetExp;
-import org.abs_models.frontend.ast.HasActualParams;
-import org.abs_models.frontend.ast.HasParams;
-import org.abs_models.frontend.ast.HasType;
-import org.abs_models.frontend.ast.Import;
-import org.abs_models.frontend.ast.InitBlock;
-import org.abs_models.frontend.ast.MethodSig;
-import org.abs_models.frontend.ast.Model;
-import org.abs_models.frontend.ast.ModuleDecl;
-import org.abs_models.frontend.ast.Name;
-import org.abs_models.frontend.ast.NamedExport;
-import org.abs_models.frontend.ast.NamedImport;
-import org.abs_models.frontend.ast.ParamDecl;
-import org.abs_models.frontend.ast.ParametricDataTypeDecl;
-import org.abs_models.frontend.ast.ParametricDataTypeUse;
-import org.abs_models.frontend.ast.ParametricFunctionDecl;
-import org.abs_models.frontend.ast.Pattern;
-import org.abs_models.frontend.ast.PatternVar;
-import org.abs_models.frontend.ast.ProductDecl;
-import org.abs_models.frontend.ast.PureExp;
-import org.abs_models.frontend.ast.StarExport;
-import org.abs_models.frontend.ast.StarImport;
-import org.abs_models.frontend.ast.TypeSynDecl;
-import org.abs_models.frontend.ast.TypeUse;
-import org.abs_models.frontend.ast.UnderscorePattern;
-import org.abs_models.frontend.ast.Value;
-import org.abs_models.frontend.ast.VarDeclStmt;
-import org.abs_models.frontend.ast.VarOrFieldDecl;
-import org.abs_models.frontend.ast.VarOrFieldUse;
+import org.abs_models.frontend.ast.*;
+import org.abs_models.backend.java.observing.GraphObserver;
 import org.abs_models.frontend.parser.Main;
+import org.abs_models.frontend.mtvl.ChocoSolver;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryException;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QueryType;
 
 public class TypeCheckerHelper {
 
@@ -137,18 +85,13 @@ public class TypeCheckerHelper {
     }
 
     public static void checkForGetOnDestiny(SemanticConditionList l, ASTNode<?> node, String targetFieldOrVariableName, Exp potentialGetValue) {
-        if (potentialGetValue instanceof GetExp) {
-            final GetExp getValue = (GetExp) potentialGetValue;
-
+        if (potentialGetValue instanceof GetExp getValue) {
             if (getValue.getType().isBottomType()) {
                 l.add(new TypeError(
-                            node,
-                            ErrorMessage.CANNOT_STORE_DESTINY_GET,
-                            new String[] {
-                                getValue.getPureExp().toString(),
-                                targetFieldOrVariableName
-                            }
-                        )
+                    node,
+                    ErrorMessage.CANNOT_STORE_DESTINY_GET,
+                    getValue.getPureExp().toString(),
+                    targetFieldOrVariableName)
                 );
             }
         }
@@ -328,9 +271,7 @@ public class TypeCheckerHelper {
 
         // Check solution from getProduct()
         if (prod.getProduct() != null) {
-            java.util.List<String> errors = prod.getModel().instantiateCSModel().checkSolutionWithErrors(
-                    prod.getProduct().getSolution(),
-                    prod.getModel());
+            java.util.List<String> errors = ChocoSolver.checkProduct(prod.getProduct(), prod.getModel());
 
             if (!errors.isEmpty()) {
                 String failedConstraints = "";
@@ -415,9 +356,9 @@ public class TypeCheckerHelper {
             String location = "";
             Decl decl = null;
             if (origrn instanceof ResolvedDeclName) {
-                decl = ((ResolvedDeclName)origrn).getDecl();
+                decl = origrn.getDecl();
             } else if (origrn instanceof ResolvedAmbigiousName) {
-                decl = ((AmbiguousDecl)((ResolvedAmbigiousName)origrn).getDecl()).getAlternative().get(0);
+                decl = ((AmbiguousDecl) origrn.getDecl()).getAlternative().get(0);
             }
             if (decl != null && !decl.getFileName().equals(Main.UNKNOWN_FILENAME)) {
                 location = " at " + decl.getFileName() + ":" + decl.getStartLine() + ":" + decl.getStartColumn();
@@ -464,8 +405,7 @@ public class TypeCheckerHelper {
             res.put(rn.getSimpleName(), rn);
             res.put(rn.getQualifiedName(), rn);
 
-            if (d instanceof DataTypeDecl) {
-                DataTypeDecl dataDecl = (DataTypeDecl) d;
+            if (d instanceof DataTypeDecl dataDecl) {
                 for (DataConstructor c : dataDecl.getDataConstructors()) {
                     rn = new ResolvedDeclName(moduleName, c);
                     if (res.containsKey(rn.getSimpleName()))
@@ -498,14 +438,12 @@ public class TypeCheckerHelper {
         ResolvedMap res = new ResolvedMap();
 
         for (Import i : mod.getImports()) {
-            if (i instanceof StarImport) {
-                StarImport si = (StarImport) i;
+            if (i instanceof StarImport si) {
                 ModuleDecl md = mod.lookupModule(si.getModuleName());
                 if (md != null) {
                     res.addAllNamesNoHiding(md.getExportedNames());
                 }
-            } else if (i instanceof NamedImport) {
-                NamedImport ni = (NamedImport) i;
+            } else if (i instanceof NamedImport ni) {
                 for (Name n : ni.getNames()) {
                     // statements like "import X;" lead to earlier type error;
                     // avoid calling lookupModule(null) here
@@ -517,8 +455,7 @@ public class TypeCheckerHelper {
                             } catch (TypeCheckerException e) {} // NADA
                     }
                 }
-            } else if (i instanceof FromImport) {
-                FromImport fi = (FromImport) i;
+            } else if (i instanceof FromImport fi) {
                 ModuleDecl md = mod.lookupModule(fi.getModuleName());
                 if (md != null) {
                     ResolvedMap en = md.getExportedNames();
@@ -554,23 +491,20 @@ public class TypeCheckerHelper {
     public static ResolvedMap getExportedNames(ModuleDecl mod) {
         ResolvedMap res = new ResolvedMap();
         for (Export e : mod.getExports()) {
-            if (e instanceof StarExport) {
-                StarExport se = (StarExport) e;
+            if (e instanceof StarExport se) {
                 if (!se.hasModuleName()) {
                     res.putAll(mod.getDefinedNames());
                 } else {
                     String moduleName = se.getModuleName().getName();
                     res.putNamesOfModule(mod, mod.getVisibleNames(), moduleName, null);
                 }
-            } else if (e instanceof FromExport) {
-                FromExport fe = (FromExport) e;
+            } else if (e instanceof FromExport fe) {
                 String moduleName = fe.getModuleName();
                 for (Name n : fe.getNames()) {
                     String simpleName = n.getSimpleName();
                     res.putNamesOfModule(mod, mod.getVisibleNames(), moduleName, simpleName);
                 }
-            } else if (e instanceof NamedExport) {
-                NamedExport ne = (NamedExport) e;
+            } else if (e instanceof NamedExport ne) {
                 for (Name n : ne.getNames()) {
                     String simpleName = n.getSimpleName();
                     res.putKindedNames(simpleName, mod.getVisibleNames());
@@ -745,26 +679,67 @@ public class TypeCheckerHelper {
     }
 
     /**
+     * Check if {@code def} is a well-typed SQLite3 query function.
+     * Add error messages to {@code e} if not.
+     *
+     * @param def the built-in function definition body
+     * @param return_type the function's return type
+     * @param e the error list
+     * @return true if {@code def} is well-typed, false otherwise.
+     */
+    public static boolean checkValidSQLite3Query(BuiltinFunctionDef def, TypeUse return_type, SemanticConditionList e) {
+        if (def.getNumArgument() > 0 && def.getArgument(0) instanceof VarOrFieldUse) {
+            VarOrFieldUse queryType = (VarOrFieldUse)def.getArgument(0);
+            if (queryType.getName().equals("sqlite3")) {
+                int errorCount = e.getErrorCount();
+                if (!TypeCheckerHelper.isValidSQLite3ReturnType(return_type.getType())) {
+                    e.add(new TypeError(return_type, ErrorMessage.SQLITE3_INCORRECT_RETURN_TYPE, ""));
+                }
+                // check `builtin' parameters
+                if (def.getNumArgument() < 3) {
+                    e.add(new TypeError(def, ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                } else if (!(def.getArgument(1) instanceof StringLiteral)) {
+                    e.add(new TypeError(def.getArgument(1), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                } else if ((!(def.getArgument(2) instanceof StringLiteral))) {
+                    e.add(new TypeError(def.getArgument(2), ErrorMessage.SQLITE3_INCORRECT_ARGUMENTS, ""));
+                }
+                for (int i = 3; i < def.getNumArgument(); i++) {
+                    if (!(def.getArgument(i) instanceof PureExp)) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                        continue;
+                    }
+                    PureExp arg = (PureExp)def.getArgument(i);
+                    if (!TypeCheckerHelper.isValidSQLite3ArgumentType(arg.getType())) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SQLITE3_INCORRECT_QUERY_ARGUMENT, ""));
+                    }
+                }
+                return errorCount == e.getErrorCount();
+            }
+        }
+        return false;
+    }
+
+    /**
      * Check whether argument t can be an argument to a SQLite3 query.
      *
-     * This method returns true if t is a string, numeric or boolean type.
+     * <p>This method returns true if t is a string, numeric or boolean type.
      */
     public static boolean isValidSQLite3ArgumentType(Type t) {
-	if (t.isUnknownType())
-	    return false;
-	else if (!t.isDataType())
-	    return false;
-	DataTypeType lt = (DataTypeType) t;
-	if (lt.isBoolType())
-	    return true;
-	else if (lt.isIntType())
-	    return true;
-	else if (lt.isRatType())
-	    return true;
-	else if (lt.isFloatType())
-	    return true;
-	else if (lt.isStringType())
-	    return true;
+        if (t.isUnknownType())
+            return false;
+        else if (!t.isDataType())
+            return false;
+        DataTypeType lt = (DataTypeType) t;
+        if (lt.isBoolType())
+            return true;
+        else if (lt.isIntType())
+            return true;
+        else if (lt.isRatType())
+            return true;
+        else if (lt.isFloatType())
+            return true;
+        else if (lt.isStringType())
+            return true;
         else
             return false;
     }
@@ -772,49 +747,171 @@ public class TypeCheckerHelper {
     /**
      * Check whether argument t can be the result of a SQLite3 query.
      *
-     * This method returns true if t is a list whose type parameter is
+     * <p>This method returns true if t is a list whose type parameter is
      * a string, numeric or boolean type, or an algebraic datatype
      * whose first constructor takes parameters of these types.
      */
     public static boolean isValidSQLite3ReturnType(Type t) {
-	    if (t.isUnknownType())
-	        return false;
-	    if (!t.isDataType())
-	        return false;
+            if (t.isUnknownType())
+                return false;
+            if (!t.isDataType())
+                return false;
 
-	    DataTypeType dt = (DataTypeType) t;
-	    if (!(dt.getDecl().getName().equals("List")))
-	        return false;
-	    if (!(dt.numTypeArgs() == 1
-	          && dt.getTypeArg(0).isDataType()))
-	        return false;
+            DataTypeType dt = (DataTypeType) t;
+            if (!(dt.getDecl().getName().equals("List")))
+                return false;
+            if (!(dt.numTypeArgs() == 1
+                  && dt.getTypeArg(0).isDataType()))
+                return false;
 
-	    DataTypeType lt = (DataTypeType)dt.getTypeArg(0);
-	    if (lt.isBoolType())
-	        return true;
-	    if (lt.isIntType())
-	        return true;
-	    if (lt.isRatType())
-	        return true;
-	    if (lt.isFloatType())
-	        return true;
-	    if (lt.isStringType())
-	        return true;
-	    DataTypeDecl ltd = lt.getDecl();
-	    if (ltd.getNumDataConstructor() != 1)
-	        return false;
-	    if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
-	        return false;
-	    for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
-	        Type cat = ca.getTypeUse().getType();
-	        if (!(cat.isBoolType()
-		          || cat.isIntType()
-		          || cat.isRatType()
-		          || cat.isFloatType()
-		          || cat.isStringType()))
-		        return false;
-	    }
-	    return true;
+            DataTypeType lt = (DataTypeType)dt.getTypeArg(0);
+            if (lt.isBoolType())
+                return true;
+            if (lt.isNumericType())
+                return true;
+            if (lt.isStringType())
+                return true;
+            DataTypeDecl ltd = lt.getDecl();
+            if (ltd.getNumDataConstructor() != 1)
+                return false;
+            if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
+                return false;
+            for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
+                Type cat = ca.getTypeUse().getType();
+                if (!(cat.isBoolType()
+                      || cat.isNumericType()
+                      || cat.isStringType()))
+                        return false;
+            }
+            return true;
+    }
+
+    /** Pattern for Sparql query string parameters.
+      *
+      * <p>This detects basically a bare ? without letter afterwards.
+      */
+    public static final java.util.regex.Pattern sparqlParamPattern = java.util.regex.Pattern.compile("\\?(?=[\\s;,.])"); // ? followed by whitespace or ,;.
+
+    /**
+     * Check if {@code def} is a well-typed SPARQL query function.
+     * Add error messages to {@code e} if not.
+     *
+     * @param def the built-in function definition body
+     * @param return_type the function's return type
+     * @param e the error list
+     * @return true if {@code def} is well-typed, false otherwise.
+     */
+    public static boolean checkValidSparqlQuery(BuiltinFunctionDef def, TypeUse return_type, SemanticConditionList e) {
+        if (def.getNumArgument() > 0 && def.getArgument(0) instanceof VarOrFieldUse) {
+            VarOrFieldUse queryType = (VarOrFieldUse)def.getArgument(0);
+            if (queryType.getName().equals("sparql")) {
+                int errorCount = e.getErrorCount();
+                // check `builtin' parameters
+                if (def.getNumArgument() < 2) {
+                    e.add(new TypeError(def, ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
+                } else if (!(def.getArgument(1) instanceof StringLiteral)) {
+                    e.add(new TypeError(def.getArgument(1), ErrorMessage.SPARQL_INCORRECT_ARGUMENTS, ""));
+                } else {
+                    String queryString = (GraphObserver.sparqlPrefix + ((StringLiteral)def.getArgument(1)).getContent());
+                    long nQueryParams = sparqlParamPattern.matcher(queryString).results().count();
+                    // Replace positional parameters with arbitrary
+                    // value so the parser can parse
+                    queryString = sparqlParamPattern.matcher(queryString).replaceAll("0");
+                    try {
+                        Query query = QueryFactory.create(queryString);
+                        TypeCheckerHelper.checkValidSparqlReturnType(def, query, return_type.getType(), e);
+                    } catch (QueryException err) {
+                        e.add(new SemanticError(def.getArgument(1), ErrorMessage.SPARQL_PARSE_ERROR, err.getMessage()));
+                    }
+                    if (nQueryParams != def.getNumArgument() - 2) {
+                        e.add(new SemanticError(def.getArgument(1), ErrorMessage.SPARQL_INCORRECT_ARGUMENT_NUMBER,
+                            Long.toString(nQueryParams), Integer.toString(def.getNumArgument() - 2)));
+                    }
+                }
+                for (int i = 2; i < def.getNumArgument(); i++) {
+                    if (!(def.getArgument(i) instanceof PureExp)) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SPARQL_INCORRECT_QUERY_ARGUMENT, ""));
+                        continue;
+                    }
+                    PureExp arg = (PureExp)def.getArgument(i);
+                    if (!TypeCheckerHelper.isValidSparqlArgumentType(arg.getType())) {
+                        e.add(new TypeError(def.getArgument(i), ErrorMessage.SPARQL_INCORRECT_QUERY_ARGUMENT, ""));
+                    }
+                }
+                return errorCount == e.getErrorCount();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check whether argument t can be an argument to a SPARQL query.
+     *
+     * <p>This method returns true if t is a string, numeric, boolean
+     * or interface type.
+     */
+    public static boolean isValidSparqlArgumentType(Type t) {
+        return t.isBoolType()
+               || t.isNumericType()
+               || t.isStringType()
+               || t.isInterfaceType();
+    }
+
+    /**
+     * Check whether argument t can be the result of a SPARQL query,
+     * and add appropriate errors to the list if not..
+     *
+     * <p>This method discriminates between ASK and SELECT queries.
+     * For SELECT queries, t must be a list whose type parameter is a
+     * string, numeric or boolean type, an interface type, or an
+     * algebraic datatype whose first constructor takes parameters of
+     * these types.  For ASK queries, t must be Bool.
+     */
+    public static void checkValidSparqlReturnType(BuiltinFunctionDef p, Query query, Type t, SemanticConditionList e) {
+        switch (query.queryType()) {
+            case QueryType.ASK: {
+                if (!t.isBoolType()) {
+                    e.add(new SemanticError(p, ErrorMessage.SPARQL_INCORRECT_ASK_RETURN_TYPE, t.toString()));
+                }
+            }
+                break;
+            case QueryType.SELECT: {
+                boolean result = false; // default
+                if (t.isDataType()) {
+                    DataTypeType dt = (DataTypeType) t;
+                    if (dt.getDecl().getName().equals("List") && dt.numTypeArgs() == 1) {
+                        Type at = dt.getTypeArg(0);
+                        if (at.isBoolType() || at.isNumericType() || at.isStringType() || at.isInterfaceType()) {
+                            result = true; // ok, list of basic type
+                        } else if (!at.isDataType()) {
+                            result = false; // not ok, list of futures or other strange things
+                        } else {
+                            result = true; // assume ok and check datatype correctness
+                            DataTypeType lt = (DataTypeType)at;
+                            DataTypeDecl ltd = lt.getDecl();
+                            if (ltd.getNumDataConstructor() != 1)
+                                result = false; // not ok, more than one constructor
+                            if (ltd.getDataConstructor(0).getNumConstructorArg() < 1)
+                                result = false; // not ok, constructor has no arguments
+                            for (ConstructorArg ca : ltd.getDataConstructor(0).getConstructorArgList()) {
+                                Type cat = ca.getTypeUse().getType();
+                                if (!(cat.isBoolType()
+                                      || cat.isNumericType()
+                                      || cat.isStringType()
+                                      || cat.isInterfaceType()))
+                                    result = false; // not ok, constructor argument must be usable
+                            }
+                        }
+                    }
+                }
+                if (!result) {
+                    e.add(new SemanticError(p, ErrorMessage.SPARQL_INCORRECT_SELECT_RETURN_TYPE, t.toString()));
+                }
+            }
+                break;
+            default:
+                e.add(new SemanticError(p, ErrorMessage.SPARQL_UNSUPPORTED_QUERY_TYPE, query.queryType().toString()));
+        }
     }
 
     /**
@@ -843,7 +940,7 @@ public class TypeCheckerHelper {
         if (t.getDecl() instanceof DataTypeDecl d) {
             Set<String> constructors = ListUtils.toJavaList(d.getDataConstructors())
                 .stream()
-                .map(c -> c.getName())
+                .map(DataConstructor::getName)
                 .collect(Collectors.toSet());
             Set<String> usedConstructors = new HashSet<>();
             // have to iterate over constructors

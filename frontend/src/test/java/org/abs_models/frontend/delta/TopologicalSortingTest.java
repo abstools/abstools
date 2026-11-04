@@ -18,7 +18,7 @@ public class TopologicalSortingTest extends DeltaTest {
     @Test(expected=DeltaModellingException.class)
     public void test0_1() {
         TopologicalSorting<DeltaID> sorter = init0_1();
-        sorter.sort();
+        sorter.getPreferredOrder();
     }
 
     @Test(expected=DeltaModellingException.class)
@@ -32,7 +32,7 @@ public class TopologicalSortingTest extends DeltaTest {
         sorter.addEdge(deltas[1], deltas[0]); // cycle
         sorter.addEdge(deltas[2], deltas[0]);
         sorter.addEdge(deltas[1], deltas[3]);
-        sorter.sort();
+        sorter.getPreferredOrder();
     }
 
     @Test(expected=DeltaModellingException.class)
@@ -42,7 +42,7 @@ public class TopologicalSortingTest extends DeltaTest {
         deltas[0] = new DeltaID("D0");
         TopologicalSorting<DeltaID> sorter = new TopologicalSorting<>(new HashSet<>(Arrays.asList(deltas)));
         sorter.addEdge(deltas[0], deltas[0]); // cycle
-        sorter.sort();
+        sorter.getPreferredOrder();
     }
 
     /**************************************************************************/

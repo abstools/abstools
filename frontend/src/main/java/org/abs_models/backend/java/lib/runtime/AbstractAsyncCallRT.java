@@ -9,7 +9,7 @@ import org.abs_models.backend.java.lib.types.ABSDataType;
 import org.abs_models.backend.java.lib.types.ABSRef;
 import org.apfloat.Aprational;
 
-public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyncCall<T> implements AsyncCallRTAttributes {
+public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyncCall<T> {
 
     /**
      * The absolute value of the deadline, or {@code -1} if no deadline given.

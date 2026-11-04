@@ -16,8 +16,6 @@ import java.util.Set;
 import org.abs_models.frontend.ast.ParamDecl;
 import org.abs_models.frontend.ast.VarOrFieldDecl;
 
-import com.google.common.collect.Sets;
-
 /**
  * Used for tracking variables through different scopes
  *
@@ -201,9 +199,8 @@ public class Vars extends LinkedHashMap<String, Var> {
      * Removes all vars,which are not contained in vars
      */
     public void retainAll(Vars vars) {
-        for (String k : Sets.difference(this.keySet(), vars.keySet()).immutableCopy())
-            remove(k);
-
+        // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html#keySet()
+        this.keySet().retainAll(vars.keySet());
     }
 
     /**
@@ -250,8 +247,11 @@ public class Vars extends LinkedHashMap<String, Var> {
             }
         }
 
-        for (String k : Sets.difference(allVars.keySet(), used))
-            this.put(k, new Var(Var.max(vars, k).getCount(), false, allVars.get(k)));
+        for (String k : allVars.keySet()) {
+            if (!used.contains(k)) {
+                this.put(k, new Var(Var.max(vars, k).getCount(), false, allVars.get(k)));
+            }
+        }
 
         // Now that we know all vars across all branches, we know whether they may block
         for (Map.Entry<String, Var> v : entrySet()) {

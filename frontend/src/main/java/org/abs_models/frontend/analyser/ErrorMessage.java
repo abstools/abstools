@@ -134,6 +134,7 @@ public enum ErrorMessage {
     WRONG_DEADLINE_TYPE("Wrong type %s in deadline annotation, should be ABS.StdLib.Duration."),
     WRONG_SIZE_ANNOTATION_TYPE("Wrong type %s in size annotation, should be a number."),
     WRONG_COST_ANNOTATION_TYPE("Wrong type %s in cost annotation, should be a number."),
+    WRONG_DOMAIN_CLASS_ANNOTATION_TYPE("Wrong type %s in domain class annotation, should evaluate to a string."),
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s."),
     WRONG_SCHEDULER_ANNOTATION_TYPE("Invalid scheduler expression, should be function invocation of type ABS.Scheduler.Process and first argument of type List<ABS.Scheduler.Process>."),
     WRONG_SCHEDULER_FUN_TYPE("Function %s invalid as scheduler function, first argument must be of type List<ABS.Scheduler.Process>, return type must be ABS.Scheduler.Process."),
@@ -165,7 +166,14 @@ public enum ErrorMessage {
 
     SQLITE3_INCORRECT_ARGUMENTS("SQLite3 query functions must have three or more arguments: `sqlite3', a string containing the database filename, a string with the SQL query, and an expression of type String, Boolean or numeric for each query parameter."),
     SQLITE3_INCORRECT_QUERY_ARGUMENT("SQLite3 query arguments must be expressions of type String, Boolean, Int, Float or Rat."),
-    SQLITE3_INCORRECT_RETURN_TYPE("SQLite3 query functions must return a list of values that can be converted from SQL types.")
+    SQLITE3_INCORRECT_RETURN_TYPE("SQLite3 query functions must return a list of values that can be converted from SQL types."),
+    SPARQL_PARSE_ERROR("Parse error in SPARQL query: %s"),
+    SPARQL_INCORRECT_ARGUMENT_NUMBER("Incorrect number of parameters in SPARQL query: %s positional parameter(s) but %s query argument(s) in the function."),
+    SPARQL_UNSUPPORTED_QUERY_TYPE("Unsupported Sparql query type %s, must be SELECT or ASK."),
+    SPARQL_INCORRECT_ARGUMENTS("Sparql query functions must have two or more arguments: `sparql', a string containing the SPARQL query, and an expression of type String, Boolean or numeric for each query parameter."),
+    SPARQL_INCORRECT_QUERY_ARGUMENT("Sparql query arguments must be expressions of type String, Boolean, or numeric."),
+    SPARQL_INCORRECT_SELECT_RETURN_TYPE("Sparql SELECT query functions must return a list of values that can be converted from Sparql."),
+    SPARQL_INCORRECT_ASK_RETURN_TYPE("Sparql ASK query functions must return Bool.")
     ;
 
     private String pattern;

@@ -1,0 +1,357 @@
+************
+ABS backends
+************
+
+This section describes the available and supported backends for ABS.
+Different backends have different purposes (simulation, code
+execution, visualization).  Their respective section describes their
+features and usage.
+
+Features beyond the core ABS language semantics include:
+
+Real-Time ABS
+  Simulating a dense-time clock, and language constructs expressing
+  delays and task deadlines.  Used for simulating time usage of ABS
+  models.
+
+Resource Models
+  Specification of resource availability (processor power, bandwidth)
+  of *Deployment Components* and simulation of resource usage deployed
+  thereon.  Builds on the semantics of Real-Time ABS.
+
+FLI
+  Foreign-Language Interface, the ability to call backend-specific
+  native code from ABS.
+
+User-defined Schedulers
+  Specification of per-cog task priorities using ABS functions.
+
+Model API
+  Interacting with a running ABS model via HTTP requests.
+
+The following table gives an overview of the features of the different
+ABS backends.
+
+
+.. table:: Backend Capabilities
+
+   ==============================================  ======   ======   ======
+   Feature                                         Maude    Erlang   Java
+   ==============================================  ======   ======   ======
+   :ref:`Real-Time ABS <sec:timed-abs>`            yes      yes      yes
+   :ref:`Resource Models <sec:deployment>`         yes      yes      yes
+   FLI                                             -        -        yes
+   :ref:`SQLite queries <sec:sqlite>`              -        yes      yes
+   :ref:`Semantic lifting <sec:semantic-lifting>`  -        -        yes
+   User-defined Schedulers                         yes      yes      -
+   :ref:`Model API <sec:model-api>`                -        yes      yes
+   Trace record/replay                             -        yes      -
+   ==============================================  ======   ======   ======
+
+.. _sec:java-backend:
+
+Java
+====
+
+The Java backend runs ABS models on the JVM by translating them into
+Java and combining them with a runtime library implementing key ABS
+concepts.
+
+How to run the Java backend
+---------------------------
+
+Compiling all files in the current directory into Java and starting
+the resulting model is done with the following commands::
+
+  $ absc --java *.abs -o model.jar
+  $ java -jar model.jar
+
+The first command compiles the ABS model, the second command starts
+Java and runs the code contained in ``model.jar``.  In case more than
+one abs file contains a main block, an arbitrary main block is
+executed.
+
+The model accepts a number of command-line arguments; see the output
+of ``java -jar model.jar -h`` for a list.
+
+The source code of the generated classes can be inspected below the
+``gen/`` directory.
+
+Compiling ABS code from Gradle
+------------------------------
+
+The Gradle build system can compile ABS code by adding the fragment
+below to a Java project's ``build.gradle`` file.  This does the
+following:
+
+* Downloads the latest released version of the ABS compiler
+* Compiles all ABS files below ``src/main/abs``
+* Adds a dependency such that ABS code is compiled before Java code
+* Adds the resulting Java source directory ``build/abs`` so that
+  generated ABS classes can be referenced from Java.
+
+.. code-block:: groovy
+
+   // Use Gradle's cache directory for downloaded files
+   ext {
+       absToolsDir = new File("${gradle.gradleUserHomeDir}/caches/abstools")
+   }
+
+   dependencies {
+       // Any other dependencies here ...
+       implementation files(new File(project.ext.absToolsDir, "absfrontend.jar"))
+   }
+
+   task downloadAbsFrontend {
+       description 'Downloads the latest absfrontend.jar from GitHub releases'
+       def taskAbsToolsDir = project.ext.absToolsDir
+       def taskAbsDownloadsDir = new File(taskAbsToolsDir, "/downloads")
+
+       doLast {
+           logger.lifecycle("Checking for latest absfrontend.jar...")
+           taskAbsDownloadsDir.mkdirs()
+           def apiUrl = new java.net.URL("https://api.github.com/repos/abstools/abstools/releases/latest")
+           def connection = apiUrl.openConnection()
+           // GitHub API may require a User-Agent header
+           connection.setRequestProperty("User-Agent", "Gradle Build")
+
+           def jsonText = connection.getInputStream().getText()
+           def json = new groovy.json.JsonSlurper().parseText(jsonText)
+           def version = json.tag_name.toString()
+           if (version.startsWith('v')) {
+               version = version.substring(1)  // Remove 'v' prefix if present
+           }
+           def jarAsset = json.assets.find { it.name == "absfrontend.jar" }
+           if (jarAsset) {
+               def versionedJarName = "absfrontend-${version}.jar"
+               def versionedJarFile = new File(taskAbsDownloadsDir, versionedJarName)
+               def jarFile = new File(taskAbsToolsDir, "absfrontend.jar")
+               if (versionedJarFile.exists()) {
+                   logger.lifecycle("Version ${version} already downloaded at ${versionedJarFile.absolutePath}")
+               } else {
+                   def downloadUrl = jarAsset.browser_download_url
+                   logger.lifecycle("Found latest version ${version} at: ${downloadUrl}")
+                   // Delete any previous absfrontend jar files
+                   taskAbsDownloadsDir.listFiles().each { file ->
+                       if (file.name.startsWith("absfrontend-") && file.name.endsWith(".jar")) {
+                           logger.lifecycle("Deleting old version: ${file.name}")
+                           file.delete()
+                       }
+                   }
+                   def jarConnection = new java.net.URL(downloadUrl).openConnection()
+                   jarConnection.setRequestProperty("User-Agent", "Gradle Build")
+                   try (def inputStream = jarConnection.getInputStream()) {
+                       java.nio.file.Files.copy(inputStream, versionedJarFile.toPath(),
+                                                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                   }
+                   logger.lifecycle("Successfully downloaded absfrontend.jar version ${version} to ${versionedJarFile.absolutePath}")
+               }
+               java.nio.file.Files.copy(versionedJarFile.toPath(), jarFile.toPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+               logger.lifecycle("Copied ${versionedJarFile.absolutePath} to ${jarFile.absolutePath}")
+           } else {
+               throw new GradleException("Could not find absfrontend.jar in the latest release")
+           }
+       }
+   }
+
+   // Compile ABS
+   task compileAbs(type: Exec, dependsOn: downloadAbsFrontend) {
+       description = 'Compiles ABS.'
+       inputs.dir 'src/main/abs'
+       outputs.dir 'build/abs'
+       commandLine 'java', '-jar', project.ext.absToolsDir.toString() + '/absfrontend.jar', '--java', '-d', 'build/abs/', '--sourceonly',
+           *fileTree(dir: 'src/main/abs', include: '**/*.abs').collect { it.absolutePath }
+   }
+
+   // Also, add build/abs to the runtime classpath
+   sourceSets {
+       main {
+           java {
+               srcDirs 'build/abs'
+           }
+           runtimeClasspath += files('build/abs')
+       }
+   }
+
+   tasks.withType(JavaCompile) {
+       dependsOn compileAbs
+       source('build/abs')
+   }
+
+   // Apply a specific Java toolchain to ease working on different environments.
+   java {
+       toolchain {
+           languageVersion = JavaLanguageVersion.of(25)
+       }
+   }
+
+
+Embedding an ABS model in Java
+------------------------------
+
+The code generated by the Java backend can be embedded in a larger
+program, and the ABS model can be started from Java code.
+
+A Java program can start a model by calling the main method of a
+special class ``Main`` in the generated Java code.  The Java backend
+generates one such ``Main`` class for each ABS module in the model
+that contains a main block.
+
+Here is a simple ABS program that waits for 15 time units, then prints
+a greeting::
+
+  module ABS;
+  {
+      await duration(15);
+      println(`Hello world!  The time is $now()$`);
+  }
+
+To add this ABS model to a larger Java program, include the Java code
+generated by the ABS compiler in the Java project's source path.  The
+Java program can then call ``ABS.Main.main`` and capture the output of
+the ABS model in a string as follows:
+
+.. code-block:: java
+
+   package org.example;
+
+   public class App {
+       public static void main(String[] args) throws Exception {
+           ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+           PrintStream printStream = new PrintStream(outputStream);
+           PrintStream originalOut = System.out;
+           try {
+               System.setOut(printStream);
+               ABS.Main.main(new String[0]);
+           } finally {
+               System.setOut(originalOut);
+           }
+           System.out.println("Captured Output:");
+           System.out.println(outputStream.toString());
+       }
+   }
+
+.. note:: Some ABS models might contain relative filenames, for
+          example to specify the location of a SQLite database to
+          query.  Such relative filenames are resolved against the
+          JVM's current directory.  If the surrounding Java code calls
+          sets the system property ``"abs.datadir"`` (via
+          ``System.setProperty``) to an absolute path naming an
+          existing directory, the model will use that directory to
+          resolve such filenames instead.
+
+
+.. _sec:erlang-backend:
+
+Erlang
+======
+
+The Erlang backend runs ABS models on the Erlang virtual machine by
+translating them into Erlang and combining them with a small runtime
+library implementing key ABS concepts (cogs, futures, objects, method
+invocations) in Erlang.
+
+Executing an ABS model in Erlang currently returns the value of the
+last statement of the main block; output via ``ABS.StdLib.println`` is
+printed on the console.  For additional introspective and interactive
+capabilities, the Erlang backend supports a Model API (see below).
+
+
+How to run the Erlang backend
+-----------------------------
+
+Running a model in Erlang involves compiling the ABS code, then
+compiling and running the resulting Erlang code.
+
+Compiling all files in the current directory into Erlang and starting
+the resulting model is done with the following commands::
+
+  $ absc --erlang *.abs
+  $ gen/erl/run
+
+This sequence of commands starts Erlang, then compiles the generated
+Erlang code and starts it.  Type ``gen/erl/run -h`` for a list of
+options accepted by the model.
+
+
+Recording and replaying traces
+------------------------------
+
+ABS task scheduling is non-deterministic; i.e., when two tasks are
+enabled, the cog will select an arbitrary one (but see
+:ref:`sec:schedulers`).  The erlang backend can record a trace of
+scheduling decisions and replay it to precisely reproduce the previous
+run.
+
+To record a trace to a file ``trace.json``, start the model with a
+parameter ``--record trace.json`` or ``-t trace.json``.
+
+To replay an existing trace recorded in ``trace.json``, start the
+model with ``--replay trace.json`` or ``-r trace.json``.
+
+A trace can also be obtained from a running model via the Model API.
+Assuming the model is started on port 8080 (via a parameter ``-p
+8080``), the trace is accessible at the url
+http://localhost:8080/trace.  A trace visualizer can be found here:
+https://github.com/larstvei/ABS-traces.
+
+
+Generating code coverage information
+------------------------------------
+
+The Erlang backend can optionally generate code coverage information
+in a format inspired by gnu ``gcov`` (see
+`<https://gcc.gnu.org/onlinedocs/gcc/Invoking-Gcov.html>`__).  The
+coverage information contains line numbers and execution count, but
+not the source code itself.  This is sufficient for some tools to
+visualize code coverage, e.g., ``cov-mode`` for Emacs
+(`<https://github.com/AdamNiederer/cov>`__).
+
+To generate code coverage information, compile an abs model with the
+``--debuginfo`` switch, then run it as normal, i.e.::
+
+  $ absc --erlang --debuginfo *.abs
+  $ gen/erl/run
+
+For each ``.abs`` file, running the model will generate a
+``.abs.gcov`` file in the directory ``gen/erl/absmodel`` after the
+simulation finishes.
+
+
+Maude
+=====
+
+The Maude backend is a high-level, executable semantics in rewriting
+logic of the ABS language.  Due to its relatively compact nature, it
+has traditionally served as a test-bed for new language features.
+
+Executing a model on the Maude backend results in a complete snapshot
+of the system state after execution has finished.
+
+The main drawback of the Maude backend is its relatively poor
+performance, making it not suitable to simulate large models.
+
+
+How to run the Maude backend
+----------------------------
+
+Running a model on Maude involves compiling the code, then starting
+Maude with the resulting file as input.
+
+Compiling all files in the current directory into Maude is done with
+the following command::
+
+  $ absc --maude *.abs -o model.maude
+
+The model is started with the following commands::
+
+  $ maude
+  Maude> in model.maude
+  Maude> frew start .
+
+This sequence of commands starts Maude, then loads the compiled model
+and starts it.  The resulting output is a dump of the complete system
+state after execution of the model finishes.
+
+

@@ -1,0 +1,31 @@
+module BackendTest;
+
+interface I {}
+
+class C(String s, Int i) implements I {
+}
+
+def Bool ask_string() = builtin(sparql,
+    `ASK {
+       ?o abs:instantiates/rdfs:label "BackendTest.C" ;
+          prog:BackendTest.s "world" .
+     }`);
+
+def Bool ask_objs() = builtin(sparql,
+    `ASK {
+       ?o abs:instantiates/rdfs:label "BackendTest.C" .
+     }`);
+
+def Bool ask_interfaces() = builtin(sparql,
+    `ASK {
+       ?o a/rdfs:label "BackendTest.I" .
+     }`);
+
+{
+    I o = new local C("hello", 15);
+    I o2 = new C("world", 1);
+
+    Bool testresult = ask_string()
+        && ask_objs()
+        && ask_interfaces();
+}

@@ -7,93 +7,88 @@ package org.abs_models.frontend.delta;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import com.google.common.collect.ArrayTable;
-import com.google.common.collect.Table;
 
 
 /* Sorting object that computes a list of elements sorted according to a given partial order
  * Usage:
  *     1. instantiate, giving all elements to be sorted
  *     2. define partial order by repeatedly calling addEdge(e1, e2), where e1 > e2
- *     3. call sort()
- *     4. obtain a valid order with getPreferredOrder() or getAnOrder()
+ *     3. obtain a valid order with getPreferredOrder() or getAnOrder()
  */
 public class TopologicalSorting<T> {
 
-    private final Set<T> nodes;
-    private final Table<T, T, Boolean> incidence;
-    private List<Set<T>> partition;
-    private List<T> preferredOrder;
-    private boolean isSorted = false;
+    private final Map<T, Set<T>> graph; // maps N to all nodes that N depends on
+    private List<Set<T>> partition; // null if sorting is necessary
+    private List<T> preferredOrder; // ditto
 
     public TopologicalSorting(Set<T> nodes) {
-        this.nodes = nodes;
-
         if (nodes.size() == 0) {
             partition = Collections.emptyList();
             preferredOrder = Collections.emptyList();
-            incidence = null;
-            return;
+            graph = Collections.emptyMap();
+        } else {
+            partition = null;
+            preferredOrder = null;
+            graph = new HashMap<>();
+            nodes.forEach(node -> graph.put(node, new HashSet<T>()));
         }
-
-        incidence = ArrayTable.create(nodes, nodes);
-        for (T cn : nodes)
-            for (T rn : nodes)
-                incidence.put(cn, rn, false);
-
-        partition = new ArrayList<>();
     }
 
     public void addEdge(T high, T low) throws DeltaModellingException {
-        if (incidence == null)
-            throw new DeltaModellingException("Sorting: nodes not found [" + high.toString() + "; " + low.toString() + "] -- graph is empty");
-        if (! incidence.containsColumn(high))
-            throw new DeltaModellingException("Sorting: node not found [" + high.toString() + "]");
-        if (! incidence.containsRow(low))
-            throw new DeltaModellingException("Sorting: node not found [" + low.toString() + "]");
-        incidence.put(high, low, true);
-        isSorted = false;
+        if (graph.isEmpty())
+            throw new DeltaModellingException("Sorting: cannot add edge, [" + high.toString() + "; " + low.toString() + "] -- graph is empty");
+        if (!graph.containsKey(high))
+            throw new DeltaModellingException("Sorting: cannot add edge, node [" + high.toString() + "] not in graph");
+        if (!graph.containsKey(low))
+            throw new DeltaModellingException("Sorting: cannot add edge, node [" + low.toString() + "] not in graph");
+        graph.get(low).add(high); // `low` points to all nodes `high` it depends on
+        partition = null;       // reset sorting status
+        preferredOrder = null;
     }
 
-    public void sort() throws DeltaModellingException {
-        boolean rootNode;
-        Set<T> nodes = new HashSet<>(this.nodes);
+    private void sort() throws DeltaModellingException {
 
-        int currentSet = 0;
+        if (partition != null) return;
+        else partition = new ArrayList<>();
+
+        Set<T> nodes = new HashSet<>(graph.keySet());
+
         while (nodes.size() > 0) {
-            partition.add(new HashSet<>());
+            HashSet<T> currentSet = new HashSet<>();
+            partition.addLast(currentSet);
 
             for (T node : nodes) {
-                rootNode = true;
+                boolean rootNode = true;
                 for (T cn : nodes) {
-                    if (incidence.get(cn, node) == true) {
+                    // Note this checks for self-dependency since we
+                    // don't skip `node` itself when checking `cn->node`
+                    if (graph.get(node).contains(cn)) {
                         rootNode = false;
-                        break; // not a root node
+                        break;  // not a root node
                     }
                 }
                 if (rootNode)
-                    partition.get(currentSet).add(node);
+                    currentSet.add(node);
             }
             // no nodes in set means there is a cycle among the remaining nodes
-            if (partition.get(currentSet).isEmpty())
+            if (currentSet.isEmpty())
                 throw new DeltaModellingException("Sorting: cycle detected among the following nodes: " + nodes.toString());
 
-            // for all nodes in set: remove these nodes from node set
-            for (T node : partition.get(currentSet))
+            // Remove newly-found root nodes
+            for (T node : currentSet)
                 nodes.remove(node);
-
-            currentSet++;
         }
-        isSorted = true;
     }
 
     /**
      * Get a single, valid order
      *
-     * TODO: eventually this should compute an implication-determined order (cf. Damiani and Schaefer 2012),
+     * <p>TODO: eventually this should compute an
+     * implication-determined order (cf. Damiani and Schaefer 2012),
      * which yields a PFGT with a minimal number of nodes
      *
      * @return A (possibly empty) list of elements
@@ -102,8 +97,8 @@ public class TopologicalSorting<T> {
         if (preferredOrder != null) // only compute once
             return preferredOrder;
 
-        checkSorted();
-        preferredOrder = new ArrayList<>(nodes.size());
+        ensureSorted();
+        preferredOrder = new ArrayList<>(graph.size());
         for (Set<T> set : partition)
             preferredOrder.addAll(set);
 
@@ -120,14 +115,14 @@ public class TopologicalSorting<T> {
     }
 
     /**
-     * The delta partition is an ordered list of sets of deltas. All deltas in a
-     * certain set have the same precedence, that is, they can be applied in any order.
-     * The partition is initially an empty list and is computed by calling sort().
+     * The delta partition is an ordered list of sets of deltas.  All
+     * deltas in a certain set have the same precedence, that is, they
+     * can be applied in any order.
      *
-     * @return A (possibly empty) list of sets. A set cannot be empty.
+     * @return A (possibly empty) list of non-empty sets.
      */
     public List<Set<T>> getPartition() {
-        checkSorted();
+        ensureSorted();
         return partition;
     }
 
@@ -135,8 +130,8 @@ public class TopologicalSorting<T> {
     /*
      * Make sure we called sort() before we access the results
      */
-    private void checkSorted() {
-        if (! isSorted)
-            throw new DeltaModellingException("Set has not yet been sorted.");
+    private void ensureSorted() {
+        if (partition == null)
+            sort();
     }
 }

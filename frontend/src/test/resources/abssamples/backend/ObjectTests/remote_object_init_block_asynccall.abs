@@ -1,0 +1,42 @@
+module BackendTest;
+// Test if asynchronous calls in init blocks work.
+
+interface I {
+    Unit flip_result();
+    Bool get_result();
+}
+
+class C implements I {
+    Bool result = False;
+
+    Unit flip_result() {
+        result = True;
+    }
+    Bool get_result() {
+        return result;
+    }
+}
+
+interface I2 {
+    Bool get_result();
+}
+
+class C2 (I o) implements I2 {
+    Fut<Unit> f;
+    {
+        f = o!flip_result();
+    }
+
+    Bool get_result() {
+        await f?;
+        Bool result = await o!get_result();
+        return result;
+    }
+
+}
+
+{
+    I o = new C();
+    I2 o2 = new C2(o);
+    Bool testresult = await o2!get_result();
+}

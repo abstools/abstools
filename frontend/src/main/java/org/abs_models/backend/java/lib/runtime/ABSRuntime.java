@@ -14,16 +14,20 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 import org.abs_models.backend.java.lib.types.ABSInterface;
@@ -69,14 +73,17 @@ public class ABSRuntime {
      */
     protected static ABSRuntime runtimeSingleton = null;
     private final ABSThreadManager threadManager = new ABSThreadManager(this);
-    private final AtomicInteger cogCounter = new AtomicInteger();
-    private final AtomicInteger taskCounter = new AtomicInteger();
+    private final AtomicLong cogCounter = new AtomicLong();
+    private final AtomicLong taskCounter = new AtomicLong();
 
     /** The number of currently active cogs in the system. */
     private long nActiveCogs = 0;
 
-    /** The number of cogs that need to wake up before the next clock advance. */
-    private long nWakingCogs = 0;
+    /** The cogs that need to wake up at least once before the clock
+     * can advance.  We make this a set instead of a counter since one
+     * cog waking up two times could lead to premature clock
+     * advance. */
+    private Set<COG> cogsToWake = new HashSet<>();
 
     /**
      * The current clock value.
@@ -117,10 +124,13 @@ public class ABSRuntime {
     public List<ABSDCMirror> getDeploymentComponents() { return deployment_components; }
 
     /**
-     * Queue of all pending resource requests.
+     * For each dc, a queue of all pending resource requests for that
+     * dc.
      *
-     * TODO: figure out locking scheme for this; it will be used from both
-     * advanceClock and addResourceGuard.
+     * TODO: figure out locking scheme for this; it will be used from
+     * both advanceClock and addResourceGuard.  Should be safe without
+     * locking because advanceClock is only called when no tasks are
+     * running.
      */
     private final Map<ABSInterface, List<ABSResourceGuard>> resource_guards
         = new HashMap<>();
@@ -156,6 +166,14 @@ public class ABSRuntime {
     private Apint clockLimit = null;
 
     /**
+     * The directory that contains data files such as sqlite files;
+     * defaults to the VM's notion of current directory.  Settable via
+     * the {@code --datadir} CLI option or the {@code abs.datadir}
+     * system property.
+     */
+    private Path datadir = Paths.get("").toAbsolutePath();
+
+    /**
      * Starts a new ABS program by giving a generated Main class
      * @param mainClass the Main class to be used
      * @throws InstantiationException if the Main class could not be instantiated
@@ -183,11 +201,11 @@ public class ABSRuntime {
         }
     }
 
-    int freshTaskID() {
+    long freshTaskID() {
         return taskCounter.incrementAndGet();
     }
 
-    int freshCOGID() {
+    long freshCOGID() {
         return cogCounter.incrementAndGet();
     }
 
@@ -271,6 +289,28 @@ public class ABSRuntime {
 
     public boolean debuggingEnabled() {
         return debugging;
+    }
+
+    /**
+     * Use {@code newDatadir} as the directory to resolve relative
+     * paths named in ABS programs.  Does nothing if {@code
+     * newDatadir} does not name an existing directory.
+     */
+    public void setDatadir(String newDatadir) {
+        Path newPath = Path.of(newDatadir).toAbsolutePath().normalize();
+        if (newPath.toFile().isDirectory()) {
+            datadir = newPath;
+        } else {
+            log.warning("The value " + newDatadir + "is not a directory; ignoring");
+        }
+    }
+
+    /**
+     * Return the directory used to resolve relative paths named in
+     * ABS programs.
+     */
+    public Path getDatadir() {
+        return datadir;
     }
 
     /**
@@ -428,7 +468,8 @@ public class ABSRuntime {
     }
 
     public static void suspend() {
-        ABSThread.getCurrentCOG().getScheduler().await(new ABSTrueGuard());
+        COG cog = ABSThread.getCurrentCOG();
+        cog.getScheduler().await(new ABSTrueGuard(cog));
     }
 
     public static void await(ABSGuard g) {
@@ -457,13 +498,13 @@ public class ABSRuntime {
         return task.getFut();
     }
 
-    private final Map<Class<?>,AtomicInteger> objectIds = new HashMap<>();
+    private final Map<Class<?>,AtomicLong> objectIds = new HashMap<>();
     public long getFreshObjectID(Class<?> clazz) {
-        AtomicInteger ai = null;
+        AtomicLong ai = null;
         synchronized (objectIds) {
             ai = objectIds.get(clazz);
             if (ai == null) {
-                ai = new AtomicInteger();
+                ai = new AtomicLong();
                 objectIds.put(clazz, ai);
             }
             return ai.incrementAndGet();
@@ -699,14 +740,14 @@ public class ABSRuntime {
      * <p>
      * NOTE: this method is supposed to be called during clock advance only.
      *
-     * @return the number of guards woken
+     * @return A modifiable set containing the guards that were woken.
      */
-    protected synchronized int handResourcesToWaitingGuards() {
+    protected synchronized Set<ABSGuard> handResourcesToWaitingGuards() {
+        Set<ABSGuard> guardsWoken = new HashSet<>();
         if (resource_guards.isEmpty()) {
             log.finest("No tasks waiting for resources");
-            return 0;
+            return guardsWoken;
         }
-        int guardsWoken = 0;
         log.finest("Handing out resources to waiting tasks");
         var iterator = resource_guards.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -734,7 +775,7 @@ public class ABSRuntime {
                     synchronized(guard) {
                         guard.notify();
                     }
-                    guardsWoken = guardsWoken + 1;
+                    guardsWoken.add(guard);
                 } else {
                     // We got some resources but not everything the
                     // current guard wanted; next call to
@@ -766,8 +807,8 @@ public class ABSRuntime {
         // where either a duration guard wakes up or a resource boundary
         // occurs (and hence, a resource guard might receive enough resources
         // to unblock), whichever comes earlier.
-        if (nWakingCogs > 0) {
-            log.finest(() -> "Not advancing clock before " + nWakingCogs + " more cogs have woken up");
+        if (!cogsToWake.isEmpty()) {
+            log.finest(() -> "Not advancing clock: waiting for " + cogsToWake.size() + " cogs to wake up.");
             return;
         }
         if (duration_guards.isEmpty() && resource_guards.isEmpty()) {
@@ -778,10 +819,16 @@ public class ABSRuntime {
                          + clock + ", clockLimit = " + (clockLimit == null ? "none" : clockLimit)
                          + ", durationGuards: " + duration_guards.size()
                          + ", resourceGuards: " + resource_guards.size());
-        int guardsWoken = handResourcesToWaitingGuards();
-        while (guardsWoken == 0 && (clockLimit != null ? clock.compareTo(clockLimit) < 0 : true)) {
-            int durationGuardsWoken = 0;
-            int resourceGuardsWoken = 0;
+        Set<ABSGuard> guardsWoken = handResourcesToWaitingGuards();
+        // This is a while loop since we advance time by 1 tick to
+        // update the deployment component histories.
+        while (guardsWoken.isEmpty() // if we already woke someone by
+                                     // giving them resources, no need
+                                     // to advance the clock
+               && (clockLimit != null ? clock.compareTo(clockLimit) < 0 : true))
+        {
+            Set<ABSGuard> durationGuardsWoken = new HashSet<>();
+            Set<ABSGuard> resourceGuardsWoken = new HashSet<>();
             Aprational next_integer = clock.isInteger()
                 ? clock.add(Aprational.ONE)
                 : clock.ceil();
@@ -795,7 +842,7 @@ public class ABSRuntime {
             log.fine(() -> "Clock advanced to " + clock);
             if (clock.compareTo(next_integer) == 0) {
                 deployment_components.forEach(ABSDCMirror::advanceTimeBy1Tick);
-                resourceGuardsWoken = resourceGuardsWoken + handResourcesToWaitingGuards();
+                resourceGuardsWoken.addAll(handResourcesToWaitingGuards());
             }
             log.finest("Checking for threads to wake that are waiting on duration guards");
             while (!duration_guards.isEmpty() && clock.compareTo(duration_guards.peek().getMinTime()) >= 0) {
@@ -803,17 +850,22 @@ public class ABSRuntime {
                 synchronized(guard) {
                     guard.notify();
                 }
-                durationGuardsWoken = durationGuardsWoken + 1;
+                durationGuardsWoken.add(guard);
             }
-            if (durationGuardsWoken > 0 && !duration_guards.isEmpty()) {
+            if (!durationGuardsWoken.isEmpty() && !duration_guards.isEmpty()) {
                 wake_time_for_duration_guards =
-                    duration_guards.stream()
-                    .map(ABSDurationGuard::getMaxTime)
-                    .reduce(duration_guards.peek().getMaxTime(), (t1, t2) -> t1.compareTo(t2) < 0 ? t1 : t2);
+                  duration_guards.stream()
+                      .map(ABSDurationGuard::getMaxTime)
+                      .reduce(duration_guards.peek().getMaxTime(), (t1, t2) -> t1.compareTo(t2) < 0 ? t1 : t2);
             }
-            guardsWoken = guardsWoken + resourceGuardsWoken + durationGuardsWoken;
+            log.finest(() -> "Woke " + resourceGuardsWoken.size() + " tasks waiting for resources and " + durationGuardsWoken.size() + " tasks waiting for time");
+            guardsWoken.addAll(resourceGuardsWoken);
+            guardsWoken.addAll(durationGuardsWoken);
         }
-        this.nWakingCogs = guardsWoken;
+        guardsWoken.stream()
+                .map(ABSGuard::getCog)
+                .forEach(cogsToWake::add);
+        log.finest(() -> "Finished clock advance, expecting " + cogsToWake.size() + " cog wake events (for " + guardsWoken.size() + " tasks) before advancing clock again");
     }
 
     /**
@@ -849,32 +901,23 @@ public class ABSRuntime {
         }
     }
 
-    public void notifyCogActive() {
+    public void notifyCogActive(COG cog) {
         synchronized(this) {
             nActiveCogs++;
-            // Note that this is still kind of an approximation: when we
-            // signal all guards after clock advance, in theory one cog could
-            // wake up, go to sleep, wake up, go to sleep before the other cog
-            // has woken up a first time, which would result in a spurious
-            // clock advance.
-            nWakingCogs = Math.max(0, nWakingCogs - 1);
+            cogsToWake.remove(cog);
         }
-        log.finest(() -> "Cog became active, now " + nActiveCogs + " active cogs.");
+        log.finest(() -> cog + " became active, now " + nActiveCogs + " active cogs, " + cogsToWake.size() + " more cogs to wake before clock can advance.");
     }
 
-    public void notifyCogInactive() {
+    public void notifyCogInactive(COG cog) {
         synchronized(this) {
             nActiveCogs--;
         }
         if (nActiveCogs == 0) {
-            log.finest(() -> "Cog became inactive, no active cogs left.");
-            if (nWakingCogs > 0) {
-                log.finest(() -> "Waiting for " + nWakingCogs + " more cogs to wake before trying clock advance.");
-            } else {
-                maybeAdvanceClock();
-            }
+            log.finest(() -> cog + " became inactive, no active cogs left.");
+            maybeAdvanceClock();
         } else if (nActiveCogs > 0) {
-            log.finest(() -> "Cog became inactive, now " + nActiveCogs + " active cogs.");
+            log.finest(() -> cog + " became inactive, now " + nActiveCogs + " active cogs.");
         } else {
             log.severe(() -> "Count of active cogs became negative (" + nActiveCogs + "), this should never happen");
         }

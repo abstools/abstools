@@ -1,0 +1,22 @@
+module BackendTest;
+// Check that toString(s) results in s without quotes but datatypes
+// containing strings print them with "quotes", even when the datatype
+// is parameterized.
+data Person = Person(String name, Int age);
+{
+    String st = "Hel\"lo";
+    List<String> l = list[st, "two", "three"];
+    Set<String> s = set[st, ""];
+    Map<String, Int> m = map[Pair(st, 1), Pair("", 2)];
+    Person p = Person("Joe", 15);
+    String rs = toString(st);
+    String ls = toString(l);
+    String ss = toString(s);
+    String ms = toString(m);
+    String ps = toString(p);
+    Bool testresult = rs == st;  // no surrounding quotes, interior quotes not escaped
+    testresult = testresult && ls == "list[\"Hel\\\"lo\",\"two\",\"three\"]"; // surrounded by quotes and escaped
+    testresult = testresult && ss == "set[\"\",\"Hel\\\"lo\"]";
+    testresult = testresult && ms == "map[Pair(\"Hel\\\"lo\",1),Pair(\"\",2)]";
+    testresult = testresult && ps == "Person(\"Joe\",15)";
+}

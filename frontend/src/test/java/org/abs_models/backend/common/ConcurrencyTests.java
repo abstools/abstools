@@ -7,6 +7,7 @@ package org.abs_models.backend.common;
 import java.io.File;
 
 import org.abs_models.backend.BackendTestDriver;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -17,25 +18,69 @@ public class ConcurrencyTests extends SemanticTests {
         super(d);
     }
 
-    static String INTERFACE_I = "interface I { Bool m(); Unit n(); } ";
-    static String CLASS_C = "class C implements I { Unit n() { } Bool m() { return True; } } ";
-    static String CLASS_D = "interface DI { } class D implements DI { { Bool b = False; } }";
-    static String CALL_M_ASYNC = "{ Bool testresult = True; I i; i = new local C(); i!m(); }";
-    static String COG_CALL_M_ASYNC = "{ Bool testresult = True; Fut<Bool> f; I i; i = new C(); f = i!m(); testresult = f.get; }";
+    static String INTERFACE_I = """
+        interface I {
+            Bool m();
+            Unit n();
+        }
+        """;
+    static String CLASS_C = """
+        class C implements I {
+            Unit n() { }
+            Bool m() { return True; }
+        }
+        """;
+    static String CLASS_D = """
+        interface DI { }
+        class D implements DI {
+            { Bool b = False; }
+        }
+        """;
+    static String CALL_M_ASYNC = """
+        {
+            Bool testresult = True;
+            I i = new local C();
+            i!m();
+        }
+        """;
+
+    static String COG_CALL_M_ASYNC = """
+        {
+            Bool testresult = True;
+            I i = new C();
+            Fut<Bool> f = i!m();
+            testresult = f.get;
+        }
+        """;
+
+    static String CALL_M_ASYNC_GET = """
+        {
+            Bool testresult = False;
+            I i = new C();
+            Fut<Bool> fut = i!m();
+            testresult = fut.get;
+        }
+        """;
+
+    static String CALL_M_ASYNC_AWAIT_GET = """
+        {
+            Bool testresult = False;
+            I i = new local C();
+            Fut<Bool> fut = i!m();
+            await fut?;
+            testresult = fut.get;
+        }
+        """;
 
     @Test
     public void asyncCall() throws Exception {
         assertEvalTrue(INTERFACE_I + CLASS_C + CALL_M_ASYNC);
     }
 
-    static String CALL_M_ASYNC_GET = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
-
     @Test
     public void futGet() throws Exception {
         assertEvalTrue(INTERFACE_I + CLASS_C + CALL_M_ASYNC_GET);
     }
-
-    static String CALL_M_ASYNC_AWAIT_GET = "{ Bool testresult = False; I i; i = new local C(); Fut<Bool> fut; fut = i!m(); await fut?; testresult = fut.get; }";
 
     @Test
     public void futAwaitAndGet() throws Exception {
@@ -147,5 +192,11 @@ public class ConcurrencyTests extends SemanticTests {
     public void ticket407_concise_await() throws Exception {
         assertEvalTrue(INTERFACE_I+CLASS_C+
                 "{ I o = new local C(); Bool testresult = await o!m(); }");
+    }
+
+    @Test
+    public void bug438() throws Exception {
+        Assume.assumeTrue("Only meaningful with Timed ABS support", driver.supportsTimedAbs()); // don't run with random scheduler
+        assertEvalTrue(new File("abssamples/backend/ConcurrencyTests/awaitExpressionGuard.abs"));
     }
 }

@@ -12,7 +12,7 @@ how to run various tools on a local machine.
 
 The ABS compiler is contained in a single file called `absfrontend.jar`.
 
-Running the ABS compiler requires Java (version 21 or greater) and Erlang
+Running the ABS compiler requires Java (version 25 or greater) and Erlang
 (version 26 or greater) installed.  Java can be downloaded, e.g., from
 <https://adoptopenjdk.net>.  Erlang is available at
 <https://www.erlang.org/downloads> (but also check below for platform-specific
@@ -37,7 +37,7 @@ following the instructions at <https://chocolatey.org/install>, then
 run the following command in a terminal with Administrator rights:
 
 ```powershell
-choco install openjdk21 git erlang visualstudio2019buildtools
+choco install openjdk25 git erlang visualstudio2019buildtools
 ```
 
 To compile the ABS toolchain, make sure to run the command `./gradlew build`
@@ -47,7 +47,7 @@ for VS 2019).
 ### Installing dependencies on Linux
 
 On Linux, check if your distribution offers the necessary programs
-pre-packaged in the version needed (JDK21, Erlang >= 26, a C
+pre-packaged in the version needed (JDK25, Erlang >= 26, a C
 compiler); otherwise download from the distribution pages linked
 above.
 

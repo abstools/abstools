@@ -37,7 +37,7 @@ public interface TaskView {
 
     void registerTaskListener(TaskObserver listener);
 
-    int getID();
+    long getID();
 
     boolean isDeadlocked();
 

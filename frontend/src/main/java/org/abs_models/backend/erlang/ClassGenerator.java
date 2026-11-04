@@ -8,8 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
-
-import com.google.common.collect.Iterables;
+import java.util.stream.Stream;
 
 import org.abs_models.backend.common.CodeStream;
 import org.abs_models.backend.erlang.ErlUtil.Mask;
@@ -202,7 +201,7 @@ public class ClassGenerator {
     private void generateDataAccess() {
         ecs.println("%% --- Internal state and low-level accessors\n");
         ecs.format("-record(state,{'class'=%s", modName);
-        for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
+        for (TypedVarOrFieldDecl f : Stream.concat(classDecl.getParams().stream(), classDecl.getFields().stream()).toList()) {
             ecs.print(",");
             ecs.format("'%s'=null", f.getName());
         }
@@ -211,7 +210,7 @@ public class ClassGenerator {
         ecs.println("#state{}.");
         ecs.decIndent();
         ecs.println();
-        for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
+        for (TypedVarOrFieldDecl f : Stream.concat(classDecl.getParams().stream(), classDecl.getFields().stream()).toList()) {
             ecs.pf(" %%%% %s:%s", f.getFileName(), f.getStartLine());
             ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{'%s'=G}", f.getName()),
                                    "'" + f.getName() + "'");
@@ -227,7 +226,7 @@ public class ClassGenerator {
         ecs.println();
         if (hasFields) {
             boolean first = true;
-            for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
+            for (TypedVarOrFieldDecl f : Stream.concat(classDecl.getParams().stream(), classDecl.getFields().stream()).toList()) {
                 if (!first) {
                     ecs.println(";");
                     ecs.decIndent();
@@ -251,7 +250,7 @@ public class ClassGenerator {
         ecs.println("[");
         ecs.incIndent();
         boolean first = true;
-        for (TypedVarOrFieldDecl f : Iterables.concat(classDecl.getParams(), classDecl.getFields())) {
+        for (TypedVarOrFieldDecl f : Stream.concat(classDecl.getParams().stream(), classDecl.getFields().stream()).toList()) {
             if (!first) ecs.print(", ");
             first = false;
             ecs.pf("{ '%s', S#state.'%s' }",

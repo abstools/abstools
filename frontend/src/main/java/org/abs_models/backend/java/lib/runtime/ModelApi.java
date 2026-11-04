@@ -3,11 +3,14 @@ package org.abs_models.backend.java.lib.runtime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 import java.net.FileNameMap;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,6 +28,9 @@ import org.abs_models.backend.java.lib.expr.BinOp;
 import org.abs_models.backend.java.lib.types.ABSAlgebraicDataType;
 import org.abs_models.backend.java.lib.types.ABSUnit;
 import org.abs_models.backend.java.lib.types.ABSValue;
+import org.abs_models.backend.java.observing.GraphObserver;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFLanguages;
 import org.apfloat.Apint;
 import org.apfloat.Aprational;
 
@@ -105,6 +111,8 @@ public class ModelApi {
         server.createContext("/quit", new ModelApi.QuitHandler());
         server.createContext("/clock", new ModelApi.ClockHandler());
         server.createContext("/dcs", new ModelApi.DCHandler());
+        server.createContext("/sparql", new ModelApi.SparqlHandler());
+        server.createContext("/ttl", new ModelApi.TtlHandler());
         // this is a catch-all handler so should be last
         server.createContext("/", new ModelApi.RootHandler());
         server.setExecutor(Executors.newCachedThreadPool(r -> {
@@ -156,9 +164,84 @@ public class ModelApi {
     }
 
     /**
+     * A handler that implements a SPARQL endpoint.
+     */
+    private static class SparqlHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            // For the format of sparql queries over http, see
+            // https://www.w3.org/TR/sparql11-protocol/#query-operation
+            String queryString;
+            if (exchange.getRequestMethod().equals("GET")) {
+                // https://www.w3.org/TR/sparql11-protocol/#query-via-get
+                URI uri = exchange.getRequestURI();
+                queryString = URLDecoder.decode(
+                    Arrays.stream(uri.getQuery().split("&"))
+                        .filter(param -> param.startsWith("query="))
+                        .map(param -> param.substring("query=".length()))
+                        .findFirst()
+                        .orElse(""),
+                    StandardCharsets.UTF_8);
+            } else if (exchange.getRequestMethod().equals("POST")
+                       && (exchange.getRequestHeaders()
+                           .get("Content-Type")
+                           .contains("application/x-www-form-urlencoded"))) {
+                // https://www.w3.org/TR/sparql11-protocol/#query-via-post-urlencoded
+                String encodedQuery = new String(exchange.getRequestBody().readAllBytes());
+                queryString = URLDecoder.decode(Arrays.stream(encodedQuery.split("&"))
+                                                .filter(param -> param.startsWith("query="))
+                                                .map(param -> param.substring("query=".length()))
+                                                .findFirst()
+                                                .orElse("")
+                                                , StandardCharsets.UTF_8);
+            } else if (exchange.getRequestMethod().equals("POST")
+                       && (exchange.getRequestHeaders()
+                           .get("Content-Type")
+                           .contains("application/sparql-query"))) {
+                // https://www.w3.org/TR/sparql11-protocol/#query-via-post-direct
+                queryString = new String(exchange.getRequestBody().readAllBytes());
+            } else {
+                exchange.getResponseHeaders().set("Allow", "GET POST");
+                exchange.sendResponseHeaders(405, 0);
+                exchange.close();
+                return;
+            }
+            Lang lang = negotiateContentType(exchange.getRequestHeaders().getFirst("Accept"));
+            String solution = GraphObserver.runQuery(GraphObserver.getModel(), queryString, lang);
+            sendResponse(exchange, 200, lang.getHeaderString(), solution);
+        }
+
+        Lang negotiateContentType(String acceptHeader) {
+            if (acceptHeader == null) acceptHeader = "application/sparql-results+json";
+            String[] mediaTypes = acceptHeader.split(",");
+            for (String mediaType : mediaTypes) {
+                // Remove quality values and whitespace
+                String cleanType = mediaType.split(";")[0].trim();
+                Lang lang = RDFLanguages.contentTypeToLang(cleanType);
+                if (lang != null) {
+                    return lang;
+                }
+            }
+            return Lang.RDFJSON; // should never be reached
+        }
+
+    }
+
+    private static class TtlHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            Lang lang = RDFLanguages.TTL;
+            StringWriter result = new StringWriter();
+            GraphObserver.getModel().write(result, lang.getName());
+            sendResponse(exchange, 200, lang.getHeaderString(), result.toString());
+        }
+    }
+
+    /**
      * A handler that serves the /index.html file.  Also serves as
      * catch-all handler and will return 404 for unmatched paths.
      */
+
     // `index.html` is `resources/java/modelapi/index.html` but can be
     // overridden by the `--modelapi-index-file` parameter
     private static class RootHandler implements HttpHandler {

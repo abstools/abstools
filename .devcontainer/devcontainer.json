@@ -1,0 +1,31 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+{
+	"name": "Debian",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:trixie",
+	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y erlang-base",
+	"features": {
+		"ghcr.io/devcontainers/features/java:1": {
+			"installGradle": true,
+			"version": "25",
+			"jdkDistro": "open",
+			"gradleVersion": "latest",
+			"mavenVersion": "latest",
+			"antVersion": "latest",
+			"groovyVersion": "latest"
+		}
+	}
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

@@ -5,45 +5,33 @@ ABS Tools
 [![Gitter](https://badges.gitter.im/abstools/general.svg)](https://gitter.im/abstools/general?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Inside this repository we develop the core tools of the ABS modelling
-language.  The current language manual is at <https://abs-models.org/manual/>.
+language.  The current language manual is at
+<https://abs-models.org/manual/>.
 
-To compile the command-line compiler and manual, run `./gradlew assemble` (See <https://abs-models.org/getting_started/local-install/> for more information).
-
-To run the ABS collaboratory (a browser-based IDE for ABS) locally using
-Docker, execute the following command:
-
-    docker run -p 8080:80 --rm abslang/collaboratory:latest
-
-Then connect your browser to <http://localhost:8080/>.  It is not necessary to
-clone the repository or compile the toolchain to run the ABS collaboratory in this way.
-
-To run the absc compiler locally using docker, create a script such as
-<https://github.com/abstools/abstools/blob/master/frontend/src/main/resources/bash/absc-docker>
-and put it in your path.
+See <https://abs-models.org/getting-started/getting-started.html> on
+how to install or compile the tools.
 
 Folders
 -------
 
 * `frontend` - the ABS compiler and runtime support.  See
-  <https://abs-models.org/getting_started/local-install/> for installation
-  instructions.
+  <https://abs-models.org/getting-started/local-installation.html> for
+  installation instructions.
 
-* `abs-models.org` - Source for the https://abs-models.org website.
-  See the README.org file in that subdirectory for deployment information.
+* `website` - Source for the https://abs-models.org website, including
+  the ABS reference manual.
 
-* `abs-docs` - the ABS language manual, available online at
-  <http://abs-models.org/manual/>.  To generate the manual locally,
-  run `make manual`.
+* `abs-models.org` - An old version of the source for the website.
+  Kept around until the tutorials are be moved below `website/` and
+  converted to rST syntax.
 
-  * `abs-docs/ReferenceManual` - an older LaTeX ABS reference manual,
-    now mostly of historical interest
+* `abs-docs` - Contains an older LaTeX ABS reference manual, now
+  mostly of historical interest, and a formal Ott grammar for a large
+  subset of ABS, written in
+  [Ott](https://github.com/ott-lang/ott)
 
-  * `abs-docs/Ott` - a formal grammar for a large subset of ABS,
-    written in [Ott](https://www.cl.cam.ac.uk/~pes20/ott/)
-
-
-* `org.abs-models.releng` - Files used by Jenkins and Buckminster for
-  continuous integration at <https://envisage.ifi.uio.no:8080/jenkins/>.
+* `org.abs-models.releng` - Files previously used by Jenkins and
+  Buckminster for continuous integration.
 
 * `abs-unit` - demonstration, description and initial ideas about the
   ABSUnit (a unit testing framework for ABS) (with Maven dependencies
@@ -79,3 +67,4 @@ instead of adding a new local commit that merges the `master` and
 `origin/master` branches.  Conflicts have to be resolved per patch
 (via `git add` + `git rebase --continue`) instead of in one go, but we
 get a cleaner history.
+
