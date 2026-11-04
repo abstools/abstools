@@ -704,6 +704,19 @@ public class NullableTests extends FrontendTest {
         assertEquals(1, sl.getErrorCount());
     }
 
+    @Test
+    public void rudi() {
+        Model m = getModel(
+            """
+                module BackendTest;
+                
+                 import * from ABS.DC;
+                 {
+                     DeploymentComponent dc = new DeploymentComponent("", map[Pair(Speed, 1)]);
+                 }""");
+        m.getMainBlock();
+    }
+
     static private Model getModel(String prog) {
         Model m = assertParse(prog);
         m.registerTypeSystemExtension(new NullCheckerExtension(m));

@@ -366,8 +366,6 @@ aspect ControlFlow {
         // complaints quite confusing, so we make the type of
         // `virtualStmt` be VirtualStmt so we can at least grep for
         // what's happening.
-        syn nta VirtualStmt FieldDecl.virtualStmt() = new VirtualStmt();
-        eq FieldDecl.getInitExp().parentStmt() = virtualStmt();
         syn nta VirtualStmt Annotation.virtualStmt() = new VirtualStmt();
         eq Annotation.getValue().parentStmt() = virtualStmt();
 
