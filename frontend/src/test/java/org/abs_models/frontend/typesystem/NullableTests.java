@@ -705,16 +705,17 @@ public class NullableTests extends FrontendTest {
     }
 
     @Test
-    public void rudi() {
+    public void mapConstructor() {
         Model m = getModel(
             """
                 module BackendTest;
                 
-                 import * from ABS.DC;
-                 {
-                     DeploymentComponent dc = new DeploymentComponent("", map[Pair(Speed, 1)]);
-                 }""");
+                import * from ABS.DC;
+                {
+                    DeploymentComponent dc = new DeploymentComponent("", map[Pair(Speed, 1)]);
+                }""");
         m.getMainBlock();
+        assertFalse(m.hasTypeErrors());
     }
 
     static private Model getModel(String prog) {

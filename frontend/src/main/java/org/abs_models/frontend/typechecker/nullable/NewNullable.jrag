@@ -405,6 +405,13 @@ aspect NewNullable {
     eq FnApp.getNullableType() {
         // Special treatment: For list literals we can take the computed nullable type directly
         if (getNumChild() == 1 && getParam(0) instanceof ListLiteral) {
+            NullableType nt = getParam(0).getNullableType();
+            // Special treatment: The map constructor takes a list of pairs,
+            // so we have to "unwrap" the list to get the correct nullable type
+            if (getName().equals("map") && nt instanceof DataTypeNullableType && ((DataTypeNullableType) nt).getParams().size() == 1) {
+                return ((DataTypeNullableType) nt).getParam(0);
+            }
+
             return getParam(0).getNullableType();
         }
         // We cannot get the NullableType from the decl, because of generics
