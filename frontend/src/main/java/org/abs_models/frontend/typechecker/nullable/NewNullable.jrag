@@ -368,55 +368,14 @@ aspect NewNullable {
         if (!(ty.getDecl() instanceof ParametricDataTypeDecl)) {
             return DataTypeNullableType.EMPTY;
         }
-        ParametricDataTypeDecl decl = (ParametricDataTypeDecl) ty.getDecl();
         DataConstructor cons = getDataConstructor();
-        java.util.List<NullableType> nts = new ArrayList<NullableType>(ty.numTypeArgs());
-        java.util.List<NullableType> paramNts = new ArrayList<NullableType>(getNumParam());
-
-        for (PureExp param : getParams()) {
-            paramNts.add(param.getNullableType());
-        }
-
-        // Each type parameter is matched to a nullable type
-        for (TypeParameterDecl param : decl.getTypeParameters()) {
-            boolean foundNt = false;
-            for (int i = 0; i < cons.getNumConstructorArg(); ++i) {
-                Type arg = cons.getConstructorArg(i).getType();
-                if (arg instanceof TypeParameter) {
-                    // We found a parameter where the type is a type parameter: Set the type parameter's nullable type to the arguments nullable type.
-                    TypeParameter tp = (TypeParameter) arg;
-                    if (tp.getDecl() == param) {
-                        nts.add(paramNts.get(i));
-                        foundNt = true;
-                        break;
-                    }
-                }
-            }
-            if (!foundNt) {
-                nts.add(PrimitiveNullableType.Unknown);
-            }
-        }
-
-        assert(nts.size() == decl.getNumTypeParameter());
-
-        return new DataTypeNullableType(nts);
+        return NullCheckerExtension.getNullableType(ty, cons, getParams());
     }
 
     eq FnApp.getNullableType() {
-        // Special treatment: For list literals we can take the computed nullable type directly
-        if (getNumChild() == 1 && getParam(0) instanceof ListLiteral) {
-            NullableType nt = getParam(0).getNullableType();
-            // Special treatment: The map constructor takes a list of pairs,
-            // so we have to "unwrap" the list to get the correct nullable type
-            if (getName().equals("map") && nt instanceof DataTypeNullableType && ((DataTypeNullableType) nt).getParams().size() == 1) {
-                return ((DataTypeNullableType) nt).getParam(0);
-            }
-
-            return getParam(0).getNullableType();
-        }
         // We cannot get the NullableType from the decl, because of generics
         Type t = getType();
-        return NullCheckerExtension.getNullableType(t);
+        return NullCheckerExtension.getNullableType(t, getDecl(), getParams());
     }
 
     eq IfExp.virtualThenStmt().nullableTypes_in() {

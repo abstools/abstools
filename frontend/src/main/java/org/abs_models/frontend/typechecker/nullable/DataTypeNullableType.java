@@ -1,5 +1,7 @@
 package org.abs_models.frontend.typechecker.nullable;
 
+import org.jspecify.annotations.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,24 +10,14 @@ import java.util.List;
  * <p></p>
  * E.g., an expression of type {@code Maybe<Object>} can never be null, but its value can be.
  */
-public class DataTypeNullableType implements NullableType {
+public record DataTypeNullableType(List<NullableType> params) implements NullableType {
     ///  For data types without parameters.
     public static DataTypeNullableType EMPTY = new DataTypeNullableType(new ArrayList<>());
     ///  Useful for e.g. Destiny
     public static DataTypeNullableType DT_OF_EMPTY = new DataTypeNullableType(List.of(EMPTY));
 
-    private final List<NullableType> params;
-
-    public DataTypeNullableType(List<NullableType> params) {
-        this.params = params;
-    }
-
     public DataTypeNullableType(NullableType nt) {
         this(List.of(nt));
-    }
-
-    public List<NullableType> getParams() {
-        return params;
     }
 
     public NullableType getParam(int i) {
@@ -36,8 +28,8 @@ public class DataTypeNullableType implements NullableType {
     public boolean assignableTo(NullableType n) {
         if (!(n instanceof DataTypeNullableType dnt))
             return false;
-        if (getParams().size() != dnt.getParams().size()) return false;
-        for (int i = 0; i < getParams().size(); ++i) {
+        if (params().size() != dnt.params().size()) return false;
+        for (int i = 0; i < params().size(); ++i) {
             if (!getParam(i).assignableTo(dnt.getParam(i))) return false;
         }
         return true;
@@ -48,10 +40,10 @@ public class DataTypeNullableType implements NullableType {
         if (other == PrimitiveNullableType.Unknown) return this;
         if (!(other instanceof DataTypeNullableType dnt))
             throw new IllegalArgumentException("Expected data nullable type, got: " + other);
-        if (getParams().size() != dnt.getParams().size())
-            throw new IllegalArgumentException("Expected same number of nullable type parameters: " + getParams().size() + " =/= " + dnt.getParams().size());
-        var newParams = new ArrayList<NullableType>(getParams().size());
-        for (int i = 0; i < getParams().size(); ++i) {
+        if (params().size() != dnt.params().size())
+            throw new IllegalArgumentException("Expected same number of nullable type parameters: " + params().size() + " =/= " + dnt.params().size());
+        var newParams = new ArrayList<NullableType>(params().size());
+        for (int i = 0; i < params().size(); ++i) {
             newParams.add(getParam(i).getMostCommon(dnt.getParam(i)));
         }
         return new DataTypeNullableType(newParams);
@@ -74,20 +66,21 @@ public class DataTypeNullableType implements NullableType {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof DataTypeNullableType o)) return false;
-        if (params.size() != o.params.size()) return false;
+        if (!(obj instanceof DataTypeNullableType(List<NullableType> params1))) return false;
+        if (params.size() != params1.size()) return false;
         for (int i = 0; i < params.size(); ++i) {
             if (params.get(i) == null) {
-                if (o.params.get(i) != null) return false;
+                if (params1.get(i) != null) return false;
                 continue;
-            };
-            if (!params.get(i).equals(o.params.get(i))) return false;
+            }
+            ;
+            if (!params.get(i).equals(params1.get(i))) return false;
         }
         return true;
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         var sb = new StringBuilder();
         sb.append('<');
         for (int i = 0; i < params.size(); ++i) {

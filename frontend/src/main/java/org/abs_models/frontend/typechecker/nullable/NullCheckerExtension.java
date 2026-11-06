@@ -9,7 +9,7 @@ import org.abs_models.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import com.google.common.collect.ImmutableMap;
 import org.jspecify.annotations.NonNull;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 /// Checks whether all assignments, calls, etc. adhere to the declared nullable types
@@ -246,6 +246,22 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
         return res;
     }
 
+    public static boolean getNonnullPreservingFromAnnotation(Type t) {
+        boolean res = false;
+        boolean hasAnnotation = false;
+        for (TypeAnnotation an : t.getTypeAnnotations()) {
+            if (an.getType().getQualifiedName().equals("ABS.StdLib.NonnullPreserving")) {
+                if (hasAnnotation) {
+                    throw new NullCheckerException(new TypeError(an.getValue(), ErrorMessage.PRESERVES_NULLABLE_MULTIPLE, new String[0]));
+                } else {
+                    hasAnnotation = true;
+                    res = true;
+                }
+            }
+        }
+        return res;
+    }
+
     public NullableType defaultIfNull(NullableType nt) {
         if (nt == null) {
             return defaultType;
@@ -293,6 +309,73 @@ public class NullCheckerExtension extends DefaultTypeSystemExtension {
             if (bt.hasBoundType()) return getNullableType(bt.getBoundType());
             return PrimitiveNullableType.Unknown;
         } else return PrimitiveNullableType.NonApplicable;
+    }
+
+    /// Computes the nullable type from a type `t`.
+    public static NullableType getNullableType(Type t, Decl decl, org.abs_models.frontend.ast.List<PureExp> args) {
+        if (!(decl instanceof HasTypeParameters) || !(decl instanceof HasParams hp)) {
+            return getNullableType(t);
+        }
+        var paramTys = new ArrayList<Type>(hp.getTypes().size());
+        for (int i = 0; i < hp.getParams().getNumChild(); ++i) {
+            paramTys.add(hp.getParams().getChild(i).getType());
+        }
+        var argTys = new ArrayList<Type>(args.getNumChild());
+        var argNTys = new ArrayList<NullableType>(args.getNumChild());
+        for (int i = 0; i < args.getNumChild(); ++i) {
+            argTys.add(args.getChild(i).getType());
+            argNTys.add(args.getChild(i).getNullableType());
+        }
+        var bindings = new HashMap<TypeParameter, NullableType>();
+        computeBindings(bindings, paramTys, argTys, argNTys);
+        boolean preserves = decl instanceof DataConstructor || getNonnullPreservingFromAnnotation(decl.getType());
+        return applyBindings(bindings, t, decl.getType(), preserves);
+    }
+
+    private static void computeBindings(Map<TypeParameter, NullableType> bindings, List<Type> paramTys, List<Type> argTys, List<NullableType> argNTys) {
+        for (int i = 0; i < paramTys.size(); ++i) {
+            Type pTy = paramTys.get(i);
+            Type aTy = argTys.get(i);
+            NullableType aNTy = argNTys.get(i);
+            if (aTy.isBoundedType()) {
+                var bt = (BoundedType) aTy;
+                if (bt.hasBoundType())
+                    aTy = bt.getBoundType();
+            }
+            if (pTy.isTypeParameter()) {
+                var tyParam = (TypeParameter) pTy;
+                if (bindings.containsKey(tyParam)) {
+                    bindings.compute(tyParam, (_, prevArgTy) -> prevArgTy.getMostCommon(aNTy));
+                } else {
+                    bindings.put(tyParam, aNTy);
+                }
+            } else if (pTy.isDataType() && aTy.isDataType()) {
+                var pDT = (DataTypeType) pTy;
+                var aDT = (DataTypeType) aTy;
+                var aNDT = (DataTypeNullableType) aNTy;
+                computeBindings(bindings, pDT.getTypeArgs(), aDT.getTypeArgs(), aNDT.params());
+            }
+        }
+    }
+
+    private static NullableType applyBindings(Map<TypeParameter, NullableType> bindings, Type ty, Type declTy, boolean preserves) {
+        if (declTy.isTypeParameter()) {
+            var tyParam = (TypeParameter) declTy;
+            if (preserves)
+                return Objects.requireNonNull(bindings.get(tyParam));
+            else
+                return getNullableType(ty);
+        } else if (declTy.isDataType()) {
+            var declDt = (DataTypeType) declTy;
+            var dt = (DataTypeType) ty;
+            var nts = new ArrayList<NullableType>(declDt.numTypeArgs());
+            for (int i = 0; i < declDt.numTypeArgs(); ++i) {
+                nts.add(applyBindings(bindings, dt.getTypeArg(i), declDt.getTypeArg(i), preserves));
+            }
+            return new DataTypeNullableType(nts);
+        } else {
+            return getNullableType(ty);
+        }
     }
 
     public static boolean shouldHaveNullableType(Type t) {

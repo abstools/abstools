@@ -714,7 +714,6 @@ public class NullableTests extends FrontendTest {
                 {
                     DeploymentComponent dc = new DeploymentComponent("", map[Pair(Speed, 1)]);
                 }""");
-        m.getMainBlock();
         assertFalse(m.hasTypeErrors());
     }
 
