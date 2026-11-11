@@ -12,6 +12,7 @@ import org.abs_models.frontend.typechecker.CheckSPLCommand;
 import org.abs_models.frontend.typechecker.locationtypes.LocationType;
 
 import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.PrimitiveNullableType;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -183,8 +184,8 @@ public class Absc implements Callable<Integer> {
 
     static class NullableTypeUserTypes extends ArrayList<String> {
         NullableTypeUserTypes() {
-            super(Arrays.stream(NullableType.USER_TYPES)
-                .map(NullableType::toString)
+            super(Arrays.stream(PrimitiveNullableType.USER_TYPES)
+                .map(PrimitiveNullableType::toString)
                 .collect(Collectors.toList()));
         }
     }
@@ -192,7 +193,7 @@ public class Absc implements Callable<Integer> {
     static class NullableTypeConverter implements ITypeConverter<NullableType> {
         @Override
         public NullableType convert(String s) throws Exception {
-            return NullableType.fromName(s);
+            return PrimitiveNullableType.fromName(s);
         }
     }
 
@@ -201,7 +202,7 @@ public class Absc implements Callable<Integer> {
             completionCandidates = NullableTypeUserTypes.class,
             converter = NullableTypeConverter.class,
             paramLabel = "nullabletype")
-    public NullableType defaultNullableType = NullableType.Nullable;
+    public PrimitiveNullableType defaultNullableType = PrimitiveNullableType.Nullable;
 
     @Option(names = { "--check-null-call" },
             description = "checks whether a call exists with the callee being null")
