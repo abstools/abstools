@@ -4,6 +4,11 @@
  */
 package org.abs_models.frontend.typechecker;
 
+import org.abs_models.frontend.ast.TypeParameterDecl;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
+import org.abs_models.frontend.typechecker.nullable.PrimitiveNullableType;
+import com.google.common.collect.ImmutableMap;
+
 public final class AnyType extends Type {
     public static final AnyType INSTANCE = new AnyType();
 
@@ -40,5 +45,9 @@ public final class AnyType extends Type {
     public String getSimpleName() {
         return "Any";
     }
-    
+
+    @Override
+    public NullableType instantiateNullableType(ImmutableMap<TypeParameterDecl, NullableType> inst) {
+        return PrimitiveNullableType.NonApplicable;
+    }
 }

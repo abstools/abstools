@@ -117,6 +117,7 @@ public enum ErrorMessage {
     NULLABLE_TYPE_MISMATCH("Nullable type %s does not match declared type %s."),
     NULLABLETYPE_MISSING_ANNOTATION("Warning: There is no nullable type annotation here. Consider adding one."),
     NULLABLETYPE_NULLCALL("The callee %s is always null."),
+    PRESERVES_NULLABLE_MULTIPLE("Multiple nullable preserving type annotations defined."),
 
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),

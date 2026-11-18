@@ -205,7 +205,7 @@ def C trd<A, B, C>(Triple<A, B, C> t) = case t {
 data Set<A> = EmptySet | Insert(A, Set<A>);
 
 // set constructor helper
-def Set<A> set<A>(List<A> l) =
+def [PreservesNonnull] Set<A> set<A>(List<A> l) =
     case l {
        Nil => EmptySet;
        Cons(x,xs) => insertElement(set(xs), x);
@@ -358,7 +358,7 @@ def Pair<Set<A>,A> next<A>(Set<A> s) =
 // Lists
 data List<A> = Nil | Cons(A head, List<A> tail);
 
-def List<A> list<A>(List<A> l) = l; // list constructor helper
+def [PreservesNonnull] List<A> list<A>(List<A> l) = l; // list constructor helper
 
 /**
  * Returns the length of list 'list'.
@@ -440,7 +440,7 @@ def List<Int> range(Int lower, Int upper) =
 // Maps
 data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
  // map constructor helper (does not preserve injectivity)
-def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
+def [PreservesNonnull] Map<A, B> map<A, B>(List<Pair<A, B>> l) =
   case l {
      Nil => EmptyMap;
      Cons(hd, tl) => InsertAssoc(hd, map(tl));
@@ -451,7 +451,7 @@ def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
  */
 def Bool emptyMap<A, B>(Map<A, B> map) = (map == EmptyMap);
 
-def Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
+def [PreservesNonnull] Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
   case map {
         EmptyMap => map;
     InsertAssoc(Pair(key, _), m) => m;
@@ -459,7 +459,7 @@ def Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
   };
 
 
-def List<B> values<A, B>(Map<A, B> map) =
+def [PreservesNonnull] List<B> values<A, B>(Map<A, B> map) =
   case map {
     EmptyMap => Nil ;
     InsertAssoc(Pair(_, elem), tail) => Cons(elem, values(tail)) ;
@@ -468,7 +468,7 @@ def List<B> values<A, B>(Map<A, B> map) =
 /**
  * Returns a set containing all keys of map 'map'.
  */
-def Set<A> keys<A, B>(Map<A, B> map) =
+def [PreservesNonnull] Set<A> keys<A, B>(Map<A, B> map) =
   case map {
     EmptyMap => EmptySet ;
     InsertAssoc(Pair(a, _), tail) => insertElement(keys(tail), a);
@@ -477,7 +477,7 @@ def Set<A> keys<A, B>(Map<A, B> map) =
 /**
  * Returns a list containing all entries of map 'map'.
  */
-def List<Pair<A, B>> entries<A, B>(Map<A, B> map) =
+def [PreservesNonnull] List<Pair<A, B>> entries<A, B>(Map<A, B> map) =
   case map {
       EmptyMap => Nil;
       InsertAssoc(e, tail) => Cons(e, entries(tail));
@@ -486,7 +486,7 @@ def List<Pair<A, B>> entries<A, B>(Map<A, B> map) =
 /**
  * Returns the value associated with key 'k' in map 'ms', or 'Nothing'.
  */
-def Maybe<B> lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+def [PreservesNonnull] Maybe<B> lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   case ms {
      InsertAssoc(Pair(k, y), _) => Just(y);
      InsertAssoc(_, tm) => lookup(tm, k);
@@ -502,14 +502,14 @@ def Maybe<B> lookupMaybe<A, B>(Map<A, B> ms, A k) = lookup(ms, k);
  * Returns the value associated with key 'k' in map 'ms',
  * or fails if not present.
  */
-def B lookupUnsafe<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+def [PreservesNonnull] B lookupUnsafe<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   fromJust(lookup(ms,k));
 
 /**
  * Returns the value associated with key 'k' in map 'ms', or the value 'd'
  * if 'k' has no entry in 'ms'.
  */
-def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
+def [PreservesNonnull] B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
   case ms {
      InsertAssoc(Pair(k, y), _) => y;
      InsertAssoc(_, tm) => lookupDefault(tm, k, d);
@@ -519,7 +519,7 @@ def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
 /**
  * Returns the key associated with 'value' in map 'ms', or 'Nothing'.
  */
-def Maybe<A> lookupReverse<A, B>(Map<A, B> ms, B value) =
+def [PreservesNonnull] Maybe<A> lookupReverse<A, B>(Map<A, B> ms, B value) =
     case ms {
         InsertAssoc(Pair(key, value), _) => Just(key)
       | InsertAssoc(_, tm) => lookupReverse(tm, value)
@@ -530,7 +530,7 @@ def Maybe<A> lookupReverse<A, B>(Map<A, B> ms, B value) =
  * Returns the key associated with 'value' in map 'ms', or 'default'
  * if there is no entry with 'value'.
  */
-def A lookupReverseDefault<A, B>(Map<A, B> ms, B value, A default) =
+def [PreservesNonnull] A lookupReverseDefault<A, B>(Map<A, B> ms, B value, A default) =
   case ms {
         InsertAssoc(Pair(key, value), _) => key
      | InsertAssoc(_, tm) => lookupReverseDefault(tm, value, default)
@@ -542,13 +542,13 @@ def A lookupReverseDefault<A, B>(Map<A, B> ms, B value, A default) =
  * Returns a map with all entries of 'map' plus an entry 'p',
  * which might override but not remove another entry with the same key.
  */
-def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
+def [PreservesNonnull] Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
 
 /**
  * Returns a map with all entries of 'ms' plus an entry mapping 'k' to 'v',
  * minus the first entry already mapping 'k' to a value.
  */
-def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) =
+def [PreservesNonnull] Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) =
   case ms {
     EmptyMap => InsertAssoc(Pair(k, v),EmptyMap);
     InsertAssoc(Pair(k, _), ts) => InsertAssoc(Pair(k, v), ts);
@@ -659,6 +659,16 @@ data LocationType = Far | Near | Somewhere | Infer;
 
 [TypeAnnotation]
 data NullableType = Nonnull | Nullable;
+
+/**
+ * When added to a function's return type, this annotation states that
+ * the nullable type of the result depends strictly on the call
+ * arguments. For instance, `list[i]` preserves nullability, because
+ * it only returns the passed arguments as a list; no possibly null or
+ * nullable elements are added.
+ */
+[TypeAnnotation]
+data NonnullPreserving = PreservesNonnull;
 
 /**
  * Can be used to annotated classes and to ensure that

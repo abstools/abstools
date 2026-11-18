@@ -11,11 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.abs_models.frontend.ast.Annotation;
-import org.abs_models.frontend.ast.Decl;
-import org.abs_models.frontend.ast.FieldDecl;
-import org.abs_models.frontend.ast.MethodSig;
-import org.abs_models.frontend.ast.TypeUse;
+import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.typechecker.nullable.NullableType;
+import com.google.common.collect.ImmutableMap;
 
 public abstract class Type {
     private static final Object ANNOTATION_KEY = "ANNOTATION_KEY";
@@ -299,4 +297,6 @@ public abstract class Type {
         assert false : "Should never happen for a well-typed model:" + getClass().getSimpleName()+"/"+getSimpleName();
         return null;
     }
+
+    public abstract NullableType instantiateNullableType(ImmutableMap<TypeParameterDecl, NullableType> inst);
 }
