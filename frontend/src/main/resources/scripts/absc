@@ -5,15 +5,17 @@ if [ -z "$PROGNAME" ] ; then
     PROGNAME="$0"
 fi
 
-DIRNAME=$(dirname "$PROGNAME")
+PROGDIR=$(dirname "$PROGNAME")
+# go up one level
+PARENTDIR=$(dirname "$PROGDIR")
 
-if [ -f "$DIRNAME/../dist/absfrontend.jar" ]; then
-    ABSFRONTENDJAR="$DIRNAME/../dist/absfrontend.jar"
-elif [ -f "$DIRNAME/lib/absfrontend.jar" ]; then
-    ABSFRONTENDJAR="$DIRNAME/lib/absfrontend.jar"
+if [ -f "$PARENTDIR/dist/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$PARENTDIR/dist/absfrontend.jar"
+elif [ -f "$PROGDIR/lib/absfrontend.jar" ]; then
+    ABSFRONTENDJAR="$PROGDIR/lib/absfrontend.jar"
 else
     echo "Error: could not find absfrontend.jar"
-    echo "(expected in $DIRNAME/../dist/ or $DIRNAME/lib/)"
+    echo "(expected in $PARENTDIR/dist/ or $PROGDIR/lib/)"
     exit 1
 fi
 

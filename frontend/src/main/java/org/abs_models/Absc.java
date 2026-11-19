@@ -49,8 +49,7 @@ import picocli.CommandLine.ScopeType;
          )
 public class Absc implements Callable<Integer> {
 
-    @Parameters(description = "ABS files/directories/packages to handle",
-                arity = "1..*")
+    @Parameters(description = "ABS files/directories/packages to handle")
     public List<File> files;
 
     @ArgGroup(exclusive = true)
@@ -104,6 +103,9 @@ public class Absc implements Callable<Integer> {
     @Option(names = { "--dump"},
             description = "dump AST to standard output")
     public boolean dump = false;
+    @Option(names = { "--print-absfrontend-jar-location" },
+        description = "Print location of absfrontend.jar and exit")
+    public boolean printAbsfrontendJarLocation = false;
 
     // Code generation options
     @Option(names = { "-o", "--output-file"},
