@@ -1,0 +1,2259 @@
+// taken from https://github.com/abstools/habs-frh/blob/master/src/refined/FRHErlang.abs
+// and modified to use the latest Smart Deployer
+
+
+module FRH;
+
+export *;
+import * from ABS.DC;
+import * from ABS.SmartDeploy;
+import * from AddQueryDeployer;
+import * from MainSmartDeployer;
+
+/////////////////////////////////////
+// COST ANNOTATION FOR SMART DEPLOYER
+/////////////////////////////////////
+
+
+// { "kind" : "list", "type" : "DeploymentService", "num": 3 },
+
+/*
+{
+	"class" : "LoadBalancerEndPointImpl",
+	"scenarios" : [
+		{ 
+			"name" : "default",
+			"provide":-1,
+			"cost":	{ "Cores": 2, "Memory" : 400 },
+			"sig": [],
+			"methods" : [
+				{
+					"add" : { "return_type" : "Bool", "name": "addLBE", "param_type": "Service" },
+					"remove" : { "return_type" : "Bool", "name": "removeLBE", "param_type": "Service" }
+				}
+			]
+		}
+	]
+}		
+*/
+[ SmartDeployCost : "{\"class\":\"LoadBalancerEndPointImpl\",\"scenarios\":[{\"name\":\"default\",\"provide\":-1,\"cost\":{\"Cores\":2,\"Memory\":400},\"sig\":[],\"methods\":[{\"add\":{\"return_type\":\"Bool\",\"name\":\"addLBE\",\"param_type\":\"Service\"},\"remove\":{\"return_type\":\"Bool\",\"name\":\"removeLBE\",\"param_type\":\"Service\"}}]}]}"]
+
+/*
+{
+	"class" : "DeploymentAgentImpl",
+	"scenarios" : [
+		{ 
+			"name" : "default",
+			"provide":-1,
+			"cost":	{ "Cores": 1, "Memory" : 80 },
+			"sig": [],
+			"methods" : [
+				{
+					"add" : { "return_type" : "Unit", "name": "installDA", "param_type": "Service" },
+					"remove" : { "return_type" : "Unit", "name": "uninstallDA" }
+				}
+			]
+		}
+	]
+}		
+*/
+[ SmartDeployCost : "{\"class\":\"DeploymentAgentImpl\",\"scenarios\":[{\"name\":\"default\",\"provide\":-1,\"cost\":{\"Cores\":1,\"Memory\":80},\"sig\":[],\"methods\":[{\"add\":{\"return_type\":\"Unit\",\"name\":\"installDA\",\"param_type\":\"Service\"},\"remove\":{\"return_type\":\"Unit\",\"name\":\"uninstallDA\"}}]}]}"]
+
+/*
+{
+	"class" : "DeploymentServiceImpl",
+	"scenarios" : [
+		{ 
+			"name" : "default",
+			"provide":-1,
+			"cost":	{ "Cores": 1, "Memory" : 10 },
+			"sig": [],
+			"methods" : [
+				{
+					"add" : { "return_type" : "Unit", "name": "addDS", "param_type": "DeploymentAgent" },
+					"remove" : { "return_type" : "Unit", "name": "removeDS", "param_type": "DeploymentAgent" }
+				}
+			]
+		}
+	]
+}		
+*/
+[ SmartDeployCost : "{\"class\":\"DeploymentServiceImpl\",\"scenarios\":[{\"name\":\"default\",\"provide\":-1,\"cost\":{\"Cores\":1,\"Memory\":10},\"sig\":[],\"methods\":[{\"add\":{\"return_type\":\"Unit\",\"name\":\"addDS\",\"param_type\":\"DeploymentAgent\"},\"remove\":{\"return_type\":\"Unit\",\"name\":\"removeDS\",\"param_type\":\"DeploymentAgent\"}}]}]}"]
+
+/*
+{
+	"class" : "LoadBalancerServiceImpl",
+	"scenarios" : [
+		{ 
+			"name" : "default",
+			"provide":-1,
+			"cost":	{ "Cores": 1, "Memory" : 10 },
+			"sig": [],
+			"methods" : []
+		}
+	]
+}
+*/
+[ SmartDeployCost : "{\"class\":\"LoadBalancerServiceImpl\",\"scenarios\":[{\"name\":\"default\",\"provide\":-1,\"cost\":{\"Cores\":1,\"Memory\":10},\"sig\":[],\"methods\":[]}]}"]
+
+/*
+{
+	"class" : "PlatformServiceImpl",
+	"scenarios" : [
+		{ 
+			"name" : "default",
+			"provide":-1,
+			"cost":	{ "Cores": 2, "Memory" : 1200 },
+			"sig": [
+				{
+					"kind" : "require",
+					"type" : "DeploymentService"
+				},
+				{
+					"kind" : "require",
+					"type" : "LoadBalancerService"
+				}
+			],
+			"methods" : [
+				{
+					"add" : { "return_type" : "Int", "name": "addEndPoint", "param_type": "LoadBalancerEndPoint" },
+					"remove" : { "return_type" : "Int", "name": "removeEndPoint", "param_type": "LoadBalancerEndPoint" }
+				},
+				{
+					"add" : { "return_type" : "Int", "name": "addServiceInstance", "param_type": "Service" },
+					"remove" : { "return_type" : "Int", "name": "removeServiceInstance", "param_type": "Service" }
+				}
+			]
+		}
+	]
+}		
+*/
+[ SmartDeployCost : "{\"class\":\"PlatformServiceImpl\",\"scenarios\":[{\"name\":\"default\",\"provide\":-1,\"cost\":{\"Cores\":2,\"Memory\":1200},\"sig\":[{\"kind\":\"require\",\"type\":\"DeploymentService\"},{\"kind\":\"require\",\"type\":\"LoadBalancerService\"}],\"methods\":[{\"add\":{\"return_type\":\"Int\",\"name\":\"addEndPoint\",\"param_type\":\"LoadBalancerEndPoint\"},\"remove\":{\"return_type\":\"Int\",\"name\":\"removeEndPoint\",\"param_type\":\"LoadBalancerEndPoint\"}},{\"add\":{\"return_type\":\"Int\",\"name\":\"addServiceInstance\",\"param_type\":\"Service\"},\"remove\":{\"return_type\":\"Int\",\"name\":\"removeServiceInstance\",\"param_type\":\"Service\"}}]}]}"] 
+
+/*
+{
+	"class" : "ServiceProviderImpl",
+	"scenarios" : [
+		{ 
+			"name" : "default",
+			"provide":-1,
+			"cost":	{ },
+			"sig": [
+				{
+					"kind" : "require",
+					"type" : "PlatformService"
+				},
+				{
+					"kind" : "require",
+					"type" : "LoadBalancerService"
+				}
+			],
+			"methods": []
+		}
+	]
+}		
+*/
+[ SmartDeployCost : "{\"class\":\"ServiceProviderImpl\",\"scenarios\":[{\"name\":\"default\",\"provide\":-1,\"cost\":{},\"sig\":[{\"kind\":\"require\",\"type\":\"PlatformService\"},{\"kind\":\"require\",\"type\":\"LoadBalancerService\"}],\"methods\":[]}]}"]
+
+/*
+{
+	"class" : "QueryServiceImpl",
+	"scenarios" : [
+		{ 
+			"name" : "staging",
+			"provide":-1,
+			"cost":	{ "Cores": 2, "Memory" : 700 },
+			"sig": [
+				{
+					"kind" : "require",
+					"type" : "DeploymentAgent"
+				},
+				{
+					"kind" : "constant",
+					"value" : "\"Customer X\""
+				},
+				{
+					"kind" : "constant",
+					"value" : "True"
+				}
+			],
+			"methods" : []
+		},
+		{ 
+			"name" : "live",
+			"provide":-1,
+			"cost":	{ "Cores": 1, "Memory" : 300 },
+			"sig": [
+				{
+					"kind" : "require",
+					"type" : "DeploymentAgent"
+				},
+				{
+					"kind" : "constant",
+					"value" : "\"Customer X\""
+				},
+				{
+					"kind" : "constant",
+					"value" : "False"
+				}
+			],
+			"methods" : []
+		}
+	]
+}		
+*/
+[ SmartDeployCost : "{\"class\":\"QueryServiceImpl\",\"scenarios\":[{\"name\":\"staging\",\"provide\":-1,\"cost\":{\"Cores\":2,\"Memory\":700},\"sig\":[{\"kind\":\"require\",\"type\":\"DeploymentAgent\"},{\"kind\":\"constant\",\"value\":\"\\\"Customer X\\\"\"},{\"kind\":\"constant\",\"value\":\"True\"}],\"methods\":[]},{\"name\":\"live\",\"provide\":-1,\"cost\":{\"Cores\":1,\"Memory\":300},\"sig\":[{\"kind\":\"require\",\"type\":\"DeploymentAgent\"},{\"kind\":\"constant\",\"value\":\"\\\"Customer X\\\"\"},{\"kind\":\"constant\",\"value\":\"False\"}],\"methods\":[]}]}"]
+
+/////////////////////////////////////
+// SmartDeployCloudProvider ANNOTATION FOR SMART DEPLOYER
+/////////////////////////////////////
+
+/*
+{  
+  "c4_xlarge_us1":{  
+    "cost":209,
+		"payment_interval":1,
+    "resources":{  
+      "Cores":4,
+      "Memory":750
+    }
+  },
+  "c4_2xlarge_us1":{  
+    "cost":419,
+    "resources":{  
+      "Cores":8,
+      "Memory":1500
+    }
+  },
+  "m4_xlarge_us1":{  
+    "cost":239,
+    "resources":{  
+      "Cores":4,
+      "Memory":1600
+    }
+  },
+  "m4_large_us1":{  
+    "cost":120,
+    "resources":{  
+      "Cores":2,
+      "Memory":800
+    }
+  },
+	"c4_xlarge_us2":{  
+    "cost":209,
+    "resources":{  
+      "Cores":4,
+      "Memory":750
+    }
+  },
+  "c4_2xlarge_us2":{  
+    "cost":419,
+    "resources":{  
+      "Cores":8,
+      "Memory":1500
+    }
+  },
+  "m4_xlarge_us2":{  
+    "cost":239,
+    "resources":{  
+      "Cores":4,
+      "Memory":1600
+    }
+  },
+  "m4_large_us2":{  
+    "cost":120,
+    "resources":{  
+      "Cores":2,
+      "Memory":800
+    }
+  },
+	"c4_xlarge_eu":{  
+    "cost":209,
+    "resources":{  
+      "Cores":4,
+      "Memory":750
+    }
+  },
+  "c4_2xlarge_eu":{  
+    "cost":419,
+    "resources":{  
+      "Cores":8,
+      "Memory":1500
+    }
+  },
+  "m4_xlarge_eu":{  
+    "cost":239,
+    "resources":{  
+      "Cores":4,
+      "Memory":1600
+    }
+  },
+  "m4_large_eu":{  
+    "cost":120,
+    "resources":{  
+      "Cores":2,
+      "Memory":800
+    }
+  }
+}
+*/
+[SmartDeployCloudProvider: "{\"c4_xlarge_us1\":{\"cost\":209,\"payment_interval\":1,\"resources\":{\"Cores\":4,\"Memory\":750}},\"c4_2xlarge_us1\":{\"cost\":419,\"resources\":{\"Cores\":8,\"Memory\":1500}},\"m4_xlarge_us1\":{\"cost\":239,\"resources\":{\"Cores\":4,\"Memory\":1600}},\"m4_large_us1\":{\"cost\":120,\"resources\":{\"Cores\":2,\"Memory\":800}},\"c4_xlarge_us2\":{\"cost\":209,\"resources\":{\"Cores\":4,\"Memory\":750}},\"c4_2xlarge_us2\":{\"cost\":419,\"resources\":{\"Cores\":8,\"Memory\":1500}},\"m4_xlarge_us2\":{\"cost\":239,\"resources\":{\"Cores\":4,\"Memory\":1600}},\"m4_large_us2\":{\"cost\":120,\"resources\":{\"Cores\":2,\"Memory\":800}},\"c4_xlarge_eu\":{\"cost\":209,\"resources\":{\"Cores\":4,\"Memory\":750}},\"c4_2xlarge_eu\":{\"cost\":419,\"resources\":{\"Cores\":8,\"Memory\":1500}},\"m4_xlarge_eu\":{\"cost\":239,\"resources\":{\"Cores\":4,\"Memory\":1600}},\"m4_large_eu\":{\"cost\":120,\"resources\":{\"Cores\":2,\"Memory\":800}}}"]
+
+/////////////////////////////////////
+// SmartDeploy ANNOTATION FOR SMART DEPLOYER: Main block
+/////////////////////////////////////
+
+/**
+{  
+  "id":"MainSmartDeployer",
+  "specification":"(sum ?x in '.*_us.': ?x.QueryServiceImpl['staging']) > 0 and (sum ?x in '.*_eu': ?x.QueryServiceImpl['staging']) > 0 and QueryServiceImpl['.*'] = 4 and (sum ?x in '.*_us.': ?x.LoadBalancerServiceImpl) = 1 and (sum ?x in '.*_eu': ?x.LoadBalancerServiceImpl) = 1 and (sum ?x in '.*_us.': ?x.PlatformServiceImpl) = 1 and (sum ?x in '.*_eu': ?x.PlatformServiceImpl) = 1 and (sum ?x in '.*_us1': ?x.LoadBalancerEndPointImpl) = 1 and (sum ?x in '.*_us2': ?x.LoadBalancerEndPointImpl) = 1 and (sum ?x in '.*_eu': ?x.LoadBalancerEndPointImpl) = 1 and (sum ?x in '.*_us.': ?x.DeploymentServiceImpl) = 1 and (sum ?x in '.*_eu': ?x.DeploymentServiceImpl) = 1 and (forall ?x in DC: ( ?x.QueryServiceImpl['.*'] < 2 and ( ?x.QueryServiceImpl['.*'] = 1 impl ?x.DeploymentAgentImpl = 1) and ( ?x.PlatformServiceImpl > 0 impl  ((?x.LoadBalancerServiceImpl = 1) and (?x.DeploymentServiceImpl = 1) and (sum ?y in obj:  ?x.?y) = 3)) and (?x.LoadBalancerEndPointImpl > 0 impl (sum ?y in obj: ?x.?y) = 1) ))  and (sum ?x in '.*_us2': ?x.QueryServiceImpl['.*']) = (sum ?x in '.*_us1': ?x.QueryServiceImpl['.*']) and (sum ?x in 'c.*': ?x.QueryServiceImpl['.*'] = 0) and (sum ?x in 'm.*': ?x.LoadBalancerEndPointImpl = 0) and (sum ?x in 'm.*': ?x.LoadBalancerServiceImpl = 0) and (sum ?x in 'm.*': ?x.PlatformServiceImpl = 0)",
+  "DC":[  
+
+  ],
+  "obj":[  
+
+  ],
+  "cloud_provider_DC_availability":{  
+    "c4_2xlarge_us2":2,
+    "c4_2xlarge_us1":2,
+    "m4_large_us2":2,
+    "m4_large_us1":2,
+    "c4_xlarge_us2":2,
+    "c4_xlarge_us1":2,
+    "m4_xlarge_us2":2,
+    "m4_xlarge_us1":2,
+    "c4_2xlarge_eu":2,
+    "c4_xlarge_eu":2,
+    "m4_large_eu":2,
+    "m4_xlarge_eu":2
+  },
+  "bind preferences":[  
+    "local",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_eu' :  forall ?y of type LoadBalancerEndPointImpl in '.*_eu' : ?x used by ?y",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  forall ?y of type LoadBalancerEndPointImpl in '.*_us.' : ?x used by ?y",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_eu' :  forall ?y of type PlatformServiceImpl in '.*_eu' : ?x used by ?y",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  forall ?y of type PlatformServiceImpl in '.*_us.' : ?x used by ?y",
+    "sum ?x of type LoadBalancerEndPointImpl['.*'] in '.*_eu' :  exists ?y of type PlatformServiceImpl in '.*_eu' : ?x used by ?y",
+    "sum ?x of type LoadBalancerEndPointImpl['.*'] in '.*_us.' :  exists ?y of type PlatformServiceImpl in '.*_us.' : ?x used by ?y",
+    "sum ?x of type LoadBalancerEndPointImpl in '.*_eu' :  exists ?y of type LoadBalancerServiceImpl in '.*_eu' : ?x used by ?y",
+    "sum ?x of type LoadBalancerEndPointImpl in '.*_us.' :  exists ?y of type LoadBalancerServiceImpl in '.*_us.' : ?x used by ?y",
+    "sum ?x of type DeploymentAgentImpl in '.*_eu' :  exists ?y of type DeploymentServiceImpl in '.*_eu' : ?x used by ?y",
+    "sum ?x of type DeploymentAgentImpl in '.*_us.' :  exists ?y of type DeploymentServiceImpl in '.*_us.' : ?x used by ?y"
+  ],
+  "add_method_priorities":[  
+    {  
+      "class":"PlatformServiceImpl",
+      "method":"addEndPoint"
+    },		
+    {  
+      "class":"LoadBalancerEndPointImpl",
+      "method":"addLBE"
+    },
+		{  
+      "class":"PlatformServiceImpl",
+      "method":"addServiceInstance"
+    },
+		{  
+      "class":"DeploymentAgentImpl",
+      "method":"installDA"
+    },
+    {  
+      "class":"DeploymentServiceImpl",
+      "method":"addDS"
+    }
+  ],
+	"remove_method_priorities":[  		
+    {  
+      "class":"DeploymentServiceImpl",
+      "method":"removeDS"
+    },
+		{  
+      "class":"DeploymentAgentImpl",
+      "method":"uninstallDA"
+    },
+		{  
+      "class":"PlatformServiceImpl",
+      "method":"removeServiceInstance"
+    },
+    {  
+      "class":"LoadBalancerEndPointImpl",
+      "method":"removeLBE"
+    },
+		{  
+      "class":"PlatformServiceImpl",
+      "method":"removeEndPoint"
+    }
+  ]
+}
+**/
+
+
+[ SmartDeploy : "{\"id\":\"MainSmartDeployer\",\"specification\":\"(sum ?x in '.*_us.': ?x.QueryServiceImpl['staging']) > 0 and (sum ?x in '.*_eu': ?x.QueryServiceImpl['staging']) > 0 and QueryServiceImpl['.*'] = 4 and (sum ?x in '.*_us.': ?x.LoadBalancerServiceImpl) = 1 and (sum ?x in '.*_eu': ?x.LoadBalancerServiceImpl) = 1 and (sum ?x in '.*_us.': ?x.PlatformServiceImpl) = 1 and (sum ?x in '.*_eu': ?x.PlatformServiceImpl) = 1 and (sum ?x in '.*_us1': ?x.LoadBalancerEndPointImpl) = 1 and (sum ?x in '.*_us2': ?x.LoadBalancerEndPointImpl) = 1 and (sum ?x in '.*_eu': ?x.LoadBalancerEndPointImpl) = 1 and (sum ?x in '.*_us.': ?x.DeploymentServiceImpl) = 1 and (sum ?x in '.*_eu': ?x.DeploymentServiceImpl) = 1 and (forall ?x in DC: ( ?x.QueryServiceImpl['.*'] < 2 and ( ?x.QueryServiceImpl['.*'] = 1 impl ?x.DeploymentAgentImpl = 1) and ( ?x.PlatformServiceImpl > 0 impl  ((?x.LoadBalancerServiceImpl = 1) and (?x.DeploymentServiceImpl = 1) and (sum ?y in obj:  ?x.?y) = 3)) and (?x.LoadBalancerEndPointImpl > 0 impl (sum ?y in obj: ?x.?y) = 1) ))  and (sum ?x in '.*_us2': ?x.QueryServiceImpl['.*']) = (sum ?x in '.*_us1': ?x.QueryServiceImpl['.*']) and (sum ?x in 'c.*': ?x.QueryServiceImpl['.*'] = 0) and (sum ?x in 'm.*': ?x.LoadBalancerEndPointImpl = 0) and (sum ?x in 'm.*': ?x.LoadBalancerServiceImpl = 0) and (sum ?x in 'm.*': ?x.PlatformServiceImpl = 0)\",\"DC\":[],\"obj\":[],\"cloud_provider_DC_availability\":{\"c4_2xlarge_us2\":2,\"c4_2xlarge_us1\":2,\"m4_large_us2\":2,\"m4_large_us1\":2,\"c4_xlarge_us2\":2,\"c4_xlarge_us1\":2,\"m4_xlarge_us2\":2,\"m4_xlarge_us1\":2,\"c4_2xlarge_eu\":2,\"c4_xlarge_eu\":2,\"m4_large_eu\":2,\"m4_xlarge_eu\":2},\"bind preferences\":[\"local\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_eu' :  forall ?y of type LoadBalancerEndPointImpl in '.*_eu' : ?x used by ?y\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  forall ?y of type LoadBalancerEndPointImpl in '.*_us.' : ?x used by ?y\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_eu' :  forall ?y of type PlatformServiceImpl in '.*_eu' : ?x used by ?y\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  forall ?y of type PlatformServiceImpl in '.*_us.' : ?x used by ?y\",\"sum ?x of type LoadBalancerEndPointImpl['.*'] in '.*_eu' :  exists ?y of type PlatformServiceImpl in '.*_eu' : ?x used by ?y\",\"sum ?x of type LoadBalancerEndPointImpl['.*'] in '.*_us.' :  exists ?y of type PlatformServiceImpl in '.*_us.' : ?x used by ?y\",\"sum ?x of type LoadBalancerEndPointImpl in '.*_eu' :  exists ?y of type LoadBalancerServiceImpl in '.*_eu' : ?x used by ?y\",\"sum ?x of type LoadBalancerEndPointImpl in '.*_us.' :  exists ?y of type LoadBalancerServiceImpl in '.*_us.' : ?x used by ?y\",\"sum ?x of type DeploymentAgentImpl in '.*_eu' :  exists ?y of type DeploymentServiceImpl in '.*_eu' : ?x used by ?y\",\"sum ?x of type DeploymentAgentImpl in '.*_us.' :  exists ?y of type DeploymentServiceImpl in '.*_us.' : ?x used by ?y\"],\"add_method_priorities\":[{\"class\":\"PlatformServiceImpl\",\"method\":\"addEndPoint\"},{\"class\":\"LoadBalancerEndPointImpl\",\"method\":\"addLBE\"},{\"class\":\"PlatformServiceImpl\",\"method\":\"addServiceInstance\"},{\"class\":\"DeploymentAgentImpl\",\"method\":\"installDA\"},{\"class\":\"DeploymentServiceImpl\",\"method\":\"addDS\"}],\"remove_method_priorities\":[{\"class\":\"DeploymentServiceImpl\",\"method\":\"removeDS\"},{\"class\":\"DeploymentAgentImpl\",\"method\":\"uninstallDA\"},{\"class\":\"PlatformServiceImpl\",\"method\":\"removeServiceInstance\"},{\"class\":\"LoadBalancerEndPointImpl\",\"method\":\"removeLBE\"},{\"class\":\"PlatformServiceImpl\",\"method\":\"removeEndPoint\"}]}" ]
+
+/////////////////////////////////////
+// SmartDeploy ANNOTATION FOR SMART DEPLOYER: AddQuery block
+/////////////////////////////////////
+
+/**
+{  
+  "id":"AddQueryDeployer",
+  "specification":"(sum ?x in '.*us.': ?x.QueryServiceImpl['live']) = 2 and (sum ?x in '.*eu': ?x.QueryServiceImpl['live']) = 2 and (forall ?x in DC: ( ?x.QueryServiceImpl['.*'] < 2 and ( ?x.QueryServiceImpl['.*'] = 1 impl ?x.DeploymentAgentImpl = 1))) and abs((sum ?x in '.*_us2': ?x.QueryServiceImpl['.*']) - (sum ?x in '.*_us1': ?x.QueryServiceImpl['.*']) ) = 0 and (sum ?x in 'c.*': ?x.QueryServiceImpl['.*'] = 0) and (sum ?x in 'm.*': ?x.LoadBalancerEndPointImpl = 0) and (sum ?x in 'm.*': ?x.LoadBalancerServiceImpl = 0) and (sum ?x in 'm.*': ?x.PlatformServiceImpl = 0)",
+  "DC":[  
+
+  ],
+  "obj":[  
+    {  
+      "name":"platformServiceObjEu",
+      "provides":[  
+        {  
+          "ports":[  
+            "MonitorPlatformService",
+            "PlatformService"
+          ],
+          "num":-1
+        }
+      ],
+			"methods" : [
+				{
+					"add" : { "return_type" : "Int", "name": "addEndPoint", "param_type": "LoadBalancerEndPoint" },
+					"remove" : { "return_type" : "Int", "name": "removeEndPoint", "param_type": "LoadBalancerEndPoint" }
+				},
+				{
+					"add" : { "return_type" : "Int", "name": "addServiceInstance", "param_type": "Service" },
+					"remove" : { "return_type" : "Int", "name": "removeServiceInstance", "param_type": "Service" }
+				}
+			],
+      "interface":"MonitorPlatformService"
+    },
+    {  
+      "name":"platformServiceObjUs",
+      "provides":[  
+        {  
+          "ports":[  
+            "MonitorPlatformService",
+            "PlatformService"
+          ],
+          "num":-1
+        }
+      ],
+      "methods" : [
+				{
+					"add" : { "return_type" : "Int", "name": "addEndPoint", "param_type": "LoadBalancerEndPoint" },
+					"remove" : { "return_type" : "Int", "name": "removeEndPoint", "param_type": "LoadBalancerEndPoint" }
+				},
+				{
+					"add" : { "return_type" : "Int", "name": "addServiceInstance", "param_type": "Service" },
+					"remove" : { "return_type" : "Int", "name": "removeServiceInstance", "param_type": "Service" }
+				}
+			],
+      "interface":"MonitorPlatformService"
+    },
+    {  
+      "name":"deploymentServiceObjEu",
+      "provides":[  
+
+      ],
+      "methods" : [
+				{
+					"add" : { "return_type" : "Unit", "name": "addDS", "param_type": "DeploymentAgent" },
+					"remove" : { "return_type" : "Unit", "name": "removeDS", "param_type": "DeploymentAgent" }
+				}
+			],
+      "interface":"DeploymentService"
+    },
+    {  
+      "name":"deploymentServiceObjUs",
+      "provides":[  
+
+      ],
+      "methods" : [
+				{
+					"add" : { "return_type" : "Unit", "name": "addDS", "param_type": "DeploymentAgent" },
+					"remove" : { "return_type" : "Unit", "name": "removeDS", "param_type": "DeploymentAgent" }
+				}
+			],
+      "interface":"DeploymentService"
+    },
+    {  
+      "name":"loadBalancerEndPointObjEu1",
+      "provides":[  
+        {  
+          "ports":[  
+            "LoadBalancerEndPoint"
+          ],
+          "num":-1
+        }
+      ],
+      "methods" : [
+				{
+					"add" : { "return_type" : "Bool", "name": "addLBE", "param_type": "Service" },
+					"remove" : { "return_type" : "Bool", "name": "removeLBE", "param_type": "Service" }
+				}
+			],
+      "interface":"LoadBalancerEndPoint"
+    },
+    {  
+      "name":"loadBalancerEndPointObjUs1",
+      "provides":[  
+        {  
+          "ports":[  
+            "LoadBalancerEndPoint"
+          ],
+          "num":-1
+        }
+      ],
+      "methods" : [
+				{
+					"add" : { "return_type" : "Bool", "name": "addLBE", "param_type": "Service" },
+					"remove" : { "return_type" : "Bool", "name": "removeLBE", "param_type": "Service" }
+				}
+			],
+      "interface":"LoadBalancerEndPoint"
+    },
+    {  
+      "name":"loadBalancerEndPointObjUs2",
+      "provides":[  
+        {  
+          "ports":[  
+            "LoadBalancerEndPoint"
+          ],
+          "num":-1
+        }
+      ],
+      "methods" : [
+				{
+					"add" : { "return_type" : "Bool", "name": "addLBE", "param_type": "Service" },
+					"remove" : { "return_type" : "Bool", "name": "removeLBE", "param_type": "Service" }
+				}
+			],
+      "interface":"LoadBalancerEndPoint"
+    }
+  ],
+  "bind preferences":[  
+    "local",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_eu' :  exists ?y of type platformServiceObjEu in DC : ?x used by ?y",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  exists ?y of type platformServiceObjUs in DC : ?x used by ?y",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_eu' :  exists ?y of type loadBalancerEndPointObjEu1 in DC : ?x used by ?y",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  exists ?y of type loadBalancerEndPointObjUs1 in DC : ?x used by ?y",
+    "sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  exists ?y of type loadBalancerEndPointObjUs2 in DC : ?x used by ?y",
+    "sum ?x of type DeploymentAgentImpl in '.*_eu' :  exists ?y of type deploymentServiceObjEu in DC : ?x used by ?y",
+    "sum ?x of type DeploymentAgentImpl in '.*_us.' :  exists ?y of type deploymentServiceObjUs in DC : ?x used by ?y"
+  ],
+  "add_method_priorities":[  
+    {  
+      "class":"loadBalancerEndPointObjEu1",
+      "method":"addLBE"
+    },
+    {  
+      "class":"loadBalancerEndPointObjUs1",
+      "method":"addLBE"
+    },
+    {  
+      "class":"loadBalancerEndPointObjUs2",
+      "method":"addLBE"
+    },
+    {  
+      "class":"platformServiceObjEu",
+      "method":"addServiceInstance"
+    },
+    {  
+      "class":"platformServiceObjUs",
+      "method":"addServiceInstance"
+    },
+		{  
+      "class":"DeploymentAgentImpl",
+      "method":"installDA"
+    },
+    {  
+      "class":"deploymentServiceObjEu",
+      "method":"addDS"
+    },
+    {  
+      "class":"deploymentServiceObjUs",
+      "method":"addDS"
+    }
+  ],
+	"remove_method_priorities":[  		
+    {  
+      "class":"deploymentServiceObjUs",
+      "method":"removeDS"
+    },
+    {  
+      "class":"deploymentServiceObjEu",
+      "method":"removeDS"
+    },
+		{  
+      "class":"DeploymentAgentImpl",
+      "method":"uninstallDA"
+    },
+    {  
+      "class":"platformServiceObjUs",
+      "method":"removeServiceInstance"
+    },
+    {  
+      "class":"platformServiceObjEu",
+      "method":"removeServiceInstance"
+    },
+    {  
+      "class":"loadBalancerEndPointObjUs2",
+      "method":"removeLBE"
+    },
+    {  
+      "class":"loadBalancerEndPointObjUs1",
+      "method":"removeLBE"
+    },
+    {  
+      "class":"loadBalancerEndPointObjEu1",
+      "method":"removeLBE"
+    }
+
+  ]
+}
+**/
+[ SmartDeploy : "{\"id\":\"AddQueryDeployer\",\"specification\":\"(sum ?x in '.*us.': ?x.QueryServiceImpl['live']) = 2 and (sum ?x in '.*eu': ?x.QueryServiceImpl['live']) = 2 and (forall ?x in DC: ( ?x.QueryServiceImpl['.*'] < 2 and ( ?x.QueryServiceImpl['.*'] = 1 impl ?x.DeploymentAgentImpl = 1))) and abs((sum ?x in '.*_us2': ?x.QueryServiceImpl['.*']) - (sum ?x in '.*_us1': ?x.QueryServiceImpl['.*']) ) = 0 and (sum ?x in 'c.*': ?x.QueryServiceImpl['.*'] = 0) and (sum ?x in 'm.*': ?x.LoadBalancerEndPointImpl = 0) and (sum ?x in 'm.*': ?x.LoadBalancerServiceImpl = 0) and (sum ?x in 'm.*': ?x.PlatformServiceImpl = 0)\",\"DC\":[],\"obj\":[{\"name\":\"platformServiceObjEu\",\"provides\":[{\"ports\":[\"MonitorPlatformService\",\"PlatformService\"],\"num\":-1}],\"methods\":[{\"add\":{\"return_type\":\"Int\",\"name\":\"addEndPoint\",\"param_type\":\"LoadBalancerEndPoint\"},\"remove\":{\"return_type\":\"Int\",\"name\":\"removeEndPoint\",\"param_type\":\"LoadBalancerEndPoint\"}},{\"add\":{\"return_type\":\"Int\",\"name\":\"addServiceInstance\",\"param_type\":\"Service\"},\"remove\":{\"return_type\":\"Int\",\"name\":\"removeServiceInstance\",\"param_type\":\"Service\"}}],\"interface\":\"MonitorPlatformService\"},{\"name\":\"platformServiceObjUs\",\"provides\":[{\"ports\":[\"MonitorPlatformService\",\"PlatformService\"],\"num\":-1}],\"methods\":[{\"add\":{\"return_type\":\"Int\",\"name\":\"addEndPoint\",\"param_type\":\"LoadBalancerEndPoint\"},\"remove\":{\"return_type\":\"Int\",\"name\":\"removeEndPoint\",\"param_type\":\"LoadBalancerEndPoint\"}},{\"add\":{\"return_type\":\"Int\",\"name\":\"addServiceInstance\",\"param_type\":\"Service\"},\"remove\":{\"return_type\":\"Int\",\"name\":\"removeServiceInstance\",\"param_type\":\"Service\"}}],\"interface\":\"MonitorPlatformService\"},{\"name\":\"deploymentServiceObjEu\",\"provides\":[],\"methods\":[{\"add\":{\"return_type\":\"Unit\",\"name\":\"addDS\",\"param_type\":\"DeploymentAgent\"},\"remove\":{\"return_type\":\"Unit\",\"name\":\"removeDS\",\"param_type\":\"DeploymentAgent\"}}],\"interface\":\"DeploymentService\"},{\"name\":\"deploymentServiceObjUs\",\"provides\":[],\"methods\":[{\"add\":{\"return_type\":\"Unit\",\"name\":\"addDS\",\"param_type\":\"DeploymentAgent\"},\"remove\":{\"return_type\":\"Unit\",\"name\":\"removeDS\",\"param_type\":\"DeploymentAgent\"}}],\"interface\":\"DeploymentService\"},{\"name\":\"loadBalancerEndPointObjEu1\",\"provides\":[{\"ports\":[\"LoadBalancerEndPoint\"],\"num\":-1}],\"methods\":[{\"add\":{\"return_type\":\"Bool\",\"name\":\"addLBE\",\"param_type\":\"Service\"},\"remove\":{\"return_type\":\"Bool\",\"name\":\"removeLBE\",\"param_type\":\"Service\"}}],\"interface\":\"LoadBalancerEndPoint\"},{\"name\":\"loadBalancerEndPointObjUs1\",\"provides\":[{\"ports\":[\"LoadBalancerEndPoint\"],\"num\":-1}],\"methods\":[{\"add\":{\"return_type\":\"Bool\",\"name\":\"addLBE\",\"param_type\":\"Service\"},\"remove\":{\"return_type\":\"Bool\",\"name\":\"removeLBE\",\"param_type\":\"Service\"}}],\"interface\":\"LoadBalancerEndPoint\"},{\"name\":\"loadBalancerEndPointObjUs2\",\"provides\":[{\"ports\":[\"LoadBalancerEndPoint\"],\"num\":-1}],\"methods\":[{\"add\":{\"return_type\":\"Bool\",\"name\":\"addLBE\",\"param_type\":\"Service\"},\"remove\":{\"return_type\":\"Bool\",\"name\":\"removeLBE\",\"param_type\":\"Service\"}}],\"interface\":\"LoadBalancerEndPoint\"}],\"bind preferences\":[\"local\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_eu' :  exists ?y of type platformServiceObjEu in DC : ?x used by ?y\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  exists ?y of type platformServiceObjUs in DC : ?x used by ?y\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_eu' :  exists ?y of type loadBalancerEndPointObjEu1 in DC : ?x used by ?y\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  exists ?y of type loadBalancerEndPointObjUs1 in DC : ?x used by ?y\",\"sum ?x of type QueryServiceImpl['.*'] in '.*_us.' :  exists ?y of type loadBalancerEndPointObjUs2 in DC : ?x used by ?y\",\"sum ?x of type DeploymentAgentImpl in '.*_eu' :  exists ?y of type deploymentServiceObjEu in DC : ?x used by ?y\",\"sum ?x of type DeploymentAgentImpl in '.*_us.' :  exists ?y of type deploymentServiceObjUs in DC : ?x used by ?y\"],\"add_method_priorities\":[{\"class\":\"loadBalancerEndPointObjEu1\",\"method\":\"addLBE\"},{\"class\":\"loadBalancerEndPointObjUs1\",\"method\":\"addLBE\"},{\"class\":\"loadBalancerEndPointObjUs2\",\"method\":\"addLBE\"},{\"class\":\"platformServiceObjEu\",\"method\":\"addServiceInstance\"},{\"class\":\"platformServiceObjUs\",\"method\":\"addServiceInstance\"},{\"class\":\"DeploymentAgentImpl\",\"method\":\"installDA\"},{\"class\":\"deploymentServiceObjEu\",\"method\":\"addDS\"},{\"class\":\"deploymentServiceObjUs\",\"method\":\"addDS\"}],\"remove_method_priorities\":[{\"class\":\"deploymentServiceObjUs\",\"method\":\"removeDS\"},{\"class\":\"deploymentServiceObjEu\",\"method\":\"removeDS\"},{\"class\":\"DeploymentAgentImpl\",\"method\":\"uninstallDA\"},{\"class\":\"platformServiceObjUs\",\"method\":\"removeServiceInstance\"},{\"class\":\"platformServiceObjEu\",\"method\":\"removeServiceInstance\"},{\"class\":\"loadBalancerEndPointObjUs2\",\"method\":\"removeLBE\"},{\"class\":\"loadBalancerEndPointObjUs1\",\"method\":\"removeLBE\"},{\"class\":\"loadBalancerEndPointObjEu1\",\"method\":\"removeLBE\"}]}" ]
+
+/////////////////////////////////////
+// PROGRAM
+/////////////////////////////////////
+
+
+// TYPE SYNONYMS AND DATATYPES
+//////////////////////////////
+
+//type Customer = String;
+data Degradation_States = S;
+//type Id = Int;
+//type Request = Int;
+//type Response = Bool;
+data ServiceType = FAS| SUGGEST| DM;
+data Config = Config_(ServiceType serviceType, List<Map<Resourcetype, Rat>> instances_);
+data State = RUNNING| STOP;
+data VMType = T2_MICRO| T2_SMALL| T2_MEDIUM| M4_LARGE| M4_XLARGE| M4_2XLARGE| M4_10XLARGE| M3_MEDIUM| M3_LARGE| M3_XLARGE| M3_2XLARGE| C4_LARGE| C4_XLARGE| C4_2XLARGE| C4_4XLARGE| C4_8XLARGE;
+//type ResourceCapacities = Map<Resourcetype, Rat>;
+data LBOp = INCR| DECR;
+data Rule = Rule_(Int interval, Monitor monitor_);
+data Scale = UP| DOWN;
+//type CustomerConfig = Pair<String, List<Pair<Config, Int>>>;  // DEAD CODE
+
+data ScaleStamp = ScaleStamp_(Time, String monitorName, ScaleAction action);
+data ScaleAction = ScaleUp(DeployerIF)
+                 | ScaleDown(DeployerIF);
+
+
+//type SmartDeploy = String;
+//type SmartDeployCloudProvider = String;
+
+
+// SPECIFIC FUNCTIONS
+/////////////////////
+
+def Int init() = 1;
+
+def Int incr(Int id) = ( id + 1 );
+
+def Int cost(Int request) = request;
+
+def Bool success() = True;
+
+def Bool isSuccess(Bool response) = response;
+
+def Set<VMType> vmTypesCollection() = 
+  set(Cons( T2_MICRO, Cons( T2_SMALL, Cons( T2_MEDIUM, Cons( M4_LARGE, Cons( M4_XLARGE, Cons( M4_2XLARGE, Cons( M4_10XLARGE, Cons( M3_MEDIUM, Cons( M3_LARGE, Cons( M3_XLARGE, Cons( M3_2XLARGE, Cons( C4_LARGE, Cons( C4_XLARGE, Cons( C4_2XLARGE, Cons( C4_4XLARGE, Cons( C4_8XLARGE, Nil ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ));
+
+
+def Map<Resourcetype, Rat> vmResources(VMType v) = 
+  case v {
+    T2_MICRO => map(Cons( Pair( Memory, 1 ), Cons( Pair( Speed, 1 ), Nil ) ));
+    T2_SMALL => map(Cons( Pair( Memory, 2 ), Cons( Pair( Speed, 1 ), Nil ) ));
+    T2_MEDIUM => map(Cons( Pair( Memory, 4 ), Cons( Pair( Speed, 2 ), Nil ) ));
+    M4_LARGE => map(Cons( Pair( Memory, 8 ), Cons( Pair( Speed, 2 ), Nil ) ));
+    M4_XLARGE => map(Cons( Pair( Memory, 16 ), Cons( Pair( Speed, 4 ), Nil ) ));
+    M4_2XLARGE => map(Cons( Pair( Memory, 32 ), Cons( Pair( Speed, 8 ), Nil ) ));
+    M4_10XLARGE => map(Cons( Pair( Memory, 160 ), Cons( Pair( Speed, 40 ), Nil ) ));
+    M3_MEDIUM => map(Cons( Pair( Memory, ( 3750 / 1000 ) ), Cons( Pair( Speed, 1 ), Nil ) ));
+    M3_LARGE => map(Cons( Pair( Memory, ( 7500 / 1000 ) ), Cons( Pair( Speed, 2 ), Nil ) ));
+    M3_XLARGE => map(Cons( Pair( Memory, 15 ), Cons( Pair( Speed, 4 ), Nil ) ));
+    M3_2XLARGE => map(Cons( Pair( Memory, 30 ), Cons( Pair( Speed, 8 ), Nil ) ));
+    C4_LARGE => map(Cons( Pair( Memory, ( 3750 / 1000 ) ), Cons( Pair( Speed, 2 ), Nil ) ));
+    C4_XLARGE => map(Cons( Pair( Memory, ( 7500 / 1000 ) ), Cons( Pair( Speed, 4 ), Nil ) ));
+    C4_2XLARGE => map(Cons( Pair( Memory, 15 ), Cons( Pair( Speed, 8 ), Nil ) ));
+    C4_4XLARGE => map(Cons( Pair( Memory, 30 ), Cons( Pair( Speed, 16 ), Nil ) ));
+    C4_8XLARGE => map(Cons( Pair( Memory, 60 ), Cons( Pair( Speed, 36 ), Nil ) ));
+  };
+
+def Map<String, Map<Resourcetype, Rat>> amazonInstances() = 
+  map(Cons( Pair( "T2_MICRO", map(Cons( Pair( Memory, 1 ), Cons( Pair( Speed, 1 ), Nil ) )) ), Cons( Pair( "T2_SMALL", map(Cons( Pair( Memory, 2 ), Cons( Pair( Speed, 1 ), Nil ) )) ), Cons( Pair( "T2_MEDIUM", map(Cons( Pair( Memory, 4 ), Cons( Pair( Speed, 2 ), Nil ) )) ), Cons( Pair( "M4_LARGE", map(Cons( Pair( Memory, 8 ), Cons( Pair( Speed, 2 ), Nil ) )) ), Cons( Pair( "M4_XLARGE", map(Cons( Pair( Memory, 16 ), Cons( Pair( Speed, 4 ), Nil ) )) ), Cons( Pair( "M4_2XLARGE", map(Cons( Pair( Memory, 32 ), Cons( Pair( Speed, 8 ), Nil ) )) ), Cons( Pair( "M4_10XLARGE", map(Cons( Pair( Memory, 160 ), Cons( Pair( Speed, 40 ), Nil ) )) ), Cons( Pair( "M3_MEDIUM", map(Cons( Pair( Memory, ( 3750 / 1000 ) ), Cons( Pair( Speed, 1 ), Nil ) )) ), Cons( Pair( "M3_LARGE", map(Cons( Pair( Memory, ( 7500 / 1000 ) ), Cons( Pair( Speed, 2 ), Nil ) )) ), Cons( Pair( "M3_XLARGE", map(Cons( Pair( Memory, 15 ), Cons( Pair( Speed, 4 ), Nil ) )) ), Cons( Pair( "M3_2XLARGE", map(Cons( Pair( Memory, 30 ), Cons( Pair( Speed, 8 ), Nil ) )) ), Cons( Pair( "C4_LARGE", map(Cons( Pair( Memory, ( 3750 / 1000 ) ), Cons( Pair( Speed, 2 ), Nil ) )) ), Cons( Pair( "C4_XLARGE", map(Cons( Pair( Memory, ( 7500 / 1000 ) ), Cons( Pair( Speed, 4 ), Nil ) )) ), Cons( Pair( "C4_2XLARGE", map(Cons( Pair( Memory, 15 ), Cons( Pair( Speed, 8 ), Nil ) )) ), Cons( Pair( "C4_4XLARGE", map(Cons( Pair( Memory, 30 ), Cons( Pair( Speed, 16 ), Nil ) )) ), Cons( Pair( "C4_8XLARGE", map(Cons( Pair( Memory, 60 ), Cons( Pair( Speed, 36 ), Nil ) )) ), Nil ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ));
+
+
+// LIST&MAP UTILITY FUNCTIONS
+////////////////////
+
+def Maybe<X> mapValue<X, A>(Map<X, A> ss, A e) = 
+  case ss {
+    EmptyMap => Nothing;
+    InsertAssoc( p, y ) => case p {
+      Pair( x, e ) => Just( x );
+      _ => mapValue(y, e);
+    };
+  };
+
+def List<X> removeFirst<X>(List<X> list, X v) = 
+  case list {
+    Nil => Nil;
+    Cons( v, vs ) => vs;
+    Cons( x, vs ) => Cons( x, removeFirst(vs, v) );
+  };
+
+def Bool inList<X>(List<X> list, X v) = 
+  case list {
+    Nil => False;
+    Cons( v, vs ) => True;
+    Cons( _, vs ) => inList(vs, v);
+  };
+
+def Bool unique<X>(List<X> list) = 
+  case list {
+    Nil => True;
+    Cons( v, vs ) => if inList(vs, v) then False else unique(vs);
+  };
+
+def List<X> add<X>(List<X> list, X v) = if inList(list, v) then list else Cons(v, list);
+
+def List<X> toList<X>(Set<X> s) = 
+  case s {
+    EmptySet => Nil;
+    Insert( x, xs ) => Cons( x, toList(xs) );
+  };
+
+def Maybe<Pair<Config, Int>> lookupService(Map<Config, Int> cs, ServiceType s) = 
+  case cs {
+    EmptyMap => Nothing;
+    InsertAssoc( Pair( Config_( s, ls ), e ), _ ) => Just( Pair( Config_( s, ls ), e ) );
+    InsertAssoc( _, ms ) => lookupService(ms, s);
+  };
+
+def Maybe<Pair<Config, Int>> lookupCustomerService(Map<String, Map<Config, Int>> cs, String c, ServiceType s) = 
+  case lookupDefault(cs, c, EmptyMap) {
+    EmptyMap => Nothing;
+    map => lookupService(map, s);
+  };
+
+def Map<Config, Int> removeLocalEndPoint(Map<Config, Int> cs, Int e) = 
+  case cs {
+    EmptyMap => EmptyMap;
+    InsertAssoc( Pair( _, e ), cs ) => cs;
+    InsertAssoc( kv, ms ) => InsertAssoc( kv, removeLocalEndPoint(ms, e) );
+  };
+
+def Map<String, Map<Config, Int>> removeGlobalEndPoint(Map<String, Map<Config, Int>> cs, Int e) = 
+  case cs {
+    EmptyMap => EmptyMap;
+    InsertAssoc( Pair( c, map ), cs ) => case removeLocalEndPoint(map, e) {
+      EmptyMap => removeGlobalEndPoint(cs, e);
+      newMap => InsertAssoc( Pair( c, newMap ), removeGlobalEndPoint(cs, e) );
+    };
+  };
+
+def Maybe<Pair<X, Y>> keyPairs<X, Y, Z>(Map<X, Map<Y, Z>> map, Z z) = 
+  case map {
+    EmptyMap => Nothing;
+    InsertAssoc( Pair( x, cm ), ms ) => case mapValue(cm, z) {
+      Nothing => keyPairs(ms, z);
+      Just( y ) => Just( Pair( x, y ) );
+    };
+  };
+
+def Map<String, Map<Config, Int>> updateConfig(Map<String, Map<Config, Int>> cs, String c, Config o, Config n) = 
+  case lookup(cs, c) {
+    Nothing => cs;
+    Just( cm ) => case lookup(cm, o) {
+      Nothing => cs;
+      Just( e ) => put(cs, c, put(removeKey(cm, o), n, e));
+    };
+  };
+
+def List<Int> getHyphenPosition(String s, Int v) = 
+  if ( s == "" ) then Nil else if ( substr(s, 0, 1) == "-" ) then Cons( v, getHyphenPosition(substr(s, 1, ( strlen(s) - 1 )), ( v + 1 )) ) else getHyphenPosition(substr(s, 1, ( strlen(s) - 1 )), ( v + 1 ));
+
+def String getInstanceName(String s) = 
+  let ( List<Int> ls ) = getHyphenPosition(s, 0) in if ( length(ls) > 1 ) then substr(s, ( head(ls) + 1 ), ( ( head(tail(ls)) - head(ls) ) - 1 )) else s;
+
+def Bool strContains(String s, String substring) = 
+  let ( Int l1 ) = strlen(s) in let ( Int l2 ) = strlen(substring) in if ( l2 > l1 ) then False else if ( substr(s, 0, l2) == substring ) then True else strContains(substr(s, 1, ( l1 - 1 )), substring);
+
+def List<A> filter_lists_by_substr<A>(List<A> xs, List<String> ys, String substring) = 
+  case ys {
+    Nil => Nil;
+    Cons( z, zs ) => if strContains(z, substring) then Cons( head(xs), filter_lists_by_substr(tail(xs), zs, substring) ) else filter_lists_by_substr(tail(xs), zs, substring);
+  };
+
+def List<A> fst_list<A, B>(List<Pair<A, B>> ls) = 
+  case ls {
+    Nil => Nil;
+    Cons( x, xs ) => Cons( fst(x), fst_list(xs) );
+  };
+
+def List<B> snd_list<A, B>(List<Pair<A, B>> ls) = 
+  case ls {
+    Nil => Nil;
+    Cons( x, xs ) => Cons( snd(x), snd_list(xs) );
+  };
+
+
+// def List<X> take<X>(List<X> ls, Int n) = 
+//   case ls {
+//     Nil => Nil;
+//     Cons( x, xs ) => if ( n == 0 ) then Nil else Cons( x, take(xs, ( n - 1 )) );
+//   };
+
+def A takeFromSet<A>(Set<A> ss) = 
+  case ss {
+    Insert( e, _ ) => e;
+  };
+
+def Bool inListAll<X>(List<X> ls, List<X> ms) = 
+  case ms {
+    Nil => True;
+    Cons( m, mm ) => inListAll(if inList(ls, m) then removeFirst(ls, m) else ls, mm);
+  };
+
+def List<X> removeAllinList<X>(List<X> ls, List<X> ms) = 
+  case ms {
+    Nil => Nil;
+    Cons( m, mm ) => removeAllinList(without(ls, m), mm);
+  };
+
+def Map<X, Y> removeAll<X, Y>(Map<X, Y> map, List<X> xs) = 
+  case xs {
+    Nil => map;
+    Cons( x, nx ) => removeAll(removeKey(map, x), nx);
+  };
+
+def List<X> difference_<X>(List<X> xs, List<X> ys) = 
+  case ys {
+    Nil => Nil;
+    Cons( y, ny ) => difference_(without(xs, y), ny);
+  };
+
+def List<Y> lookupMap<X, Y>(Map<X, Y> map, List<X> xs) = 
+  case xs {
+    Nil => Nil;
+    Cons( x, nx ) => case lookup(map, x) {
+      Nothing => lookupMap(map, nx);
+      Just( v ) => Cons( v, lookupMap(map, nx) );
+    };
+  };
+
+def List<Z> lookupTwoMaps<X, Y, Z>(Map<X, List<Y>> m1, Map<Y, Z> m2, X x) = 
+  case lookup(m1, x) {
+    Nothing => Nil;
+    Just( vs ) => lookupMap(m2, vs);
+  };
+
+
+def List<Y> lookupAllSecond<W, X, Y>(Map<W, Map<X, List<Y>>> map, X x) = 
+  case map {
+    EmptyMap => Nil;
+    InsertAssoc( Pair( w, ns ), ms ) => concatenate(lookupDefault(ns, x, Nil), lookupAllSecond(ms, x));
+  };
+
+def Map<Int, Y> decr1<Y>(Map<Int, Y> map) = 
+  case map {
+    EmptyMap => EmptyMap;
+    InsertAssoc( Pair( w, y ), ms ) => InsertAssoc( Pair( ( w - 1 ), y ), decr1(ms) );
+  };
+
+
+def Map<X, Map<Int, Y>> decr<X, Y>(Map<X, Map<Int, Y>> map) = 
+  case map {
+    EmptyMap => EmptyMap;
+    InsertAssoc( Pair( w, ns ), ms ) => InsertAssoc( Pair( w, decr1(ns) ), decr(ms) );
+  };
+
+def Map<X, Map<X, Y>> reset<X, Y>(Map<X, Map<X, Y>> map, X x) = 
+  case map {
+    EmptyMap => EmptyMap;
+    InsertAssoc( Pair( k, ns ), ms ) => case lookup(ns, x) {
+      Nothing => InsertAssoc( Pair( k, ns ), reset(ms, x) );
+      Just( y ) => InsertAssoc( Pair( k, put(removeKey(ns, x), k, y) ), reset(ms, x) );
+    };
+  };
+
+
+// MONITORS
+///////////////////////////////////////
+
+interface Monitor {
+  Maybe<ScaleStamp> monitor();
+  [HTTPCallable] List<Pair<Time, List<Pair<String, Rat>>>> metricHistory();}
+
+interface DegradationMonitorIf extends Monitor {
+  Unit notify_query_Mon(Time t, String customer, Rat procTime);}
+
+
+class DegradationMonitorImpl(DeployerIF deployer) implements DegradationMonitorIf {
+  //[Visualize] 
+  List<Pair<Time, List<Pair<String, Rat>>>> metricHist = Nil;
+  List<Pair<Time, List<Pair<String, Rat>>>> metricHistFull = Nil; 
+  DegradationMetricIf metric;
+  Bool firstScale = True;
+  {
+    metric = new local DegradationMetricImpl();
+  }
+  
+  Maybe<ScaleStamp> monitor(){
+    Map<String, Rat> degradationSLA = map(Cons( Pair( "asos.fas.live.200ms", ( 5 / 1000 ) ), Cons( Pair( "asos.fas.live.500ms", ( 1 / 1000 ) ), Cons( Pair( "gamma.fas.live.200ms", ( 5 / 100 ) ), Cons( Pair( "gamma.fas.live.500ms", ( 1 / 100 ) ), Nil ) ) ) ));
+    Maybe<ScaleStamp> res = Nothing;
+    if (firstScale) {
+      firstScale = False;
+      Time t = now();
+      res = Just(ScaleStamp_(t, "DegradationMonitor", ScaleUp(deployer)));
+    }
+    else {
+      //Set<String> metricNames = keys(degradationSLA);
+      List<Pair<Time, List<Pair<String, Rat>>>> copyFull = metricHistFull;
+      List<Pair<String, Rat>> latestMeasurements = if (isEmpty(copyFull))
+                                                   then Nil
+                                                   else snd(head(copyFull));
+      Bool allUnderUtilized = True;
+      while (latestMeasurements != Nil) {
+        Pair<String,Rat> latestMeasurement = head(latestMeasurements);
+        latestMeasurements = tail(latestMeasurements);
+        Rat targetValue = lookupUnsafe(degradationSLA, fst(latestMeasurement));
+        Rat latestValue = snd(latestMeasurement);
+        Rat difference = (latestValue/100 - targetValue) / targetValue;
+        if (difference > 1/10) {
+          Time t = now();
+          res = Just(ScaleStamp_(t, "DegradationMonitor", ScaleUp(deployer)));
+          latestMeasurements = Nil; // break
+          allUnderUtilized = False;
+        }
+        else if (difference > -5/10){
+          allUnderUtilized = False;
+        }
+      }
+      if (allUnderUtilized) {
+        Time t = now();
+        res = Just(ScaleStamp_(t, "DegradationMonitor", ScaleDown(deployer)));
+      }
+    }
+    return res;
+  }
+  List<Pair<Time, List<Pair<String, Rat>>>> metricHistory(){
+    List<Pair<Time, List<Pair<String, Rat>>>> copy = metricHist;
+    metricHist = Nil;
+    return copy;
+  }
+  Unit notify_query_Mon(Time t, String customer, Rat procTime){
+    List<Pair<String, Rat>> measurement = metric.notify_query_Met(t, customer, procTime);
+    metricHist = Cons( Pair( t, measurement ), metricHist );
+    metricHistFull = Cons( Pair( t, measurement ), metricHistFull );
+  }
+  }
+
+// METRICS
+/////////////////////////////////////
+
+interface DegradationMetricIf {
+  List<Pair<String, Rat>> notify_query_Met(Time t, String customer, Rat procTime);
+}
+
+class DegradationMetricImpl implements DegradationMetricIf {
+  List<Pair<String, Rat>> slowQpct = Nil;
+  Map<String, Rat> degradationSLA = map(Cons( Pair( "asos.fas.live.200ms", ( 5 / 1000 ) ), Cons( Pair( "asos.fas.live.500ms", ( 1 / 1000 ) ), Cons( Pair( "gamma.fas.live.500ms", ( 5 / 100 ) ), Cons( Pair( "gamma.fas.live.500ms", ( 1 / 100 ) ), Nil ) ) ) ));
+  Map<String, Int> cnt = EmptyMap;
+  Map<String, Int> slow200Cnt = EmptyMap;
+  Map<String, Int> slow500Cnt = EmptyMap;
+  Degradation_States curState = S;
+  
+  List<Pair<String, Rat>> notify_query_Met(Time t, String customer, Rat procTime){
+    if ( ( curState == S ) ){
+      curState = S;
+      {
+        Int old200 = 0;
+        Int old500 = 0;
+        Int custCnt = 0;
+        Maybe<Int> mold200 = lookup(slow200Cnt, customer);
+        Maybe<Int> mold500 = lookup(slow500Cnt, customer);
+        Maybe<Int> mcustCnt = lookup(cnt, customer);
+        case mold200 {
+          Nothing => {
+            
+          }
+          Just( val ) => {
+            old200 = val;
+          }
+        }
+        case mold500 {
+          Nothing => {
+            
+          }
+          Just( val ) => {
+            old500 = val;
+          }
+        }
+        case mcustCnt {
+          Nothing => {
+            
+          }
+          Just( val ) => {
+            custCnt = val;
+          }
+        }
+        Int new200 = ( old200 + case ( procTime > 200 ) {
+            True => 1;
+            False => 0;
+          } );
+        Int new500 = ( old500 + case ( procTime > 500 ) {
+            True => 1;
+            False => 0;
+          } );
+        slow200Cnt = put(slow200Cnt, customer, new200);
+        slow500Cnt = put(slow500Cnt, customer, new500);
+        custCnt = ( custCnt + 1 );
+        cnt = put(cnt, customer, custCnt);
+        Int twoPct = truncate( ( 2 * custCnt ) / 100 );
+        slowQpct = list(Cons( Pair( ( customer + ".fas.live.200ms" ), ( ( 100 * max(0, ( new200 - twoPct )) ) / custCnt ) ), Cons( Pair( ( customer + ".fas.live.500ms" ), ( ( 100 * max(0, ( new500 - twoPct )) ) / custCnt ) ), Nil ) ));
+      }
+    } else {
+      assert False;
+    }
+    return slowQpct;
+  }
+}
+
+// FRH Interfaces
+/////////////
+
+interface DeployerIF {
+  Unit scaleUp();
+  Unit scaleDown();
+}
+
+interface InfrastructureService {
+  DeploymentComponent acquireInstance_(Int id, VMType vmType);
+  Unit release(DeploymentComponent component);
+}
+
+interface EndPoint {
+  Bool invoke(Int request);
+  Unit setStatus(State status);
+  State getStatus();
+}
+
+interface LoadBalancerEndPoint extends EndPoint {
+  Bool removeLBE(Service service);
+  Bool addLBE(Service service);
+  List<Service> getServices();
+	DeploymentComponent getDC();
+}
+
+interface Service extends EndPoint {
+  Int getServiceId();
+  Unit setServiceId(Int id);
+  ServiceType getServiceType();
+  String getCustomer();
+  Int getLatency();
+  Int getRequestCount();
+  Int getCPU();
+  Int getBandwidth();
+  Int getMemory();
+  InfRat getResource(Resourcetype t);
+}
+
+interface DeploymentService {
+  Service installDS(String customer, ServiceType st, Int serviceId, VMType v);
+  Unit uninstallDS(Int serviceId);
+  Unit startDS(Int serviceId);
+  Unit stopDS(Int serviceId);
+  Unit addDS(DeploymentAgent agent);
+  Unit removeDS(DeploymentAgent agent);
+	DeploymentComponent getDC();
+}
+
+interface DeploymentAgent {
+  Unit installDA(Service s);
+  Unit uninstallDA();
+  Unit startDA();
+  Unit stopDA();
+  Service getServiceDA();
+}
+
+interface LoadBalancerService {
+  Bool disable(Int endPointId);
+  Bool enable(Int endPointId);
+  Bool create(List<Service> services, Int endPointId);
+  Bool addLBS(Int endPointId, LoadBalancerEndPoint ep);
+  Bool removeLBS(Int endPointId);
+  Maybe<Int> getEndPointId(LoadBalancerEndPoint lb);
+  Maybe<LoadBalancerEndPoint> getEndPointById(Int endPointId);
+  List<Int> getEndPointIdsByService(Service s);
+  Bool decrease(Int endPointId, List<Service> services);
+  Bool increase(Int endPointId, List<Service> services);
+}
+
+interface PlatformService {
+  Int createService(Config config, String customer);
+  Unit removeService(Int endPoint);
+}
+
+interface MonitorPlatformService extends PlatformService {
+  Unit incrService(Int endPoint, List<Map<Resourcetype, Rat>> instances);
+  Unit decrService(Int endPoint, List<Int> serviceIds);
+  List<Int> getEndPoints();
+  Maybe<Service> getServiceMPS(Int serviceId);
+  List<Int> getServiceIds(Int endPoint);
+  Unit alterResource(Int serviceId, Resourcetype t, Rat r);
+  Int addEndPoint(LoadBalancerEndPoint lb);
+  Int removeEndPoint(LoadBalancerEndPoint lb);
+  Int addServiceInstance(Service s);
+  Int removeServiceInstance(Service s);
+	DeploymentComponent getDC();
+}
+
+// interface User {
+//   Unit use(EndPoint endPoint, Int min, Int max);
+// }
+
+interface MonitoringService {
+  Unit addMS(Rule rule);
+  Unit removeMS(Rule rule);
+  [HTTPCallable] List<String> getHistory();
+  [HTTPCallable] Unit executeScaleAction(Int index);
+}
+
+interface ServiceProvider {
+  EndPoint addCustomer(Config sc, String c);
+  Unit removeCustomer(Config sc, String c);
+}
+
+interface Item {
+
+}
+
+interface IQueryService extends Service {
+  List<Item> doQuery(String q);
+}
+
+interface MonitoringQueryEndpoint extends EndPoint {
+  [HTTPCallable] Unit invokeWithDelay(Int proctime, String customer, Int amazonECU, Int delay);
+}
+
+interface UtilityFunctions {
+  List<String> getdc_instance_names(List<DeploymentComponent> ls);
+	List<DeploymentComponent> getMonitorPlatformServiceDCs(List<MonitorPlatformService> ls);
+	List<DeploymentComponent> getDeploymentServiceDCs(List<DeploymentService> ls);
+	List<DeploymentComponent> getLoadBalancerEndPointDCs(List<LoadBalancerEndPoint> ls);
+}
+
+
+// FRH Classes
+//////////////
+
+class DeployerImpl implements DeployerIF {  
+  Unit scaleUp(){}
+  Unit scaleDown(){}
+}
+
+class InfrastructureServiceImpl(CloudProvider cp) implements InfrastructureService {
+  Int total = 0;
+  Map<Int, DeploymentComponent> inUse = EmptyMap;
+  
+  Int cpu(DeploymentComponent dc){
+    Fut<InfRat> cf = dc!total(Speed);
+    InfRat cpu = cf.get;
+    return truncate(finvalue(cpu));
+  }
+  DeploymentComponent acquireInstance_(Int id, VMType vmType){
+    DeploymentComponent vm = null;
+    Map<Resourcetype, Rat> resourceConfig = vmResources(vmType);
+    Maybe<DeploymentComponent> md = lookup(inUse, id);
+    case md {
+      Nothing => {
+        Fut<DeploymentComponent> tmp1619402333 = cp!launchInstanceNamed(toString(vmType));
+        await tmp1619402333?;
+        vm = tmp1619402333.get;
+        inUse = InsertAssoc( Pair( id, vm ), inUse );
+      }
+      Just( d ) => {
+        vm = d;
+      }
+    }
+    return vm;
+  }
+  Unit release(DeploymentComponent component){
+    Maybe<Int> id = mapValue(inUse, component);
+    assert ( id != Nothing );
+    inUse = removeKey(inUse, fromJust(id));
+    Int cpu = this.cpu(component);
+    total = ( total - cpu );
+  }
+}
+
+class LoadBalancerEndPointImpl implements LoadBalancerEndPoint {
+  Int log = 0;
+  State state = STOP;
+  List<Service> services = Nil;
+  List<Service> current = Nil;
+  {
+    assert unique(services);
+  }
+  
+  Bool removeLBE(Service service){
+    assert ( length(services) > 1 );
+    Bool result = False;
+    if ( inList(services, service) ){
+      services = removeFirst(services, service);
+      current = removeFirst(current, service);
+      result = True;
+    }
+    return result;
+  }
+  Bool addLBE(Service service){
+    Bool result = False;
+    if ( ! inList(services, service) ){
+      services = Cons( service, services );
+      current = Cons( service, current );
+      result = True;
+    }
+    return result;
+  }
+  Bool invoke(Int request){
+    log = ( log + 1 );
+    assert ( state == RUNNING );
+    if ( ( current == Nil ) ){
+      current = services;
+    }
+    EndPoint p = head(current);
+    current = tail(current);
+    Fut<Bool> tmp296831715 = p!invoke(request);
+    await tmp296831715?;
+    return tmp296831715.get;
+  }
+  Unit setStatus(State status){
+    state = status;
+  }
+  State getStatus(){
+    return state;
+  }
+  List<Service> getServices(){
+    return services;
+  }
+	DeploymentComponent getDC() { return thisDC(); }
+}
+
+class ServiceImpl(Int serviceId, ServiceType st, String c, Int cost) implements Service {
+  Int latency = 0;
+  Int log = 0;
+  State state = STOP;
+  
+  Int getCPU(){
+    DeploymentComponent dc = thisDC();
+    Fut<InfRat> fdt = dc!total(Speed);
+    InfRat dt = fdt.get;
+    return truncate(finvalue(dt));
+  }
+  Int getBandwidth(){
+    DeploymentComponent dc = thisDC();
+    Fut<InfRat> fdt = dc!total(Bandwidth);
+    InfRat dt = fdt.get;
+    return truncate(finvalue(dt));
+  }
+  Int getMemory(){
+    DeploymentComponent dc = thisDC();
+    Fut<InfRat> fdt = dc!total(Memory);
+    InfRat dt = fdt.get;
+    return truncate(finvalue(dt));
+  }
+  InfRat getResource(Resourcetype t){
+    DeploymentComponent dc = thisDC();
+    Fut<InfRat> fdt = dc!total(t);
+    InfRat dt = fdt.get;
+    return dt;
+  }
+  Int getLatency(){
+    return latency;
+  }
+  Int getRequestCount(){
+    return log;
+  }
+  State getStatus(){
+    return state;
+  }
+  Unit setStatus(State state_){
+    this.state = state_;
+  }
+  Int getServiceId(){
+    return serviceId;
+  }
+  Unit setServiceId(Int id){
+    assert ( serviceId == 0 );
+    serviceId = id;
+  }
+  Bool invoke(Int request){
+    assert ( state == RUNNING );
+    Int cost = cost(request);
+    Rat time = currentms();
+    [Cost : cost] log = ( log + 1 );
+    Rat time_ = currentms();
+    time = time_ - time;
+    latency = max(latency, truncate(time));
+    return success();
+  }
+  ServiceType getServiceType(){
+    return st;
+  }
+  String getCustomer(){
+    return c;
+  }
+}
+
+
+class DeploymentAgentImpl implements DeploymentAgent {
+  Service service = null;
+  
+  Unit installDA(Service s){
+    assert ( service == null );
+    assert ( s != null );
+    Fut<State> tmp935704808 = s!getStatus();
+    await tmp935704808?;
+    State state = tmp935704808.get;
+    assert ( state == STOP );
+    service = s;
+  }
+  Unit uninstallDA(){
+    assert ( service != null );
+    Fut<State> tmp1938106144 = service!getStatus();
+    await tmp1938106144?;
+    State state = tmp1938106144.get;
+    assert ( state == STOP );
+    service = null;
+  }
+  Unit startDA(){
+    Fut<Unit> tmp1409058575 = service!setStatus(RUNNING);
+    await tmp1409058575?;
+    tmp1409058575.get;
+  }
+  Unit stopDA(){
+    Fut<Unit> tmp1691696909 = service!setStatus(STOP);
+    await tmp1691696909?;
+    tmp1691696909.get;
+  }
+  Service getServiceDA(){
+    return service;
+  }
+}
+
+class DeploymentServiceImpl implements DeploymentService {
+  Map<Service, DeploymentAgent> allocations = EmptyMap;
+  Map<Int, Service> services = EmptyMap;
+  
+  Service installDS(String customer, ServiceType st, Int serviceId, VMType v){
+    assert ( lookup(services, serviceId) == Nothing );
+    Service service = new ServiceImpl(serviceId, st, customer, 2);
+    DeploymentAgent agent = new DeploymentAgentImpl();
+    Fut<Unit> tmp1193797116 = agent!installDA(service);
+    await tmp1193797116?;
+    tmp1193797116.get;
+    allocations = InsertAssoc( Pair( service, agent ), allocations );
+    services = InsertAssoc( Pair( serviceId, service ), services );
+    return service;
+  }
+  Service lookup_(Int id){
+    Maybe<Service> s = lookup(services, id);
+    assert ( s != Nothing );
+    return fromJust(s);
+  }
+  Unit uninstallDS(Int serviceId){
+    Service service = this.lookup_(serviceId);
+    Fut<State> tmp1240537166 = service!getStatus();
+    await tmp1240537166?;
+    State state = tmp1240537166.get;
+    assert ( state == STOP );
+    Maybe<DeploymentAgent> mAgent = lookup(allocations, service);
+    assert ( mAgent != Nothing );
+    DeploymentAgent agent = fromJust(mAgent);
+    Fut<Unit> tmp1638969247 = agent!uninstallDA();
+    await tmp1638969247?;
+    tmp1638969247.get;
+    allocations = removeKey(allocations, service);
+    services = removeKey(services, serviceId);
+  }
+  Unit invoke_(Int serviceId, State state){
+    Service service = this.lookup_(serviceId);
+    Fut<Unit> tmp1937294500 = service!setStatus(state);
+    await tmp1937294500?;
+    tmp1937294500.get;
+  }
+  Unit startDS(Int serviceId){
+    this.invoke_(serviceId, RUNNING);
+  }
+  Unit stopDS(Int serviceId){
+    this.invoke_(serviceId, STOP);
+  }
+  Unit addDS(DeploymentAgent agent){
+    Fut<Service> tmp908802124 = agent!getServiceDA();
+    await tmp908802124?;
+    Service s = tmp908802124.get;
+    Fut<Int> tmp433699465 = s!getServiceId();
+    await tmp433699465?;
+    Int serviceId = tmp433699465.get;
+    assert ( serviceId != 0 );
+    allocations = InsertAssoc( Pair( s, agent ), allocations );
+    services = InsertAssoc( Pair( serviceId, s ), services );
+    this.startDS(serviceId);
+  }
+  Unit removeDS(DeploymentAgent agent){
+    Fut<Service> tmp908802124 = agent!getServiceDA();
+    await tmp908802124?;
+    Service s = tmp908802124.get;
+    Fut<Int> tmp433699465 = s!getServiceId();
+    await tmp433699465?;
+    Int serviceId = tmp433699465.get;
+    assert ( serviceId != 0 );
+    this.stopDS(serviceId);
+    allocations = removeKey(allocations,s);
+    services = removeKey(services,serviceId);
+  }
+	DeploymentComponent getDC() { return thisDC(); }
+}
+
+
+class LoadBalancerServiceImpl implements LoadBalancerService {
+  Map<Int, LoadBalancerEndPoint> endPoints = EmptyMap;
+  
+  Bool change(Int endPointId, List<Service> services_, LBOp op){
+    Bool result = False;
+    List<Service> services = services_;
+    Maybe<LoadBalancerEndPoint> ep = lookup(endPoints, endPointId);
+    if ( ( ep != Nothing ) ){
+      LoadBalancerEndPoint endPoint = fromJust(ep);
+      while (( services != Nil )) {
+        Fut<Bool> fb;
+        if ( ( op == INCR ) ){
+          fb = endPoint!addLBE(head(services));
+        } else {
+          fb = endPoint!removeLBE(head(services));
+        }
+        Bool b = fb.get;
+        result = ( result || b );
+        services = tail(services);
+      }
+    }
+    return result;
+  }
+  Bool decrease(Int endPointId, List<Service> services){
+    Bool result = this.change(endPointId, services, DECR);
+    return result;
+  }
+  Bool increase(Int endPointId, List<Service> services){
+    Bool result = this.change(endPointId, services, INCR);
+    return result;
+  }
+  Bool status(Int id, State state){
+    Maybe<EndPoint> mep = lookup(endPoints, id);
+    Bool success = False;
+    if ( ( mep != Nothing ) ){
+      EndPoint point = fromJust(mep);
+      Fut<Unit> tmp1838342951 = point!setStatus(state);
+      await tmp1838342951?;
+      tmp1838342951.get;
+      success = True;
+    }
+    return success;
+  }
+  Bool disable(Int id){
+    return this.status(id, STOP);
+  }
+  Bool enable(Int id){
+    return this.status(id, RUNNING);
+  }
+  Bool create(List<Service> services_, Int endPointId){
+    Bool added = False;
+    List<Service> services = services_;
+    Maybe<EndPoint> mep = lookup(endPoints, endPointId);
+    if ( ( mep == Nothing ) ){
+      LoadBalancerEndPoint ep = new LoadBalancerEndPointImpl();
+      while (( services != Nil )) {
+        Service s = head(services);
+        Fut<Bool> tmp1839130458 = ep!addLBE(s);
+        await tmp1839130458?;
+        tmp1839130458.get;
+        services = tail(services);
+      }
+      endPoints = put(endPoints, endPointId, ep);
+      added = True;
+    }
+    return added;
+  }
+  Bool addLBS(Int endPointId, LoadBalancerEndPoint ep){
+    Bool added = False;
+    Maybe<EndPoint> mep = lookup(endPoints, endPointId);
+    if ( ( mep == Nothing ) ){
+      endPoints = put(endPoints, endPointId, ep);
+      added = True;
+    }
+    return added;
+  }
+  Bool removeLBS(Int endPointId){
+    Bool removed = False;
+    Maybe<EndPoint> mep = lookup(endPoints, endPointId);
+    if ( ( mep != Nothing ) ){
+      EndPoint point = fromJust(mep);
+      Fut<State> tmp1199303255 = point!getStatus();
+      await tmp1199303255?;
+      State state = tmp1199303255.get;
+      assert ( state == STOP );
+      endPoints = removeKey(endPoints, endPointId);
+      removed = True;
+    }
+    return removed;
+  }
+  Maybe<LoadBalancerEndPoint> getEndPointById(Int endPointId){
+    return lookup(endPoints, endPointId);
+  }
+  List<Int> getEndPointIdsByService(Service s){
+    List<LoadBalancerEndPoint> endPointsToCheck = values(endPoints);
+    List<Int> foundEndPoints = Nil;
+    while (( endPointsToCheck != Nil )) {
+      LoadBalancerEndPoint lb = head(endPointsToCheck);
+      Fut<List<Service>> tmp379407034 = lb!getServices();
+      await tmp379407034?;
+      List<Service> services = tmp379407034.get;
+      if ( inList(services, s) ){
+        Maybe<Int> mep = mapValue(endPoints, lb);
+        case mep {
+          Nothing => {
+            foundEndPoints = Nil;
+          }
+          Just( id ) => {
+            foundEndPoints = Cons( id, foundEndPoints );
+          }
+        }
+      }
+      endPointsToCheck = tail(endPointsToCheck);
+    }
+    return foundEndPoints;
+  }
+  Maybe<Int> getEndPointId(LoadBalancerEndPoint lb){
+    return mapValue(endPoints, lb);
+  }
+}
+
+class PlatformServiceImpl(DeploymentService ds, LoadBalancerService ls) implements MonitorPlatformService {
+  Map<Int, Service> services = EmptyMap;
+  Map<Int, Int> serviceToEndPoints = EmptyMap;
+  Map<Int, List<Int>> endPoints = EmptyMap;
+  Map<String, Map<Config, Int>> customers = EmptyMap;
+  Int serviceId = init();
+  
+  Int createService(Config config, String customer){
+    ServiceType st = serviceType(config);
+    assert ( lookupCustomerService(customers, customer, st) == Nothing );
+    List<Map<Resourcetype, Rat>> instances = instances_(config);
+    assert ( instances != Nil );
+    serviceId = incr(serviceId);
+    Int endPoint = serviceId;
+    List<Service> currentServices = Nil;
+    List<Int> ids = Nil;
+    while (( instances != Nil )) {
+      Map<Resourcetype, Rat> res = head(instances);
+      Service service = this.createServiceInstance(customer, st, res);
+      Fut<Int> idf = service!getServiceId();
+      Int id = idf.get;
+      ids = Cons( id, ids );
+      serviceToEndPoints = InsertAssoc( Pair( id, endPoint ), serviceToEndPoints );
+      currentServices = Cons( service, currentServices );
+      instances = tail(instances);
+    }
+    endPoints = InsertAssoc( Pair( endPoint, ids ), endPoints );
+    customers = put(customers, customer, put(lookupDefault(customers, customer, EmptyMap), config, endPoint));
+    Fut<Bool> tmp1171196949 = ls!create(currentServices, endPoint);
+    await tmp1171196949?;
+    tmp1171196949.get;
+    Fut<Bool> tmp1403088342 = ls!enable(endPoint);
+    await tmp1403088342?;
+    tmp1403088342.get;
+    return endPoint;
+  }
+  Unit removeService(Int endPoint){
+    Fut<Bool> tmp1409497701 = ls!disable(endPoint);
+    await tmp1409497701?;
+    Bool b = tmp1409497701.get;
+    assert b;
+    Fut<Bool> tmp1576354454 = ls!removeLBS(serviceId);
+    await tmp1576354454?;
+    b = tmp1576354454.get;
+    assert b;
+    List<Int> sids = lookupDefault(endPoints, endPoint, Nil);
+    while (( sids != Nil )) {
+      Int id = head(sids);
+      services = removeKey(services, id);
+      serviceToEndPoints = removeKey(serviceToEndPoints, id);
+      Fut<Unit> tmp1688710402 = ds!stopDS(id);
+      await tmp1688710402?;
+      tmp1688710402.get;
+      Fut<Unit> tmp1061115215 = ds!uninstallDS(id);
+      await tmp1061115215?;
+      tmp1061115215.get;
+      sids = tail(sids);
+    }
+    endPoints = removeKey(endPoints, endPoint);
+    customers = removeGlobalEndPoint(customers, endPoint);
+  }
+  Int addServiceInstance(Service s){
+    serviceId = incr(serviceId);
+    Int id = serviceId;
+    Fut<Unit> tmp305646302 = s!setServiceId(id);
+    await tmp305646302?;
+    tmp305646302.get;
+    services = put(services, id, s);
+    Fut<List<Int>> tmp268620232 = ls!getEndPointIdsByService(s);
+    await tmp268620232?;
+    List<Int> onEndPoints = tmp268620232.get;
+    List<Int> endPointsToProcess = onEndPoints;
+    while (( endPointsToProcess != Nil )) {
+      Int endPointId = head(endPointsToProcess);
+      serviceToEndPoints = InsertAssoc( Pair( id, endPointId ), serviceToEndPoints );
+      Maybe<List<Int>> mSerEndpoints = lookup(endPoints, endPointId);
+      case mSerEndpoints {
+        Nothing => {
+          endPoints = InsertAssoc( Pair( endPointId, list(Cons( id, Nil )) ), endPoints );
+        }
+        Just( l ) => {
+          endPoints = InsertAssoc( Pair( endPointId, Cons( id, l ) ), endPoints );
+        }
+      }
+      endPointsToProcess = tail(endPointsToProcess);
+    }
+    return serviceId;
+  }
+  Int removeServiceInstance(Service s){
+    Int id = await s!getServiceId();
+    services = removeKey(services, id);
+    Fut<List<Int>> tmp268620232 = ls!getEndPointIdsByService(s);
+    await tmp268620232?;
+    List<Int> onEndPoints = tmp268620232.get;
+    List<Int> endPointsToProcess = onEndPoints;
+    while (( endPointsToProcess != Nil )) {
+      Int endPointId = head(endPointsToProcess);
+      serviceToEndPoints = removeKey(serviceToEndPoints,id);
+      removeKey(endPoints,endPointId);
+      endPointsToProcess = tail(endPointsToProcess);
+    }
+    return serviceId;
+  }
+  Int addEndPoint(LoadBalancerEndPoint lb){
+    serviceId = incr(serviceId);
+    Int endPoint = serviceId;
+    Fut<List<Service>> tmp948268398 = lb!getServices();
+    await tmp948268398?;
+    List<Service> connectedServices = tmp948268398.get;
+    List<Service> remaining = connectedServices;
+    while (( remaining != Nil )) {
+      Service s = head(remaining);
+      Fut<Int> tmp1792172929 = s!getServiceId();
+      await tmp1792172929?;
+      Int serviceId = tmp1792172929.get;
+      serviceToEndPoints = put(serviceToEndPoints, serviceId, endPoint);
+      List<Int> connectedIds = lookupDefault(endPoints, endPoint, Nil);
+      connectedIds = Cons( serviceId, connectedIds );
+      endPoints = put(endPoints, endPoint, connectedIds);
+    }
+    Fut<Bool> tmp636002577 = ls!addLBS(endPoint, lb);
+    await tmp636002577?;
+    tmp636002577.get;
+    Fut<Bool> tmp97281693 = ls!enable(endPoint);
+    await tmp97281693?;
+    tmp97281693.get;
+    return endPoint;
+  }
+  Int removeEndPoint(LoadBalancerEndPoint lb){
+    return 0;
+  }
+  Service createServiceInstance(String customer, ServiceType st, Map<Resourcetype, Rat> resource){
+    serviceId = incr(serviceId);
+    Int id = serviceId;
+    Set<VMType> vms = this.findVM(resource);
+    assert ! emptySet(vms);
+    VMType v = takeFromSet(vms);
+    Fut<Service> sf = ds!installDS(customer, st, id, v);
+    Service service = sf.get;
+    Fut<Unit> uf = ds!startDS(id);
+    sf.get;
+    services = put(services, id, service);
+    return service;
+  }
+  Unit incrService(Int endPoint, List<Map<Resourcetype, Rat>> instances){
+    assert ( instances != Nil );
+    Maybe<Pair<String, Config>> setting = keyPairs(customers, endPoint);
+    assert ( setting != Nothing );
+    String customer = fst(fromJust(setting));
+    Config oldC = snd(fromJust(setting));
+    ServiceType st = serviceType(oldC);
+    List<Service> es = Nil;
+    List<Int> ids = Nil;
+    List<Map<Resourcetype, Rat>> remaining = instances;
+    while (( remaining != Nil )) {
+      Map<Resourcetype, Rat> res = head(remaining);
+      Service service = this.createServiceInstance(customer, st, res);
+      Fut<Int> idf = service!getServiceId();
+      Int id = idf.get;
+      serviceToEndPoints = InsertAssoc( Pair( id, endPoint ), serviceToEndPoints );
+      ids = Cons( id, ids );
+      es = Cons( service, es );
+      remaining = tail(remaining);
+    }
+    endPoints = put(endPoints, endPoint, concatenate(ids, lookupDefault(endPoints, endPoint, Nil)));
+    Fut<Bool> fb = ls!increase(endPoint, es);
+    Bool increased = fb.get;
+    assert increased;
+    customers = updateConfig(customers, customer, oldC, Config_( st, concatenate(instances, instances_(oldC)) ));
+  }
+  Unit decrService(Int endPoint, List<Int> serviceIds){
+    Maybe<Pair<String, Config>> setting = keyPairs(customers, endPoint);
+    assert ( setting != Nothing );
+    String customer = fst(fromJust(setting));
+    Config oldC = snd(fromJust(setting));
+    ServiceType st = serviceType(oldC);
+    Maybe<List<Int>> msers = lookup(endPoints, endPoint);
+    assert ( msers != Nothing );
+    List<Int> sers = fromJust(msers);
+    assert inListAll(sers, serviceIds);
+    List<Service> deployed = Nil;
+    List<Int> remains = serviceIds;
+    while (( remains != Nil )) {
+      Int serviceId = head(remains);
+      Maybe<Service> mdeployed = lookup(services, serviceId);
+      assert ( mdeployed != Nothing );
+      deployed = Cons( fromJust(mdeployed), deployed );
+      remains = tail(remains);
+    }
+    Fut<Bool> fb = ls!decrease(endPoint, deployed);
+    Bool decreased = fb.get;
+    assert decreased;
+    remains = serviceIds;
+    List<Map<Resourcetype, Rat>> current = instances_(oldC);
+    while (( remains != Nil )) {
+      Int serviceId = head(remains);
+      Fut<Unit> sf = ds!stopDS(serviceId);
+      sf.get;
+      sf = ds!uninstallDS(serviceId);
+      sf.get;
+      serviceToEndPoints = removeKey(serviceToEndPoints, serviceId);
+      services = removeKey(services, serviceId);
+      remains = tail(remains);
+      current = tail(current);
+    }
+    endPoints = put(endPoints, endPoint, difference_(lookupDefault(endPoints, endPoint, Nil), serviceIds));
+    customers = updateConfig(customers, customer, oldC, Config_( st, current ));
+  }
+  Unit uninstallInstance(Int endPoint, Service s, Int serviceId){
+    Fut<Bool> bf = ls!decrease(endPoint, list(Cons( s, Nil )));
+    bf.get;
+    Fut<Unit> uf = ds!stopDS(serviceId);
+    uf.get;
+    uf = ds!uninstallDS(serviceId);
+    uf.get;
+  }
+  Unit alterResource(Int serviceId, Resourcetype t, Rat r){
+    Maybe<Service> mservice = lookup(services, serviceId);
+    assert ( mservice != Nothing );
+    Service ser = fromJust(mservice);
+    Fut<InfRat> fOldCapacity = ser!getResource(t);
+    InfRat oldCapacity = fOldCapacity.get;
+    assert ( oldCapacity != InfRat );
+    Rat newCapacity = 0;
+    case oldCapacity {
+      Fin( v ) => {
+        newCapacity = ( v + r );
+      }
+    }
+    Map<Resourcetype, Rat> req = map(Cons( Pair( t, newCapacity ), Nil ));
+    Maybe<Int> mendPoint = lookup(serviceToEndPoints, serviceId);
+    assert ( mendPoint != Nothing );
+    Int endPoint = fromJust(mendPoint);
+    List<Int> instances = lookupDefault(endPoints, endPoint, Nil);
+    Fut<String> fc = ser!getCustomer();
+    String customer = fc.get;
+    Fut<ServiceType> fs = ser!getServiceType();
+    ServiceType st = fs.get;
+    Service newSer = this.createServiceInstance(customer, st, req);
+    Fut<Int> idf = newSer!getServiceId();
+    Int newId = idf.get;
+    Fut<Bool> fb = ls!increase(endPoint, list(Cons( newSer, Nil )));
+    Bool increased = fb.get;
+    assert increased;
+    serviceToEndPoints = InsertAssoc( Pair( newId, endPoint ), serviceToEndPoints );
+    List<Int> allInstances = Cons( newId, lookupDefault(endPoints, endPoint, Nil) );
+    this.uninstallInstance(endPoint, ser, serviceId);
+    serviceToEndPoints = removeKey(serviceToEndPoints, serviceId);
+    services = removeKey(services, serviceId);
+    endPoints = put(endPoints, endPoint, without(allInstances, serviceId));
+  }
+  List<Int> getEndPoints(){
+    return toList(keys(endPoints));
+  }
+  List<Int> getServiceIds(Int endPoint){
+    return lookupDefault(endPoints, endPoint, Nil);
+  }
+  Maybe<Service> getServiceMPS(Int serviceId){
+    return lookup(services, serviceId);
+  }
+  Set<VMType> findVM(Map<Resourcetype, Rat> rc2){
+    Set<VMType> remaining = vmTypesCollection();
+    Set<VMType> res = EmptySet;
+    while (! emptySet(remaining)) {
+      VMType vm = takeFromSet(remaining);
+      remaining = remove(remaining, vm);
+      Bool match = this.matchResources(vmResources(vm), rc2);
+      if ( match ){
+        res = insertElement(res, vm);
+      }
+    }
+    return res;
+  }
+  Bool matchResources(Map<Resourcetype, Rat> rc1, Map<Resourcetype, Rat> rc2){
+    Bool result = True;
+    Set<Resourcetype> resources1 = keys(rc1);
+    while (( ( result == True ) && ! emptySet(resources1) )) {
+      Resourcetype key = takeFromSet(resources1);
+      resources1 = remove(resources1, key);
+      Rat value1 = lookupUnsafe(rc1, key);
+      Maybe<Rat> value2 = lookup(rc2, key);
+      case value2 {
+        Nothing => {
+          result = True;
+        }
+        Just( v2 ) => {
+          if ( ( value1 < v2 ) ){
+            result = False;
+          }
+        }
+      }
+    }
+    return result;
+  }
+	DeploymentComponent getDC() { return thisDC(); }
+}
+
+
+// class RepeatUserImpl implements User {
+//   Int log = 0;
+  
+//   Unit use(EndPoint endPoint, Int min, Int max){
+//     Int count = 0;
+//     while (True) {
+//       State state = this.getState(endPoint);
+//       if ( ( state == RUNNING ) ){
+//         log = ( log + 1 );
+//         Response res = this.invoke(endPoint, min, max);
+//       }
+//     }
+//   }
+//   Response invoke(EndPoint point, Int min, Int max){
+//     return this.invokeWithSize(point, min, max, 0);
+//   }
+//   Response invokeWithSize(EndPoint point, Int min, Int max, Request request){
+//     await duration(min, max);
+//     Fut<Response> bf = point!invoke(request);
+//     Response b = bf.get;
+//     return b;
+//   }
+//   State getState(EndPoint point){
+//     Fut<State> sf = point!getStatus();
+//     State state = sf.get;
+//     return state;
+//   }
+// }
+
+class MonitoringServiceImpl implements MonitoringService {
+  Int log = 0;
+  List<ScaleStamp> history = Nil;
+  Map<Int, Map<Int, List<Monitor>>> monitorMap = EmptyMap;
+  
+  Unit addMS(Rule rule){
+    Int interval = interval(rule);
+    assert ( interval > 0 );
+    Monitor monitor = monitor_(rule);
+    Map<Int, List<Monitor>> thisInterval = lookupDefault(monitorMap, interval, EmptyMap);
+    List<Monitor> monitors = lookupDefault(thisInterval, interval, Nil);
+    monitorMap = put(monitorMap, interval, put(thisInterval, interval, Cons( monitor, monitors )));
+  }
+  Unit removeMS(Rule rule){
+    Int interval = interval(rule);
+    Monitor monitor = monitor_(rule);
+    Map<Int, List<Monitor>> thisInterval = lookupDefault(monitorMap, interval, EmptyMap);
+    Set<Int> keys = keys(thisInterval);
+    Bool done = False;
+    while (( ( keys != EmptySet ) && ! done )) {
+      Pair<Set<Int>, Int> nt = next(keys);
+      List<Monitor> monitors = lookupDefault(thisInterval, snd(nt), Nil);
+      if ( inList(monitors, monitor) ){
+        monitorMap = put(monitorMap, interval, put(thisInterval, snd(nt), without(monitors, monitor)));
+        done = True;
+      } else {
+        keys = fst(nt);
+      }
+    }
+  }
+ Unit run(){
+    while (True) {
+      await duration(1, 1);
+      log = ( log + 1 );
+      monitorMap = decr(monitorMap);
+      List<Monitor> toBeRun = lookupAllSecond(monitorMap, 0);
+      monitorMap = reset(monitorMap, 0);
+      List<Fut<Maybe<ScaleStamp>>> futs = Nil;
+      while (( toBeRun != Nil )) {
+        Monitor mon = head(toBeRun);
+        Fut<Maybe<ScaleStamp>> f = this!execute(mon);
+        futs = Cons( f, futs );
+        toBeRun = tail(toBeRun);
+      }
+      while (( futs != Nil )) {
+        Fut<Maybe<ScaleStamp>> f = head(futs);
+        await f?;
+        Maybe<ScaleStamp> res = f.get;
+        this.history = case res {
+                          Just(res_) => appendright(this.history,res_);
+                          _ => this.history;
+                       };
+        futs = tail(futs);
+      }
+    }
+  }
+  List<String> getHistory() {
+    List<ScaleStamp> tempHistory = this.history; // this.history is not flushed
+    List<String> stringHistory = Nil;
+    while (tempHistory != Nil) {
+      stringHistory = Cons(toString(head(tempHistory)),stringHistory);
+      tempHistory = tail(tempHistory);
+    }
+    return reverse(stringHistory);
+  }
+  Maybe<ScaleStamp> execute(Monitor m){
+    Fut<Maybe<ScaleStamp>> f = m!monitor();
+    await f?;
+    return f.get;
+  }
+  
+  Unit executeScaleAction(Int index) {
+    ScaleStamp ss = nth(history, index);
+    ScaleAction a = action(ss);
+    DeployerIF d = case a { ScaleUp(d_) => d_;
+                            ScaleDown(d_) => d_;
+                          };
+    case a {
+        ScaleUp(_)   => { Fut<Unit> f = d!scaleUp(); f.get; }
+        ScaleDown(_) => { Fut<Unit> f = d!scaleDown(); f.get; }
+    }
+  }  
+}
+
+
+class LatencyMonitor(Int upper, MonitorPlatformService ps) implements Monitor {
+  Int log = 0;
+  
+  Int scaling(Service logger, Int latency){
+    Fut<Int> fcpu = logger!getCPU();
+    Int cpu = fcpu.get;
+    Rat amount = ( cpu * ( latency - ( upper / latency ) ) );
+    return max(1, truncate(amount));
+  }
+  List<Pair<Int, Int>> getLatencies(Int endPoint){
+    List<Pair<Int, Int>> scaling_ = Nil;
+    Fut<List<Int>> fservices = ps!getServiceIds(endPoint);
+    List<Int> services = fservices.get;
+    while (( services != Nil )) {
+      Int serviceId = head(services);
+      Fut<Maybe<Service>> lf = ps!getServiceMPS(serviceId);
+      Maybe<Service> ml = lf.get;
+      assert ( ml != Nothing );
+      Service logger = fromJust(ml);
+      Fut<Int> lif = logger!getLatency();
+      Int latency = lif.get;
+      if ( ( latency > upper ) ){
+        Int res = this.scaling(logger, latency);
+        scaling_ = Cons( Pair( serviceId, res ), scaling_ );
+      }
+      services = tail(services);
+    }
+    return scaling_;
+  }
+  Maybe<ScaleStamp> monitor(){
+    log = ( log + 1 );
+    List<Triple<Int, Resourcetype, Rat>> scaling_ = Nil;
+    Fut<List<Int>> ef = ps!getEndPoints();
+    List<Int> endPoints = ef.get;
+    while (( endPoints != Nil )) {
+      Int endPoint = head(endPoints);
+      List<Pair<Int, Int>> setting = this.getLatencies(endPoint);
+      while (( setting != Nil )) {
+        Pair<Int, Int> lat = head(setting);
+        setting = tail(setting);
+        Triple<Int, Resourcetype, Rat> h = Triple( fst(lat), Speed, snd(lat) );
+        scaling_ = Cons( h, scaling_ );
+      }
+      endPoints = tail(endPoints);
+    }
+    while (( scaling_ != Nil )) {
+      Triple<Int, Resourcetype, Rat> sc = head(scaling_);
+      Int instance_ = fstT(sc);
+      Resourcetype rt = sndT(sc);
+      Rat v = trd(sc);
+      Fut<Unit> fu = ps!alterResource(instance_, rt, v);
+      fu.get;
+      scaling_ = tail(scaling_);
+    }
+    return Nothing;
+    //Time t = now();
+    //return(ScaleStamp_(t,"LatencyMonitor", ScaleNot)); // STUB
+  }
+  List<Pair<Time, List<Pair<String, Rat>>>> metricHistory(){
+    return Nil;
+  }
+}
+
+class ServiceProviderImpl(PlatformService ps, LoadBalancerService ls) implements ServiceProvider {
+  Map<String, Map<Config, Int>> customers = EmptyMap;
+  
+  EndPoint addCustomer(Config sc, String c){
+    Fut<Int> tmp325183616 = ps!createService(sc, c);
+    await tmp325183616?;
+    Int id = tmp325183616.get;
+    Map<Config, Int> map = lookupDefault(customers, c, EmptyMap);
+    assert ( lookup(map, sc) == Nothing );
+    customers = put(customers, c, InsertAssoc( Pair( sc, id ), map ));
+    Fut<Maybe<LoadBalancerEndPoint>> ef = ls!getEndPointById(id);
+    Maybe<LoadBalancerEndPoint> eps = ef.get;
+    assert ( eps != Nothing );
+    return fromJust(eps);
+  }
+  Unit removeCustomer(Config sc, String c){
+    Map<Config, Int> map = lookupDefault(customers, c, EmptyMap);
+    Maybe<Int> mid = lookup(map, sc);
+    assert ( mid != Nothing );
+    customers = put(customers, c, removeKey(map, sc));
+    Fut<Unit> tmp28692953 = ps!removeService(fromJust(mid));
+    await tmp28692953?;
+    tmp28692953.get;
+  }
+}
+
+
+class QueryServiceImpl(DeploymentAgent da, String c, Bool staging) implements IQueryService {
+  Int reqCount = 0;
+  State currentState = STOP;
+  Int serviceId = 0;
+  
+  Bool invoke(Int request){
+    assert ( currentState == RUNNING );
+    Time t = now();
+    println(toString(t) + ": invoking query with cost " + toString(request) + " in serviceId: "  + toString(serviceId));
+    [Cost : cost(request)] reqCount = ( reqCount + 1 );
+    return True;
+  }
+  Unit setStatus(State status){
+    currentState = status;
+  }
+  State getStatus(){
+    return currentState;
+  }
+  Int getServiceId(){
+    return serviceId;
+  }
+  Unit setServiceId(Int id){
+    assert ( serviceId == 0 );
+    serviceId = id;
+  }
+  ServiceType getServiceType(){
+    return FAS;
+  }
+  String getCustomer(){
+    return c;
+  }
+  Int getLatency(){
+    return 0;
+  }
+  Int getRequestCount(){
+    return reqCount;
+  }
+  Int getCPU(){
+    DeploymentComponent dc = thisDC();
+    Fut<InfRat> fdt = dc!total(Speed);
+    InfRat dt = fdt.get;
+    return truncate(finvalue(dt));
+  }
+  Int getBandwidth(){
+    DeploymentComponent dc = thisDC();
+    Fut<InfRat> fdt = dc!total(Bandwidth);
+    InfRat dt = fdt.get;
+    return truncate(finvalue(dt));
+  }
+  Int getMemory(){
+    DeploymentComponent dc = thisDC();
+    Fut<InfRat> fdt = dc!total(Memory);
+    InfRat dt = fdt.get;
+    return truncate(finvalue(dt));
+  }
+  InfRat getResource(Resourcetype t){
+    DeploymentComponent dc = thisDC();
+    Fut<InfRat> fdt = dc!total(t);
+    InfRat dt = fdt.get;
+    return dt;
+  }
+  List<Item> doQuery(String q){
+    return Nil;
+  }
+}
+
+
+class MonitoringQueryEndpointImpl(List<EndPoint> allEndpoints, DegradationMonitorIf monitor) implements MonitoringQueryEndpoint {
+  List<EndPoint> current = allEndpoints;
+  State state = RUNNING;
+  
+  Bool invoke(Int request){
+    assert ( state != STOP );
+    if ( ( current == Nil ) ){
+      current = allEndpoints;
+    }
+    EndPoint p = head(current);
+    current = tail(current);
+    Fut<Bool> tmp2024985246 = p!invoke(request);
+    await tmp2024985246?;
+    return tmp2024985246.get;
+  }
+  Unit setStatus(State status){
+    state = status;
+  }
+  State getStatus(){
+    return state;
+  }
+  Unit invokeWithDelay(Int proctime, String customer, Int amazonECU, Int delay) {
+    Int req = ( proctime * amazonECU );
+    Time start = now();
+    this.invoke(req);
+    Time end = now();
+
+    //calculate new proctime
+    Rat newProcTime = timeValue(end) - timeValue(start);
+    
+    //register measurement to the monitor
+    monitor.notify_query_Mon(start, customer, newProcTime);
+    
+    //delay until next query
+    await duration(delay,delay); 
+
+    //print new query metrics
+    //print("old proctime: ");
+    //print(toString(proctime));
+    //print(" new proctime: ");
+    //print(toString(newProcTime));
+    //print(" delay: ");
+    //println(toString(delay));
+
+  }
+}
+
+class UtilityFunctionsImpl implements UtilityFunctions {
+	
+	List<DeploymentComponent> getMonitorPlatformServiceDCs(List<MonitorPlatformService> ls){
+		List<MonitorPlatformService> ls_ = ls;
+		List<DeploymentComponent> rs = Nil;
+		while (( ls_ != Nil )) {
+      MonitorPlatformService val = head(ls_);
+			DeploymentComponent dc = val.getDC();
+			rs = Cons(dc,rs);
+      ls_ = tail(ls_);
+    }
+    return reverse(rs);
+	}
+
+	List<DeploymentComponent> getDeploymentServiceDCs(List<DeploymentService> ls){
+		List<DeploymentService> ls_ = ls;
+		List<DeploymentComponent> rs = Nil;
+		while (( ls_ != Nil )) {
+      DeploymentService val = head(ls_);
+			DeploymentComponent dc = val.getDC();
+			rs = Cons(dc,rs);
+      ls_ = tail(ls_);
+    }
+    return reverse(rs);
+	}
+
+	List<DeploymentComponent> getLoadBalancerEndPointDCs(List<LoadBalancerEndPoint> ls){
+		List<LoadBalancerEndPoint> ls_ = ls;
+		List<DeploymentComponent> rs = Nil;
+		while (( ls_ != Nil )) {
+      LoadBalancerEndPoint val = head(ls_);
+			DeploymentComponent dc = val.getDC();
+			rs = Cons(dc,rs);
+      ls_ = tail(ls_);
+    }
+    return reverse(rs);
+	}
+
+  List<String> getdc_instance_names(List<DeploymentComponent> ls){
+    List<DeploymentComponent> ls_ = ls;
+    List<String> rs = Nil;
+    while (( ls_ != Nil )) {
+      DeploymentComponent dc = head(ls_);
+      String s = dc.getName();
+      s = getInstanceName(s);
+      rs = Cons( s, rs );
+      ls_ = tail(ls_);
+    }
+    return reverse(rs);
+  }
+}
+
+
+class AddQueryServicesDeployerImpl(CloudProvider cloudProvider, MonitorPlatformService platformServiceObjEu, MonitorPlatformService platformServiceObjUs, DeploymentService deploymentServiceObjEu, DeploymentService deploymentServiceObjUs, LoadBalancerEndPoint loadBalancerEndPointObjEu1, LoadBalancerEndPoint loadBalancerEndPointObjUs1, LoadBalancerEndPoint loadBalancerEndPointObjUs2) implements DeployerIF {
+  AddQueryDeployer depl;
+  {
+    depl = new AddQueryDeployer(cloudProvider, platformServiceObjEu, platformServiceObjUs, deploymentServiceObjEu, deploymentServiceObjUs, loadBalancerEndPointObjEu1, loadBalancerEndPointObjUs1, loadBalancerEndPointObjUs2);
+  }
+  Unit scaleUp(){
+    depl.deploy();
+  }
+  Unit scaleDown(){
+    depl.undeploy();
+  }
+}
+
+
+// FRH MAIN
+///////////
+{
+  CloudProvider cp = new CloudProvider("CloudProvider");
+  //cp.addSmartDeployInstances();
+  MainSmartDeployer c1 = new local MainSmartDeployer(cp);
+  c1.deploy();
+  println("Initial Deployment Configuration set up");
+  UtilityFunctions utility_obj = new UtilityFunctionsImpl();
+  List<String> string_list = Nil;
+  List<DeploymentComponent> dc_list = Nil;
+  List<MonitorPlatformService> monitorPlatformServices = c1.getMonitorPlatformService();
+  dc_list = utility_obj.getMonitorPlatformServiceDCs(monitorPlatformServices);
+  string_list = utility_obj.getdc_instance_names(dc_list);
+  List<MonitorPlatformService> monitorPlatformServicesUs = filter_lists_by_substr(monitorPlatformServices, string_list, "_us");
+  List<MonitorPlatformService> monitorPlatformServicesEu = filter_lists_by_substr(monitorPlatformServices, string_list, "_eu");
+  List<DeploymentService> deploymentServices = c1.getDeploymentService();
+  dc_list = utility_obj.getDeploymentServiceDCs(deploymentServices);
+  string_list = utility_obj.getdc_instance_names(dc_list);
+  List<DeploymentService> deploymentServicesUs = filter_lists_by_substr(deploymentServices, string_list, "_us");
+  List<DeploymentService> deploymentServicesEu = filter_lists_by_substr(deploymentServices, string_list, "_eu");
+  List<LoadBalancerEndPoint> loadBalancerEndPoints = c1.getLoadBalancerEndPoint();
+  dc_list = utility_obj.getLoadBalancerEndPointDCs(loadBalancerEndPoints);
+  string_list = utility_obj.getdc_instance_names(dc_list);
+  List<LoadBalancerEndPoint> loadBalancerEndPointsUs = filter_lists_by_substr(loadBalancerEndPoints, string_list, "_us");
+  List<LoadBalancerEndPoint> loadBalancerEndPointsEu = filter_lists_by_substr(loadBalancerEndPoints, string_list, "_eu");
+  DeployerIF deployerif = new AddQueryServicesDeployerImpl(cp, head(monitorPlatformServicesEu), head(monitorPlatformServicesUs), head(deploymentServicesUs), head(deploymentServicesEu), head(loadBalancerEndPointsEu), head(loadBalancerEndPointsUs), head(tail(loadBalancerEndPointsUs)));
+  [HTTPName: "monitoringService"] MonitoringService ms = new MonitoringServiceImpl();
+  [HTTPName : "monitor"] DegradationMonitorIf degradationMonitor = new DegradationMonitorImpl(deployerif);
+  Fut<Unit> df = ms!addMS(Rule_( 5000, degradationMonitor ));
+  df.get;
+  [HTTPName : "queryService"] MonitoringQueryEndpoint mqep = new MonitoringQueryEndpointImpl(loadBalancerEndPointsUs, degradationMonitor);
+  println("Endpoints set up. Waiting for requests...");
+}
