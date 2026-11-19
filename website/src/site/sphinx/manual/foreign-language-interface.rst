@@ -118,12 +118,11 @@ the following Java class can be added to the model to override the
 
 To include the foreign class, place both ``fli.abs`` and
 ``C_fli.java`` in the current directory, then compile the model as
-follows (with the ABS compiler ``absfrontend.jar`` added to the
-classpath)::
+follows::
 
    absc --java fli.abs
-   javac -d gen/ --class-path gen:absfrontend.jar C_fli.java
-   java -cp gen:absfrontend.jar FLITest.Main
+   javac -d gen/ --class-path gen:$(absc --print-absfrontend-jar-location) C_fli.java
+   java -cp gen:$(absc --print-absfrontend-jar-location) FLITest.Main
 
 When compiled and run like this, the model will not print to the
 console.  Instead, the messages will be shown in a window that is

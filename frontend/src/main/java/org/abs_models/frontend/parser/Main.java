@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.file.Path;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -84,6 +86,16 @@ public class Main {
         boolean done = false;
         this.arguments = arguments;
         try {
+            if (arguments.printAbsfrontendJarLocation) {
+                CodeSource source = Absc.class.getProtectionDomain().getCodeSource();
+                if (source == null || source.getLocation() == null) {
+                    throw new InternalBackendException("Cannot determine location of absfrontend.jar");
+                }
+                Path location = Path.of(source.getLocation().toURI()).toAbsolutePath().normalize();
+                System.out.println(location);
+                return 0;
+            }
+
             if (arguments.backend != null) {
                 if (arguments.backend.maude) {
                     result = Math.max(result, MaudeCompiler.doMain(arguments));
@@ -169,7 +181,7 @@ public class Main {
     }
 
     private static Model parseFiles(boolean verbose, final java.util.List<File> fileNames) throws IOException, InternalBackendException {
-        if (fileNames.isEmpty()) {
+        if (fileNames == null || fileNames.isEmpty()) {
             throw new IllegalArgumentException("Please provide at least one input file");
         }
 
@@ -189,7 +201,7 @@ public class Main {
             parseFileOrDirectory(units, f, verbose);
         }
 
-	units.add(getStdLib());
+	    units.add(getStdLib());
 
         List<CompilationUnit> unitList = new List<>();
         for (CompilationUnit u : units) {
