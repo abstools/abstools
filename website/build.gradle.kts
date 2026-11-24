@@ -3,7 +3,7 @@ import com.pswidersk.gradle.python.uv.UvxTask
 plugins {
     base
     // https://github.com/PrzemyslawSwiderski/python-uv-gradle-plugin
-    id("com.pswidersk.python-uv-plugin") version "0.4.32"
+    id("com.pswidersk.python-uv-plugin") version "0.4.36"
 }
 
 tasks.register<UvxTask>("website") {
