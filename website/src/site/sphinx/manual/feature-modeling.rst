@@ -198,6 +198,53 @@ a group can also be specified.  This is particularly useful for
 specifying constraints that do not fit into the tree structure given
 by the root feature model.
 
+The following table describes the meaning as well as the associativity
+and the precedence of the operators. The list is sorted from high
+precedence to low precedence, with operators having the same
+precedence contained in the same table cell.
+
+
+.. table:: Feature Operators
+
+   +--------------+------------------+---------------+----------------+-------------+
+   |Expression    | Meaning          | Associativity | Argument types | Result type |
+   +==============+==================+===============+================+=============+
+   |``!e``        | logical negation | left          | ``Bool``       | ``Bool``    |
+   |              +------------------+---------------+----------------+-------------+
+   |``-e``        | integer negation | left          | number         | number      |
+   +--------------+------------------+---------------+----------------+-------------+
+   |``e1 * e2``   | multiplication   | left          | number         | number      |
+   |              +------------------+---------------+----------------+-------------+
+   |``e1 / e2``   | division         | left          | number         | number      |
+   |              +------------------+---------------+----------------+-------------+
+   |``e1 % e2``   | modulo           | left          | number         | number      |
+   +--------------+------------------+---------------+----------------+-------------+
+   |``e1 + e2``   | addition         | left          | number         | number      |
+   |              +------------------+---------------+----------------+-------------+
+   |``e1 - e2``   | subtraction      | left          | number         | number      |
+   +--------------+------------------+---------------+----------------+-------------+
+   |``e1 < e2``   | less than        | left          | compatible     | ``Bool``    |
+   |              +------------------+---------------+----------------+-------------+
+   |``e1 <= e2``  | less or equal    | left          | compatible     | ``Bool``    |
+   |              +------------------+---------------+----------------+-------------+
+   |``e1 > e2``   | greater than     | left          | compatible     | ``Bool``    |
+   |              +------------------+---------------+----------------+-------------+
+   |``e1 >= e2``  | greater or equal | left          | compatible     | ``Bool``    |
+   +--------------+------------------+---------------+----------------+-------------+
+   |``e1 == e2``  | equality         | left          | compatible     | ``Bool``    |
+   |              +------------------+---------------+----------------+-------------+
+   |``e1 != e2``  | inequality       | left          | compatible     | ``Bool``    |
+   +--------------+------------------+---------------+----------------+-------------+
+   |``e1 && e2``  | logical and      | left          | ``Bool``       | ``Bool``    |
+   +--------------+------------------+---------------+----------------+-------------+
+   |``e1 || e2``  | logical or       | left          | ``Bool``       | ``Bool``    |
+   +--------------+------------------+---------------+----------------+-------------+
+   |``e1 <-> e2`` | equivalence      | left          | ``Bool``       | ``Bool``    |
+   +--------------+------------------+---------------+----------------+-------------+
+   |``e1 -> e2``  | implication      | right         | ``Bool``       | ``Bool``    |
+   +--------------+------------------+---------------+----------------+-------------+
+
+
 Here is an example feature model for the ``DeltaResourceExample``
 product line, defining valid combinations of features and valid ranges
 of parameters for cost, capacity and number of machines::

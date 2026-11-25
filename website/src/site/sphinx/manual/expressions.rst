@@ -116,30 +116,47 @@ datatypes.  All operators are pure (side effect-free).
 
 The following table describes the meaning as well as the associativity
 and the precedence of the different operators. The list is sorted from
-low precedence to high precedence.
+high precedence to low precedence, with operators having the same
+precedence contained in the same table cell.
 
 .. table:: ABS Operators
 
-   =============   ================   =============   ==============   ===========
-   Expression      Meaning            Associativity   Argument types   Result type
-   =============   ================   =============   ==============   ===========
-   ``e1 || e2``    logical or         left            ``Bool``         ``Bool``
-   ``e1 && e2``    logical and        left            ``Bool``         ``Bool``
-   ``e1 == e2``    equality           left            compatible       ``Bool``
-   ``e1 != e2``    inequality         left            compatible       ``Bool``
-   ``e1 < e2``     less than          left            compatible       ``Bool``
-   ``e1 \<= e2``   less or equal      left            compatible       ``Bool``
-   ``e1 > e2``     greater than       left            compatible       ``Bool``
-   ``e1 >= e2``    greater or equal   left            compatible       ``Bool``
-   ``e1 + e2``     concatenation      left            ``String``       ``String``
-   ``e1 + e2``     addition           left            number           number
-   ``e1 - e2``     subtraction        left            number           number
-   ``e1 * e2``     multiplication     left            number           number
-   ``e1 / e2``     division           left            number           ``Rat`` or ``Float``
-   ``e1 % e2``     modulo             left            number           number
-   ``!e``          logical negation   right           ``Bool``         ``Bool``
-   ``-e``          integer negation   right           number           number
-   =============   ================   =============   ==============   ===========
+   +--------------+------------------+----------------+-------------+
+   |Expression    | Meaning          | Argument types | Result type |
+   +==============+==================+================+=============+
+   |``!e``        | logical negation | ``Bool``       | ``Bool``    |
+   |              +------------------+----------------+-------------+
+   |``-e``        | integer negation | number         | number      |
+   +--------------+------------------+----------------+-------------+
+   |``e1 * e2``   | multiplication   | number         | number      |
+   |              +------------------+----------------+-------------+
+   |``e1 / e2``   | division         | number         | number      |
+   |              +------------------+----------------+-------------+
+   |``e1 % e2``   | modulo           | number         | number      |
+   +--------------+------------------+----------------+-------------+
+   |``e1 + e2``   | concatenation    | ``String``     | ``String``  |
+   |              +------------------+----------------+-------------+
+   |``e1 + e2``   | addition         | number         | number      |
+   |              +------------------+----------------+-------------+
+   |``e1 - e2``   | subtraction      | number         | number      |
+   +--------------+------------------+----------------+-------------+
+   |``e1 < e2``   | less than        | compatible     | ``Bool``    |
+   |              +------------------+----------------+-------------+
+   |``e1 <= e2``  | less or equal    | compatible     | ``Bool``    |
+   |              +------------------+----------------+-------------+
+   |``e1 > e2``   | greater than     | compatible     | ``Bool``    |
+   |              +------------------+----------------+-------------+
+   |``e1 >= e2``  | greater or equal | compatible     | ``Bool``    |
+   +--------------+------------------+----------------+-------------+
+   |``e1 == e2``  | equality         | compatible     | ``Bool``    |
+   |              +------------------+----------------+-------------+
+   |``e1 != e2``  | inequality       | compatible     | ``Bool``    |
+   +--------------+------------------+----------------+-------------+
+   |``e1 && e2``  | logical and      | ``Bool``       | ``Bool``    |
+   +--------------+------------------+----------------+-------------+
+   |``e1 || e2``  | logical or       | ``Bool``       | ``Bool``    |
+   +--------------+------------------+----------------+-------------+
+
 
 
 Semantics of comparison operators
