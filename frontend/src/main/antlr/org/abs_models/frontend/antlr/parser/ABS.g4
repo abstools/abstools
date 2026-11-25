@@ -498,9 +498,10 @@ mexp : TYPE_IDENTIFIER '.' IDENTIFIER
     | l=mexp op=(PLUS | MINUS) r=mexp
     | l=mexp op=(LT | GT | LTEQ | GTEQ) r=mexp
     | l=mexp op=(EQEQ | NOTEQ) r=mexp
-    | l=mexp op=(IMPLIES | EQUIV) r=mexp
     | l=mexp op=ANDAND r=mexp
     | l=mexp op=OROR r=mexp
+    | l=mexp op=EQUIV r=mexp
+    |<assoc=right> l=mexp op=IMPLIES r=mexp
     | '(' a=mexp ')'
     ;
 
