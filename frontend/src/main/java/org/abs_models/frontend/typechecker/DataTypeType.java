@@ -14,8 +14,10 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.abs_models.frontend.ast.*;
+import org.abs_models.frontend.typechecker.nullable.DataTypeNullableType;
 import org.abs_models.frontend.typechecker.nullable.NullCheckerExtension;
 import org.abs_models.frontend.typechecker.nullable.NullableType;
+import com.google.common.collect.ImmutableMap;
 
 public class DataTypeType extends Type {
     private final DataTypeDecl decl;
@@ -340,5 +342,14 @@ public class DataTypeType extends Type {
         } else {
             return new DataTypeUse(getQualifiedName(), new org.abs_models.frontend.ast.List<>());
         }
+    }
+
+    @Override
+    public NullableType instantiateNullableType(ImmutableMap<TypeParameterDecl, NullableType> inst) {
+        var nts = new ArrayList<NullableType>(numTypeArgs());
+        for (Type arg : getTypeArgs()) {
+            nts.add(arg.instantiateNullableType(inst));
+        }
+        return new DataTypeNullableType(nts);
     }
 }
