@@ -1,12 +1,6 @@
 module Example;
 import * from ABS.Scheduler;
 
-// Type declarations
-// type Duration = Int ;
-data Deadline;                 // Type for annotations
-data Scheduler;                // Type for annotations
-data Cost;                     // Type for annotations
-
 // Well know scheduling policies
 // EDF : earliest deadline first
 def Process edf(List<Process> l) =
